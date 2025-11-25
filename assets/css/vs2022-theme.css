@@ -1,0 +1,223 @@
+/* VS2022 代码高亮主题 */
+/* 基于VS2022的深色主题 */
+
+/* 代码块容器 */
+pre[class*="language-"] {
+    background-color: #1E1E1E !important;
+    border: 1px solid #3C3C3C !important;
+    border-radius: 8px !important;
+    padding: 1.2em !important;
+    margin: 1.5em 0 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    overflow-x: auto !important;
+    position: relative !important;
+}
+
+/* 代码标签 */
+code[class*="language-"] {
+    color: #D4D4D4 !important;
+    font-family: 'Consolas', 'Courier New', monospace !important;
+    font-size: 0.95em !important;
+    line-height: 1.5 !important;
+    text-shadow: none !important;
+}
+
+/* 行内代码 */
+:not(pre) > code[class*="language-"] {
+    background-color: #2D2D30 !important;
+    border: 1px solid #3C3C3C !important;
+    border-radius: 4px !important;
+    padding: 0.2em 0.4em !important;
+    color: #D4D4D4 !important;
+}
+
+/* 注释 */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+    color: #6A9955 !important;
+    font-style: italic !important;
+}
+
+/* 标点符号 */
+.token.punctuation {
+    color: #D4D4D4 !important;
+}
+
+/* 属性名 */
+.token.tag,
+.token.attr-name,
+.token.namespace,
+.token.deleted {
+    color: #569CD6 !important;
+}
+
+/* 属性值 */
+.token.attr-value,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+    color: #CE9178 !important;
+}
+
+/* 关键字 */
+.token.keyword,
+.token.class-name,
+.token.atrule,
+.token.boolean,
+.token.constant,
+.token.symbol {
+    color: #569CD6 !important;
+}
+
+/* 函数名 */
+.token.function,
+.token.selector,
+.token.url {
+    color: #DCDCAA !important;
+}
+
+/* 数字 */
+.token.number,
+.token.property {
+    color: #B5CEA8 !important;
+}
+
+/* 变量 */
+.token.variable {
+    color: #9CDCFE !important;
+}
+
+/* 操作符 */
+.token.operator,
+.token.entity {
+    color: #D4D4D4 !important;
+}
+
+/* 正则表达式 */
+.token.regex {
+    color: #D16969 !important;
+}
+
+/* 重要内容 */
+.token.important {
+    color: #569CD6 !important;
+    font-weight: bold !important;
+}
+
+/* C# 特定语法高亮 */
+.token.class-name {
+    color: #4EC9B0 !important;
+}
+
+.token.method {
+    color: #DCDCAA !important;
+}
+
+/* XML/HTML 特定 */
+.token.tag .token.tag {
+    color: #569CD6 !important;
+}
+
+.token.tag .token.attr-name {
+    color: #9CDCFE !important;
+}
+
+.token.tag .token.attr-value {
+    color: #CE9178 !important;
+}
+
+/* 代码块标题 */
+pre[class*="language-"]::before {
+    content: attr(data-language);
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #2D2D30 !important;
+    color: #9CDCFE !important;
+    font-size: 0.75rem !important;
+    padding: 4px 12px !important;
+    border-radius: 0 8px 0 8px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* 行号样式 */
+.line-numbers .line-numbers-rows {
+    border-right: 1px solid #3C3C3C !important;
+    background-color: #252526 !important;
+}
+
+.line-numbers-rows > span:before {
+    color: #858585 !important;
+}
+
+/* 选中行高亮 */
+.line-highlight {
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.1) 70%, transparent) !important;
+}
+
+/* 滚动条样式 */
+pre[class*="language-"]::-webkit-scrollbar {
+    height: 8px !important;
+}
+
+pre[class*="language-"]::-webkit-scrollbar-track {
+    background: #1E1E1E !important;
+    border-radius: 4px !important;
+}
+
+pre[class*="language-"]::-webkit-scrollbar-thumb {
+    background: #424242 !important;
+    border-radius: 4px !important;
+}
+
+pre[class*="language-"]::-webkit-scrollbar-thumb:hover {
+    background: #4E4E4E !important;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    pre[class*="language-"] {
+        padding: 0.8em !important;
+        font-size: 0.85em !important;
+    }
+    
+    pre[class*="language-"]::before {
+        font-size: 0.7rem !important;
+        padding: 3px 8px !important;
+    }
+}
+
+/* 复制按钮样式 */
+.copy-button {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    background-color: #2D2D30 !important;
+    color: #D4D4D4 !important;
+    border: 1px solid #3C3C3C !important;
+    border-radius: 4px !important;
+    padding: 6px 10px !important;
+    font-size: 0.8rem !important;
+    cursor: pointer !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s ease !important;
+    z-index: 10 !important;
+}
+
+pre[class*="language-"]:hover .copy-button {
+    opacity: 1 !important;
+}
+
+.copy-button:hover {
+    background-color: #3C3C3C !important;
+    color: #FFFFFF !important;
+}
+
+.copy-button:active {
+    background-color: #007ACC !important;
+}

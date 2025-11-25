@@ -1,0 +1,6 @@
+# 重定向规则 - 将Markdown文件重定向到viewer.html
+# 注意：这个文件适用于Apache服务器，Python简单HTTP服务器不会使用它
+# 但我们可以创建一个JavaScript重定向机制作为替代
+
+RewriteEngine On
+RewriteRule ^(.+)\.md$ viewer.html?file=$1.md [L,QSA]

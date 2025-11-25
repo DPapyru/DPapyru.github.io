@@ -1,59 +1,67 @@
 <!DOCTYPE html>
+<!-- 泰拉瑞亚Mod制作教程网站首页 -->
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>泰拉瑞亚Mod制作教程 - 首页</title>
-    
-    <!-- SEO优化标签 -->
+
+    <!-- SEO优化标签 - 提高搜索引擎可见性 -->
     <meta name="description" content="泰拉瑞亚Mod制作教程是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛，让更多人能够参与到泰拉瑞亚Mod的开发中来。">
     <meta name="keywords" content="泰拉瑞亚,Mod,教程,开发,tModLoader,C#,游戏开发">
     <meta name="author" content="泰拉瑞亚Mod社区">
     <meta name="robots" content="index, follow">
-    
-    <!-- Open Graph标签 -->
+
+    <!-- Open Graph标签 - 用于社交媒体分享时显示的预览信息 -->
     <meta property="og:title" content="泰拉瑞亚Mod制作教程">
     <meta property="og:description" content="面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://dpapyru.github.io/">
-    <meta property="og:image" content="https://dpapyru.github.io/assets/images/hero-image.png">
+    <meta property="og:image" content="https://dpapyru.github.io/assets/imgs/Green_tModLoader.png">
     <meta property="og:site_name" content="泰拉瑞亚Mod制作教程">
     <meta property="og:locale" content="zh_CN">
-    
-    <!-- Twitter Card标签 -->
+
+    <!-- Twitter Card标签 - 用于在Twitter上分享时显示的卡片信息 -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="泰拉瑞亚Mod制作教程">
     <meta name="twitter:description" content="面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛">
-    <meta name="twitter:image" content="https://dpapyru.github.io/assets/images/hero-image.png">
-    
-    <!-- 其他SEO标签 -->
+    <meta name="twitter:image" content="https://dpapyru.github.io/assets/imgs/Green_tModLoader.png">
+
+    <!-- 其他SEO标签 - 规范URL和RSS订阅 -->
     <link rel="canonical" href="https://dpapyru.github.io/">
     <link rel="alternate" type="application/rss+xml" title="泰拉瑞亚Mod制作教程" href="/feed.xml">
-    
-    <!-- 样式和图标 -->
+
+    <!-- 样式和图标 - 加载CSS样式表和网站图标 -->
     <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
-    <link rel="apple-touch-icon" href="assets/images/apple-touch-icon.png">
+    <link rel="stylesheet" href="assets/css/prism.min.css">
+    <link rel="stylesheet" href="assets/css/vs2022-theme.css">
+    <link rel="icon" type="image/png" href="assets/imgs/Green_tModLoader.png">
 </head>
+
 <body>
+    <!-- 网站头部导航区域 -->
     <header class="site-header">
         <div class="container">
+            <!-- 头部内容容器：包含网站logo、导航菜单和移动端菜单按钮 -->
             <div class="header-content">
+                <!-- 网站logo和标题 -->
                 <div class="logo">
                     <a href="index.html">
-                        <img src="assets/images/logo.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
+                        <img src="assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
                         <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
                     </a>
                 </div>
+                <!-- 主导航菜单 -->
                 <nav class="main-nav">
                     <ul class="nav-list">
                         <li class="nav-item"><a href="index.html" class="nav-link active">首页</a></li>
-                        <li class="nav-item"><a href="docs/tutorial-index.md" class="nav-link">教程索引</a></li>
-                        <li class="nav-item"><a href="getting-started.html" class="nav-link">入门指南</a></li>
-                        <li class="nav-item"><a href="basics.html" class="nav-link">基础教程</a></li>
-                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank">GitHub</a></li>
+                        <li class="nav-item"><a href="docs/index.html" class="nav-link">文档</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
+                                target="_blank">GitHub</a></li>
                     </ul>
                 </nav>
+                <!-- 移动端菜单切换按钮 -->
                 <button class="mobile-menu-toggle" aria-label="切换菜单">
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -63,202 +71,149 @@
         </div>
     </header>
 
+    <!-- 网站主要内容区域 -->
     <main class="homepage">
+        <!-- 首页英雄区域：展示网站主要介绍和CTA按钮 -->
         <section class="hero">
             <div class="container">
-                <div class="hero-content">
-                    <h2 class="hero-title">欢迎来到泰拉瑞亚Mod制作教程</h2>
-                    <p class="hero-description">
-                        这是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛，让更多人能够参与到泰拉瑞亚Mod的开发中来。
-                    </p>
-                    <div class="hero-buttons">
-                        <a href="getting-started.html" class="btn btn-primary">开始学习</a>
-                        <a href="docs/tutorial-index.md" class="btn btn-secondary">查看教程</a>
+                <!-- 搜索框区域 -->
+                <div class="hero-search">
+                    <div class="search-container">
+                        <div class="search-box">
+                            <input type="text" class="search-input" id="hero-search-input" placeholder="搜索教程内容...">
+                            <button class="search-button" id="hero-search-button">
+                                <i class="icon-search"></i>
+                            </button>
+                            <button class="search-clear" id="hero-search-clear" style="display: none;">
+                                <i class="icon-clear"></i>
+                            </button>
+                        </div>
+                        <div class="search-suggestions" id="hero-search-suggestions"></div>
                     </div>
                 </div>
-                <div class="hero-image">
-                    <img src="assets/images/hero-image.png" alt="泰拉瑞亚Mod开发">
-                </div>
-            </div>
-        </section>
-
-        <section class="features">
-            <div class="container">
-                <h2 class="section-title">为什么选择我们的教程？</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <img src="assets/images/icons/easy.svg" alt="简单易学">
+                
+                <!-- 英雄区域内容包装器 -->
+                <div class="hero-content-wrapper">
+                    <!-- 英雄区域左侧文字内容 -->
+                    <div class="hero-content">
+                        <h2 class="hero-title">欢迎来到泰拉瑞亚Mod制作教程</h2>
+                        <p class="hero-description">
+                            这是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛，让更多人能够参与到泰拉瑞亚Mod的开发中来。
+                        </p>
+                        <div class="hero-buttons">
+                            <a href="docs/index.html" class="btn btn-primary">开始学习</a>
+                            <a href="docs/viewer.html?file=01-入门指南/README.md" class="btn btn-secondary">如何贡献教程</a>
                         </div>
-                        <h3 class="feature-title">简单易学</h3>
-                        <p class="feature-description">我们的教程从基础开始，循序渐进，适合各种技术水平的开发者。</p>
                     </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <img src="assets/images/icons/community.svg" alt="社区协作">
-                        </div>
-                        <h3 class="feature-title">社区协作</h3>
-                        <p class="feature-description">这是一个开放的项目，欢迎所有人参与贡献和完善教程内容。</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <img src="assets/images/icons/examples.svg" alt="丰富示例">
-                        </div>
-                        <h3 class="feature-title">丰富示例</h3>
-                        <p class="feature-description">提供大量实际代码示例，帮助你更好地理解和应用所学知识。</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <img src="assets/images/icons/up-to-date.svg" alt="持续更新">
-                        </div>
-                        <h3 class="feature-title">持续更新</h3>
-                        <p class="feature-description">教程内容会随着泰拉瑞亚版本的更新而持续维护和更新。</p>
-                    </div>
+                    <!-- 英雄区域右侧图片 -->
                 </div>
             </div>
         </section>
 
+        <!-- 教程分类区域：展示不同难度级别的教程 -->
         <section class="tutorial-categories">
             <div class="container">
                 <h2 class="section-title">教程分类</h2>
+                <!-- 分类卡片网格布局 -->
                 <div class="categories-grid">
+                    <!-- 分类卡片1：入门指南 -->
                     <div class="category-card">
                         <div class="category-icon">
-                            <img src="assets/images/icons/getting-started.svg" alt="入门指南">
+                            🚀
                         </div>
                         <h3 class="category-title">入门指南</h3>
                         <p class="category-description">了解如何开始制作你的第一个泰拉瑞亚Mod，包括环境设置和基本概念。</p>
-                        <a href="getting-started.html" class="category-link">开始学习 →</a>
+                        <a href="docs/viewer.html?file=01-入门指南/README.md" class="category-link">开始学习 →</a>
                     </div>
+                    <!-- 分类卡片2：基础概念 -->
                     <div class="category-card">
                         <div class="category-icon">
-                            <img src="assets/images/icons/basics.svg" alt="基础教程">
+                            📚
                         </div>
-                        <h3 class="category-title">基础教程</h3>
+                        <h3 class="category-title">基础概念</h3>
                         <p class="category-description">学习泰拉瑞亚Mod开发的基础知识和核心概念，为进阶学习打下基础。</p>
-                        <a href="basics.html" class="category-link">开始学习 →</a>
+                        <a href="docs/viewer.html?file=02-基础概念/README.md" class="category-link">开始学习 →</a>
                     </div>
+                    <!-- 分类卡片3：内容创建 -->
                     <div class="category-card">
                         <div class="category-icon">
-                            <img src="assets/images/icons/intermediate.svg" alt="中级教程">
+                            🛠️
                         </div>
-                        <h3 class="category-title">中级教程</h3>
-                        <p class="category-description">深入学习更复杂的Mod开发技术，包括自定义物品、NPC和生物群系。</p>
-                        <a href="docs/tutorial-index.md" class="category-link">开始学习 →</a>
+                        <h3 class="category-title">内容创建</h3>
+                        <p class="category-description">学习如何创建各种游戏内容，包括物品、NPC、方块等。</p>
+                        <a href="docs/viewer.html?file=03-内容创建/README.md" class="category-link">开始学习 →</a>
                     </div>
+                    <!-- 分类卡片4：高级开发 -->
                     <div class="category-card">
                         <div class="category-icon">
-                            <img src="assets/images/icons/advanced.svg" alt="高级教程">
+                            ⚙️
                         </div>
-                        <h3 class="category-title">高级教程</h3>
+                        <h3 class="category-title">高级开发</h3>
                         <p class="category-description">掌握高级Mod开发技术，包括复杂的游戏机制和性能优化技巧。</p>
-                        <a href="docs/tutorial-index.md" class="category-link">开始学习 →</a>
+                        <a href="docs/viewer.html?file=04-高级开发/README.md" class="category-link">开始学习 →</a>
                     </div>
+                    <!-- 分类卡片5：专题主题 -->
                     <div class="category-card">
                         <div class="category-icon">
-                            <img src="assets/images/icons/resources.svg" alt="资源参考">
+                            🎯
+                        </div>
+                        <h3 class="category-title">专题主题</h3>
+                        <p class="category-description">探索特定领域的专题教程和深度技术探讨。</p>
+                        <a href="docs/viewer.html?file=05-专题主题/README.md" class="category-link">开始学习 →</a>
+                    </div>
+                    <!-- 分类卡片6：资源参考 -->
+                    <div class="category-card">
+                        <div class="category-icon">
+                            📖
                         </div>
                         <h3 class="category-title">资源参考</h3>
                         <p class="category-description">查找API文档、代码示例和其他有用的资源，加速你的开发进程。</p>
-                        <a href="docs/tutorial-index.md" class="category-link">查看资源 →</a>
+                        <a href="docs/viewer.html?file=06-资源参考/README.md" class="category-link">查看资源 →</a>
                     </div>
                 </div>
             </div>
         </section>
 
+        <!-- 最新更新区域：展示网站的最新动态和更新内容 -->
         <section class="latest-updates">
             <div class="container">
                 <h2 class="section-title">最新更新</h2>
+                <!-- 更新卡片网格布局 -->
                 <div class="updates-grid">
+                    <!-- 默认内容，将由JavaScript自动替换 -->
                     <div class="update-card">
-                        <div class="update-date">2023-11-25</div>
-                        <h3 class="update-title">网站上线</h3>
-                        <p class="update-description">泰拉瑞亚Mod制作教程网站正式上线，提供入门指南和基础概念教程。</p>
-                    </div>
-                    <div class="update-card">
-                        <div class="update-date">2023-11-25</div>
-                        <h3 class="update-title">教程索引系统</h3>
-                        <p class="update-description">新增自动生成的教程索引系统，方便贡献者添加新教程内容。</p>
-                    </div>
-                    <div class="update-card">
-                        <div class="update-date">计划中</div>
-                        <h3 class="update-title">中级教程</h3>
-                        <p class="update-description">即将推出中级教程，包括物品创建、NPC开发等内容。</p>
+                        <div class="update-date">加载中...</div>
+                        <h3 class="update-title">正在获取最新更新</h3>
+                        <p class="update-description">请稍候，系统正在自动获取最新的文档更新信息。</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="getting-started-guide">
-            <div class="container">
-                <h2 class="section-title">如何使用本网站</h2>
-                <div class="guide-content">
-                    <div class="guide-step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <h3>选择教程</h3>
-                            <p>根据你的技术水平，从入门指南、基础教程、中级教程或高级教程中选择合适的起点。</p>
-                        </div>
-                    </div>
-                    <div class="guide-step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <h3>跟随学习</h3>
-                            <p>按照教程步骤，逐步学习泰拉瑞亚Mod开发的知识和技巧。</p>
-                        </div>
-                    </div>
-                    <div class="guide-step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <h3>实践应用</h3>
-                            <p>通过实际编写代码和创建Mod内容，巩固所学知识。</p>
-                        </div>
-                    </div>
-                    <div class="guide-step">
-                        <div class="step-number">4</div>
-                        <div class="step-content">
-                            <h3>参与贡献</h3>
-                            <p>加入社区，分享你的经验，为教程项目做出贡献。</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="contribute">
-            <div class="container">
-                <div class="contribute-content">
-                    <h2 class="contribute-title">参与贡献</h2>
-                    <p class="contribute-description">
-                        这是一个协作项目，我们欢迎所有人参与贡献。无论你是Mod开发新手还是经验丰富的开发者，
-                        你的知识和经验都能帮助到其他人。
-                    </p>
-                    <div class="contribute-buttons">
-                        <a href="CONTRIBUTING.md" class="btn btn-primary">如何贡献</a>
-                        <a href="https://github.com/DPapyru/DPapyru.github.io" class="btn btn-secondary" target="_blank">GitHub仓库</a>
-                    </div>
-                </div>
-            </div>
-        </section>
     </main>
 
+    <!-- 网站底部区域 -->
     <footer class="site-footer">
         <div class="container">
+            <!-- 底部内容容器 -->
             <div class="footer-content">
+                <!-- 底部第一栏：关于项目 -->
                 <div class="footer-section">
                     <h4>关于项目</h4>
                     <p>这是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛。</p>
                 </div>
+                <!-- 底部第二栏：快速链接 -->
                 <div class="footer-section">
                     <h4>快速链接</h4>
                     <ul>
                         <li><a href="index.html">首页</a></li>
-                        <li><a href="docs/tutorial-index.md">教程索引</a></li>
-                        <li><a href="getting-started.html">入门指南</a></li>
-                        <li><a href="basics.html">基础教程</a></li>
+                        <li><a href="docs/viewer.html?file=01-入门指南/README.md">教程索引</a></li>
+                        <li><a href="docs/viewer.html?file=01-入门指南/README.md">入门指南</a></li>
+                        <li><a href="docs/viewer.html?file=02-基础概念/README.md">基础概念</a></li>
                         <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
                     </ul>
                 </div>
+                <!-- 底部第三栏：联系我们 -->
                 <div class="footer-section">
                     <h4>联系我们</h4>
                     <ul>
@@ -267,14 +222,20 @@
                     </ul>
                 </div>
             </div>
+            <!-- 底部版权信息 -->
             <div class="footer-bottom">
-                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a> 许可协议。</p>
+                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC
+                        BY 4.0</a> 许可协议。</p>
             </div>
         </div>
     </footer>
 
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/search.js"></script>
-    <script src="assets/js/navigation.js"></script>
+    <!-- 加载JavaScript文件 -->
+    <script src="assets/js/main.js"></script> <!-- 主要功能脚本 -->
+    <script src="assets/js/search.js"></script> <!-- 搜索功能脚本 -->
+    <script src="assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
+    <script src="assets/js/latest-updates.js"></script> <!-- 最新更新功能脚本 -->
+    
 </body>
+
 </html>

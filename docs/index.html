@@ -1,32 +1,362 @@
 <!DOCTYPE html>
+<!-- 泰拉瑞亚Mod制作教程文档导航页面 -->
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文档 - 泰拉瑞亚Mod制作教程</title>
+    <title>文档导航 - 泰拉瑞亚Mod制作教程</title>
+    
+    <!-- SEO优化标签 -->
+    <meta name="description" content="泰拉瑞亚Mod制作教程文档导航，提供完整的教程分类和快速访问链接">
+    <meta name="keywords" content="泰拉瑞亚,Mod,教程,文档,导航,tModLoader">
+    <meta name="author" content="泰拉瑞亚Mod社区">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph标签 -->
+    <meta property="og:title" content="文档导航 - 泰拉瑞亚Mod制作教程">
+    <meta property="og:description" content="泰拉瑞亚Mod制作教程文档导航，提供完整的教程分类和快速访问链接">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dpapyru.github.io/docs/">
+    
+    <!-- 样式和图标 -->
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/prism.min.css">
-    <link rel="icon" type="image/x-icon" href="../assets/images/favicon.ico">
+    <link rel="stylesheet" href="../assets/css/vs2022-theme.css">
+    <link rel="icon" type="image/png" href="../assets/imgs/Green_tModLoader.png">
+    
+    <!-- 自定义样式 -->
+    <style>
+        /* 文档导航页面特定样式 */
+        .docs-hero {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+        }
+        
+        .docs-hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .docs-hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            line-height: 1.6;
+        }
+        
+        .search-section {
+            background-color: #f8f9fa;
+            padding: 40px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 1px solid #ddd;
+            border-radius: 50px;
+            font-size: 1rem;
+            outline: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+        }
+        
+        .search-button {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .search-button:hover {
+            background-color: #0056b3;
+        }
+        
+        .docs-content {
+            padding: 60px 0;
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .category-card {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .category-header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .category-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            opacity: 0.8;
+        }
+        
+        .category-title {
+            font-size: 1.5rem;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .category-description {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        
+        .category-content {
+            padding: 0;
+        }
+        
+        .doc-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .doc-item {
+            border-bottom: 1px solid #f1f3f4;
+            transition: background-color 0.2s ease;
+        }
+        
+        .doc-item:last-child {
+            border-bottom: none;
+        }
+        
+        .doc-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .doc-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            color: #333;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        .doc-link:hover {
+            color: #007bff;
+        }
+        
+        .doc-icon {
+            margin-right: 15px;
+            color: #007bff;
+            font-size: 1.2rem;
+        }
+        
+        .doc-info {
+            flex: 1;
+        }
+        
+        .doc-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .doc-meta {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .doc-meta span {
+            margin-right: 10px;
+        }
+        
+        .difficulty-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .difficulty-badge.beginner {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .difficulty-badge.intermediate {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .difficulty-badge.advanced {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .quick-links {
+            background-color: #f8f9fa;
+            padding: 40px 0;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .quick-links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .quick-link-card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .quick-link-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .quick-link-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: #007bff;
+        }
+        
+        .quick-link-title {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .quick-link-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .search-result-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .search-result-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .search-result-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .search-result-path {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .docs-hero h1 {
+                font-size: 2rem;
+            }
+            
+            .docs-hero p {
+                font-size: 1rem;
+            }
+            
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-links-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
+
 <body>
+    <!-- 网站头部导航区域 -->
     <header class="site-header">
         <div class="container">
             <div class="header-content">
+                <!-- 网站logo和标题 -->
                 <div class="logo">
                     <a href="../index.html">
-                        <img src="../assets/images/logo.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
+                        <img src="../assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
                         <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
                     </a>
                 </div>
+                <!-- 主导航菜单 -->
                 <nav class="main-nav">
                     <ul class="nav-list">
                         <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
-                        <li class="nav-item"><a href="../docs/" class="nav-link active">文档</a></li>
-                        <li class="nav-item"><a href="../examples/" class="nav-link">示例</a></li>
-                        <li class="nav-item"><a href="../community/" class="nav-link">社区</a></li>
-                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank">GitHub</a></li>
+                        <li class="nav-item"><a href="index.html" class="nav-link active">文档</a></li>
+                        <li class="nav-item"><a href="viewer.html" class="nav-link">文档查看器</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
+                                target="_blank">GitHub</a></li>
                     </ul>
                 </nav>
+                <!-- 移动端菜单切换按钮 -->
                 <button class="mobile-menu-toggle" aria-label="切换菜单">
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -36,121 +366,75 @@
         </div>
     </header>
 
-    <div class="site-container">
-        <aside class="sidebar">
-            <div class="sidebar-content">
-                <div class="sidebar-section">
-                    <h3 class="sidebar-title">文档导航</h3>
-                    <ul class="sidebar-list">
-                        <li><a href="getting-started.md">入门指南</a></li>
-                        <li><a href="basic-concepts.md">基础概念</a></li>
-                        <li><a href="item-creation.md">物品创建</a></li>
-                        <li><a href="npc-development.md">NPC开发</a></li>
-                        <li><a href="advanced-topics.md">高级主题</a></li>
-                    </ul>
+    <!-- 文档导航主要内容区域 -->
+    <main>
+        <!-- 文档导航英雄区域 -->
+        <section class="docs-hero">
+            <div class="container">
+                <h1>文档导航</h1>
+                <p>探索泰拉瑞亚Mod制作的完整教程体系，从入门到精通，一步步成为Mod开发专家</p>
+                <div class="hero-buttons">
+                    <a href="#getting-started" class="btn btn-primary">开始学习</a>
+                    <a href="viewer.html?file=01-入门指南/README.md" class="btn btn-secondary">查看教程</a>
                 </div>
-                <div class="sidebar-section">
-                    <h3 class="sidebar-title">贡献者</h3>
-                    <div class="contributors">
-                        <p>欢迎参与贡献！</p>
-                        <a href="../community/contributing.md" class="btn btn-small">如何贡献</a>
+            </div>
+        </section>
+
+        <!-- 搜索区域 -->
+        <section class="search-section">
+            <div class="container">
+                <div class="search-container">
+                    <input type="text" id="doc-search" class="search-input" placeholder="搜索文档...">
+                    <button class="search-button" id="search-btn">🔍</button>
+                    <div class="search-results" id="search-results"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 文档分类内容区域 -->
+        <section class="docs-content">
+            <div class="container">
+                <div class="category-grid" id="category-grid">
+                    <!-- 分类卡片将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 快速链接区域 -->
+        <section class="quick-links">
+            <div class="container">
+                <h2 class="section-title">快速链接</h2>
+                <div class="quick-links-grid">
+                    <div class="quick-link-card">
+                        <div class="quick-link-icon">📚</div>
+                        <h3 class="quick-link-title">完整教程索引</h3>
+                        <p class="quick-link-description">查看所有教程的完整列表和详细信息</p>
+                        <a href="viewer.html?file=01-入门指南/README.md" class="btn btn-small btn-outline">查看索引</a>
+                    </div>
+                    <div class="quick-link-card">
+                        <div class="quick-link-icon">🚀</div>
+                        <h3 class="quick-link-title">快速开始</h3>
+                        <p class="quick-link-description">立即开始你的第一个Mod制作之旅</p>
+                        <a href="viewer.html?file=01-入门指南/README.md" class="btn btn-small btn-primary">开始学习</a>
+                    </div>
+                    <div class="quick-link-card">
+                        <div class="quick-link-icon">🔧</div>
+                        <h3 class="quick-link-title">API参考</h3>
+                        <p class="quick-link-description">查阅完整的tModLoader API文档</p>
+                        <a href="viewer.html?file=06-资源参考/README.md" class="btn btn-small btn-outline">查看API</a>
+                    </div>
+                    <div class="quick-link-card">
+                        <div class="quick-link-icon">💬</div>
+                        <h3 class="quick-link-title">社区支持</h3>
+                        <p class="quick-link-description">获取帮助和参与社区讨论</p>
+                        <a href="https://github.com/DPapyru/DPapyru.github.io" class="btn btn-small btn-outline" target="_blank">GitHub</a>
                     </div>
                 </div>
             </div>
-        </aside>
+        </section>
+    </main>
 
-        <main class="main-content">
-            <div class="content-wrapper">
-                <!-- 加载状态指示器 -->
-                <div id="loading-indicator" class="loading-indicator" style="display: none;">
-                    <div class="loading-spinner"></div>
-                    <p>正在加载内容...</p>
-                </div>
-                
-                <!-- 错误信息容器 -->
-                <div id="error-message" class="error-message" style="display: none;">
-                    <h3>加载失败</h3>
-                    <p id="error-text">无法加载内容，请稍后再试。</p>
-                </div>
-                
-                <!-- Markdown内容容器 -->
-                <div id="markdown-content" class="markdown-content" style="display: none;">
-                    <!-- 内容将通过Markdown渲染后插入这里 -->
-                </div>
-                
-                <!-- 目录容器 -->
-                <div id="table-of-contents" class="table-of-contents" style="display: none;">
-                    <h3>目录</h3>
-                    <ul id="toc-list"></ul>
-                </div>
-
-                <!-- 默认内容（目录页面） -->
-                <div id="default-content">
-                    <div class="category-header">
-                        <h1 class="category-title">文档</h1>
-                        <p class="category-description">选择下面的教程开始学习泰拉瑞亚Mod开发。</p>
-                    </div>
-
-                    <div class="category-content">
-                    <section id="getting-started" class="category-section">
-                        <h2 class="section-title">入门指南</h2>
-                        <div class="tutorial-list">
-                            <div class="tutorial-item">
-                                <div class="tutorial-info">
-                                    <h3 class="tutorial-item-title">
-                                        <a href="getting-started.md">入门指南</a>
-                                    </h3>
-                                    <p class="tutorial-item-description">了解如何开始制作你的第一个泰拉瑞亚Mod，包括环境设置和基本概念。</p>
-                                    <div class="tutorial-meta">
-                                        <span class="difficulty-badge beginner">初级</span>
-                                        <span class="time">30分钟</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section id="basic-concepts" class="category-section">
-                        <h2 class="section-title">基础概念</h2>
-                        <div class="tutorial-list">
-                            <div class="tutorial-item">
-                                <div class="tutorial-info">
-                                    <h3 class="tutorial-item-title">
-                                        <a href="basic-concepts.md">基础概念</a>
-                                    </h3>
-                                    <p class="tutorial-item-description">学习泰拉瑞亚Mod开发的基础知识和核心概念，包括API和代码结构。</p>
-                                    <div class="tutorial-meta">
-                                        <span class="difficulty-badge intermediate">中级</span>
-                                        <span class="time">60分钟</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section id="item-creation" class="category-section">
-                        <h2 class="section-title">物品创建</h2>
-                        <div class="tutorial-list">
-                            <div class="tutorial-item">
-                                <div class="tutorial-info">
-                                    <h3 class="tutorial-item-title">
-                                        <a href="item-creation.md">物品创建</a>
-                                    </h3>
-                                    <p class="tutorial-item-description">学习如何创建自定义物品、武器和装备，包括属性设置和功能实现。</p>
-                                    <div class="tutorial-meta">
-                                        <span class="difficulty-badge intermediate">中级</span>
-                                        <span class="time">90分钟</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
+    <!-- 网站底部区域 -->
     <footer class="site-footer">
         <div class="container">
             <div class="footer-content">
@@ -162,9 +446,9 @@
                     <h4>快速链接</h4>
                     <ul>
                         <li><a href="../index.html">首页</a></li>
-                        <li><a href="../docs/">文档</a></li>
-                        <li><a href="../examples/">示例</a></li>
-                        <li><a href="../community/">社区</a></li>
+                        <li><a href="index.html">文档</a></li>
+                        <li><a href="viewer.html">文档查看器</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -176,14 +460,323 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a> 许可协议。</p>
+                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC
+                        BY 4.0</a> 许可协议。</p>
             </div>
         </div>
     </footer>
 
-    <script src="../assets/js/marked.min.js"></script>
-    <script src="../assets/js/prism.min.js"></script>
-    <script src="../assets/js/prism-csharp.min.js"></script>
+    <!-- 加载JavaScript文件 -->
     <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/search.js"></script>
+    <script src="../assets/js/navigation.js"></script>
+    
+    <script>
+        // 文档分类配置
+        const DOC_CATEGORIES = {
+            '01-入门指南': {
+                title: '入门指南',
+                description: '适合初学者的基础入门教程，帮助您快速了解项目的基本概念和使用方法',
+                icon: '🚀',
+                difficulty: '初级',
+                estimated_time: '30分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '入门指南', difficulty: 'beginner', time: '30分钟' }
+                ]
+            },
+            '02-基础概念': {
+                title: '基础概念',
+                description: '深入了解项目的核心概念和基本原理，为进一步学习打下坚实基础',
+                icon: '📚',
+                difficulty: '初级',
+                estimated_time: '45分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '基础概念', difficulty: 'beginner', time: '45分钟' }
+                ]
+            },
+            '03-内容创建': {
+                title: '内容创建',
+                description: '学习如何创建高质量的内容，掌握内容组织和呈现的最佳实践',
+                icon: '🛠️',
+                difficulty: '中级',
+                estimated_time: '60分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '内容创建', difficulty: 'intermediate', time: '60分钟' }
+                ]
+            },
+            '04-高级开发': {
+                title: '高级开发',
+                description: '深入探讨项目的高级功能和开发技巧，适合有经验的开发人员',
+                icon: '⚙️',
+                difficulty: '高级',
+                estimated_time: '90分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '高级开发', difficulty: 'advanced', time: '90分钟' }
+                ]
+            },
+            '05-专题主题': {
+                title: '专题主题',
+                description: '深入探讨特定领域的应用和解决方案，满足专业化需求',
+                icon: '🎯',
+                difficulty: '高级',
+                estimated_time: '75分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '专题主题', difficulty: 'advanced', time: '75分钟' }
+                ]
+            },
+            '06-资源参考': {
+                title: '资源参考',
+                description: '提供丰富的参考资源，包括工具、文档、示例和社区支持',
+                icon: '📖',
+                difficulty: '全部级别',
+                estimated_time: '30分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '资源参考', difficulty: 'all', time: '30分钟' }
+                ]
+            }
+        };
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== docs/index.html: 页面加载完成 ===');
+            
+            // 初始化移动端菜单
+            initMobileMenu();
+            
+            // 生成文档分类卡片
+            generateCategoryCards();
+            
+            // 初始化搜索功能
+            initSearchFunctionality();
+            
+            // 初始化平滑滚动
+            initSmoothScroll();
+        });
+
+        // 生成文档分类卡片
+        function generateCategoryCards() {
+            const categoryGrid = document.getElementById('category-grid');
+            
+            Object.keys(DOC_CATEGORIES).forEach(categoryKey => {
+                const category = DOC_CATEGORIES[categoryKey];
+                
+                // 创建分类卡片
+                const categoryCard = document.createElement('div');
+                categoryCard.className = 'category-card';
+                categoryCard.id = categoryKey.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+                
+                // 创建分类头部
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'category-header';
+                categoryHeader.innerHTML = `
+                    <h3 class="category-title">${category.title}</h3>
+                    <p class="category-description">${category.description}</p>
+                    <div class="category-icon">${category.icon}</div>
+                `;
+                
+                // 创建分类内容
+                const categoryContent = document.createElement('div');
+                categoryContent.className = 'category-content';
+                
+                // 创建文档列表
+                const docList = document.createElement('ul');
+                docList.className = 'doc-list';
+                
+                category.files.forEach(file => {
+                    const docItem = document.createElement('li');
+                    docItem.className = 'doc-item';
+                    
+                    const docLink = document.createElement('a');
+                    docLink.className = 'doc-link';
+                    docLink.href = `viewer.html?file=${categoryKey}/${file.name}`;
+                    
+                    const difficultyClass = file.difficulty === 'all' ? 'beginner' : file.difficulty;
+                    const difficultyText = getDifficultyText(file.difficulty);
+                    
+                    docLink.innerHTML = `
+                        <div class="doc-icon">📄</div>
+                        <div class="doc-info">
+                            <div class="doc-title">${file.title}</div>
+                            <div class="doc-meta">
+                                <span class="difficulty-badge ${difficultyClass}">${difficultyText}</span>
+                                <span>⏱️ ${file.time}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    docItem.appendChild(docLink);
+                    docList.appendChild(docItem);
+                });
+                
+                categoryContent.appendChild(docList);
+                categoryCard.appendChild(categoryHeader);
+                categoryCard.appendChild(categoryContent);
+                categoryGrid.appendChild(categoryCard);
+            });
+        }
+
+        // 获取难度文本
+        function getDifficultyText(difficulty) {
+            const difficultyMap = {
+                'beginner': '初级',
+                'intermediate': '中级',
+                'advanced': '高级',
+                'all': '全部级别'
+            };
+            return difficultyMap[difficulty] || difficulty;
+        }
+
+        // 初始化搜索功能
+        function initSearchFunctionality() {
+            const searchInput = document.getElementById('doc-search');
+            const searchButton = document.getElementById('search-btn');
+            const searchResults = document.getElementById('search-results');
+            
+            if (!searchInput || !searchButton || !searchResults) return;
+            
+            // 创建搜索索引
+            const searchIndex = [];
+            
+            Object.keys(DOC_CATEGORIES).forEach(categoryKey => {
+                const category = DOC_CATEGORIES[categoryKey];
+                
+                category.files.forEach(file => {
+                    searchIndex.push({
+                        title: file.title,
+                        path: `${categoryKey}/${file.name}`,
+                        category: category.title,
+                        difficulty: file.difficulty,
+                        time: file.time
+                    });
+                });
+            });
+            
+            // 搜索输入事件
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim().toLowerCase();
+                
+                if (query.length === 0) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+                
+                // 过滤搜索结果
+                const results = searchIndex.filter(item => 
+                    item.title.toLowerCase().includes(query) ||
+                    item.category.toLowerCase().includes(query)
+                );
+                
+                // 显示搜索结果
+                displaySearchResults(results);
+            });
+            
+            // 搜索按钮点击事件
+            searchButton.addEventListener('click', function() {
+                const query = searchInput.value.trim();
+                if (query) {
+                    performSearch(query);
+                }
+            });
+            
+            // 搜索输入框回车事件
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = this.value.trim();
+                    if (query) {
+                        performSearch(query);
+                    }
+                }
+            });
+            
+            // 点击其他地方关闭搜索结果
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+            
+            // 显示搜索结果
+            function displaySearchResults(results) {
+                searchResults.innerHTML = '';
+                
+                if (results.length === 0) {
+                    searchResults.innerHTML = `
+                        <div class="search-result-item">
+                            <div class="search-result-title">没有找到匹配的文档</div>
+                            <div class="search-result-path">请尝试其他关键词</div>
+                        </div>
+                    `;
+                } else {
+                    results.forEach(result => {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'search-result-item';
+                        
+                        resultItem.innerHTML = `
+                            <div class="search-result-title">${result.title}</div>
+                            <div class="search-result-path">${result.category} / ${result.path.split('/').pop()}</div>
+                        `;
+                        
+                        resultItem.addEventListener('click', function() {
+                            window.location.href = `viewer.html?file=${result.path}`;
+                        });
+                        
+                        searchResults.appendChild(resultItem);
+                    });
+                }
+                
+                searchResults.style.display = 'block';
+            }
+            
+            // 执行搜索
+            function performSearch(query) {
+                const results = searchIndex.filter(item => 
+                    item.title.toLowerCase().includes(query.toLowerCase()) ||
+                    item.category.toLowerCase().includes(query.toLowerCase())
+                );
+                
+                if (results.length === 0) {
+                    alert('没有找到匹配的文档，请尝试其他关键词');
+                } else if (results.length === 1) {
+                    // 如果只有一个结果，直接跳转
+                    window.location.href = `viewer.html?file=${results[0].path}`;
+                } else {
+                    // 如果有多个结果，显示搜索结果页面
+                    displaySearchResults(results);
+                }
+            }
+        }
+
+        // 初始化平滑滚动
+        function initSmoothScroll() {
+            // 获取所有锚点链接
+            const anchorLinks = document.querySelectorAll('a[href^="#"]');
+            
+            anchorLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        // 计算目标位置，考虑固定头部的高度
+                        const headerHeight = document.querySelector('.site-header').offsetHeight;
+                        const targetPosition = targetElement.offsetTop - headerHeight - 20;
+                        
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        }
+    </script>
 </body>
+
 </html>

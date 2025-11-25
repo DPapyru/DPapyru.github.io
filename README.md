@@ -76,7 +76,6 @@ DPapyru.github.io/
 │   ├── workflows/         # GitHub Actions工作流
 │   │   └── deploy.yml     # 自动部署配置
 │   └── ISSUE_TEMPLATE/    # 问题模板
-└── test-results/          # 测试结果
 ```
 
 ## 🚀 快速开始

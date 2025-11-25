@@ -61,7 +61,15 @@ class TutorialSearch {
         searchContainer.appendChild(searchSuggestions);
         searchContainer.appendChild(searchResults);
         
-        // 将搜索容器添加到导航栏
+        // 将搜索容器添加到英雄区域的搜索框
+        const heroSearchContainer = document.querySelector('.hero-search .search-container');
+        if (heroSearchContainer) {
+            // 如果英雄区域已有搜索容器，则只绑定事件，不创建新元素
+            this.bindHeroSearchEvents();
+            return;
+        }
+        
+        // 否则，将搜索容器添加到导航栏（作为后备方案）
         const mainNav = document.querySelector('.main-nav');
         if (mainNav) {
             mainNav.appendChild(searchContainer);
@@ -70,24 +78,69 @@ class TutorialSearch {
 
     // 绑定事件
     bindEvents() {
+        // 尝试绑定英雄区域的搜索框
+        this.bindHeroSearchEvents();
+        
+        // 作为后备方案，也尝试绑定常规搜索框
+        this.bindRegularSearchEvents();
+    }
+    
+    // 绑定英雄区域搜索框事件
+    bindHeroSearchEvents() {
+        const searchInput = document.getElementById('hero-search-input');
+        const searchButton = document.getElementById('hero-search-button');
+        const clearButton = document.getElementById('hero-search-clear');
+        
+        if (!searchInput) return; // 如果英雄区域搜索框不存在，则退出
+        
+        // 搜索输入事件
+        searchInput.addEventListener('input', debounce((e) => {
+            this.handleHeroSearchInput(e.target.value);
+        }, 300));
+        
+        searchInput.addEventListener('focus', () => {
+            this.showHeroSearchSuggestions();
+        });
+        
+        searchInput.addEventListener('keydown', (e) => {
+            this.handleHeroKeydown(e);
+        });
+        
+        // 搜索按钮点击事件
+        if (searchButton) {
+            searchButton.addEventListener('click', () => {
+                this.performHeroSearch();
+            });
+        }
+        
+        // 清除按钮点击事件
+        if (clearButton) {
+            clearButton.addEventListener('click', () => {
+                this.clearHeroSearch();
+            });
+        }
+    }
+    
+    // 绑定常规搜索框事件（作为后备）
+    bindRegularSearchEvents() {
         const searchInput = document.getElementById('search-input');
         const searchButton = document.getElementById('search-button');
         const clearButton = document.getElementById('search-clear');
         
+        if (!searchInput) return; // 如果常规搜索框不存在，则退出
+        
         // 搜索输入事件
-        if (searchInput) {
-            searchInput.addEventListener('input', debounce((e) => {
-                this.handleSearchInput(e.target.value);
-            }, 300));
-            
-            searchInput.addEventListener('focus', () => {
-                this.showSearchSuggestions();
-            });
-            
-            searchInput.addEventListener('keydown', (e) => {
-                this.handleKeydown(e);
-            });
-        }
+        searchInput.addEventListener('input', debounce((e) => {
+            this.handleSearchInput(e.target.value);
+        }, 300));
+        
+        searchInput.addEventListener('focus', () => {
+            this.showSearchSuggestions();
+        });
+        
+        searchInput.addEventListener('keydown', (e) => {
+            this.handleKeydown(e);
+        });
         
         // 搜索按钮点击事件
         if (searchButton) {
@@ -103,28 +156,14 @@ class TutorialSearch {
             });
         }
         
-        // 点击页面其他地方关闭搜索结果
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-container')) {
-                this.hideSearchResults();
-                this.hideSearchSuggestions();
-            }
-        });
-        
-        // ESC键关闭搜索
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isSearchVisible) {
-                this.hideSearchResults();
-                document.getElementById('search-input').blur();
-            }
-        });
-        
-        // Ctrl+K 或 Cmd+K 聚焦搜索框
+        // Ctrl+K 或 Cmd+K 聚焦英雄区域搜索框
         document.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                 e.preventDefault();
-                const searchInput = document.getElementById('search-input');
-                if (searchInput) {
+                const heroSearchInput = document.getElementById('hero-search-input');
+                if (heroSearchInput) {
+                    heroSearchInput.focus();
+                } else if (searchInput) {
                     searchInput.focus();
                 }
             }
@@ -150,12 +189,15 @@ class TutorialSearch {
                     const metadata = this.parseMetadata(content);
                     const plainText = this.stripMarkdown(content);
                     
+                    // 更新URL，使其指向viewer.html并加载相应的README.md文件
+                    const viewerUrl = `docs/viewer.html?file=${file.replace('docs/', '')}`;
+                    
                     this.searchIndex.push({
                         title: metadata.title || this.extractTitle(content),
-                        url: file,
+                        url: viewerUrl,
                         content: plainText,
                         description: metadata.description || this.extractDescription(plainText),
-                        category: metadata.category || '未分类',
+                        category: metadata.category || this.getCategoryFromPath(file),
                         difficulty: metadata.difficulty || '未知',
                         time: metadata.time || '未知',
                         author: metadata.author || '未知',
@@ -176,12 +218,14 @@ class TutorialSearch {
 
     // 获取所有教程文件
     async getTutorialFiles() {
-        // 这里应该返回所有教程文件的路径
-        // 由于我们无法直接读取目录，我们手动列出所有已知的教程文件
+        // 返回所有教程文件的路径 - 新的文档结构只包含每个分类目录下的README.md文件
         return [
-            'docs/tutorial-index.md',
-            'docs/getting-started.md',
-            'docs/basic-concepts.md'
+            'docs/01-入门指南/README.md',
+            'docs/02-基础概念/README.md',
+            'docs/03-内容创建/README.md',
+            'docs/04-高级开发/README.md',
+            'docs/05-专题主题/README.md',
+            'docs/06-资源参考/README.md'
         ];
     }
 
@@ -199,6 +243,15 @@ class TutorialSearch {
                 metadata[key.trim()] = valueParts.join(':').trim();
             }
         });
+        
+        // 处理新文档结构中的元数据字段映射
+        // 将estimated_time映射到time，将last_updated映射到date
+        if (metadata.estimated_time && !metadata.time) {
+            metadata.time = metadata.estimated_time;
+        }
+        if (metadata.last_updated && !metadata.date) {
+            metadata.date = metadata.last_updated;
+        }
         
         return metadata;
     }
@@ -254,7 +307,21 @@ class TutorialSearch {
         return content.trim();
     }
 
-    // 处理搜索输入
+    // 处理英雄区域搜索输入
+    handleHeroSearchInput(query) {
+        this.currentQuery = query.trim();
+        const clearButton = document.getElementById('hero-search-clear');
+        
+        if (this.currentQuery) {
+            clearButton.style.display = 'flex';
+            this.showHeroSearchSuggestions();
+        } else {
+            clearButton.style.display = 'none';
+            this.hideHeroSearchSuggestions();
+        }
+    }
+    
+    // 处理常规搜索输入
     handleSearchInput(query) {
         this.currentQuery = query.trim();
         const clearButton = document.getElementById('search-clear');
@@ -268,14 +335,45 @@ class TutorialSearch {
         }
     }
 
-    // 显示搜索建议
+    // 显示英雄区域搜索建议
+    showHeroSearchSuggestions() {
+        if (!this.currentQuery) return;
+        
+        const suggestions = this.getSuggestions(this.currentQuery);
+        const suggestionsContainer = document.getElementById('hero-search-suggestions');
+        
+        if (suggestions.length === 0 || !suggestionsContainer) {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
+        
+        suggestionsContainer.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            item.innerHTML = this.highlightText(suggestion.title, this.currentQuery);
+            
+            item.addEventListener('click', () => {
+                document.getElementById('hero-search-input').value = suggestion.title;
+                this.currentQuery = suggestion.title;
+                this.performHeroSearch();
+            });
+            
+            suggestionsContainer.appendChild(item);
+        });
+        
+        suggestionsContainer.style.display = 'block';
+    }
+    
+    // 显示常规搜索建议
     showSearchSuggestions() {
         if (!this.currentQuery) return;
         
         const suggestions = this.getSuggestions(this.currentQuery);
         const suggestionsContainer = document.getElementById('search-suggestions');
         
-        if (suggestions.length === 0) {
+        if (suggestions.length === 0 || !suggestionsContainer) {
             suggestionsContainer.style.display = 'none';
             return;
         }
@@ -299,9 +397,20 @@ class TutorialSearch {
         suggestionsContainer.style.display = 'block';
     }
 
-    // 隐藏搜索建议
+    // 隐藏英雄区域搜索建议
+    hideHeroSearchSuggestions() {
+        const suggestionsContainer = document.getElementById('hero-search-suggestions');
+        if (suggestionsContainer) {
+            suggestionsContainer.style.display = 'none';
+        }
+    }
+    
+    // 隐藏常规搜索建议
     hideSearchSuggestions() {
-        document.getElementById('search-suggestions').style.display = 'none';
+        const suggestionsContainer = document.getElementById('search-suggestions');
+        if (suggestionsContainer) {
+            suggestionsContainer.style.display = 'none';
+        }
     }
 
     // 获取搜索建议
@@ -314,16 +423,164 @@ class TutorialSearch {
             .slice(0, 5); // 最多显示5个建议
     }
 
-    // 执行搜索
+    // 执行英雄区域搜索
+    performHeroSearch() {
+        if (!this.currentQuery) return;
+        
+        // 跳转到搜索结果页面
+        const searchUrl = `search-results.html?q=${encodeURIComponent(this.currentQuery)}`;
+        window.location.href = searchUrl;
+    }
+    
+    // 执行常规搜索
     performSearch() {
         if (!this.currentQuery) return;
         
-        this.hideSearchSuggestions();
-        this.searchResults = this.search(this.currentQuery);
-        this.displaySearchResults();
+        // 跳转到搜索结果页面
+        const searchUrl = `search-results.html?q=${encodeURIComponent(this.currentQuery)}`;
+        window.location.href = searchUrl;
     }
 
-    // 搜索功能
+    // 高级搜索算法
+    advancedSearch(query) {
+        if (!query) return [];
+        
+        // 解析搜索查询
+        const searchQuery = this.parseSearchQuery(query);
+        
+        const results = [];
+        
+        this.searchIndex.forEach(item => {
+            const score = this.calculateRelevanceScore(item, searchQuery);
+            
+            if (score > 0) {
+                results.push({
+                    ...item,
+                    score
+                });
+            }
+        });
+        
+        // 按得分排序
+        return results.sort((a, b) => b.score - a.score);
+    }
+
+    // 解析搜索查询
+    parseSearchQuery(query) {
+        // 这是一个简化的查询解析器，支持基本的AND、OR和括号
+        // 在实际应用中，可能需要更复杂的解析器
+        
+        // 移除多余的空格
+        query = query.trim().replace(/\s+/g, ' ');
+        
+        // 处理精确匹配（引号包围的短语）
+        const exactMatches = [];
+        const exactMatchRegex = /"([^"]+)"/g;
+        let match;
+        while ((match = exactMatchRegex.exec(query)) !== null) {
+            exactMatches.push(match[1].toLowerCase());
+        }
+        
+        // 移除精确匹配部分，处理剩余查询
+        query = query.replace(/"[^"]+"/g, '').trim();
+        
+        // 处理AND操作（+号）
+        const andTerms = [];
+        const andTermRegex = /\+([^\s+]+)/g;
+        while ((match = andTermRegex.exec(query)) !== null) {
+            andTerms.push(match[1].toLowerCase());
+        }
+        
+        // 移除AND操作部分
+        query = query.replace(/\+[^\s+]+/g, '').trim();
+        
+        // 处理括号（简化处理，只支持一层括号）
+        const bracketGroups = [];
+        const bracketRegex = /\(([^)]+)\)/g;
+        while ((match = bracketRegex.exec(query)) !== null) {
+            bracketGroups.push(match[1].toLowerCase());
+        }
+        
+        // 移除括号部分
+        query = query.replace(/\([^)]+\)/g, '').trim();
+        
+        // 剩余的部分作为OR操作
+        const orTerms = query ? query.split(' ').filter(term => term) : [];
+        
+        return {
+            exactMatches,
+            andTerms,
+            orTerms,
+            bracketGroups,
+            originalQuery: query
+        };
+    }
+
+    // 计算相关性得分
+    calculateRelevanceScore(item, searchQuery) {
+        let score = 0;
+        const title = item.title.toLowerCase();
+        const content = item.content.toLowerCase();
+        const description = item.description.toLowerCase();
+        const category = item.category.toLowerCase();
+        
+        // 精确匹配得分最高
+        searchQuery.exactMatches.forEach(term => {
+            if (title.includes(term)) score += 50;
+            if (description.includes(term)) score += 25;
+            if (content.includes(term)) score += 10;
+            if (category.includes(term)) score += 15;
+        });
+        
+        // AND操作得分较高
+        searchQuery.andTerms.forEach(term => {
+            if (title.includes(term)) score += 20;
+            if (description.includes(term)) score += 10;
+            if (content.includes(term)) score += 5;
+            if (category.includes(term)) score += 8;
+        });
+        
+        // OR操作得分较低
+        searchQuery.orTerms.forEach(term => {
+            if (title.includes(term)) score += 10;
+            if (description.includes(term)) score += 5;
+            if (content.includes(term)) score += 2;
+            if (category.includes(term)) score += 3;
+        });
+        
+        // 括号组得分中等
+        searchQuery.bracketGroups.forEach(group => {
+            const groupTerms = group.split(' ');
+            let groupScore = 0;
+            
+            groupTerms.forEach(term => {
+                if (title.includes(term)) groupScore += 15;
+                if (description.includes(term)) groupScore += 8;
+                if (content.includes(term)) groupScore += 3;
+                if (category.includes(term)) groupScore += 5;
+            });
+            
+            // 如果组内有多个匹配，给予额外奖励
+            if (groupScore > 15) {
+                score += groupScore * 1.5;
+            } else {
+                score += groupScore;
+            }
+        });
+        
+        // 完全匹配得分更高
+        if (title === searchQuery.originalQuery.toLowerCase()) score += 100;
+        
+        return score;
+    }
+
+    // 从文件路径获取分类
+    getCategoryFromPath(filePath) {
+        const match = filePath.match(/docs\/([^\/]+)/);
+        return match ? match[1] : '未分类';
+    }
+
+    // 搜索功能（保留原有简单搜索作为后备）
     search(query) {
         if (!query) return [];
         
@@ -429,18 +686,60 @@ class TutorialSearch {
         this.isSearchVisible = false;
     }
 
-    // 清除搜索
+    // 清除英雄区域搜索
+    clearHeroSearch() {
+        document.getElementById('hero-search-input').value = '';
+        document.getElementById('hero-search-clear').style.display = 'none';
+        this.currentQuery = '';
+        this.hideSearchResults();
+        this.hideHeroSearchSuggestions();
+    }
+    
+    // 清除常规搜索
     clearSearch() {
-        document.getElementById('search-input').value = '';
-        document.getElementById('search-clear').style.display = 'none';
+        const searchInput = document.getElementById('search-input');
+        const clearButton = document.getElementById('search-clear');
+        
+        if (searchInput) searchInput.value = '';
+        if (clearButton) clearButton.style.display = 'none';
+        
         this.currentQuery = '';
         this.hideSearchResults();
         this.hideSearchSuggestions();
     }
 
-    // 处理键盘事件
+    // 处理英雄区域键盘事件
+    handleHeroKeydown(e) {
+        const suggestionsContainer = document.getElementById('hero-search-suggestions');
+        if (!suggestionsContainer) return;
+        
+        const suggestions = suggestionsContainer.querySelectorAll('.suggestion-item');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            // 实现向下导航建议
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            // 实现向上导航建议
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (suggestions.length > 0) {
+                // 选择第一个建议
+                suggestions[0].click();
+            } else {
+                this.performHeroSearch();
+            }
+        } else if (e.key === 'Escape') {
+            this.hideHeroSearchSuggestions();
+            this.hideSearchResults();
+        }
+    }
+    
+    // 处理常规键盘事件
     handleKeydown(e) {
         const suggestionsContainer = document.getElementById('search-suggestions');
+        if (!suggestionsContainer) return;
+        
         const suggestions = suggestionsContainer.querySelectorAll('.suggestion-item');
         
         if (e.key === 'ArrowDown') {
@@ -484,11 +783,12 @@ class TutorialSearch {
     // 获取类别文本
     getCategoryText(category) {
         const categories = {
-            'getting-started': '入门指南',
-            'basic-concepts': '基础概念',
-            'mod-development': 'Mod开发',
-            'advanced-topics': '高级主题',
-            'resources': '资源参考'
+            '01-入门指南': '入门指南',
+            '02-基础概念': '基础概念',
+            '03-内容创建': '内容创建',
+            '04-高级开发': '高级开发',
+            '05-专题主题': '专题主题',
+            '06-资源参考': '资源参考'
         };
         return categories[category] || category;
     }
@@ -498,7 +798,11 @@ class TutorialSearch {
         const difficulties = {
             'beginner': '初级',
             'intermediate': '中级',
-            'advanced': '高级'
+            'advanced': '高级',
+            '初级': '初级',
+            '中级': '中级',
+            '高级': '高级',
+            '全部级别': '全部级别'
         };
         return difficulties[difficulty] || difficulty;
     }

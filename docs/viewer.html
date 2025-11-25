@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<!-- 泰拉瑞亚Mod制作教程文档查看器页面 -->
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档查看器 - 泰拉瑞亚Mod制作教程</title>
+    <!-- 加载CSS样式文件 -->
+    <link rel="stylesheet" href="../assets/css/style.css"> <!-- 主样式文件 -->
+    <link rel="stylesheet" href="../assets/css/prism.min.css"> <!-- 代码高亮样式 -->
+    <link rel="stylesheet" href="../assets/css/vs2022-theme.css"> <!-- VS2022代码高亮主题 -->
+    <link rel="icon" type="image/png" href="../assets/imgs/Green_tModLoader.png"> <!-- 网站图标 -->
+</head>
+
+<body>
+    <!-- 网站头部导航区域 -->
+    <header class="site-header">
+        <div class="container">
+            <!-- 头部内容容器：包含网站logo、导航菜单和移动端菜单按钮 -->
+            <div class="header-content">
+                <!-- 网站logo和标题 -->
+                <div class="logo">
+                    <a href="../index.html">
+                        <img src="../assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
+                        <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
+                    </a>
+                </div>
+                <!-- 主导航菜单 -->
+                <nav class="main-nav">
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="../docs/" class="nav-link active">文档</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
+                                target="_blank">GitHub</a></li>
+                    </ul>
+                </nav>
+                <!-- 移动端菜单切换按钮 -->
+                <button class="mobile-menu-toggle" aria-label="切换菜单">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 网站主体容器：包含侧边栏和主内容区 -->
+    <div class="site-container">
+        <!-- 左侧边栏：文档导航和相关链接 -->
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <!-- 侧边栏第一部分：文档导航 -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">文档导航</h3>
+                    <ul class="sidebar-list" id="category-sidebar">
+                        <!-- 分类侧边栏将通过JavaScript动态生成 -->
+                    </ul>
+                </div>
+                <!-- 侧边栏第二部分：当前分类文档 -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title" id="current-category-title">当前分类</h3>
+                    <ul class="sidebar-list" id="current-category-docs">
+                        <!-- 当前分类的文档列表将通过JavaScript动态生成 -->
+                    </ul>
+                </div>
+                <!-- 侧边栏第三部分：贡献者信息 -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">贡献者</h3>
+                    <div class="contributors">
+                        <p>欢迎参与贡献！</p>
+                        <a href="../CONTRIBUTING.md" class="btn btn-small">如何贡献</a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区域：显示Markdown文档内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <!-- 教程头部区域：包含面包屑导航和文档元信息 -->
+                <div class="tutorial-header">
+                    <!-- 面包屑导航 -->
+                    <div class="breadcrumb">
+                        <a href="../index.html">首页</a> >
+                        <a href="../docs/">文档</a> >
+                        <span class="current" id="current-doc-name">文档</span>
+                    </div>
+                    <!-- 文档标题 -->
+                    <h1 class="tutorial-title" id="doc-title">文档</h1>
+                    <!-- 文档元信息：难度、时间、作者、更新日期 -->
+                    <div class="tutorial-meta" id="doc-meta">
+                        <span class="difficulty">难度: <span class="difficulty-badge" id="doc-difficulty">未知</span></span>
+                        <span class="time">预计时间: <span id="doc-time">未知</span></span>
+                        <span class="author">作者: <span id="doc-author">未知</span></span>
+                        <span class="date">更新日期: <span id="doc-date">未知</span></span>
+                    </div>
+                </div>
+
+                <!-- 教程内容区域：加载和显示Markdown内容 -->
+                <div class="tutorial-content">
+                    <!-- 加载状态指示器：显示内容加载中的提示 -->
+                    <div id="loading-indicator" class="loading-indicator">
+                        <div class="loading-spinner"></div>
+                        <p>正在加载内容...</p>
+                    </div>
+
+                    <!-- 错误信息容器：当内容加载失败时显示错误信息 -->
+                    <div id="error-message" class="error-message" style="display: none;">
+                        <h3>加载失败</h3>
+                        <p id="error-text">无法加载文档内容，请稍后再试。</p>
+                    </div>
+
+                    <!-- 目录容器：自动生成的文档目录 -->
+                    <div id="table-of-contents" class="table-of-contents" style="display: none;">
+                        <h3>目录</h3>
+                        <ul id="toc-list"></ul>
+                    </div>
+
+                    <!-- Markdown内容容器：渲染后的HTML内容将插入这里 -->
+                    <div id="markdown-content" class="markdown-content" style="display: none;">
+                        <!-- 文档内容将通过Markdown渲染后插入这里 -->
+                    </div>
+                </div>
+
+                <!-- 教程底部区域：导航链接和反馈表单 -->
+                <div class="tutorial-footer">
+                    <!-- 教程导航：上一篇/下一篇链接 -->
+                    <div class="tutorial-navigation">
+                        <a href="../docs/" class="btn btn-outline prev-tutorial">← 返回文档列表</a>
+                        <a href="?file=02-基础概念/basic-concepts.md" class="btn btn-primary next-tutorial">基础教程 →</a>
+                    </div>
+                    <!-- 教程反馈：用户反馈和问题提交 -->
+                    <div class="tutorial-feedback">
+                        <h3>教程反馈</h3>
+                        <p>如果你对本教程有任何问题或建议，欢迎在GitHub上提出Issue或PR。</p>
+                        <a href="https://github.com/DPapyru/DPapyru.github.io/issues" class="btn btn-small"
+                            target="_blank">提供反馈</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 网站底部区域 -->
+    <footer class="site-footer">
+        <div class="container">
+            <!-- 底部内容容器 -->
+            <div class="footer-content">
+                <!-- 底部第一栏：关于项目 -->
+                <div class="footer-section">
+                    <h4>关于项目</h4>
+                    <p>这是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛。</p>
+                </div>
+                <!-- 底部第二栏：快速链接 -->
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="../index.html">首页</a></li>
+                        <li><a href="../docs/">文档</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                    </ul>
+                </div>
+                <!-- 底部第三栏：联系我们 -->
+                <div class="footer-section">
+                    <h4>联系我们</h4>
+                    <ul>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                        <li><a href="mailto:contact@example.com">邮箱</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- 底部版权信息 -->
+            <div class="footer-bottom">
+                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC
+                        BY 4.0</a> 许可协议。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 加载JavaScript文件 -->
+    <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
+    <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
+    <script src="../assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
+    <script>
+        // 设置一个标志，告诉main.js这是viewer.html页面，不要执行自动加载
+        window.IS_VIEWER_PAGE = true;
+
+        // 禁用main.js中的路由系统，避免干扰viewer.html的文件加载
+        window.DISABLE_ROUTER = true;
+    </script>
+    <script src="../assets/js/main.js"></script> <!-- 主要功能脚本 -->
+    <script src="../assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
+
+    <script>
+        // 文档分类配置
+        const DOC_CATEGORIES = {
+            '01-入门指南': {
+                title: '入门指南',
+                description: '适合初学者的基础入门教程，帮助您快速了解项目的基本概念和使用方法',
+                difficulty: '初级',
+                estimated_time: '30分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '入门指南', difficulty: 'beginner', time: '30分钟' }
+                ]
+            },
+            '02-基础概念': {
+                title: '基础概念',
+                description: '深入了解项目的核心概念和基本原理，为进一步学习打下坚实基础',
+                difficulty: '初级',
+                estimated_time: '45分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '基础概念', difficulty: 'beginner', time: '45分钟' }
+                ]
+            },
+            '03-内容创建': {
+                title: '内容创建',
+                description: '学习如何创建高质量的内容，掌握内容组织和呈现的最佳实践',
+                difficulty: '中级',
+                estimated_time: '60分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '内容创建', difficulty: 'intermediate', time: '60分钟' }
+                ]
+            },
+            '04-高级开发': {
+                title: '高级开发',
+                description: '深入探讨项目的高级功能和开发技巧，适合有经验的开发人员',
+                difficulty: '高级',
+                estimated_time: '90分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '高级开发', difficulty: 'advanced', time: '90分钟' }
+                ]
+            },
+            '05-专题主题': {
+                title: '专题主题',
+                description: '深入探讨特定领域的应用和解决方案，满足专业化需求',
+                difficulty: '高级',
+                estimated_time: '75分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '专题主题', difficulty: 'advanced', time: '75分钟' }
+                ]
+            },
+            '06-资源参考': {
+                title: '资源参考',
+                description: '提供丰富的参考资源，包括工具、文档、示例和社区支持',
+                difficulty: '全部级别',
+                estimated_time: '30分钟',
+                last_updated: '2025-11-25',
+                files: [
+                    { name: 'README.md', title: '资源参考', difficulty: 'all', time: '30分钟' }
+                ]
+            }
+        };
+
+        // 文档查看器的主要JavaScript逻辑
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('=== docs/viewer.html: 页面加载完成 ===');
+
+            // 初始化分类导航
+            initializeCategoryNavigation();
+
+            // 从URL参数获取要加载的Markdown文件
+            const urlParams = new URLSearchParams(window.location.search);
+            let markdownFile = urlParams.get('file');
+
+            // 如果没有指定文件，尝试从路径中获取
+            if (!markdownFile) {
+                const pathParts = window.location.pathname.split('/');
+                markdownFile = pathParts[pathParts.length - 1];
+            }
+
+            // 如果还是没有，默认加载01-入门指南/README.md
+            if (!markdownFile || !markdownFile.endsWith('.md')) {
+                markdownFile = '01-入门指南/README.md';
+            }
+
+            console.log(`docs/viewer.html: 准备加载Markdown文件: ${markdownFile}`);
+
+            // 延迟加载，确保所有脚本都已初始化
+            setTimeout(function () {
+                // 直接使用本地加载函数，避免main.js中的路径处理问题
+                console.log('docs/viewer.html: 使用本地loadMarkdownDirectly函数');
+                loadMarkdownDirectly(markdownFile);
+            }, 200);
+
+            // 初始化下拉菜单
+            initializeDropdownMenu();
+        });
+
+        // 直接加载Markdown内容的备用函数
+        function loadMarkdownDirectly(filePath) {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const errorMessage = document.getElementById('error-message');
+            const markdownContent = document.getElementById('markdown-content');
+
+            console.log(`docs/viewer.html: 原始文件路径: ${filePath}`);
+
+            // 增强的路径清理逻辑
+            let fetchPath = filePath;
+
+            // 移除开头的docs/前缀（因为viewer.html已经在docs目录中）
+            if (fetchPath.startsWith('docs/')) {
+                fetchPath = fetchPath.substring(5);
+                console.log(`docs/viewer.html: 移除docs前缀: ${fetchPath}`);
+            }
+
+            // 确保路径正确，相对于当前目录（docs/）
+            if (fetchPath.includes('/')) {
+                // 路径已经包含目录，直接使用
+                console.log(`docs/viewer.html: 使用完整路径: ${fetchPath}`);
+            } else {
+                // 如果只是文件名，默认在01-入门指南目录中查找
+                fetchPath = `01-入门指南/${fetchPath}`;
+                console.log(`docs/viewer.html: 添加默认目录: ${fetchPath}`);
+            }
+
+            // 确保文件以.md结尾
+            if (!fetchPath.endsWith('.md')) {
+                fetchPath += '.md';
+                console.log(`docs/viewer.html: 添加.md扩展名: ${fetchPath}`);
+            }
+
+            console.log(`docs/viewer.html: 最终使用路径: ${fetchPath}`);
+
+            fetch(fetchPath)
+                .then(response => {
+                    console.log(`获取响应状态: ${response.status} ${response.statusText}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(markdownText => {
+                    console.log(`docs/viewer.html: 成功获取Markdown内容，长度: ${markdownText.length}`);
+
+                    if (typeof marked !== 'undefined') {
+                        console.log('marked.js已加载，开始渲染');
+
+                        // 解析Front Matter（文档元数据）
+                        const frontMatter = parseFrontMatter(markdownText);
+                        const content = frontMatter.content;
+                        const metadata = frontMatter.metadata;
+
+                        console.log('解析的元数据:', metadata);
+
+                        // 更新页面元数据（标题、难度、作者等）
+                        updatePageMetadata(metadata, filePath);
+
+                        // 更新当前分类的文档列表
+                        updateCurrentCategoryDocs(filePath);
+
+                        // 渲染Markdown内容为HTML
+                        const renderedHTML = marked.parse(content);
+                        console.log('Markdown渲染完成，HTML长度:', renderedHTML.length);
+                        markdownContent.innerHTML = renderedHTML;
+
+                        // 应用代码语法高亮
+                        if (typeof Prism !== 'undefined') {
+                            console.log('应用代码高亮');
+                            Prism.highlightAllUnder(markdownContent);
+                        } else {
+                            console.warn('Prism.js未加载，跳过代码高亮');
+                        }
+
+                        // 自动生成文档目录
+                        generateTableOfContents(markdownContent);
+
+                        // 显示内容，隐藏加载指示器
+                        if (loadingIndicator) loadingIndicator.style.display = 'none';
+                        markdownContent.style.display = 'block';
+                        document.getElementById('table-of-contents').style.display = 'block';
+
+                    } else {
+                        throw new Error('marked.js未加载');
+                    }
+                })
+                .catch(error => {
+                    console.error('docs/viewer.html: 加载Markdown失败:', error);
+                    if (loadingIndicator) loadingIndicator.style.display = 'none';
+                    if (errorMessage) {
+                        errorMessage.style.display = 'block';
+                        document.getElementById('error-text').textContent = `无法加载文件 "${filePath}": ${error.message}`;
+                    }
+                });
+        }
+
+        // 解析Front Matter（文档开头的元数据部分）
+        function parseFrontMatter(text) {
+            const frontMatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
+            const match = text.match(frontMatterRegex);
+
+            if (match) {
+                const metadata = {};
+                const metadataLines = match[1].split('\n');
+
+                metadataLines.forEach(line => {
+                    const colonIndex = line.indexOf(':');
+                    if (colonIndex > 0) {
+                        const key = line.substring(0, colonIndex).trim();
+                        const value = line.substring(colonIndex + 1).trim();
+                        metadata[key] = value;
+                    }
+                });
+
+                return {
+                    metadata: metadata,
+                    content: match[2]
+                };
+            }
+
+            return {
+                metadata: {},
+                content: text
+            };
+        }
+
+        // 更新页面元数据（标题、难度、时间、作者、日期）
+        function updatePageMetadata(metadata, filePath) {
+            const title = metadata.title || filePath.replace('.md', '');
+            const difficulty = metadata.difficulty || 'beginner';
+            const time = metadata.time || '未知';
+            const author = metadata.author || '未知';
+            const date = metadata.date || '未知';
+
+            console.log('更新页面元数据:', { title, difficulty, time, author, date });
+
+            document.title = `${title} - 泰拉瑞亚Mod制作教程`;
+            document.getElementById('current-doc-name').textContent = title;
+            document.getElementById('doc-title').textContent = title;
+            document.getElementById('doc-difficulty').textContent = getDifficultyText(difficulty);
+            document.getElementById('doc-difficulty').className = `difficulty-badge ${difficulty}`;
+            document.getElementById('doc-time').textContent = time;
+            document.getElementById('doc-author').textContent = author;
+            document.getElementById('doc-date').textContent = date;
+        }
+
+        // 将难度代码转换为中文文本
+        function getDifficultyText(difficulty) {
+            const difficultyMap = {
+                'beginner': '初级',
+                'intermediate': '中级',
+                'advanced': '高级'
+            };
+            return difficultyMap[difficulty] || difficulty;
+        }
+
+        // 生成文档目录（基于标题h1-h6）
+        function generateTableOfContents(contentElement) {
+            const tableOfContents = document.getElementById('table-of-contents');
+            const tocList = document.getElementById('toc-list');
+
+            if (!tableOfContents || !tocList || !contentElement) {
+                return;
+            }
+
+            const headings = contentElement.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            console.log(`找到 ${headings.length} 个标题用于生成目录`);
+
+            if (headings.length === 0) {
+                tableOfContents.style.display = 'none';
+                return;
+            }
+
+            tocList.innerHTML = '';
+
+            headings.forEach((heading, index) => {
+                // 为没有ID的标题自动生成ID
+                if (!heading.id) {
+                    heading.id = `heading-${index}`;
+                }
+
+                // 创建目录项
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = `#${heading.id}`;
+                a.textContent = heading.textContent;
+
+                // 根据标题级别设置缩进
+                const level = parseInt(heading.tagName.substring(1));
+                a.style.paddingLeft = `${(level - 1) * 15}px`;
+
+                li.appendChild(a);
+                tocList.appendChild(li);
+
+                // 添加平滑滚动效果
+                a.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetElement = document.getElementById(heading.id);
+                    if (targetElement) {
+                        // 计算滚动位置，考虑固定头部高度
+                        const headerHeight = document.querySelector('.site-header').offsetHeight;
+                        const targetPosition = targetElement.offsetTop - headerHeight - 20;
+
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            tableOfContents.style.display = 'block';
+            console.log('目录生成完成');
+        }
+
+        // 初始化分类导航
+        function initializeCategoryNavigation() {
+            const categoryNav = document.getElementById('category-nav');
+            const categorySidebar = document.getElementById('category-sidebar');
+
+            if (!categoryNav || !categorySidebar) return;
+
+            // 生成主导航菜单
+            Object.keys(DOC_CATEGORIES).forEach(categoryKey => {
+                const category = DOC_CATEGORIES[categoryKey];
+
+                // 创建主导航项
+                const navItem = document.createElement('li');
+                navItem.innerHTML = `<a href="?file=${categoryKey}/README.md">${category.title}</a>`;
+                categoryNav.appendChild(navItem);
+
+                // 创建侧边栏导航项
+                const sidebarItem = document.createElement('li');
+                sidebarItem.innerHTML = `<a href="?file=${categoryKey}/README.md">${category.title}</a>`;
+                categorySidebar.appendChild(sidebarItem);
+            });
+        }
+
+        // 初始化下拉菜单
+        function initializeDropdownMenu() {
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+
+            if (!dropdownToggle || !dropdownMenu) return;
+
+            // 点击切换下拉菜单
+            dropdownToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                dropdownMenu.classList.toggle('show');
+            });
+
+            // 点击其他地方关闭下拉菜单
+            document.addEventListener('click', function (e) {
+                if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.remove('show');
+                }
+            });
+        }
+
+        // 更新当前分类的文档列表
+        function updateCurrentCategoryDocs(filePath) {
+            const currentCategoryTitle = document.getElementById('current-category-title');
+            const currentCategoryDocs = document.getElementById('current-category-docs');
+
+            if (!currentCategoryTitle || !currentCategoryDocs) return;
+
+            // 从文件路径中提取分类
+            const categoryMatch = filePath.match(/^(\d+-[^\/]+)/);
+            if (!categoryMatch) return;
+
+            const categoryKey = categoryMatch[1];
+            const category = DOC_CATEGORIES[categoryKey];
+
+            if (!category) return;
+
+            // 更新分类标题
+            currentCategoryTitle.textContent = category.title;
+
+            // 清空现有列表
+            currentCategoryDocs.innerHTML = '';
+
+            // 添加该分类的文档
+            category.files.forEach(file => {
+                const li = document.createElement('li');
+                const fullPath = `${categoryKey}/${file.name}`;
+                const displayName = file.name === 'README.md' ? '分类概述' : file.name.replace('.md', '');
+
+                li.innerHTML = `<a href="?file=${fullPath}">${displayName}</a>`;
+
+                // 如果是当前文件，添加活动状态
+                if (fullPath === filePath) {
+                    li.querySelector('a').classList.add('active');
+                }
+
+                currentCategoryDocs.appendChild(li);
+            });
+        }
+    </script>
+</body>
+
+</html>

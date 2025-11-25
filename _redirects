@@ -4,8 +4,15 @@
 # 将根目录重定向到首页
 / /index.html 200
 
-# 处理Markdown文件访问，将其重定向到对应的HTML页面
-/docs/* /index.html 200
+# 处理Markdown文件访问，将其重定向到viewer.html
+/docs/*.md /docs/viewer.html?file=:splat 200
+
+# 处理已删除的HTML文件，重定向到对应的Markdown文件
+/getting-started.html /docs/getting-started.md 301
+/basics.html /docs/basic-concepts.md 301
+
+# 处理其他docs路径
+/docs/ /docs/viewer.html?file=getting-started.md 200
 
 # 处理其他可能的路径
 /* /index.html 200

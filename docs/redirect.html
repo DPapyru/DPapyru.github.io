@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>重定向中...</title>
+    <script>
+        // 获取当前路径
+        const currentPath = window.location.pathname;
+        const pathParts = currentPath.split('/');
+
+        // 查找.md文件
+        let markdownFile = null;
+        for (let i = 0; i < pathParts.length; i++) {
+            if (pathParts[i].endsWith('.md')) {
+                markdownFile = pathParts[i];
+                break;
+            }
+        }
+
+        if (markdownFile) {
+            // 重定向到viewer.html（现在viewer.html在docs目录下）
+            window.location.href = `viewer.html?file=${markdownFile}`;
+        } else {
+            // 如果没有找到Markdown文件，重定向到文档首页
+            window.location.href = '../index.html';
+        }
+    </script>
+</head>
+
+<body>
+    <p>正在重定向，请稍候...</p>
+</body>
+
+</html>

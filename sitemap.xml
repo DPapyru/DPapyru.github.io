@@ -13,19 +13,13 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://dpapyru.github.io/getting-started.html</loc>
+    <loc>https://dpapyru.github.io/docs/getting-started.md</loc>
     <lastmod>2023-11-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dpapyru.github.io/basics.html</loc>
-    <lastmod>2023-11-25</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dpapyru.github.io/intermediate.html</loc>
+    <loc>https://dpapyru.github.io/docs/basic-concepts.md</loc>
     <lastmod>2023-11-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

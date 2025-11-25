@@ -45,7 +45,12 @@ class NavigationEnhancements {
             if (item.isCurrent) {
                 li.innerHTML = `<span class="breadcrumb-current">${item.text}</span>`;
             } else {
-                li.innerHTML = `<a href="${item.url}" class="breadcrumb-link">${item.text}</a>`;
+                // 清理路径
+                let cleanUrl = item.url;
+                if (typeof window.cleanPath === 'function') {
+                    cleanUrl = window.cleanPath(cleanUrl);
+                }
+                li.innerHTML = `<a href="${cleanUrl}" class="breadcrumb-link">${item.text}</a>`;
             }
 
             breadcrumbList.appendChild(li);
@@ -85,13 +90,13 @@ class NavigationEnhancements {
                     isCurrent: true
                 });
             }
-        } else if (path.includes('getting-started.html')) {
+        } else if (path.includes('getting-started.md') || path.includes('01-入门指南')) {
             items.push({
                 text: '入门指南',
                 url: '',
                 isCurrent: true
             });
-        } else if (path.includes('basics.html')) {
+        } else if (path.includes('basic-concepts.md') || path.includes('02-基础概念')) {
             items.push({
                 text: '基础教程',
                 url: '',
@@ -286,7 +291,27 @@ class NavigationEnhancements {
                 e.preventDefault();
                 clearTimeout(this.gTimer);
                 this.gPressed = false;
-                window.location.href = 'docs/tutorial-index.md';
+                
+                // 使用cleanPath函数处理路径（如果可用）
+                let tutorialPath = 'docs/tutorial-index.md';
+                if (typeof window.cleanPath === 'function') {
+                    tutorialPath = window.cleanPath(tutorialPath);
+                    console.log(`键盘快捷键G+T：清理后的教程路径: ${tutorialPath}`);
+                }
+                
+                // 使用更安全的导航方式，避免直接跳转导致的问题
+                if (tutorialPath.endsWith('.md')) {
+                    // 如果是Markdown文件，使用路由系统加载
+                    console.log(`通过路由系统加载Markdown: ${tutorialPath}`);
+                    if (typeof loadMarkdownContent === 'function') {
+                        loadMarkdownContent(tutorialPath);
+                        history.pushState({}, '', tutorialPath);
+                    } else {
+                        window.location.href = tutorialPath;
+                    }
+                } else {
+                    window.location.href = tutorialPath;
+                }
             }
         });
     }
