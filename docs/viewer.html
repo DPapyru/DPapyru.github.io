@@ -128,6 +128,7 @@
                     <!-- 教程导航：上一篇/下一篇链接 -->
                     <div class="tutorial-navigation">
                         <a href="../docs/" class="btn btn-outline prev-tutorial">← 返回文档列表</a>
+                        <a href="?file=test.md" class="btn btn-secondary">测试文档</a>
                         <a href="?file=02-基础概念/basic-concepts.md" class="btn btn-primary next-tutorial">基础教程 →</a>
                     </div>
                     <!-- 教程反馈：用户反馈和问题提交 -->
@@ -193,104 +194,313 @@
     <script src="../assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
 
     <script>
-        // 文档分类配置
-        const DOC_CATEGORIES = {
-            '01-入门指南': {
-                title: '入门指南',
-                description: '适合初学者的基础入门教程，帮助您快速了解项目的基本概念和使用方法',
-                difficulty: '初级',
-                estimated_time: '30分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '入门指南', difficulty: 'beginner', time: '30分钟' }
-                ]
+        // 文档配置和元数据管理
+        let DOC_CONFIG = null;
+        let ALL_DOCS = [];
+        
+        // 主分类配置
+        const MAIN_CATEGORIES = {
+            '入门': {
+                title: '入门',
+                description: '适合初学者的基础教程',
+                order: 1
             },
-            '02-基础概念': {
-                title: '基础概念',
-                description: '深入了解项目的核心概念和基本原理，为进一步学习打下坚实基础',
-                difficulty: '初级',
-                estimated_time: '45分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '基础概念', difficulty: 'beginner', time: '45分钟' }
-                ]
+            '进阶': {
+                title: '进阶',
+                description: '有一定基础后的进阶教程',
+                order: 2
             },
-            '03-内容创建': {
-                title: '内容创建',
-                description: '学习如何创建高质量的内容，掌握内容组织和呈现的最佳实践',
-                difficulty: '中级',
-                estimated_time: '60分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '内容创建', difficulty: 'intermediate', time: '60分钟' }
-                ]
+            '高级': {
+                title: '高级',
+                description: '面向有经验开发者的高级教程',
+                order: 3
             },
-            '04-高级开发': {
-                title: '高级开发',
-                description: '深入探讨项目的高级功能和开发技巧，适合有经验的开发人员',
-                difficulty: '高级',
-                estimated_time: '90分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '高级开发', difficulty: 'advanced', time: '90分钟' }
-                ]
-            },
-            '05-专题主题': {
-                title: '专题主题',
-                description: '深入探讨特定领域的应用和解决方案，满足专业化需求',
-                difficulty: '高级',
-                estimated_time: '75分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '专题主题', difficulty: 'advanced', time: '75分钟' }
-                ]
-            },
-            '06-资源参考': {
-                title: '资源参考',
-                description: '提供丰富的参考资源，包括工具、文档、示例和社区支持',
-                difficulty: '全部级别',
-                estimated_time: '30分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '资源参考', difficulty: 'all', time: '30分钟' }
-                ]
+            '个人分享': {
+                title: '个人分享',
+                description: '社区成员的个人经验和技巧分享',
+                order: 4
             }
+        };
+        
+        // 主题领域配置
+        const TOPIC_AREAS = {
+            'env': {
+                title: '环境配置',
+                description: '开发环境搭建和配置'
+            },
+            'mod-basics': {
+                title: 'Mod基础',
+                description: 'Mod开发的基础概念和核心API'
+            },
+            'items': {
+                title: '物品系统',
+                description: '物品、武器和装备的开发'
+            },
+            'npcs': {
+                title: 'NPC系统',
+                description: 'NPC的创建和行为定制'
+            },
+            'world-gen': {
+                title: '世界生成',
+                description: '世界生成和地形修改'
+            },
+            'ui': {
+                title: 'UI界面',
+                description: '用户界面和交互设计'
+            },
+            'networking': {
+                title: '网络功能',
+                description: '多人游戏和网络通信'
+            },
+            'advanced': {
+                title: '高级功能',
+                description: '高级开发技巧和优化'
+            }
+        };
+
+        // 旧路径重定向映射
+        const OLD_PATH_REDIRECTS = {
+            '01-入门指南/README.md': 'test.md',
+            '02-基础概念/basic-concepts.md': 'test.md',
+            '03-内容创建/content-creation.md': 'test.md',
+            '04-高级开发/advanced-development.md': 'test.md',
+            '05-专题主题/special-topics.md': 'test.md',
+            '06-资源参考/resource-reference.md': 'test.md'
         };
 
         // 文档查看器的主要JavaScript逻辑
         document.addEventListener('DOMContentLoaded', function () {
             console.log('=== docs/viewer.html: 页面加载完成 ===');
+            console.log('=== 诊断信息 ===');
+            console.log('当前页面URL:', window.location.href);
+            console.log('当前页面路径:', window.location.pathname);
+            console.log('当前搜索参数:', window.location.search);
 
-            // 初始化分类导航
-            initializeCategoryNavigation();
+            // 初始化文档配置
+            initializeDocumentConfig().then(() => {
+                // 初始化分类导航
+                initializeCategoryNavigation();
 
-            // 从URL参数获取要加载的Markdown文件
-            const urlParams = new URLSearchParams(window.location.search);
-            let markdownFile = urlParams.get('file');
+                // 从URL参数获取要加载的Markdown文件
+                const urlParams = new URLSearchParams(window.location.search);
+                let markdownFile = urlParams.get('file');
+                console.log('从URL参数获取的文件名:', markdownFile);
 
-            // 如果没有指定文件，尝试从路径中获取
-            if (!markdownFile) {
-                const pathParts = window.location.pathname.split('/');
-                markdownFile = pathParts[pathParts.length - 1];
-            }
+                // 如果没有指定文件，尝试从路径中获取
+                if (!markdownFile) {
+                    const pathParts = window.location.pathname.split('/');
+                    markdownFile = pathParts[pathParts.length - 1];
+                    console.log('从路径获取的文件名:', markdownFile);
+                }
 
-            // 如果还是没有，默认加载01-入门指南/README.md
-            if (!markdownFile || !markdownFile.endsWith('.md')) {
-                markdownFile = '01-入门指南/README.md';
-            }
+                // 如果还是没有，默认加载test.md
+                if (!markdownFile || !markdownFile.endsWith('.md')) {
+                    markdownFile = 'test.md';
+                    console.log('使用默认文件名:', markdownFile);
+                }
 
-            console.log(`docs/viewer.html: 准备加载Markdown文件: ${markdownFile}`);
+                console.log(`docs/viewer.html: 准备加载Markdown文件: ${markdownFile}`);
 
-            // 延迟加载，确保所有脚本都已初始化
-            setTimeout(function () {
-                // 直接使用本地加载函数，避免main.js中的路径处理问题
-                console.log('docs/viewer.html: 使用本地loadMarkdownDirectly函数');
-                loadMarkdownDirectly(markdownFile);
-            }, 200);
+                // 延迟加载，确保所有脚本都已初始化
+                setTimeout(function () {
+                    // 直接使用本地加载函数，避免main.js中的路径处理问题
+                    console.log('docs/viewer.html: 使用本地loadMarkdownDirectly函数');
+                    loadMarkdownDirectly(markdownFile);
+                }, 200);
+            });
 
             // 初始化下拉菜单
             initializeDropdownMenu();
         });
+
+        // 初始化文档配置
+        async function initializeDocumentConfig() {
+            try {
+                // 尝试加载配置文件
+                const configResponse = await fetch('./config.json');
+                if (configResponse.ok) {
+                    DOC_CONFIG = await configResponse.json();
+                    console.log('成功加载配置文件:', DOC_CONFIG);
+                } else {
+                    console.warn('配置文件不存在，使用默认配置');
+                    DOC_CONFIG = generateDefaultConfig();
+                }
+            } catch (error) {
+                console.warn('加载配置文件失败，使用默认配置:', error);
+                DOC_CONFIG = generateDefaultConfig();
+            }
+            
+            // 扫描所有文档文件
+            await scanAllDocuments();
+        }
+
+        // 生成默认配置（当config.json不存在时）
+        function generateDefaultConfig() {
+            const config = {
+                categories: {},
+                topics: {},
+                authors: {},
+                all_files: []
+            };
+
+            // 初始化分类结构
+            Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
+                config.categories[categoryKey] = {
+                    title: MAIN_CATEGORIES[categoryKey].title,
+                    description: MAIN_CATEGORIES[categoryKey].description,
+                    topics: {}
+                };
+            });
+
+            // 初始化主题结构
+            Object.keys(TOPIC_AREAS).forEach(topicKey => {
+                config.topics[topicKey] = {
+                    title: TOPIC_AREAS[topicKey].title,
+                    description: TOPIC_AREAS[topicKey].description
+                };
+            });
+
+            return config;
+        }
+
+        // 扫描所有文档文件
+        async function scanAllDocuments() {
+            console.log('=== scanAllDocuments() 诊断开始 ===');
+            try {
+                // 由于Python http.server会自动返回index.html而不是目录列表，
+                // 我们直接使用配置文件中的文档列表，而不是扫描目录
+                console.log('使用配置文件中的文档列表，而不是扫描目录');
+                
+                // 首先尝试加载配置文件
+                try {
+                    const configResponse = await fetch('./config.json');
+                    if (configResponse.ok) {
+                        const config = await configResponse.json();
+                        console.log('成功加载配置文件:', config);
+                        
+                        // 从配置文件中提取文档列表
+                        ALL_DOCS = config.all_files || [];
+                        console.log('从配置文件加载的文档:', ALL_DOCS);
+                        
+                        // 如果配置文件中有文档，直接使用
+                        if (ALL_DOCS.length > 0) {
+                            console.log('=== scanAllDocuments() 诊断结束 ===');
+                            return;
+                        }
+                    }
+                } catch (configError) {
+                    console.warn('加载配置文件失败:', configError);
+                }
+                
+                // 如果配置文件加载失败或没有文档，尝试已知的文档列表
+                const knownFiles = ['test.md'];
+                console.log('尝试已知的文档列表:', knownFiles);
+                
+                ALL_DOCS = [];
+                
+                for (const filename of knownFiles) {
+                    try {
+                        // 获取文档内容和元数据
+                        const docUrl = `./${filename}`;
+                        console.log('尝试获取文档内容，URL:', docUrl);
+                        const docResponse = await fetch(docUrl);
+                        console.log(`获取文档 ${filename} 响应状态:`, docResponse.status, docResponse.statusText);
+                        
+                        if (docResponse.ok) {
+                            const content = await docResponse.text();
+                            const { metadata } = parseFrontMatter(content);
+                            
+                            const docInfo = {
+                                filename: filename,
+                                title: metadata.title || filename.replace('.md', ''),
+                                author: metadata.author || '未知',
+                                category: metadata.category || '入门',
+                                topic: metadata.topic || 'mod-basics',
+                                order: parseInt(metadata.order) || 999,
+                                description: metadata.description || '',
+                                tags: metadata.tags ? metadata.tags.split(',').map(t => t.trim()) : [],
+                                last_updated: metadata.last_updated || '未知'
+                            };
+                            
+                            ALL_DOCS.push(docInfo);
+                            console.log('成功添加文档:', docInfo.title);
+                            
+                            // 更新配置
+                            updateConfigWithDocument(docInfo);
+                        }
+                    } catch (error) {
+                        console.warn(`无法处理文档 ${filename}:`, error);
+                    }
+                }
+                
+                // 按分类和排序
+                ALL_DOCS.sort((a, b) => {
+                    if (a.category !== b.category) {
+                        return MAIN_CATEGORIES[a.category].order - MAIN_CATEGORIES[b.category].order;
+                    }
+                    return a.order - b.order;
+                });
+                
+                console.log('扫描到的文档:', ALL_DOCS);
+                console.log('=== scanAllDocuments() 诊断结束 ===');
+                
+            } catch (error) {
+                console.error('扫描文档失败:', error);
+                console.log('=== scanAllDocuments() 因错误结束 ===');
+                // 提供一些默认文档
+                ALL_DOCS = [
+                    {
+                        filename: 'test.md',
+                        title: '测试文档',
+                        author: '测试',
+                        category: '入门',
+                        topic: 'mod-basics',
+                        order: 1,
+                        description: '用于测试文档查看器功能的示例文档',
+                        tags: ['测试'],
+                        last_updated: '2025-11-26'
+                    }
+                ];
+            }
+        }
+
+        // 使用文档信息更新配置
+        function updateConfigWithDocument(docInfo) {
+            const { category, topic } = docInfo;
+            
+            // 确保分类存在
+            if (!DOC_CONFIG.categories[category]) {
+                DOC_CONFIG.categories[category] = {
+                    title: category,
+                    description: `${category}相关文档`,
+                    topics: {}
+                };
+            }
+            
+            // 确保主题存在
+            if (!DOC_CONFIG.categories[category].topics[topic]) {
+                DOC_CONFIG.categories[category].topics[topic] = {
+                    title: TOPIC_AREAS[topic]?.title || topic,
+                    description: TOPIC_AREAS[topic]?.description || '',
+                    files: []
+                };
+            }
+            
+            // 添加文件到对应主题
+            DOC_CONFIG.categories[category].topics[topic].files.push(docInfo);
+            
+            // 更新作者信息
+            if (!DOC_CONFIG.authors[docInfo.author]) {
+                DOC_CONFIG.authors[docInfo.author] = {
+                    name: docInfo.author,
+                    files: []
+                };
+            }
+            DOC_CONFIG.authors[docInfo.author].files.push(docInfo.filename);
+            
+            // 添加到所有文件列表
+            DOC_CONFIG.all_files.push(docInfo);
+        }
 
         // 直接加载Markdown内容的备用函数
         function loadMarkdownDirectly(filePath) {
@@ -298,11 +508,13 @@
             const errorMessage = document.getElementById('error-message');
             const markdownContent = document.getElementById('markdown-content');
 
+            console.log(`=== loadMarkdownDirectly() 诊断开始 ===`);
             console.log(`docs/viewer.html: 原始文件路径: ${filePath}`);
+            console.log('当前页面位置:', window.location.href);
 
             // 增强的路径清理逻辑
             let fetchPath = filePath;
-            console.log(`docs/viewer.html: 原始文件路径: ${fetchPath}`);
+            console.log(`docs/viewer.html: 初始fetchPath: ${fetchPath}`);
 
             // 1. URL解码
             fetchPath = decodeURIComponent(fetchPath);
@@ -320,22 +532,65 @@
                 console.log(`docs/viewer.html: 移除开头斜杠: ${fetchPath}`);
             }
 
-            // 4. 检查是否是已知的分类名
-            const knownCategories = ['01-入门指南', '02-基础概念', '03-内容创建', '04-高级开发', '05-专题主题', '06-资源参考'];
-            if (knownCategories.includes(fetchPath) || fetchPath.match(/^\d+-[^\/]+$/)) {
-                // 如果是分类名，添加README.md
-                fetchPath = `${fetchPath}/README.md`;
-                console.log(`docs/viewer.html: 识别为分类名，添加README.md: ${fetchPath}`);
-            } else if (fetchPath.includes('/')) {
-                // 路径已经包含目录，直接使用
-                console.log(`docs/viewer.html: 使用完整路径: ${fetchPath}`);
-            } else {
-                // 如果只是文件名，默认在01-入门指南目录中查找
-                fetchPath = `01-入门指南/${fetchPath}`;
-                console.log(`docs/viewer.html: 添加默认目录: ${fetchPath}`);
+            // 4. 检查是否是旧路径格式，进行重定向
+            if (OLD_PATH_REDIRECTS[fetchPath]) {
+                fetchPath = OLD_PATH_REDIRECTS[fetchPath];
+                console.log(`docs/viewer.html: 旧路径重定向: ${fetchPath}`);
             }
 
-            // 5. 确保文件以.md结尾
+            // 5. 检查是否是已知的分类名或特殊文件
+            const knownCategories = ['00-测试文档', '01-入门指南', '02-基础概念', '03-内容创建', '04-高级开发', '05-专题主题', '06-资源参考'];
+            const rootFiles = ['test.md']; // 位于docs根目录的文件列表
+            
+            if (knownCategories.includes(fetchPath) || fetchPath.match(/^\d+-[^\/]+$/)) {
+                // 如果是分类名，尝试重定向到对应的文档
+                console.log(`docs/viewer.html: 识别为旧分类名，尝试重定向`);
+                // 尝试找到该分类下的第一个文档
+                const firstDoc = ALL_DOCS.find(doc => doc.category === getCategoryFromOldPath(fetchPath));
+                if (firstDoc) {
+                    fetchPath = firstDoc.filename;
+                    console.log(`docs/viewer.html: 重定向到文档: ${fetchPath}`);
+                } else {
+                    // 如果找不到对应文档，使用默认文档
+                    fetchPath = 'test.md';
+                    console.log(`docs/viewer.html: 未找到对应文档，使用默认: ${fetchPath}`);
+                }
+            } else if (rootFiles.includes(fetchPath)) {
+                // 如果是根目录下的特殊文件，直接使用
+                console.log(`docs/viewer.html: 识别为根目录文件: ${fetchPath}`);
+            } else if (fetchPath.includes('/')) {
+                // 路径已经包含目录，检查是否是旧格式
+                if (fetchPath.match(/^\d+-[^\/]+\/.*/)) {
+                    // 旧格式路径，尝试重定向
+                    console.log(`docs/viewer.html: 识别为旧格式路径，尝试重定向`);
+                    const filename = fetchPath.split('/').pop();
+                    const doc = ALL_DOCS.find(d => d.filename === filename || d.filename.endsWith(filename));
+                    if (doc) {
+                        fetchPath = doc.filename;
+                        console.log(`docs/viewer.html: 重定向到文档: ${fetchPath}`);
+                    } else {
+                        // 如果找不到对应文档，使用默认文档
+                        fetchPath = 'test.md';
+                        console.log(`docs/viewer.html: 未找到对应文档，使用默认: ${fetchPath}`);
+                    }
+                } else {
+                    // 路径已经包含目录，直接使用
+                    console.log(`docs/viewer.html: 使用完整路径: ${fetchPath}`);
+                }
+            } else {
+                // 如果只是文件名，检查是否存在于文档列表中
+                const doc = ALL_DOCS.find(d => d.filename === fetchPath || d.filename === `${fetchPath}.md`);
+                if (doc) {
+                    fetchPath = doc.filename;
+                    console.log(`docs/viewer.html: 找到匹配文档: ${fetchPath}`);
+                } else {
+                    // 如果找不到，使用默认文档
+                    fetchPath = 'test.md';
+                    console.log(`docs/viewer.html: 未找到匹配文档，使用默认: ${fetchPath}`);
+                }
+            }
+
+            // 6. 确保文件以.md结尾
             if (!fetchPath.endsWith('.md')) {
                 fetchPath += '.md';
                 console.log(`docs/viewer.html: 添加.md扩展名: ${fetchPath}`);
@@ -346,6 +601,7 @@
             // 确保路径相对于当前页面（docs目录）
             const fetchUrl = fetchPath.startsWith('./') ? fetchPath : `./${fetchPath}`;
             console.log(`docs/viewer.html: 实际fetch URL: ${fetchUrl}`);
+            console.log(`完整请求URL将是: ${window.location.origin}${window.location.pathname.replace(/\/[^\/]*$/, '/')}${fetchUrl}`);
 
             fetch(fetchUrl)
                 .then(response => {
@@ -369,10 +625,10 @@
                         console.log('解析的元数据:', metadata);
 
                         // 更新页面元数据（标题、难度、作者等）
-                        updatePageMetadata(metadata, filePath);
+                        updatePageMetadata(metadata, fetchPath);
 
                         // 更新当前分类的文档列表
-                        updateCurrentCategoryDocs(filePath);
+                        updateCurrentCategoryDocs(fetchPath);
 
                         // 渲染Markdown内容为HTML
                         const renderedHTML = marked.parse(content);
@@ -404,9 +660,23 @@
                     if (loadingIndicator) loadingIndicator.style.display = 'none';
                     if (errorMessage) {
                         errorMessage.style.display = 'block';
-                        document.getElementById('error-text').textContent = `无法加载文件 "${filePath}": ${error.message}`;
+                        document.getElementById('error-text').textContent = `无法加载文件 "${fetchPath}": ${error.message}`;
                     }
                 });
+        }
+
+        // 从旧路径获取对应的分类
+        function getCategoryFromOldPath(oldPath) {
+            const pathMap = {
+                '00-测试文档': '入门',
+                '01-入门指南': '入门',
+                '02-基础概念': '入门',
+                '03-内容创建': '进阶',
+                '04-高级开发': '高级',
+                '05-专题主题': '高级',
+                '06-资源参考': '个人分享'
+            };
+            return pathMap[oldPath] || '入门';
         }
 
         // 解析Front Matter（文档开头的元数据部分）
@@ -530,25 +800,109 @@
 
         // 初始化分类导航
         function initializeCategoryNavigation() {
-            const categoryNav = document.getElementById('category-nav');
             const categorySidebar = document.getElementById('category-sidebar');
 
-            if (!categoryNav || !categorySidebar) return;
+            if (!categorySidebar) return;
 
-            // 生成主导航菜单
-            Object.keys(DOC_CATEGORIES).forEach(categoryKey => {
-                const category = DOC_CATEGORIES[categoryKey];
+            // 清空现有导航
+            categorySidebar.innerHTML = '';
 
-                // 创建主导航项
-                const navItem = document.createElement('li');
-                navItem.innerHTML = `<a href="?file=${categoryKey}/README.md">${category.title}</a>`;
-                categoryNav.appendChild(navItem);
+            // 等待配置加载完成
+            if (!DOC_CONFIG) {
+                console.warn('文档配置尚未加载，稍后重试');
+                setTimeout(initializeCategoryNavigation, 100);
+                return;
+            }
 
-                // 创建侧边栏导航项
-                const sidebarItem = document.createElement('li');
-                sidebarItem.innerHTML = `<a href="?file=${categoryKey}/README.md">${category.title}</a>`;
-                categorySidebar.appendChild(sidebarItem);
+            // 生成分类导航
+            Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
+                const category = MAIN_CATEGORIES[categoryKey];
+                
+                // 创建分类导航项
+                const categoryItem = document.createElement('li');
+                categoryItem.className = 'category-item';
+                
+                // 创建分类标题
+                const categoryHeader = document.createElement('h4');
+                categoryHeader.className = 'category-header';
+                categoryHeader.textContent = category.title;
+                categoryItem.appendChild(categoryHeader);
+                
+                // 创建主题子菜单
+                const topicList = document.createElement('ul');
+                topicList.className = 'topic-list';
+                
+                // 获取该分类下的所有主题
+                const categoryTopics = DOC_CONFIG.categories[categoryKey]?.topics || {};
+                
+                if (Object.keys(categoryTopics).length > 0) {
+                    Object.keys(categoryTopics).forEach(topicKey => {
+                        const topic = categoryTopics[topicKey];
+                        
+                        // 创建主题标题
+                        const topicHeader = document.createElement('h5');
+                        topicHeader.className = 'topic-header';
+                        topicHeader.textContent = topic.title;
+                        topicList.appendChild(topicHeader);
+                        
+                        // 创建文档列表
+                        const fileList = document.createElement('ul');
+                        fileList.className = 'file-list';
+                        
+                        topic.files.forEach(file => {
+                            const fileItem = document.createElement('li');
+                            fileItem.className = 'file-item';
+                            
+                            const fileLink = document.createElement('a');
+                            fileLink.href = `?file=${file.filename}`;
+                            fileLink.textContent = file.title;
+                            fileLink.title = file.description || file.title;
+                            
+                            fileItem.appendChild(fileLink);
+                            fileList.appendChild(fileItem);
+                        });
+                        
+                        topicList.appendChild(fileList);
+                    });
+                } else {
+                    // 如果没有主题，显示提示信息
+                    const noDocsItem = document.createElement('li');
+                    noDocsItem.className = 'no-docs';
+                    noDocsItem.textContent = '暂无文档';
+                    topicList.appendChild(noDocsItem);
+                }
+                
+                categoryItem.appendChild(topicList);
+                categorySidebar.appendChild(categoryItem);
             });
+            
+            // 添加"所有文档"部分
+            const allDocsItem = document.createElement('li');
+            allDocsItem.className = 'category-item all-docs';
+            
+            const allDocsHeader = document.createElement('h4');
+            allDocsHeader.className = 'category-header';
+            allDocsHeader.textContent = '所有文档';
+            allDocsItem.appendChild(allDocsHeader);
+            
+            const allDocsList = document.createElement('ul');
+            allDocsList.className = 'file-list';
+            
+            ALL_DOCS.forEach(doc => {
+                const docItem = document.createElement('li');
+                docItem.className = 'file-item';
+                
+                const docLink = document.createElement('a');
+                docLink.href = `?file=${doc.filename}`;
+                docLink.textContent = doc.title;
+                docLink.title = `${doc.author} - ${doc.description || doc.title}`;
+                
+                docItem.appendChild(docLink);
+                allDocsList.appendChild(docItem);
+            });
+            
+            allDocsItem.appendChild(allDocsList);
+            categorySidebar.appendChild(allDocsItem);
         }
 
         // 初始化下拉菜单
@@ -579,36 +933,94 @@
 
             if (!currentCategoryTitle || !currentCategoryDocs) return;
 
-            // 从文件路径中提取分类
-            const categoryMatch = filePath.match(/^(\d+-[^\/]+)/);
-            if (!categoryMatch) return;
+            // 等待配置加载完成
+            if (!DOC_CONFIG || ALL_DOCS.length === 0) {
+                console.warn('文档配置尚未加载，稍后重试');
+                setTimeout(() => updateCurrentCategoryDocs(filePath), 100);
+                return;
+            }
 
-            const categoryKey = categoryMatch[1];
-            const category = DOC_CATEGORIES[categoryKey];
+            // 查找当前文档信息
+            const currentDoc = ALL_DOCS.find(doc => doc.filename === filePath);
+            
+            if (!currentDoc) {
+                // 如果找不到文档，显示所有文档
+                currentCategoryTitle.textContent = '所有文档';
+                currentCategoryDocs.innerHTML = '';
+                
+                ALL_DOCS.forEach(doc => {
+                    const li = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = `?file=${doc.filename}`;
+                    link.textContent = doc.title;
+                    link.title = `${doc.author} - ${doc.description || doc.title}`;
+                    
+                    if (doc.filename === filePath) {
+                        link.classList.add('active');
+                    }
+                    
+                    li.appendChild(link);
+                    currentCategoryDocs.appendChild(li);
+                });
+                
+                return;
+            }
 
-            if (!category) return;
-
-            // 更新分类标题
-            currentCategoryTitle.textContent = category.title;
+            // 显示当前文档的分类信息
+            const category = MAIN_CATEGORIES[currentDoc.category];
+            const topic = TOPIC_AREAS[currentDoc.topic];
+            
+            let titleText = category ? category.title : currentDoc.category;
+            if (topic) {
+                titleText += ` - ${topic.title}`;
+            }
+            
+            currentCategoryTitle.textContent = titleText;
 
             // 清空现有列表
             currentCategoryDocs.innerHTML = '';
 
-            // 添加该分类的文档
-            category.files.forEach(file => {
-                const li = document.createElement('li');
-                const fullPath = `${categoryKey}/${file.name}`;
-                const displayName = file.name === 'README.md' ? '分类概述' : file.name.replace('.md', '');
+            // 显示同一分类和主题下的其他文档
+            const relatedDocs = ALL_DOCS.filter(doc =>
+                doc.category === currentDoc.category && doc.topic === currentDoc.topic
+            ).sort((a, b) => a.order - b.order);
 
-                li.innerHTML = `<a href="?file=${fullPath}">${displayName}</a>`;
-
-                // 如果是当前文件，添加活动状态
-                if (fullPath === filePath) {
-                    li.querySelector('a').classList.add('active');
-                }
-
-                currentCategoryDocs.appendChild(li);
-            });
+            if (relatedDocs.length > 0) {
+                relatedDocs.forEach(doc => {
+                    const li = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = `?file=${doc.filename}`;
+                    link.textContent = doc.title;
+                    link.title = `${doc.author} - ${doc.description || doc.title}`;
+                    
+                    if (doc.filename === filePath) {
+                        link.classList.add('active');
+                    }
+                    
+                    li.appendChild(link);
+                    currentCategoryDocs.appendChild(li);
+                });
+            } else {
+                // 如果没有相关文档，显示同一分类下的所有文档
+                const categoryDocs = ALL_DOCS.filter(doc =>
+                    doc.category === currentDoc.category
+                ).sort((a, b) => a.order - b.order);
+                
+                categoryDocs.forEach(doc => {
+                    const li = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = `?file=${doc.filename}`;
+                    link.textContent = doc.title;
+                    link.title = `${doc.author} - ${doc.description || doc.title}`;
+                    
+                    if (doc.filename === filePath) {
+                        link.classList.add('active');
+                    }
+                    
+                    li.appendChild(link);
+                    currentCategoryDocs.appendChild(li);
+                });
+            }
         }
     </script>
 </body>

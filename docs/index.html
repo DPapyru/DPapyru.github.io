@@ -375,7 +375,7 @@
                 <p>探索泰拉瑞亚Mod制作的完整教程体系，从入门到精通，一步步成为Mod开发专家</p>
                 <div class="hero-buttons">
                     <a href="#getting-started" class="btn btn-primary">开始学习</a>
-                    <a href="viewer.html?file=01-入门指南/README.md" class="btn btn-secondary">查看教程</a>
+                    <a href="viewer.html?file=test.md" class="btn btn-secondary">查看教程</a>
                 </div>
             </div>
         </section>
@@ -404,31 +404,8 @@
         <section class="quick-links">
             <div class="container">
                 <h2 class="section-title">快速链接</h2>
-                <div class="quick-links-grid">
-                    <div class="quick-link-card">
-                        <div class="quick-link-icon">📚</div>
-                        <h3 class="quick-link-title">完整教程索引</h3>
-                        <p class="quick-link-description">查看所有教程的完整列表和详细信息</p>
-                        <a href="viewer.html?file=01-入门指南/README.md" class="btn btn-small btn-outline">查看索引</a>
-                    </div>
-                    <div class="quick-link-card">
-                        <div class="quick-link-icon">🚀</div>
-                        <h3 class="quick-link-title">快速开始</h3>
-                        <p class="quick-link-description">立即开始你的第一个Mod制作之旅</p>
-                        <a href="viewer.html?file=01-入门指南/README.md" class="btn btn-small btn-primary">开始学习</a>
-                    </div>
-                    <div class="quick-link-card">
-                        <div class="quick-link-icon">🔧</div>
-                        <h3 class="quick-link-title">API参考</h3>
-                        <p class="quick-link-description">查阅完整的tModLoader API文档</p>
-                        <a href="viewer.html?file=06-资源参考/README.md" class="btn btn-small btn-outline">查看API</a>
-                    </div>
-                    <div class="quick-link-card">
-                        <div class="quick-link-icon">💬</div>
-                        <h3 class="quick-link-title">社区支持</h3>
-                        <p class="quick-link-description">获取帮助和参与社区讨论</p>
-                        <a href="https://github.com/DPapyru/DPapyru.github.io" class="btn btn-small btn-outline" target="_blank">GitHub</a>
-                    </div>
+                <div class="quick-links-grid" id="quick-links-grid">
+                    <!-- 快速链接将通过JavaScript动态生成 -->
                 </div>
             </div>
         </section>
@@ -472,73 +449,79 @@
     <script src="../assets/js/navigation.js"></script>
     
     <script>
-        // 文档分类配置
-        const DOC_CATEGORIES = {
-            '01-入门指南': {
-                title: '入门指南',
-                description: '适合初学者的基础入门教程，帮助您快速了解项目的基本概念和使用方法',
+        // 文档配置和元数据管理
+        let DOC_CONFIG = null;
+        let ALL_DOCS = [];
+        
+        // 主分类配置
+        const MAIN_CATEGORIES = {
+            '入门': {
+                title: '入门',
+                description: '适合初学者的基础教程',
                 icon: '🚀',
-                difficulty: '初级',
-                estimated_time: '30分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '入门指南', difficulty: 'beginner', time: '30分钟' }
-                ]
+                order: 1
             },
-            '02-基础概念': {
-                title: '基础概念',
-                description: '深入了解项目的核心概念和基本原理，为进一步学习打下坚实基础',
+            '进阶': {
+                title: '进阶',
+                description: '有一定基础后的进阶教程',
                 icon: '📚',
-                difficulty: '初级',
-                estimated_time: '45分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '基础概念', difficulty: 'beginner', time: '45分钟' }
-                ]
+                order: 2
             },
-            '03-内容创建': {
-                title: '内容创建',
-                description: '学习如何创建高质量的内容，掌握内容组织和呈现的最佳实践',
-                icon: '🛠️',
-                difficulty: '中级',
-                estimated_time: '60分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '内容创建', difficulty: 'intermediate', time: '60分钟' }
-                ]
-            },
-            '04-高级开发': {
-                title: '高级开发',
-                description: '深入探讨项目的高级功能和开发技巧，适合有经验的开发人员',
+            '高级': {
+                title: '高级',
+                description: '面向有经验开发者的高级教程',
                 icon: '⚙️',
-                difficulty: '高级',
-                estimated_time: '90分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '高级开发', difficulty: 'advanced', time: '90分钟' }
-                ]
+                order: 3
             },
-            '05-专题主题': {
-                title: '专题主题',
-                description: '深入探讨特定领域的应用和解决方案，满足专业化需求',
+            '个人分享': {
+                title: '个人分享',
+                description: '社区成员的个人经验和技巧分享',
                 icon: '🎯',
-                difficulty: '高级',
-                estimated_time: '75分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '专题主题', difficulty: 'advanced', time: '75分钟' }
-                ]
+                order: 4
+            }
+        };
+        
+        // 主题领域配置
+        const TOPIC_AREAS = {
+            'env': {
+                title: '环境配置',
+                description: '开发环境搭建和配置',
+                icon: '🛠️'
             },
-            '06-资源参考': {
-                title: '资源参考',
-                description: '提供丰富的参考资源，包括工具、文档、示例和社区支持',
-                icon: '📖',
-                difficulty: '全部级别',
-                estimated_time: '30分钟',
-                last_updated: '2025-11-25',
-                files: [
-                    { name: 'README.md', title: '资源参考', difficulty: 'all', time: '30分钟' }
-                ]
+            'mod-basics': {
+                title: 'Mod基础',
+                description: 'Mod开发的基础概念和核心API',
+                icon: '📖'
+            },
+            'items': {
+                title: '物品系统',
+                description: '物品、武器和装备的开发',
+                icon: '⚔️'
+            },
+            'npcs': {
+                title: 'NPC系统',
+                description: 'NPC的创建和行为定制',
+                icon: '👥'
+            },
+            'world-gen': {
+                title: '世界生成',
+                description: '世界生成和地形修改',
+                icon: '🌍'
+            },
+            'ui': {
+                title: 'UI界面',
+                description: '用户界面和交互设计',
+                icon: '🎨'
+            },
+            'networking': {
+                title: '网络功能',
+                description: '多人游戏和网络通信',
+                icon: '🌐'
+            },
+            'advanced': {
+                title: '高级功能',
+                description: '高级开发技巧和优化',
+                icon: '🔧'
             }
         };
 
@@ -549,22 +532,239 @@
             // 初始化移动端菜单
             initMobileMenu();
             
-            // 生成文档分类卡片
-            generateCategoryCards();
-            
-            // 初始化搜索功能
-            initSearchFunctionality();
-            
-            // 初始化平滑滚动
-            initSmoothScroll();
+            // 初始化文档配置
+            initializeDocumentConfig().then(() => {
+                // 生成文档分类卡片
+                generateCategoryCards();
+                
+                // 生成快速链接
+                generateQuickLinks();
+                
+                // 初始化搜索功能
+                initSearchFunctionality();
+                
+                // 初始化平滑滚动
+                initSmoothScroll();
+            });
         });
+
+        // 初始化文档配置
+        async function initializeDocumentConfig() {
+            try {
+                // 尝试加载配置文件
+                const configResponse = await fetch('./config.json');
+                if (configResponse.ok) {
+                    DOC_CONFIG = await configResponse.json();
+                    console.log('成功加载配置文件:', DOC_CONFIG);
+                } else {
+                    console.warn('配置文件不存在，使用默认配置');
+                    DOC_CONFIG = generateDefaultConfig();
+                }
+            } catch (error) {
+                console.warn('加载配置文件失败，使用默认配置:', error);
+                DOC_CONFIG = generateDefaultConfig();
+            }
+            
+            // 扫描所有文档文件
+            await scanAllDocuments();
+        }
+
+        // 生成默认配置（当config.json不存在时）
+        function generateDefaultConfig() {
+            const config = {
+                categories: {},
+                topics: {},
+                authors: {},
+                all_files: []
+            };
+
+            // 初始化分类结构
+            Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
+                config.categories[categoryKey] = {
+                    title: MAIN_CATEGORIES[categoryKey].title,
+                    description: MAIN_CATEGORIES[categoryKey].description,
+                    topics: {}
+                };
+            });
+
+            // 初始化主题结构
+            Object.keys(TOPIC_AREAS).forEach(topicKey => {
+                config.topics[topicKey] = {
+                    title: TOPIC_AREAS[topicKey].title,
+                    description: TOPIC_AREAS[topicKey].description
+                };
+            });
+
+            return config;
+        }
+
+        // 扫描所有文档文件
+        async function scanAllDocuments() {
+            try {
+                // 获取docs目录下的所有.md文件
+                const docsResponse = await fetch('./');
+                if (!docsResponse.ok) {
+                    throw new Error('无法获取docs目录列表');
+                }
+
+                const htmlText = await docsResponse.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                const links = doc.querySelectorAll('a[href$=".md"]');
+                
+                ALL_DOCS = [];
+                
+                for (const link of links) {
+                    const filename = link.getAttribute('href');
+                    if (filename && filename.endsWith('.md')) {
+                        try {
+                            // 获取文档内容和元数据
+                            const docResponse = await fetch(`./${filename}`);
+                            if (docResponse.ok) {
+                                const content = await docResponse.text();
+                                const { metadata } = parseFrontMatter(content);
+                                
+                                const docInfo = {
+                                    filename: filename,
+                                    title: metadata.title || filename.replace('.md', ''),
+                                    author: metadata.author || '未知',
+                                    category: metadata.category || '入门',
+                                    topic: metadata.topic || 'mod-basics',
+                                    order: parseInt(metadata.order) || 999,
+                                    description: metadata.description || '',
+                                    tags: metadata.tags ? metadata.tags.split(',').map(t => t.trim()) : [],
+                                    last_updated: metadata.last_updated || '未知',
+                                    difficulty: metadata.difficulty || 'beginner',
+                                    time: metadata.time || '未知'
+                                };
+                                
+                                ALL_DOCS.push(docInfo);
+                                
+                                // 更新配置
+                                updateConfigWithDocument(docInfo);
+                            }
+                        } catch (error) {
+                            console.warn(`无法处理文档 ${filename}:`, error);
+                        }
+                    }
+                }
+                
+                // 按分类和排序
+                ALL_DOCS.sort((a, b) => {
+                    if (a.category !== b.category) {
+                        return MAIN_CATEGORIES[a.category].order - MAIN_CATEGORIES[b.category].order;
+                    }
+                    return a.order - b.order;
+                });
+                
+                console.log('扫描到的文档:', ALL_DOCS);
+                
+            } catch (error) {
+                console.error('扫描文档失败:', error);
+                // 提供一些默认文档
+                ALL_DOCS = [
+                    {
+                        filename: 'test.md',
+                        title: '测试文档',
+                        author: 'DPapyru',
+                        category: '入门',
+                        topic: 'mod-basics',
+                        order: 1,
+                        description: '用于测试文档查看器功能的示例文档',
+                        tags: ['测试'],
+                        last_updated: '2025-11-26',
+                        difficulty: 'beginner',
+                        time: '30分钟'
+                    }
+                ];
+            }
+        }
+
+        // 使用文档信息更新配置
+        function updateConfigWithDocument(docInfo) {
+            const { category, topic } = docInfo;
+            
+            // 确保分类存在
+            if (!DOC_CONFIG.categories[category]) {
+                DOC_CONFIG.categories[category] = {
+                    title: category,
+                    description: `${category}相关文档`,
+                    topics: {}
+                };
+            }
+            
+            // 确保主题存在
+            if (!DOC_CONFIG.categories[category].topics[topic]) {
+                DOC_CONFIG.categories[category].topics[topic] = {
+                    title: TOPIC_AREAS[topic]?.title || topic,
+                    description: TOPIC_AREAS[topic]?.description || '',
+                    files: []
+                };
+            }
+            
+            // 添加文件到对应主题
+            DOC_CONFIG.categories[category].topics[topic].files.push(docInfo);
+            
+            // 更新作者信息
+            if (!DOC_CONFIG.authors[docInfo.author]) {
+                DOC_CONFIG.authors[docInfo.author] = {
+                    name: docInfo.author,
+                    files: []
+                };
+            }
+            DOC_CONFIG.authors[docInfo.author].files.push(docInfo.filename);
+            
+            // 添加到所有文件列表
+            DOC_CONFIG.all_files.push(docInfo);
+        }
+
+        // 解析Front Matter（文档开头的元数据部分）
+        function parseFrontMatter(text) {
+            const frontMatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
+            const match = text.match(frontMatterRegex);
+
+            if (match) {
+                const metadata = {};
+                const metadataLines = match[1].split('\n');
+
+                metadataLines.forEach(line => {
+                    const colonIndex = line.indexOf(':');
+                    if (colonIndex > 0) {
+                        const key = line.substring(0, colonIndex).trim();
+                        const value = line.substring(colonIndex + 1).trim();
+                        metadata[key] = value;
+                    }
+                });
+
+                return {
+                    metadata: metadata,
+                    content: match[2]
+                };
+            }
+
+            return {
+                metadata: {},
+                content: text
+            };
+        }
 
         // 生成文档分类卡片
         function generateCategoryCards() {
             const categoryGrid = document.getElementById('category-grid');
             
-            Object.keys(DOC_CATEGORIES).forEach(categoryKey => {
-                const category = DOC_CATEGORIES[categoryKey];
+            // 清空现有内容
+            categoryGrid.innerHTML = '';
+            
+            // 按分类顺序生成卡片
+            Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
+                const category = MAIN_CATEGORIES[categoryKey];
+                
+                // 获取该分类下的所有文档
+                const categoryDocs = ALL_DOCS.filter(doc => doc.category === categoryKey);
+                
+                if (categoryDocs.length === 0) {
+                    return; // 如果没有文档，跳过该分类
+                }
                 
                 // 创建分类卡片
                 const categoryCard = document.createElement('div');
@@ -588,30 +788,47 @@
                 const docList = document.createElement('ul');
                 docList.className = 'doc-list';
                 
-                category.files.forEach(file => {
-                    const docItem = document.createElement('li');
-                    docItem.className = 'doc-item';
+                // 按主题分组显示文档
+                const topicGroups = {};
+                categoryDocs.forEach(doc => {
+                    if (!topicGroups[doc.topic]) {
+                        topicGroups[doc.topic] = [];
+                    }
+                    topicGroups[doc.topic].push(doc);
+                });
+                
+                // 为每个主题创建文档项
+                Object.keys(topicGroups).forEach(topicKey => {
+                    const topic = TOPIC_AREAS[topicKey];
+                    const topicDocs = topicGroups[topicKey];
                     
-                    const docLink = document.createElement('a');
-                    docLink.className = 'doc-link';
-                    docLink.href = `viewer.html?file=${categoryKey}/${file.name}`;
-                    
-                    const difficultyClass = file.difficulty === 'all' ? 'beginner' : file.difficulty;
-                    const difficultyText = getDifficultyText(file.difficulty);
-                    
-                    docLink.innerHTML = `
-                        <div class="doc-icon">📄</div>
-                        <div class="doc-info">
-                            <div class="doc-title">${file.title}</div>
-                            <div class="doc-meta">
-                                <span class="difficulty-badge ${difficultyClass}">${difficultyText}</span>
-                                <span>⏱️ ${file.time}</span>
+                    topicDocs.forEach(doc => {
+                        const docItem = document.createElement('li');
+                        docItem.className = 'doc-item';
+                        
+                        const docLink = document.createElement('a');
+                        docLink.className = 'doc-link';
+                        docLink.href = `viewer.html?file=${doc.filename}`;
+                        docLink.title = `${doc.author} - ${doc.description || doc.title}`;
+                        
+                        const difficultyClass = doc.difficulty === 'all' ? 'beginner' : doc.difficulty;
+                        const difficultyText = getDifficultyText(doc.difficulty);
+                        
+                        docLink.innerHTML = `
+                            <div class="doc-icon">${topic ? topic.icon : '📄'}</div>
+                            <div class="doc-info">
+                                <div class="doc-title">${doc.title}</div>
+                                <div class="doc-meta">
+                                    <span class="difficulty-badge ${difficultyClass}">${difficultyText}</span>
+                                    <span>⏱️ ${doc.time}</span>
+                                    <span>👤 ${doc.author}</span>
+                                </div>
                             </div>
-                        </div>
-                    `;
-                    
-                    docItem.appendChild(docLink);
-                    docList.appendChild(docItem);
+                        `;
+                        
+                        docItem.appendChild(docLink);
+                        docList.appendChild(docItem);
+                    });
                 });
                 
                 categoryContent.appendChild(docList);
@@ -619,6 +836,19 @@
                 categoryCard.appendChild(categoryContent);
                 categoryGrid.appendChild(categoryCard);
             });
+            
+            // 如果没有任何文档，显示提示信息
+            if (ALL_DOCS.length === 0) {
+                const noDocsMessage = document.createElement('div');
+                noDocsMessage.className = 'no-docs-message';
+                noDocsMessage.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <h3>暂无文档</h3>
+                        <p>当前目录下没有找到任何文档文件。</p>
+                    </div>
+                `;
+                categoryGrid.appendChild(noDocsMessage);
+            }
         }
 
         // 获取难度文本
@@ -643,17 +873,21 @@
             // 创建搜索索引
             const searchIndex = [];
             
-            Object.keys(DOC_CATEGORIES).forEach(categoryKey => {
-                const category = DOC_CATEGORIES[categoryKey];
+            // 使用 ALL_DOCS 构建搜索索引
+            ALL_DOCS.forEach(doc => {
+                const category = MAIN_CATEGORIES[doc.category];
+                const topic = TOPIC_AREAS[doc.topic];
                 
-                category.files.forEach(file => {
-                    searchIndex.push({
-                        title: file.title,
-                        path: `${categoryKey}/${file.name}`,
-                        category: category.title,
-                        difficulty: file.difficulty,
-                        time: file.time
-                    });
+                searchIndex.push({
+                    title: doc.title,
+                    filename: doc.filename,
+                    category: category ? category.title : doc.category,
+                    topic: topic ? topic.title : doc.topic,
+                    author: doc.author,
+                    description: doc.description,
+                    tags: doc.tags ? doc.tags.join(', ') : '',
+                    difficulty: doc.difficulty,
+                    time: doc.time
                 });
             });
             
@@ -667,9 +901,13 @@
                 }
                 
                 // 过滤搜索结果
-                const results = searchIndex.filter(item => 
+                const results = searchIndex.filter(item =>
                     item.title.toLowerCase().includes(query) ||
-                    item.category.toLowerCase().includes(query)
+                    item.category.toLowerCase().includes(query) ||
+                    item.topic.toLowerCase().includes(query) ||
+                    item.author.toLowerCase().includes(query) ||
+                    item.description.toLowerCase().includes(query) ||
+                    item.tags.toLowerCase().includes(query)
                 );
                 
                 // 显示搜索结果
@@ -719,11 +957,11 @@
                         
                         resultItem.innerHTML = `
                             <div class="search-result-title">${result.title}</div>
-                            <div class="search-result-path">${result.category} / ${result.path.split('/').pop()}</div>
+                            <div class="search-result-path">${result.category} - ${result.topic} (${result.author})</div>
                         `;
                         
                         resultItem.addEventListener('click', function() {
-                            window.location.href = `viewer.html?file=${result.path}`;
+                            window.location.href = `viewer.html?file=${result.filename}`;
                         });
                         
                         searchResults.appendChild(resultItem);
@@ -735,21 +973,119 @@
             
             // 执行搜索
             function performSearch(query) {
-                const results = searchIndex.filter(item => 
+                const results = searchIndex.filter(item =>
                     item.title.toLowerCase().includes(query.toLowerCase()) ||
-                    item.category.toLowerCase().includes(query.toLowerCase())
+                    item.category.toLowerCase().includes(query.toLowerCase()) ||
+                    item.topic.toLowerCase().includes(query.toLowerCase()) ||
+                    item.author.toLowerCase().includes(query.toLowerCase()) ||
+                    item.description.toLowerCase().includes(query.toLowerCase()) ||
+                    item.tags.toLowerCase().includes(query.toLowerCase())
                 );
                 
                 if (results.length === 0) {
                     alert('没有找到匹配的文档，请尝试其他关键词');
                 } else if (results.length === 1) {
                     // 如果只有一个结果，直接跳转
-                    window.location.href = `viewer.html?file=${results[0].path}`;
+                    window.location.href = `viewer.html?file=${results[0].filename}`;
                 } else {
                     // 如果有多个结果，显示搜索结果页面
                     displaySearchResults(results);
                 }
             }
+        }
+
+        // 生成快速链接
+        function generateQuickLinks() {
+            const quickLinksGrid = document.getElementById('quick-links-grid');
+            
+            if (!quickLinksGrid) return;
+            
+            // 清空现有内容
+            quickLinksGrid.innerHTML = '';
+            
+            // 定义快速链接配置
+            const quickLinksConfig = [
+                {
+                    icon: '📚',
+                    title: '完整教程索引',
+                    description: '查看所有教程的完整列表和详细信息',
+                    action: 'view-all',
+                    buttonClass: 'btn-outline'
+                },
+                {
+                    icon: '🚀',
+                    title: '快速开始',
+                    description: '立即开始你的第一个Mod制作之旅',
+                    action: 'get-started',
+                    buttonClass: 'btn-primary'
+                },
+                {
+                    icon: '🔧',
+                    title: 'API参考',
+                    description: '查阅完整的tModLoader API文档',
+                    action: 'api-reference',
+                    buttonClass: 'btn-outline'
+                },
+                {
+                    icon: '💬',
+                    title: '社区支持',
+                    description: '获取帮助和参与社区讨论',
+                    action: 'community',
+                    buttonClass: 'btn-outline'
+                }
+            ];
+            
+            // 生成快速链接卡片
+            quickLinksConfig.forEach(linkConfig => {
+                const quickLinkCard = document.createElement('div');
+                quickLinkCard.className = 'quick-link-card';
+                
+                let buttonHtml = '';
+                let buttonLink = '#';
+                
+                // 根据动作类型确定链接
+                switch (linkConfig.action) {
+                    case 'view-all':
+                        // 查找第一个文档
+                        if (ALL_DOCS.length > 0) {
+                            buttonLink = `viewer.html?file=${ALL_DOCS[0].filename}`;
+                        }
+                        break;
+                    case 'get-started':
+                        // 查找入门分类的第一个文档
+                        const beginnerDoc = ALL_DOCS.find(doc => doc.category === '入门');
+                        if (beginnerDoc) {
+                            buttonLink = `viewer.html?file=${beginnerDoc.filename}`;
+                        }
+                        break;
+                    case 'api-reference':
+                        // 查找高级或进阶分类的文档
+                        const apiDoc = ALL_DOCS.find(doc =>
+                            doc.category === '高级' || doc.category === '进阶'
+                        );
+                        if (apiDoc) {
+                            buttonLink = `viewer.html?file=${apiDoc.filename}`;
+                        }
+                        break;
+                    case 'community':
+                        buttonLink = 'https://github.com/DPapyru/DPapyru.github.io';
+                        break;
+                }
+                
+                quickLinkCard.innerHTML = `
+                    <div class="quick-link-icon">${linkConfig.icon}</div>
+                    <h3 class="quick-link-title">${linkConfig.title}</h3>
+                    <p class="quick-link-description">${linkConfig.description}</p>
+                    <a href="${buttonLink}" class="btn btn-small ${linkConfig.buttonClass}"
+                       ${linkConfig.action === 'community' ? 'target="_blank"' : ''}>
+                        ${linkConfig.action === 'view-all' ? '查看索引' :
+                          linkConfig.action === 'get-started' ? '开始学习' :
+                          linkConfig.action === 'api-reference' ? '查看API' : 'GitHub'}
+                    </a>
+                `;
+                
+                quickLinksGrid.appendChild(quickLinkCard);
+            });
         }
 
         // 初始化平滑滚动

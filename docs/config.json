@@ -1,0 +1,89 @@
+{
+  "categories": {
+    "入门": {
+      "title": "入门",
+      "description": "适合初学者的基础教程",
+      "topics": {
+        "mod-basics": {
+          "title": "Mod基础",
+          "description": "Mod开发的基础概念和核心API",
+          "files": [
+            {
+              "filename": "test.md",
+              "title": "测试文档",
+              "author": "DPapyru",
+              "order": 1,
+              "description": "用于测试文档查看器功能的示例文档",
+              "last_updated": "2025-11-26"
+            }
+          ]
+        }
+      }
+    },
+    "进阶": {
+      "title": "进阶",
+      "description": "有一定基础后的进阶教程",
+      "topics": {}
+    },
+    "高级": {
+      "title": "高级",
+      "description": "面向有经验开发者的高级教程",
+      "topics": {}
+    },
+    "个人分享": {
+      "title": "个人分享",
+      "description": "社区成员的个人经验和技巧分享",
+      "topics": {}
+    }
+  },
+  "topics": {
+    "mod-basics": {
+      "title": "Mod基础",
+      "description": "Mod开发的基础概念和核心API"
+    },
+    "env": {
+      "title": "环境配置",
+      "description": "开发环境搭建和配置"
+    },
+    "items": {
+      "title": "物品系统",
+      "description": "物品、武器和装备的开发"
+    },
+    "npcs": {
+      "title": "NPC系统",
+      "description": "NPC的创建和行为定制"
+    },
+    "world-gen": {
+      "title": "世界生成",
+      "description": "世界生成和地形修改"
+    },
+    "ui": {
+      "title": "UI界面",
+      "description": "用户界面和交互设计"
+    },
+    "networking": {
+      "title": "网络功能",
+      "description": "多人游戏和网络通信"
+    },
+    "advanced": {
+      "title": "高级功能",
+      "description": "高级开发技巧和优化"
+    }
+  },
+  "authors": {
+    "DPapyru": {
+      "name": "DPapyru",
+      "files": ["test.md"]
+    }
+  },
+  "all_files": [
+    {
+      "filename": "test.md",
+      "title": "测试文档",
+      "author": "DPapyru",
+      "category": "入门",
+      "topic": "mod-basics",
+      "order": 1
+    }
+  ]
+}

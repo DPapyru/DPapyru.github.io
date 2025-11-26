@@ -1,5 +1,17 @@
 # 泰拉瑞亚Mod制作教程网站
 
+## 本地调试
+
+使用命令行打开项目:
+
+- 如果电脑装着python就使用: **python -m http.server 8000**
+- 如果有node.js就使用: **npx http-server -p 8080**
+  - 也可以使用http-server:**npx http-server -p 8080**
+  - 或者(静态网页):**npx static -p 8080**
+- php使用:**php -S localhost:8080**
+
+## 发布
+
 [![GitHub license](https://img.shields.io/github/license/DPapyru/DPapyru.github.io)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/DPapyru/DPapyru.github.io)](https://github.com/DPapyru/DPapyru.github.io/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/DPapyru/DPapyru.github.io)](https://github.com/DPapyru/DPapyru.github.io/network)
