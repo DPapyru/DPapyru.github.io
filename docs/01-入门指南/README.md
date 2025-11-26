@@ -1,12 +1,10 @@
 ---
-title: "入门指南"
-difficulty: "初级"
-description: "适合初学者的基础入门教程，帮助您快速了解项目的基本概念和使用方法"
-estimated_time: "30分钟"
-last_updated: "2025-11-25"
+title: 入门指南
+difficulty: 初级
+description: 适合初学者的基础入门教程，帮助您快速了解项目的基本概念和使用方法
+estimated_time: 30分钟
+last_updated: 2025-11-25
 ---
-
-# 入门指南
 
 本分类为您提供项目的入门指导，帮助您从零开始了解和使用本项目。
 

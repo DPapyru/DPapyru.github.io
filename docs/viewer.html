@@ -82,8 +82,8 @@
                 <div class="tutorial-header">
                     <!-- 面包屑导航 -->
                     <div class="breadcrumb">
-                        <a href="../index.html">首页</a> >
-                        <a href="../docs/">文档</a> >
+                        <a href="../index.html">首页</a> &gt;
+                        <a href="../docs/">文档</a> &gt;
                         <span class="current" id="current-doc-name">文档</span>
                     </div>
                     <!-- 文档标题 -->
@@ -302,15 +302,31 @@
 
             // 增强的路径清理逻辑
             let fetchPath = filePath;
+            console.log(`docs/viewer.html: 原始文件路径: ${fetchPath}`);
 
-            // 移除开头的docs/前缀（因为viewer.html已经在docs目录中）
+            // 1. URL解码
+            fetchPath = decodeURIComponent(fetchPath);
+            console.log(`docs/viewer.html: URL解码后: ${fetchPath}`);
+
+            // 2. 移除开头的docs/前缀（因为viewer.html已经在docs目录中）
             if (fetchPath.startsWith('docs/')) {
                 fetchPath = fetchPath.substring(5);
                 console.log(`docs/viewer.html: 移除docs前缀: ${fetchPath}`);
             }
 
-            // 确保路径正确，相对于当前目录（docs/）
-            if (fetchPath.includes('/')) {
+            // 3. 移除开头的斜杠
+            if (fetchPath.startsWith('/')) {
+                fetchPath = fetchPath.substring(1);
+                console.log(`docs/viewer.html: 移除开头斜杠: ${fetchPath}`);
+            }
+
+            // 4. 检查是否是已知的分类名
+            const knownCategories = ['01-入门指南', '02-基础概念', '03-内容创建', '04-高级开发', '05-专题主题', '06-资源参考'];
+            if (knownCategories.includes(fetchPath) || fetchPath.match(/^\d+-[^\/]+$/)) {
+                // 如果是分类名，添加README.md
+                fetchPath = `${fetchPath}/README.md`;
+                console.log(`docs/viewer.html: 识别为分类名，添加README.md: ${fetchPath}`);
+            } else if (fetchPath.includes('/')) {
                 // 路径已经包含目录，直接使用
                 console.log(`docs/viewer.html: 使用完整路径: ${fetchPath}`);
             } else {
@@ -319,7 +335,7 @@
                 console.log(`docs/viewer.html: 添加默认目录: ${fetchPath}`);
             }
 
-            // 确保文件以.md结尾
+            // 5. 确保文件以.md结尾
             if (!fetchPath.endsWith('.md')) {
                 fetchPath += '.md';
                 console.log(`docs/viewer.html: 添加.md扩展名: ${fetchPath}`);
@@ -327,7 +343,11 @@
 
             console.log(`docs/viewer.html: 最终使用路径: ${fetchPath}`);
 
-            fetch(fetchPath)
+            // 确保路径相对于当前页面（docs目录）
+            const fetchUrl = fetchPath.startsWith('./') ? fetchPath : `./${fetchPath}`;
+            console.log(`docs/viewer.html: 实际fetch URL: ${fetchUrl}`);
+
+            fetch(fetchUrl)
                 .then(response => {
                     console.log(`获取响应状态: ${response.status} ${response.statusText}`);
                     if (!response.ok) {
