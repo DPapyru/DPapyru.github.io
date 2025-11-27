@@ -1,7 +1,7 @@
 ---
-title: 给新人的入门教学
+title: 贡献者怎么编写文章？
 author: 小天使
-category: 入门
+category: 怎么贡献
 topic: mod-basics
 order: 1
 difficulty: beginner

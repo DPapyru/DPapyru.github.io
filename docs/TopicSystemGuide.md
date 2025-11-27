@@ -1,7 +1,7 @@
 ---
 title: Topic 系统使用指南
 author: 小天使
-category: 个人分享
+category: 怎么贡献
 topic: advanced
 order: 1
 difficulty: advanced

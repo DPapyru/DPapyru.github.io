@@ -46,11 +46,11 @@ const categories = {
 files.forEach(file => {
     const content = fs.readFileSync(path.join(docsDir, file), 'utf8');
     const metadata = parseMetadata(content);
-    
+
     if (metadata.category) {
         // 检查分类是否存在，如果不存在则创建或使用默认分类
         let targetCategory = metadata.category;
-        
+
         // 如果分类不在预定义列表中，尝试映射或使用默认分类
         if (!categories[targetCategory]) {
             // 尝试将中文分类映射到英文分类键
@@ -61,15 +61,15 @@ files.forEach(file => {
                 '高级主题': 'advanced-topics',
                 '资源参考': 'resources'
             };
-            
+
             targetCategory = categoryMapping[metadata.category] || 'resources';
-            
+
             // 如果映射后仍不存在，确保resources分类存在
             if (!categories[targetCategory]) {
                 categories[targetCategory] = [];
             }
         }
-        
+
         categories[targetCategory].push({
             file,
             ...metadata
@@ -100,14 +100,14 @@ Object.keys(categories).forEach(category => {
     if (categories[category] && categories[category].length > 0) {
         const categoryTitle = getCategoryTitle(category);
         indexContent += `## ${categoryTitle}\n\n`;
-        
+
         categories[category].sort((a, b) => {
             // 安全地比较标题，处理可能缺失的标题
             const titleA = a.title || '';
             const titleB = b.title || '';
             return titleA.localeCompare(titleB);
         });
-        
+
         categories[category].forEach(tutorial => {
             indexContent += `### [${tutorial.title || '无标题'}](${tutorial.file})\n`;
             indexContent += `- **难度**: ${getDifficultyText(tutorial.difficulty)}\n`;
@@ -147,7 +147,7 @@ function parseMetadata(content) {
     try {
         // 移除可能的BOM字符
         content = content.replace(/^\uFEFF/, '');
-        
+
         // 尝试多种正则表达式模式
         let metadataMatch = content.match(/---\r?\n(.*?)\r?\n---/s);
         if (!metadataMatch) {
@@ -156,10 +156,10 @@ function parseMetadata(content) {
         if (!metadataMatch) {
             return {};
         }
-        
+
         const metadata = {};
         const lines = metadataMatch[1].split(/\r?\n/);
-        
+
         lines.forEach(line => {
             const colonIndex = line.indexOf(':');
             if (colonIndex > 0) {
@@ -168,7 +168,7 @@ function parseMetadata(content) {
                 metadata[key] = value;
             }
         });
-        
+
         return metadata;
     } catch (error) {
         console.error('解析元数据时出错:', error.message);
@@ -204,6 +204,47 @@ function getDifficultyText(difficulty) {
 
 // 更新config.json数据的函数
 function updateConfigData() {
+    // 获取当前docs目录中所有实际存在的Markdown文件
+    const existingFiles = new Set(files);
+    
+    // 清理categories中的无效文件记录
+    if (configData.categories) {
+        Object.keys(configData.categories).forEach(category => {
+            if (configData.categories[category].topics) {
+                Object.keys(configData.categories[category].topics).forEach(topic => {
+                    if (configData.categories[category].topics[topic].files) {
+                        // 过滤掉无效的文件记录
+                        configData.categories[category].topics[topic].files =
+                            configData.categories[category].topics[topic].files.filter(fileObj => {
+                                // 检查文件对象是否有效且文件实际存在
+                                return fileObj &&
+                                       fileObj.filename &&
+                                       existingFiles.has(fileObj.filename);
+                            });
+                    }
+                });
+            }
+        });
+    }
+    
+    // 清理authors中的无效记录
+    if (configData.authors) {
+        Object.keys(configData.authors).forEach(author => {
+            if (configData.authors[author].files) {
+                // 过滤掉不存在的文件
+                configData.authors[author].files =
+                    configData.authors[author].files.filter(filename => {
+                        return existingFiles.has(filename);
+                    });
+                
+                // 如果作者没有有效文件了，移除该作者
+                if (configData.authors[author].files.length === 0) {
+                    delete configData.authors[author];
+                }
+            }
+        });
+    }
+    
     // 初始化类别结构（如果不存在）
     const defaultCategories = {
         '入门': {
@@ -224,6 +265,11 @@ function updateConfigData() {
         '个人分享': {
             title: '个人分享',
             description: '社区成员的个人经验和技巧分享',
+            topics: {}
+        },
+        '怎么贡献': {
+            title: '怎么贡献',
+            description: '介绍贡献者应该怎么贡献文章',
             topics: {}
         }
     };
@@ -333,7 +379,7 @@ function updateConfigData() {
     files.forEach(file => {
         const content = fs.readFileSync(path.join(docsDir, file), 'utf8');
         const metadata = parseMetadata(content);
-        
+
         // 确定类别
         let category = metadata.category || '资源参考';
         // 将英文类别映射到中文
@@ -345,10 +391,10 @@ function updateConfigData() {
             'resources': '资源参考'
         };
         category = categoryMapping[category] || category;
-        
+
         // 确定主题
         let topic = metadata.topic || 'mod-basics';
-        
+
         // 如果主题不在预定义列表中，尝试通过别名查找
         if (!configData.topics[topic]) {
             let foundTopic = null;
@@ -360,7 +406,7 @@ function updateConfigData() {
             });
             topic = foundTopic || 'mod-basics';
         }
-        
+
         // 确保类别存在
         if (!configData.categories[category]) {
             configData.categories[category] = {
@@ -369,7 +415,7 @@ function updateConfigData() {
                 topics: {}
             };
         }
-        
+
         // 确保主题在类别中存在
         if (!configData.categories[category].topics[topic]) {
             const topicData = configData.topics[topic];
@@ -379,7 +425,7 @@ function updateConfigData() {
                 files: []
             };
         }
-        
+
         // 创建文件对象
         const fileObj = {
             filename: file,
@@ -389,12 +435,12 @@ function updateConfigData() {
             description: metadata.description || '无描述',
             last_updated: metadata.last_updated || metadata.date || '未知'
         };
-        
+
         // 检查文件是否已存在于主题的文件列表中
         const existingFileIndex = configData.categories[category].topics[topic].files.findIndex(
             f => f.filename === file
         );
-        
+
         if (existingFileIndex >= 0) {
             // 更新现有文件
             configData.categories[category].topics[topic].files[existingFileIndex] = fileObj;
@@ -402,10 +448,10 @@ function updateConfigData() {
             // 添加新文件
             configData.categories[category].topics[topic].files.push(fileObj);
         }
-        
+
         // 按order排序
         configData.categories[category].topics[topic].files.sort((a, b) => a.order - b.order);
-        
+
         // 添加到all_files
         configData.all_files.push({
             filename: file,
@@ -415,7 +461,7 @@ function updateConfigData() {
             topic: topic,
             order: parseInt(metadata.order) || 999
         });
-        
+
         // 更新作者信息
         if (metadata.author) {
             if (!configData.authors[metadata.author]) {
@@ -424,14 +470,26 @@ function updateConfigData() {
                     files: []
                 };
             }
-            
+
             // 检查文件是否已存在于作者的文件列表中
             if (!configData.authors[metadata.author].files.includes(file)) {
                 configData.authors[metadata.author].files.push(file);
             }
+            
+            // 从其他作者的文件列表中移除此文件，确保作者信息一致性
+            Object.keys(configData.authors).forEach(author => {
+                if (author !== metadata.author && configData.authors[author].files.includes(file)) {
+                    configData.authors[author].files = configData.authors[author].files.filter(f => f !== file);
+                    
+                    // 如果该作者没有其他文件了，移除该作者
+                    if (configData.authors[author].files.length === 0) {
+                        delete configData.authors[author];
+                    }
+                }
+            });
         }
     });
-    
+
     // 按order排序all_files
     configData.all_files.sort((a, b) => a.order - b.order);
 }

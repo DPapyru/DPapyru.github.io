@@ -31,14 +31,6 @@
               "order": 1,
               "description": "用于测试文档查看器功能的示例文档",
               "last_updated": "2025-11-26"
-            },
-            {
-              "filename": "DPapyru-ForContributors.md",
-              "title": "给所有的贡献者",
-              "author": "小天使",
-              "order": 999,
-              "description": "无描述",
-              "last_updated": "未知"
             }
           ]
         }
@@ -62,7 +54,40 @@
           "title": "高级功能",
           "description": "高级开发技巧和优化",
           "files": [
-            {},
+            {
+              "filename": "TopicSystemGuide.md",
+              "title": "Topic 系统使用指南",
+              "author": "小天使",
+              "order": 1,
+              "description": "详细介绍Topic系统的使用方法和最佳实践",
+              "last_updated": "2025-11-27"
+            }
+          ]
+        }
+      }
+    },
+    "怎么贡献": {
+      "title": "怎么贡献",
+      "description": "介绍贡献者应该怎么贡献文章",
+      "topics": {
+        "mod-basics": {
+          "title": "Mod基础",
+          "description": "Mod开发的基础概念和核心API",
+          "files": [
+            {
+              "filename": "DPapyru-ForContributors-Basic.md",
+              "title": "贡献者怎么编写文章？",
+              "author": "小天使",
+              "order": 1,
+              "description": "用于测试文档查看器功能的示例文档",
+              "last_updated": "2025-11-26"
+            }
+          ]
+        },
+        "advanced": {
+          "title": "高级功能",
+          "description": "高级开发技巧和优化",
+          "files": [
             {
               "filename": "TopicSystemGuide.md",
               "title": "Topic 系统使用指南",
@@ -175,38 +200,26 @@
     }
   },
   "authors": {
-    "DPapyru": {
-      "name": "DPapyru",
-      "files": [
-        "test.md",
-        "DPapyru-ForNewModder.md",
-        "TopicSystemGuide.md"
-      ]
-    },
     "小天使": {
       "name": "小天使",
       "files": [
-        "DPapyru-ForContributors.md",
         "test-navigation.md",
         "DPapyru-ForNewModder.md",
         "test.md",
-        "TopicSystemGuide.md"
-      ]
-    },
-    "作者名称": {
-      "name": "作者名称",
-      "files": [
-        "TopicSystemGuide.md"
-      ]
-    },
-    "测试作者": {
-      "name": "测试作者",
-      "files": [
-        "test-navigation.md"
+        "TopicSystemGuide.md",
+        "DPapyru-ForContributors-Basic.md"
       ]
     }
   },
   "all_files": [
+    {
+      "filename": "DPapyru-ForContributors-Basic.md",
+      "title": "贡献者怎么编写文章？",
+      "author": "小天使",
+      "category": "怎么贡献",
+      "topic": "mod-basics",
+      "order": 1
+    },
     {
       "filename": "DPapyru-ForNewModder.md",
       "title": "给新人的入门教学",
@@ -235,17 +248,9 @@
       "filename": "TopicSystemGuide.md",
       "title": "Topic 系统使用指南",
       "author": "小天使",
-      "category": "个人分享",
+      "category": "怎么贡献",
       "topic": "advanced",
       "order": 1
-    },
-    {
-      "filename": "DPapyru-ForContributors.md",
-      "title": "给所有的贡献者",
-      "author": "小天使",
-      "category": "入门",
-      "topic": "mod-basics",
-      "order": 999
     }
   ]
 }
