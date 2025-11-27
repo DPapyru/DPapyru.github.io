@@ -1,10 +1,37 @@
-// generate-index.js - 自动生成教程索引的脚本
+// generate-index.js - 自动生成教程索引和配置的脚本
 const fs = require('fs');
 const path = require('path');
 
 // 读取所有Markdown文件
 const docsDir = './docs';
 const files = fs.readdirSync(docsDir).filter(file => file.endsWith('.md') && file !== 'tutorial-index.md');
+
+// 读取现有的config.json文件（如果存在）
+let configData = {};
+const configPath = path.join(docsDir, 'config.json');
+if (fs.existsSync(configPath)) {
+    try {
+        const configContent = fs.readFileSync(configPath, 'utf8');
+        configData = JSON.parse(configContent);
+    } catch (error) {
+        console.error('读取config.json时出错:', error.message);
+        // 如果读取失败，使用默认配置
+        configData = {
+            categories: {},
+            topics: {},
+            authors: {},
+            all_files: []
+        };
+    }
+} else {
+    // 如果config.json不存在，创建默认配置
+    configData = {
+        categories: {},
+        topics: {},
+        authors: {},
+        all_files: []
+    };
+}
 
 // 按类别分组
 const categories = {
@@ -104,9 +131,16 @@ indexContent += `要使用此脚本，请运行：\n\n`;
 indexContent += `\`\`\`bash\nnode generate-index.js\n\`\`\`\n\n`;
 indexContent += `这将自动扫描\`docs\`目录中的所有Markdown文件，解析它们的元数据，并更新\`tutorial-index.md\`文件。\n`;
 
+// 更新config.json数据
+updateConfigData();
+
 // 写入索引文件
 fs.writeFileSync(path.join(docsDir, 'tutorial-index.md'), indexContent);
 console.log('教程索引已更新！');
+
+// 写入配置文件
+fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
+console.log('配置文件已更新！');
 
 // 辅助函数
 function parseMetadata(content) {
@@ -166,4 +200,238 @@ function getDifficultyText(difficulty) {
         'advanced': '高级'
     };
     return texts[difficulty] || difficulty;
+}
+
+// 更新config.json数据的函数
+function updateConfigData() {
+    // 初始化类别结构（如果不存在）
+    const defaultCategories = {
+        '入门': {
+            title: '入门',
+            description: '适合初学者的基础教程',
+            topics: {}
+        },
+        '进阶': {
+            title: '进阶',
+            description: '有一定基础后的进阶教程',
+            topics: {}
+        },
+        '高级': {
+            title: '高级',
+            description: '面向有经验开发者的高级教程',
+            topics: {}
+        },
+        '个人分享': {
+            title: '个人分享',
+            description: '社区成员的个人经验和技巧分享',
+            topics: {}
+        }
+    };
+
+    // 确保所有默认类别都存在
+    Object.keys(defaultCategories).forEach(category => {
+        if (!configData.categories[category]) {
+            configData.categories[category] = defaultCategories[category];
+        }
+    });
+
+    // 初始化默认主题（如果不存在）
+    const defaultTopics = {
+        'mod-basics': {
+            title: 'Mod基础',
+            description: 'Mod开发的基础概念和核心API',
+            icon: '📖',
+            display_names: {
+                zh: 'Mod基础',
+                en: 'Mod Basics'
+            },
+            aliases: ['Mod基础']
+        },
+        'env': {
+            title: '环境配置',
+            description: '开发环境搭建和配置',
+            icon: '🛠️',
+            display_names: {
+                zh: '环境配置',
+                en: 'Environment Setup'
+            },
+            aliases: ['环境配置']
+        },
+        'items': {
+            title: '物品系统',
+            description: '物品、武器和装备的开发',
+            icon: '⚔️',
+            display_names: {
+                zh: '物品系统',
+                en: 'Item System'
+            },
+            aliases: ['物品系统']
+        },
+        'npcs': {
+            title: 'NPC系统',
+            description: 'NPC的创建和行为定制',
+            icon: '👥',
+            display_names: {
+                zh: 'NPC系统',
+                en: 'NPC System'
+            },
+            aliases: ['NPC系统']
+        },
+        'world-gen': {
+            title: '世界生成',
+            description: '世界生成和地形修改',
+            icon: '🌍',
+            display_names: {
+                zh: '世界生成',
+                en: 'World Generation'
+            },
+            aliases: ['世界生成']
+        },
+        'ui': {
+            title: 'UI界面',
+            description: '用户界面和交互设计',
+            icon: '🎨',
+            display_names: {
+                zh: 'UI界面',
+                en: 'UI Interface'
+            },
+            aliases: ['UI界面']
+        },
+        'networking': {
+            title: '网络功能',
+            description: '多人游戏和网络通信',
+            icon: '🌐',
+            display_names: {
+                zh: '网络功能',
+                en: 'Networking'
+            },
+            aliases: ['网络功能']
+        },
+        'advanced': {
+            title: '高级功能',
+            description: '高级开发技巧和优化',
+            icon: '🔧',
+            display_names: {
+                zh: '高级功能',
+                en: 'Advanced Features'
+            },
+            aliases: ['高级功能']
+        }
+    };
+
+    // 确保所有默认主题都存在
+    Object.keys(defaultTopics).forEach(topic => {
+        if (!configData.topics[topic]) {
+            configData.topics[topic] = defaultTopics[topic];
+        }
+    });
+
+    // 重置all_files数组
+    configData.all_files = [];
+
+    // 处理每个文件
+    files.forEach(file => {
+        const content = fs.readFileSync(path.join(docsDir, file), 'utf8');
+        const metadata = parseMetadata(content);
+        
+        // 确定类别
+        let category = metadata.category || '资源参考';
+        // 将英文类别映射到中文
+        const categoryMapping = {
+            'getting-started': '入门',
+            'basic-concepts': '基础概念',
+            'mod-development': 'Mod开发',
+            'advanced-topics': '高级主题',
+            'resources': '资源参考'
+        };
+        category = categoryMapping[category] || category;
+        
+        // 确定主题
+        let topic = metadata.topic || 'mod-basics';
+        
+        // 如果主题不在预定义列表中，尝试通过别名查找
+        if (!configData.topics[topic]) {
+            let foundTopic = null;
+            Object.keys(configData.topics).forEach(topicKey => {
+                const topicData = configData.topics[topicKey];
+                if (topicData.aliases && topicData.aliases.includes(topic)) {
+                    foundTopic = topicKey;
+                }
+            });
+            topic = foundTopic || 'mod-basics';
+        }
+        
+        // 确保类别存在
+        if (!configData.categories[category]) {
+            configData.categories[category] = {
+                title: category,
+                description: `${category}相关的教程`,
+                topics: {}
+            };
+        }
+        
+        // 确保主题在类别中存在
+        if (!configData.categories[category].topics[topic]) {
+            const topicData = configData.topics[topic];
+            configData.categories[category].topics[topic] = {
+                title: topicData ? topicData.title : topic,
+                description: topicData ? topicData.description : `${topic}相关教程`,
+                files: []
+            };
+        }
+        
+        // 创建文件对象
+        const fileObj = {
+            filename: file,
+            title: metadata.title || file.replace('.md', ''),
+            author: metadata.author || '未知',
+            order: parseInt(metadata.order) || 999,
+            description: metadata.description || '无描述',
+            last_updated: metadata.last_updated || metadata.date || '未知'
+        };
+        
+        // 检查文件是否已存在于主题的文件列表中
+        const existingFileIndex = configData.categories[category].topics[topic].files.findIndex(
+            f => f.filename === file
+        );
+        
+        if (existingFileIndex >= 0) {
+            // 更新现有文件
+            configData.categories[category].topics[topic].files[existingFileIndex] = fileObj;
+        } else {
+            // 添加新文件
+            configData.categories[category].topics[topic].files.push(fileObj);
+        }
+        
+        // 按order排序
+        configData.categories[category].topics[topic].files.sort((a, b) => a.order - b.order);
+        
+        // 添加到all_files
+        configData.all_files.push({
+            filename: file,
+            title: metadata.title || file.replace('.md', ''),
+            author: metadata.author || '未知',
+            category: category,
+            topic: topic,
+            order: parseInt(metadata.order) || 999
+        });
+        
+        // 更新作者信息
+        if (metadata.author) {
+            if (!configData.authors[metadata.author]) {
+                configData.authors[metadata.author] = {
+                    name: metadata.author,
+                    files: []
+                };
+            }
+            
+            // 检查文件是否已存在于作者的文件列表中
+            if (!configData.authors[metadata.author].files.includes(file)) {
+                configData.authors[metadata.author].files.push(file);
+            }
+        }
+    });
+    
+    // 按order排序all_files
+    configData.all_files.sort((a, b) => a.order - b.order);
 }

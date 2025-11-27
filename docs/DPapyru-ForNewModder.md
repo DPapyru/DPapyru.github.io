@@ -1,5 +1,5 @@
 ---
-title: 测试文档
+title: 给新人的入门教学
 author: DPapyru
 category: 入门
 topic: mod-basics

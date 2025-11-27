@@ -15,6 +15,30 @@
               "order": 1,
               "description": "用于测试文档查看器功能的示例文档",
               "last_updated": "2025-11-26"
+            },
+            {
+              "filename": "DPapyru-ForNewModder.md",
+              "title": "给新人的入门教学",
+              "author": "DPapyru",
+              "order": 1,
+              "description": "用于测试文档查看器功能的示例文档",
+              "last_updated": "2025-11-26"
+            },
+            {
+              "filename": "TopicSystemGuide.md",
+              "title": "文档标题",
+              "author": "作者名称",
+              "order": 1,
+              "description": "文档简短描述",
+              "last_updated": "2025-11-26"
+            },
+            {
+              "filename": "DPapyru-ForContributors.md",
+              "title": "给所有的贡献者",
+              "author": "小天使",
+              "order": 999,
+              "description": "无描述",
+              "last_updated": "未知"
             }
           ]
         }
@@ -45,7 +69,9 @@
         "zh": "Mod基础",
         "en": "Mod Basics"
       },
-      "aliases": ["Mod基础"]
+      "aliases": [
+        "Mod基础"
+      ]
     },
     "env": {
       "title": "环境配置",
@@ -55,7 +81,9 @@
         "zh": "环境配置",
         "en": "Environment Setup"
       },
-      "aliases": ["环境配置"]
+      "aliases": [
+        "环境配置"
+      ]
     },
     "items": {
       "title": "物品系统",
@@ -65,7 +93,9 @@
         "zh": "物品系统",
         "en": "Item System"
       },
-      "aliases": ["物品系统"]
+      "aliases": [
+        "物品系统"
+      ]
     },
     "npcs": {
       "title": "NPC系统",
@@ -75,7 +105,9 @@
         "zh": "NPC系统",
         "en": "NPC System"
       },
-      "aliases": ["NPC系统"]
+      "aliases": [
+        "NPC系统"
+      ]
     },
     "world-gen": {
       "title": "世界生成",
@@ -85,7 +117,9 @@
         "zh": "世界生成",
         "en": "World Generation"
       },
-      "aliases": ["世界生成"]
+      "aliases": [
+        "世界生成"
+      ]
     },
     "ui": {
       "title": "UI界面",
@@ -95,7 +129,9 @@
         "zh": "UI界面",
         "en": "UI Interface"
       },
-      "aliases": ["UI界面"]
+      "aliases": [
+        "UI界面"
+      ]
     },
     "networking": {
       "title": "网络功能",
@@ -105,7 +141,9 @@
         "zh": "网络功能",
         "en": "Networking"
       },
-      "aliases": ["网络功能"]
+      "aliases": [
+        "网络功能"
+      ]
     },
     "advanced": {
       "title": "高级功能",
@@ -115,23 +153,64 @@
         "zh": "高级功能",
         "en": "Advanced Features"
       },
-      "aliases": ["高级功能"]
+      "aliases": [
+        "高级功能"
+      ]
     }
   },
   "authors": {
     "DPapyru": {
       "name": "DPapyru",
-      "files": ["test.md"]
+      "files": [
+        "test.md",
+        "DPapyru-ForNewModder.md"
+      ]
+    },
+    "小天使": {
+      "name": "小天使",
+      "files": [
+        "DPapyru-ForContributors.md"
+      ]
+    },
+    "作者名称": {
+      "name": "作者名称",
+      "files": [
+        "TopicSystemGuide.md"
+      ]
     }
   },
   "all_files": [
     {
-      "filename": "test.md",
-      "title": "测试文档",
-      "author": "Null",
+      "filename": "DPapyru-ForNewModder.md",
+      "title": "给新人的入门教学",
+      "author": "DPapyru",
       "category": "入门",
       "topic": "mod-basics",
       "order": 1
+    },
+    {
+      "filename": "test.md",
+      "title": "测试文档",
+      "author": "DPapyru",
+      "category": "入门",
+      "topic": "mod-basics",
+      "order": 1
+    },
+    {
+      "filename": "TopicSystemGuide.md",
+      "title": "文档标题",
+      "author": "作者名称",
+      "category": "入门",
+      "topic": "mod-basics",
+      "order": 1
+    },
+    {
+      "filename": "DPapyru-ForContributors.md",
+      "title": "给所有的贡献者",
+      "author": "小天使",
+      "category": "入门",
+      "topic": "mod-basics",
+      "order": 999
     }
   ]
 }
