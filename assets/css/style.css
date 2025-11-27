@@ -1305,6 +1305,237 @@ a:hover {
     }
 }
 
+/* 手机端导航样式 */
+.mobile-nav-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.mobile-nav-toggle:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.mobile-nav-toggle .nav-icon {
+    font-size: 1.2rem;
+    margin-right: 5px;
+}
+
+.mobile-nav-toggle .nav-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* 手机端导航覆盖层 */
+.mobile-nav-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+}
+
+.mobile-nav-overlay.active {
+    display: flex;
+}
+
+/* 导航内容区域 (占屏幕2/3) */
+.mobile-nav-content {
+    height: 66.67vh;
+    background-color: white;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.mobile-nav-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.mobile-nav-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 5px;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.mobile-nav-close:hover {
+    background-color: #e9ecef;
+    color: #333;
+}
+
+.mobile-nav-body {
+    padding: 0;
+    flex: 1;
+}
+
+.mobile-nav-sections {
+    padding: 15px 20px;
+}
+
+/* 半透明返回区域 (占屏幕1/3) */
+.mobile-nav-back {
+    height: 33.33vh;
+    background-color: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.mobile-nav-back:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.mobile-nav-back-hint {
+    text-align: center;
+    color: white;
+}
+
+.mobile-nav-back-hint p {
+    margin: 0 0 10px 0;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.back-arrow {
+    font-size: 2rem;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* 手机端导航内容样式 */
+.mobile-category {
+    margin-bottom: 20px;
+}
+
+.mobile-category-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.mobile-topic {
+    margin-bottom: 15px;
+}
+
+.mobile-topic-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 8px;
+    padding-left: 5px;
+}
+
+.mobile-file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mobile-file-item {
+    margin-bottom: 5px;
+}
+
+.mobile-file-link {
+    display: block;
+    padding: 10px 15px;
+    color: #495057;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.mobile-file-link:hover {
+    background-color: #f8f9fa;
+    color: #007bff;
+    transform: translateX(5px);
+}
+
+.mobile-file-link.active {
+    background-color: #e7f3ff;
+    color: #007bff;
+    font-weight: 500;
+    border-left: 3px solid #007bff;
+}
+
+/* 响应式设计 - 只在手机端显示导航按钮 */
+@media (max-width: 768px) {
+    .mobile-nav-toggle {
+        display: flex !important;
+        order: 3;
+    }
+    
+    .mobile-menu-toggle {
+        order: 2;
+    }
+    
+    .main-nav {
+        order: 4;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-nav-toggle {
+        display: none !important;
+    }
+}
+
 /* Markdown内容样式 */
 .markdown-content {
     line-height: 1.8;

@@ -46,6 +46,11 @@ const categories = {
 files.forEach(file => {
     const content = fs.readFileSync(path.join(docsDir, file), 'utf8');
     const metadata = parseMetadata(content);
+    
+    // 跳过标记为 hide: true 的文件
+    if (metadata.hide === 'true' || metadata.hide === true) {
+        return;
+    }
 
     if (metadata.category) {
         // 检查分类是否存在，如果不存在则创建或使用默认分类
@@ -210,12 +215,20 @@ function updateConfigData() {
     
     // 创建文件到正确类别的映射表
     const fileToCorrectCategory = {};
+    // 创建隐藏文件集合
+    const hiddenFiles = new Set();
     
     // 首先解析所有文件的元数据，确定每个文件应该属于哪个类别
     currentFiles.forEach(file => {
         try {
             const content = fs.readFileSync(path.join(docsDir, file), 'utf8');
             const metadata = parseMetadata(content);
+            
+            // 检查是否为隐藏文件
+            if (metadata.hide === 'true' || metadata.hide === true) {
+                hiddenFiles.add(file);
+                return; // 跳过隐藏文件
+            }
             
             // 确定类别
             let category = metadata.category || '资源参考';
@@ -247,7 +260,12 @@ function updateConfigData() {
                             configData.categories[category].topics[topic].files.filter(fileObj => {
                                 // 检查文件对象是否有效且文件实际存在
                                 if (!fileObj || !fileObj.filename || !existingFiles.has(fileObj.filename)) {
-                                    return false;
+                                    return false; // 返回false，表示该文件对象无效
+                                }
+                                
+                                // 检查文件是否为隐藏文件
+                                if (hiddenFiles.has(fileObj.filename)) {
+                                    return false; // 跳过隐藏文件
                                 }
                                 
                                 // 检查文件是否属于当前类别（防止文件出现在错误的类别中）
@@ -264,10 +282,10 @@ function updateConfigData() {
     if (configData.authors) {
         Object.keys(configData.authors).forEach(author => {
             if (configData.authors[author].files) {
-                // 过滤掉不存在的文件
+                // 过滤掉不存在的文件和隐藏文件
                 configData.authors[author].files =
                     configData.authors[author].files.filter(filename => {
-                        return existingFiles.has(filename);
+                        return existingFiles.has(filename) && !hiddenFiles.has(filename);
                     });
                 
                 // 如果作者没有有效文件了，移除该作者
@@ -412,6 +430,11 @@ function updateConfigData() {
     files.forEach(file => {
         const content = fs.readFileSync(path.join(docsDir, file), 'utf8');
         const metadata = parseMetadata(content);
+        
+        // 跳过隐藏文件
+        if (metadata.hide === 'true' || metadata.hide === true) {
+            return;
+        }
 
         // 确定类别
         let category = metadata.category || '资源参考';

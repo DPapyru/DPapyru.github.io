@@ -688,7 +688,6 @@
                         tags: doc.tags || [],
                         last_updated: doc.last_updated || '未知',
                         difficulty: doc.difficulty || 'beginner',
-                        time: doc.time || '未知'
                     }));
                     
                     console.log('从配置文件加载的文档:', ALL_DOCS);
@@ -714,7 +713,6 @@
                         tags: ['测试'],
                         last_updated: '2025-11-26',
                         difficulty: 'beginner',
-                        time: '30分钟'
                     }
                 ];
             }
@@ -757,7 +755,6 @@
                                     tags: metadata.tags ? metadata.tags.split(',').map(t => t.trim()) : [],
                                     last_updated: metadata.last_updated || '未知',
                                     difficulty: metadata.difficulty || 'beginner',
-                                    time: metadata.time || '未知'
                                 };
                                 
                                 ALL_DOCS.push(docInfo);
@@ -976,7 +973,6 @@
                                 <div class="doc-title">${doc.title}</div>
                                 <div class="doc-meta">
                                     <span class="difficulty-badge ${difficultyClass}">${difficultyText}</span>
-                                    <span>⏱️ ${doc.time}</span>
                                     <span>👤 ${doc.author}</span>
                                 </div>
                             </div>
@@ -1049,7 +1045,6 @@
                         description: doc.description,
                         tags: doc.tags ? doc.tags.join(', ') : '',
                         difficulty: doc.difficulty,
-                        time: doc.time
                     });
                 });
                 

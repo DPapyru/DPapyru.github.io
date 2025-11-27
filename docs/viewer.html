@@ -41,6 +41,11 @@
                     <span class="bar"></span>
                     <span class="bar"></span>
                 </button>
+                <!-- 手机端文档导航按钮 -->
+                <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="文档导航">
+                    <span class="nav-icon">☰</span>
+                    <span class="nav-text">导航</span>
+                </button>
             </div>
         </div>
     </header>
@@ -179,6 +184,30 @@
         </div>
     </footer>
 
+    <!-- 手机端导航覆盖层 -->
+    <div class="mobile-nav-overlay" id="mobile-nav-overlay">
+        <!-- 导航区域 (占屏幕2/3) -->
+        <div class="mobile-nav-content">
+            <div class="mobile-nav-header">
+                <h3>文档导航</h3>
+                <button class="mobile-nav-close" id="mobile-nav-close">✕</button>
+            </div>
+            <div class="mobile-nav-body">
+                <!-- 导航内容将在这里动态生成 -->
+                <div class="mobile-nav-sections" id="mobile-nav-sections">
+                    <!-- 分类导航将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+        <!-- 半透明返回区域 (占屏幕1/3) -->
+        <div class="mobile-nav-back" id="mobile-nav-back">
+            <div class="mobile-nav-back-hint">
+                <p>点击此处返回文章</p>
+                <div class="back-arrow">↑</div>
+            </div>
+        </div>
+    </div>
+
     <!-- 加载JavaScript文件 -->
     <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
     <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
@@ -311,6 +340,9 @@
 
             // 初始化下拉菜单
             initializeDropdownMenu();
+            
+            // 初始化手机端导航
+            initializeMobileNavigation();
         });
 
         // 初始化文档配置
@@ -1065,6 +1097,193 @@
                     currentCategoryDocs.appendChild(li);
                 });
             }
+        }
+        
+        // 初始化手机端导航
+        function initializeMobileNavigation() {
+            const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+            const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
+            const mobileNavClose = document.getElementById('mobile-nav-close');
+            const mobileNavBack = document.getElementById('mobile-nav-back');
+            const mobileNavSections = document.getElementById('mobile-nav-sections');
+            
+            // 检查是否为移动设备
+            function isMobileDevice() {
+                return window.innerWidth <= 768;
+            }
+            
+            // 设置初始显示状态
+            updateMobileNavVisibility();
+            
+            // 确保在移动设备上也能正常工作
+            if (isMobileDevice()) {
+                console.log('检测到移动设备，初始化手机端导航');
+            }
+            
+            // 生成手机端导航内容
+            function generateMobileNavContent() {
+                if (!DOC_CONFIG || ALL_DOCS.length === 0) {
+                    console.warn('文档配置尚未加载，稍后重试');
+                    setTimeout(generateMobileNavContent, 100);
+                    return;
+                }
+                
+                mobileNavSections.innerHTML = '';
+                
+                // 生成分类导航
+                Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
+                    const category = MAIN_CATEGORIES[categoryKey];
+                    
+                    // 创建分类容器
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'mobile-category';
+                    
+                    // 创建分类标题
+                    const categoryTitle = document.createElement('div');
+                    categoryTitle.className = 'mobile-category-title';
+                    categoryTitle.textContent = category.title;
+                    categoryDiv.appendChild(categoryTitle);
+                    
+                    // 获取该分类下的所有主题
+                    const categoryTopics = DOC_CONFIG.categories[categoryKey]?.topics || {};
+                    
+                    if (Object.keys(categoryTopics).length > 0) {
+                        Object.keys(categoryTopics).forEach(topicKey => {
+                            const topic = categoryTopics[topicKey];
+                            
+                            // 创建主题容器
+                            const topicDiv = document.createElement('div');
+                            topicDiv.className = 'mobile-topic';
+                            
+                            // 创建主题标题
+                            const topicTitle = document.createElement('div');
+                            topicTitle.className = 'mobile-topic-title';
+                            topicTitle.textContent = topic.title;
+                            topicDiv.appendChild(topicTitle);
+                            
+                            // 创建文档列表
+                            const fileList = document.createElement('ul');
+                            fileList.className = 'mobile-file-list';
+                            
+                            topic.files.forEach(file => {
+                                const fileItem = document.createElement('li');
+                                fileItem.className = 'mobile-file-item';
+                                
+                                const fileLink = document.createElement('a');
+                                fileLink.href = `?file=${file.filename}`;
+                                fileLink.className = 'mobile-file-link';
+                                fileLink.textContent = file.title;
+                                fileLink.title = file.description || file.title;
+                                
+                                // 检查是否为当前文档
+                                const currentUrl = new URL(window.location);
+                                const currentFile = currentUrl.searchParams.get('file') || 'test.md';
+                                if (file.filename === currentFile) {
+                                    fileLink.classList.add('active');
+                                }
+                                
+                                // 添加点击事件，点击后关闭导航
+                                fileLink.addEventListener('click', function() {
+                                    closeMobileNav();
+                                });
+                                
+                                fileItem.appendChild(fileLink);
+                                fileList.appendChild(fileItem);
+                            });
+                            
+                            topicDiv.appendChild(fileList);
+                            categoryDiv.appendChild(topicDiv);
+                        });
+                    } else {
+                        // 如果没有主题，显示提示信息
+                        const noDocsItem = document.createElement('div');
+                        noDocsItem.className = 'mobile-file-item';
+                        noDocsItem.textContent = '暂无文档';
+                        categoryDiv.appendChild(noDocsItem);
+                    }
+                    
+                    mobileNavSections.appendChild(categoryDiv);
+                });
+                
+                // 添加"所有文档"部分
+                const allDocsDiv = document.createElement('div');
+                allDocsDiv.className = 'mobile-category';
+                
+                const allDocsTitle = document.createElement('div');
+                allDocsTitle.className = 'mobile-category-title';
+                allDocsTitle.textContent = '所有文档';
+                allDocsDiv.appendChild(allDocsTitle);
+                
+                const allDocsList = document.createElement('ul');
+                allDocsList.className = 'mobile-file-list';
+                
+                ALL_DOCS.forEach(doc => {
+                    const docItem = document.createElement('li');
+                    docItem.className = 'mobile-file-item';
+                    
+                    const docLink = document.createElement('a');
+                    docLink.href = `?file=${doc.filename}`;
+                    docLink.className = 'mobile-file-link';
+                    docLink.textContent = doc.title;
+                    docLink.title = `${doc.author} - ${doc.description || doc.title}`;
+                    
+                    // 检查是否为当前文档
+                    const currentUrl = new URL(window.location);
+                    const currentFile = currentUrl.searchParams.get('file') || 'test.md';
+                    if (doc.filename === currentFile) {
+                        docLink.classList.add('active');
+                    }
+                    
+                    // 添加点击事件，点击后关闭导航
+                    docLink.addEventListener('click', function() {
+                        closeMobileNav();
+                    });
+                    
+                    docItem.appendChild(docLink);
+                    allDocsList.appendChild(docItem);
+                });
+                
+                allDocsDiv.appendChild(allDocsList);
+                mobileNavSections.appendChild(allDocsDiv);
+            }
+            
+            // 打开手机端导航
+            function openMobileNav() {
+                mobileNavOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // 防止背景滚动
+                generateMobileNavContent();
+            }
+            
+            // 关闭手机端导航
+            function closeMobileNav() {
+                mobileNavOverlay.classList.remove('active');
+                document.body.style.overflow = ''; // 恢复滚动
+            }
+            
+            // 绑定事件监听器
+            mobileNavToggle.addEventListener('click', openMobileNav);
+            mobileNavClose.addEventListener('click', closeMobileNav);
+            mobileNavBack.addEventListener('click', closeMobileNav);
+            
+            // 点击覆盖层背景关闭导航（除了返回区域）
+            mobileNavOverlay.addEventListener('click', function(e) {
+                if (e.target === mobileNavOverlay) {
+                    closeMobileNav();
+                }
+            });
+            
+            // 更新手机端导航可见性
+            function updateMobileNavVisibility() {
+                if (isMobileDevice()) {
+                    mobileNavToggle.style.display = 'flex';
+                } else {
+                    mobileNavToggle.style.display = 'none';
+                    closeMobileNav(); // 在非移动设备上关闭导航
+                }
+            }
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', updateMobileNavVisibility);
         }
     </script>
 </body>
