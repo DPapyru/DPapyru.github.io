@@ -1,35 +1,38 @@
 <!DOCTYPE html>
-<!-- 泰拉瑞亚Mod制作教程文档导航页面 -->
+<!-- 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程文档导航页面 -->
 <html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文档导航 - 泰拉瑞亚Mod制作教程</title>
+    <title>文档导航 - 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程</title>
     
     <!-- SEO优化标签 -->
-    <meta name="description" content="泰拉瑞亚Mod制作教程文档导航，提供完整的教程分类和快速访问链接">
-    <meta name="keywords" content="泰拉瑞亚,Mod,教程,文档,导航,tModLoader">
-    <meta name="author" content="泰拉瑞亚Mod社区">
+    <meta name="description" content="错数螺线 LogSpiral文档导航，提供完整的教程分类和快速访问链接">
+    <meta name="keywords" content="泰拉瑞亚,Mod,教程,文档,导航,tModLoader,C#,游戏开发,错数螺线,LogSpiral">
+    <meta name="author" content="错数螺线 LogSpiral社区">
     <meta name="robots" content="index, follow">
     
     <!-- Open Graph标签 -->
-    <meta property="og:title" content="文档导航 - 泰拉瑞亚Mod制作教程">
-    <meta property="og:description" content="泰拉瑞亚Mod制作教程文档导航，提供完整的教程分类和快速访问链接">
+    <meta property="og:title" content="文档导航 - 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程">
+    <meta property="og:description" content="错数螺线 LogSpiral文档导航，提供完整的教程分类和快速访问链接">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://dpapyru.github.io/docs/">
+    <meta property="og:url" content="https://dpapyru.github.io/LogSpiral/docs/">
+    <meta property="og:image" content="https://dpapyru.github.io/LogSpiral/assets/imgs/icon.jpg">
+    <meta property="og:site_name" content="错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程">
+    <meta property="og:locale" content="zh_CN">
     
     <!-- 样式和图标 -->
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/prism.min.css">
     <link rel="stylesheet" href="../assets/css/vs2022-theme.css">
-    <link rel="icon" type="image/png" href="../assets/imgs/Green_tModLoader.png">
+    <link rel="icon" type="image/png" href="../assets/imgs/icon.jpg">
     
     <!-- 自定义样式 -->
     <style>
         /* 文档导航页面特定样式 */
         .docs-hero {
-            background: linear-gradient(0deg, #155724, #28a745,#155724);
+            background: linear-gradient(0deg, #0056b3, #007bff, #0056b3);
             color: white;
             padding: 60px 0;
             text-align: center;
@@ -49,9 +52,9 @@
         }
         
         .search-section {
-            background-color: #f8f9fa;
+            background-color: #1e1e1e;
             padding: 40px 0;
-            border-bottom: 1px solid #e9ecef;
+            border-bottom: 1px solid #333;
         }
         
         .search-container {
@@ -63,11 +66,13 @@
         .search-input {
             width: 100%;
             padding: 15px 50px 15px 20px;
-            border: 1px solid #ddd;
+            border: 1px solid #333;
             border-radius: 50px;
             font-size: 1rem;
             outline: none;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: #2a2a2a;
+            color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
         }
         
@@ -100,6 +105,7 @@
         
         .docs-content {
             padding: 60px 0;
+            background-color: #121212;
         }
         
         .category-grid {
@@ -110,20 +116,21 @@
         }
         
         .category-card {
-            background-color: #fff;
+            background-color: #1e1e1e;
             border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #333;
         }
         
         .category-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
         
         .category-header {
-            background-color: #28a745;
+            background-color: #007bff;
             color: white;
             padding: 20px;
             position: relative;
@@ -132,7 +139,7 @@
         }
         
         .category-header:hover {
-            background-color: #218838;
+            background-color: #0056b3;
         }
         
         .category-icon {
@@ -167,7 +174,7 @@
         }
         
         .doc-item {
-            border-bottom: 1px solid #f1f3f4;
+            border-bottom: 1px solid #333;
             transition: background-color 0.2s ease;
         }
         
@@ -176,14 +183,14 @@
         }
         
         .doc-item:hover {
-            background-color: #f8f9fa;
+            background-color: #2a2a2a;
         }
         
         .doc-link {
             display: flex;
             align-items: center;
             padding: 15px 20px;
-            color: #333;
+            color: #ccc;
             text-decoration: none;
             transition: color 0.2s ease;
         }
@@ -205,11 +212,12 @@
         .doc-title {
             font-weight: 600;
             margin-bottom: 5px;
+            color: #fff;
         }
         
         .doc-meta {
             font-size: 0.85rem;
-            color: #666;
+            color: #999;
         }
         
         .doc-meta span {
@@ -225,24 +233,24 @@
         }
         
         .difficulty-badge.beginner {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: #1e3a1e;
+            color: #4caf50;
         }
         
         .difficulty-badge.intermediate {
-            background-color: #fff3cd;
-            color: #856404;
+            background-color: #3a2e1e;
+            color: #ff9800;
         }
         
         .difficulty-badge.advanced {
-            background-color: #f8d7da;
-            color: #721c24;
+            background-color: #3a1e1e;
+            color: #f44336;
         }
         
         .quick-links {
-            background-color: #f8f9fa;
+            background-color: #1e1e1e;
             padding: 40px 0;
-            border-top: 1px solid #e9ecef;
+            border-top: 1px solid #333;
         }
         
         .quick-links-grid {
@@ -252,17 +260,18 @@
         }
         
         .quick-link-card {
-            background-color: #fff;
+            background-color: #2a2a2a;
             border-radius: 8px;
             padding: 20px;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid #333;
         }
         
         .quick-link-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
         }
         
         .quick-link-icon {
@@ -274,12 +283,12 @@
         .quick-link-title {
             font-size: 1.1rem;
             margin-bottom: 10px;
-            color: #333;
+            color: #fff;
         }
         
         .quick-link-description {
             font-size: 0.9rem;
-            color: #666;
+            color: #ccc;
             margin-bottom: 15px;
         }
         
@@ -288,11 +297,11 @@
             top: 100%;
             left: 0;
             right: 0;
-            background-color: #fff;
-            border: 1px solid #ddd;
+            background-color: #2a2a2a;
+            border: 1px solid #333;
             border-top: none;
             border-radius: 0 0 12px 12px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
             max-height: 300px;
             overflow-y: auto;
             z-index: 1000;
@@ -303,20 +312,22 @@
             padding: 12px 20px;
             cursor: pointer;
             transition: background-color 0.2s ease;
+            color: #ccc;
         }
         
         .search-result-item:hover {
-            background-color: #f8f9fa;
+            background-color: #333;
         }
         
         .search-result-title {
             font-weight: 600;
             margin-bottom: 5px;
+            color: #fff;
         }
         
         .search-result-path {
             font-size: 0.85rem;
-            color: #666;
+            color: #999;
         }
         
         /* 响应式设计 */
@@ -324,15 +335,15 @@
             .docs-hero h1 {
                 font-size: 2rem;
             }
-            
+           
             .docs-hero p {
                 font-size: 1rem;
             }
-            
+           
             .category-grid {
                 grid-template-columns: 1fr;
             }
-            
+           
             .quick-links-grid {
                 grid-template-columns: 1fr;
             }
@@ -348,8 +359,8 @@
                 <!-- 网站logo和标题 -->
                 <div class="logo">
                     <a href="../index.html">
-                        <img src="../assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
-                        <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
+                        <img src="../assets/imgs/icon.jpg" alt="错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程" class="logo-image">
+                        <h1 class="site-title">错数螺线 LogSpiral</h1>
                     </a>
                 </div>
                 <!-- 主导航菜单 -->
@@ -357,7 +368,7 @@
                     <ul class="nav-list">
                         <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
                         <li class="nav-item"><a href="index.html" class="nav-link active">文档</a></li>
-                        <li class="nav-item"><a href="viewer.html" class="nav-link">文档查看器</a></li>
+                        <li class="nav-item"><a href="../viewer.html" class="nav-link">文档查看器</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
                                 target="_blank">GitHub</a></li>
                     </ul>
@@ -378,10 +389,10 @@
         <section class="docs-hero">
             <div class="container">
                 <h1>文档导航</h1>
-                <p>探索泰拉瑞亚Mod制作的完整教程体系，从入门到精通，一步步成为Mod开发专家</p>
+                <p>探索错数螺线 LogSpiral 的完整教程体系，从入门到精通，一步步成为Mod开发专家</p>
                 <div class="hero-buttons">
                     <a href="#getting-started" class="btn btn-primary">开始学习</a>
-                    <a href="viewer.html?file=test.md" class="btn btn-secondary">查看教程</a>
+                    <a href="../viewer.html?file=0-开始/0-Home 主页.md" class="btn btn-secondary">查看教程</a>
                 </div>
             </div>
         </section>
@@ -423,14 +434,14 @@
             <div class="footer-content">
                 <div class="footer-section">
                     <h4>关于项目</h4>
-                    <p>这是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛。</p>
+                    <p>错数螺线 LogSpiral是面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛。</p>
                 </div>
                 <div class="footer-section">
                     <h4>快速链接</h4>
                     <ul>
                         <li><a href="../index.html">首页</a></li>
                         <li><a href="index.html">文档</a></li>
-                        <li><a href="viewer.html">文档查看器</a></li>
+                        <li><a href="../viewer.html">文档查看器</a></li>
                         <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
                     </ul>
                 </div>
@@ -438,12 +449,13 @@
                     <h4>联系我们</h4>
                     <ul>
                         <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
-                        <li><a href="mailto:contact@example.com">邮箱</a></li>
+                        <li>小天使大力支持错数螺线线！</li>
+                        <li>QQ:3253615697</li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC
+                <p>&copy; 2023 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC
                         BY 4.0</a> 许可协议。</p>
             </div>
         </div>
@@ -467,7 +479,7 @@
 
         // 页面加载完成后执行
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('=== docs/index.html: 页面加载完成 ===');
+            console.log('=== LogSpiral/docs/index.html: 页面加载完成 ===');
             
             // 初始化移动端菜单
             initMobileMenu();
@@ -546,11 +558,14 @@
         // 获取分类图标
         function getCategoryIcon(categoryKey) {
             const iconMap = {
-                '入门': '🚀',
-                '进阶': '📚',
-                '高级': '⚙️',
-                '个人分享': '🎯',
-                '怎么贡献': '🤝'
+                '0-开始': '🚀',
+                '1-基础': '📖',
+                '2-中阶': '⚡',
+                '3-高阶': '🔧',
+                '4-专家': '💎',
+                '概念了解': '🧠',
+                '原版代码文档': '🔍',
+                '杂项': '📦'
             };
             return iconMap[categoryKey] || '📄';
         }
@@ -558,11 +573,14 @@
         // 获取分类排序
         function getCategoryOrder(categoryKey) {
             const orderMap = {
-                '入门': 1,
-                '进阶': 2,
-                '高级': 3,
-                '个人分享': 4,
-                '怎么贡献': 5
+                '0-开始': 1,
+                '1-基础': 2,
+                '2-中阶': 3,
+                '3-高阶': 4,
+                '4-专家': 5,
+                '概念了解': 6,
+                '原版代码文档': 7,
+                '杂项': 8
             };
             return orderMap[categoryKey] || 999;
         }
@@ -577,7 +595,7 @@
             };
 
             // 初始化默认分类结构
-            const defaultCategories = ['入门', '进阶', '高级', '个人分享', '怎么贡献'];
+            const defaultCategories = ['0-开始', '1-基础', '2-中阶', '3-高阶', '4-专家', '概念了解', '原版代码文档', '杂项'];
             defaultCategories.forEach(categoryKey => {
                 config.categories[categoryKey] = {
                     title: categoryKey,
@@ -597,10 +615,10 @@
             // 初始化默认主题结构
             const defaultTopics = [
                 {
-                    key: 'env',
-                    title: '环境配置',
-                    description: '开发环境搭建和配置',
-                    icon: '🛠️'
+                    key: 'getting-started',
+                    title: '入门指南',
+                    description: 'tModLoader基础知识和入门指南',
+                    icon: '🚀'
                 },
                 {
                     key: 'mod-basics',
@@ -609,40 +627,40 @@
                     icon: '📖'
                 },
                 {
-                    key: 'items',
-                    title: '物品系统',
-                    description: '物品、武器和装备的开发',
-                    icon: '⚔️'
-                },
-                {
-                    key: 'npcs',
-                    title: 'NPC系统',
-                    description: 'NPC的创建和行为定制',
-                    icon: '👥'
-                },
-                {
-                    key: 'world-gen',
-                    title: '世界生成',
-                    description: '世界生成和地形修改',
-                    icon: '🌍'
-                },
-                {
-                    key: 'ui',
-                    title: 'UI界面',
-                    description: '用户界面和交互设计',
-                    icon: '🎨'
-                },
-                {
-                    key: 'networking',
-                    title: '网络功能',
-                    description: '多人游戏和网络通信',
-                    icon: '🌐'
+                    key: 'intermediate',
+                    title: '进阶功能',
+                    description: '进阶开发技巧和功能实现',
+                    icon: '⚡'
                 },
                 {
                     key: 'advanced',
                     title: '高级功能',
                     description: '高级开发技巧和优化',
                     icon: '🔧'
+                },
+                {
+                    key: 'expert',
+                    title: '专家功能',
+                    description: '专家级开发技巧和深度优化',
+                    icon: '💎'
+                },
+                {
+                    key: 'concepts',
+                    title: '概念解释',
+                    description: '各种概念和术语的解释',
+                    icon: '🧠'
+                },
+                {
+                    key: 'vanilla',
+                    title: '原版代码',
+                    description: '原版代码的详细文档和参考',
+                    icon: '🔍'
+                },
+                {
+                    key: 'misc',
+                    title: '杂项资源',
+                    description: '其他有用的教程和资源',
+                    icon: '📦'
                 }
             ];
 
@@ -687,13 +705,14 @@
                         filename: doc.filename,
                         title: doc.title || doc.filename.replace('.md', ''),
                         author: doc.author || '未知',
-                        category: doc.category || '入门',
-                        topic: doc.topic || 'mod-basics',
+                        category: doc.category || '0-开始',
+                        topic: doc.topic || 'getting-started',
                         order: parseInt(doc.order) || 999,
                         description: doc.description || '',
                         tags: doc.tags || [],
                         last_updated: doc.last_updated || '未知',
                         difficulty: doc.difficulty || 'beginner',
+                        path: doc.path || doc.filename
                     }));
                     
                     console.log('从配置文件加载的文档:', ALL_DOCS);
@@ -709,16 +728,17 @@
                 // 提供一些默认文档
                 ALL_DOCS = [
                     {
-                        filename: 'test.md',
-                        title: '测试文档',
-                        author: '小天使',
-                        category: '入门',
-                        topic: 'mod-basics',
-                        order: 1,
-                        description: '用于测试文档查看器功能的示例文档',
-                        tags: ['测试'],
-                        last_updated: '2025-11-26',
+                        filename: '0-开始/0-Home 主页.md',
+                        title: '主页',
+                        author: '错数螺线(LogSpiral)',
+                        category: '0-开始',
+                        topic: 'getting-started',
+                        order: 0,
+                        description: '错数螺线 LogSpiral 的主页',
+                        tags: ['主页', '介绍'],
+                        last_updated: '2025-11-28',
                         difficulty: 'beginner',
+                        path: '0-开始/0-Home 主页.md'
                     }
                 ];
             }
@@ -754,13 +774,14 @@
                                     filename: filename,
                                     title: metadata.title || filename.replace('.md', ''),
                                     author: metadata.author || '未知',
-                                    category: metadata.category || '入门',
-                                    topic: metadata.topic || 'mod-basics',
+                                    category: metadata.category || '0-开始',
+                                    topic: metadata.topic || 'getting-started',
                                     order: parseInt(metadata.order) || 999,
                                     description: metadata.description || '',
                                     tags: metadata.tags ? metadata.tags.split(',').map(t => t.trim()) : [],
                                     last_updated: metadata.last_updated || '未知',
                                     difficulty: metadata.difficulty || 'beginner',
+                                    path: filename
                                 };
                                 
                                 ALL_DOCS.push(docInfo);
@@ -935,7 +956,7 @@
                 
                 // 添加点击事件，链接到 folder.html 页面
                 categoryHeader.addEventListener('click', function() {
-                    window.location.href = `folder.html?path=${encodeURIComponent(categoryKey)}`;
+                    window.location.href = `../folder.html?path=${encodeURIComponent(categoryKey)}`;
                 });
                 
                 categoryHeader.innerHTML = `
@@ -977,7 +998,7 @@
                         
                         const docLink = document.createElement('a');
                         docLink.className = 'doc-link';
-                        docLink.href = `viewer.html?file=${doc.path || doc.filename}`;
+                        docLink.href = `../viewer.html?file=${doc.path || doc.filename}`;
                         docLink.title = `${doc.author} - ${doc.description || doc.title}`;
                         
                         const difficultyClass = doc.difficulty === 'all' ? 'beginner' : doc.difficulty;
@@ -1020,7 +1041,7 @@
                         
                         // 添加点击事件，跳转到文件夹页面
                         moreLink.addEventListener('click', function() {
-                            window.location.href = `folder.html?path=${encodeURIComponent(categoryKey)}`;
+                            window.location.href = `../folder.html?path=${encodeURIComponent(categoryKey)}`;
                         });
                         
                         moreItem.appendChild(moreLink);
@@ -1090,6 +1111,7 @@
                         description: doc.description,
                         tags: doc.tags ? doc.tags.join(', ') : '',
                         difficulty: doc.difficulty,
+                        path: doc.path || doc.filename
                     });
                 });
                 
@@ -1169,7 +1191,7 @@
                         `;
                         
                         resultItem.addEventListener('click', function() {
-                            window.location.href = `viewer.html?file=${result.path || result.filename}`;
+                            window.location.href = `../viewer.html?file=${result.path || result.filename}`;
                         });
                         
                         searchResults.appendChild(resultItem);
@@ -1194,7 +1216,7 @@
                     alert('没有找到匹配的文档，请尝试其他关键词');
                 } else if (results.length === 1) {
                     // 如果只有一个结果，直接跳转
-                    window.location.href = `viewer.html?file=${results[0].filename}`;
+                    window.location.href = `../viewer.html?file=${results[0].path || results[0].filename}`;
                 } else {
                     // 如果有多个结果，显示搜索结果页面
                     displaySearchResults(results);
@@ -1261,23 +1283,23 @@
                     case 'view-all':
                         // 查找第一个文档
                         if (ALL_DOCS.length > 0) {
-                            buttonLink = `viewer.html?file=${ALL_DOCS[0].filename}`;
+                            buttonLink = `../viewer.html?file=${ALL_DOCS[0].path || ALL_DOCS[0].filename}`;
                         }
                         break;
                     case 'get-started':
                         // 查找入门分类的第一个文档
-                        const beginnerDoc = ALL_DOCS.find(doc => doc.category === '入门');
+                        const beginnerDoc = ALL_DOCS.find(doc => doc.category === '0-开始');
                         if (beginnerDoc) {
-                            buttonLink = `viewer.html?file=${beginnerDoc.path || beginnerDoc.filename}`;
+                            buttonLink = `../viewer.html?file=${beginnerDoc.path || beginnerDoc.filename}`;
                         }
                         break;
                     case 'api-reference':
                         // 查找高级或进阶分类的文档
                         const apiDoc = ALL_DOCS.find(doc =>
-                            doc.category === '高级' || doc.category === '进阶'
+                            doc.category === '3-高阶' || doc.category === '2-中阶'
                         );
                         if (apiDoc) {
-                            buttonLink = `viewer.html?file=${apiDoc.path || apiDoc.filename}`;
+                            buttonLink = `../viewer.html?file=${apiDoc.path || apiDoc.filename}`;
                         }
                         break;
                     case 'community':

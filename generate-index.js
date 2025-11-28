@@ -2,42 +2,76 @@
 const fs = require('fs');
 const path = require('path');
 
-// 读取所有Markdown文件
-const docsDir = './docs';
+// 项目配置
+const projectConfig = {
+    name: '主项目',
+    docsDir: './docs',
+    configFile: './docs/config.json',
+    indexFile: './docs/tutorial-index.md',
+    categories: {
+        'getting-started': [],
+        'basic-concepts': [],
+        'mod-development': [],
+        'advanced-topics': [],
+        'resources': []
+    }
+};
 
 // 递归扫描目录获取所有Markdown文件
-function scanDirectoryRecursively(dir, fileList = []) {
-  const items = fs.readdirSync(dir);
-  
-  items.forEach(item => {
-    const fullPath = path.join(dir, item);
-    const stat = fs.statSync(fullPath);
-    
-    if (stat.isDirectory()) {
-      // 递归扫描子目录
-      scanDirectoryRecursively(fullPath, fileList);
-    } else if (item.endsWith('.md') && item !== 'tutorial-index.md') {
-      // 计算相对于docs目录的路径，确保使用正斜杠
-      const relativePath = path.relative(docsDir, fullPath).replace(/\\/g, '/');
-      fileList.push(relativePath);
-    }
-  });
-  
-  return fileList;
+function scanDirectoryRecursively(dir, baseDir, fileList = []) {
+    const items = fs.readdirSync(dir);
+
+    items.forEach(item => {
+        const fullPath = path.join(dir, item);
+        const stat = fs.statSync(fullPath);
+
+        if (stat.isDirectory()) {
+            // 递归扫描子目录
+            scanDirectoryRecursively(fullPath, baseDir, fileList);
+        } else if (item.endsWith('.md') && item !== 'tutorial-index.md') {
+            // 计算相对于docs目录的路径，确保使用正斜杠
+            const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, '/');
+            fileList.push(relativePath);
+        }
+    });
+
+    return fileList;
 }
 
-const files = scanDirectoryRecursively(docsDir);
+// 处理主项目
+function processMainProject() {
+    console.log(`\n正在处理 ${projectConfig.name} 项目...`);
 
-// 读取现有的config.json文件（如果存在）
-let configData = {};
-const configPath = path.join(docsDir, 'config.json');
-if (fs.existsSync(configPath)) {
-    try {
-        const configContent = fs.readFileSync(configPath, 'utf8');
-        configData = JSON.parse(configContent);
-    } catch (error) {
-        console.error('读取config.json时出错:', error.message);
-        // 如果读取失败，使用默认配置
+    const { docsDir, configFile, categories: defaultCategories } = projectConfig;
+
+    // 检查目录是否存在
+    if (!fs.existsSync(docsDir)) {
+        console.log(`警告: ${projectConfig.name} 的文档目录不存在: ${docsDir}`);
+        return;
+    }
+
+    // 扫描所有Markdown文件
+    const files = scanDirectoryRecursively(docsDir, docsDir);
+    console.log(`找到 ${files.length} 个Markdown文件`);
+
+    // 读取现有的config.json文件（如果存在）
+    let configData = {};
+    if (fs.existsSync(configFile)) {
+        try {
+            const configContent = fs.readFileSync(configFile, 'utf8');
+            configData = JSON.parse(configContent);
+        } catch (error) {
+            console.error(`读取${projectConfig.name}的config.json时出错:`, error.message);
+            // 如果读取失败，使用默认配置
+            configData = {
+                categories: {},
+                topics: {},
+                authors: {},
+                all_files: []
+            };
+        }
+    } else {
+        // 如果config.json不存在，创建默认配置
         configData = {
             categories: {},
             topics: {},
@@ -45,42 +79,25 @@ if (fs.existsSync(configPath)) {
             all_files: []
         };
     }
-} else {
-    // 如果config.json不存在，创建默认配置
-    configData = {
-        categories: {},
-        topics: {},
-        authors: {},
-        all_files: []
-    };
-}
 
-// 按类别分组
-const categories = {
-    'getting-started': [],
-    'basic-concepts': [],
-    'mod-development': [],
-    'advanced-topics': [],
-    'resources': []
-};
+    // 按类别分组
+    const categories = JSON.parse(JSON.stringify(defaultCategories)); // 深拷贝默认分类
 
-// 解析每个文件的元数据
-files.forEach(file => {
-    const fullPath = path.join(docsDir, file);
-    const content = fs.readFileSync(fullPath, 'utf8');
-    const metadata = parseMetadata(content);
-    
-    // 跳过标记为 hide: true 的文件
-    if (metadata.hide === 'true' || metadata.hide === true) {
-        return;
-    }
+    // 解析每个文件的元数据
+    files.forEach(file => {
+        const fullPath = path.join(docsDir, file);
+        const content = fs.readFileSync(fullPath, 'utf8');
+        const metadata = parseMetadata(content);
 
-    if (metadata.category) {
-        // 检查分类是否存在，如果不存在则创建或使用默认分类
-        let targetCategory = metadata.category;
+        // 跳过标记为 hide: true 的文件
+        if (metadata.hide === 'true' || metadata.hide === true) {
+            return;
+        }
 
-        // 如果分类不在预定义列表中，尝试映射或使用默认分类
-        if (!categories[targetCategory]) {
+        if (metadata.category) {
+            // 检查分类是否存在，如果不存在则创建或使用默认分类
+            let targetCategory = metadata.category;
+
             // 尝试将中文分类映射到英文分类键
             const categoryMapping = {
                 '入门': 'getting-started',
@@ -89,175 +106,130 @@ files.forEach(file => {
                 '高级主题': 'advanced-topics',
                 '资源参考': 'resources'
             };
+            targetCategory = categoryMapping[metadata.category] || metadata.category;
 
-            targetCategory = categoryMapping[metadata.category] || 'resources';
-
-            // 如果映射后仍不存在，确保resources分类存在
+            // 如果分类不在预定义列表中，使用默认分类
             if (!categories[targetCategory]) {
-                categories[targetCategory] = [];
+                targetCategory = 'resources';
+
+                // 确保默认分类存在
+                if (!categories[targetCategory]) {
+                    categories[targetCategory] = [];
+                }
             }
-        }
 
-        categories[targetCategory].push({
-            file,
-            path: file, // 添加完整路径
-            ...metadata
-        });
-    } else {
-        // 如果没有指定类别，默认为resources
-        if (!categories.resources) {
-            categories.resources = [];
-        }
-        categories.resources.push({
-            file,
-            path: file, // 添加完整路径
-            ...metadata
-        });
-    }
-});
-
-// 生成索引内容
-let indexContent = `# 教程索引\n\n`;
-indexContent += `这个文件是泰拉瑞亚Mod制作教程的索引，列出了所有可用的教程资源。索引是自动生成的，贡献者可以通过添加新的教程文件来更新此索引。\n\n`;
-indexContent += `## 如何添加新教程\n\n`;
-indexContent += `1. 在\`docs\`目录下创建新的Markdown文件\n`;
-indexContent += `2. 在文件开头添加以下元数据格式：\n\n`;
-indexContent += `\`\`\`markdown\n---\ntitle: 教程标题\ndifficulty: beginner|intermediate|advanced\ncategory: getting-started|basic-concepts|mod-development|advanced-topics|resources\ntime: 预计完成时间（分钟）\nauthor: 作者名称\ndate: 更新日期（YYYY-MM-DD）\ndescription: 简短描述\n---\n\`\`\`\n\n`;
-indexContent += `3. 运行\`node generate-index.js\`脚本自动更新此索引文件\n\n`;
-
-// 按类别生成内容
-Object.keys(categories).forEach(category => {
-    if (categories[category] && categories[category].length > 0) {
-        const categoryTitle = getCategoryTitle(category);
-        indexContent += `## ${categoryTitle}\n\n`;
-
-        categories[category].sort((a, b) => {
-            // 安全地比较标题，处理可能缺失的标题
-            const titleA = a.title || '';
-            const titleB = b.title || '';
-            return titleA.localeCompare(titleB);
-        });
-
-        categories[category].forEach(tutorial => {
-            indexContent += `### [${tutorial.title || '无标题'}](${tutorial.path || tutorial.file})\n`;
-            indexContent += `- **难度**: ${getDifficultyText(tutorial.difficulty)}\n`;
-            // 检查时间字段是否已经包含"分钟"，避免重复
-            const timeText = tutorial.time || '未知';
-            const timeDisplay = timeText.includes('分钟') ? timeText : `${timeText}分钟`;
-            indexContent += `- **预计时间**: ${timeDisplay}\n`;
-            indexContent += `- **作者**: ${tutorial.author || '未知'}\n`;
-            indexContent += `- **更新日期**: ${tutorial.date || tutorial.last_updated || '未知'}\n`;
-            indexContent += `- **描述**: ${tutorial.description || '无描述'}\n\n`;
-        });
-    }
-});
-
-// 添加自动生成脚本部分
-indexContent += `---\n\n`;
-indexContent += `## 自动生成脚本\n\n`;
-indexContent += `为了方便贡献者，我们提供了一个Node.js脚本来自动生成教程索引：\n\n`;
-indexContent += `\`\`\`javascript\n// generate-index.js\nconst fs = require('fs');\nconst path = require('path');\n\n// 读取所有Markdown文件\nconst docsDir = './docs';\nconst files = fs.readdirSync(docsDir).filter(file => file.endsWith('.md') && file !== 'tutorial-index.md');\n\n// 按类别分组\nconst categories = {\n    'getting-started': [],\n    'basic-concepts': [],\n    'mod-development': [],\n    'advanced-topics': [],\n    'resources': []\n};\n\n// 解析每个文件的元数据\nfiles.forEach(file => {\n    const content = fs.readFileSync(path.join(docsDir, file), 'utf8');\n    const metadata = parseMetadata(content);\n    \n    if (metadata.category) {\n        categories[metadata.category].push({\n            file,\n            ...metadata\n        });\n    }\n});\n\n// 生成索引内容\nlet indexContent = \`# 教程索引\\\\n\\\\n\`;\n// ... 其余脚本内容\n\`\`\`\n\n`;
-indexContent += `要使用此脚本，请运行：\n\n`;
-indexContent += `\`\`\`bash\nnode generate-index.js\n\`\`\`\n\n`;
-indexContent += `这将自动扫描\`docs\`目录中的所有Markdown文件，解析它们的元数据，并更新\`tutorial-index.md\`文件。\n`;
-
-// 更新config.json数据
-updateConfigData();
-
-// 写入索引文件
-fs.writeFileSync(path.join(docsDir, 'tutorial-index.md'), indexContent);
-console.log('教程索引已更新！');
-
-// 写入配置文件
-fs.writeFileSync(configPath, JSON.stringify(configData, null, 2));
-console.log('配置文件已更新！');
-
-// 辅助函数
-function parseMetadata(content) {
-    try {
-        // 移除可能的BOM字符
-        content = content.replace(/^\uFEFF/, '');
-
-        // 尝试多种正则表达式模式
-        let metadataMatch = content.match(/---\r?\n(.*?)\r?\n---/s);
-        if (!metadataMatch) {
-            metadataMatch = content.match(/^---\s*\n(.*?)\n---/ms);
-        }
-        if (!metadataMatch) {
-            return {};
-        }
-
-        const metadata = {};
-        const lines = metadataMatch[1].split(/\r?\n/);
-
-        lines.forEach(line => {
-            const colonIndex = line.indexOf(':');
-            if (colonIndex > 0) {
-                const key = line.substring(0, colonIndex).trim();
-                const value = line.substring(colonIndex + 1).trim();
-                metadata[key] = value;
+            categories[targetCategory].push({
+                file,
+                path: file, // 添加完整路径
+                ...metadata
+            });
+        } else {
+            // 如果没有指定类别，使用默认分类
+            const defaultCategory = 'resources';
+            if (!categories[defaultCategory]) {
+                categories[defaultCategory] = [];
             }
-        });
+            categories[defaultCategory].push({
+                file,
+                path: file, // 添加完整路径
+                ...metadata
+            });
+        }
+    });
 
-        return metadata;
-    } catch (error) {
-        console.error('解析元数据时出错:', error.message);
-        return {};
-    }
+    // 生成索引内容
+    let indexContent = generateIndexContent(categories);
+
+    // 更新config.json数据
+    updateConfigData(docsDir, files, configData);
+
+    // 写入索引文件
+    const indexPath = path.join(docsDir, 'tutorial-index.md');
+    fs.writeFileSync(indexPath, indexContent);
+    console.log(`${projectConfig.name} 教程索引已更新！`);
+
+    // 写入配置文件
+    fs.writeFileSync(configFile, JSON.stringify(configData, null, 2));
+    console.log(`${projectConfig.name} 配置文件已更新！`);
 }
 
-function getCategoryTitle(category) {
-    const titles = {
-        'getting-started': '入门指南',
-        'basic-concepts': '基础概念',
-        'mod-development': 'Mod开发',
-        'advanced-topics': '高级主题',
-        'resources': '资源参考',
-        // 直接支持中文分类名称
-        '入门': '入门指南',
-        '基础概念': '基础概念',
-        'Mod开发': 'Mod开发',
-        '高级主题': '高级主题',
-        '资源参考': '资源参考'
-    };
-    return titles[category] || category;
-}
+// 生成索引内容的函数
+function generateIndexContent(categories) {
+    let indexContent = `# 教程索引\n\n`;
 
-function getDifficultyText(difficulty) {
-    const texts = {
-        'beginner': '初级',
-        'intermediate': '中级',
-        'advanced': '高级'
-    };
-    return texts[difficulty] || difficulty;
+    indexContent += `这个文件是泰拉瑞亚Mod制作教程的索引，列出了所有可用的教程资源。索引是自动生成的，贡献者可以通过添加新的教程文件来更新此索引。\n\n`;
+    indexContent += `## 如何添加新教程\n\n`;
+    indexContent += `1. 在\`docs\`目录下创建新的Markdown文件\n`;
+    indexContent += `2. 在文件开头添加以下元数据格式：\n\n`;
+    indexContent += `\`\`\`markdown\n---\ntitle: 教程标题\ndifficulty: beginner|intermediate|advanced\ncategory: getting-started|basic-concepts|mod-development|advanced-topics|resources\ntime: 预计完成时间（分钟）\nauthor: 作者名称\ndate: 更新日期（YYYY-MM-DD）\ndescription: 简短描述\n---\n\`\`\`\n\n`;
+    indexContent += `3. 运行\`node generate-index.js\`脚本自动更新此索引文件\n\n`;
+
+    // 按类别生成内容
+    Object.keys(categories).forEach(category => {
+        if (categories[category] && categories[category].length > 0) {
+            const categoryTitle = getCategoryTitle(category);
+            indexContent += `## ${categoryTitle}\n\n`;
+
+            categories[category].sort((a, b) => {
+                // 安全地比较标题，处理可能缺失的标题
+                const titleA = a.title || '';
+                const titleB = b.title || '';
+                return titleA.localeCompare(titleB);
+            });
+
+            categories[category].forEach(tutorial => {
+                indexContent += `### [${tutorial.title || '无标题'}](${tutorial.path || tutorial.file})\n`;
+                indexContent += `- **难度**: ${getDifficultyText(tutorial.difficulty)}\n`;
+                // 检查时间字段是否已经包含"分钟"，避免重复
+                const timeText = tutorial.time || '未知';
+                const timeDisplay = timeText.includes('分钟') ? timeText : `${timeText}分钟`;
+                indexContent += `- **预计时间**: ${timeDisplay}\n`;
+                indexContent += `- **作者**: ${tutorial.author || '未知'}\n`;
+                indexContent += `- **更新日期**: ${tutorial.date || tutorial.last_updated || '未知'}\n`;
+                indexContent += `- **描述**: ${tutorial.description || '无描述'}\n\n`;
+            });
+        }
+    });
+
+    // 添加自动生成脚本部分
+    indexContent += `---\n\n`;
+    indexContent += `## 自动生成脚本\n\n`;
+    indexContent += `为了方便贡献者，我们提供了一个Node.js脚本来自动生成教程索引：\n\n`;
+    indexContent += `\`\`\`javascript\n// generate-index.js\nconst fs = require('fs');\nconst path = require('path');\n\n// 读取所有Markdown文件\nconst docsDir = './docs';\nconst files = fs.readdirSync(docsDir).filter(file => file.endsWith('.md') && file !== 'tutorial-index.md');\n\n// 按类别分组\nconst categories = {\n    'getting-started': [],\n    'basic-concepts': [],\n    'mod-development': [],\n    'advanced-topics': [],\n    'resources': []\n};\n\n// 解析每个文件的元数据\nfiles.forEach(file => {\n    const content = fs.readFileSync(path.join(docsDir, file), 'utf8');\n    const metadata = parseMetadata(content);\n    \n    if (metadata.category) {\n        categories[metadata.category].push({\n            file,\n            ...metadata\n        });\n    }\n});\n\n// 生成索引内容\nlet indexContent = \`# 教程索引\\\\n\\\\n\`;\n// ... 其余脚本内容\n\`\`\`\n\n`;
+    indexContent += `要使用此脚本，请运行：\n\n`;
+    indexContent += `\`\`\`bash\nnode generate-index.js\n\`\`\`\n\n`;
+    indexContent += `这将自动扫描\`docs\`目录中的所有Markdown文件，解析它们的元数据，并更新\`tutorial-index.md\`文件。\n`;
+
+    return indexContent;
 }
 
 // 更新config.json数据的函数
-function updateConfigData() {
+function updateConfigData(docsDir, files, configData) {
     // 获取当前docs目录中所有实际存在的Markdown文件（包括子目录）
-    const currentFiles = scanDirectoryRecursively(docsDir);
+    const currentFiles = scanDirectoryRecursively(docsDir, docsDir);
     const existingFiles = new Set(currentFiles);
-    
+
     // 创建文件到正确类别的映射表
     const fileToCorrectCategory = {};
     // 创建隐藏文件集合
     const hiddenFiles = new Set();
-    
+
     // 首先解析所有文件的元数据，确定每个文件应该属于哪个类别
     currentFiles.forEach(file => {
         try {
             const fullPath = path.join(docsDir, file);
             const content = fs.readFileSync(fullPath, 'utf8');
             const metadata = parseMetadata(content);
-            
+
             // 检查是否为隐藏文件
             if (metadata.hide === 'true' || metadata.hide === true) {
                 hiddenFiles.add(file);
                 return; // 跳过隐藏文件
             }
-            
+
             // 确定类别
             let category = metadata.category || '资源参考';
+
             // 将英文类别映射到中文
             const categoryMapping = {
                 'getting-started': '入门',
@@ -267,14 +239,14 @@ function updateConfigData() {
                 'resources': '资源参考'
             };
             category = categoryMapping[category] || category;
-            
+
             fileToCorrectCategory[file] = category;
         } catch (error) {
             console.error(`解析文件 ${file} 时出错:`, error.message);
-            fileToCorrectCategory[file] = '资源参考'; // 默认类别
+            fileToCorrectCategory[file] = projectKey === 'main' ? '资源参考' : '杂项'; // 默认类别
         }
     });
-    
+
     // 清理categories中的无效文件记录和错误分类的文件
     if (configData.categories) {
         Object.keys(configData.categories).forEach(category => {
@@ -288,12 +260,12 @@ function updateConfigData() {
                                 if (!fileObj || !fileObj.filename || !existingFiles.has(fileObj.filename)) {
                                     return false; // 返回false，表示该文件对象无效
                                 }
-                                
+
                                 // 检查文件是否为隐藏文件
                                 if (hiddenFiles.has(fileObj.filename)) {
                                     return false; // 跳过隐藏文件
                                 }
-                                
+
                                 // 检查文件是否属于当前类别（防止文件出现在错误的类别中）
                                 const correctCategory = fileToCorrectCategory[fileObj.filename];
                                 return correctCategory === category;
@@ -303,7 +275,7 @@ function updateConfigData() {
             }
         });
     }
-    
+
     // 清理authors中的无效记录
     if (configData.authors) {
         Object.keys(configData.authors).forEach(author => {
@@ -313,7 +285,7 @@ function updateConfigData() {
                     configData.authors[author].files.filter(filename => {
                         return existingFiles.has(filename) && !hiddenFiles.has(filename);
                     });
-                
+
                 // 如果作者没有有效文件了，移除该作者
                 if (configData.authors[author].files.length === 0) {
                     delete configData.authors[author];
@@ -321,7 +293,7 @@ function updateConfigData() {
             }
         });
     }
-    
+
     // 初始化类别结构（如果不存在）
     const defaultCategories = {
         '入门': {
@@ -457,7 +429,7 @@ function updateConfigData() {
         const fullPath = path.join(docsDir, file);
         const content = fs.readFileSync(fullPath, 'utf8');
         const metadata = parseMetadata(content);
-        
+
         // 跳过隐藏文件
         if (metadata.hide === 'true' || metadata.hide === true) {
             return;
@@ -465,6 +437,7 @@ function updateConfigData() {
 
         // 确定类别
         let category = metadata.category || '资源参考';
+
         // 将英文类别映射到中文
         const categoryMapping = {
             'getting-started': '入门',
@@ -560,12 +533,12 @@ function updateConfigData() {
             if (!configData.authors[metadata.author].files.includes(path.basename(file))) {
                 configData.authors[metadata.author].files.push(path.basename(file));
             }
-            
+
             // 从其他作者的文件列表中移除此文件，确保作者信息一致性
             Object.keys(configData.authors).forEach(author => {
                 if (author !== metadata.author && configData.authors[author].files.includes(path.basename(file))) {
                     configData.authors[author].files = configData.authors[author].files.filter(f => f !== path.basename(file));
-                    
+
                     // 如果该作者没有其他文件了，移除该作者
                     if (configData.authors[author].files.length === 0) {
                         delete configData.authors[author];
@@ -578,3 +551,68 @@ function updateConfigData() {
     // 按order排序all_files
     configData.all_files.sort((a, b) => a.order - b.order);
 }
+
+// 辅助函数
+function parseMetadata(content) {
+    try {
+        // 移除可能的BOM字符
+        content = content.replace(/^\uFEFF/, '');
+
+        // 尝试多种正则表达式模式
+        let metadataMatch = content.match(/---\r?\n(.*?)\r?\n---/s);
+        if (!metadataMatch) {
+            metadataMatch = content.match(/^---\s*\n(.*?)\n---/ms);
+        }
+        if (!metadataMatch) {
+            return {};
+        }
+
+        const metadata = {};
+        const lines = metadataMatch[1].split(/\r?\n/);
+
+        lines.forEach(line => {
+            const colonIndex = line.indexOf(':');
+            if (colonIndex > 0) {
+                const key = line.substring(0, colonIndex).trim();
+                const value = line.substring(colonIndex + 1).trim();
+                metadata[key] = value;
+            }
+        });
+
+        return metadata;
+    } catch (error) {
+        console.error('解析元数据时出错:', error.message);
+        return {};
+    }
+}
+
+function getCategoryTitle(category) {
+    const titles = {
+        'getting-started': '入门指南',
+        'basic-concepts': '基础概念',
+        'mod-development': 'Mod开发',
+        'advanced-topics': '高级主题',
+        'resources': '资源参考',
+        // 直接支持中文分类名称
+        '入门': '入门指南',
+        '基础概念': '基础概念',
+        'Mod开发': 'Mod开发',
+        '高级主题': '高级主题',
+        '资源参考': '资源参考'
+    };
+    return titles[category] || category;
+}
+
+function getDifficultyText(difficulty) {
+    const texts = {
+        'beginner': '初级',
+        'intermediate': '中级',
+        'advanced': '高级'
+    };
+    return texts[difficulty] || difficulty;
+}
+
+// 主处理逻辑
+console.log('开始生成教程索引和配置文件...');
+processMainProject();
+console.log('\n主项目处理完成！');

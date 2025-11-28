@@ -1,0 +1,2144 @@
+<!DOCTYPE html>
+<!-- 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程文档查看器页面 -->
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档查看器 - 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程</title>
+
+    <!-- SEO优化标签 -->
+    <meta name="description" content="错数螺线 LogSpiral 文档查看器，提供泰拉瑞亚Mod开发教程的在线阅读体验，支持代码高亮、目录导航和搜索功能。">
+    <meta name="keywords" content="泰拉瑞亚,Mod,教程,文档查看器,tModLoader,C#,游戏开发,错数螺线,LogSpiral">
+    <meta name="author" content="错数螺线 LogSpiral社区">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph标签 -->
+    <meta property="og:title" content="文档查看器 - 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程">
+    <meta property="og:description" content="错数螺线 LogSpiral 文档查看器，提供泰拉瑞亚Mod开发教程的在线阅读体验">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dpapyru.github.io/LogSpiral/viewer.html">
+    <meta property="og:image" content="https://dpapyru.github.io/LogSpiral/assets/imgs/icon.jpg">
+    <meta property="og:site_name" content="错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程">
+    <meta property="og:locale" content="zh_CN">
+
+    <!-- Twitter Card标签 -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="文档查看器 - 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程">
+    <meta name="twitter:description" content="错数螺线 LogSpiral 文档查看器，提供泰拉瑞亚Mod开发教程的在线阅读体验">
+    <meta name="twitter:image" content="https://dpapyru.github.io/LogSpiral/assets/imgs/icon.jpg">
+
+    <!-- 规范URL -->
+    <link rel="canonical" href="https://dpapyru.github.io/LogSpiral/viewer.html">
+
+    <!-- 加载CSS样式文件 -->
+    <link rel="stylesheet" href="assets/css/style.css"> <!-- 主样式文件 -->
+    <link rel="stylesheet" href="assets/css/prism.min.css"> <!-- 代码高亮样式 -->
+    <link rel="stylesheet" href="assets/css/vs2022-theme.css"> <!-- VS2022代码高亮主题 -->
+    <link rel="icon" type="image/png" href="assets/imgs/icon.jpg"> <!-- 网站图标 -->
+</head>
+
+<body>
+    <!-- 网站头部导航区域 -->
+    <header class="site-header">
+        <div class="container">
+            <!-- 头部内容容器：包含网站logo、导航菜单和移动端菜单按钮 -->
+            <div class="header-content">
+                <!-- 网站logo和标题 -->
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="assets/imgs/icon.jpg" alt="错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程" class="logo-image">
+                        <h1 class="site-title">错数螺线 LogSpiral</h1>
+                    </a>
+                </div>
+                <!-- 主导航菜单 -->
+                <nav class="main-nav">
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="docs/" class="nav-link active">文档</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
+                                target="_blank">GitHub</a></li>
+                    </ul>
+                </nav>
+                <!-- 移动端菜单切换按钮 -->
+                <button class="mobile-menu-toggle" aria-label="切换菜单">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <!-- 手机端文档导航按钮 -->
+                <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="文档导航">
+                    <span class="nav-icon">☰</span>
+                    <span class="nav-text">导航</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 网站主体容器：包含侧边栏和主内容区 -->
+    <div class="site-container">
+        <!-- 左侧边栏：文档导航和相关链接 -->
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <!-- 侧边栏第一部分：文档导航 -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">
+                        <span class="sidebar-title-text">文档导航</span>
+                    </h3>
+                    <ul class="sidebar-list" id="category-sidebar">
+                        <!-- 分类侧边栏将通过JavaScript动态生成 -->
+                    </ul>
+                </div>
+                <!-- 侧边栏第二部分：当前分类文档 -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title" id="current-category-title">当前分类</h3>
+                    <ul class="sidebar-list" id="current-category-docs">
+                        <!-- 当前分类的文档列表将通过JavaScript动态生成 -->
+                    </ul>
+                </div>
+                <!-- 侧边栏第三部分：贡献者信息 -->
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">贡献者</h3>
+                    <div class="contributors">
+                        <p>欢迎参与贡献！</p>
+                        <a href="../CONTRIBUTING.md" class="btn btn-small">如何贡献</a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区域：显示Markdown文档内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <!-- 教程头部区域：包含面包屑导航和文档元信息 -->
+                <div class="tutorial-header">
+                    <!-- 面包屑导航 -->
+                    <div class="breadcrumb">
+                        <a href="index.html">首页</a> >
+                        <a href="docs/">文档</a> >
+                        <span class="current" id="current-doc-name">文档</span>
+                    </div>
+                    <!-- 文档标题 -->
+                    <h1 class="tutorial-title" id="doc-title">文档</h1>
+                    <!-- 文档元信息：难度、时间、作者、更新日期 -->
+                    <div class="tutorial-meta" id="doc-meta">
+                        <span class="difficulty">难度: <span class="difficulty-badge" id="doc-difficulty">未知</span></span>
+                        <span class="time">预计时间: <span id="doc-time">未知</span></span>
+                        <span class="author">作者: <span id="doc-author">未知</span></span>
+                        <span class="date">更新日期: <span id="doc-date">未知</span></span>
+                    </div>
+                </div>
+
+                <!-- 教程内容区域：加载和显示Markdown内容 -->
+                <div class="tutorial-content">
+                    <!-- 加载状态指示器：显示内容加载中的提示 -->
+                    <div id="loading-indicator" class="loading-indicator">
+                        <div class="loading-spinner"></div>
+                        <p>正在加载内容...</p>
+                    </div>
+
+                    <!-- 错误信息容器：当内容加载失败时显示错误信息 -->
+                    <div id="error-message" class="error-message" style="display: none;">
+                        <h3>加载失败</h3>
+                        <p id="error-text">无法加载文档内容，请稍后再试。</p>
+                    </div>
+
+                    <!-- 目录容器：自动生成的文档目录 -->
+                    <div id="table-of-contents" class="table-of-contents" style="display: none;">
+                        <h3>目录</h3>
+                        <ul id="toc-list"></ul>
+                    </div>
+
+                    <!-- Markdown内容容器：渲染后的HTML内容将插入这里 -->
+                    <div id="markdown-content" class="markdown-content" style="display: none;">
+                        <!-- 文档内容将通过Markdown渲染后插入这里 -->
+                    </div>
+                </div>
+
+                <!-- 教程底部区域：导航链接和反馈表单 -->
+                <div class="tutorial-footer">
+                    <!-- 教程导航：上一篇/下一篇链接 -->
+                    <div class="tutorial-navigation">
+                        <a href="docs/" class="btn btn-outline prev-tutorial">← 返回文档列表</a>
+                        <a href="?file=test.md" class="btn btn-secondary">测试文档</a>
+                        <a href="?file=02-基础概念/basic-concepts.md" class="btn btn-primary next-tutorial">基础教程 →</a>
+                    </div>
+                    <!-- 教程反馈：用户反馈和问题提交 -->
+                    <div class="tutorial-feedback">
+                        <h3>教程反馈</h3>
+                        <p>如果你对本教程有任何问题或建议，欢迎在GitHub上提出Issue或PR。</p>
+                        <a href="https://github.com/DPapyru/DPapyru.github.io/issues" class="btn btn-small"
+                            target="_blank">提供反馈</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 网站底部区域 -->
+    <footer class="site-footer">
+        <div class="container">
+            <!-- 底部内容容器 -->
+            <div class="footer-content">
+                <!-- 底部第一栏：关于项目 -->
+                <div class="footer-section">
+                    <h4>关于项目</h4>
+                    <p>错数螺线 LogSpiral是面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛。</p>
+                </div>
+                <!-- 底部第二栏：快速链接 -->
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="index.html">首页</a></li>
+                        <li><a href="docs/">文档</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                    </ul>
+                </div>
+                <!-- 底部第三栏：联系我们 -->
+                <div class="footer-section">
+                    <h4>联系我们</h4>
+                    <ul>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                        <li>QQ:3253615697</li>
+                    </ul>
+                </div>
+            </div>
+            <!-- 底部版权信息 -->
+            <div class="footer-bottom">
+                <p>&copy; 2023 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/"
+                        target="_blank">CC
+                        BY 4.0</a> 许可协议。</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 手机端导航覆盖层 -->
+    <div class="mobile-nav-overlay" id="mobile-nav-overlay">
+        <!-- 导航区域 (占屏幕2/3) -->
+        <div class="mobile-nav-content">
+            <div class="mobile-nav-header">
+                <h3>文档导航</h3>
+                <button class="mobile-nav-close" id="mobile-nav-close">✕</button>
+            </div>
+            <div class="mobile-nav-body">
+                <!-- 导航内容将在这里动态生成 -->
+                <div class="mobile-nav-sections" id="mobile-nav-sections">
+                    <!-- 分类导航将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+        <!-- 半透明返回区域 (占屏幕1/3) -->
+        <div class="mobile-nav-back" id="mobile-nav-back">
+            <div class="mobile-nav-back-hint">
+                <p>点击此处返回文章</p>
+                <div class="back-arrow">↑</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载JavaScript文件 -->
+    <script src="assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
+    <script src="assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
+    <script src="assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
+    <script>
+        // 设置一个标志，告诉main.js这是viewer.html页面，不要执行自动加载
+        window.IS_VIEWER_PAGE = true;
+
+        // 禁用main.js中的路由系统，避免干扰viewer.html的文件加载
+        window.DISABLE_ROUTER = true;
+    </script>
+    <script src="assets/js/main.js"></script> <!-- 主要功能脚本 -->
+    <script src="assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
+
+    <script>
+        // 文档配置和元数据管理
+        let DOC_CONFIG = null;
+        let ALL_DOCS = [];
+
+        // 主分类配置
+        const MAIN_CATEGORIES = {
+            '0-开始': {
+                title: '开始',
+                description: '适合初学者的基础教程',
+                order: 1
+            },
+            '1-基础': {
+                title: '基础',
+                description: '有一定基础后的进阶教程',
+                order: 2
+            },
+            '2-中阶': {
+                title: '中阶',
+                description: '面向有经验开发者的高级教程',
+                order: 3
+            },
+            '3-高阶': {
+                title: '高阶',
+                description: '高级开发技巧和优化',
+                order: 4
+            },
+            '4-专家': {
+                title: '专家',
+                description: '专家级开发技巧',
+                order: 5
+            }
+        };
+
+        // 主题领域配置
+        const TOPIC_AREAS = {
+            'env': {
+                title: '环境配置',
+                description: '开发环境搭建和配置'
+            },
+            'mod-basics': {
+                title: 'Mod基础',
+                description: 'Mod开发的基础概念和核心API'
+            },
+            'items': {
+                title: '物品系统',
+                description: '物品、武器和装备的开发'
+            },
+            'npcs': {
+                title: 'NPC系统',
+                description: 'NPC的创建和行为定制'
+            },
+            'world-gen': {
+                title: '世界生成',
+                description: '世界生成和地形修改'
+            },
+            'ui': {
+                title: 'UI界面',
+                description: '用户界面和交互设计'
+            },
+            'networking': {
+                title: '网络功能',
+                description: '多人游戏和网络通信'
+            },
+            'advanced': {
+                title: '高级功能',
+                description: '高级开发技巧和优化'
+            }
+        };
+
+        // 旧路径重定向映射
+        const OLD_PATH_REDIRECTS = {
+            '01-入门指南/README.md': 'test.md',
+            '02-基础概念/basic-concepts.md': 'test.md',
+            '03-内容创建/content-creation.md': 'test.md',
+            '04-高级开发/advanced-development.md': 'test.md',
+            '05-专题主题/special-topics.md': 'test.md',
+            '06-资源参考/resource-reference.md': 'test.md'
+        };
+
+        // 文档查看器的主要JavaScript逻辑
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('=== LogSpiral/viewer.html: 页面加载完成 ===');
+            console.log('=== 诊断信息 ===');
+            console.log('当前页面URL:', window.location.href);
+            console.log('当前页面路径:', window.location.pathname);
+            console.log('当前搜索参数:', window.location.search);
+
+            // 初始化侧边栏滚动功能
+            initializeSidebarScrolling();
+
+            // 初始化文档配置
+            initializeDocumentConfig().then(() => {
+                // 初始化分类导航
+                initializeCategoryNavigation();
+
+                // 从URL参数获取要加载的Markdown文件
+                const urlParams = new URLSearchParams(window.location.search);
+                let markdownFile = urlParams.get('file');
+                console.log('从URL参数获取的文件名:', markdownFile);
+
+                // 如果没有指定文件，尝试从路径中获取
+                if (!markdownFile) {
+                    const pathParts = window.location.pathname.split('/');
+                    markdownFile = pathParts[pathParts.length - 1];
+                    console.log('从路径获取的文件名:', markdownFile);
+                }
+
+                // 如果还是没有，默认加载主页文档
+                if (!markdownFile || !markdownFile.endsWith('.md')) {
+                    markdownFile = '0-开始/0-Home 主页.md';
+                    console.log('使用默认文件名:', markdownFile);
+                }
+
+                console.log(`LogSpiral/viewer.html: 准备加载Markdown文件: ${markdownFile}`);
+
+                // 延迟加载，确保所有脚本都已初始化
+                setTimeout(function () {
+                    // 直接使用本地加载函数，避免main.js中的路径处理问题
+                    console.log('LogSpiral/viewer.html: 使用本地loadMarkdownDirectly函数');
+                    loadMarkdownDirectly(markdownFile);
+                }, 200);
+            });
+
+            // 初始化下拉菜单
+            initializeDropdownMenu();
+
+            // 初始化手机端导航
+            initializeMobileNavigation();
+
+            // 初始化MD渲染器
+            initializeMarkedRender();
+        });
+
+        async function initializeMarkedRender() {
+            console.log('初始化MD渲染器...');
+
+            try {
+                // 配置 marked.js 选项
+                marked.use({
+                    highlight: function (code, lang) {
+                        if (typeof Prism !== 'undefined' && Prism.languages[lang]) {
+                            return Prism.highlight(code, Prism.languages[lang], lang);
+                        }
+                        return code;
+                    },
+                    breaks: true,
+                    gfm: true,
+                    tables: true,
+                    sanitize: false,
+                    smartLists: true,
+                    smartypants: true,
+                    mangle: true,
+                    headerIds: true,
+                    xhtml: false,
+                    pedantic: false
+                });
+                console.log('MD渲染器初始化完毕!');
+            } catch (error) {
+                console.error('初始化MD渲染器失败:', error);
+            }
+        }
+
+        // 初始化文档配置
+        async function initializeDocumentConfig() {
+            try {
+                // 尝试加载配置文件
+                const configResponse = await fetch('./docs/config.json');
+                if (configResponse.ok) {
+                    DOC_CONFIG = await configResponse.json();
+                    console.log('成功加载配置文件:', DOC_CONFIG);
+                } else {
+                    console.warn('配置文件不存在，使用默认配置');
+                    DOC_CONFIG = generateDefaultConfig();
+                }
+            } catch (error) {
+                console.warn('加载配置文件失败，使用默认配置:', error);
+                DOC_CONFIG = generateDefaultConfig();
+            }
+
+            // 扫描所有文档文件
+            await scanAllDocuments();
+        }
+
+        // 生成默认配置（当config.json不存在时）
+        function generateDefaultConfig() {
+            const config = {
+                categories: {},
+                topics: {},
+                authors: {},
+                all_files: []
+            };
+
+            // 初始化分类结构
+            Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
+                config.categories[categoryKey] = {
+                    title: MAIN_CATEGORIES[categoryKey].title,
+                    description: MAIN_CATEGORIES[categoryKey].description,
+                    topics: {}
+                };
+            });
+
+            // 初始化主题结构
+            Object.keys(TOPIC_AREAS).forEach(topicKey => {
+                config.topics[topicKey] = {
+                    title: TOPIC_AREAS[topicKey].title,
+                    description: TOPIC_AREAS[topicKey].description
+                };
+            });
+
+            return config;
+        }
+
+        // 扫描所有文档文件
+        async function scanAllDocuments() {
+            console.log('=== scanAllDocuments() 诊断开始 ===');
+            try {
+                // 完全依赖配置文件，因为git上传后会调用generate-index.js生成新的config.json
+                try {
+                    const configResponse = await fetch('./docs/config.json');
+                    if (configResponse.ok) {
+                        const config = await configResponse.json();
+                        console.log('成功加载配置文件:', config);
+
+                        // 从配置文件中提取文档列表
+                        ALL_DOCS = config.all_files || [];
+                        console.log('从配置文件加载的文档:', ALL_DOCS);
+
+                        // 如果配置文件中有文档，直接使用
+                        if (ALL_DOCS.length > 0) {
+                            // 确保每个文档都有必要的属性
+                            ALL_DOCS = ALL_DOCS.map(doc => ({
+                                ...doc,
+                                title: doc.title || doc.filename.replace('.md', ''),
+                                author: doc.author || '未知',
+                                category: doc.category || '0-开始',
+                                topic: doc.topic || 'mod-basics',
+                                order: parseInt(doc.order) || 999,
+                                description: doc.description || '',
+                                tags: doc.tags ? (Array.isArray(doc.tags) ? doc.tags : doc.tags.split(',').map(t => t.trim())) : [],
+                                last_updated: doc.last_updated || '未知'
+                            }));
+
+                            console.log('处理后的文档列表:', ALL_DOCS);
+                            console.log('=== scanAllDocuments() 诊断结束 ===');
+                            return;
+                        }
+                    }
+                } catch (configError) {
+                    console.warn('加载配置文件失败:', configError);
+                }
+
+                // 如果配置文件加载失败或没有文档，尝试扫描常见的文档文件
+                console.log('配置文件不可用，尝试扫描常见文档文件');
+                const commonFiles = [
+                    'DPapyru-ForNewModder.md',
+                    'DPapyru-ForContributors-Basic.md',
+                    'TopicSystemGuide.md',
+                    'tutorial-index.md',
+                    'test.md'
+                ];
+
+                ALL_DOCS = [];
+
+                for (const filename of commonFiles) {
+                    try {
+                        // 获取文档内容和元数据
+                        const docUrl = `./docs/${filename}`;
+                        const docResponse = await fetch(docUrl);
+
+                        if (docResponse.ok) {
+                            const content = await docResponse.text();
+                            const { metadata } = parseFrontMatter(content);
+
+                            const docInfo = {
+                                filename: filename,
+                                title: metadata.title || filename.replace('.md', ''),
+                                author: metadata.author || '未知',
+                                category: metadata.category || '0-开始',
+                                topic: metadata.topic || 'mod-basics',
+                                order: parseInt(metadata.order) || 999,
+                                description: metadata.description || '',
+                                tags: metadata.tags ? metadata.tags.split(',').map(t => t.trim()) : [],
+                                last_updated: metadata.last_updated || '未知'
+                            };
+
+                            ALL_DOCS.push(docInfo);
+                            console.log('成功添加文档:', docInfo.title);
+                        }
+                    } catch (error) {
+                        console.warn(`无法处理文档 ${filename}:`, error);
+                    }
+                }
+
+                // 按分类和排序
+                ALL_DOCS.sort((a, b) => {
+                    if (a.category !== b.category) {
+                        return (MAIN_CATEGORIES[a.category]?.order || 999) - (MAIN_CATEGORIES[b.category]?.order || 999);
+                    }
+                    return a.order - b.order;
+                });
+
+                console.log('扫描到的文档:', ALL_DOCS);
+                console.log('=== scanAllDocuments() 诊断结束 ===');
+
+            } catch (error) {
+                console.error('扫描文档失败:', error);
+                console.log('=== scanAllDocuments() 因错误结束 ===');
+                // 提供一些默认文档
+                ALL_DOCS = [
+                    {
+                        filename: '0-开始/0-Home 主页.md',
+                        path: '0-开始/0-Home 主页.md',
+                        title: '0-Home 主页',
+                        author: '错数螺线(LogSpiral)',
+                        category: '0-开始',
+                        topic: 'getting-started',
+                        order: 1,
+                        description: 'tModLoader基础知识和入门指南',
+                        tags: ['主页', '入门'],
+                        last_updated: '2025-11-26'
+                    }
+                ];
+            }
+        }
+
+        // 使用文档信息更新配置
+        function updateConfigWithDocument(docInfo) {
+            const { category, topic } = docInfo;
+
+            // 确保分类存在
+            if (!DOC_CONFIG.categories[category]) {
+                DOC_CONFIG.categories[category] = {
+                    title: category,
+                    description: `${category}相关文档`,
+                    topics: {}
+                };
+            }
+
+            // 确保主题存在
+            if (!DOC_CONFIG.categories[category].topics[topic]) {
+                DOC_CONFIG.categories[category].topics[topic] = {
+                    title: TOPIC_AREAS[topic]?.title || topic,
+                    description: TOPIC_AREAS[topic]?.description || '',
+                    files: []
+                };
+            }
+
+            // 添加文件到对应主题
+            DOC_CONFIG.categories[category].topics[topic].files.push(docInfo);
+
+            // 更新作者信息
+            if (!DOC_CONFIG.authors[docInfo.author]) {
+                DOC_CONFIG.authors[docInfo.author] = {
+                    name: docInfo.author,
+                    files: []
+                };
+            }
+            DOC_CONFIG.authors[docInfo.author].files.push(docInfo.filename);
+
+            // 添加到所有文件列表
+            DOC_CONFIG.all_files.push(docInfo);
+        }
+        // 直接加载Markdown内容的备用函数
+        function loadMarkdownDirectly(filePath) {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const errorMessage = document.getElementById('error-message');
+            const markdownContent = document.getElementById('markdown-content');
+
+            console.log(`=== loadMarkdownDirectly() 诊断开始 ===`);
+            console.log(`LogSpiral/viewer.html: 原始文件路径: ${filePath}`);
+            console.log('当前页面位置:', window.location.href);
+
+            // 增强的路径清理逻辑
+            let fetchPath = filePath;
+            console.log(`LogSpiral/viewer.html: 初始fetchPath: ${fetchPath}`);
+
+            // 1. URL解码
+            fetchPath = decodeURIComponent(fetchPath);
+            console.log(`LogSpiral/viewer.html: URL解码后: ${fetchPath}`);
+
+            // 2. 如果只是文件名，尝试在文档列表中查找完整路径
+            if (!fetchPath.includes('/') && ALL_DOCS.length > 0) {
+                const doc = ALL_DOCS.find(d => d.filename === fetchPath || d.path === fetchPath);
+                if (doc && doc.path) {
+                    fetchPath = doc.path;
+                    console.log(`LogSpiral/viewer.html: 通过文档列表找到完整路径: ${fetchPath}`);
+                }
+            }
+
+            // 3. 移除开头的docs/前缀（因为viewer.html已经在LogSpiral目录中）
+            if (fetchPath.startsWith('docs/')) {
+                fetchPath = fetchPath.substring(5);
+                console.log(`LogSpiral/viewer.html: 移除docs前缀: ${fetchPath}`);
+            }
+
+            // 4. 移除开头的斜杠
+            if (fetchPath.startsWith('/')) {
+                fetchPath = fetchPath.substring(1);
+                console.log(`LogSpiral/viewer.html: 移除开头斜杠: ${fetchPath}`);
+            }
+
+            // 5. 检查是否是旧路径格式，进行重定向
+            if (OLD_PATH_REDIRECTS[fetchPath]) {
+                fetchPath = OLD_PATH_REDIRECTS[fetchPath];
+                console.log(`LogSpiral/viewer.html: 旧路径重定向: ${fetchPath}`);
+            }
+
+            // 6. 检查是否是已知的分类名或特殊文件
+            const knownCategories = ['00-测试文档', '01-入门指南', '02-基础概念', '03-内容创建', '04-高级开发', '05-专题主题', '06-资源参考'];
+            const rootFiles = ['tutorial-index.md', 'test.md']; // 位于docs根目录的文件列表
+
+            // 优化路径处理逻辑，优先使用配置文件中的路径信息
+            if (ALL_DOCS.length > 0) {
+                // 首先尝试直接匹配完整路径
+                let doc = ALL_DOCS.find(d => d.path === fetchPath || d.filename === fetchPath);
+
+                if (!doc && fetchPath.includes('/')) {
+                    // 如果是路径格式，尝试匹配路径中的文件名
+                    const filename = fetchPath.split('/').pop();
+                    doc = ALL_DOCS.find(d => d.filename === filename || d.filename.endsWith(filename));
+                }
+
+                if (!doc && !fetchPath.includes('/')) {
+                    // 如果只是文件名，尝试匹配文件名
+                    doc = ALL_DOCS.find(d => d.filename === fetchPath || d.filename === `${fetchPath}.md`);
+                }
+
+                if (doc) {
+                    // 找到匹配的文档，使用配置文件中的路径
+                    fetchPath = doc.path || doc.filename;
+                    console.log(`LogSpiral/viewer.html: 通过配置文件找到匹配文档: ${fetchPath}`);
+                } else if (knownCategories.includes(fetchPath) || fetchPath.match(/^\d+-[^\/]+$/)) {
+                    // 如果是分类名，尝试重定向到对应的文档
+                    console.log(`LogSpiral/viewer.html: 识别为旧分类名，尝试重定向`);
+                    const firstDoc = ALL_DOCS.find(doc => doc.category === getCategoryFromOldPath(fetchPath));
+                    if (firstDoc) {
+                        fetchPath = firstDoc.path || firstDoc.filename;
+                        console.log(`LogSpiral/viewer.html: 重定向到文档: ${fetchPath}`);
+                    } else {
+                        // 如果找不到对应文档，使用默认文档
+                        fetchPath = '0-开始/0-Home 主页.md';
+                        console.log(`LogSpiral/viewer.html: 未找到对应文档，使用默认: ${fetchPath}`);
+                    }
+                } else if (OLD_PATH_REDIRECTS[fetchPath]) {
+                    // 检查是否是旧路径格式，进行重定向
+                    fetchPath = OLD_PATH_REDIRECTS[fetchPath];
+                    console.log(`LogSpiral/viewer.html: 旧路径重定向: ${fetchPath}`);
+                } else if (!rootFiles.includes(fetchPath)) {
+                    // 如果不是根目录文件且找不到匹配，使用默认文档
+                    fetchPath = '0-开始/0-Home 主页.md';
+                    console.log(`LogSpiral/viewer.html: 未找到匹配文档，使用默认: ${fetchPath}`);
+                } else {
+                    // 根目录文件，直接使用
+                    console.log(`LogSpiral/viewer.html: 识别为根目录文件: ${fetchPath}`);
+                }
+            } else {
+                // 如果配置文件未加载，使用原有逻辑
+                if (knownCategories.includes(fetchPath) || fetchPath.match(/^\d+-[^\/]+$/)) {
+                    // 如果是分类名，尝试重定向到对应的文档
+                    console.log(`LogSpiral/viewer.html: 识别为旧分类名，尝试重定向`);
+                    const firstDoc = ALL_DOCS.find(doc => doc.category === getCategoryFromOldPath(fetchPath));
+                    if (firstDoc) {
+                        fetchPath = firstDoc.path || firstDoc.filename;
+                        console.log(`LogSpiral/viewer.html: 重定向到文档: ${fetchPath}`);
+                    } else {
+                        fetchPath = '0-开始/0-Home 主页.md';
+                        console.log(`LogSpiral/viewer.html: 未找到对应文档，使用默认: ${fetchPath}`);
+                    }
+                } else if (rootFiles.includes(fetchPath)) {
+                    console.log(`LogSpiral/viewer.html: 识别为根目录文件: ${fetchPath}`);
+                } else {
+                    fetchPath = '0-开始/0-Home 主页.md';
+                    console.log(`LogSpiral/viewer.html: 未找到匹配文档，使用默认: ${fetchPath}`);
+                }
+            }
+
+            // 7. 确保文件以.md结尾
+            if (!fetchPath.endsWith('.md')) {
+                fetchPath += '.md';
+                console.log(`LogSpiral/viewer.html: 添加.md扩展名: ${fetchPath}`);
+            }
+
+            console.log(`LogSpiral/viewer.html: 最终使用路径: ${fetchPath}`);
+
+            // 确保路径相对于当前页面（LogSpiral目录）
+            // 直接添加docs/前缀，因为文档在docs目录中
+            let fetchUrl = `./docs/${fetchPath}`;
+
+            console.log(`LogSpiral/viewer.html: 实际fetch URL: ${fetchUrl}`);
+            console.log(`完整请求URL将是: ${window.location.origin}${window.location.pathname.replace(/\/[^\/]*$/, '/')}${fetchUrl}`);
+
+            fetch(fetchUrl)
+                .then(response => {
+                    console.log(`获取响应状态: ${response.status} ${response.statusText}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(markdownText => {
+                    console.log(`LogSpiral/viewer.html: 成功获取Markdown内容，长度: ${markdownText.length}`);
+
+                    if (typeof marked !== 'undefined') {
+                        console.log('marked.js已加载，开始渲染');
+
+                        // 解析Front Matter（文档元数据）
+                        const frontMatter = parseFrontMatter(markdownText);
+                        const content = frontMatter.content;
+                        const metadata = frontMatter.metadata;
+
+                        console.log('解析的元数据:', metadata);
+
+                        // 更新页面元数据（标题、难度、作者等）
+                        updatePageMetadata(metadata, fetchPath);
+
+                        // 更新当前分类的文档列表
+                        updateCurrentCategoryDocs(fetchPath);
+
+                        const renderedHTML = marked.parse(content);
+                        console.log('Markdown渲染完成，HTML长度:', renderedHTML.length);
+                        markdownContent.innerHTML = renderedHTML;
+
+                        // 应用代码语法高亮
+                        if (typeof Prism !== 'undefined') {
+                            console.log('应用代码高亮');
+                            Prism.highlightAllUnder(markdownContent);
+                        } else {
+                            console.warn('Prism.js未加载，跳过代码高亮');
+                        }
+
+                        // 自动生成文档目录
+                        generateTableOfContents(markdownContent);
+
+                        // 显示内容，隐藏加载指示器
+                        if (loadingIndicator) loadingIndicator.style.display = 'none';
+                        markdownContent.style.display = 'block';
+                        document.getElementById('table-of-contents').style.display = 'block';
+
+                    } else {
+                        throw new Error('marked.js未加载');
+                    }
+                })
+                .catch(error => {
+                    console.error('LogSpiral/viewer.html: 加载Markdown失败:', error);
+                    if (loadingIndicator) loadingIndicator.style.display = 'none';
+                    if (errorMessage) {
+                        errorMessage.style.display = 'block';
+                        document.getElementById('error-text').textContent = `无法加载文件 "${fetchPath}": ${error.message}`;
+                    }
+                });
+        }
+
+        // 从旧路径获取对应的分类
+        function getCategoryFromOldPath(oldPath) {
+            const pathMap = {
+                '00-测试文档': '0-开始',
+                '01-入门指南': '0-开始',
+                '02-基础概念': '1-基础',
+                '03-内容创建': '2-中阶',
+                '04-高级开发': '3-高阶',
+                '05-专题主题': '4-专家',
+                '06-资源参考': '4-专家'
+            };
+            return pathMap[oldPath] || '0-开始';
+        }
+
+        // 解析Front Matter（文档开头的元数据部分）
+        function parseFrontMatter(text) {
+            const frontMatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
+            const match = text.match(frontMatterRegex);
+
+            if (match) {
+                const metadata = {};
+                const metadataLines = match[1].split('\n');
+
+                metadataLines.forEach(line => {
+                    const colonIndex = line.indexOf(':');
+                    if (colonIndex > 0) {
+                        const key = line.substring(0, colonIndex).trim();
+                        const value = line.substring(colonIndex + 1).trim();
+                        metadata[key] = value;
+                    }
+                });
+
+                return {
+                    metadata: metadata,
+                    content: match[2]
+                };
+            }
+
+            return {
+                metadata: {},
+                content: text
+            };
+        }
+
+        // 更新页面元数据（标题、难度、时间、作者、日期）
+        function updatePageMetadata(metadata, filePath) {
+            const title = metadata.title || filePath.replace('.md', '');
+            const difficulty = metadata.difficulty || 'beginner';
+            const time = metadata.time || '未知';
+            const author = metadata.author || '未知';
+            const last_updated = metadata.last_updated || '未知';
+            const prevChapter = metadata.prev_chapter || null;
+            const nextChapter = metadata.next_chapter || null;
+
+            console.log('更新页面元数据:', { title, difficulty, time, author, last_updated, prevChapter, nextChapter });
+
+            // 更新页面标题
+            document.title = `${title} - 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程`;
+
+            // 更新页面显示的标题
+            document.getElementById('current-doc-name').textContent = title;
+            document.getElementById('doc-title').textContent = title;
+            document.getElementById('doc-difficulty').textContent = getDifficultyText(difficulty);
+            document.getElementById('doc-difficulty').className = `difficulty-badge ${difficulty}`;
+            document.getElementById('doc-time').textContent = time;
+            document.getElementById('doc-author').textContent = author;
+            document.getElementById('doc-date').textContent = last_updated;
+
+            // 更新SEO元标签
+            updateSEOMetadata(metadata, title, filePath);
+
+            // 更新导航按钮
+            updateNavigationButtons(prevChapter, nextChapter);
+        }
+
+        // 更新SEO元标签
+        function updateSEOMetadata(metadata, title, filePath) {
+            // 更新description
+            const description = metadata.description || `错数螺线 LogSpiral 文档：${title}，泰拉瑞亚Mod开发教程`;
+            let descriptionMeta = document.querySelector('meta[name="description"]');
+            if (descriptionMeta) {
+                descriptionMeta.setAttribute('content', description);
+            }
+
+            // 更新keywords
+            const keywords = metadata.keywords ? metadata.keywords.join(', ') : `泰拉瑞亚,Mod,教程,${title},tModLoader,C#,游戏开发,错数螺线,LogSpiral`;
+            let keywordsMeta = document.querySelector('meta[name="keywords"]');
+            if (keywordsMeta) {
+                keywordsMeta.setAttribute('content', keywords);
+            }
+
+            // 更新Open Graph标签
+            let ogTitle = document.querySelector('meta[property="og:title"]');
+            if (ogTitle) {
+                ogTitle.setAttribute('content', `${title} - 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程`);
+            }
+
+            let ogDescription = document.querySelector('meta[property="og:description"]');
+            if (ogDescription) {
+                ogDescription.setAttribute('content', description);
+            }
+
+            let ogUrl = document.querySelector('meta[property="og:url"]');
+            if (ogUrl) {
+                ogUrl.setAttribute('content', `https://dpapyru.github.io/LogSpiral/viewer.html?file=${encodeURIComponent(filePath)}`);
+            }
+
+            // 更新Twitter Card标签
+            let twitterTitle = document.querySelector('meta[name="twitter:title"]');
+            if (twitterTitle) {
+                twitterTitle.setAttribute('content', `${title} - 错数螺线 LogSpiral - 泰拉瑞亚Mod制作教程`);
+            }
+
+            let twitterDescription = document.querySelector('meta[name="twitter:description"]');
+            if (twitterDescription) {
+                twitterDescription.setAttribute('content', description);
+            }
+
+            // 更新canonical URL
+            let canonical = document.querySelector('link[rel="canonical"]');
+            if (canonical) {
+                canonical.setAttribute('href', `https://dpapyru.github.io/LogSpiral/viewer.html?file=${encodeURIComponent(filePath)}`);
+            }
+        }
+
+        // 更新导航按钮
+        function updateNavigationButtons(prevChapter, nextChapter) {
+            const navigationContainer = document.querySelector('.tutorial-navigation');
+            if (!navigationContainer) {
+                console.warn('找不到导航容器');
+                return;
+            }
+
+            // 清空现有导航内容
+            navigationContainer.innerHTML = '';
+
+            // 添加返回文档列表按钮
+            const backToListBtn = document.createElement('a');
+            backToListBtn.href = 'docs/';
+            backToListBtn.className = 'btn btn-outline prev-tutorial';
+            backToListBtn.textContent = '← 返回文档列表';
+            navigationContainer.appendChild(backToListBtn);
+
+            // 添加上一章按钮（如果存在）
+            if (prevChapter) {
+                const prevBtn = document.createElement('a');
+                prevBtn.href = `?file=${prevChapter}`;
+                prevBtn.className = 'btn btn-secondary prev-tutorial';
+                prevBtn.textContent = '← 上一章';
+                navigationContainer.appendChild(prevBtn);
+            }
+
+            // 添加下一章按钮（如果存在）
+            if (nextChapter) {
+                const nextBtn = document.createElement('a');
+                nextBtn.href = `?file=${nextChapter}`;
+                nextBtn.className = 'btn btn-primary next-tutorial';
+                nextBtn.textContent = '下一章 →';
+                navigationContainer.appendChild(nextBtn);
+            }
+
+            console.log('导航按钮已更新:', { prevChapter, nextChapter });
+        }
+
+        // 将难度代码转换为中文文本
+        function getDifficultyText(difficulty) {
+            const difficultyMap = {
+                'beginner': '初级',
+                'intermediate': '中级',
+                'advanced': '高级'
+            };
+            return difficultyMap[difficulty] || difficulty;
+        }
+
+        // 生成文档目录（基于标题h1-h6）
+        function generateTableOfContents(contentElement) {
+            const tableOfContents = document.getElementById('table-of-contents');
+            const tocList = document.getElementById('toc-list');
+
+            if (!tableOfContents || !tocList || !contentElement) {
+                return;
+            }
+
+            const headings = contentElement.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            console.log(`找到 ${headings.length} 个标题用于生成目录`);
+
+            if (headings.length === 0) {
+                tableOfContents.style.display = 'none';
+                return;
+            }
+
+            tocList.innerHTML = '';
+
+            headings.forEach((heading, index) => {
+                // 为没有ID的标题自动生成ID
+                if (!heading.id) {
+                    heading.id = `heading-${index}`;
+                }
+
+                // 创建目录项
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = `#${heading.id}`;
+                a.textContent = heading.textContent;
+
+                // 根据标题级别设置缩进
+                const level = parseInt(heading.tagName.substring(1));
+                a.style.paddingLeft = `${(level - 1) * 15}px`;
+
+                li.appendChild(a);
+                tocList.appendChild(li);
+
+                // 添加平滑滚动效果
+                a.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetElement = document.getElementById(heading.id);
+                    if (targetElement) {
+                        // 计算滚动位置，考虑固定头部高度
+                        const headerHeight = document.querySelector('.site-header').offsetHeight;
+                        const targetPosition = targetElement.offsetTop - headerHeight - 20;
+
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            tableOfContents.style.display = 'block';
+            console.log('目录生成完成');
+        }
+
+        // 检查分类是否有文档
+        function categoryHasDocuments(categoryKey) {
+            if (!DOC_CONFIG || !DOC_CONFIG.categories || !DOC_CONFIG.categories[categoryKey]) {
+                return false;
+            }
+
+            const categoryTopics = DOC_CONFIG.categories[categoryKey].topics || {};
+
+            // 检查该分类下是否有任何主题包含文档
+            for (const topicKey in categoryTopics) {
+                const topic = categoryTopics[topicKey];
+                if (topic.files && topic.files.length > 0) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // 初始化分类导航
+        function initializeCategoryNavigation() {
+            const categorySidebar = document.getElementById('category-sidebar');
+
+            if (!categorySidebar) return;
+
+            // 清空现有导航
+            categorySidebar.innerHTML = '';
+
+            // 等待配置加载完成
+            if (!DOC_CONFIG) {
+                console.warn('文档配置尚未加载，稍后重试');
+                setTimeout(initializeCategoryNavigation, 100);
+                return;
+            }
+
+            // 确保ALL_DOCS已加载
+            if (!ALL_DOCS || ALL_DOCS.length === 0) {
+                console.warn('文档列表尚未加载，稍后重试');
+                setTimeout(initializeCategoryNavigation, 100);
+                return;
+            }
+
+            console.log('开始初始化分类导航，文档数量:', ALL_DOCS.length);
+
+            // 添加分割线
+            const divider = document.createElement('div');
+            divider.className = 'sidebar-divider';
+            categorySidebar.appendChild(divider);
+
+            // 生成分类导航
+            Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
+                const category = MAIN_CATEGORIES[categoryKey];
+
+                // 检查该分类是否有文档，如果没有则跳过
+                if (!categoryHasDocuments(categoryKey)) {
+                    return; // 跳过空分类
+                }
+
+                // 创建分类导航项
+                const categoryItem = document.createElement('li');
+                categoryItem.className = 'category-item';
+
+                // 创建分类标题
+                const categoryHeader = document.createElement('h4');
+                categoryHeader.className = 'category-header';
+
+                // 添加分类标题文本
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'category-title-text';
+                titleSpan.textContent = category.title;
+                categoryHeader.appendChild(titleSpan);
+
+                // 添加展开/收起按钮
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'category-toggle';
+                toggleBtn.setAttribute('aria-label', '展开/收起分类');
+                toggleBtn.innerHTML = '▼';
+                categoryHeader.appendChild(toggleBtn);
+
+                categoryItem.appendChild(categoryHeader);
+
+                // 创建主题子菜单
+                const topicList = document.createElement('ul');
+                topicList.className = 'topic-list';
+
+                // 获取该分类下的所有主题
+                const categoryTopics = DOC_CONFIG.categories[categoryKey]?.topics || {};
+
+                if (Object.keys(categoryTopics).length > 0) {
+                    Object.keys(categoryTopics).forEach(topicKey => {
+                        const topic = categoryTopics[topicKey];
+
+                        // 检查主题是否有文档，如果没有则跳过
+                        if (!topic.files || topic.files.length === 0) {
+                            return; // 跳过空主题
+                        }
+
+                        // 创建主题标题
+                        const topicHeader = document.createElement('h5');
+                        topicHeader.className = 'topic-header';
+
+                        // 添加主题标题文本
+                        const topicTitleSpan = document.createElement('span');
+                        topicTitleSpan.className = 'topic-title-text';
+                        topicTitleSpan.textContent = topic.title;
+                        topicHeader.appendChild(topicTitleSpan);
+
+                        // 添加展开/收起按钮
+                        const topicToggleBtn = document.createElement('button');
+                        topicToggleBtn.className = 'topic-toggle';
+                        topicToggleBtn.setAttribute('aria-label', '展开/收起主题');
+                        topicToggleBtn.innerHTML = '▼';
+                        topicHeader.appendChild(topicToggleBtn);
+
+                        topicList.appendChild(topicHeader);
+
+                        // 创建文档列表
+                        const fileList = document.createElement('ul');
+                        fileList.className = 'file-list';
+
+                        // 确保topic.files存在且是数组
+                        const files = topic.files || [];
+                        files.forEach(file => {
+                            const fileItem = document.createElement('li');
+                            fileItem.className = 'file-item';
+
+                            const fileLink = document.createElement('a');
+                            fileLink.href = `?file=${file.path || file.filename}`;
+                            fileLink.textContent = file.title;
+                            fileLink.title = `${file.author || '未知'} - ${file.description || file.title}`;
+
+                            fileItem.appendChild(fileLink);
+                            fileList.appendChild(fileItem);
+                        });
+
+                        topicList.appendChild(fileList);
+
+                        // 为主题标题添加点击事件
+                        topicHeader.addEventListener('click', function () {
+                            toggleTopic(categoryKey, topicKey, topicHeader, fileList);
+                        });
+
+                        // 为主题标题的按钮添加点击事件
+                        topicToggleBtn.addEventListener('click', function (e) {
+                            e.stopPropagation();
+                            toggleTopic(categoryKey, topicKey, topicHeader, fileList);
+                        });
+
+                        // 恢复主题的展开/收起状态
+                        const isTopicCollapsed = getCollapsedState('topic', `${categoryKey}-${topicKey}`);
+                        if (isTopicCollapsed) {
+                            fileList.classList.add('collapsed');
+                            topicToggleBtn.classList.add('collapsed');
+                        }
+                    });
+                }
+
+                categoryItem.appendChild(topicList);
+                categorySidebar.appendChild(categoryItem);
+
+                // 为分类标题添加点击事件
+                categoryHeader.addEventListener('click', function () {
+                    toggleCategory(categoryKey, categoryHeader, topicList);
+                });
+
+                // 为分类标题的按钮添加点击事件
+                toggleBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    toggleCategory(categoryKey, categoryHeader, topicList);
+                });
+
+                // 恢复分类的展开/收起状态
+                const isCollapsed = getCollapsedState('category', categoryKey);
+                if (isCollapsed) {
+                    topicList.classList.add('collapsed');
+                    toggleBtn.classList.add('collapsed');
+                }
+            });
+
+            // 添加分割线
+            const allDocsDivider = document.createElement('div');
+            allDocsDivider.className = 'sidebar-divider';
+            categorySidebar.appendChild(allDocsDivider);
+
+            // 添加"所有文档"部分
+            const allDocsItem = document.createElement('li');
+            allDocsItem.className = 'category-item all-docs';
+
+            const allDocsHeader = document.createElement('h4');
+            allDocsHeader.className = 'category-header';
+
+            // 添加"所有文档"标题文本
+            const allDocsTitleSpan = document.createElement('span');
+            allDocsTitleSpan.className = 'category-title-text';
+            allDocsTitleSpan.textContent = '所有文档';
+            allDocsHeader.appendChild(allDocsTitleSpan);
+
+            // 添加展开/收起按钮
+            const allDocsToggleBtn = document.createElement('button');
+            allDocsToggleBtn.className = 'category-toggle';
+            allDocsToggleBtn.setAttribute('aria-label', '展开/收起所有文档');
+            allDocsToggleBtn.innerHTML = '▼';
+            allDocsHeader.appendChild(allDocsToggleBtn);
+
+            allDocsItem.appendChild(allDocsHeader);
+
+            const allDocsList = document.createElement('ul');
+            allDocsList.className = 'file-list';
+
+            // 确保ALL_DOCS存在且是数组
+            const allDocs = ALL_DOCS || [];
+            console.log('准备显示"所有文档"，文档数量:', allDocs.length);
+
+            if (allDocs.length === 0) {
+                // 如果没有文档，显示提示信息
+                const noDocsItem = document.createElement('li');
+                noDocsItem.className = 'no-docs';
+                noDocsItem.textContent = '未找到任何文档';
+                allDocsList.appendChild(noDocsItem);
+                console.log('没有找到文档，显示提示信息');
+            } else {
+                // 按分类和排序组织文档
+                const sortedDocs = [...allDocs].sort((a, b) => {
+                    // 先按分类排序
+                    const categoryOrderA = MAIN_CATEGORIES[a.category]?.order || 999;
+                    const categoryOrderB = MAIN_CATEGORIES[b.category]?.order || 999;
+                    if (categoryOrderA !== categoryOrderB) {
+                        return categoryOrderA - categoryOrderB;
+                    }
+                    // 同一分类内按排序值排序
+                    return (a.order || 999) - (b.order || 999);
+                });
+
+                console.log('排序后的文档:', sortedDocs);
+
+                sortedDocs.forEach((doc, index) => {
+                    const docItem = document.createElement('li');
+                    docItem.className = 'file-item';
+
+                    const docLink = document.createElement('a');
+                    docLink.href = `?file=${doc.path || doc.filename}`;
+                    docLink.textContent = doc.title;
+
+                    // 添加更详细的标题信息
+                    const categoryTitle = MAIN_CATEGORIES[doc.category]?.title || doc.category;
+                    const topicTitle = DOC_CONFIG.topics[doc.topic]?.title || doc.topic;
+                    const pathInfo = doc.path && doc.path !== doc.filename ? ` [路径: ${doc.path}]` : '';
+                    docLink.title = `${doc.author || '未知作者'} - ${doc.description || doc.title} [${categoryTitle} - ${topicTitle}]${pathInfo}`;
+
+                    docItem.appendChild(docLink);
+                    allDocsList.appendChild(docItem);
+
+                    // 调试信息：每添加10个文档输出一次日志
+                    if (index < 10 || index % 10 === 0) {
+                        console.log(`已添加文档 ${index + 1}/${sortedDocs.length}: ${doc.title}`);
+                    }
+                });
+
+                console.log('所有文档已添加到列表，总数:', sortedDocs.length);
+            }
+
+            allDocsItem.appendChild(allDocsList);
+            categorySidebar.appendChild(allDocsItem);
+            console.log('"所有文档"部分已添加到侧边栏');
+
+            // 为"所有文档"标题添加点击事件
+            allDocsHeader.addEventListener('click', function () {
+                toggleAllDocs(allDocsHeader, allDocsList);
+            });
+
+            // 为"所有文档"标题的按钮添加点击事件
+            allDocsToggleBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                toggleAllDocs(allDocsHeader, allDocsList);
+            });
+
+            // 恢复"所有文档"的展开/收起状态
+            const isAllDocsCollapsed = getCollapsedState('all-docs', 'all-docs');
+            if (isAllDocsCollapsed) {
+                allDocsList.classList.add('collapsed');
+                allDocsToggleBtn.classList.add('collapsed');
+            }
+
+            console.log('"所有文档"部分已添加到侧边栏');
+
+            // 确保侧边栏滚动功能正常工作
+            setTimeout(() => {
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    // 强制重新计算滚动区域
+                    sidebar.style.overflow = 'hidden';
+                    setTimeout(() => {
+                        sidebar.style.overflow = 'scroll';
+                        sidebar.style.overflowY = 'auto';
+                        sidebar.style.overflowX = 'hidden';
+                    }, 10);
+                }
+            }, 100);
+
+            // 文档导航部分不再需要展开/收起功能
+        }
+
+        // 文档导航部分不再需要展开/收起功能
+
+        // 文档导航部分不再需要展开/收起功能
+
+        // 展开/收起分类
+        function toggleCategory(categoryKey, categoryHeader, topicList) {
+            const isCollapsed = topicList.classList.contains('collapsed');
+            const toggleBtn = categoryHeader.querySelector('.category-toggle');
+
+            if (isCollapsed) {
+                // 展开
+                topicList.classList.remove('collapsed');
+                toggleBtn.classList.remove('collapsed');
+                setCollapsedState('category', categoryKey, false);
+            } else {
+                // 收起
+                topicList.classList.add('collapsed');
+                toggleBtn.classList.add('collapsed');
+                setCollapsedState('category', categoryKey, true);
+            }
+        }
+
+        // 展开/收起主题
+        function toggleTopic(categoryKey, topicKey, topicHeader, fileList) {
+            const isCollapsed = fileList.classList.contains('collapsed');
+            const toggleBtn = topicHeader.querySelector('.topic-toggle');
+
+            if (isCollapsed) {
+                // 展开
+                fileList.classList.remove('collapsed');
+                toggleBtn.classList.remove('collapsed');
+                setCollapsedState('topic', `${categoryKey}-${topicKey}`, false);
+            } else {
+                // 收起
+                fileList.classList.add('collapsed');
+                toggleBtn.classList.add('collapsed');
+                setCollapsedState('topic', `${categoryKey}-${topicKey}`, true);
+            }
+        }
+
+        // 展开/收起"所有文档"
+        function toggleAllDocs(allDocsHeader, allDocsList) {
+            const isCollapsed = allDocsList.classList.contains('collapsed');
+            const toggleBtn = allDocsHeader.querySelector('.category-toggle');
+
+            if (isCollapsed) {
+                // 展开
+                allDocsList.classList.remove('collapsed');
+                toggleBtn.classList.remove('collapsed');
+                setCollapsedState('all-docs', 'all-docs', false);
+            } else {
+                // 收起
+                allDocsList.classList.add('collapsed');
+                toggleBtn.classList.add('collapsed');
+                setCollapsedState('all-docs', 'all-docs', true);
+            }
+        }
+
+        // 从localStorage获取展开/收起状态
+        function getCollapsedState(type, key) {
+            try {
+                const storageKey = `logspiral-sidebar-${type}-${key}`;
+                const state = localStorage.getItem(storageKey);
+                return state === 'true';
+            } catch (error) {
+                console.warn('无法从localStorage获取展开/收起状态:', error);
+                return false;
+            }
+        }
+
+        // 保存展开/收起状态到localStorage
+        function setCollapsedState(type, key, isCollapsed) {
+            try {
+                const storageKey = `logspiral-sidebar-${type}-${key}`;
+                localStorage.setItem(storageKey, isCollapsed.toString());
+            } catch (error) {
+                console.warn('无法保存展开/收起状态到localStorage:', error);
+            }
+        }
+
+        // 初始化下拉菜单
+        function initializeDropdownMenu() {
+            const dropdownToggle = document.querySelector('.dropdown-toggle');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+
+            if (!dropdownToggle || !dropdownMenu) return;
+
+            // 点击切换下拉菜单
+            dropdownToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                dropdownMenu.classList.toggle('show');
+            });
+
+            // 点击其他地方关闭下拉菜单
+            document.addEventListener('click', function (e) {
+                if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.remove('show');
+                }
+            });
+        }
+
+        // 更新当前分类的文档列表
+        function updateCurrentCategoryDocs(filePath) {
+            const currentCategoryTitle = document.getElementById('current-category-title');
+            const currentCategoryDocs = document.getElementById('current-category-docs');
+
+            if (!currentCategoryTitle || !currentCategoryDocs) return;
+
+            // 等待配置加载完成
+            if (!DOC_CONFIG || !ALL_DOCS || ALL_DOCS.length === 0) {
+                console.warn('文档配置尚未加载，稍后重试');
+                setTimeout(() => updateCurrentCategoryDocs(filePath), 100);
+                return;
+            }
+
+            // 查找当前文档信息
+            const currentDoc = ALL_DOCS.find(doc => doc.path === filePath || doc.filename === filePath);
+
+            if (!currentDoc) {
+                // 如果找不到文档，显示所有文档
+                currentCategoryTitle.textContent = '所有文档';
+                currentCategoryDocs.innerHTML = '';
+
+                // 按分类和排序组织文档
+                const sortedDocs = [...ALL_DOCS].sort((a, b) => {
+                    // 先按分类排序
+                    const categoryOrderA = MAIN_CATEGORIES[a.category]?.order || 999;
+                    const categoryOrderB = MAIN_CATEGORIES[b.category]?.order || 999;
+                    if (categoryOrderA !== categoryOrderB) {
+                        return categoryOrderA - categoryOrderB;
+                    }
+                    // 同一分类内按排序值排序
+                    return (a.order || 999) - (b.order || 999);
+                });
+
+                sortedDocs.forEach(doc => {
+                    const li = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = `?file=${doc.path || doc.filename}`;
+                    link.textContent = doc.title;
+                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
+
+                    if (doc.filename === filePath) {
+                        link.classList.add('active');
+                    }
+
+                    li.appendChild(link);
+                    currentCategoryDocs.appendChild(li);
+                });
+
+                return;
+            }
+
+            // 显示当前文档的分类信息
+            const category = MAIN_CATEGORIES[currentDoc.category];
+            const topic = DOC_CONFIG.topics ? DOC_CONFIG.topics[currentDoc.topic] : null;
+
+            let titleText = category ? category.title : currentDoc.category;
+            if (topic) {
+                titleText += ` - ${topic.title}`;
+            }
+
+            currentCategoryTitle.textContent = titleText;
+
+            // 清空现有列表
+            currentCategoryDocs.innerHTML = '';
+
+            // 显示同一分类和主题下的其他文档
+            const relatedDocs = ALL_DOCS.filter(doc =>
+                doc.category === currentDoc.category && doc.topic === currentDoc.topic
+            ).sort((a, b) => (a.order || 999) - (b.order || 999));
+
+            if (relatedDocs.length > 0) {
+                relatedDocs.forEach(doc => {
+                    const li = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = `?file=${doc.path || doc.filename}`;
+                    link.textContent = doc.title;
+                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
+
+                    if (doc.filename === filePath) {
+                        link.classList.add('active');
+                    }
+
+                    li.appendChild(link);
+                    currentCategoryDocs.appendChild(li);
+                });
+            } else {
+                // 如果没有相关文档，显示同一分类下的所有文档
+                const categoryDocs = ALL_DOCS.filter(doc =>
+                    doc.category === currentDoc.category
+                ).sort((a, b) => (a.order || 999) - (b.order || 999));
+
+                categoryDocs.forEach(doc => {
+                    const li = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = `?file=${doc.path || doc.filename}`;
+                    link.textContent = doc.title;
+                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
+
+                    if (doc.filename === filePath) {
+                        link.classList.add('active');
+                    }
+
+                    li.appendChild(link);
+                    currentCategoryDocs.appendChild(li);
+                });
+            }
+        }
+
+        // 初始化手机端导航
+        function initializeMobileNavigation() {
+            const mobileNavToggle = document.getElementById('mobile-nav-toggle');
+            const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
+            const mobileNavClose = document.getElementById('mobile-nav-close');
+            const mobileNavBack = document.getElementById('mobile-nav-back');
+            const mobileNavSections = document.getElementById('mobile-nav-sections');
+
+            // 检查是否为移动设备
+            function isMobileDevice() {
+                return window.innerWidth <= 768;
+            }
+
+            // 设置初始显示状态
+            updateMobileNavVisibility();
+
+            // 确保在移动设备上也能正常工作
+            if (isMobileDevice()) {
+                console.log('检测到移动设备，初始化手机端导航');
+            }
+
+            // 生成手机端导航内容
+            function generateMobileNavContent() {
+                if (!DOC_CONFIG || ALL_DOCS.length === 0) {
+                    console.warn('文档配置尚未加载，稍后重试');
+                    setTimeout(generateMobileNavContent, 100);
+                    return;
+                }
+
+                mobileNavSections.innerHTML = '';
+
+                // 添加分割线
+                const divider = document.createElement('div');
+                divider.className = 'mobile-nav-divider';
+                mobileNavSections.appendChild(divider);
+
+                // 生成分类导航
+                Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
+                    const category = MAIN_CATEGORIES[categoryKey];
+
+                    // 检查该分类是否有文档，如果没有则跳过
+                    if (!categoryHasDocuments(categoryKey)) {
+                        return; // 跳过空分类
+                    }
+
+                    // 创建分类容器
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'mobile-category';
+
+                    // 创建分类标题
+                    const categoryTitle = document.createElement('div');
+                    categoryTitle.className = 'mobile-category-title';
+                    categoryTitle.textContent = category.title;
+                    categoryDiv.appendChild(categoryTitle);
+
+                    // 为分类标题添加点击事件
+                    categoryTitle.addEventListener('click', function () {
+                        toggleMobileCategory(categoryKey, categoryTitle, categoryDiv);
+                    });
+
+                    // 添加展开/收起按钮
+                    const categoryToggleBtn = document.createElement('button');
+                    categoryToggleBtn.className = 'mobile-category-toggle';
+                    categoryToggleBtn.setAttribute('aria-label', '展开/收起分类');
+                    categoryToggleBtn.innerHTML = '▼';
+                    categoryTitle.appendChild(categoryToggleBtn);
+
+                    // 为分类标题的按钮添加点击事件
+                    categoryToggleBtn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        toggleMobileCategory(categoryKey, categoryTitle, categoryDiv);
+                    });
+
+                    // 恢复分类的展开/收起状态
+                    const isCollapsed = getCollapsedState('category', categoryKey);
+                    if (isCollapsed) {
+                        categoryToggleBtn.classList.add('collapsed');
+                        // 收起该分类下的所有主题和文件列表
+                        const topicLists = categoryDiv.querySelectorAll('.mobile-topic');
+                        const fileLists = categoryDiv.querySelectorAll('.mobile-file-list');
+
+                        // 收起主题容器
+                        topicLists.forEach(topic => {
+                            topic.style.display = 'none';
+                            const topicToggle = topic.querySelector('.mobile-topic-toggle');
+                            const topicFileList = topic.querySelector('.mobile-file-list');
+                            if (topicToggle) {
+                                topicToggle.classList.add('collapsed');
+                            }
+                            if (topicFileList) {
+                                topicFileList.classList.add('collapsed');
+                            }
+                        });
+
+                        // 收起文件列表
+                        fileLists.forEach(list => {
+                            list.classList.add('collapsed');
+                        });
+                    }
+
+                    // 获取该分类下的所有主题
+                    const categoryTopics = DOC_CONFIG.categories[categoryKey]?.topics || {};
+
+                    if (Object.keys(categoryTopics).length > 0) {
+                        Object.keys(categoryTopics).forEach(topicKey => {
+                            const topic = categoryTopics[topicKey];
+
+                            // 检查主题是否有文档，如果没有则跳过
+                            if (!topic.files || topic.files.length === 0) {
+                                return; // 跳过空主题
+                            }
+
+                            // 创建主题容器
+                            const topicDiv = document.createElement('div');
+                            topicDiv.className = 'mobile-topic';
+
+                            // 创建主题标题
+                            const topicTitle = document.createElement('div');
+                            topicTitle.className = 'mobile-topic-title';
+
+                            // 添加主题标题文本
+                            const topicTitleSpan = document.createElement('span');
+                            topicTitleSpan.className = 'mobile-topic-title-text';
+                            topicTitleSpan.textContent = topic.title;
+                            topicTitle.appendChild(topicTitleSpan);
+
+                            // 添加展开/收起按钮
+                            const topicToggleBtn = document.createElement('button');
+                            topicToggleBtn.className = 'mobile-topic-toggle';
+                            topicToggleBtn.setAttribute('aria-label', '展开/收起主题');
+                            topicToggleBtn.innerHTML = '▼';
+                            topicTitle.appendChild(topicToggleBtn);
+
+                            topicDiv.appendChild(topicTitle);
+
+                            // 为主题标题添加点击事件
+                            topicTitle.addEventListener('click', function () {
+                                toggleMobileTopic(categoryKey, topicKey, topicTitle, topicDiv);
+                            });
+
+                            // 为主题标题的按钮添加点击事件
+                            topicToggleBtn.addEventListener('click', function (e) {
+                                e.stopPropagation();
+                                toggleMobileTopic(categoryKey, topicKey, topicTitle, topicDiv);
+                            });
+
+                            // 恢复主题的展开/收起状态
+                            const isTopicCollapsed = getCollapsedState('topic', `${categoryKey}-${topicKey}`);
+                            if (isTopicCollapsed) {
+                                topicToggleBtn.classList.add('collapsed');
+                                // 收起该主题下的文件列表
+                                const fileList = topicDiv.querySelector('.mobile-file-list');
+                                if (fileList) {
+                                    fileList.classList.add('collapsed');
+                                }
+                            }
+
+                            // 创建文档列表
+                            const fileList = document.createElement('ul');
+                            fileList.className = 'mobile-file-list';
+
+                            topic.files.forEach(file => {
+                                const fileItem = document.createElement('li');
+                                fileItem.className = 'mobile-file-item';
+
+                                const fileLink = document.createElement('a');
+                                fileLink.href = `?file=${file.path || file.filename}`;
+                                fileLink.className = 'mobile-file-link';
+                                fileLink.textContent = file.title;
+                                fileLink.title = file.description || file.title;
+
+                                // 检查是否为当前文档
+                                const currentUrl = new URL(window.location);
+                                const currentFile = currentUrl.searchParams.get('file') || 'test.md';
+                                if (file.filename === currentFile) {
+                                    fileLink.classList.add('active');
+                                }
+
+                                // 添加点击事件，点击后关闭导航
+                                fileLink.addEventListener('click', function () {
+                                    closeMobileNav();
+                                });
+
+                                fileItem.appendChild(fileLink);
+                                fileList.appendChild(fileItem);
+                            });
+
+                            topicDiv.appendChild(fileList);
+                            categoryDiv.appendChild(topicDiv);
+                        });
+                    }
+
+                    mobileNavSections.appendChild(categoryDiv);
+                });
+
+                // 添加分割线
+                const allDocsDivider = document.createElement('div');
+                allDocsDivider.className = 'mobile-nav-divider';
+                mobileNavSections.appendChild(allDocsDivider);
+
+                // 添加"所有文档"部分
+                const allDocsDiv = document.createElement('div');
+                allDocsDiv.className = 'mobile-category all-docs';
+
+                const allDocsTitle = document.createElement('div');
+                allDocsTitle.className = 'mobile-category-title';
+
+                // 添加"所有文档"标题文本
+                const allDocsTitleSpan = document.createElement('span');
+                allDocsTitleSpan.className = 'mobile-category-title-text';
+                allDocsTitleSpan.textContent = '所有文档';
+                allDocsTitle.appendChild(allDocsTitleSpan);
+
+                // 添加展开/收起按钮
+                const allDocsToggleBtn = document.createElement('button');
+                allDocsToggleBtn.className = 'mobile-category-toggle';
+                allDocsToggleBtn.setAttribute('aria-label', '展开/收起所有文档');
+                allDocsToggleBtn.innerHTML = '▼';
+                allDocsTitle.appendChild(allDocsToggleBtn);
+
+                allDocsDiv.appendChild(allDocsTitle);
+
+                // 为"所有文档"标题添加点击事件
+                allDocsTitle.addEventListener('click', function () {
+                    toggleMobileAllDocs(allDocsTitle, allDocsDiv);
+                });
+
+                // 为"所有文档"标题的按钮添加点击事件
+                allDocsToggleBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    toggleMobileAllDocs(allDocsTitle, allDocsDiv);
+                });
+
+                // 恢复"所有文档"的展开/收起状态
+                const isAllDocsCollapsed = getCollapsedState('all-docs', 'all-docs');
+                if (isAllDocsCollapsed) {
+                    allDocsToggleBtn.classList.add('collapsed');
+                    // 收起"所有文档"的文件列表
+                    const fileList = allDocsDiv.querySelector('.mobile-file-list');
+                    if (fileList) {
+                        fileList.classList.add('collapsed');
+                    }
+                }
+
+                const allDocsList = document.createElement('ul');
+                allDocsList.className = 'mobile-file-list';
+
+                // 确保ALL_DOCS存在且是数组
+                const allDocs = ALL_DOCS || [];
+                if (allDocs.length === 0) {
+                    // 如果没有文档，显示提示信息
+                    const noDocsItem = document.createElement('li');
+                    noDocsItem.className = 'mobile-file-item';
+                    noDocsItem.textContent = '未找到任何文档';
+                    allDocsList.appendChild(noDocsItem);
+                } else {
+                    // 按分类和排序组织文档
+                    const sortedDocs = [...allDocs].sort((a, b) => {
+                        // 先按分类排序
+                        const categoryOrderA = MAIN_CATEGORIES[a.category]?.order || 999;
+                        const categoryOrderB = MAIN_CATEGORIES[b.category]?.order || 999;
+                        if (categoryOrderA !== categoryOrderB) {
+                            return categoryOrderA - categoryOrderB;
+                        }
+                        // 同一分类内按排序值排序
+                        return (a.order || 999) - (b.order || 999);
+                    });
+
+                    sortedDocs.forEach(doc => {
+                        const docItem = document.createElement('li');
+                        docItem.className = 'mobile-file-item';
+
+                        const docLink = document.createElement('a');
+                        docLink.href = `?file=${doc.path || doc.filename}`;
+                        docLink.className = 'mobile-file-link';
+                        docLink.textContent = doc.title;
+
+                        // 添加更详细的标题信息
+                        const categoryTitle = MAIN_CATEGORIES[doc.category]?.title || doc.category;
+                        const topicTitle = DOC_CONFIG.topics && DOC_CONFIG.topics[doc.topic] ? DOC_CONFIG.topics[doc.topic].title : doc.topic;
+                        const pathInfo = doc.path && doc.path !== doc.filename ? ` [路径: ${doc.path}]` : '';
+                        docLink.title = `${doc.author || '未知作者'} - ${doc.description || doc.title} [${categoryTitle} - ${topicTitle}]${pathInfo}`;
+
+                        // 检查是否为当前文档
+                        const currentUrl = new URL(window.location);
+                        const currentFile = currentUrl.searchParams.get('file') || 'test.md';
+                        if (doc.filename === currentFile) {
+                            docLink.classList.add('active');
+                        }
+
+                        // 添加点击事件，点击后关闭导航
+                        docLink.addEventListener('click', function () {
+                            closeMobileNav();
+                        });
+
+                        docItem.appendChild(docLink);
+                        allDocsList.appendChild(docItem);
+                    });
+                }
+
+                allDocsDiv.appendChild(allDocsList);
+                mobileNavSections.appendChild(allDocsDiv);
+            }
+
+            // 打开手机端导航
+            function openMobileNav() {
+                mobileNavOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // 防止背景滚动
+                generateMobileNavContent();
+            }
+
+            // 关闭手机端导航
+            function closeMobileNav() {
+                mobileNavOverlay.classList.remove('active');
+                document.body.style.overflow = ''; // 恢复滚动
+            }
+
+            // 绑定事件监听器
+            mobileNavToggle.addEventListener('click', openMobileNav);
+            mobileNavClose.addEventListener('click', closeMobileNav);
+            mobileNavBack.addEventListener('click', closeMobileNav);
+
+            // 点击覆盖层背景关闭导航（除了返回区域）
+            mobileNavOverlay.addEventListener('click', function (e) {
+                if (e.target === mobileNavOverlay) {
+                    closeMobileNav();
+                }
+            });
+
+            // 更新手机端导航可见性
+            function updateMobileNavVisibility() {
+                if (isMobileDevice()) {
+                    mobileNavToggle.style.display = 'flex';
+                } else {
+                    mobileNavToggle.style.display = 'none';
+                    closeMobileNav(); // 在非移动设备上关闭导航
+                }
+            }
+
+            // 监听窗口大小变化
+            window.addEventListener('resize', updateMobileNavVisibility);
+        }
+
+        // 移动端分类展开/收起功能
+        function toggleMobileCategory(categoryKey, categoryTitle, categoryDiv) {
+            const toggleBtn = categoryTitle.querySelector('.mobile-category-toggle');
+            // 查找该分类下的所有主题和文件列表
+            const topicLists = categoryDiv.querySelectorAll('.mobile-topic');
+            const fileLists = categoryDiv.querySelectorAll('.mobile-file-list');
+
+            // 检查是否已收起
+            const isCollapsed = toggleBtn.classList.contains('collapsed');
+
+            if (isCollapsed) {
+                // 展开
+                toggleBtn.classList.remove('collapsed');
+                // 展开主题容器本身
+                topicLists.forEach(topic => {
+                    topic.style.display = 'block';
+                    const topicToggle = topic.querySelector('.mobile-topic-toggle');
+                    const topicFileList = topic.querySelector('.mobile-file-list');
+                    if (topicToggle && topicToggle.classList.contains('collapsed')) {
+                        topicToggle.classList.remove('collapsed');
+                        topicFileList.classList.remove('collapsed');
+                    }
+                });
+                fileLists.forEach(list => {
+                    list.classList.remove('collapsed');
+                });
+                setCollapsedState('category', categoryKey, false);
+            } else {
+                // 收起
+                toggleBtn.classList.add('collapsed');
+                // 收起主题容器本身
+                topicLists.forEach(topic => {
+                    topic.style.display = 'none';
+                    const topicToggle = topic.querySelector('.mobile-topic-toggle');
+                    const topicFileList = topic.querySelector('.mobile-file-list');
+                    if (topicToggle && !topicToggle.classList.contains('collapsed')) {
+                        topicToggle.classList.add('collapsed');
+                        topicFileList.classList.add('collapsed');
+                    }
+                });
+                fileLists.forEach(list => {
+                    list.classList.add('collapsed');
+                });
+                setCollapsedState('category', categoryKey, true);
+            }
+        }
+
+        // 移动端主题展开/收起功能
+        function toggleMobileTopic(categoryKey, topicKey, topicTitle, topicDiv) {
+            const toggleBtn = topicTitle.querySelector('.mobile-topic-toggle');
+            const fileList = topicDiv.querySelector('.mobile-file-list');
+
+            // 检查是否已收起
+            const isCollapsed = toggleBtn.classList.contains('collapsed');
+
+            if (isCollapsed) {
+                // 展开
+                toggleBtn.classList.remove('collapsed');
+                fileList.classList.remove('collapsed');
+                setCollapsedState('topic', `${categoryKey}-${topicKey}`, false);
+            } else {
+                // 收起
+                toggleBtn.classList.add('collapsed');
+                fileList.classList.add('collapsed');
+                setCollapsedState('topic', `${categoryKey}-${topicKey}`, true);
+            }
+        }
+
+        // 移动端"所有文档"展开/收起功能
+        function toggleMobileAllDocs(allDocsTitle, allDocsDiv) {
+            const toggleBtn = allDocsTitle.querySelector('.mobile-category-toggle');
+            const fileList = allDocsDiv.querySelector('.mobile-file-list');
+
+            // 检查是否已收起
+            const isCollapsed = toggleBtn.classList.contains('collapsed');
+
+            if (isCollapsed) {
+                // 展开
+                toggleBtn.classList.remove('collapsed');
+                fileList.classList.remove('collapsed');
+                setCollapsedState('all-docs', 'all-docs', false);
+            } else {
+                // 收起
+                toggleBtn.classList.add('collapsed');
+                fileList.classList.add('collapsed');
+                setCollapsedState('all-docs', 'all-docs', true);
+            }
+        }
+
+        // 初始化侧边栏滚动功能
+        function initializeSidebarScrolling() {
+            const sidebar = document.querySelector('.sidebar');
+            if (!sidebar) return;
+
+            let isScrolling = false;
+            let scrollTimeout;
+
+            // 确保侧边栏具有正确的滚动属性
+            sidebar.style.overflowY = 'auto';
+            sidebar.style.overflowX = 'hidden';
+
+            // 确保子元素不会阻止滚动
+            const sidebarLists = sidebar.querySelectorAll('.sidebar-list, .topic-list, .file-list');
+            sidebarLists.forEach(list => {
+                list.style.overflow = 'visible';
+                list.style.maxHeight = 'none';
+            });
+
+            // 滚动事件处理
+            sidebar.addEventListener('scroll', function () {
+                if (!isScrolling) {
+                    sidebar.classList.add('scrolling');
+                    isScrolling = true;
+                }
+
+                // 清除之前的超时
+                clearTimeout(scrollTimeout);
+
+                // 设置新的超时，在停止滚动后移除类
+                scrollTimeout = setTimeout(function () {
+                    sidebar.classList.remove('scrolling');
+                    isScrolling = false;
+                }, 150);
+            });
+
+            // 为侧边栏内的链接添加平滑滚动效果
+            const sidebarLinks = sidebar.querySelectorAll('a[href^="#"]');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+
+                    if (targetElement) {
+                        // 计算滚动位置，考虑固定头部高度
+                        const headerHeight = document.querySelector('.site-header').offsetHeight;
+                        const targetPosition = targetElement.offsetTop - headerHeight - 20;
+
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            // 添加键盘导航支持
+            sidebar.addEventListener('keydown', function (e) {
+                // 上下箭头键滚动
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    sidebar.scrollTop -= 30;
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    sidebar.scrollTop += 30;
+                }
+                // Home键滚动到顶部
+                else if (e.key === 'Home') {
+                    e.preventDefault();
+                    sidebar.scrollTop = 0;
+                }
+                // End键滚动到底部
+                else if (e.key === 'End') {
+                    e.preventDefault();
+                    sidebar.scrollTop = sidebar.scrollHeight;
+                }
+            });
+
+            // 确保侧边栏可以获得焦点以支持键盘导航
+            sidebar.setAttribute('tabindex', '0');
+
+            // 添加滚动指示器（可选）
+            addScrollIndicator(sidebar);
+        }
+
+        // 添加滚动指示器
+        function addScrollIndicator(sidebar) {
+            // 检查是否需要滚动指示器
+            function checkScrollNeeded() {
+                const needsScroll = sidebar.scrollHeight > sidebar.clientHeight;
+
+                // 如果需要滚动且没有指示器，则添加一个
+                if (needsScroll && !sidebar.querySelector('.scroll-indicator')) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'scroll-indicator';
+                    indicator.innerHTML = '↓';
+                    indicator.style.cssText = `
+                        position: absolute;
+                        bottom: 10px;
+                        right: 10px;
+                        background: rgba(0, 123, 255, 0.7);
+                        color: white;
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 12px;
+                        opacity: 0.7;
+                        pointer-events: none;
+                        transition: opacity 0.3s ease;
+                        z-index: 10;
+                    `;
+
+                    // 将指示器添加到侧边栏内容区域
+                    const sidebarContent = sidebar.querySelector('.sidebar-content');
+                    if (sidebarContent) {
+                        sidebarContent.style.position = 'relative';
+                        sidebarContent.appendChild(indicator);
+
+                        // 监听滚动，当用户开始滚动时隐藏指示器
+                        let hideTimeout;
+                        sidebar.addEventListener('scroll', function () {
+                            indicator.style.opacity = '0';
+
+                            // 清除之前的超时
+                            clearTimeout(hideTimeout);
+
+                            // 如果滚动到顶部，重新显示指示器
+                            if (sidebar.scrollTop <= 10) {
+                                hideTimeout = setTimeout(() => {
+                                    indicator.style.opacity = '0.7';
+                                }, 1000);
+                            }
+                        });
+                    }
+                }
+                // 如果不需要滚动且有指示器，则移除它
+                else if (!needsScroll) {
+                    const indicator = sidebar.querySelector('.scroll-indicator');
+                    if (indicator) {
+                        indicator.remove();
+                    }
+                }
+            }
+
+            // 初始检查
+            checkScrollNeeded();
+
+            // 窗口大小变化时重新检查
+            window.addEventListener('resize', checkScrollNeeded);
+
+            // 内容变化时重新检查（使用MutationObserver）
+            const observer = new MutationObserver(checkScrollNeeded);
+            observer.observe(sidebar, { childList: true, subtree: true });
+        }
+    </script>
+</body>
+
+</html>

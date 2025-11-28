@@ -1,0 +1,22 @@
+# robots.txt for LogSpiral - 泰拉瑞亚Mod制作教程
+# 允许所有搜索引擎抓取 LogSpiral 目录下的内容
+
+User-agent: *
+Allow: /
+Allow: /docs/
+Allow: /assets/imgs/
+
+# 禁止抓取不必要的目录和文件类型
+Disallow: /assets/js/
+Disallow: /assets/css/
+Disallow: /*.json$
+Disallow: /docs/*/原文件名顺序-方便查找原文对比/
+Disallow: /*.min.js$
+Disallow: /*.min.css$
+Disallow: /test*
+
+# 站点地图位置
+Sitemap: https://dpapyru.github.io/LogSpiral/sitemap.xml
+
+# 爬取延迟（可选，对服务器友好）
+Crawl-delay: 1
