@@ -4,6 +4,10 @@
  * 并根据修改时间显示最近的更新
  */
 
+let response_config = null;
+let config = null;
+const path_to_file = [];
+
 // 文档路径列表 - 更新为新的扁平化结构
 const DOC_PATHS = [
     'docs/Modder入门/DPapyru-给新人的前言.md',
@@ -15,11 +19,11 @@ const DOC_PATHS = [
 // 从config.json获取文档列表的函数
 async function getDocumentsFromConfig() {
     try {
-        const response = await fetch('docs/config.json');
-        if (!response.ok) {
-            throw new Error(`无法加载config.json: ${response.status}`);
+        response_config = await fetch('docs/config.json');
+        if (!response_config.ok) {
+            throw new Error(`无法加载config.json: ${response_config.status}`);
         }
-        const config = await response.json();
+        config = await response_config.json();
 
         // 从config.json中提取所有文档文件
         const documents = [];
@@ -28,9 +32,10 @@ async function getDocumentsFromConfig() {
         if (config.all_files && Array.isArray(config.all_files)) {
             config.all_files.forEach(file => {
                 documents.push(`docs/${file.path}`);
+                path_to_file.push({ filename: file.filename, path: file.path });
             });
         }
-
+        console.log('文档列表创建成功');
         return documents;
     } catch (error) {
         console.error('获取config.json失败:', error);
@@ -229,7 +234,12 @@ function generateUpdateCard(doc) {
     let viewUrl = doc.url;
     if (viewUrl.endsWith('.md') && !viewUrl.includes('viewer.html')) {
         const fileName = viewUrl.split('/').pop();
-        viewUrl = `docs/viewer.html?file=${fileName}`;
+
+        // 查询path_to_file，寻找对应的文件路径
+        const filePathToFile = path_to_file.find(f => f.filename === fileName);
+        const filePath = filePathToFile ? filePathToFile.path : 'No Found';
+        console.log('当前查询路径:' + filePath);
+        viewUrl = `viewer.html?file=${filePath}`;
     }
 
     return `

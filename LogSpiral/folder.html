@@ -425,7 +425,7 @@
                     <ul class="nav-list">
                         <li class="nav-item"><a href="index.html" class="nav-link">首页</a></li>
                         <li class="nav-item"><a href="docs/index.html" class="nav-link">文档</a></li>
-                        <li class="nav-item"><a href="docs/viewer.html" class="nav-link">文档查看器</a></li>
+                        <li class="nav-item"><a href="viewer.html" class="nav-link">文档查看器</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
                                 target="_blank">GitHub</a></li>
                     </ul>
@@ -509,7 +509,7 @@
                     <ul>
                         <li><a href="index.html">首页</a></li>
                         <li><a href="docs/index.html">文档</a></li>
-                        <li><a href="docs/viewer.html">文档查看器</a></li>
+                        <li><a href="viewer.html">文档查看器</a></li>
                         <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
                     </ul>
                 </div>
@@ -838,7 +838,7 @@
                     </div>
                     <div class="doc-card-footer">
                         <div class="doc-author">作者: ${doc.author}</div>
-                        <a href="docs/viewer.html?file=${doc.path}" class="doc-link">查看文档</a>
+                        <a href="viewer.html?file=${doc.path}" class="doc-link">查看文档</a>
                     </div>
                 `;
                 
@@ -936,7 +936,7 @@
                         `;
                         
                         resultItem.addEventListener('click', function() {
-                            window.location.href = `docs/viewer.html?file=${result.path}`;
+                            window.location.href = `viewer.html?file=${result.path}`;
                         });
                         
                         searchResults.appendChild(resultItem);
@@ -1012,7 +1012,7 @@
                         </div>
                         <div class="doc-card-footer">
                             <div class="doc-author">作者: ${doc.author}</div>
-                            <a href="docs/viewer.html?file=${doc.path}" class="doc-link">查看文档</a>
+                            <a href="viewer.html?file=${doc.path}" class="doc-link">查看文档</a>
                         </div>
                     `;
                     
@@ -1033,7 +1033,7 @@
                     alert('没有找到匹配的文档，请尝试其他关键词');
                 } else if (results.length === 1) {
                     // 如果只有一个结果，直接跳转
-                    window.location.href = `docs/viewer.html?file=${results[0].path}`;
+                    window.location.href = `viewer.html?file=${results[0].path}`;
                 } else {
                     // 如果有多个结果，更新文档网格
                     updateDocumentGrid(results);

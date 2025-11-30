@@ -353,7 +353,12 @@
                 initializeCategoryNavigation();
 
                 // 从URL参数获取要加载的Markdown文件
-                const urlParams = new URLSearchParams(window.location.search);
+                let url = window.location.search;
+                // url = url.replace('?','%3F');
+                // url = url.replace('=','%3D');
+                url = url.replace(/#/g,'%23');
+                url = url.replace(/&/g,'%26');
+                const urlParams = new URLSearchParams(url);
                 let markdownFile = urlParams.get('file');
                 console.log('从URL参数获取的文件名:', markdownFile);
 
