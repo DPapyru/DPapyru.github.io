@@ -6,19 +6,370 @@ const path = require('path');
 const projectConfig = {
     name: '主项目',
     docsDir: './docs',
-    configFile: './docs/config.json',
-    indexFile: './docs/tutorial-index.md',
-    categories: {
-        'getting-started': [],
-        'basic-concepts': [],
-        'mod-development': [],
-        'advanced-topics': [],
-        'resources': []
-    }
+    configFile: './docs/config.json'
 };
 
-// 递归扫描目录获取所有Markdown文件
-function scanDirectoryRecursively(dir, baseDir, fileList = []) {
+// 动态配置管理器
+class ConfigManager {
+    constructor(configPath) {
+        this.configPath = configPath;
+        this.config = null;
+        this.defaultConfig = this.getDefaultConfig();
+        this.specialCategories = ['怎么贡献', 'Modder入门'];
+        this.categoryMappings = {
+            '入门': 'getting-started',
+            '基础概念': 'basic-concepts',
+            'Mod开发': 'mod-development',
+            '高级主题': 'advanced-topics',
+            '资源参考': 'resources',
+            '进阶': 'intermediate',
+            '个人分享': 'personal-sharing'
+        };
+        this.reverseCategoryMappings = {};
+
+        // 创建反向映射
+        Object.keys(this.categoryMappings).forEach(key => {
+            this.reverseCategoryMappings[this.categoryMappings[key]] = key;
+        });
+    }
+
+    // 获取默认配置
+    getDefaultConfig() {
+        return {
+            categories: {
+                '入门': {
+                    title: '入门',
+                    description: '适合初学者的基础教程',
+                    topics: {}
+                },
+                '进阶': {
+                    title: '进阶',
+                    description: '有一定基础后的进阶教程',
+                    topics: {}
+                },
+                '高级': {
+                    title: '高级',
+                    description: '面向有经验开发者的高级教程',
+                    topics: {}
+                },
+                '个人分享': {
+                    title: '个人分享',
+                    description: '社区成员的个人经验和技巧分享',
+                    topics: {}
+                },
+                '怎么贡献': {
+                    title: '怎么贡献',
+                    description: '介绍贡献者应该怎么贡献文章',
+                    topics: {}
+                },
+                'Modder入门': {
+                    title: 'Modder入门',
+                    description: 'Modder入门相关的教程',
+                    topics: {}
+                }
+            },
+            topics: {
+                'mod-basics': {
+                    title: 'Mod基础',
+                    description: 'Mod开发的基础概念和核心API',
+                    icon: '📖',
+                    display_names: {
+                        zh: 'Mod基础',
+                        en: 'Mod Basics'
+                    },
+                    aliases: ['Mod基础']
+                },
+                'env': {
+                    title: '环境配置',
+                    description: '开发环境搭建和配置',
+                    icon: '🛠️',
+                    display_names: {
+                        zh: '环境配置',
+                        en: 'Environment Setup'
+                    },
+                    aliases: ['环境配置']
+                },
+                'items': {
+                    title: '物品系统',
+                    description: '物品、武器和装备的开发',
+                    icon: '⚔️',
+                    display_names: {
+                        zh: '物品系统',
+                        en: 'Item System'
+                    },
+                    aliases: ['物品系统']
+                },
+                'npcs': {
+                    title: 'NPC系统',
+                    description: 'NPC的创建和行为定制',
+                    icon: '👥',
+                    display_names: {
+                        zh: 'NPC系统',
+                        en: 'NPC System'
+                    },
+                    aliases: ['NPC系统']
+                },
+                'world-gen': {
+                    title: '世界生成',
+                    description: '世界生成和地形修改',
+                    icon: '🌍',
+                    display_names: {
+                        zh: '世界生成',
+                        en: 'World Generation'
+                    },
+                    aliases: ['世界生成']
+                },
+                'ui': {
+                    title: 'UI界面',
+                    description: '用户界面和交互设计',
+                    icon: '🎨',
+                    display_names: {
+                        zh: 'UI界面',
+                        en: 'UI Interface'
+                    },
+                    aliases: ['UI界面']
+                },
+                'networking': {
+                    title: '网络功能',
+                    description: '多人游戏和网络通信',
+                    icon: '🌐',
+                    display_names: {
+                        zh: '网络功能',
+                        en: 'Networking'
+                    },
+                    aliases: ['网络功能']
+                },
+                'advanced': {
+                    title: '高级功能',
+                    description: '高级开发技巧和优化',
+                    icon: '🔧',
+                    display_names: {
+                        zh: '高级功能',
+                        en: 'Advanced Features'
+                    },
+                    aliases: ['高级功能']
+                },
+                'article-contribution': {
+                    title: '文章贡献',
+                    description: '如何为教程网站贡献文章',
+                    icon: '✍️',
+                    display_names: {
+                        zh: '文章贡献',
+                        en: 'Article Contribution'
+                    },
+                    aliases: ['文章贡献']
+                }
+            },
+            authors: {},
+            all_files: [],
+            // 新增配置选项
+            settings: {
+                defaultCategory: '资源参考',
+                defaultTopic: 'mod-basics',
+                pathMappings: {},
+                customFields: ['last_updated', 'tags', 'time', 'prev_chapter', 'next_chapter', 'colorLD', 'colorChange'],
+                validationRules: {
+                    requiredFields: ['title'],
+                    optionalFields: ['author', 'description', 'date', 'difficulty', 'order', 'category', 'topic', 'last_updated', 'tags', 'time', 'prev_chapter', 'next_chapter', 'colorLD', 'colorChange']
+                }
+            }
+        };
+    }
+
+    // 加载配置
+    loadConfig() {
+        try {
+            if (fs.existsSync(this.configPath)) {
+                const configContent = fs.readFileSync(this.configPath, 'utf8');
+                this.config = JSON.parse(configContent);
+                this.validateConfig();
+                this.mergeWithDefaults();
+                console.log('配置文件加载成功');
+            } else {
+                console.log('配置文件不存在，使用默认配置');
+                this.config = JSON.parse(JSON.stringify(this.defaultConfig));
+            }
+        } catch (error) {
+            console.error('加载配置文件时出错:', error.message);
+            console.log('使用默认配置');
+            this.config = JSON.parse(JSON.stringify(this.defaultConfig));
+        }
+        return this.config;
+    }
+
+    // 验证配置
+    validateConfig() {
+        if (!this.config) {
+            throw new Error('配置为空');
+        }
+
+        // 验证基本结构
+        if (!this.config.categories || typeof this.config.categories !== 'object') {
+            throw new Error('配置中缺少有效的categories对象');
+        }
+
+        if (!this.config.topics || typeof this.config.topics !== 'object') {
+            throw new Error('配置中缺少有效的topics对象');
+        }
+
+        // 验证特殊分类是否存在
+        this.specialCategories.forEach(category => {
+            if (!this.config.categories[category]) {
+                console.warn(`警告: 特殊分类 "${category}" 不存在于配置中，将自动创建`);
+            }
+        });
+
+        console.log('配置验证通过');
+    }
+
+    // 与默认配置合并
+    mergeWithDefaults() {
+        // 合并设置
+        if (!this.config.settings) {
+            this.config.settings = JSON.parse(JSON.stringify(this.defaultConfig.settings));
+        } else {
+            // 合并默认设置
+            Object.keys(this.defaultConfig.settings).forEach(key => {
+                if (this.config.settings[key] === undefined) {
+                    this.config.settings[key] = JSON.parse(JSON.stringify(this.defaultConfig.settings[key]));
+                }
+
+                // 特殊处理customFields和validationRules，确保它们包含所有必要的字段
+                if (key === 'customFields' && this.config.settings[key].length === 0) {
+                    this.config.settings[key] = JSON.parse(JSON.stringify(this.defaultConfig.settings[key]));
+                }
+
+                if (key === 'validationRules' && this.config.settings[key]) {
+                    // 确保optionalFields包含所有自定义字段
+                    const defaultOptionalFields = this.defaultConfig.settings.validationRules.optionalFields;
+                    const currentOptionalFields = this.config.settings[key].optionalFields || [];
+
+                    // 添加缺失的自定义字段
+                    defaultOptionalFields.forEach(field => {
+                        if (!currentOptionalFields.includes(field)) {
+                            currentOptionalFields.push(field);
+                        }
+                    });
+
+                    this.config.settings[key].optionalFields = currentOptionalFields;
+                }
+            });
+        }
+
+        // 合并默认分类
+        Object.keys(this.defaultConfig.categories).forEach(category => {
+            if (!this.config.categories[category]) {
+                this.config.categories[category] = JSON.parse(JSON.stringify(this.defaultConfig.categories[category]));
+            }
+        });
+
+        // 合并默认主题
+        Object.keys(this.defaultConfig.topics).forEach(topic => {
+            if (!this.config.topics[topic]) {
+                this.config.topics[topic] = JSON.parse(JSON.stringify(this.defaultConfig.topics[topic]));
+            }
+        });
+    }
+
+    // 保存配置
+    saveConfig() {
+        try {
+            fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
+            console.log('配置文件保存成功');
+        } catch (error) {
+            console.error('保存配置文件时出错:', error.message);
+            throw error;
+        }
+    }
+
+    // 获取所有分类
+    getCategories() {
+        return this.config ? this.config.categories : {};
+    }
+
+    // 获取所有主题
+    getTopics() {
+        return this.config ? this.config.topics : {};
+    }
+
+    // 获取设置
+    getSettings() {
+        return this.config && this.config.settings ? this.config.settings : this.defaultConfig.settings;
+    }
+
+    // 映射分类名称
+    mapCategoryName(categoryName) {
+        // 首先尝试直接映射
+        if (this.categoryMappings[categoryName]) {
+            return this.categoryMappings[categoryName];
+        }
+
+        // 如果是英文，尝试反向映射
+        if (this.reverseCategoryMappings[categoryName]) {
+            return categoryName; // 已经是英文键
+        }
+
+        // 如果是中文分类名，直接返回
+        if (this.config.categories[categoryName]) {
+            return categoryName;
+        }
+
+        // 如果是不存在上面的分类内容，新建一个分类
+        if(categoryName !== '' && categoryName !== null){
+            return categoryName;
+        }
+
+        // 默认返回
+        return this.getSettings().defaultCategory;
+    }
+
+    // 通过别名查找主题
+    findTopicByAlias(alias) {
+        if (!this.config.topics) return null;
+
+        for (const topicKey in this.config.topics) {
+            const topic = this.config.topics[topicKey];
+            if (topic.aliases && topic.aliases.includes(alias)) {
+                return topicKey;
+            }
+        }
+
+        return null;
+    }
+
+    // 检查是否为特殊分类
+    isSpecialCategory(categoryName) {
+        return this.specialCategories.includes(categoryName);
+    }
+
+    // 添加新分类
+    addCategory(categoryKey, categoryData) {
+        if (!this.config.categories) {
+            this.config.categories = {};
+        }
+        this.config.categories[categoryKey] = categoryData;
+    }
+
+    // 添加新主题
+    addTopic(topicKey, topicData) {
+        if (!this.config.topics) {
+            this.config.topics = {};
+        }
+        this.config.topics[topicKey] = topicData;
+    }
+
+    // 处理路径映射
+    mapPath(originalPath) {
+        const pathMappings = this.getSettings().pathMappings;
+        if (pathMappings && pathMappings[originalPath]) {
+            return pathMappings[originalPath];
+        }
+        return originalPath;
+    }
+}
+
+// 递归扫描目录获取所有Markdown文件和翻译器配置
+function scanDirectoryRecursively(dir, baseDir, fileList = [], translatorConfigs = {}) {
     const items = fs.readdirSync(dir);
 
     items.forEach(item => {
@@ -27,7 +378,18 @@ function scanDirectoryRecursively(dir, baseDir, fileList = []) {
 
         if (stat.isDirectory()) {
             // 递归扫描子目录
-            scanDirectoryRecursively(fullPath, baseDir, fileList);
+            scanDirectoryRecursively(fullPath, baseDir, fileList, translatorConfigs);
+        } else if (item === 'Translator.yaml') {
+            // 找到Translator.yaml文件，读取并存储翻译配置
+            try {
+                const translatorContent = fs.readFileSync(fullPath, 'utf8');
+                const translatorData = parseYaml(translatorContent);
+                const relativeDirPath = path.relative(baseDir, dir).replace(/\\/g, '/');
+                translatorConfigs[relativeDirPath] = translatorData;
+                console.log(`发现翻译配置文件: ${relativeDirPath}/Translator.yaml`);
+            } catch (error) {
+                console.error(`读取翻译配置文件 ${fullPath} 时出错:`, error.message);
+            }
         } else if (item.endsWith('.md') && item !== 'tutorial-index.md') {
             // 计算相对于docs目录的路径，确保使用正斜杠
             const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, '/');
@@ -35,14 +397,14 @@ function scanDirectoryRecursively(dir, baseDir, fileList = []) {
         }
     });
 
-    return fileList;
+    return { files: fileList, translatorConfigs };
 }
 
 // 处理主项目
 function processMainProject() {
     console.log(`\n正在处理 ${projectConfig.name} 项目...`);
 
-    const { docsDir, configFile, categories: defaultCategories } = projectConfig;
+    const { docsDir, configFile } = projectConfig;
 
     // 检查目录是否存在
     if (!fs.existsSync(docsDir)) {
@@ -50,163 +412,87 @@ function processMainProject() {
         return;
     }
 
-    // 扫描所有Markdown文件
-    const files = scanDirectoryRecursively(docsDir, docsDir);
-    console.log(`找到 ${files.length} 个Markdown文件`);
+    // 初始化配置管理器
+    const configManager = new ConfigManager(configFile);
+    const configData = configManager.loadConfig();
 
-    // 读取现有的config.json文件（如果存在）
-    let configData = {};
-    if (fs.existsSync(configFile)) {
-        try {
-            const configContent = fs.readFileSync(configFile, 'utf8');
-            configData = JSON.parse(configContent);
-        } catch (error) {
-            console.error(`读取${projectConfig.name}的config.json时出错:`, error.message);
-            // 如果读取失败，使用默认配置
-            configData = {
-                categories: {},
-                topics: {},
-                authors: {},
-                all_files: []
-            };
-        }
-    } else {
-        // 如果config.json不存在，创建默认配置
-        configData = {
-            categories: {},
-            topics: {},
-            authors: {},
-            all_files: []
-        };
-    }
+    // 扫描所有Markdown文件和翻译器配置
+    const scanResult = scanDirectoryRecursively(docsDir, docsDir);
+    const files = scanResult.files;
+    const translatorConfigs = scanResult.translatorConfigs;
+    console.log(`找到 ${files.length} 个Markdown文件`);
+    console.log(`找到 ${Object.keys(translatorConfigs).length} 个翻译配置文件`);
 
     // 按类别分组
-    const categories = JSON.parse(JSON.stringify(defaultCategories)); // 深拷贝默认分类
+    const categories = {};
 
     // 解析每个文件的元数据
     files.forEach(file => {
         const fullPath = path.join(docsDir, file);
         const content = fs.readFileSync(fullPath, 'utf8');
-        const metadata = parseMetadata(content);
+        let metadata = parseMetadata(content);
 
         // 跳过标记为 hide: true 的文件
         if (metadata.hide === 'true' || metadata.hide === true) {
             return;
         }
 
-        if (metadata.category) {
-            // 检查分类是否存在，如果不存在则创建或使用默认分类
-            let targetCategory = metadata.category;
-
-            // 尝试将中文分类映射到英文分类键
-            const categoryMapping = {
-                '入门': 'getting-started',
-                '基础概念': 'basic-concepts',
-                'Mod开发': 'mod-development',
-                '高级主题': 'advanced-topics',
-                '资源参考': 'resources'
-            };
-            targetCategory = categoryMapping[metadata.category] || metadata.category;
-
-            // 如果分类不在预定义列表中，使用默认分类
-            if (!categories[targetCategory]) {
-                targetCategory = 'resources';
-
-                // 确保默认分类存在
-                if (!categories[targetCategory]) {
-                    categories[targetCategory] = [];
-                }
-            }
-
-            categories[targetCategory].push({
-                file,
-                path: file, // 添加完整路径
-                ...metadata
-            });
-        } else {
-            // 如果没有指定类别，使用默认分类
-            const defaultCategory = 'resources';
-            if (!categories[defaultCategory]) {
-                categories[defaultCategory] = [];
-            }
-            categories[defaultCategory].push({
-                file,
-                path: file, // 添加完整路径
-                ...metadata
-            });
+        // 验证元数据
+        const validation = validateMetadata(metadata, configManager);
+        if (validation.errors.length > 0) {
+            console.error(`文件 ${file} 元数据验证失败:`, validation.errors.join(', '));
+            return; // 跳过有错误的文件
         }
+
+        // 显示警告
+        if (validation.warnings.length > 0) {
+            console.warn(`文件 ${file} 元数据警告:`, validation.warnings.join(', '));
+        }
+
+        // 处理自定义字段
+        metadata = processCustomFields(metadata, configManager);
+
+        // 使用配置管理器处理分类
+        let targetCategory = metadata.category || configManager.getSettings().defaultCategory;
+        targetCategory = configManager.mapCategoryName(targetCategory);
+
+        // 特殊分类处理
+        if (configManager.isSpecialCategory(targetCategory)) {
+            console.log(`处理特殊分类: ${targetCategory}`);
+        }
+
+        // 如果分类不存在，创建新分类
+        if (!categories[targetCategory]) {
+            categories[targetCategory] = [];
+        }
+
+        // 应用路径映射
+        const mappedPath = configManager.mapPath(file);
+
+        categories[targetCategory].push({
+            file,
+            path: mappedPath, // 使用映射后的路径
+            originalPath: file, // 保留原始路径
+            ...metadata
+        });
     });
 
-    // 生成索引内容
-    let indexContent = generateIndexContent(categories);
-
     // 更新config.json数据
-    updateConfigData(docsDir, files, configData);
+    updateConfigData(docsDir, files, configManager, translatorConfigs);
 
-    // 写入索引文件
-    const indexPath = path.join(docsDir, 'tutorial-index.md');
-    fs.writeFileSync(indexPath, indexContent);
-    console.log(`${projectConfig.name} 教程索引已更新！`);
-
-    // 写入配置文件
-    fs.writeFileSync(configFile, JSON.stringify(configData, null, 2));
+    // 保存配置文件
+    configManager.saveConfig();
     console.log(`${projectConfig.name} 配置文件已更新！`);
 }
 
-// 生成索引内容的函数
-function generateIndexContent(categories) {
-    let indexContent = `# 教程索引\n\n`;
-
-    indexContent += `这个文件是泰拉瑞亚Mod制作教程的索引，列出了所有可用的教程资源。索引是自动生成的，贡献者可以通过添加新的教程文件来更新此索引。\n\n`;
-    indexContent += `## 如何添加新教程\n\n`;
-    indexContent += `1. 在\`docs\`目录下创建新的Markdown文件\n`;
-    indexContent += `2. 在文件开头添加以下元数据格式：\n\n`;
-    indexContent += `\`\`\`markdown\n---\ntitle: 教程标题\ndifficulty: beginner|intermediate|advanced\ncategory: getting-started|basic-concepts|mod-development|advanced-topics|resources\ntime: 预计完成时间（分钟）\nauthor: 作者名称\ndate: 更新日期（YYYY-MM-DD）\ndescription: 简短描述\n---\n\`\`\`\n\n`;
-    indexContent += `3. 运行\`node generate-index.js\`脚本自动更新此索引文件\n\n`;
-
-    // 按类别生成内容
-    Object.keys(categories).forEach(category => {
-        if (categories[category] && categories[category].length > 0) {
-            const categoryTitle = getCategoryTitle(category);
-            indexContent += `## ${categoryTitle}\n\n`;
-
-            categories[category].sort((a, b) => {
-                // 安全地比较标题，处理可能缺失的标题
-                const titleA = a.title || '';
-                const titleB = b.title || '';
-                return titleA.localeCompare(titleB);
-            });
-
-            categories[category].forEach(tutorial => {
-                indexContent += `### [${tutorial.title || '无标题'}](${tutorial.path || tutorial.file})\n`;
-                indexContent += `- **难度**: ${getDifficultyText(tutorial.difficulty)}\n`;
-                // 检查时间字段是否已经包含"分钟"，避免重复
-                const timeText = tutorial.time || '未知';
-                const timeDisplay = timeText.includes('分钟') ? timeText : `${timeText}分钟`;
-                indexContent += `- **预计时间**: ${timeDisplay}\n`;
-                indexContent += `- **作者**: ${tutorial.author || '未知'}\n`;
-                indexContent += `- **更新日期**: ${tutorial.date || tutorial.last_updated || '未知'}\n`;
-                indexContent += `- **描述**: ${tutorial.description || '无描述'}\n\n`;
-            });
-        }
-    });
-
-    // 添加自动生成脚本部分
-    indexContent += `---\n\n`;
-    indexContent += `## 自动生成脚本\n\n`;
-    indexContent += `为了方便贡献者，我们提供了一个Node.js脚本来自动生成教程索引：\n\n`;
-    indexContent += `\`\`\`javascript\n// generate-index.js\nconst fs = require('fs');\nconst path = require('path');\n\n// 读取所有Markdown文件\nconst docsDir = './docs';\nconst files = fs.readdirSync(docsDir).filter(file => file.endsWith('.md') && file !== 'tutorial-index.md');\n\n// 按类别分组\nconst categories = {\n    'getting-started': [],\n    'basic-concepts': [],\n    'mod-development': [],\n    'advanced-topics': [],\n    'resources': []\n};\n\n// 解析每个文件的元数据\nfiles.forEach(file => {\n    const content = fs.readFileSync(path.join(docsDir, file), 'utf8');\n    const metadata = parseMetadata(content);\n    \n    if (metadata.category) {\n        categories[metadata.category].push({\n            file,\n            ...metadata\n        });\n    }\n});\n\n// 生成索引内容\nlet indexContent = \`# 教程索引\\\\n\\\\n\`;\n// ... 其余脚本内容\n\`\`\`\n\n`;
-    indexContent += `要使用此脚本，请运行：\n\n`;
-    indexContent += `\`\`\`bash\nnode generate-index.js\n\`\`\`\n\n`;
-    indexContent += `这将自动扫描\`docs\`目录中的所有Markdown文件，解析它们的元数据，并更新\`tutorial-index.md\`文件。\n`;
-
-    return indexContent;
-}
 
 // 更新config.json数据的函数
-function updateConfigData(docsDir, files, configData) {
+function updateConfigData(docsDir, files, configManager, translatorConfigs = {}) {
+    const configData = configManager.config;
+
     // 获取当前docs目录中所有实际存在的Markdown文件（包括子目录）
-    const currentFiles = scanDirectoryRecursively(docsDir, docsDir);
+    const currentScanResult = scanDirectoryRecursively(docsDir, docsDir);
+    const currentFiles = currentScanResult.files;
     const existingFiles = new Set(currentFiles);
 
     // 创建文件到正确类别的映射表
@@ -227,23 +513,14 @@ function updateConfigData(docsDir, files, configData) {
                 return; // 跳过隐藏文件
             }
 
-            // 确定类别
-            let category = metadata.category || '资源参考';
-
-            // 将英文类别映射到中文
-            const categoryMapping = {
-                'getting-started': '入门',
-                'basic-concepts': '基础概念',
-                'mod-development': 'Mod开发',
-                'advanced-topics': '高级主题',
-                'resources': '资源参考'
-            };
-            category = categoryMapping[category] || category;
+            // 使用配置管理器确定类别
+            let category = metadata.category || configManager.getSettings().defaultCategory;
+            category = configManager.mapCategoryName(category);
 
             fileToCorrectCategory[file] = category;
         } catch (error) {
             console.error(`解析文件 ${file} 时出错:`, error.message);
-            fileToCorrectCategory[file] = projectKey === 'main' ? '资源参考' : '杂项'; // 默认类别
+            fileToCorrectCategory[file] = configManager.getSettings().defaultCategory; // 使用默认类别
         }
     });
 
@@ -294,133 +571,6 @@ function updateConfigData(docsDir, files, configData) {
         });
     }
 
-    // 初始化类别结构（如果不存在）
-    const defaultCategories = {
-        '入门': {
-            title: '入门',
-            description: '适合初学者的基础教程',
-            topics: {}
-        },
-        '进阶': {
-            title: '进阶',
-            description: '有一定基础后的进阶教程',
-            topics: {}
-        },
-        '高级': {
-            title: '高级',
-            description: '面向有经验开发者的高级教程',
-            topics: {}
-        },
-        '个人分享': {
-            title: '个人分享',
-            description: '社区成员的个人经验和技巧分享',
-            topics: {}
-        },
-        '怎么贡献': {
-            title: '怎么贡献',
-            description: '介绍贡献者应该怎么贡献文章',
-            topics: {}
-        }
-    };
-
-    // 确保所有默认类别都存在
-    Object.keys(defaultCategories).forEach(category => {
-        if (!configData.categories[category]) {
-            configData.categories[category] = defaultCategories[category];
-        }
-    });
-
-    // 初始化默认主题（如果不存在）
-    const defaultTopics = {
-        'mod-basics': {
-            title: 'Mod基础',
-            description: 'Mod开发的基础概念和核心API',
-            icon: '📖',
-            display_names: {
-                zh: 'Mod基础',
-                en: 'Mod Basics'
-            },
-            aliases: ['Mod基础']
-        },
-        'env': {
-            title: '环境配置',
-            description: '开发环境搭建和配置',
-            icon: '🛠️',
-            display_names: {
-                zh: '环境配置',
-                en: 'Environment Setup'
-            },
-            aliases: ['环境配置']
-        },
-        'items': {
-            title: '物品系统',
-            description: '物品、武器和装备的开发',
-            icon: '⚔️',
-            display_names: {
-                zh: '物品系统',
-                en: 'Item System'
-            },
-            aliases: ['物品系统']
-        },
-        'npcs': {
-            title: 'NPC系统',
-            description: 'NPC的创建和行为定制',
-            icon: '👥',
-            display_names: {
-                zh: 'NPC系统',
-                en: 'NPC System'
-            },
-            aliases: ['NPC系统']
-        },
-        'world-gen': {
-            title: '世界生成',
-            description: '世界生成和地形修改',
-            icon: '🌍',
-            display_names: {
-                zh: '世界生成',
-                en: 'World Generation'
-            },
-            aliases: ['世界生成']
-        },
-        'ui': {
-            title: 'UI界面',
-            description: '用户界面和交互设计',
-            icon: '🎨',
-            display_names: {
-                zh: 'UI界面',
-                en: 'UI Interface'
-            },
-            aliases: ['UI界面']
-        },
-        'networking': {
-            title: '网络功能',
-            description: '多人游戏和网络通信',
-            icon: '🌐',
-            display_names: {
-                zh: '网络功能',
-                en: 'Networking'
-            },
-            aliases: ['网络功能']
-        },
-        'advanced': {
-            title: '高级功能',
-            description: '高级开发技巧和优化',
-            icon: '🔧',
-            display_names: {
-                zh: '高级功能',
-                en: 'Advanced Features'
-            },
-            aliases: ['高级功能']
-        }
-    };
-
-    // 确保所有默认主题都存在
-    Object.keys(defaultTopics).forEach(topic => {
-        if (!configData.topics[topic]) {
-            configData.topics[topic] = defaultTopics[topic];
-        }
-    });
-
     // 重置all_files数组
     configData.all_files = [];
 
@@ -428,48 +578,50 @@ function updateConfigData(docsDir, files, configData) {
     files.forEach(file => {
         const fullPath = path.join(docsDir, file);
         const content = fs.readFileSync(fullPath, 'utf8');
-        const metadata = parseMetadata(content);
+        let metadata = parseMetadata(content);
 
         // 跳过隐藏文件
         if (metadata.hide === 'true' || metadata.hide === true) {
             return;
         }
 
-        // 确定类别
-        let category = metadata.category || '资源参考';
+        // 应用翻译配置
+        metadata = applyTranslatorConfig(file, metadata, translatorConfigs);
 
-        // 将英文类别映射到中文
-        const categoryMapping = {
-            'getting-started': '入门',
-            'basic-concepts': '基础概念',
-            'mod-development': 'Mod开发',
-            'advanced-topics': '高级主题',
-            'resources': '资源参考'
-        };
-        category = categoryMapping[category] || category;
+        // 验证元数据
+        const validation = validateMetadata(metadata, configManager);
+        if (validation.errors.length > 0) {
+            console.error(`文件 ${file} 元数据验证失败:`, validation.errors.join(', '));
+            return; // 跳过有错误的文件
+        }
+
+        // 显示警告
+        if (validation.warnings.length > 0) {
+            console.warn(`文件 ${file} 元数据警告:`, validation.warnings.join(', '));
+        }
+
+        // 处理自定义字段
+        metadata = processCustomFields(metadata, configManager);
+
+        // 使用配置管理器确定类别
+        let category = metadata.category || configManager.getSettings().defaultCategory;
+        category = configManager.mapCategoryName(category);
 
         // 确定主题
-        let topic = metadata.topic || 'mod-basics';
+        let topic = metadata.topic || configManager.getSettings().defaultTopic;
 
         // 如果主题不在预定义列表中，尝试通过别名查找
         if (!configData.topics[topic]) {
-            let foundTopic = null;
-            Object.keys(configData.topics).forEach(topicKey => {
-                const topicData = configData.topics[topicKey];
-                if (topicData.aliases && topicData.aliases.includes(topic)) {
-                    foundTopic = topicKey;
-                }
-            });
-            topic = foundTopic || 'mod-basics';
+            topic = configManager.findTopicByAlias(topic) || configManager.getSettings().defaultTopic;
         }
 
         // 确保类别存在
         if (!configData.categories[category]) {
-            configData.categories[category] = {
+            configManager.addCategory(category, {
                 title: category,
                 description: `${category}相关的教程`,
                 topics: {}
-            };
+            });
         }
 
         // 确保主题在类别中存在
@@ -482,20 +634,32 @@ function updateConfigData(docsDir, files, configData) {
             };
         }
 
+        // 应用路径映射
+        const mappedPath = configManager.mapPath(file);
+
         // 创建文件对象
         const fileObj = {
             filename: path.basename(file), // 仅文件名，向后兼容
-            path: file, // 完整相对路径
+            path: mappedPath, // 使用映射后的路径
+            originalPath: file, // 保留原始路径
             title: metadata.title || path.basename(file, '.md'),
             author: metadata.author || '未知',
             order: parseInt(metadata.order) || 999,
             description: metadata.description || '无描述',
-            last_updated: metadata.last_updated || metadata.date || '未知'
+            last_updated: metadata.last_updated || metadata.date || '2017-9-18',
+            // 添加新的自定义字段
+            tags: metadata.tags || [],
+            time: metadata.time || '不具体',
+            difficulty: metadata.difficulty || 'beginner',
+            prev_chapter: metadata.prev_chapter || null,
+            next_chapter: metadata.next_chapter || null,
+            colorLD: metadata.colorLD || null,
+            colorChange: metadata.colorChange || null
         };
 
         // 检查文件是否已存在于主题的文件列表中
         const existingFileIndex = configData.categories[category].topics[topic].files.findIndex(
-            f => f.filename === path.basename(file) || f.path === file
+            f => f.filename === path.basename(file) || f.path === mappedPath
         );
 
         if (existingFileIndex >= 0) {
@@ -512,12 +676,22 @@ function updateConfigData(docsDir, files, configData) {
         // 添加到all_files
         configData.all_files.push({
             filename: path.basename(file), // 仅文件名，向后兼容
-            path: file, // 完整相对路径
+            path: mappedPath, // 使用映射后的路径
+            originalPath: file, // 保留原始路径
             title: metadata.title || path.basename(file, '.md'),
             author: metadata.author || '未知',
             category: category,
             topic: topic,
-            order: parseInt(metadata.order) || 999
+            order: parseInt(metadata.order) || 999,
+            // 添加新的自定义字段
+            tags: metadata.tags || [],
+            time: metadata.time || '不具体',
+            difficulty: metadata.difficulty || 'beginner',
+            prev_chapter: metadata.prev_chapter || null,
+            next_chapter: metadata.next_chapter || null,
+            colorLD: metadata.colorLD || null,
+            colorChange: metadata.colorChange || null,
+            last_updated: metadata.last_updated || metadata.date || '2017-9-18'
         });
 
         // 更新作者信息
@@ -552,6 +726,49 @@ function updateConfigData(docsDir, files, configData) {
     configData.all_files.sort((a, b) => a.order - b.order);
 }
 
+// 应用翻译配置的函数
+function applyTranslatorConfig(filePath, metadata, translatorConfigs) {
+    // 获取文件所在的目录路径
+    const dirPath = path.dirname(filePath);
+
+    // 查找该目录或父目录中的翻译配置
+    let translatorConfig = null;
+    let configPath = null;
+
+    // 从当前目录开始，向上查找翻译配置
+    let currentPath = dirPath;
+    while (currentPath && currentPath !== '.') {
+        if (translatorConfigs[currentPath]) {
+            translatorConfig = translatorConfigs[currentPath];
+            configPath = currentPath;
+            break;
+        }
+        // 向上一级目录查找
+        currentPath = path.dirname(currentPath);
+    }
+
+    // 如果找到了翻译配置，应用它
+    if (translatorConfig) {
+        console.log(`应用翻译配置 ${configPath}/Translator.yaml 到文件: ${filePath}`);
+
+        // 创建新的元数据对象，优先使用翻译配置中的值
+        const newMetadata = { ...metadata };
+
+        if (translatorConfig.author !== null && translatorConfig.author !== undefined) {
+            newMetadata.author = translatorConfig.author;
+            newMetadata.title = path.basename(filePath, '.md');
+            newMetadata.description = translatorConfig.description;
+            newMetadata.order = translatorConfig.order;
+            newMetadata.category = translatorConfig.category;
+        }
+
+        return newMetadata;
+    }
+
+    // 如果没有找到翻译配置，返回原始元数据
+    return metadata;
+}
+
 // 辅助函数
 function parseMetadata(content) {
     try {
@@ -567,49 +784,205 @@ function parseMetadata(content) {
             return {};
         }
 
-        const metadata = {};
-        const lines = metadataMatch[1].split(/\r?\n/);
-
-        lines.forEach(line => {
-            const colonIndex = line.indexOf(':');
-            if (colonIndex > 0) {
-                const key = line.substring(0, colonIndex).trim();
-                const value = line.substring(colonIndex + 1).trim();
-                metadata[key] = value;
-            }
-        });
-
-        return metadata;
+        // 使用更强大的YAML解析器
+        return parseYaml(metadataMatch[1]);
     } catch (error) {
         console.error('解析元数据时出错:', error.message);
         return {};
     }
 }
 
-function getCategoryTitle(category) {
-    const titles = {
-        'getting-started': '入门指南',
-        'basic-concepts': '基础概念',
-        'mod-development': 'Mod开发',
-        'advanced-topics': '高级主题',
-        'resources': '资源参考',
-        // 直接支持中文分类名称
-        '入门': '入门指南',
-        '基础概念': '基础概念',
-        'Mod开发': 'Mod开发',
-        '高级主题': '高级主题',
-        '资源参考': '资源参考'
-    };
-    return titles[category] || category;
+// 简单的YAML解析器，支持嵌套对象和数组
+function parseYaml(yamlText) {
+    // 移除开头和结尾的空白行
+    const lines = yamlText.trim().split('\n');
+    const result = {};
+
+    // 简单的栈结构跟踪当前对象和缩进级别
+    const stack = [{ obj: result, indent: -1 }];
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (!line.trim()) continue;
+
+        // 计算实际缩进（空格数）
+        const indent = line.search(/\S/);
+        const trimmedLine = line.trim();
+
+        // 移除比当前缩进级别更深的所有对象
+        while (stack.length > 1 && stack[stack.length - 1].indent >= indent) {
+            stack.pop();
+        }
+
+        const current = stack[stack.length - 1];
+        const currentObj = current.obj;
+
+        // 处理数组项（以-开头）
+        if (trimmedLine.startsWith('-')) {
+            const content = trimmedLine.substring(1).trim();
+
+            // 检查是否是键值对形式 (- key: value)
+            if (content.includes(':')) {
+                const colonIndex = content.indexOf(':');
+                const key = content.substring(0, colonIndex).trim();
+                const value = content.substring(colonIndex + 1).trim();
+
+                // 处理带引号的字符串
+                let finalValue = value;
+                if ((value.startsWith('"') && value.endsWith('"')) ||
+                    (value.startsWith("'") && value.endsWith("'"))) {
+                    finalValue = value.substring(1, value.length - 1);
+                }
+
+                // 如果当前对象是数组，则推入新对象
+                if (Array.isArray(currentObj)) {
+                    const newObj = {};
+                    newObj[key] = finalValue;
+                    currentObj.push(newObj);
+                } else {
+                    // 否则创建数组并添加第一个元素
+                    const arrayKey = Object.keys(currentObj).pop();
+                    if (!Array.isArray(currentObj[arrayKey])) {
+                        currentObj[arrayKey] = [];
+                    }
+                    const newObj = {};
+                    newObj[key] = finalValue;
+                    currentObj[arrayKey].push(newObj);
+                }
+            } else {
+                // 简单值形式 (- value)
+                let finalValue = content;
+                if ((content.startsWith('"') && content.endsWith('"')) ||
+                    (content.startsWith("'") && content.endsWith("'"))) {
+                    finalValue = content.substring(1, content.length - 1);
+                }
+
+                // 确保当前上下文是数组
+                const parent = stack[stack.length - 2];
+                if (parent) {
+                    const parentObj = parent.obj;
+                    const arrayKey = Object.keys(parentObj).pop();
+
+                    if (!Array.isArray(parentObj[arrayKey])) {
+                        parentObj[arrayKey] = [];
+                    }
+                    parentObj[arrayKey].push(finalValue);
+                }
+            }
+        }
+        // 处理键值对 (key: value)
+        else if (trimmedLine.includes(':')) {
+            const colonIndex = trimmedLine.indexOf(':');
+            const key = trimmedLine.substring(0, colonIndex).trim();
+            const value = trimmedLine.substring(colonIndex + 1).trim();
+
+            // 如果值为空，这是一个嵌套对象
+            if (!value) {
+                const newObj = {};
+                currentObj[key] = newObj;
+                stack.push({ obj: newObj, indent: indent });
+            }
+            // 如果值不为空，是简单键值对
+            else {
+                // 处理带引号的字符串
+                let finalValue = value;
+                if ((value.startsWith('"') && value.endsWith('"')) ||
+                    (value.startsWith("'") && value.endsWith("'"))) {
+                    finalValue = value.substring(1, value.length - 1);
+                }
+                // 处理颜色值等特殊格式
+                else if (value.startsWith('#')) {
+                    finalValue = value;
+                }
+                // 尝试转换数字
+                else if (!isNaN(value) && !isNaN(parseFloat(value))) {
+                    finalValue = parseFloat(value);
+                }
+                // 处理布尔值
+                else if (value.toLowerCase() === 'true') {
+                    finalValue = true;
+                }
+                else if (value.toLowerCase() === 'false') {
+                    finalValue = false;
+                }
+
+                currentObj[key] = finalValue;
+            }
+        }
+        // 处理数组开始的情况 ([key]:)
+        else if (trimmedLine.endsWith(':')) {
+            const key = trimmedLine.slice(0, -1).trim();
+            const newArray = [];
+            currentObj[key] = newArray;
+            stack.push({ obj: newArray, indent: indent });
+        }
+    }
+
+    return result;
 }
 
-function getDifficultyText(difficulty) {
-    const texts = {
-        'beginner': '初级',
-        'intermediate': '中级',
-        'advanced': '高级'
-    };
-    return texts[difficulty] || difficulty;
+
+// 验证元数据字段
+function validateMetadata(metadata, configManager) {
+    const settings = configManager.getSettings();
+    const validationRules = settings.validationRules;
+    const errors = [];
+    const warnings = [];
+
+    // 检查必需字段
+    if (validationRules && validationRules.requiredFields) {
+        validationRules.requiredFields.forEach(field => {
+            if (!metadata[field]) {
+                errors.push(`缺少必需字段: ${field}`);
+            }
+        });
+    }
+
+    // 检查可选字段
+    if (validationRules && validationRules.optionalFields) {
+        Object.keys(metadata).forEach(field => {
+            if (!validationRules.requiredFields.includes(field) &&
+                !validationRules.optionalFields.includes(field) &&
+                !settings.customFields.includes(field)) {
+                warnings.push(`未知字段: ${field}`);
+            }
+        });
+    }
+
+    // 验证分类
+    if (metadata.category) {
+        const mappedCategory = configManager.mapCategoryName(metadata.category);
+        if (!configManager.getCategories()[mappedCategory]) {
+            warnings.push(`未知分类: ${metadata.category}，将使用默认分类`);
+        }
+    }
+
+    // 验证主题
+    if (metadata.topic) {
+        const topicKey = configManager.findTopicByAlias(metadata.topic) || metadata.topic;
+        if (!configManager.getTopics()[topicKey]) {
+            warnings.push(`未知主题: ${metadata.topic}，将使用默认主题`);
+        }
+    }
+
+    return { errors, warnings };
+}
+
+// 处理自定义字段
+function processCustomFields(metadata, configManager) {
+    const settings = configManager.getSettings();
+    const customFields = settings.customFields || [];
+    const processedMetadata = { ...metadata };
+
+    // 处理自定义字段
+    customFields.forEach(field => {
+        if (metadata[field]) {
+            // 这里可以添加自定义字段的处理逻辑
+            console.log(`处理自定义字段 ${field}: ${metadata[field]}`);
+        }
+    });
+
+    return processedMetadata;
 }
 
 // 主处理逻辑

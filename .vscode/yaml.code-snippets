@@ -53,7 +53,7 @@
         "body": "description: ${1:简短描述}",
         "description": "添加文章简短描述"
     },
-    "默认topics":{
+    "默认topics": {
         "scope": "yaml",
         "prefix": "topic",
         "body": [
@@ -87,5 +87,13 @@
             "    - ${4:#f0f}",
         ],
         "description": "添加颜色动画(注意！exColor这一类变量名不能使用非英文字符,否则无法显示内容！)"
+    },
+    "排序": {
+        "scope": "yaml",
+        "prefix": "order",
+        "body": [
+            "order: ${1:1}"
+        ],
+        "description": "文章排序"
     }
 }

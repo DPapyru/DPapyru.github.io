@@ -890,24 +890,183 @@
             await loadDocumentsFromConfig();
         }
 
+        // 获取默认分类配置
+        function getDefaultCategories() {
+            return {
+                "入门": {
+                    "title": "入门",
+                    "description": "适合初学者的基础教程",
+                    "icon": "🚀",
+                    "color": "#4CAF50",
+                    "order": 1
+                },
+                "进阶": {
+                    "title": "进阶",
+                    "description": "有一定基础后的进阶教程",
+                    "icon": "📚",
+                    "color": "#2196F3",
+                    "order": 2
+                },
+                "高级": {
+                    "title": "高级",
+                    "description": "面向有经验开发者的高级教程",
+                    "icon": "🔥",
+                    "color": "#FF5722",
+                    "order": 3
+                },
+                "个人分享": {
+                    "title": "个人分享",
+                    "description": "社区成员的个人经验和技巧分享",
+                    "icon": "💡",
+                    "color": "#FFC107",
+                    "order": 4
+                },
+                "怎么贡献": {
+                    "title": "怎么贡献",
+                    "description": "介绍贡献者应该怎么贡献文章",
+                    "icon": "🤝",
+                    "color": "#9C27B0",
+                    "order": 5,
+                    "special": true
+                },
+                "Modder入门": {
+                    "title": "Modder入门",
+                    "description": "Modder入门相关的教程",
+                    "icon": "🎮",
+                    "color": "#00BCD4",
+                    "order": 6,
+                    "special": true
+                }
+            };
+        }
+
+        // 获取默认主题配置
+        function getDefaultTopics() {
+            return {
+                "mod-basics": {
+                    "title": "Mod基础",
+                    "description": "Mod开发的基础概念和核心API",
+                    "icon": "📖",
+                    "order": 1
+                },
+                "env": {
+                    "title": "环境配置",
+                    "description": "开发环境搭建和配置",
+                    "icon": "🛠️",
+                    "order": 2
+                },
+                "items": {
+                    "title": "物品系统",
+                    "description": "物品、武器和装备的开发",
+                    "icon": "⚔️",
+                    "order": 3
+                },
+                "npcs": {
+                    "title": "NPC系统",
+                    "description": "NPC的创建和行为定制",
+                    "icon": "👥",
+                    "order": 4
+                },
+                "world-gen": {
+                    "title": "世界生成",
+                    "description": "世界生成和地形修改",
+                    "icon": "🌍",
+                    "order": 5
+                },
+                "ui": {
+                    "title": "UI界面",
+                    "description": "用户界面和交互设计",
+                    "icon": "🎨",
+                    "order": 6
+                },
+                "networking": {
+                    "title": "网络功能",
+                    "description": "多人游戏和网络通信",
+                    "icon": "🌐",
+                    "order": 7
+                },
+                "advanced": {
+                    "title": "高级功能",
+                    "description": "高级开发技巧和优化",
+                    "icon": "🔧",
+                    "order": 8
+                }
+            };
+        }
+
         // 生成默认配置（当config.json不存在时）
         function generateDefaultConfig() {
             const config = {
+                _metadata: {
+                    version: "2.0.0",
+                    schema: "tmodloader-docs-v2",
+                    created: new Date().toISOString().split('T')[0],
+                    lastUpdated: new Date().toISOString().split('T')[0],
+                    description: "泰拉瑞亚Mod制作教程配置文件 - 默认配置"
+                },
+                globalSettings: {
+                    language: "zh",
+                    theme: "default",
+                    siteName: "泰拉瑞亚Mod制作教程",
+                    siteDescription: "全面的泰拉瑞亚Mod开发教程资源",
+                    baseUrl: "",
+                    enableSearch: true,
+                    enableDarkMode: true,
+                    defaultOrder: 999,
+                    dateFormat: "YYYY-MM-DD"
+                },
                 categories: {},
                 topics: {},
                 authors: {},
-                all_files: []
+                all_files: [],
+                pathMappings: {},
+                settings: {
+                    defaultCategory: "入门",
+                    defaultTopic: "mod-basics",
+                    specialCategories: ["怎么贡献", "Modder入门"]
+                },
+                extensions: {
+                    customFields: {
+                        difficulty: {
+                            type: "select",
+                            options: ["beginner", "intermediate", "advanced"],
+                            default: "beginner",
+                            required: false
+                        }
+                    }
+                }
             };
-            
+
             // 初始化分类结构
-            Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
+            const defaultCategories = getDefaultCategories();
+            Object.keys(defaultCategories).forEach(categoryKey => {
+                const category = defaultCategories[categoryKey];
                 config.categories[categoryKey] = {
-                    title: MAIN_CATEGORIES[categoryKey].title,
-                    description: MAIN_CATEGORIES[categoryKey].description,
-                    topics: {}
+                    ...category,
+                    topics: {
+                        "mod-basics": {
+                            title: "Mod基础",
+                            description: "Mod开发的基础概念和核心API",
+                            files: []
+                        }
+                    }
                 };
             });
-            
+
+            // 初始化主题结构
+            const defaultTopics = getDefaultTopics();
+            Object.keys(defaultTopics).forEach(topicKey => {
+                const topic = defaultTopics[topicKey];
+                config.topics[topicKey] = {
+                    ...topic,
+                    display_names: {
+                        "zh": topic.title,
+                        "en": topic.title
+                    },
+                    aliases: [topic.title]
+                };
+            });
+
             return config;
         }
 
@@ -1132,15 +1291,33 @@
             });
         }
 
-        // 获取难度文本
+        // 获取难度文本 - 优先从配置文件读取，否则使用默认值
         function getDifficultyText(difficulty) {
-            const difficultyMap = {
+            // 首先尝试从配置文件中获取难度映射
+            if (DOC_CONFIG && DOC_CONFIG.extensions && DOC_CONFIG.extensions.customFields &&
+                DOC_CONFIG.extensions.customFields.difficulty && DOC_CONFIG.extensions.customFields.difficulty.options) {
+                const difficultyOptions = DOC_CONFIG.extensions.customFields.difficulty.options;
+                const difficultyMap = {
+                    'beginner': '初级',
+                    'intermediate': '中级',
+                    'advanced': '高级',
+                    'all': '全部级别'
+                };
+                
+                // 如果配置中有自定义映射，使用配置中的映射
+                if (difficultyOptions.includes(difficulty)) {
+                    return difficultyMap[difficulty] || difficulty;
+                }
+            }
+            
+            // 默认难度映射
+            const defaultDifficultyMap = {
                 'beginner': '初级',
                 'intermediate': '中级',
                 'advanced': '高级',
                 'all': '全部级别'
             };
-            return difficultyMap[difficulty] || difficulty;
+            return defaultDifficultyMap[difficulty] || difficulty;
         }
 
         // 初始化搜索功能

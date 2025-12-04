@@ -4,7 +4,7 @@
 class AppController {
     constructor(options = {}) {
         this.options = {
-            configPath: './docs/config-enhanced.json',
+            configPath: './docs/config.json',
             enableConfigManager: true,
             enableSearchManager: true,
             enableNavigationManager: true,
@@ -710,7 +710,7 @@ class AppController {
 
 // 创建全局应用实例
 window.app = new AppController({
-    configPath: './docs/config-enhanced.json',
+    configPath: './docs/config.json',
     enableConfigManager: true,
     enableSearchManager: true,
     enableNavigationManager: true,

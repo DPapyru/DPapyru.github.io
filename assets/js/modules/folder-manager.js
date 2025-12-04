@@ -403,13 +403,22 @@ class FolderManager {
      * 获取难度文本
      */
     getDifficultyText(difficulty) {
-        const difficultyMap = {
+        // 如果有配置管理器，尝试从配置中获取难度映射
+        if (this.configManager) {
+            const difficultyOptions = this.configManager.getDifficultyOptions();
+            if (difficultyOptions[difficulty]) {
+                return difficultyOptions[difficulty];
+            }
+        }
+        
+        // 默认难度映射（向后兼容）
+        const defaultDifficultyMap = {
             'beginner': '初级',
             'intermediate': '中级',
             'advanced': '高级',
             'all': '全部级别'
         };
-        return difficultyMap[difficulty] || difficulty;
+        return defaultDifficultyMap[difficulty] || difficulty;
     }
 
     /**

@@ -39,8 +39,15 @@ class ConfigManager {
     parseConfig() {
         if (!this.config) return;
 
-        // 提取分类
-        this.categories = this.config.categories || {};
+        // 提取分类 - 兼容新旧配置结构
+        if (this.config.categories) {
+            this.categories = this.config.categories;
+        } else if (this.config.topics) {
+            // 如果没有categories但有topics，从topics生成categories
+            this.categories = this.extractCategoriesFromTopics(this.config.topics);
+        } else {
+            this.categories = {};
+        }
 
         // 提取主题
         this.topics = this.config.topics || {};
@@ -53,36 +60,96 @@ class ConfigManager {
     }
 
     /**
+     * 从主题中提取分类（兼容旧配置结构）
+     */
+    extractCategoriesFromTopics(topics) {
+        const categories = {};
+        
+        // 遍历所有主题，根据主题前缀创建分类
+        Object.keys(topics).forEach(topicKey => {
+            // 提取分类前缀（例如从 "01-入门指南/基础" 提取 "入门指南"）
+            const parts = topicKey.split('/');
+            const categoryKey = parts[0];
+            
+            if (!categories[categoryKey]) {
+                // 从分类键中提取友好名称
+                const nameMatch = categoryKey.match(/^\d+-(.+)$/);
+                const categoryName = nameMatch ? nameMatch[1] : categoryKey;
+                
+                categories[categoryKey] = {
+                    title: categoryName,
+                    description: `${categoryName}相关教程`,
+                    order: parseInt(categoryKey.match(/^\d+/)?.[0] || 999),
+                    topics: {}
+                };
+            }
+            
+            categories[categoryKey].topics[topicKey] = topics[topicKey];
+        });
+        
+        return categories;
+    }
+
+    /**
      * 获取默认配置
      */
     getDefaultConfig() {
         return {
-            meta: {
-                version: "2.0",
-                generated_at: new Date().toISOString().split('T')[0],
-                description: "默认配置文件",
-                organization_mode: "auto",
-                supported_languages: ["zh", "en"],
-                default_language: "zh"
+            metadata: {
+                title: "泰拉瑞亚Mod制作教程",
+                description: "泰拉瑞亚Mod开发的完整教程",
+                version: "1.0.0",
+                lastUpdated: new Date().toISOString()
             },
             categories: {
-                '入门': {
-                    title: '入门',
-                    description: '适合初学者的基础教程',
+                "入门": {
+                    icon: "🚀",
                     order: 1,
-                    topics: {}
+                    description: "新手入门教程"
+                },
+                "进阶": {
+                    icon: "📚",
+                    order: 2,
+                    description: "进阶开发技巧"
+                },
+                "高级": {
+                    icon: "🔥",
+                    order: 3,
+                    description: "高级开发技术"
+                },
+                "个人分享": {
+                    icon: "💡",
+                    order: 4,
+                    description: "个人开发经验分享"
+                },
+                "怎么贡献": {
+                    icon: "🤝",
+                    order: 5,
+                    description: "贡献指南"
+                },
+                "Modder入门": {
+                    icon: "🎮",
+                    order: 6,
+                    description: "Modder入门教程"
                 }
             },
-            topics: {
-                'mod-basics': {
-                    title: 'Mod基础',
-                    description: 'Mod开发的基础概念和核心API',
-                    icon: '📖',
-                    order: 1
-                }
-            },
+            topics: {},
             authors: {},
-            all_files: []
+            all_files: [],
+            pathMappings: {},
+            extensions: {
+                customFields: {
+                    difficulty: {
+                        type: "select",
+                        options: {
+                            "beginner": "初级",
+                            "intermediate": "中级",
+                            "advanced": "高级",
+                            "all": "全部级别"
+                        }
+                    }
+                }
+            }
         };
     }
 
@@ -250,6 +317,83 @@ class ConfigManager {
                 order: 3
             }
         };
+    }
+
+    /**
+     * 获取路径映射
+     */
+    getPathMappings() {
+        return this.config?.pathMappings || {};
+    }
+
+    /**
+     * 获取扩展配置
+     */
+    getExtensions() {
+        return this.config?.extensions || {};
+    }
+
+    /**
+     * 获取难度选项
+     */
+    getDifficultyOptions() {
+        const extensions = this.getExtensions();
+        if (extensions.customFields && extensions.customFields.difficulty) {
+            return extensions.customFields.difficulty.options || {};
+        }
+        return {
+            'beginner': '初级',
+            'intermediate': '中级',
+            'advanced': '高级',
+            'all': '全部级别'
+        };
+    }
+
+    /**
+     * 获取分类图标
+     */
+    getCategoryIcon(categoryKey) {
+        if (this.categories && this.categories[categoryKey] && this.categories[categoryKey].icon) {
+            return this.categories[categoryKey].icon;
+        }
+        const iconMap = {
+            '入门': '🚀',
+            '进阶': '📚',
+            '高级': '🔥',
+            '个人分享': '💡',
+            '怎么贡献': '🤝',
+            'Modder入门': '🎮'
+        };
+        return iconMap[categoryKey] || '📄';
+    }
+
+    /**
+     * 获取分类排序
+     */
+    getCategoryOrder(categoryKey) {
+        if (this.categories && this.categories[categoryKey] && this.categories[categoryKey].order !== undefined) {
+            return this.categories[categoryKey].order;
+        }
+        const orderMap = {
+            '入门': 1,
+            '进阶': 2,
+            '高级': 3,
+            '个人分享': 4,
+            '怎么贡献': 5,
+            'Modder入门': 6
+        };
+        return orderMap[categoryKey] || 999;
+    }
+
+    /**
+     * 获取难度文本
+     */
+    getDifficultyText(difficulty) {
+        const difficultyOptions = this.getDifficultyOptions();
+        if (difficultyOptions[difficulty]) {
+            return difficultyOptions[difficulty];
+        }
+        return difficulty;
     }
 }
 

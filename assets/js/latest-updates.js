@@ -6,10 +6,9 @@
 
 // 文档路径列表 - 更新为新的扁平化结构
 const DOC_PATHS = [
-    'docs/Modder入门/DPapyru-给新人的前言.md',
-    'docs/给贡献者阅读的文章/DPapyru-贡献者如何编写文章基础.md',
-    'docs/给贡献者阅读的文章/TopicSystem使用指南.md',
-    'docs/tutorial-index.md'
+    'Modder入门/DPapyru-给新人的前言.md',
+    '怎么贡献/DPapyru-贡献者如何编写文章基础.md',
+    '怎么贡献/TopicSystem使用指南.md'
 ];
 
 // 从config.json获取文档列表的函数
@@ -27,7 +26,8 @@ async function getDocumentsFromConfig() {
         // 直接使用config.all_files数组
         if (config.all_files && Array.isArray(config.all_files)) {
             config.all_files.forEach(file => {
-                documents.push(`docs/${file.path}`);
+                // file.path 已经包含完整路径，不需要再添加 "docs/" 前缀
+                documents.push(file.path);
             });
         }
 
@@ -84,6 +84,43 @@ function parseYamlFrontMatter(content) {
  * @returns {Promise} 包含文档信息的Promise
  */
 function fetchDocumentInfo(url) {
+    // 首先尝试从config.json获取文档信息
+    return fetch('docs/config.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`无法加载config.json: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(config => {
+            // 在all_files中查找匹配的文档
+            const fileInfo = config.all_files.find(file => file.path === url);
+            
+            if (fileInfo) {
+                // 找到了文档信息，直接使用
+                return {
+                    url: url,
+                    title: fileInfo.title || '未知标题',
+                    description: fileInfo.description || '暂无描述',
+                    lastUpdated: fileInfo.last_updated || '未知',
+                    difficulty: fileInfo.difficulty || 'beginner',
+                    time: fileInfo.time || '未知',
+                    lastModifiedDate: new Date(fileInfo.last_updated === '未知' ? '2025-11-27' : fileInfo.last_updated)
+                };
+            } else {
+                // 没有找到，尝试获取文件头信息
+                return fetchWithHeaders(url);
+            }
+        })
+        .catch(error => {
+            console.error(`从config.json获取文档信息失败 (${url}):`, error);
+            // 如果从config.json获取失败，尝试获取文件头信息
+            return fetchWithHeaders(url);
+        });
+}
+
+// 通过HTTP头获取文档信息的辅助函数
+function fetchWithHeaders(url) {
     return fetch(url, { method: 'HEAD' })
         .then(response => {
             if (!response.ok) {
@@ -109,7 +146,7 @@ function fetchDocumentInfo(url) {
                         title: metadata?.title || '未知标题',
                         description: metadata?.description || '暂无描述',
                         lastUpdated: metadata?.last_updated || lastModifiedDate.toISOString().split('T')[0],
-                        difficulty: metadata?.difficulty || '未知',
+                        difficulty: metadata?.difficulty || 'beginner',
                         time: metadata?.time || '未知',
                         lastModifiedDate: lastModifiedDate
                     };
@@ -131,42 +168,77 @@ function getFallbackDocumentInfo(url) {
     // 根据URL路径推断文档信息 - 更新为新的扁平化结构
     const fileName = url.split('/').pop();
 
-    // 默认文档信息映射 - 基于新的文件名
+    // 默认文档信息映射 - 基于新的文件名，包含更多LogSpiral文档
     const defaultDocs = {
         'DPapyru-给新人的前言.md': {
-            title: '给新人的入门建议',
-            description: '给新人的入门建议',
-            difficulty: '初级',
-            time: '30分钟',
-            lastUpdated: '2025-11-27'
+            title: '给新人的前言',
+            description: '新人要看一下前言',
+            difficulty: 'beginner',
+            time: '5分钟',
+            lastUpdated: '2025-12-02'
         },
         'DPapyru-贡献者如何编写文章基础.md': {
             title: '贡献者怎么编写文章？',
-            description: '用于测试文档查看器功能的示例文档',
-            difficulty: '中级',
-            time: '45分钟',
+            description: '如何给这个教程网页进行一个文档编写？',
+            difficulty: 'beginner',
+            time: '5分钟',
             lastUpdated: '2025-11-27'
         },
         'TopicSystem使用指南.md': {
-            title: 'Topic 系统使用指南',
+            title: 'Topic系统使用指南',
             description: '详细介绍Topic系统的使用方法和最佳实践',
-            difficulty: '中级',
-            time: '60分钟',
+            difficulty: 'advanced',
+            time: '30分钟',
             lastUpdated: '2025-11-27'
         },
-        'tutorial-index.md': {
-            title: '教程索引',
-            description: '提供所有教程的概览和导航，帮助用户快速找到所需内容',
-            difficulty: '全部级别',
-            time: '15分钟',
-            lastUpdated: '2025-11-27'
+        '0-Basic-Prerequisites 基础-先决条件.md': {
+            title: '0-Basic-Prerequisites 基础-先决条件',
+            description: '错数螺线翻译',
+            difficulty: 'beginner',
+            time: '未知',
+            lastUpdated: '未知'
+        },
+        '1-Basic-Item 基础-物品.md': {
+            title: '1-Basic-Item 基础-物品',
+            description: '错数螺线翻译',
+            difficulty: 'beginner',
+            time: '未知',
+            lastUpdated: '未知'
+        },
+        '0-Home 主页.md': {
+            title: '0-Home 主页',
+            description: '错数螺线翻译',
+            difficulty: 'beginner',
+            time: '未知',
+            lastUpdated: '未知'
+        },
+        '1-tModLoader-guide-for-players tModLoader玩家指引.md': {
+            title: '1-tModLoader-guide-for-players tModLoader玩家指引',
+            description: '错数螺线翻译',
+            difficulty: 'beginner',
+            time: '未知',
+            lastUpdated: '未知'
+        },
+        '2-tModLoader-guide-for-developers tModLoader开发者指引.md': {
+            title: '2-tModLoader-guide-for-developers tModLoader开发者指引',
+            description: '错数螺线翻译',
+            difficulty: 'beginner',
+            time: '未知',
+            lastUpdated: '未知'
+        },
+        '3-tModLoader-guide-for-contributors tModLoader贡献者指引.md': {
+            title: '3-tModLoader-guide-for-contributors tModLoader贡献者指引',
+            description: '错数螺线翻译',
+            difficulty: 'beginner',
+            time: '未知',
+            lastUpdated: '未知'
         }
     };
 
     const defaultInfo = defaultDocs[fileName] || {
         title: '未知文档',
         description: '暂无描述',
-        difficulty: '未知',
+        difficulty: 'beginner',
         time: '未知',
         lastUpdated: '2025-11-27'
     };
@@ -178,7 +250,7 @@ function getFallbackDocumentInfo(url) {
         lastUpdated: defaultInfo.lastUpdated,
         difficulty: defaultInfo.difficulty,
         time: defaultInfo.time,
-        lastModifiedDate: new Date(defaultInfo.lastUpdated)
+        lastModifiedDate: new Date(defaultInfo.lastUpdated === '未知' ? '2025-11-27' : defaultInfo.lastUpdated)
     };
 }
 
@@ -308,8 +380,8 @@ async function loadLatestUpdates() {
             return dateB - dateA;
         });
 
-        // 取前5个最新文档
-        const latestDocuments = validDocuments.slice(0, 5);
+        // 取前6个最新文档
+        const latestDocuments = validDocuments.slice(0, 6);
 
         // 生成HTML内容
         const updatesGrid = document.querySelector('.updates-grid');

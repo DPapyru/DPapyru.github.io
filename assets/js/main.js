@@ -1,29 +1,143 @@
+// 全局配置变量 - 避免重复声明
+if (typeof window.DOC_CONFIG === 'undefined') {
+    window.DOC_CONFIG = null;
+}
+if (typeof window.PATH_REDIRECTS === 'undefined') {
+    window.PATH_REDIRECTS = {};
+}
+
+// 使用全局变量
+let DOC_CONFIG = window.DOC_CONFIG;
+let PATH_REDIRECTS = window.PATH_REDIRECTS;
+
 // DOM加载完成后执行
 document.addEventListener('DOMContentLoaded', function () {
-    // 初始化移动端菜单
-    initMobileMenu();
+    // 初始化配置
+    initializeConfig().then(() => {
+        // 初始化移动端菜单
+        initMobileMenu();
 
-    // 初始化侧边栏导航
-    initSidebarNavigation();
+        // 初始化侧边栏导航
+        initSidebarNavigation();
 
-    // 初始化平滑滚动
-    initSmoothScroll();
+        // 初始化平滑滚动
+        initSmoothScroll();
 
-    // 初始化教程筛选功能
-    initTutorialFilters();
+        // 初始化教程筛选功能
+        initTutorialFilters();
 
-    // 初始化路由系统
-    initRouter();
+        // 初始化路由系统
+        initRouter();
 
-    // 初始化Markdown渲染
-    initMarkdownRenderer();
+        // 初始化Markdown渲染
+        initMarkdownRenderer();
 
-    // 初始化代码高亮
-    initCodeHighlight();
+        // 初始化代码高亮
+        initCodeHighlight();
 
-    // 初始化搜索结果点击事件
-    initSearchResultClickEvents();
+        // 初始化搜索结果点击事件
+        initSearchResultClickEvents();
+    });
 });
+
+/**
+ * 初始化配置
+ * 从config.json加载配置文件，设置全局配置变量
+ */
+async function initializeConfig() {
+    try {
+        // 检查当前页面路径，决定配置文件的相对路径
+        const currentPath = window.location.pathname;
+        let configPath = './config.json';
+        
+        // 如果在docs目录下，直接使用config.json
+        if (currentPath.includes('/docs/')) {
+            configPath = './config.json';
+        } else if (currentPath.includes('/LogSpiral/')) {
+            configPath = './LogSpiral/docs/config.json';
+        } else {
+            // 在根目录下，尝试docs/config.json
+            configPath = './docs/config.json';
+        }
+        
+        console.log('尝试加载配置文件，路径:', configPath);
+        const configResponse = await fetch(configPath);
+        if (configResponse.ok) {
+            DOC_CONFIG = await configResponse.json();
+            PATH_REDIRECTS = DOC_CONFIG.pathMappings || {};
+            console.log('成功加载配置文件:', DOC_CONFIG);
+        } else {
+            console.warn('无法加载配置文件，使用默认配置');
+            DOC_CONFIG = generateDefaultConfig();
+            PATH_REDIRECTS = {};
+        }
+    } catch (error) {
+        console.error('加载配置文件时出错:', error);
+        DOC_CONFIG = generateDefaultConfig();
+        PATH_REDIRECTS = {};
+    }
+}
+
+/**
+ * 生成默认配置
+ * 当无法加载配置文件时使用默认配置
+ */
+function generateDefaultConfig() {
+    return {
+        metadata: {
+            title: "泰拉瑞亚Mod制作教程",
+            description: "泰拉瑞亚Mod开发的完整教程",
+            version: "1.0.0",
+            lastUpdated: new Date().toISOString()
+        },
+        categories: {
+            "入门": {
+                icon: "🚀",
+                order: 1,
+                description: "新手入门教程"
+            },
+            "进阶": {
+                icon: "📚",
+                order: 2,
+                description: "进阶开发技巧"
+            },
+            "高级": {
+                icon: "🔥",
+                order: 3,
+                description: "高级开发技术"
+            },
+            "个人分享": {
+                icon: "💡",
+                order: 4,
+                description: "个人开发经验分享"
+            },
+            "怎么贡献": {
+                icon: "🤝",
+                order: 5,
+                description: "贡献指南"
+            },
+            "Modder入门": {
+                icon: "🎮",
+                order: 6,
+                description: "Modder入门教程"
+            }
+        },
+        pathMappings: {},
+        extensions: {
+            customFields: {
+                difficulty: {
+                    type: "select",
+                    options: {
+                        "beginner": "初级",
+                        "intermediate": "中级",
+                        "advanced": "高级",
+                        "all": "全部级别"
+                    }
+                }
+            }
+        }
+    };
+}
 
 /**
  * 初始化移动端菜单切换功能
@@ -643,24 +757,36 @@ function cleanPath(path) {
         return path;
     }
 
-    // 新的扁平化结构处理：如果路径包含旧的结构，尝试映射到新结构
-    const oldStructureMappings = {
-        '01-入门指南/README.md': 'DPapyru-ForNewModder.md',
-        '02-基础概念/README.md': 'tutorial-index.md',
-        '03-内容创建/README.md': 'tutorial-index.md',
-        '04-高级开发/README.md': 'tutorial-index.md',
-        '05-专题主题/README.md': 'tutorial-index.md',
-        '06-资源参考/README.md': 'tutorial-index.md',
-        'getting-started.md': 'DPapyru-ForNewModder.md',
-        'basic-concepts.md': 'tutorial-index.md'
-    };
+    // 使用配置中的路径映射处理旧结构
+    if (PATH_REDIRECTS && Object.keys(PATH_REDIRECTS).length > 0) {
+        // 检查是否需要映射旧路径到新路径
+        for (const [oldPath, newPath] of Object.entries(PATH_REDIRECTS)) {
+            if (path.includes(oldPath)) {
+                path = path.replace(oldPath, newPath);
+                console.log(`使用配置映射旧路径到新路径: ${oldPath} -> ${newPath}`);
+                break;
+            }
+        }
+    } else {
+        // 默认的旧结构映射（向后兼容）
+        const defaultOldStructureMappings = {
+            '01-入门指南/README.md': 'DPapyru-ForNewModder.md',
+            '02-基础概念/README.md': 'tutorial-index.md',
+            '03-内容创建/README.md': 'tutorial-index.md',
+            '04-高级开发/README.md': 'tutorial-index.md',
+            '05-专题主题/README.md': 'tutorial-index.md',
+            '06-资源参考/README.md': 'tutorial-index.md',
+            'getting-started.md': 'DPapyru-ForNewModder.md',
+            'basic-concepts.md': 'tutorial-index.md'
+        };
 
-    // 检查是否需要映射旧路径到新路径
-    for (const [oldPath, newPath] of Object.entries(oldStructureMappings)) {
-        if (path.includes(oldPath)) {
-            path = path.replace(oldPath, newPath);
-            console.log(`映射旧路径到新路径: ${oldPath} -> ${newPath}`);
-            break;
+        // 检查是否需要映射旧路径到新路径
+        for (const [oldPath, newPath] of Object.entries(defaultOldStructureMappings)) {
+            if (path.includes(oldPath)) {
+                path = path.replace(oldPath, newPath);
+                console.log(`使用默认映射旧路径到新路径: ${oldPath} -> ${newPath}`);
+                break;
+            }
         }
     }
 
@@ -724,23 +850,39 @@ function tryFallbackPaths(originalPath) {
         }
     }
 
-    // 添加旧结构到新结构的映射作为备用路径
-    const oldToNewMappings = {
-        'docs/01-入门指南/README.md': 'docs/DPapyru-ForNewModder.md',
-        'docs/02-基础概念/README.md': 'docs/tutorial-index.md',
-        'docs/03-内容创建/README.md': 'docs/tutorial-index.md',
-        'docs/04-高级开发/README.md': 'docs/tutorial-index.md',
-        'docs/05-专题主题/README.md': 'docs/tutorial-index.md',
-        'docs/06-资源参考/README.md': 'docs/tutorial-index.md',
-        'docs/getting-started.md': 'docs/DPapyru-ForNewModder.md',
-        'docs/basic-concepts.md': 'docs/tutorial-index.md'
-    };
+    // 使用配置中的路径映射作为备用路径
+    if (PATH_REDIRECTS && Object.keys(PATH_REDIRECTS).length > 0) {
+        // 检查原始路径是否匹配旧结构，如果是则添加新结构路径作为备用
+        for (const [oldPath, newPath] of Object.entries(PATH_REDIRECTS)) {
+            const fullOldPath = oldPath.startsWith('docs/') ? oldPath : `docs/${oldPath}`;
+            const fullNewPath = newPath.startsWith('docs/') ? newPath : `docs/${newPath}`;
+            
+            if (originalPath.includes(fullOldPath) || originalPath.includes(oldPath)) {
+                fallbackPaths.push(fullNewPath);
+                console.log(`使用配置添加备用路径: ${fullOldPath} -> ${fullNewPath}`);
+                break;
+            }
+        }
+    } else {
+        // 默认的旧结构到新结构的映射（向后兼容）
+        const defaultOldToNewMappings = {
+            'docs/01-入门指南/README.md': 'docs/DPapyru-ForNewModder.md',
+            'docs/02-基础概念/README.md': 'docs/tutorial-index.md',
+            'docs/03-内容创建/README.md': 'docs/tutorial-index.md',
+            'docs/04-高级开发/README.md': 'docs/tutorial-index.md',
+            'docs/05-专题主题/README.md': 'docs/tutorial-index.md',
+            'docs/06-资源参考/README.md': 'docs/tutorial-index.md',
+            'docs/getting-started.md': 'docs/DPapyru-ForNewModder.md',
+            'docs/basic-concepts.md': 'docs/tutorial-index.md'
+        };
 
-    // 检查原始路径是否匹配旧结构，如果是则添加新结构路径作为备用
-    for (const [oldPath, newPath] of Object.entries(oldToNewMappings)) {
-        if (originalPath.includes(oldPath) || originalPath.includes(oldPath.replace('docs/', ''))) {
-            fallbackPaths.push(newPath);
-            break;
+        // 检查原始路径是否匹配旧结构，如果是则添加新结构路径作为备用
+        for (const [oldPath, newPath] of Object.entries(defaultOldToNewMappings)) {
+            if (originalPath.includes(oldPath) || originalPath.includes(oldPath.replace('docs/', ''))) {
+                fallbackPaths.push(newPath);
+                console.log(`使用默认添加备用路径: ${oldPath} -> ${newPath}`);
+                break;
+            }
         }
     }
 
@@ -1227,11 +1369,17 @@ window.TerrariaModTutorial = {
     initTutorialFilters,
     debounce,
     throttle,
-    cleanPath  // 导出路径清理函数
+    cleanPath,  // 导出路径清理函数
+    initializeConfig,  // 导出配置初始化函数
+    generateDefaultConfig  // 导出默认配置生成函数
 };
 
-// 同时将cleanPath设为全局函数，方便其他脚本使用
+// 同时将关键函数设为全局函数，方便其他脚本使用
 window.cleanPath = cleanPath;
+window.initializeConfig = initializeConfig;
+window.generateDefaultConfig = generateDefaultConfig;
+window.DOC_CONFIG = DOC_CONFIG;  // 导出配置对象
+window.PATH_REDIRECTS = PATH_REDIRECTS;  // 导出路径映射
 
 /**
  * 初始化搜索结果点击事件

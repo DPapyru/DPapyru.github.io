@@ -5,14 +5,86 @@ class TutorialSearch {
         this.searchResults = [];
         this.isSearchVisible = false;
         this.currentQuery = '';
+        this.config = null;
         this.init();
     }
 
     // 初始化搜索功能
-    init() {
+    async init() {
+        await this.loadConfig();
         this.createSearchElements();
         this.bindEvents();
         this.loadSearchIndex();
+    }
+
+    // 加载配置文件
+    async loadConfig() {
+        try {
+            // 根据当前页面位置确定配置文件路径
+            const configPath = window.location.pathname.includes('/docs/') ? './config.json' : 'docs/config.json';
+            const response = await fetch(configPath);
+            if (response.ok) {
+                this.config = await response.json();
+                console.log('搜索模块成功加载配置文件');
+            } else {
+                console.warn('搜索模块无法加载配置文件，使用默认配置');
+                this.config = this.generateDefaultConfig();
+            }
+        } catch (error) {
+            console.error('搜索模块加载配置文件时出错:', error);
+            this.config = this.generateDefaultConfig();
+        }
+    }
+
+    // 生成默认配置
+    generateDefaultConfig() {
+        return {
+            categories: {
+                "入门": {
+                    icon: "🚀",
+                    order: 1,
+                    description: "新手入门教程"
+                },
+                "进阶": {
+                    icon: "📚",
+                    order: 2,
+                    description: "进阶开发技巧"
+                },
+                "高级": {
+                    icon: "🔥",
+                    order: 3,
+                    description: "高级开发技术"
+                },
+                "个人分享": {
+                    icon: "💡",
+                    order: 4,
+                    description: "个人开发经验分享"
+                },
+                "怎么贡献": {
+                    icon: "🤝",
+                    order: 5,
+                    description: "贡献指南"
+                },
+                "Modder入门": {
+                    icon: "🎮",
+                    order: 6,
+                    description: "Modder入门教程"
+                }
+            },
+            extensions: {
+                customFields: {
+                    difficulty: {
+                        type: "select",
+                        options: {
+                            "beginner": "初级",
+                            "intermediate": "中级",
+                            "advanced": "高级",
+                            "all": "全部级别"
+                        }
+                    }
+                }
+            }
+        };
     }
 
     // 创建搜索相关的DOM元素
@@ -233,7 +305,9 @@ class TutorialSearch {
     // 从config.json获取所有教程文件
     async getTutorialFilesFromConfig() {
         try {
-            const response = await fetch('docs/config.json');
+            // 根据当前页面位置确定配置文件路径
+            const configPath = window.location.pathname.includes('/docs/') ? './config.json' : 'docs/config.json';
+            const response = await fetch(configPath);
             if (!response.ok) {
                 throw new Error(`无法加载config.json: ${response.status}`);
             }
@@ -316,7 +390,9 @@ class TutorialSearch {
         
         // 尝试从config.json获取更完整的元数据
         try {
-            const response = await fetch('docs/config.json');
+            // 根据当前页面位置确定配置文件路径
+            const configPath = window.location.pathname.includes('/docs/') ? './config.json' : 'docs/config.json';
+            const response = await fetch(configPath);
             if (response.ok) {
                 const config = await response.json();
                 
@@ -800,19 +876,32 @@ class TutorialSearch {
         return /[\u4e00-\u9fa5]/.test(text);
     }
 
-    // 从文件路径获取分类 - 更新为新的嵌套文档结构
+    // 从文件路径获取分类 - 使用配置文件
     getCategoryFromPath(filePath) {
         const fileName = filePath.split('/').pop();
         
-        // 基于文件名映射到分类
-        const categoryMappings = {
-            'DPapyru-给新人的前言.md': '入门',
+        // 如果有配置文件，尝试从配置中获取分类
+        if (this.config && this.config.all_files) {
+            const fileInfo = this.config.all_files.find(file =>
+                file.path === filePath ||
+                file.filename === fileName ||
+                file.filename === fileName.split('/').pop()
+            );
+            
+            if (fileInfo && fileInfo.category) {
+                return fileInfo.category;
+            }
+        }
+        
+        // 默认分类映射（向后兼容）
+        const defaultCategoryMappings = {
+            'DPapyru-给新人的前言.md': 'Modder入门',
             'DPapyru-贡献者如何编写文章基础.md': '怎么贡献',
             'TopicSystem使用指南.md': '怎么贡献',
             'tutorial-index.md': '教程索引'
         };
         
-        return categoryMappings[fileName] || '未分类';
+        return defaultCategoryMappings[fileName] || '未分类';
     }
 
     // 搜索功能（保留原有简单搜索作为后备）
@@ -1016,14 +1105,21 @@ class TutorialSearch {
         }
     }
 
-    // 获取类别文本 - 更新为新的嵌套文档结构
+    // 获取类别文本 - 使用配置文件
     getCategoryText(category) {
-        const categories = {
+        // 如果有配置文件，尝试从配置中获取类别信息
+        if (this.config && this.config.categories && this.config.categories[category]) {
+            return this.config.categories[category].description || category;
+        }
+        
+        // 默认类别映射（向后兼容）
+        const defaultCategories = {
             '入门': '入门',
             '进阶': '进阶',
             '高级': '高级',
             '个人分享': '个人分享',
             '怎么贡献': '怎么贡献',
+            'Modder入门': 'Modder入门',
             '教程索引': '教程索引',
             '01-入门指南': '入门指南', // 保留旧映射以兼容性
             '02-基础概念': '基础概念',
@@ -1032,12 +1128,22 @@ class TutorialSearch {
             '05-专题主题': '专题主题',
             '06-资源参考': '资源参考'
         };
-        return categories[category] || category;
+        return defaultCategories[category] || category;
     }
 
-    // 获取难度文本
+    // 获取难度文本 - 使用配置文件
     getDifficultyText(difficulty) {
-        const difficulties = {
+        // 如果有配置文件，尝试从配置中获取难度映射
+        if (this.config && this.config.extensions && this.config.extensions.customFields &&
+            this.config.extensions.customFields.difficulty && this.config.extensions.customFields.difficulty.options) {
+            const difficultyOptions = this.config.extensions.customFields.difficulty.options;
+            if (difficultyOptions[difficulty]) {
+                return difficultyOptions[difficulty];
+            }
+        }
+        
+        // 默认难度映射（向后兼容）
+        const defaultDifficulties = {
             'beginner': '初级',
             'intermediate': '中级',
             'advanced': '高级',
@@ -1046,7 +1152,7 @@ class TutorialSearch {
             '高级': '高级',
             '全部级别': '全部级别'
         };
-        return difficulties[difficulty] || difficulty;
+        return defaultDifficulties[difficulty] || difficulty;
     }
 }
 

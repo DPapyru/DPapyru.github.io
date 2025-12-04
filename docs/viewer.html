@@ -142,8 +142,8 @@
                     <!-- 教程导航：上一篇/下一篇链接 -->
                     <div class="tutorial-navigation">
                         <a href="../docs/" class="btn btn-outline prev-tutorial">← 返回文档列表</a>
-                        <a href="?file=test.md" class="btn btn-secondary">测试文档</a>
-                        <a href="?file=02-基础概念/basic-concepts.md" class="btn btn-primary next-tutorial">基础教程 →</a>
+                        <a href="?file=Modder入门/DPapyru-给新人的前言.md" class="btn btn-secondary">查看教程</a>
+                        <a href="?file=怎么贡献/DPapyru-贡献者如何编写文章基础.md" class="btn btn-primary next-tutorial">贡献指南 →</a>
                     </div>
                     <!-- 教程反馈：用户反馈和问题提交 -->
                     <div class="tutorial-feedback">
@@ -234,115 +234,17 @@
 
     <script>
         // 文档配置和元数据管理
-        let DOC_CONFIG = null;
+        let VIEWER_DOC_CONFIG = null;
         let ALL_DOCS = [];
 
-        // 主分类配置 - 与配置文件中的分类系统匹配
-        const MAIN_CATEGORIES = {
-            // 当前项目使用的分类系统
-            '入门': {
-                title: '入门',
-                description: '适合初学者的基础教程',
-                order: 1
-            },
-            '进阶': {
-                title: '进阶',
-                description: '有一定基础后的进阶教程',
-                order: 2
-            },
-            '高级': {
-                title: '高级',
-                description: '面向有经验开发者的高级教程',
-                order: 3
-            },
-            '个人分享': {
-                title: '个人分享',
-                description: '社区成员的个人经验和技巧分享',
-                order: 4
-            },
-            '怎么贡献': {
-                title: '怎么贡献',
-                description: '介绍贡献者应该怎么贡献文章',
-                order: 5
-            },
-            // 兼容外部项目的旧分类系统
-            '0-开始': {
-                title: '开始',
-                description: '适合初学者的基础教程',
-                order: 1,
-                mapsTo: '入门' // 映射到当前分类系统
-            },
-            '1-基础': {
-                title: '基础',
-                description: '有一定基础后的进阶教程',
-                order: 2,
-                mapsTo: '入门' // 映射到当前分类系统
-            },
-            '2-中阶': {
-                title: '中阶',
-                description: '面向有经验开发者的高级教程',
-                order: 3,
-                mapsTo: '进阶' // 映射到当前分类系统
-            },
-            '3-高阶': {
-                title: '高阶',
-                description: '高级开发技巧和优化',
-                order: 4,
-                mapsTo: '高级' // 映射到当前分类系统
-            },
-            '4-专家': {
-                title: '专家',
-                description: '专家级开发技巧',
-                order: 5,
-                mapsTo: '高级' // 映射到当前分类系统
-            }
-        };
-
-        // 主题领域配置
-        const TOPIC_AREAS = {
-            'env': {
-                title: '环境配置',
-                description: '开发环境搭建和配置'
-            },
-            'mod-basics': {
-                title: 'Mod基础',
-                description: 'Mod开发的基础概念和核心API'
-            },
-            'items': {
-                title: '物品系统',
-                description: '物品、武器和装备的开发'
-            },
-            'npcs': {
-                title: 'NPC系统',
-                description: 'NPC的创建和行为定制'
-            },
-            'world-gen': {
-                title: '世界生成',
-                description: '世界生成和地形修改'
-            },
-            'ui': {
-                title: 'UI界面',
-                description: '用户界面和交互设计'
-            },
-            'networking': {
-                title: '网络功能',
-                description: '多人游戏和网络通信'
-            },
-            'advanced': {
-                title: '高级功能',
-                description: '高级开发技巧和优化'
-            }
-        };
-
-        // 旧路径重定向映射
-        const OLD_PATH_REDIRECTS = {
-            '01-入门指南/README.md': 'test.md',
-            '02-基础概念/basic-concepts.md': 'test.md',
-            '03-内容创建/content-creation.md': 'test.md',
-            '04-高级开发/advanced-development.md': 'test.md',
-            '05-专题主题/special-topics.md': 'test.md',
-            '06-资源参考/resource-reference.md': 'test.md'
-        };
+        // 主分类配置 - 将从配置文件动态加载
+        let MAIN_CATEGORIES = {};
+        
+        // 主题领域配置 - 将从配置文件动态加载
+        let TOPIC_AREAS = {};
+        
+        // 路径重定向映射 - 将从配置文件动态加载
+        let VIEWER_PATH_REDIRECTS = {};
 
         // 文档查看器的主要JavaScript逻辑
         document.addEventListener('DOMContentLoaded', function () {
@@ -379,10 +281,17 @@
                     console.log('从路径获取的文件名:', markdownFile);
                 }
 
-                // 如果还是没有，默认加载test.md
+                // 如果还是没有，默认加载第一个可用的文档
                 if (!markdownFile || !markdownFile.endsWith('.md')) {
-                    markdownFile = 'test.md';
-                    console.log('使用默认文件名:', markdownFile);
+                    // 尝试从配置中获取第一个文档
+                    if (ALL_DOCS && ALL_DOCS.length > 0) {
+                        markdownFile = ALL_DOCS[0].filename || ALL_DOCS[0].path;
+                        console.log('使用配置中的第一个文档:', markdownFile);
+                    } else {
+                        // 如果没有配置，使用已知的文档
+                        markdownFile = 'Modder入门/DPapyru-给新人的前言.md';
+                        console.log('使用默认文档:', markdownFile);
+                    }
                 }
 
                 console.log(`docs/viewer.html: 准备加载Markdown文件: ${markdownFile}`);
@@ -438,47 +347,271 @@
         async function initializeDocumentConfig() {
             try {
                 // 尝试加载配置文件
+                console.log('viewer.html: 正在加载配置文件，当前路径:', window.location.pathname);
                 const configResponse = await fetch('./config.json');
                 if (configResponse.ok) {
-                    DOC_CONFIG = await configResponse.json();
-                    console.log('成功加载配置文件:', DOC_CONFIG);
+                    VIEWER_DOC_CONFIG = await configResponse.json();
+                    console.log('成功加载配置文件:', VIEWER_DOC_CONFIG);
+                    
+                    // 从配置文件中提取分类、主题和路径映射
+                    const categories = VIEWER_DOC_CONFIG.categories || {};
+                    MAIN_CATEGORIES = {};
+                    
+                    // 转换分类格式以匹配viewer.html的期望
+                    Object.keys(categories).forEach(categoryKey => {
+                        const category = categories[categoryKey];
+                        const isSpecial = ["怎么贡献", "Modder入门"].includes(categoryKey);
+                        
+                        MAIN_CATEGORIES[categoryKey] = {
+                            title: category.title,
+                            description: category.description,
+                            icon: getCategoryIcon(categoryKey),
+                            color: getCategoryColor(categoryKey),
+                            order: getCategoryOrder(categoryKey),
+                            special: isSpecial
+                        };
+                    });
+                    
+                    TOPIC_AREAS = VIEWER_DOC_CONFIG.topics || {};
+                    VIEWER_PATH_REDIRECTS = VIEWER_DOC_CONFIG.pathMappings || {};
+                    
+                    console.log('加载的分类:', MAIN_CATEGORIES);
+                    console.log('加载的主题:', TOPIC_AREAS);
+                    console.log('加载的路径映射:', PATH_REDIRECTS);
                 } else {
                     console.warn('配置文件不存在，使用默认配置');
-                    DOC_CONFIG = generateDefaultConfig();
+                    VIEWER_DOC_CONFIG = generateDefaultConfig();
+                    // 使用默认配置初始化分类、主题和路径映射
+                    MAIN_CATEGORIES = getDefaultCategories();
+                    TOPIC_AREAS = getDefaultTopics();
+                    VIEWER_PATH_REDIRECTS = {};
                 }
             } catch (error) {
                 console.warn('加载配置文件失败，使用默认配置:', error);
-                DOC_CONFIG = generateDefaultConfig();
+                VIEWER_DOC_CONFIG = generateDefaultConfig();
+                // 使用默认配置初始化分类、主题和路径映射
+                MAIN_CATEGORIES = getDefaultCategories();
+                TOPIC_AREAS = getDefaultTopics();
+                VIEWER_PATH_REDIRECTS = {};
             }
 
             // 扫描所有文档文件
             await scanAllDocuments();
         }
 
+        // 获取分类图标 - 优先从配置文件读取，否则使用默认值
+        function getCategoryIcon(categoryKey) {
+            // 首先尝试从配置文件中获取图标
+            if (VIEWER_DOC_CONFIG && VIEWER_DOC_CONFIG.categories && VIEWER_DOC_CONFIG.categories[categoryKey] && VIEWER_DOC_CONFIG.categories[categoryKey].icon) {
+                return VIEWER_DOC_CONFIG.categories[categoryKey].icon;
+            }
+            
+            // 默认图标映射
+            const iconMap = {
+                '入门': '🚀',
+                '进阶': '📚',
+                '高级': '🔥',
+                '个人分享': '💡',
+                '怎么贡献': '🤝',
+                'Modder入门': '🎮'
+            };
+            return iconMap[categoryKey] || '📄';
+        }
+
+        // 获取分类颜色 - 优先从配置文件读取，否则使用默认值
+        function getCategoryColor(categoryKey) {
+            // 首先尝试从配置文件中获取颜色
+            if (VIEWER_DOC_CONFIG && VIEWER_DOC_CONFIG.categories && VIEWER_DOC_CONFIG.categories[categoryKey] && VIEWER_DOC_CONFIG.categories[categoryKey].color) {
+                return VIEWER_DOC_CONFIG.categories[categoryKey].color;
+            }
+            
+            // 默认颜色映射
+            const colorMap = {
+                '入门': '#4CAF50',
+                '进阶': '#2196F3',
+                '高级': '#FF5722',
+                '个人分享': '#FFC107',
+                '怎么贡献': '#9C27B0',
+                'Modder入门': '#00BCD4'
+            };
+            return colorMap[categoryKey] || '#28a745';
+        }
+
+        // 获取分类排序 - 优先从配置文件读取，否则使用默认值
+        function getCategoryOrder(categoryKey) {
+            // 首先尝试从配置文件中获取排序
+            if (VIEWER_DOC_CONFIG && VIEWER_DOC_CONFIG.categories && VIEWER_DOC_CONFIG.categories[categoryKey] && VIEWER_DOC_CONFIG.categories[categoryKey].order !== undefined) {
+                return VIEWER_DOC_CONFIG.categories[categoryKey].order;
+            }
+            
+            // 默认排序映射
+            const orderMap = {
+                '入门': 1,
+                '进阶': 2,
+                '高级': 3,
+                '个人分享': 4,
+                '怎么贡献': 5,
+                'Modder入门': 6
+            };
+            return orderMap[categoryKey] || 999;
+        }
+
+        // 获取默认分类配置
+        function getDefaultCategories() {
+            return {
+                "入门": {
+                    "title": "入门",
+                    "description": "适合初学者的基础教程",
+                    "icon": "🚀",
+                    "color": "#4CAF50",
+                    "order": 1
+                },
+                "进阶": {
+                    "title": "进阶",
+                    "description": "有一定基础后的进阶教程",
+                    "icon": "📚",
+                    "color": "#2196F3",
+                    "order": 2
+                },
+                "高级": {
+                    "title": "高级",
+                    "description": "面向有经验开发者的高级教程",
+                    "icon": "🔥",
+                    "color": "#FF5722",
+                    "order": 3
+                },
+                "个人分享": {
+                    "title": "个人分享",
+                    "description": "社区成员的个人经验和技巧分享",
+                    "icon": "💡",
+                    "color": "#FFC107",
+                    "order": 4
+                },
+                "怎么贡献": {
+                    "title": "怎么贡献",
+                    "description": "介绍贡献者应该怎么贡献文章",
+                    "icon": "🤝",
+                    "color": "#9C27B0",
+                    "order": 5,
+                    "special": true
+                },
+                "Modder入门": {
+                    "title": "Modder入门",
+                    "description": "Modder入门相关的教程",
+                    "icon": "🎮",
+                    "color": "#00BCD4",
+                    "order": 6,
+                    "special": true
+                }
+            };
+        }
+
+        // 获取默认主题配置
+        function getDefaultTopics() {
+            return {
+                "mod-basics": {
+                    "title": "Mod基础",
+                    "description": "Mod开发的基础概念和核心API",
+                    "icon": "📖",
+                    "order": 1
+                },
+                "env": {
+                    "title": "环境配置",
+                    "description": "开发环境搭建和配置",
+                    "icon": "🛠️",
+                    "order": 2
+                },
+                "items": {
+                    "title": "物品系统",
+                    "description": "物品、武器和装备的开发",
+                    "icon": "⚔️",
+                    "order": 3
+                },
+                "npcs": {
+                    "title": "NPC系统",
+                    "description": "NPC的创建和行为定制",
+                    "icon": "👥",
+                    "order": 4
+                },
+                "world-gen": {
+                    "title": "世界生成",
+                    "description": "世界生成和地形修改",
+                    "icon": "🌍",
+                    "order": 5
+                },
+                "ui": {
+                    "title": "UI界面",
+                    "description": "用户界面和交互设计",
+                    "icon": "🎨",
+                    "order": 6
+                },
+                "networking": {
+                    "title": "网络功能",
+                    "description": "多人游戏和网络通信",
+                    "icon": "🌐",
+                    "order": 7
+                },
+                "advanced": {
+                    "title": "高级功能",
+                    "description": "高级开发技巧和优化",
+                    "icon": "🔧",
+                    "order": 8
+                }
+            };
+        }
+
         // 生成默认配置（当config.json不存在时）
         function generateDefaultConfig() {
             const config = {
+                _metadata: {
+                    version: "2.0.0",
+                    schema: "tmodloader-docs-v2",
+                    created: new Date().toISOString().split('T')[0],
+                    lastUpdated: new Date().toISOString().split('T')[0],
+                    description: "泰拉瑞亚Mod制作教程配置文件 - 默认配置"
+                },
+                globalSettings: {
+                    language: "zh",
+                    theme: "default",
+                    siteName: "泰拉瑞亚Mod制作教程",
+                    siteDescription: "全面的泰拉瑞亚Mod开发教程资源",
+                    baseUrl: "",
+                    enableSearch: true,
+                    enableDarkMode: true,
+                    defaultOrder: 999,
+                    dateFormat: "YYYY-MM-DD"
+                },
                 categories: {},
                 topics: {},
                 authors: {},
-                all_files: []
+                all_files: [],
+                pathMappings: {},
+                settings: {
+                    defaultCategory: "入门",
+                    defaultTopic: "mod-basics",
+                    specialCategories: ["怎么贡献", "Modder入门"]
+                }
             };
 
             // 初始化分类结构
-            Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
+            const defaultCategories = getDefaultCategories();
+            Object.keys(defaultCategories).forEach(categoryKey => {
                 config.categories[categoryKey] = {
-                    title: MAIN_CATEGORIES[categoryKey].title,
-                    description: MAIN_CATEGORIES[categoryKey].description,
-                    topics: {}
+                    ...defaultCategories[categoryKey],
+                    topics: {
+                        "mod-basics": {
+                            title: "Mod基础",
+                            description: "Mod开发的基础概念和核心API",
+                            files: []
+                        }
+                    }
                 };
             });
 
             // 初始化主题结构
-            Object.keys(TOPIC_AREAS).forEach(topicKey => {
-                config.topics[topicKey] = {
-                    title: TOPIC_AREAS[topicKey].title,
-                    description: TOPIC_AREAS[topicKey].description
-                };
+            const defaultTopics = getDefaultTopics();
+            Object.keys(defaultTopics).forEach(topicKey => {
+                config.topics[topicKey] = defaultTopics[topicKey];
             });
 
             return config;
@@ -504,14 +637,6 @@
                         if (ALL_DOCS.length > 0) {
                             // 确保每个文档都有必要的属性
                             ALL_DOCS = ALL_DOCS.map(doc => {
-                                // 处理分类映射
-                                let category = doc.category || '入门';
-                                if (category && MAIN_CATEGORIES[category] && MAIN_CATEGORIES[category].mapsTo) {
-                                    const oldCategory = category;
-                                    category = MAIN_CATEGORIES[category].mapsTo;
-                                    console.log(`文档 ${doc.title} 的分类从 ${oldCategory} 映射到 ${category}`);
-                                }
-
                                 // 处理标签格式
                                 let tags = [];
                                 if (doc.tags) {
@@ -531,9 +656,10 @@
 
                                 return {
                                     ...doc,
+                                    path: doc.path || doc.filename,
                                     title: doc.title || doc.filename.replace('.md', ''),
                                     author: doc.author || '未知',
-                                    category: category,
+                                    category: doc.category || '入门',
                                     topic: doc.topic || 'mod-basics',
                                     order: parseInt(doc.order) || 999,
                                     description: doc.description || '',
@@ -556,7 +682,7 @@
                 }
 
                 // 如果配置文件加载失败或没有文档，尝试扫描常见的文档文件
-                console.log('配置文件不可用，尝试扫描常见文档文件');
+                console.warn('配置文件不可用，尝试扫描常见文档文件');
                 const commonFiles = [
                     'DPapyru-给新人的前言.md',
                     'DPapyru-ForContributors-Basic.md',
@@ -646,8 +772,8 @@
             const { category, topic } = docInfo;
 
             // 确保分类存在
-            if (!DOC_CONFIG.categories[category]) {
-                DOC_CONFIG.categories[category] = {
+            if (!VIEWER_DOC_CONFIG.categories[category]) {
+                VIEWER_DOC_CONFIG.categories[category] = {
                     title: category,
                     description: `${category}相关文档`,
                     topics: {}
@@ -655,8 +781,8 @@
             }
 
             // 确保主题存在
-            if (!DOC_CONFIG.categories[category].topics[topic]) {
-                DOC_CONFIG.categories[category].topics[topic] = {
+            if (!VIEWER_DOC_CONFIG.categories[category].topics[topic]) {
+                VIEWER_DOC_CONFIG.categories[category].topics[topic] = {
                     title: TOPIC_AREAS[topic]?.title || topic,
                     description: TOPIC_AREAS[topic]?.description || '',
                     files: []
@@ -667,16 +793,16 @@
             DOC_CONFIG.categories[category].topics[topic].files.push(docInfo);
 
             // 更新作者信息
-            if (!DOC_CONFIG.authors[docInfo.author]) {
-                DOC_CONFIG.authors[docInfo.author] = {
+            if (!VIEWER_DOC_CONFIG.authors[docInfo.author]) {
+                VIEWER_DOC_CONFIG.authors[docInfo.author] = {
                     name: docInfo.author,
                     files: []
                 };
             }
-            DOC_CONFIG.authors[docInfo.author].files.push(docInfo.filename);
+            VIEWER_DOC_CONFIG.authors[docInfo.author].files.push(docInfo.filename);
 
             // 添加到所有文件列表
-            DOC_CONFIG.all_files.push(docInfo);
+            VIEWER_DOC_CONFIG.all_files.push(docInfo);
         }
         // 直接加载Markdown内容的备用函数
         function loadMarkdownDirectly(filePath) {
@@ -718,8 +844,8 @@
             }
 
             // 4. 检查是否是旧路径格式，进行重定向
-            if (OLD_PATH_REDIRECTS[fetchPath]) {
-                fetchPath = OLD_PATH_REDIRECTS[fetchPath];
+            if (VIEWER_PATH_REDIRECTS[fetchPath]) {
+                fetchPath = VIEWER_PATH_REDIRECTS[fetchPath];
                 console.log(`docs/viewer.html: 旧路径重定向: ${fetchPath}`);
             }
 
@@ -866,14 +992,14 @@
             console.log(`映射分类: ${oldCategory}`);
 
             // 如果分类已经存在于新系统中，直接返回
-            if (MAIN_CATEGORIES[oldCategory] && !MAIN_CATEGORIES[oldCategory].mapsTo) {
+            if (MAIN_CATEGORIES[oldCategory]) {
                 console.log(`分类 ${oldCategory} 已存在于新系统中`);
                 return oldCategory;
             }
 
-            // 如果分类有映射配置，使用映射
-            if (MAIN_CATEGORIES[oldCategory] && MAIN_CATEGORIES[oldCategory].mapsTo) {
-                const newCategory = MAIN_CATEGORIES[oldCategory].mapsTo;
+            // 如果配置文件中有分类映射，使用映射
+            if (VIEWER_DOC_CONFIG && VIEWER_DOC_CONFIG.categoryMappings && VIEWER_DOC_CONFIG.categoryMappings[oldCategory]) {
+                const newCategory = VIEWER_DOC_CONFIG.categoryMappings[oldCategory];
                 console.log(`分类 ${oldCategory} 映射到 ${newCategory}`);
                 return newCategory;
             }
@@ -1315,12 +1441,29 @@
 
         // 将难度代码转换为中文文本
         function getDifficultyText(difficulty) {
-            const difficultyMap = {
+            // 首先尝试从配置文件中获取难度映射
+            if (VIEWER_DOC_CONFIG && VIEWER_DOC_CONFIG.extensions && VIEWER_DOC_CONFIG.extensions.customFields &&
+                VIEWER_DOC_CONFIG.extensions.customFields.difficulty && VIEWER_DOC_CONFIG.extensions.customFields.difficulty.options) {
+                const difficultyOptions = VIEWER_DOC_CONFIG.extensions.customFields.difficulty.options;
+                const difficultyMap = {
+                    'beginner': '初级',
+                    'intermediate': '中级',
+                    'advanced': '高级'
+                };
+                
+                // 如果配置中有自定义映射，使用配置中的映射
+                if (difficultyOptions.includes(difficulty)) {
+                    return difficultyMap[difficulty] || difficulty;
+                }
+            }
+            
+            // 默认难度映射
+            const defaultDifficultyMap = {
                 'beginner': '初级',
                 'intermediate': '中级',
                 'advanced': '高级'
             };
-            return difficultyMap[difficulty] || difficulty;
+            return defaultDifficultyMap[difficulty] || difficulty;
         }
 
         // 生成文档目录（基于标题h1-h6）
@@ -1396,12 +1539,12 @@
             }
 
             // 如果ALL_DOCS中没有，检查配置文件
-            if (!DOC_CONFIG || !DOC_CONFIG.categories || !DOC_CONFIG.categories[categoryKey]) {
+            if (!VIEWER_DOC_CONFIG || !VIEWER_DOC_CONFIG.categories || !VIEWER_DOC_CONFIG.categories[categoryKey]) {
                 console.log(`配置文件中没有找到分类 ${categoryKey}`);
                 return false;
             }
 
-            const categoryTopics = DOC_CONFIG.categories[categoryKey].topics || {};
+            const categoryTopics = VIEWER_DOC_CONFIG.categories[categoryKey].topics || {};
             console.log(`分类 ${categoryKey} 下的主题:`, Object.keys(categoryTopics));
 
             // 检查该分类下是否有任何主题包含文档
@@ -1431,7 +1574,7 @@
             categorySidebar.innerHTML = '';
 
             // 等待配置加载完成
-            if (!DOC_CONFIG) {
+            if (!VIEWER_DOC_CONFIG) {
                 console.warn('文档配置尚未加载，稍后重试');
                 setTimeout(initializeCategoryNavigation, 100);
                 return;
@@ -1489,7 +1632,7 @@
                 topicList.className = 'topic-list';
 
                 // 获取该分类下的所有主题
-                const categoryTopics = DOC_CONFIG.categories[categoryKey]?.topics || {};
+                const categoryTopics = VIEWER_DOC_CONFIG.categories[categoryKey]?.topics || {};
 
                 if (Object.keys(categoryTopics).length > 0) {
                     Object.keys(categoryTopics).forEach(topicKey => {
@@ -1639,7 +1782,7 @@
 
                     // 添加更详细的标题信息
                     const categoryTitle = MAIN_CATEGORIES[doc.category]?.title || doc.category;
-                    const topicTitle = DOC_CONFIG.topics[doc.topic]?.title || doc.topic;
+                    const topicTitle = VIEWER_DOC_CONFIG.topics[doc.topic]?.title || doc.topic;
                     const pathInfo = doc.path && doc.path !== doc.filename ? ` [路径: ${doc.path}]` : '';
                     docLink.title = `${doc.author || '未知作者'} - ${doc.description || doc.title} [${categoryTitle} - ${topicTitle}]${pathInfo}`;
 
@@ -1789,7 +1932,7 @@
             if (!currentCategoryTitle || !currentCategoryDocs) return;
 
             // 等待配置加载完成
-            if (!DOC_CONFIG || !ALL_DOCS || ALL_DOCS.length === 0) {
+            if (!VIEWER_DOC_CONFIG || !ALL_DOCS || ALL_DOCS.length === 0) {
                 console.warn('文档配置尚未加载，稍后重试');
                 setTimeout(() => updateCurrentCategoryDocs(filePath), 100);
                 return;
@@ -1835,7 +1978,7 @@
 
             // 显示当前文档的分类信息
             const category = MAIN_CATEGORIES[currentDoc.category];
-            const topic = DOC_CONFIG.topics ? DOC_CONFIG.topics[currentDoc.topic] : null;
+            const topic = VIEWER_DOC_CONFIG.topics ? VIEWER_DOC_CONFIG.topics[currentDoc.topic] : null;
 
             let titleText = category ? category.title : currentDoc.category;
             if (topic) {
@@ -1913,7 +2056,7 @@
 
             // 生成手机端导航内容
             function generateMobileNavContent() {
-                if (!DOC_CONFIG || ALL_DOCS.length === 0) {
+                if (!VIEWER_DOC_CONFIG || ALL_DOCS.length === 0) {
                     console.warn('文档配置尚未加载，稍后重试');
                     setTimeout(generateMobileNavContent, 100);
                     return;
@@ -1967,7 +2110,7 @@
                     categoryDiv.appendChild(categoryTitle);
 
                     // 获取该分类下的所有主题
-                    const categoryTopics = DOC_CONFIG.categories[categoryKey]?.topics || {};
+                    const categoryTopics = VIEWER_DOC_CONFIG.categories[categoryKey]?.topics || {};
 
                     if (Object.keys(categoryTopics).length > 0) {
                         Object.keys(categoryTopics).forEach(topicKey => {
@@ -2136,7 +2279,7 @@
 
                         // 添加更详细的标题信息
                         const categoryTitle = MAIN_CATEGORIES[doc.category]?.title || doc.category;
-                        const topicTitle = DOC_CONFIG.topics && DOC_CONFIG.topics[doc.topic] ? DOC_CONFIG.topics[doc.topic].title : doc.topic;
+                        const topicTitle = VIEWER_DOC_CONFIG.topics && VIEWER_DOC_CONFIG.topics[doc.topic] ? VIEWER_DOC_CONFIG.topics[doc.topic].title : doc.topic;
                         const pathInfo = doc.path && doc.path !== doc.filename ? ` [路径: ${doc.path}]` : '';
                         docLink.title = `${doc.author || '未知作者'} - ${doc.description || doc.title} [${categoryTitle} - ${topicTitle}]${pathInfo}`;
 
