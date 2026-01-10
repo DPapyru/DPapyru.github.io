@@ -532,20 +532,6 @@
     color: #f44336 !important;
 }
 
-/* 特殊元素 */
-[data-theme="dark"] .LogSpiral {
-    background-color: #303030 !important;
-    color: rgb(198, 221, 255) !important;
-    box-shadow: 1px 1px 2.5px rgba(39, 81, 221, 0.22),
-        -1px -1px 2.5px rgba(39, 81, 221, 0.22),
-        -1px 1px 2.5px rgba(39, 81, 221, 0.22),
-        1px -1px 2.5px rgba(39, 81, 221, 0.22) !important;
-    text-shadow: 1px 1px 2.5px rgba(39, 81, 221, 0.22),
-        -1px -1px 2.5px rgba(39, 81, 221, 0.22),
-        -1px 1px 2.5px rgba(39, 81, 221, 0.22),
-        1px -1px 2.5px rgba(39, 81, 221, 0.22) !important;
-}
-
 /* 文件夹页面特定样式 */
 [data-theme="dark"] .folder-hero {
     background: linear-gradient(0deg, var(--primary-hover), var(--primary-color), var(--primary-hover)) !important;

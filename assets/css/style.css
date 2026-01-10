@@ -35,6 +35,44 @@ a:hover {
     color: var(--link-hover);
 }
 
+/* 跳转到主要内容（无障碍） */
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 9999;
+    padding: 10px 14px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+}
+
+.skip-link:focus {
+    left: 16px;
+    top: 16px;
+}
+
+/* 更友好的键盘焦点样式 */
+:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 /* 按钮样式 */
 .btn {
     display: inline-block;
@@ -1624,6 +1662,10 @@ a:hover {
     justify-content: center;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    border: none;
+    padding: 0;
+    width: 100%;
+    appearance: none;
 }
 
 .mobile-nav-back:hover {

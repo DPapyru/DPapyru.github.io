@@ -1,6 +1,10 @@
 // generate-index.js - 自动生成教程索引和配置的脚本
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
+
+const SITE_BASE_URL = 'https://dpapyru.github.io';
+const SEARCH_INDEX_PATH = './assets/search-index.json';
 
 // 项目配置
 const projectConfig = {
@@ -400,6 +404,11 @@ function scanDirectoryRecursively(dir, baseDir, fileList = [], translatorConfigs
     return { files: fileList, translatorConfigs };
 }
 
+function inferTitleFromFilename(filePath) {
+    const base = path.basename(filePath, '.md');
+    return base || '未命名文档';
+}
+
 // 处理主项目
 function processMainProject() {
     console.log(`\n正在处理 ${projectConfig.name} 项目...`);
@@ -409,7 +418,7 @@ function processMainProject() {
     // 检查目录是否存在
     if (!fs.existsSync(docsDir)) {
         console.log(`警告: ${projectConfig.name} 的文档目录不存在: ${docsDir}`);
-        return;
+        return null;
     }
 
     // 初始化配置管理器
@@ -431,6 +440,8 @@ function processMainProject() {
         const fullPath = path.join(docsDir, file);
         const content = fs.readFileSync(fullPath, 'utf8');
         let metadata = parseMetadata(content);
+        if (!metadata.title) metadata.title = inferTitleFromFilename(file);
+        if (!metadata.title) metadata.title = inferTitleFromFilename(file);
 
         // 跳过标记为 hide: true 的文件
         if (metadata.hide === 'true' || metadata.hide === true) {
@@ -483,6 +494,190 @@ function processMainProject() {
     // 保存配置文件
     configManager.saveConfig();
     console.log(`${projectConfig.name} 配置文件已更新！`);
+
+    return configManager.config;
+}
+
+function formatLastMod(date) {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function safeGitLastMod(repoRelativePath) {
+    try {
+        const output = execSync(`git log -1 --format=%cs -- "${repoRelativePath}"`, {
+            stdio: ['ignore', 'pipe', 'ignore']
+        }).toString().trim();
+        return output || null;
+    } catch {
+        return null;
+    }
+}
+
+function getLastModForPath(repoRelativePath) {
+    const gitDate = safeGitLastMod(repoRelativePath);
+    if (gitDate) return gitDate;
+
+    try {
+        const stat = fs.statSync(repoRelativePath);
+        return formatLastMod(stat.mtime);
+    } catch {
+        return null;
+    }
+}
+
+function generateSitemap(config) {
+    if (!config || !Array.isArray(config.all_files)) {
+        console.warn('跳过 sitemap.xml 生成：配置文件缺少 all_files');
+        return;
+    }
+
+    const staticPages = [
+        { path: '/', file: 'index.html', priority: '1.0', changefreq: 'weekly' },
+        { path: '/docs/', file: 'docs/index.html', priority: '0.9', changefreq: 'weekly' }
+    ];
+
+    const urls = [];
+
+    for (const page of staticPages) {
+        const lastmod = getLastModForPath(page.file);
+        urls.push({
+            loc: `${SITE_BASE_URL}${page.path}`,
+            lastmod,
+            changefreq: page.changefreq,
+            priority: page.priority
+        });
+    }
+
+    const folders = new Set();
+    for (const doc of config.all_files) {
+        if (!doc || !doc.path) continue;
+        const topLevel = String(doc.path).split('/')[0];
+        if (topLevel) folders.add(topLevel);
+    }
+
+    for (const folder of [...folders].sort((a, b) => a.localeCompare(b, 'zh-CN'))) {
+        urls.push({
+            loc: `${SITE_BASE_URL}/docs/folder.html?path=${encodeURIComponent(folder)}`,
+            lastmod: getLastModForPath('docs/config.json'),
+            changefreq: 'weekly',
+            priority: '0.6'
+        });
+    }
+
+    for (const doc of config.all_files) {
+        if (!doc || !doc.path) continue;
+        const filePath = String(doc.path);
+        const repoPath = path.join('docs', filePath).replace(/\\/g, '/');
+        const lastmod = getLastModForPath(repoPath);
+
+        urls.push({
+            loc: `${SITE_BASE_URL}/docs/viewer.html?file=${encodeURIComponent(filePath)}`,
+            lastmod,
+            changefreq: 'monthly',
+            priority: '0.8'
+        });
+    }
+
+    const uniqueByLoc = new Map();
+    for (const entry of urls) {
+        if (!entry || !entry.loc) continue;
+        uniqueByLoc.set(entry.loc, entry);
+    }
+
+    const finalUrls = [...uniqueByLoc.values()].sort((a, b) => a.loc.localeCompare(b.loc));
+
+    const xmlLines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    ];
+
+    for (const u of finalUrls) {
+        xmlLines.push('  <url>');
+        xmlLines.push(`    <loc>${u.loc}</loc>`);
+        if (u.lastmod) xmlLines.push(`    <lastmod>${u.lastmod}</lastmod>`);
+        if (u.changefreq) xmlLines.push(`    <changefreq>${u.changefreq}</changefreq>`);
+        if (u.priority) xmlLines.push(`    <priority>${u.priority}</priority>`);
+        xmlLines.push('  </url>');
+    }
+
+    xmlLines.push('</urlset>');
+
+    fs.writeFileSync('./sitemap.xml', xmlLines.join('\n') + '\n', 'utf8');
+    console.log(`sitemap.xml 已生成，包含 ${finalUrls.length} 条URL`);
+}
+
+function stripFrontMatter(markdownText) {
+    const text = String(markdownText || '');
+    if (text.startsWith('---')) {
+        const endIndex = text.indexOf('\n---', 3);
+        if (endIndex !== -1) {
+            return text.slice(endIndex + 4);
+        }
+    }
+    return text;
+}
+
+function stripMarkdown(markdownText) {
+    let text = stripFrontMatter(markdownText);
+
+    text = text.replace(/```[\s\S]*?```/g, ' ');
+    text = text.replace(/`[^`]*`/g, ' ');
+    text = text.replace(/!\[[^\]]*\]\([^\)]*\)/g, ' ');
+    text = text.replace(/\[[^\]]*\]\([^\)]*\)/g, ' ');
+    text = text.replace(/<[^>]+>/g, ' ');
+    text = text.replace(/[#>*_~\\-]+/g, ' ');
+    text = text.replace(/\s+/g, ' ').trim();
+
+    return text;
+}
+
+function generateSearchIndex(config) {
+    if (!config || !Array.isArray(config.all_files)) {
+        console.warn('跳过 search-index.json 生成：配置文件缺少 all_files');
+        return;
+    }
+
+    const docs = [];
+    for (const doc of config.all_files) {
+        if (!doc || !doc.path) continue;
+        const filePath = String(doc.path);
+        const repoPath = path.join('docs', filePath);
+        let markdown = '';
+        try {
+            markdown = fs.readFileSync(repoPath, 'utf8');
+        } catch {
+            markdown = '';
+        }
+
+        docs.push({
+            path: filePath,
+            filename: doc.filename || path.basename(filePath),
+            title: doc.title || inferTitleFromFilename(filePath),
+            description: doc.description || '',
+            category: doc.category || '',
+            topic: doc.topic || '',
+            author: doc.author || '',
+            tags: Array.isArray(doc.tags) ? doc.tags : [],
+            difficulty: doc.difficulty || '',
+            time: doc.time || '',
+            last_updated: doc.last_updated || '',
+            content: stripMarkdown(markdown)
+        });
+    }
+
+    const payload = {
+        version: 1,
+        // 使用可复现的时间戳，避免每次构建都产生无意义的 diff
+        generatedAt: getLastModForPath('docs/config.json'),
+        count: docs.length,
+        docs
+    };
+
+    fs.writeFileSync(SEARCH_INDEX_PATH, JSON.stringify(payload), 'utf8');
+    console.log(`search-index 已生成：${SEARCH_INDEX_PATH}（${docs.length} 条）`);
 }
 
 
@@ -587,6 +782,7 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
 
         // 应用翻译配置
         metadata = applyTranslatorConfig(file, metadata, translatorConfigs);
+        if (!metadata.title) metadata.title = inferTitleFromFilename(file);
 
         // 验证元数据
         const validation = validateMetadata(metadata, configManager);
@@ -775,14 +971,9 @@ function parseMetadata(content) {
         // 移除可能的BOM字符
         content = content.replace(/^\uFEFF/, '');
 
-        // 尝试多种正则表达式模式
-        let metadataMatch = content.match(/---\r?\n(.*?)\r?\n---/s);
-        if (!metadataMatch) {
-            metadataMatch = content.match(/^---\s*\n(.*?)\n---/ms);
-        }
-        if (!metadataMatch) {
-            return {};
-        }
+        // 仅解析文件起始处的 Front Matter，避免误把正文中的 '---' 当成元数据
+        const metadataMatch = content.match(/^\s*---\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
+        if (!metadataMatch) return {};
 
         // 使用更强大的YAML解析器
         return parseYaml(metadataMatch[1]);
@@ -987,5 +1178,7 @@ function processCustomFields(metadata, configManager) {
 
 // 主处理逻辑
 console.log('开始生成教程索引和配置文件...');
-processMainProject();
+const mainConfig = processMainProject();
+generateSitemap(mainConfig);
+generateSearchIndex(mainConfig);
 console.log('\n主项目处理完成！');

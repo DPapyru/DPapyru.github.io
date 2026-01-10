@@ -6,6 +6,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文档查看器 - 泰拉瑞亚Mod制作教程</title>
+
+    <!-- SEO优化标签（实际值会在脚本中根据 ?file 和文档元数据更新） -->
+    <meta name="description" content="泰拉瑞亚Mod制作教程文档阅读页面，支持目录、代码高亮与分类导航。">
+    <meta name="keywords" content="泰拉瑞亚,Mod,教程,tModLoader,C#,文档">
+    <meta name="author" content="泰拉瑞亚Mod社区">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph标签 -->
+    <meta property="og:title" content="文档查看器 - 泰拉瑞亚Mod制作教程">
+    <meta property="og:description" content="泰拉瑞亚Mod制作教程文档阅读页面，支持目录、代码高亮与分类导航。">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://dpapyru.github.io/docs/viewer.html">
+    <meta property="og:image" content="https://dpapyru.github.io/assets/imgs/Green_tModLoader.png">
+    <meta property="og:site_name" content="泰拉瑞亚Mod制作教程">
+    <meta property="og:locale" content="zh_CN">
+
+    <!-- Twitter Card标签 -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="文档查看器 - 泰拉瑞亚Mod制作教程">
+    <meta name="twitter:description" content="泰拉瑞亚Mod制作教程文档阅读页面，支持目录、代码高亮与分类导航。">
+    <meta name="twitter:image" content="https://dpapyru.github.io/assets/imgs/Green_tModLoader.png">
+
+    <!-- 规范URL（实际值会在脚本中根据 ?file 更新） -->
+    <link rel="canonical" href="https://dpapyru.github.io/docs/viewer.html">
+
     <!-- 加载CSS样式文件 -->
     <link rel="stylesheet" href="../assets/css/style.css"> <!-- 主样式文件 -->
     <link rel="stylesheet" href="../assets/css/prism.min.css"> <!-- 代码高亮样式 -->
@@ -13,16 +38,11 @@
     <link rel="icon" type="image/png" href="../assets/imgs/Green_tModLoader.png"> <!-- 网站图标 -->
 
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
-    <script>
-        // 主题切换早期加载脚本 - 防止页面加载时主题闪烁
-        (function () {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
-    </script>
+    <script src="../assets/js/theme-init.js"></script>
 </head>
 
 <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
     <!-- 网站头部导航区域 -->
     <header class="site-header">
         <div class="container">
@@ -36,22 +56,22 @@
                     </a>
                 </div>
                 <!-- 主导航菜单 -->
-                <nav class="main-nav">
+                <nav class="main-nav" id="main-nav">
                     <ul class="nav-list">
                         <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
-                        <li class="nav-item"><a href="../docs/" class="nav-link active">文档</a></li>
+                        <li class="nav-item"><a href="index.html" class="nav-link active" aria-current="page">文档</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
-                                target="_blank">GitHub</a></li>
+                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
                     </ul>
                 </nav>
                 <!-- 移动端菜单切换按钮 -->
-                <button class="mobile-menu-toggle" aria-label="切换菜单">
+                <button class="mobile-menu-toggle" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
                     <span class="bar"></span>
                     <span class="bar"></span>
                     <span class="bar"></span>
                 </button>
                 <!-- 手机端文档导航按钮 -->
-                <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="文档导航">
+                <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="文档导航" aria-controls="mobile-nav-overlay" aria-expanded="false">
                     <span class="nav-icon">☰</span>
                     <span class="nav-text">导航</span>
                 </button>
@@ -83,21 +103,21 @@
                     <h3 class="sidebar-title">贡献者</h3>
                     <div class="contributors">
                         <p>欢迎参与贡献！</p>
-                        <a href="../CONTRIBUTING.md" class="btn btn-small">如何贡献</a>
+                        <a href="viewer.html?file=怎么贡献/DPapyru-贡献者如何编写文章基础.md" class="btn btn-small">如何贡献</a>
                     </div>
                 </div>
             </div>
         </aside>
 
         <!-- 主内容区域：显示Markdown文档内容 -->
-        <main class="main-content">
+        <main class="main-content" id="main-content" tabindex="-1">
             <div class="content-wrapper">
                 <!-- 教程头部区域：包含面包屑导航和文档元信息 -->
                 <div class="tutorial-header">
                     <!-- 面包屑导航 -->
                     <div class="breadcrumb">
                         <a href="../index.html">首页</a> &gt;
-                        <a href="../docs/">文档</a> &gt;
+                        <a href="index.html">文档</a> &gt;
                         <span class="current" id="current-doc-name">文档</span>
                     </div>
                     <!-- 文档标题 -->
@@ -114,22 +134,22 @@
                 <!-- 教程内容区域：加载和显示Markdown内容 -->
                 <div class="tutorial-content">
                     <!-- 加载状态指示器：显示内容加载中的提示 -->
-                    <div id="loading-indicator" class="loading-indicator">
+                    <div id="loading-indicator" class="loading-indicator" role="status" aria-live="polite" aria-busy="true">
                         <div class="loading-spinner"></div>
                         <p>正在加载内容...</p>
                     </div>
 
                     <!-- 错误信息容器：当内容加载失败时显示错误信息 -->
-                    <div id="error-message" class="error-message" style="display: none;">
+                    <div id="error-message" class="error-message" style="display: none;" role="alert" aria-live="assertive" aria-hidden="true">
                         <h3>加载失败</h3>
                         <p id="error-text">无法加载文档内容，请稍后再试。</p>
                     </div>
 
                     <!-- 目录容器：自动生成的文档目录 -->
-                    <div id="table-of-contents" class="table-of-contents" style="display: none;">
+                    <nav id="table-of-contents" class="table-of-contents" style="display: none;" aria-label="目录">
                         <h3>目录</h3>
                         <ul id="toc-list"></ul>
-                    </div>
+                    </nav>
 
                     <!-- Markdown内容容器：渲染后的HTML内容将插入这里 -->
                     <div id="markdown-content" class="markdown-content" style="display: none;">
@@ -141,7 +161,7 @@
                 <div class="tutorial-footer">
                     <!-- 教程导航：上一篇/下一篇链接 -->
                     <div class="tutorial-navigation">
-                        <a href="../docs/" class="btn btn-outline prev-tutorial">← 返回文档列表</a>
+                        <a href="index.html" class="btn btn-outline prev-tutorial">← 返回文档列表</a>
                         <a href="?file=Modder入门/DPapyru-给新人的前言.md" class="btn btn-secondary">查看教程</a>
                         <a href="?file=怎么贡献/DPapyru-贡献者如何编写文章基础.md" class="btn btn-primary next-tutorial">贡献指南 →</a>
                     </div>
@@ -150,7 +170,7 @@
                         <h3>教程反馈</h3>
                         <p>如果你对本教程有任何问题或建议，欢迎在GitHub上提出Issue或PR。</p>
                         <a href="https://github.com/DPapyru/DPapyru.github.io/issues" class="btn btn-small"
-                            target="_blank">提供反馈</a>
+                            target="_blank" rel="noopener noreferrer">提供反馈</a>
                     </div>
                 </div>
             </div>
@@ -172,34 +192,34 @@
                     <h4>快速链接</h4>
                     <ul>
                         <li><a href="../index.html">首页</a></li>
-                        <li><a href="../docs/">文档</a></li>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                        <li><a href="index.html">文档</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                     </ul>
                 </div>
                 <!-- 底部第三栏：联系我们 -->
                 <div class="footer-section">
                     <h4>联系我们</h4>
                     <ul>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li><a href="mailto:contact@example.com">邮箱</a></li>
                     </ul>
                 </div>
             </div>
             <!-- 底部版权信息 -->
             <div class="footer-bottom">
-                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC
+                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC
                         BY 4.0</a> 许可协议。</p>
             </div>
         </div>
     </footer>
 
     <!-- 手机端导航覆盖层 -->
-    <div class="mobile-nav-overlay" id="mobile-nav-overlay">
+    <div class="mobile-nav-overlay" id="mobile-nav-overlay" role="dialog" aria-modal="true" aria-label="文档导航" aria-hidden="true">
         <!-- 导航区域 (占屏幕2/3) -->
         <div class="mobile-nav-content">
             <div class="mobile-nav-header">
                 <h3>文档导航</h3>
-                <button class="mobile-nav-close" id="mobile-nav-close">✕</button>
+                <button class="mobile-nav-close" id="mobile-nav-close" type="button" aria-label="关闭导航">✕</button>
             </div>
             <div class="mobile-nav-body">
                 <!-- 导航内容将在这里动态生成 -->
@@ -209,15 +229,16 @@
             </div>
         </div>
         <!-- 半透明返回区域 (占屏幕1/3) -->
-        <div class="mobile-nav-back" id="mobile-nav-back">
+        <button class="mobile-nav-back" id="mobile-nav-back" type="button" aria-label="返回文章">
             <div class="mobile-nav-back-hint">
                 <p>点击此处返回文章</p>
                 <div class="back-arrow">↑</div>
             </div>
-        </div>
+        </button>
     </div>
 
     <!-- 加载JavaScript文件 -->
+    <script src="../assets/js/site-config.js"></script>
     <script src="../assets/js/theme-toggle.js"></script> <!-- 主题切换功能脚本 -->
     <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
     <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
@@ -236,6 +257,8 @@
         // 文档配置和元数据管理
         let VIEWER_DOC_CONFIG = null;
         let ALL_DOCS = [];
+        let CURRENT_DOC_PATH = null;
+        let DOC_LOOKUP_MAP = null;
 
         // 主分类配置 - 将从配置文件动态加载
         let MAIN_CATEGORIES = {};
@@ -253,13 +276,6 @@
             console.log('当前页面URL:', window.location.href);
             console.log('当前页面路径:', window.location.pathname);
             console.log('当前搜索参数:', window.location.search);
-
-            // 初始化主题切换功能
-            const themeToggle = new ThemeToggle({
-                targetSelector: '.main-nav .nav-list',
-                position: 'last' // 作为导航菜单的最后一项
-            });
-            themeToggle.init();
 
             // 初始化侧边栏滚动功能
             initializeSidebarScrolling();
@@ -314,44 +330,123 @@
             initializeMarkedRender();
         });
 
-        async function initializeMarkedRender() {
-            console.log('初始化MD渲染器...');
+	        async function initializeMarkedRender() {
+	            console.log('初始化MD渲染器...');
 
-            try {
-                // 配置 marked.js 选项
-                marked.use({
-                    highlight: function (code, lang) {
-                        if (typeof Prism !== 'undefined' && Prism.languages[lang]) {
-                            return Prism.highlight(code, Prism.languages[lang], lang);
-                        }
-                        return code;
-                    },
-                    breaks: true,
-                    gfm: true,
-                    tables: true,
-                    sanitize: false,
-                    smartLists: true,
-                    smartypants: true,
-                    mangle: true,
-                    headerIds: true,
-                    xhtml: false,
-                    pedantic: false
-                });
-                console.log('MD渲染器初始化完毕!');
-            } catch (error) {
-                console.error('初始化MD渲染器失败:', error);
-            }
-        }
+	            try {
+	                function escapeHtml(text) {
+	                    return String(text)
+	                        .replace(/&/g, '&amp;')
+	                        .replace(/</g, '&lt;')
+	                        .replace(/>/g, '&gt;')
+	                        .replace(/"/g, '&quot;')
+	                        .replace(/'/g, '&#39;');
+	                }
+
+	                function isSafeUrl(href) {
+	                    if (!href) return true;
+	                    const trimmed = String(href).trim().toLowerCase();
+	                    return !(
+	                        trimmed.startsWith('javascript:') ||
+	                        trimmed.startsWith('data:') ||
+	                        trimmed.startsWith('vbscript:')
+	                    );
+	                }
+
+	                const renderer = (marked.Renderer && typeof marked.Renderer === 'function')
+	                    ? new marked.Renderer()
+	                    : null;
+
+	                if (renderer) {
+	                    // 禁止在 Markdown 中渲染原始 HTML（防止 XSS）
+	                    renderer.html = (html) => escapeHtml(html);
+
+	                    // 过滤危险链接协议
+	                    renderer.link = (href, title, text) => {
+	                        if (!isSafeUrl(href)) return escapeHtml(text || '');
+
+	                        const rawHref = String(href || '');
+	                        const safeText = text || '';
+	                        const safeTitle = title ? ` title="${escapeHtml(title)}"` : '';
+
+	                        if (rawHref.startsWith('#')) {
+	                            return `<a href="${escapeHtml(rawHref)}"${safeTitle}>${safeText}</a>`;
+	                        }
+
+	                        const hashIndex = rawHref.indexOf('#');
+	                        const hash = hashIndex >= 0 ? rawHref.slice(hashIndex) : '';
+	                        const baseHref = hashIndex >= 0 ? rawHref.slice(0, hashIndex) : rawHref;
+
+	                        if (!baseHref) return escapeHtml(safeText);
+
+	                        if (
+	                            baseHref.includes('.html') ||
+	                            baseHref.startsWith('?') ||
+	                            baseHref.includes('viewer.html') ||
+	                            baseHref.includes('folder.html') ||
+	                            /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(baseHref)
+	                        ) {
+	                            return `<a href="${escapeHtml(rawHref)}"${safeTitle}>${safeText}</a>`;
+	                        }
+
+	                        const resolvedDoc = resolveDocLinkPath(baseHref, CURRENT_DOC_PATH);
+	                        if (resolvedDoc) {
+	                            const finalHref = `viewer.html?file=${encodeURIComponent(resolvedDoc)}${hash}`;
+	                            return `<a href="${escapeHtml(finalHref)}"${safeTitle}>${safeText}</a>`;
+	                        }
+
+	                        const resolvedRelative = resolveRelativeHref(baseHref, CURRENT_DOC_PATH);
+	                        const finalHref = `viewer.html?file=${encodeURIComponent(resolvedRelative)}${hash}`;
+	                        return `<a href="${escapeHtml(finalHref)}"${safeTitle}>${safeText}</a>`;
+	                    };
+
+	                    renderer.image = (href, title, text) => {
+	                        if (!isSafeUrl(href)) return '';
+	                        const resolvedSrc = resolveRelativeHref(href, CURRENT_DOC_PATH);
+	                        const safeSrc = escapeHtml(resolvedSrc);
+	                        const safeAlt = escapeHtml(text || '');
+	                        const safeTitle = title ? ` title="${escapeHtml(title)}"` : '';
+	                        return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} loading="lazy" decoding="async" />`;
+	                    };
+	                }
+
+	                // 配置 marked.js 选项（GitHub Pages 纯静态环境）
+	                marked.setOptions({
+	                    renderer: renderer || undefined,
+	                    highlight: function (code, lang) {
+	                        if (typeof Prism !== 'undefined' && lang && Prism.languages[lang]) {
+	                            return Prism.highlight(code, Prism.languages[lang], lang);
+	                        }
+	                        return code;
+	                    },
+	                    breaks: true,
+	                    gfm: true,
+	                    tables: true,
+	                    smartLists: true,
+	                    smartypants: true,
+	                    mangle: true,
+	                    headerIds: true,
+	                    xhtml: false,
+	                    pedantic: false
+	                });
+	                console.log('MD渲染器初始化完毕!');
+	            } catch (error) {
+	                console.error('初始化MD渲染器失败:', error);
+	            }
+	        }
 
         // 初始化文档配置
         async function initializeDocumentConfig() {
             try {
-                // 尝试加载配置文件
                 console.log('viewer.html: 正在加载配置文件，当前路径:', window.location.pathname);
-                const configResponse = await fetch('./config.json');
-                if (configResponse.ok) {
+                if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
+                    VIEWER_DOC_CONFIG = await window.SiteConfig.load();
+                } else {
+                    const configResponse = await fetch('./config.json');
+                    if (!configResponse.ok) throw new Error('无法加载config.json: ' + configResponse.status);
                     VIEWER_DOC_CONFIG = await configResponse.json();
-                    console.log('成功加载配置文件:', VIEWER_DOC_CONFIG);
+                }
+                console.log('成功加载配置文件:', VIEWER_DOC_CONFIG);
                     
                     // 从配置文件中提取分类、主题和路径映射
                     const categories = VIEWER_DOC_CONFIG.categories || {};
@@ -373,26 +468,22 @@
                     });
                     
                     TOPIC_AREAS = VIEWER_DOC_CONFIG.topics || {};
-                    VIEWER_PATH_REDIRECTS = VIEWER_DOC_CONFIG.pathMappings || {};
+                    VIEWER_PATH_REDIRECTS =
+                        VIEWER_DOC_CONFIG.pathMappings ||
+                        (VIEWER_DOC_CONFIG.settings && VIEWER_DOC_CONFIG.settings.pathMappings) ||
+                        window.PATH_REDIRECTS ||
+                        {};
                     
                     console.log('加载的分类:', MAIN_CATEGORIES);
                     console.log('加载的主题:', TOPIC_AREAS);
-                    console.log('加载的路径映射:', PATH_REDIRECTS);
-                } else {
-                    console.warn('配置文件不存在，使用默认配置');
-                    VIEWER_DOC_CONFIG = generateDefaultConfig();
-                    // 使用默认配置初始化分类、主题和路径映射
-                    MAIN_CATEGORIES = getDefaultCategories();
-                    TOPIC_AREAS = getDefaultTopics();
-                    VIEWER_PATH_REDIRECTS = {};
-                }
+                    console.log('加载的路径映射:', VIEWER_PATH_REDIRECTS);
             } catch (error) {
                 console.warn('加载配置文件失败，使用默认配置:', error);
                 VIEWER_DOC_CONFIG = generateDefaultConfig();
                 // 使用默认配置初始化分类、主题和路径映射
                 MAIN_CATEGORIES = getDefaultCategories();
                 TOPIC_AREAS = getDefaultTopics();
-                VIEWER_PATH_REDIRECTS = {};
+                VIEWER_PATH_REDIRECTS = window.PATH_REDIRECTS || {};
             }
 
             // 扫描所有文档文件
@@ -621,11 +712,10 @@
         async function scanAllDocuments() {
             console.log('=== scanAllDocuments() 诊断开始 ===');
             try {
-                // 完全依赖配置文件，因为git上传后会调用generate-index.js生成新的config.json
+                // 完全依赖配置文件，因为部署时会调用 generate-index.js 生成新的 config.json
                 try {
-                    const configResponse = await fetch('./config.json');
-                    if (configResponse.ok) {
-                        const config = await configResponse.json();
+                    const config = VIEWER_DOC_CONFIG || (window.SiteConfig ? await window.SiteConfig.load() : null);
+                    if (config) {
                         console.log('成功加载配置文件:', config);
 
                         // 从配置文件中提取文档列表
@@ -670,12 +760,13 @@
 
                             console.log('处理后的文档列表:', ALL_DOCS);
                             console.log('=== scanAllDocuments() 诊断结束 ===');
+                            buildDocLookupMap();
                             return;
                         } else {
                             console.warn('配置文件中没有找到文档');
                         }
                     } else {
-                        console.warn(`配置文件请求失败: ${configResponse.status} ${configResponse.statusText}`);
+                        console.warn('无法获取配置文件，文档列表为空');
                     }
                 } catch (configError) {
                     console.warn('加载配置文件失败:', configError);
@@ -684,11 +775,10 @@
                 // 如果配置文件加载失败或没有文档，尝试扫描常见的文档文件
                 console.warn('配置文件不可用，尝试扫描常见文档文件');
                 const commonFiles = [
-                    'DPapyru-给新人的前言.md',
-                    'DPapyru-ForContributors-Basic.md',
-                    'TopicSystemGuide.md',
-                    'tutorial-index.md',
-                    'test.md'
+                    'Modder入门/DPapyru-给新人的前言.md',
+                    '怎么贡献/DPapyru-贡献者如何编写文章基础.md',
+                    '怎么贡献/TopicSystem使用指南.md',
+                    '螺线翻译tml教程/0-开始/0-Home 主页.md'
                 ];
 
                 ALL_DOCS = [];
@@ -745,6 +835,7 @@
                 console.log('扫描到的文档数量:', ALL_DOCS.length);
                 console.log('扫描到的文档:', ALL_DOCS);
                 console.log('=== scanAllDocuments() 诊断结束 ===');
+                buildDocLookupMap();
 
             } catch (error) {
                 console.error('扫描文档失败:', error);
@@ -752,19 +843,157 @@
                 // 提供一些默认文档
                 ALL_DOCS = [
                     {
-                        filename: 'test.md',
-                        title: '测试文档',
-                        author: '测试',
-                        category: '入门',
+                        filename: 'DPapyru-给新人的前言.md',
+                        path: 'Modder入门/DPapyru-给新人的前言.md',
+                        title: '给新人的前言',
+                        author: 'DPapyru',
+                        category: 'Modder入门',
                         topic: 'mod-basics',
                         order: 1,
-                        description: '用于测试文档查看器功能的示例文档',
-                        tags: ['测试'],
-                        last_updated: '2025-11-26'
+                        description: '面向新人的入门引导文档',
+                        tags: ['入门'],
+                        last_updated: '未知'
                     }
                 ];
                 console.log('使用默认文档配置');
+                buildDocLookupMap();
             }
+        }
+
+        function buildDocLookupMap() {
+            const map = new Map();
+
+            function addKey(key, value) {
+                if (!key || !value) return;
+                const strKey = String(key);
+                map.set(strKey, value);
+                const lower = strKey.toLowerCase();
+                if (!map.has(lower)) map.set(lower, value);
+            }
+
+            function slugFromFilename(filename) {
+                const base = String(filename || '').replace(/\.md$/i, '');
+                if (!base) return '';
+                const firstToken = base.split(' ')[0];
+                return firstToken.replace(/^\d+-/, '');
+            }
+
+            (ALL_DOCS || []).forEach(doc => {
+                const resolvedPath = doc && (doc.path || doc.filename);
+                if (!resolvedPath) return;
+
+                addKey(resolvedPath, resolvedPath);
+                addKey(resolvedPath.replace(/\.md$/i, ''), resolvedPath);
+
+                if (doc.filename) {
+                    addKey(doc.filename, resolvedPath);
+                    addKey(String(doc.filename).replace(/\.md$/i, ''), resolvedPath);
+
+                    const slug = slugFromFilename(doc.filename);
+                    addKey(slug, resolvedPath);
+                    addKey(`${slug}.md`, resolvedPath);
+                }
+
+                if (doc.originalPath) {
+                    addKey(doc.originalPath, resolvedPath);
+                    addKey(String(doc.originalPath).replace(/\.md$/i, ''), resolvedPath);
+                }
+            });
+
+            DOC_LOOKUP_MAP = map;
+        }
+
+        function normalizePath(inputPath) {
+            const parts = String(inputPath || '').split('/');
+            const stack = [];
+            for (const part of parts) {
+                if (!part || part === '.') continue;
+                if (part === '..') {
+                    if (stack.length) stack.pop();
+                    continue;
+                }
+                stack.push(part);
+            }
+            return stack.join('/');
+        }
+
+        function resolveRelativeHref(rawHref, currentDocPath) {
+            if (!currentDocPath) return rawHref;
+            if (!rawHref) return rawHref;
+
+            const hrefStr = String(rawHref);
+            if (
+                hrefStr.startsWith('#') ||
+                hrefStr.startsWith('/') ||
+                /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(hrefStr)
+            ) {
+                return rawHref;
+            }
+
+            const hashIndex = hrefStr.indexOf('#');
+            const baseHref = hashIndex >= 0 ? hrefStr.slice(0, hashIndex) : hrefStr;
+            const hash = hashIndex >= 0 ? hrefStr.slice(hashIndex) : '';
+
+            let decoded = baseHref;
+            try {
+                decoded = decodeURIComponent(baseHref);
+            } catch {
+                decoded = baseHref;
+            }
+
+            const baseDir = String(currentDocPath).split('/').slice(0, -1).join('/');
+            if (!baseDir) return rawHref;
+
+            const joined = normalizePath(`${baseDir}/${decoded.replace(/^\.?\//, '')}`);
+            return `${joined}${hash}`;
+        }
+
+        function resolveDocLinkPath(href, currentDocPath) {
+            if (!href) return null;
+
+            const hrefStr = String(href);
+            if (hrefStr.startsWith('/') || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(hrefStr)) return null;
+
+            let decodedPath = hrefStr;
+            try {
+                decodedPath = decodeURIComponent(hrefStr);
+            } catch {
+                decodedPath = hrefStr;
+            }
+
+            decodedPath = decodedPath.replace(/^\.?\//, '').replace(/^docs\//, '');
+
+            const candidates = [];
+            if (decodedPath) {
+                candidates.push(decodedPath);
+                candidates.push(decodedPath.replace(/\.md$/i, ''));
+                if (!decodedPath.endsWith('.md') && !decodedPath.includes('.')) {
+                    candidates.push(`${decodedPath}.md`);
+                }
+            }
+
+            if (currentDocPath && decodedPath) {
+                const baseDir = String(currentDocPath).split('/').slice(0, -1).join('/');
+                if (baseDir) {
+                    const joined = normalizePath(`${baseDir}/${decodedPath}`);
+                    candidates.unshift(joined);
+                    candidates.unshift(joined.replace(/\.md$/i, ''));
+                    if (!joined.endsWith('.md') && !joined.includes('.')) {
+                        candidates.unshift(`${joined}.md`);
+                    }
+                }
+            }
+
+            const lookup = DOC_LOOKUP_MAP;
+            if (!lookup) return null;
+
+            for (const c of candidates) {
+                if (!c) continue;
+                const hit = lookup.get(c) || lookup.get(String(c).toLowerCase());
+                if (hit) return hit;
+            }
+
+            return null;
         }
 
         // 使用文档信息更新配置
@@ -805,22 +1034,40 @@
             VIEWER_DOC_CONFIG.all_files.push(docInfo);
         }
         // 直接加载Markdown内容的备用函数
-        function loadMarkdownDirectly(filePath) {
-            const loadingIndicator = document.getElementById('loading-indicator');
-            const errorMessage = document.getElementById('error-message');
-            const markdownContent = document.getElementById('markdown-content');
+	        function loadMarkdownDirectly(filePath) {
+	            const loadingIndicator = document.getElementById('loading-indicator');
+	            const errorMessage = document.getElementById('error-message');
+	            const markdownContent = document.getElementById('markdown-content');
+
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'block';
+                    loadingIndicator.setAttribute('aria-busy', 'true');
+                }
+                if (errorMessage) {
+                    errorMessage.style.display = 'none';
+                    errorMessage.setAttribute('aria-hidden', 'true');
+                }
+                if (markdownContent) {
+                    markdownContent.style.display = 'none';
+                }
 
             console.log(`=== loadMarkdownDirectly() 诊断开始 ===`);
             console.log(`docs/viewer.html: 原始文件路径: ${filePath}`);
             console.log('当前页面位置:', window.location.href);
 
-            // 增强的路径清理逻辑
-            let fetchPath = filePath;
-            console.log(`docs/viewer.html: 初始fetchPath: ${fetchPath}`);
+	            try {
+	                // 增强的路径清理逻辑（仅允许加载 config.json 列出的文档，避免路径穿越）
+	                let fetchPath = filePath;
+	                console.log(`docs/viewer.html: 初始fetchPath: ${fetchPath}`);
 
-            // 1. URL解码
-            fetchPath = decodeURIComponent(fetchPath);
-            console.log(`docs/viewer.html: URL解码后: ${fetchPath}`);
+	                // 1. URL解码
+	                fetchPath = decodeURIComponent(fetchPath);
+	                console.log(`docs/viewer.html: URL解码后: ${fetchPath}`);
+
+	                // 1.1 基础安全校验：拒绝路径穿越/反斜杠/空字节
+	                if (/(^|\/|\\)\.\.(\/|\\|$)/.test(fetchPath) || fetchPath.includes('\\') || fetchPath.includes('\0')) {
+	                    throw new Error('非法路径参数');
+	                }
 
             // 2. 如果只是文件名，尝试在文档列表中查找完整路径
             if (!fetchPath.includes('/') && ALL_DOCS.length > 0) {
@@ -849,24 +1096,25 @@
                 console.log(`docs/viewer.html: 旧路径重定向: ${fetchPath}`);
             }
 
-            // 5. 检查是否是已知的分类名或特殊文件
-            const knownCategories = ['00-测试文档', '01-入门指南', '02-基础概念', '03-内容创建', '04-高级开发', '05-专题主题', '06-资源参考'];
-            const rootFiles = ['test.md']; // 位于docs根目录的文件列表
+	            // 5. 检查是否是已知的分类名或特殊文件
+	            const knownCategories = ['01-入门指南', '02-基础概念', '03-内容创建', '04-高级开发', '05-专题主题', '06-资源参考'];
+	            const rootFiles = []; // 位于docs根目录的特殊文件列表（如有需要可添加）
+	            const defaultDocPath = (ALL_DOCS && ALL_DOCS.length > 0) ? (ALL_DOCS[0].path || ALL_DOCS[0].filename) : null;
 
             if (knownCategories.includes(fetchPath) || fetchPath.match(/^\d+-[^\/]+$/)) {
                 // 如果是分类名，尝试重定向到对应的文档
                 console.log(`docs/viewer.html: 识别为旧分类名，尝试重定向`);
                 // 尝试找到该分类下的第一个文档
-                const firstDoc = ALL_DOCS.find(doc => doc.category === getCategoryFromOldPath(fetchPath));
-                if (firstDoc) {
-                    fetchPath = firstDoc.filename;
-                    console.log(`docs/viewer.html: 重定向到文档: ${fetchPath}`);
-                } else {
-                    // 如果找不到对应文档，使用默认文档
-                    fetchPath = 'test.md';
-                    console.log(`docs/viewer.html: 未找到对应文档，使用默认: ${fetchPath}`);
-                }
-            } else if (rootFiles.includes(fetchPath)) {
+	                const firstDoc = ALL_DOCS.find(doc => doc.category === getCategoryFromOldPath(fetchPath));
+	                if (firstDoc) {
+	                    fetchPath = firstDoc.path || firstDoc.filename;
+	                    console.log(`docs/viewer.html: 重定向到文档: ${fetchPath}`);
+	                } else {
+	                    if (!defaultDocPath) throw new Error('未找到可用文档');
+	                    fetchPath = defaultDocPath;
+	                    console.log(`docs/viewer.html: 未找到对应文档，使用默认: ${fetchPath}`);
+	                }
+	            } else if (rootFiles.includes(fetchPath)) {
                 // 如果是根目录下的特殊文件，直接使用
                 console.log(`docs/viewer.html: 识别为根目录文件: ${fetchPath}`);
             } else if (fetchPath.includes('/')) {
@@ -875,39 +1123,52 @@
                     // 旧格式路径，尝试重定向
                     console.log(`docs/viewer.html: 识别为旧格式路径，尝试重定向`);
                     const filename = fetchPath.split('/').pop();
-                    const doc = ALL_DOCS.find(d => d.filename === filename || d.filename.endsWith(filename));
-                    if (doc) {
-                        fetchPath = doc.filename;
-                        console.log(`docs/viewer.html: 重定向到文档: ${fetchPath}`);
-                    } else {
-                        // 如果找不到对应文档，使用默认文档
-                        fetchPath = 'test.md';
-                        console.log(`docs/viewer.html: 未找到对应文档，使用默认: ${fetchPath}`);
-                    }
-                } else {
+	                    const doc = ALL_DOCS.find(d => d.filename === filename || d.filename.endsWith(filename));
+	                    if (doc) {
+	                        fetchPath = doc.path || doc.filename;
+	                        console.log(`docs/viewer.html: 重定向到文档: ${fetchPath}`);
+	                    } else {
+	                        if (!defaultDocPath) throw new Error('未找到可用文档');
+	                        fetchPath = defaultDocPath;
+	                        console.log(`docs/viewer.html: 未找到对应文档，使用默认: ${fetchPath}`);
+	                    }
+	                } else {
                     // 路径已经包含目录，直接使用
                     console.log(`docs/viewer.html: 使用完整路径: ${fetchPath}`);
                 }
             } else {
                 // 如果只是文件名，检查是否存在于文档列表中
-                const doc = ALL_DOCS.find(d => d.filename === fetchPath || d.path === fetchPath || d.filename === `${fetchPath}.md`);
-                if (doc) {
-                    fetchPath = doc.path || doc.filename;
-                    console.log(`docs/viewer.html: 找到匹配文档: ${fetchPath}`);
-                } else {
-                    // 如果找不到，使用默认文档
-                    fetchPath = 'test.md';
-                    console.log(`docs/viewer.html: 未找到匹配文档，使用默认: ${fetchPath}`);
-                }
-            }
+	                const doc = ALL_DOCS.find(d => d.filename === fetchPath || d.path === fetchPath || d.filename === `${fetchPath}.md`);
+	                if (doc) {
+	                    fetchPath = doc.path || doc.filename;
+	                    console.log(`docs/viewer.html: 找到匹配文档: ${fetchPath}`);
+	                } else {
+	                    if (!defaultDocPath) throw new Error('未找到可用文档');
+	                    fetchPath = defaultDocPath;
+	                    console.log(`docs/viewer.html: 未找到匹配文档，使用默认: ${fetchPath}`);
+	                }
+	            }
 
-            // 6. 确保文件以.md结尾
-            if (!fetchPath.endsWith('.md')) {
-                fetchPath += '.md';
-                console.log(`docs/viewer.html: 添加.md扩展名: ${fetchPath}`);
-            }
+	            // 6. 最终白名单校验：必须存在于 ALL_DOCS 中
+	            if (ALL_DOCS && ALL_DOCS.length > 0) {
+	                const matches = ALL_DOCS.filter(d => d.path === fetchPath || d.filename === fetchPath);
+	                if (matches.length === 1) {
+	                    fetchPath = matches[0].path || matches[0].filename;
+	                } else if (matches.length === 0) {
+	                    throw new Error('文档不存在或未被索引（请使用 docs/config.json 中的路径）');
+	                } else {
+	                    throw new Error('文档名称不唯一，请使用完整路径');
+	                }
+	            }
+
+	            // 7. 确保文件以.md结尾
+	            if (!fetchPath.endsWith('.md')) {
+	                fetchPath += '.md';
+	                console.log(`docs/viewer.html: 添加.md扩展名: ${fetchPath}`);
+	            }
 
             console.log(`docs/viewer.html: 最终使用路径: ${fetchPath}`);
+            CURRENT_DOC_PATH = fetchPath;
 
             // 确保路径相对于当前页面（docs目录）
             let fetchUrl = fetchPath.startsWith('./') ? fetchPath : `./${fetchPath}`;
@@ -923,8 +1184,8 @@
             console.log(`docs/viewer.html: 实际fetch URL: ${fetchUrl}`);
             console.log(`完整请求URL将是: ${window.location.origin}${window.location.pathname.replace(/\/[^\/]*$/, '/')}${fetchUrl}`);
 
-            fetch(fetchUrl)
-                .then(response => {
+	            fetch(encodeURI(fetchUrl))
+	                .then(response => {
                     console.log(`获取响应状态: ${response.status} ${response.statusText}`);
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
@@ -941,6 +1202,24 @@
                         const frontMatter = parseFrontMatter(markdownText);
                         const content = frontMatter.content;
                         const metadata = frontMatter.metadata;
+
+                        // 补齐缺失的元数据：优先使用 config.json 中的索引信息（不修改 Markdown 原文）
+                        const docFromConfig = ALL_DOCS.find(d => {
+                            const p = d.path || d.filename;
+                            return p === fetchPath || d.filename === fetchPath || d.path === fetchPath;
+                        });
+                        if (docFromConfig) {
+                            if (!metadata.title && docFromConfig.title) metadata.title = docFromConfig.title;
+                            if (!metadata.author && docFromConfig.author) metadata.author = docFromConfig.author;
+                            if (!metadata.description && docFromConfig.description) metadata.description = docFromConfig.description;
+                            if (!metadata.category && docFromConfig.category) metadata.category = docFromConfig.category;
+                            if (!metadata.topic && docFromConfig.topic) metadata.topic = docFromConfig.topic;
+                            if (!metadata.difficulty && docFromConfig.difficulty) metadata.difficulty = docFromConfig.difficulty;
+                            if (!metadata.time && docFromConfig.time) metadata.time = docFromConfig.time;
+                            if (!metadata.last_updated && docFromConfig.last_updated) metadata.last_updated = docFromConfig.last_updated;
+                            if (!metadata.prev_chapter && docFromConfig.prev_chapter) metadata.prev_chapter = docFromConfig.prev_chapter;
+                            if (!metadata.next_chapter && docFromConfig.next_chapter) metadata.next_chapter = docFromConfig.next_chapter;
+                        }
 
                         console.log('解析的元数据:', metadata);
 
@@ -966,9 +1245,13 @@
                         generateTableOfContents(markdownContent);
 
                         // 显示内容，隐藏加载指示器
-                        if (loadingIndicator) loadingIndicator.style.display = 'none';
+                        if (loadingIndicator) {
+                            loadingIndicator.style.display = 'none';
+                            loadingIndicator.setAttribute('aria-busy', 'false');
+                        }
                         markdownContent.style.display = 'block';
                         document.getElementById('table-of-contents').style.display = 'block';
+                        if (errorMessage) errorMessage.setAttribute('aria-hidden', 'true');
 
                         // 初始化图片缩放
                         initImageZoom();
@@ -977,15 +1260,31 @@
                         throw new Error('marked.js未加载');
                     }
                 })
-                .catch(error => {
+	                .catch(error => {
                     console.error('docs/viewer.html: 加载Markdown失败:', error);
-                    if (loadingIndicator) loadingIndicator.style.display = 'none';
+                    if (loadingIndicator) {
+                        loadingIndicator.style.display = 'none';
+                        loadingIndicator.setAttribute('aria-busy', 'false');
+                    }
                     if (errorMessage) {
                         errorMessage.style.display = 'block';
+                        errorMessage.setAttribute('aria-hidden', 'false');
                         document.getElementById('error-text').textContent = `无法加载文件 "${fetchPath}": ${error.message}`;
                     }
-                });
-        }
+	                });
+	            } catch (error) {
+	                console.error('docs/viewer.html: 无法解析/加载文档:', error);
+	                if (loadingIndicator) {
+	                    loadingIndicator.style.display = 'none';
+                        loadingIndicator.setAttribute('aria-busy', 'false');
+	                }
+	                if (errorMessage) {
+	                    errorMessage.style.display = 'block';
+                        errorMessage.setAttribute('aria-hidden', 'false');
+	                    document.getElementById('error-text').textContent = `无法加载文件 "${filePath}": ${error.message}`;
+	                }
+	            }
+	        }
 
         // 分类映射函数：将旧分类系统映射到新分类系统
         function mapCategoryToNewSystem(oldCategory) {
@@ -1217,6 +1516,46 @@
 
             // 更新导航按钮
             updateNavigationButtons(prevChapter, nextChapter);
+
+            // 更新 SEO 元标签（canonical/OG/Twitter/description）
+            updateSeoMeta({
+                title,
+                description: metadata.description || metadata.summary || '',
+                filePath
+            });
+        }
+
+        function setMetaContent(selector, content) {
+            const el = document.querySelector(selector);
+            if (el && content) el.setAttribute('content', content);
+        }
+
+        function setCanonical(href) {
+            let link = document.querySelector('link[rel="canonical"]');
+            if (!link) {
+                link = document.createElement('link');
+                link.setAttribute('rel', 'canonical');
+                document.head.appendChild(link);
+            }
+            link.setAttribute('href', href);
+        }
+
+        function updateSeoMeta({ title, description, filePath }) {
+            const baseUrl = 'https://dpapyru.github.io/docs/viewer.html';
+            const url = filePath ? `${baseUrl}?file=${encodeURIComponent(filePath)}` : baseUrl;
+
+            const safeTitle = title ? `${title} - 泰拉瑞亚Mod制作教程` : '文档查看器 - 泰拉瑞亚Mod制作教程';
+            const safeDescription = (description && String(description).trim())
+                ? String(description).trim()
+                : '泰拉瑞亚Mod制作教程文档阅读页面，支持目录、代码高亮与分类导航。';
+
+            setCanonical(url);
+            setMetaContent('meta[name="description"]', safeDescription);
+            setMetaContent('meta[property="og:title"]', safeTitle);
+            setMetaContent('meta[property="og:description"]', safeDescription);
+            setMetaContent('meta[property="og:url"]', url);
+            setMetaContent('meta[name="twitter:title"]', safeTitle);
+            setMetaContent('meta[name="twitter:description"]', safeDescription);
         }
 
         function updateColorStyle(colorLDArray, colorChangeArray) {
@@ -1350,7 +1689,7 @@
 
             // 添加文档列表链接
             const docsLink = document.createElement('a');
-            docsLink.href = '../docs/';
+            docsLink.href = 'index.html';
             docsLink.textContent = '文档';
             breadcrumb.appendChild(docsLink);
 
@@ -1366,25 +1705,22 @@
                 const category = MAIN_CATEGORIES[currentDoc.category];
                 if (category) {
                     const categoryLink = document.createElement('a');
-                    categoryLink.href = `../docs/?category=${encodeURIComponent(currentDoc.category)}`;
+                    categoryLink.href = `folder.html?path=${encodeURIComponent(currentDoc.category)}`;
                     categoryLink.textContent = category.title;
                     breadcrumb.appendChild(categoryLink);
 
-                    // 添加分隔符
-                    const separator3 = document.createElement('span');
-                    separator3.className = 'breadcrumb-separator';
-                    separator3.textContent = ' > ';
-                    breadcrumb.appendChild(separator3);
+                    // 主题信息仅展示为文本（当前站点不支持按 topic 过滤跳转）
+                    if (currentDoc.topic && VIEWER_DOC_CONFIG && VIEWER_DOC_CONFIG.topics && VIEWER_DOC_CONFIG.topics[currentDoc.topic]) {
+                        const separator3 = document.createElement('span');
+                        separator3.className = 'breadcrumb-separator';
+                        separator3.textContent = ' > ';
+                        breadcrumb.appendChild(separator3);
 
-                    // 如果有主题，添加主题链接
-                    if (currentDoc.topic && DOC_CONFIG.topics && DOC_CONFIG.topics[currentDoc.topic]) {
-                        const topic = DOC_CONFIG.topics[currentDoc.topic];
-                        const topicLink = document.createElement('a');
-                        topicLink.href = `../docs/?category=${encodeURIComponent(currentDoc.category)}&topic=${encodeURIComponent(currentDoc.topic)}`;
-                        topicLink.textContent = topic.title;
-                        breadcrumb.appendChild(topicLink);
+                        const topicSpan = document.createElement('span');
+                        topicSpan.className = 'breadcrumb-topic';
+                        topicSpan.textContent = VIEWER_DOC_CONFIG.topics[currentDoc.topic].title;
+                        breadcrumb.appendChild(topicSpan);
 
-                        // 添加分隔符
                         const separator4 = document.createElement('span');
                         separator4.className = 'breadcrumb-separator';
                         separator4.textContent = ' > ';
@@ -1401,7 +1737,7 @@
         }
 
         // 更新导航按钮
-        function updateNavigationButtons(prevChapter, nextChapter) {
+	        function updateNavigationButtons(prevChapter, nextChapter) {
             const navigationContainer = document.querySelector('.tutorial-navigation');
             if (!navigationContainer) {
                 console.warn('找不到导航容器');
@@ -1411,30 +1747,30 @@
             // 清空现有导航内容
             navigationContainer.innerHTML = '';
 
-            // 添加返回文档列表按钮
-            const backToListBtn = document.createElement('a');
-            backToListBtn.href = '../docs/';
-            backToListBtn.className = 'btn btn-outline prev-tutorial';
-            backToListBtn.textContent = '← 返回文档列表';
-            navigationContainer.appendChild(backToListBtn);
+	            // 添加返回文档列表按钮
+	            const backToListBtn = document.createElement('a');
+	            backToListBtn.href = 'index.html';
+	            backToListBtn.className = 'btn btn-outline prev-tutorial';
+	            backToListBtn.textContent = '← 返回文档列表';
+	            navigationContainer.appendChild(backToListBtn);
 
             // 添加上一章按钮（如果存在）
-            if (prevChapter) {
-                const prevBtn = document.createElement('a');
-                prevBtn.href = `?file=${prevChapter}`;
-                prevBtn.className = 'btn btn-secondary prev-tutorial';
-                prevBtn.textContent = '← 上一章';
-                navigationContainer.appendChild(prevBtn);
-            }
+	            if (prevChapter) {
+	                const prevBtn = document.createElement('a');
+	                prevBtn.href = `?file=${encodeURIComponent(prevChapter)}`;
+	                prevBtn.className = 'btn btn-secondary prev-tutorial';
+	                prevBtn.textContent = '← 上一章';
+	                navigationContainer.appendChild(prevBtn);
+	            }
 
             // 添加下一章按钮（如果存在）
-            if (nextChapter) {
-                const nextBtn = document.createElement('a');
-                nextBtn.href = `?file=${nextChapter}`;
-                nextBtn.className = 'btn btn-primary next-tutorial';
-                nextBtn.textContent = '下一章 →';
-                navigationContainer.appendChild(nextBtn);
-            }
+	            if (nextChapter) {
+	                const nextBtn = document.createElement('a');
+	                nextBtn.href = `?file=${encodeURIComponent(nextChapter)}`;
+	                nextBtn.className = 'btn btn-primary next-tutorial';
+	                nextBtn.textContent = '下一章 →';
+	                navigationContainer.appendChild(nextBtn);
+	            }
 
             console.log('导航按钮已更新:', { prevChapter, nextChapter });
         }
@@ -1683,10 +2019,10 @@
                             const fileItem = document.createElement('li');
                             fileItem.className = 'file-item';
 
-                            const fileLink = document.createElement('a');
-                            fileLink.href = `?file=${file.path || file.filename}`;
-                            fileLink.textContent = file.title;
-                            fileLink.title = `${file.author || '未知'} - ${file.description || file.title}`;
+	                            const fileLink = document.createElement('a');
+	                            fileLink.href = `?file=${encodeURIComponent(file.path || file.filename)}`;
+	                            fileLink.textContent = file.title;
+	                            fileLink.title = `${file.author || '未知'} - ${file.description || file.title}`;
 
                             fileItem.appendChild(fileLink);
                             fileList.appendChild(fileItem);
@@ -1776,9 +2112,9 @@
                     const docItem = document.createElement('li');
                     docItem.className = 'file-item';
 
-                    const docLink = document.createElement('a');
-                    docLink.href = `?file=${doc.path || doc.filename}`;
-                    docLink.textContent = doc.title;
+	                    const docLink = document.createElement('a');
+	                    docLink.href = `?file=${encodeURIComponent(doc.path || doc.filename)}`;
+	                    docLink.textContent = doc.title;
 
                     // 添加更详细的标题信息
                     const categoryTitle = MAIN_CATEGORIES[doc.category]?.title || doc.category;
@@ -1938,8 +2274,8 @@
                 return;
             }
 
-            // 查找当前文档信息
-            const currentDoc = ALL_DOCS.find(doc => doc.filename === filePath);
+	            // 查找当前文档信息（支持 filename 或 path）
+	            const currentDoc = ALL_DOCS.find(doc => doc.filename === filePath || doc.path === filePath);
 
             if (!currentDoc) {
                 // 如果找不到文档，显示所有文档
@@ -1961,13 +2297,13 @@
                 sortedDocs.forEach(doc => {
                     const li = document.createElement('li');
                     const link = document.createElement('a');
-                    link.href = `?file=${doc.filename}`;
-                    link.textContent = doc.title;
-                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
+	                    link.href = `?file=${encodeURIComponent(doc.path || doc.filename)}`;
+	                    link.textContent = doc.title;
+	                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
 
-                    if (doc.filename === filePath) {
-                        link.classList.add('active');
-                    }
+	                    if ((doc.path || doc.filename) === filePath || doc.filename === filePath || doc.path === filePath) {
+	                        link.classList.add('active');
+	                    }
 
                     li.appendChild(link);
                     currentCategoryDocs.appendChild(li);
@@ -1999,13 +2335,13 @@
                 relatedDocs.forEach(doc => {
                     const li = document.createElement('li');
                     const link = document.createElement('a');
-                    link.href = `?file=${doc.filename}`;
-                    link.textContent = doc.title;
-                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
+	                    link.href = `?file=${encodeURIComponent(doc.path || doc.filename)}`;
+	                    link.textContent = doc.title;
+	                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
 
-                    if (doc.filename === filePath) {
-                        link.classList.add('active');
-                    }
+	                    if ((doc.path || doc.filename) === filePath || doc.filename === filePath || doc.path === filePath) {
+	                        link.classList.add('active');
+	                    }
 
                     li.appendChild(link);
                     currentCategoryDocs.appendChild(li);
@@ -2016,16 +2352,16 @@
                     doc.category === currentDoc.category
                 ).sort((a, b) => (a.order || 999) - (b.order || 999));
 
-                categoryDocs.forEach(doc => {
-                    const li = document.createElement('li');
-                    const link = document.createElement('a');
-                    link.href = `?file=${doc.filename}`;
-                    link.textContent = doc.title;
-                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
+	                categoryDocs.forEach(doc => {
+	                    const li = document.createElement('li');
+	                    const link = document.createElement('a');
+	                    link.href = `?file=${encodeURIComponent(doc.path || doc.filename)}`;
+	                    link.textContent = doc.title;
+	                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
 
-                    if (doc.filename === filePath) {
-                        link.classList.add('active');
-                    }
+	                    if ((doc.path || doc.filename) === filePath || doc.filename === filePath || doc.path === filePath) {
+	                        link.classList.add('active');
+	                    }
 
                     li.appendChild(link);
                     currentCategoryDocs.appendChild(li);
@@ -2040,6 +2376,53 @@
             const mobileNavClose = document.getElementById('mobile-nav-close');
             const mobileNavBack = document.getElementById('mobile-nav-back');
             const mobileNavSections = document.getElementById('mobile-nav-sections');
+
+            if (!mobileNavToggle || !mobileNavOverlay || !mobileNavClose || !mobileNavBack || !mobileNavSections) {
+                return;
+            }
+
+            mobileNavToggle.setAttribute('aria-expanded', 'false');
+            mobileNavOverlay.setAttribute('aria-hidden', 'true');
+
+            let lastFocusedElement = null;
+
+            function getFocusableElements(container) {
+                const selectors = [
+                    'a[href]',
+                    'button:not([disabled])',
+                    'input:not([disabled])',
+                    'select:not([disabled])',
+                    'textarea:not([disabled])',
+                    '[tabindex]:not([tabindex="-1"])'
+                ];
+                return Array.from(container.querySelectorAll(selectors.join(','))).filter(el => {
+                    return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+                });
+            }
+
+            function trapFocus(event) {
+                if (!mobileNavOverlay.classList.contains('active')) return;
+                if (event.key !== 'Tab') return;
+
+                const focusable = getFocusableElements(mobileNavOverlay);
+                if (focusable.length === 0) return;
+
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                const active = document.activeElement;
+
+                if (event.shiftKey) {
+                    if (active === first || !mobileNavOverlay.contains(active)) {
+                        event.preventDefault();
+                        last.focus();
+                    }
+                } else {
+                    if (active === last) {
+                        event.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
 
             // 检查是否为移动设备
             function isMobileDevice() {
@@ -2156,22 +2539,22 @@
                             const fileList = document.createElement('ul');
                             fileList.className = 'mobile-file-list';
 
-                            topic.files.forEach(file => {
+	                            topic.files.forEach(file => {
                                 const fileItem = document.createElement('li');
                                 fileItem.className = 'mobile-file-item';
 
-                                const fileLink = document.createElement('a');
-                                fileLink.href = `?file=${file.filename}`;
-                                fileLink.className = 'mobile-file-link';
-                                fileLink.textContent = file.title;
-                                fileLink.title = file.description || file.title;
+	                                const fileLink = document.createElement('a');
+	                                fileLink.href = `?file=${encodeURIComponent(file.path || file.filename)}`;
+	                                fileLink.className = 'mobile-file-link';
+	                                fileLink.textContent = file.title;
+	                                fileLink.title = file.description || file.title;
 
                                 // 检查是否为当前文档
                                 const currentUrl = new URL(window.location);
-                                const currentFile = currentUrl.searchParams.get('file') || 'test.md';
-                                if (file.filename === currentFile) {
-                                    fileLink.classList.add('active');
-                                }
+	                                const currentFile = currentUrl.searchParams.get('file') || '';
+	                                if ((file.path || file.filename) === currentFile || file.filename === currentFile || file.path === currentFile) {
+	                                    fileLink.classList.add('active');
+	                                }
 
                                 // 添加点击事件，点击后关闭导航
                                 fileLink.addEventListener('click', function () {
@@ -2272,10 +2655,10 @@
                         const docItem = document.createElement('li');
                         docItem.className = 'mobile-file-item';
 
-                        const docLink = document.createElement('a');
-                        docLink.href = `?file=${doc.path || doc.filename}`;
-                        docLink.className = 'mobile-file-link';
-                        docLink.textContent = doc.title;
+	                        const docLink = document.createElement('a');
+	                        docLink.href = `?file=${encodeURIComponent(doc.path || doc.filename)}`;
+	                        docLink.className = 'mobile-file-link';
+	                        docLink.textContent = doc.title;
 
                         // 添加更详细的标题信息
                         const categoryTitle = MAIN_CATEGORIES[doc.category]?.title || doc.category;
@@ -2285,10 +2668,10 @@
 
                         // 检查是否为当前文档
                         const currentUrl = new URL(window.location);
-                        const currentFile = currentUrl.searchParams.get('file') || 'test.md';
-                        if (doc.filename === currentFile) {
-                            docLink.classList.add('active');
-                        }
+	                        const currentFile = currentUrl.searchParams.get('file') || '';
+	                        if ((doc.path || doc.filename) === currentFile || doc.filename === currentFile || doc.path === currentFile) {
+	                            docLink.classList.add('active');
+	                        }
 
                         // 添加点击事件，点击后关闭导航
                         docLink.addEventListener('click', function () {
@@ -2306,21 +2689,40 @@
 
             // 打开手机端导航
             function openMobileNav() {
+                lastFocusedElement = document.activeElement;
                 mobileNavOverlay.classList.add('active');
                 document.body.style.overflow = 'hidden'; // 防止背景滚动
                 generateMobileNavContent();
+                mobileNavToggle.setAttribute('aria-expanded', 'true');
+                mobileNavOverlay.setAttribute('aria-hidden', 'false');
+                mobileNavClose.focus();
+                document.addEventListener('keydown', trapFocus, true);
             }
 
             // 关闭手机端导航
             function closeMobileNav() {
                 mobileNavOverlay.classList.remove('active');
                 document.body.style.overflow = ''; // 恢复滚动
+                mobileNavToggle.setAttribute('aria-expanded', 'false');
+                mobileNavOverlay.setAttribute('aria-hidden', 'true');
+                document.removeEventListener('keydown', trapFocus, true);
+                if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+                    lastFocusedElement.focus();
+                } else {
+                    mobileNavToggle.focus();
+                }
             }
 
             // 绑定事件监听器
             mobileNavToggle.addEventListener('click', openMobileNav);
             mobileNavClose.addEventListener('click', closeMobileNav);
             mobileNavBack.addEventListener('click', closeMobileNav);
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && mobileNavOverlay.classList.contains('active')) {
+                    closeMobileNav();
+                }
+            });
 
             // 点击覆盖层背景关闭导航（除了返回区域）
             mobileNavOverlay.addEventListener('click', function (e) {

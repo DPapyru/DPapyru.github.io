@@ -14,11 +14,10 @@ const DOC_PATHS = [
 // 从config.json获取文档列表的函数
 async function getDocumentsFromConfig() {
     try {
-        const response = await fetch('docs/config.json');
-        if (!response.ok) {
-            throw new Error(`无法加载config.json: ${response.status}`);
-        }
-        const config = await response.json();
+        const config = await (window.SiteConfig ? window.SiteConfig.load() : fetch('docs/config.json').then(r => {
+            if (!r.ok) throw new Error(`无法加载config.json: ${r.status}`);
+            return r.json();
+        }));
 
         // 从config.json中提取所有文档文件
         const documents = [];
@@ -84,14 +83,13 @@ function parseYamlFrontMatter(content) {
  * @returns {Promise} 包含文档信息的Promise
  */
 function fetchDocumentInfo(url) {
-    // 首先尝试从config.json获取文档信息
-    return fetch('docs/config.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`无法加载config.json: ${response.status}`);
-            }
-            return response.json();
-        })
+    // 优先使用共享的 SiteConfig（避免重复 fetch）
+    return (window.SiteConfig ? window.SiteConfig.load() : fetch('docs/config.json').then(response => {
+        if (!response.ok) {
+            throw new Error(`无法加载config.json: ${response.status}`);
+        }
+        return response.json();
+    }))
         .then(config => {
             // 在all_files中查找匹配的文档
             const fileInfo = config.all_files.find(file => file.path === url);
@@ -168,7 +166,7 @@ function getFallbackDocumentInfo(url) {
     // 根据URL路径推断文档信息 - 更新为新的扁平化结构
     const fileName = url.split('/').pop();
 
-    // 默认文档信息映射 - 基于新的文件名，包含更多LogSpiral文档
+    // 默认文档信息映射 - 基于新的文件名
     const defaultDocs = {
         'DPapyru-给新人的前言.md': {
             title: '给新人的前言',
@@ -276,10 +274,13 @@ function showLoadingState() {
 function showErrorState(message) {
     const updatesGrid = document.querySelector('.updates-grid');
     if (updatesGrid) {
+        const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
+            ? window.SiteUtils.escapeHtml
+            : (v) => String(v);
         updatesGrid.innerHTML = `
             <div class="error-indicator">
                 <div class="error-icon">⚠️</div>
-                <p>加载失败: ${message}</p>
+                <p>加载失败: ${esc(message)}</p>
                 <button class="btn btn-secondary retry-button" onclick="loadLatestUpdates()">重试</button>
             </div>
         `;
@@ -292,6 +293,10 @@ function showErrorState(message) {
  * @returns {string} 更新卡片HTML
  */
 function generateUpdateCard(doc) {
+    const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
+        ? window.SiteUtils.escapeHtml
+        : (v) => String(v);
+
     let difficultyClass = getDifficultyClass(doc);
     let difficultyText = getDifficultyText(doc);
     if (difficultyText === 'unknown')
@@ -300,20 +305,23 @@ function generateUpdateCard(doc) {
     // 为Markdown文件链接添加viewer.html前缀
     let viewUrl = doc.url;
     if (viewUrl.endsWith('.md') && !viewUrl.includes('viewer.html')) {
-        const fileName = viewUrl.split('/').pop();
-        viewUrl = `docs/viewer.html?file=${fileName}`;
+        const relativePath = viewUrl.startsWith('docs/') ? viewUrl.substring(5) : viewUrl;
+        viewUrl = `docs/viewer.html?file=${encodeURIComponent(relativePath)}`;
     }
+
+    const allowedDifficulty = ['beginner', 'intermediate', 'advanced', 'unknown'];
+    if (!allowedDifficulty.includes(difficultyClass)) difficultyClass = 'unknown';
 
     return `
         <div class="update-card">
-            <div class="update-date">${doc.lastUpdated}</div>
+            <div class="update-date">${esc(doc.lastUpdated)}</div>
             <div class="update-meta">
-                <span class="difficulty-tag ${difficultyClass}">${difficultyText}</span>
-                <span class="estimated-time">⏱️ ${doc.time}</span>
+                <span class="difficulty-tag ${difficultyClass}">${esc(difficultyText)}</span>
+                <span class="estimated-time">⏱️ ${esc(doc.time)}</span>
             </div>
-            <h3 class="update-title">${doc.title}</h3>
-            <p class="update-description">${doc.description}</p>
-            <a href="${viewUrl}" class="update-link">查看详情 →</a>
+            <h3 class="update-title">${esc(doc.title)}</h3>
+            <p class="update-description">${esc(doc.description)}</p>
+            <a href="${esc(viewUrl)}" class="update-link">查看详情 →</a>
         </div>
     `;
 }

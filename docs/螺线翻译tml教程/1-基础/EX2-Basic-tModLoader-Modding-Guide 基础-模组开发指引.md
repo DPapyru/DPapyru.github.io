@@ -15,7 +15,7 @@
 [译注-此处原文](https://github.com/tModLoader/tModLoader/wiki/tModLoader-guide-for-developers#net-sdk)
 
 这篇教程会让你熟悉tModLoader模组开发，并帮助你制作第一个模组  
-在此之前，请先阅读参考[基础-先决条件](https://dpapyru.github.io/LogSpiral/viewer.html?file=1-%E5%9F%BA%E7%A1%80/0-Basic-Prerequisites%20%E5%9F%BA%E7%A1%80-%E5%85%88%E5%86%B3%E6%9D%A1%E4%BB%B6.md)   
+在此之前，请先阅读参考[基础-先决条件](https://dpapyru.github.io/docs/viewer.html?file=螺线翻译tml教程/1-基础/0-Basic-Prerequisites%20基础-先决条件.md)   
 [译注-此处原文](https://github.com/tModLoader/tModLoader/wiki/Basic-Prerequisites)
 
 # 你的第一个模组

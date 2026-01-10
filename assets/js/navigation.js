@@ -1,6 +1,7 @@
 // 导航功能实现
 class NavigationEnhancements {
     constructor() {
+        this.sidebarToggleCount = 0;
         this.init();
     }
 
@@ -53,18 +54,19 @@ class NavigationEnhancements {
                 
                 // 如果是Markdown文件，使用viewer.html加载
                 if (cleanUrl.endsWith('.md') && !cleanUrl.includes('viewer.html')) {
+                    const viewerBase = window.location.pathname.includes('/docs/') ? 'viewer.html' : 'docs/viewer.html';
                     // 如果是文件名，尝试在文档列表中查找完整路径
                     if (!cleanUrl.includes('/') && typeof window.ALL_DOCS !== 'undefined' && window.ALL_DOCS.length > 0) {
                         const doc = window.ALL_DOCS.find(d => d.filename === cleanUrl.split('/').pop() || d.path === cleanUrl);
                         if (doc && doc.path) {
-                            cleanUrl = `docs/viewer.html?file=${doc.path}`;
+                            cleanUrl = `${viewerBase}?file=${encodeURIComponent(doc.path)}`;
                         } else {
                             const fileName = cleanUrl.split('/').pop();
-                            cleanUrl = `docs/viewer.html?file=${fileName}`;
+                            cleanUrl = `${viewerBase}?file=${encodeURIComponent(fileName)}`;
                         }
                     } else {
                         const fileName = cleanUrl.split('/').pop();
-                        cleanUrl = `docs/viewer.html?file=${cleanUrl}`;
+                        cleanUrl = `${viewerBase}?file=${encodeURIComponent(cleanUrl)}`;
                     }
                 }
                 
@@ -95,7 +97,7 @@ class NavigationEnhancements {
         if (path.includes('/docs/')) {
             items.push({
                 text: '教程',
-                url: 'docs/tutorial-index.md',
+                url: 'docs/index.html',
                 isCurrent: false
             });
 
@@ -108,30 +110,6 @@ class NavigationEnhancements {
                     isCurrent: true
                 });
             }
-        } else if (path.includes('DPapyru-ForNewModder.md') || path.includes('01-入门指南')) {
-            items.push({
-                text: '入门指南',
-                url: '',
-                isCurrent: true
-            });
-        } else if (path.includes('DPapyru-ForContributors-Basic.md') || path.includes('给贡献者阅读的文章')) {
-            items.push({
-                text: '贡献指南',
-                url: '',
-                isCurrent: true
-            });
-        } else if (path.includes('TopicSystemGuide.md')) {
-            items.push({
-                text: '系统指南',
-                url: '',
-                isCurrent: true
-            });
-        } else if (path.includes('tutorial-index.md') || path.includes('02-基础概念')) {
-            items.push({
-                text: '教程索引',
-                url: '',
-                isCurrent: true
-            });
         }
 
         return items;
@@ -181,8 +159,16 @@ class NavigationEnhancements {
         // 创建折叠按钮
         const toggle = document.createElement('button');
         toggle.className = 'sidebar-toggle';
+        toggle.type = 'button';
         toggle.innerHTML = '▼';
         toggle.setAttribute('aria-label', '折叠/展开');
+        toggle.setAttribute('aria-expanded', 'true');
+
+        if (!list.id) {
+            this.sidebarToggleCount += 1;
+            list.id = `sidebar-collapsible-${this.sidebarToggleCount}`;
+        }
+        toggle.setAttribute('aria-controls', list.id);
         
         // 调整标题样式以容纳按钮
         title.style.paddingRight = '25px';
@@ -196,6 +182,7 @@ class NavigationEnhancements {
             list.classList.toggle('collapsed');
             toggle.classList.toggle('collapsed');
             toggle.innerHTML = list.classList.contains('collapsed') ? '▶' : '▼';
+            toggle.setAttribute('aria-expanded', list.classList.contains('collapsed') ? 'false' : 'true');
         });
         
         // 添加折叠类
@@ -241,6 +228,7 @@ class NavigationEnhancements {
         // 创建返回顶部按钮
         const backToTop = document.createElement('button');
         backToTop.className = 'back-to-top';
+        backToTop.type = 'button';
         backToTop.setAttribute('aria-label', '返回顶部');
         backToTop.innerHTML = '↑';
         
@@ -316,23 +304,9 @@ class NavigationEnhancements {
                 clearTimeout(this.gTimer);
                 this.gPressed = false;
                 
-                // 使用cleanPath函数处理路径（如果可用）
-                let tutorialPath = 'docs/tutorial-index.md';
-                if (typeof window.cleanPath === 'function') {
-                    tutorialPath = window.cleanPath(tutorialPath);
-                    console.log(`键盘快捷键G+T：清理后的教程路径: ${tutorialPath}`);
-                }
-                
-                // 使用更安全的导航方式，避免直接跳转导致的问题
-                if (tutorialPath.endsWith('.md')) {
-                    // 如果是Markdown文件，使用viewer.html加载
-                    console.log(`通过viewer.html加载Markdown: ${tutorialPath}`);
-                    const fileName = tutorialPath.split('/').pop();
-                    const viewerUrl = `docs/viewer.html?file=${fileName}`;
-                    window.location.href = viewerUrl;
-                } else {
-                    window.location.href = tutorialPath;
-                }
+                // 教程索引
+                const inDocs = window.location.pathname.includes('/docs/');
+                window.location.href = inDocs ? 'index.html' : 'docs/index.html';
             }
 
             // G 然后 N 跳转到新手指南
@@ -341,19 +315,10 @@ class NavigationEnhancements {
                 clearTimeout(this.gTimer);
                 this.gPressed = false;
                 
-                let newPath = 'docs/DPapyru-ForNewModder.md';
-                if (typeof window.cleanPath === 'function') {
-                    newPath = window.cleanPath(newPath);
-                    console.log(`键盘快捷键G+N：清理后的路径: ${newPath}`);
-                }
-                
-                if (newPath.endsWith('.md')) {
-                    const fileName = newPath.split('/').pop();
-                    const viewerUrl = `docs/viewer.html?file=${fileName}`;
-                    window.location.href = viewerUrl;
-                } else {
-                    window.location.href = newPath;
-                }
+                // 入门指南
+                const inDocs = window.location.pathname.includes('/docs/');
+                const viewerBase = inDocs ? 'viewer.html' : 'docs/viewer.html';
+                window.location.href = viewerBase + '?file=' + encodeURIComponent('Modder入门/DPapyru-给新人的前言.md');
             }
         });
     }

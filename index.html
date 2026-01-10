@@ -28,43 +28,21 @@
     <meta name="twitter:description" content="面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛">
     <meta name="twitter:image" content="https://dpapyru.github.io/assets/imgs/Green_tModLoader.png">
 
-    <!-- 其他SEO标签 - 规范URL和RSS订阅 -->
+    <!-- 其他SEO标签 - 规范URL -->
     <link rel="canonical" href="https://dpapyru.github.io/">
-    <link rel="alternate" type="application/rss+xml" title="泰拉瑞亚Mod制作教程" href="/feed.xml">
+
+    <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
+    <script src="assets/js/theme-init.js"></script>
 
     <!-- 样式和图标 - 加载CSS样式表和网站图标 -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/prism.min.css">
     <link rel="stylesheet" href="assets/css/vs2022-theme.css">
     <link rel="icon" type="image/png" href="assets/imgs/Green_tModLoader.png">
-    
-    <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
-    <script>
-        // 主题切换早期加载脚本 - 防止页面加载时主题闪烁
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
-    </script>
-    <style>
-        /* 特殊的螺线教程样式 */
-        .LogSpiral {
-            background-color: #2a2a2a;
-            box-shadow: 1px 1px 2.5px rgba(39, 81, 221, 0.22),
-                -1px -1px 2.5px rgba(39, 81, 221, 0.22),
-                -1px 1px 2.5px rgba(39, 81, 221, 0.22),
-                1px -1px 2.5px rgba(39, 81, 221, 0.22);
-            color: white !important;
-            text-shadow:
-                1px 1px 2.5px rgba(39, 81, 221, 0.22),
-                -1px -1px 2.5px rgba(39, 81, 221, 0.22),
-                -1px 1px 2.5px rgba(39, 81, 221, 0.22),
-                1px -1px 2.5px rgba(39, 81, 221, 0.22);
-        }
-    </style>
 </head>
 
 <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
     <!-- 网站头部导航区域 -->
     <header class="site-header">
         <div class="container">
@@ -78,16 +56,16 @@
                     </a>
                 </div>
                 <!-- 主导航菜单 -->
-                <nav class="main-nav">
+                <nav class="main-nav" id="main-nav">
                     <ul class="nav-list">
-                        <li class="nav-item"><a href="index.html" class="nav-link active">首页</a></li>
+                        <li class="nav-item"><a href="index.html" class="nav-link active" aria-current="page">首页</a></li>
                         <li class="nav-item"><a href="docs/index.html" class="nav-link">文档</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
-                                target="_blank">GitHub</a></li>
+                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
                     </ul>
                 </nav>
                 <!-- 移动端菜单切换按钮 -->
-                <button class="mobile-menu-toggle" aria-label="切换菜单">
+                <button class="mobile-menu-toggle" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
                     <span class="bar"></span>
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -97,7 +75,7 @@
     </header>
 
     <!-- 网站主要内容区域 -->
-    <main class="homepage">
+    <main class="homepage" id="main-content" tabindex="-1">
         <!-- 首页英雄区域：展示网站主要介绍和CTA按钮 -->
         <section class="hero">
             <div class="container">
@@ -105,11 +83,11 @@
                 <div class="hero-search">
                     <div class="search-container">
                         <div class="search-box">
-                            <input type="text" class="search-input" id="hero-search-input" placeholder="搜索教程内容...">
-                            <button class="search-button" id="hero-search-button">
+                            <input type="text" class="search-input" id="hero-search-input" placeholder="搜索教程内容..." aria-label="搜索教程内容">
+                            <button class="search-button" id="hero-search-button" aria-label="搜索">
                                 <i class="icon-search"></i>
                             </button>
-                            <button class="search-clear" id="hero-search-clear" style="display: none;">
+                            <button class="search-clear" id="hero-search-clear" style="display: none;" aria-label="清除搜索">
                                 <i class="icon-clear"></i>
                             </button>
                         </div>
@@ -169,43 +147,36 @@
                     <h4>快速链接</h4>
                     <ul>
                         <li><a href="index.html">首页</a></li>
-                        <li><a href="docs/">教程索引</a></li>
-                        <li><a href="docs/viewer.html?file=DPapyru-ForNewModder.md">入门指南</a></li>
-                        <li><a href="#">基础概念</a></li>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                        <li><a href="docs/index.html">教程索引</a></li>
+                        <li><a href="docs/viewer.html?file=Modder入门/DPapyru-给新人的前言.md">入门指南</a></li>
+                        <li><a href="docs/index.html">基础概念</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                     </ul>
                 </div>
                 <!-- 底部第三栏：联系我们 -->
                 <div class="footer-section">
                     <h4>联系我们</h4>
                     <ul>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li><a href="mailto:contact@example.com">邮箱</a></li>
                     </ul>
                 </div>
             </div>
             <!-- 底部版权信息 -->
             <div class="footer-bottom">
-                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC
+                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC
                         BY 4.0</a> 许可协议。</p>
             </div>
         </div>
     </footer>
 
     <!-- 加载JavaScript文件 -->
+    <script src="assets/js/site-config.js"></script>
     <script src="assets/js/theme-toggle.js"></script> <!-- 主题切换功能脚本 -->
     <script src="assets/js/main.js"></script> <!-- 主要功能脚本 -->
     <script src="assets/js/search.js"></script> <!-- 搜索功能脚本 -->
     <script src="assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
     <script src="assets/js/latest-updates.js"></script> <!-- 最新更新功能脚本 -->
-    
-    <!-- 初始化主题切换功能 -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 主题切换功能已在 theme-toggle.js 中自动初始化
-            // 这里不需要额外的初始化代码
-        });
-    </script>
 
 </body>
 

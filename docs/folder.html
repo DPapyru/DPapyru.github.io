@@ -18,12 +18,27 @@
     <meta property="og:description" content="泰拉瑞亚Mod制作教程文档文件夹内容，提供特定文件夹下的所有文档列表">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://dpapyru.github.io/docs/folder.html">
+    <meta property="og:image" content="https://dpapyru.github.io/assets/imgs/Green_tModLoader.png">
+    <meta property="og:site_name" content="泰拉瑞亚Mod制作教程">
+    <meta property="og:locale" content="zh_CN">
+
+    <!-- Twitter Card标签 -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="文件夹内容 - 泰拉瑞亚Mod制作教程">
+    <meta name="twitter:description" content="泰拉瑞亚Mod制作教程文档文件夹内容，提供特定文件夹下的所有文档列表">
+    <meta name="twitter:image" content="https://dpapyru.github.io/assets/imgs/Green_tModLoader.png">
+
+    <!-- 规范URL（实际值会在脚本中根据 ?path 更新） -->
+    <link rel="canonical" href="https://dpapyru.github.io/docs/folder.html">
 
     <!-- 样式和图标 -->
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/prism.min.css">
     <link rel="stylesheet" href="../assets/css/vs2022-theme.css">
     <link rel="icon" type="image/png" href="../assets/imgs/Green_tModLoader.png">
+
+    <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
+    <script src="../assets/js/theme-init.js"></script>
 
     <!-- 自定义样式 -->
     <style>
@@ -451,6 +466,7 @@
 </head>
 
 <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
     <!-- 网站头部导航区域 -->
     <header class="site-header">
         <div class="container">
@@ -463,15 +479,14 @@
                     </a>
                 </div>
                 <!-- 主导航菜单 -->
-                <nav class="main-nav">
-                    <ul class="nav-list">
-                        <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
-                        <li class="nav-item"><a href="index.html" class="nav-link">文档</a></li>
-                        <li class="nav-item"><a href="editor.html" class="nav-link">文档编辑器</a></li>
-                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
-                                target="_blank">GitHub</a></li>
-                        <li class="nav-item" id="theme-toggle-container">
-                            <button class="theme-toggle-btn nav-link" aria-label="切换主题">
+	                <nav class="main-nav" id="main-nav">
+	                    <ul class="nav-list">
+	                        <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
+	                        <li class="nav-item"><a href="index.html" class="nav-link active" aria-current="page">文档</a></li>
+	                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
+	                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
+	                        <li class="nav-item" id="theme-toggle-container">
+	                            <button class="theme-toggle-btn nav-link" aria-label="切换主题">
                                 <span class="theme-icon">🌙</span>
                                 <span class="theme-text">深色</span>
                             </button>
@@ -479,7 +494,7 @@
                     </ul>
                 </nav>
                 <!-- 移动端菜单切换按钮 -->
-                <button class="mobile-menu-toggle" aria-label="切换菜单">
+                <button class="mobile-menu-toggle" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
                     <span class="bar"></span>
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -489,7 +504,7 @@
     </header>
 
     <!-- 文件夹页面主要内容区域 -->
-    <main>
+    <main id="main-content" tabindex="-1">
         <!-- 面包屑导航 -->
         <section class="breadcrumb">
             <div class="container">
@@ -549,14 +564,14 @@
                             </select>
                         </div>
                         <div class="view-toggle">
-                            <button id="grid-view-btn" class="active">网格视图</button>
-                            <button id="list-view-btn">列表视图</button>
+                            <button id="grid-view-btn" class="active" type="button" aria-pressed="true">网格视图</button>
+                            <button id="list-view-btn" type="button" aria-pressed="false">列表视图</button>
                         </div>
                     </div>
                     <div class="search-container">
                         <input type="text" id="doc-search" class="search-input" placeholder="搜索此文件夹下的文档..."
-                            autocomplete="off">
-                        <button class="search-button" id="search-btn">🔍</button>
+                            aria-label="搜索此文件夹下的文档" autocomplete="off">
+                        <button class="search-button" id="search-btn" type="button" aria-label="搜索">🔍</button>
                         <div class="search-results" id="search-results"></div>
                     </div>
                 </div>
@@ -589,31 +604,31 @@
                     <h4>关于项目</h4>
                     <p>这是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛。</p>
                 </div>
-                <div class="footer-section">
-                    <h4>快速链接</h4>
-                    <ul>
-                        <li><a href="../index.html">首页</a></li>
-                        <li><a href="index.html">文档</a></li>
-                        <li><a href="editor.html">文档编辑器</a></li>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
-                    </ul>
-                </div>
+	                <div class="footer-section">
+	                    <h4>快速链接</h4>
+	                    <ul>
+	                        <li><a href="../index.html">首页</a></li>
+	                        <li><a href="index.html">文档</a></li>
+	                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+	                    </ul>
+	                </div>
                 <div class="footer-section">
                     <h4>联系我们</h4>
                     <ul>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li><a href="mailto:contact@example.com">邮箱</a></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC
+                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC
                         BY 4.0</a> 许可协议。</p>
             </div>
         </div>
     </footer>
 
     <!-- 加载JavaScript文件 -->
+    <script src="../assets/js/site-config.js"></script>
     <script src="../assets/js/main.js"></script>
     <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
     <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
@@ -622,50 +637,36 @@
     <script src="../assets/js/navigation.js"></script>
     <script src="../assets/js/theme-toggle.js"></script> <!-- 主题切换功能 -->
 
-    <script>
-        // 文档配置和元数据管理 - 使用页面级变量避免冲突
-        let FOLDER_DOC_CONFIG = null;
-        let ALL_DOCS = [];
-        let FOLDER_DOCS = [];
-        let CURRENT_FOLDER = '';
+	    <script>
+	        // 文档配置和元数据管理 - 使用页面级变量避免冲突
+	        let FOLDER_DOC_CONFIG = null;
+	        let ALL_DOCS = [];
+	        let FOLDER_DOCS = [];
+	        let CURRENT_FOLDER = '';
+
+	        function escapeHtml(text) {
+	            return String(text)
+	                .replace(/&/g, '&amp;')
+	                .replace(/</g, '&lt;')
+	                .replace(/>/g, '&gt;')
+	                .replace(/"/g, '&quot;')
+	                .replace(/'/g, '&#39;');
+	        }
+
+	        function normalizeDifficultyClass(difficulty) {
+	            const allowed = ['beginner', 'intermediate', 'advanced'];
+	            if (difficulty === 'all') return 'beginner';
+	            return allowed.includes(difficulty) ? difficulty : 'beginner';
+	        }
 
         // 页面加载完成后执行
         document.addEventListener('DOMContentLoaded', function () {
             console.log('=== docs/folder.html: 页面加载完成 ===');
 
-            // 初始化移动端菜单
-            initMobileMenu();
-
-            // 应用保存的主题偏好
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                document.documentElement.setAttribute('data-theme', 'dark');
-            }
-
-            // 初始化主题切换功能 - 使用标准的ThemeToggle类
-            if (typeof ThemeToggle !== 'undefined') {
-                // 创建ThemeToggle实例，但禁用按钮创建以使用页面中已有的按钮
-                const themeToggle = new ThemeToggle();
-                // 重写createThemeToggleButton方法，防止创建新按钮
-                themeToggle.createThemeToggleButton = function() {
-                    // 什么都不做，因为我们已经有按钮了
-                };
-                
-                // 确保现有按钮与ThemeToggle类正确关联
-                const existingButton = document.querySelector('.theme-toggle-btn');
-                if (existingButton) {
-                    // 移除可能存在的事件监听器
-                    const newButton = existingButton.cloneNode(true);
-                    existingButton.parentNode.replaceChild(newButton, existingButton);
-                    
-                    // 添加ThemeToggle的事件处理
-                    newButton.addEventListener('click', () => themeToggle.toggleTheme());
-                }
-            }
-
             // 获取URL参数中的文件夹路径
             const folderPath = getFolderPathFromURL();
             CURRENT_FOLDER = folderPath;
+            updateFolderSeoMeta(folderPath);
 
             // 初始化文档配置
             initializeDocumentConfig().then(() => {
@@ -696,19 +697,51 @@
             return urlParams.get('path') || '';
         }
 
+        function setMetaContent(selector, content) {
+            const el = document.querySelector(selector);
+            if (el && content) el.setAttribute('content', content);
+        }
+
+        function setCanonical(href) {
+            let link = document.querySelector('link[rel="canonical"]');
+            if (!link) {
+                link = document.createElement('link');
+                link.setAttribute('rel', 'canonical');
+                document.head.appendChild(link);
+            }
+            link.setAttribute('href', href);
+        }
+
+        function updateFolderSeoMeta(folderPath) {
+            const baseUrl = 'https://dpapyru.github.io/docs/folder.html';
+            const url = folderPath ? `${baseUrl}?path=${encodeURIComponent(folderPath)}` : baseUrl;
+            const title = folderPath ? `${folderPath} - 文件夹内容 - 泰拉瑞亚Mod制作教程` : '文件夹内容 - 泰拉瑞亚Mod制作教程';
+            const description = folderPath
+                ? `泰拉瑞亚Mod制作教程：浏览 "${folderPath}" 下的文档列表。`
+                : '泰拉瑞亚Mod制作教程文档文件夹内容，提供特定文件夹下的所有文档列表。';
+
+            document.title = title;
+            setCanonical(url);
+            setMetaContent('meta[name="description"]', description);
+            setMetaContent('meta[property="og:title"]', title);
+            setMetaContent('meta[property="og:description"]', description);
+            setMetaContent('meta[property="og:url"]', url);
+            setMetaContent('meta[name="twitter:title"]', title);
+            setMetaContent('meta[name="twitter:description"]', description);
+        }
+
         // 初始化文档配置
         async function initializeDocumentConfig() {
             try {
-                // 尝试加载配置文件
                 console.log('folder.html: 正在加载配置文件，当前路径:', window.location.pathname);
-                const configResponse = await fetch('./config.json');
-                if (configResponse.ok) {
-                    FOLDER_DOC_CONFIG = await configResponse.json();
-                    console.log('成功加载配置文件:', FOLDER_DOC_CONFIG);
+                if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
+                    FOLDER_DOC_CONFIG = await window.SiteConfig.load();
                 } else {
-                    console.warn('配置文件不存在，使用默认配置');
-                    FOLDER_DOC_CONFIG = generateDefaultConfig();
+                    const configResponse = await fetch('./config.json');
+                    if (!configResponse.ok) throw new Error('无法加载config.json: ' + configResponse.status);
+                    FOLDER_DOC_CONFIG = await configResponse.json();
                 }
+                console.log('成功加载配置文件:', FOLDER_DOC_CONFIG);
             } catch (error) {
                 console.warn('加载配置文件失败，使用默认配置:', error);
                 FOLDER_DOC_CONFIG = generateDefaultConfig();
@@ -1073,8 +1106,8 @@
         }
 
         // 生成文件夹标题和描述
-        function generateFolderHeader(folderPath) {
-            const folderHeader = document.getElementById('folder-header');
+	        function generateFolderHeader(folderPath) {
+	            const folderHeader = document.getElementById('folder-header');
 
             if (!folderHeader) return;
 
@@ -1094,12 +1127,12 @@
                 folderDescription = FOLDER_DOC_CONFIG.categories[folderPath].description || '';
             }
 
-            // 生成文件夹标题和描述
-            folderHeader.innerHTML = `
-                <h2 class="folder-title">${folderPath}</h2>
-                <p class="folder-description">${folderDescription || `浏览 "${folderPath}" 文件夹下的所有文档`}</p>
-            `;
-        }
+	            // 生成文件夹标题和描述
+	            folderHeader.innerHTML = `
+	                <h2 class="folder-title">${escapeHtml(folderPath)}</h2>
+	                <p class="folder-description">${escapeHtml(folderDescription || `浏览 "${folderPath}" 文件夹下的所有文档`)}</p>
+	            `;
+	        }
 
         // 生成文档列表
         function generateDocumentGrid() {
@@ -1138,45 +1171,45 @@
                     const docCard = document.createElement('div');
                     docCard.className = 'doc-card';
 
-                    const difficultyClass = doc.difficulty === 'all' ? 'beginner' : doc.difficulty;
-                    const difficultyText = getDifficultyText(doc.difficulty);
+	                    const difficultyClass = normalizeDifficultyClass(doc.difficulty);
+	                    const difficultyText = getDifficultyText(doc.difficulty);
 
                     // 生成标签HTML
-                    let tagsHtml = '';
-                    if (doc.tags && doc.tags.length > 0) {
-                        tagsHtml = doc.tags.map(tag => `<span class="doc-tag">${tag}</span>`).join('');
-                    }
+	                    let tagsHtml = '';
+	                    if (doc.tags && doc.tags.length > 0) {
+	                        tagsHtml = doc.tags.map(tag => `<span class="doc-tag">${escapeHtml(tag)}</span>`).join('');
+	                    }
 
                     // 处理描述
-                    let description = '暂无描述';
-                    if (doc.description && typeof doc.description === 'string' && doc.description.trim() !== '') {
-                        description = doc.description;
-                    }
+	                    let description = '暂无描述';
+	                    if (doc.description && typeof doc.description === 'string' && doc.description.trim() !== '') {
+	                        description = doc.description;
+	                    }
 
-                    docCard.innerHTML = `
-                        <div class="doc-card-header">
-                            <h3 class="doc-title">${doc.title}</h3>
-                            <div class="doc-meta">
-                                <div class="doc-meta-item">
-                                    <span class="difficulty-badge ${difficultyClass}">${difficultyText}</span>
-                                </div>
-                                <div class="doc-meta-item">
-                                    <span>👤 ${doc.author}</span>
-                                </div>
-                                <div class="doc-meta-item">
-                                    <span>📅 ${doc.last_updated}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="doc-card-body">
-                            <p class="doc-description">${description}</p>
-                            ${tagsHtml ? `<div class="doc-tags">${tagsHtml}</div>` : ''}
-                        </div>
-                        <div class="doc-card-footer">
-                            <div class="doc-author">作者: ${doc.author}</div>
-                            <a href="viewer.html?file=${encodeURIComponent(doc.path)}" class="doc-link">查看文档</a>
-                        </div>
-                    `;
+	                    docCard.innerHTML = `
+	                        <div class="doc-card-header">
+	                            <h3 class="doc-title">${escapeHtml(doc.title)}</h3>
+	                            <div class="doc-meta">
+	                                <div class="doc-meta-item">
+	                                    <span class="difficulty-badge ${difficultyClass}">${escapeHtml(difficultyText)}</span>
+	                                </div>
+	                                <div class="doc-meta-item">
+	                                    <span>👤 ${escapeHtml(doc.author)}</span>
+	                                </div>
+	                                <div class="doc-meta-item">
+	                                    <span>📅 ${escapeHtml(doc.last_updated)}</span>
+	                                </div>
+	                            </div>
+	                        </div>
+	                        <div class="doc-card-body">
+	                            <p class="doc-description">${escapeHtml(description)}</p>
+	                            ${tagsHtml ? `<div class="doc-tags">${tagsHtml}</div>` : ''}
+	                        </div>
+	                        <div class="doc-card-footer">
+	                            <div class="doc-author">作者: ${escapeHtml(doc.author)}</div>
+	                            <a href="viewer.html?file=${encodeURIComponent(doc.path)}" class="doc-link">查看文档</a>
+	                        </div>
+	                    `;
 
                     docGrid.appendChild(docCard);
                 });
@@ -1278,8 +1311,8 @@
             });
 
             // 显示搜索结果
-            function displaySearchResults(results) {
-                searchResults.innerHTML = '';
+	        function displaySearchResults(results) {
+	            searchResults.innerHTML = '';
 
                 if (results.length === 0) {
                     searchResults.innerHTML = `
@@ -1289,14 +1322,14 @@
                         </div>
                     `;
                 } else {
-                    results.forEach(result => {
-                        const resultItem = document.createElement('div');
-                        resultItem.className = 'search-result-item';
+	                results.forEach(result => {
+	                    const resultItem = document.createElement('div');
+	                    resultItem.className = 'search-result-item';
 
-                        resultItem.innerHTML = `
-                            <div class="search-result-title">${result.title}</div>
-                            <div class="search-result-meta">作者: ${result.author} | 更新: ${result.last_updated}</div>
-                        `;
+	                    resultItem.innerHTML = `
+	                        <div class="search-result-title">${escapeHtml(result.title)}</div>
+	                        <div class="search-result-meta">作者: ${escapeHtml(result.author)} | 更新: ${escapeHtml(result.last_updated)}</div>
+	                    `;
 
                         resultItem.addEventListener('click', function () {
                             window.location.href = `viewer.html?file=${encodeURIComponent(result.path)}`;
@@ -1517,6 +1550,8 @@
                 docGrid.classList.remove('list-view');
                 gridViewBtn.classList.add('active');
                 listViewBtn.classList.remove('active');
+                gridViewBtn.setAttribute('aria-pressed', 'true');
+                listViewBtn.setAttribute('aria-pressed', 'false');
             });
 
             // 列表视图切换事件
@@ -1524,6 +1559,8 @@
                 docGrid.classList.add('list-view');
                 listViewBtn.classList.add('active');
                 gridViewBtn.classList.remove('active');
+                listViewBtn.setAttribute('aria-pressed', 'true');
+                gridViewBtn.setAttribute('aria-pressed', 'false');
             });
 
             // 初始应用过滤器和排序

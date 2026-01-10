@@ -10,7 +10,10 @@
     <!-- SEO优化标签 -->
     <meta name="description" content="泰拉瑞亚Mod制作教程搜索结果页面，支持高级搜索、搜索历史和智能建议。">
     <meta name="keywords" content="泰拉瑞亚,Mod,教程,搜索,tModLoader,C#,游戏开发">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="noindex, follow">
+
+    <!-- 规范URL（避免搜索结果页被误收录） -->
+    <link rel="canonical" href="https://dpapyru.github.io/search-results.html">
 
     <!-- 样式和图标 -->
     <link rel="stylesheet" href="assets/css/style.css">
@@ -19,13 +22,7 @@
     <link rel="icon" type="image/png" href="assets/imgs/Green_tModLoader.png">
     
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
-    <script>
-        // 主题切换早期加载脚本 - 防止页面加载时主题闪烁
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
-    </script>
+    <script src="assets/js/theme-init.js"></script>
 
     <!-- 搜索结果页面专用样式 -->
     <style>
@@ -443,6 +440,7 @@
 </head>
 
 <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
     <!-- 网站头部导航区域 -->
     <header class="site-header">
         <div class="container">
@@ -456,18 +454,18 @@
                     </a>
                 </div>
                 <!-- 主导航菜单 -->
-                <nav class="main-nav">
+                <nav class="main-nav" id="main-nav">
                     <ul class="nav-list">
                         <li class="nav-item"><a href="index.html" class="nav-link">首页</a></li>
                         <li class="nav-item"><a href="docs/index.html" class="nav-link">文档</a></li>
-                        <li class="nav-item"><a href="search-results.html" class="nav-link active">搜索</a></li>
+                        <li class="nav-item"><a href="search-results.html" class="nav-link active" aria-current="page">搜索</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
-                                target="_blank">GitHub</a></li>
+                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <!-- 主题切换按钮将通过 theme-toggle.js 自动添加 -->
                     </ul>
                 </nav>
                 <!-- 移动端菜单切换按钮 -->
-                <button class="mobile-menu-toggle" aria-label="切换菜单">
+                <button class="mobile-menu-toggle" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
                     <span class="bar"></span>
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -477,7 +475,7 @@
     </header>
 
     <!-- 搜索页面主要内容区域 -->
-    <main class="search-page">
+    <main class="search-page" id="main-content" tabindex="-1">
         <div class="container">
             <!-- 搜索页面头部 -->
             <div class="search-page-header">
@@ -492,8 +490,8 @@
                 <!-- 搜索输入框 -->
                 <div class="search-input-group">
                     <input type="text" class="search-input-large" id="advanced-search-input"
-                        placeholder="输入搜索关键词，支持高级语法..." autocomplete="off">
-                    <button class="search-button-large" id="advanced-search-button">
+                        placeholder="输入搜索关键词，支持高级语法..." aria-label="搜索教程" autocomplete="off">
+                    <button class="search-button-large" id="advanced-search-button" type="button" aria-label="搜索">
                         <i class="icon-search"></i>
                     </button>
                     <div class="search-suggestions-page" id="advanced-search-suggestions"></div>
@@ -505,12 +503,6 @@
                         <label class="search-option-label" for="search-category">分类</label>
                         <select class="search-option-select" id="search-category">
                             <option value="">全部分类</option>
-                            <option value="01-入门指南">入门指南</option>
-                            <option value="02-基础概念">基础概念</option>
-                            <option value="03-内容创建">内容创建</option>
-                            <option value="04-高级开发">高级开发</option>
-                            <option value="05-专题主题">专题主题</option>
-                            <option value="06-资源参考">资源参考</option>
                         </select>
                     </div>
                     <div class="search-option-group">
@@ -611,43 +603,37 @@
                     <h4>快速链接</h4>
                     <ul>
                         <li><a href="index.html">首页</a></li>
-                        <li><a href="docs/tutorial-index.md">教程索引</a></li>
-                        <li><a href="docs/01-入门指南/README.md">入门指南</a></li>
-                        <li><a href="docs/02-基础概念/README.md">基础概念</a></li>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                        <li><a href="docs/index.html">教程索引</a></li>
+                        <li><a href="docs/viewer.html?file=Modder入门/DPapyru-给新人的前言.md">入门指南</a></li>
+                        <li><a href="docs/index.html">基础概念</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                     </ul>
                 </div>
                 <!-- 底部第三栏：联系我们 -->
                 <div class="footer-section">
                     <h4>联系我们</h4>
                     <ul>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li><a href="mailto:contact@example.com">邮箱</a></li>
                     </ul>
                 </div>
             </div>
             <!-- 底部版权信息 -->
             <div class="footer-bottom">
-                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC
+                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC
                         BY 4.0</a> 许可协议。</p>
             </div>
         </div>
     </footer>
 
     <!-- 加载JavaScript文件 -->
+    <script src="assets/js/site-config.js"></script>
     <script src="assets/js/theme-toggle.js"></script> <!-- 主题切换功能脚本 -->
     <script src="assets/js/main.js"></script>
-    <script src="assets/js/search.js"></script>
     <script src="assets/js/navigation.js"></script>
 
     <!-- 搜索结果页面专用脚本 -->
     <script>
-        // 初始化主题切换功能
-        document.addEventListener('DOMContentLoaded', function() {
-            // 主题切换功能已在 theme-toggle.js 中自动初始化
-            // 这里不需要额外的初始化代码
-        });
-        
         // 搜索结果页面功能
         class SearchResultsPage {
             constructor() {
@@ -662,6 +648,7 @@
             async init() {
                 this.bindEvents();
                 await this.loadSearchIndex();
+                await this.populateFiltersFromConfig();
                 this.displaySearchHistory();
 
                 // 如果URL中有查询参数，执行搜索
@@ -755,6 +742,12 @@
             // 加载搜索索引
             async loadSearchIndex() {
                 try {
+                    const loaded = await this.loadSearchIndexFromJson();
+                    if (loaded) {
+                        console.log(`已从 search-index.json 加载索引，共 ${this.searchIndex.length} 个教程`);
+                        return;
+                    }
+
                     // 首先尝试从config.json获取文档列表
                     let tutorialFiles = await this.getTutorialFilesFromConfig();
 
@@ -766,15 +759,16 @@
                     // 为每个文件创建索引
                     for (const file of tutorialFiles) {
                         try {
-                            const response = await fetch(file); // 使用fetch获取文件内容
+                            const response = await fetch(encodeURI(file)); // 使用fetch获取文件内容（兼容空格/中文路径）
                             if (!response.ok) continue;
 
                             const content = await response.text(); // 使用text()方法获取文件内容
                             const metadata = await this.parseMetadataWithConfig(content, file.split('/').pop()); // 使用parseMetadataWithConfig方法解析文件元数据
                             const plainText = this.stripMarkdown(content); // 使用stripMarkdown方法去除Markdown格式
 
-                            // 更新URL，使其指向viewer.html并加载相应的文件
-                            const viewerUrl = `docs/viewer.html?file=${file.replace('docs/', '').split('/').pop()}`;
+                            // 更新URL，使其指向viewer.html并加载相应的文件（保留完整相对路径）
+                            const relativePath = file.replace(/^docs\\//, '');
+                            const viewerUrl = `docs/viewer.html?file=${encodeURIComponent(relativePath)}`;
                             console.log('更新后的URL:', viewerUrl);
 
                             this.searchIndex.push({
@@ -787,7 +781,7 @@
                                 time: metadata.time || metadata.estimated_time || '未知',
                                 author: metadata.author || '未知',
                                 date: metadata.date || metadata.last_updated || '未知',
-                                path: metadata.path || ''
+                                path: metadata.path || relativePath
                             });
                         } catch (error) {
                             console.warn(`无法加载文件 ${file}:`, error);
@@ -800,14 +794,50 @@
                 }
             }
 
+            getViewerBase() {
+                return (window.SiteUtils && typeof window.SiteUtils.getViewerBase === 'function')
+                    ? window.SiteUtils.getViewerBase()
+                    : 'docs/viewer.html';
+            }
+
+            async loadSearchIndexFromJson() {
+                try {
+                    const response = await fetch('assets/search-index.json');
+                    if (!response.ok) return false;
+                    const payload = await response.json();
+                    if (!payload || !Array.isArray(payload.docs)) return false;
+
+                    const viewerBase = this.getViewerBase();
+                    this.searchIndex = payload.docs.map(doc => {
+                        const relativePath = doc.path || doc.filename;
+                        return {
+                            title: doc.title || '',
+                            url: `${viewerBase}?file=${encodeURIComponent(relativePath)}`,
+                            content: doc.content || '',
+                            description: doc.description || '',
+                            category: doc.category || '未分类',
+                            difficulty: doc.difficulty || '未知',
+                            time: doc.time || '未知',
+                            author: doc.author || '未知',
+                            date: doc.last_updated || '未知',
+                            path: relativePath
+                        };
+                    });
+
+                    return this.searchIndex.length > 0;
+                } catch (error) {
+                    console.warn('search-index.json 加载失败，回退到逐文件索引:', error);
+                    return false;
+                }
+            }
+
             // 从config.json获取所有教程文件
             async getTutorialFilesFromConfig() {
                 try {
-                    const response = await fetch('docs/config.json');
-                    if (!response.ok) {
-                        throw new Error(`无法加载config.json: ${response.status}`);
-                    }
-                    const config = await response.json();
+                    const config = await (window.SiteConfig ? window.SiteConfig.load() : fetch('docs/config.json').then(r => {
+                        if (!r.ok) throw new Error(`无法加载config.json: ${r.status}`);
+                        return r.json();
+                    }));
 
                     // 从config.json中提取所有文档文件
                     const documents = [];
@@ -838,14 +868,46 @@
 
             // 获取所有教程文件（默认后备方案）
             async getTutorialFiles() {
-                // 返回所有教程文件的路径 - 更新为新的扁平化文档结构
+                // 返回所有教程文件的路径（后备方案）
                 return [
-                    'docs/DPapyru-ForNewModder.md',
-                    'docs/DPapyru-ForContributors-Basic.md',
-                    'docs/TopicSystemGuide.md',
-                    'docs/tutorial-index.md',
-                    'docs/test.md'
+                    'docs/Modder入门/DPapyru-给新人的前言.md',
+                    'docs/怎么贡献/DPapyru-贡献者如何编写文章基础.md',
+                    'docs/怎么贡献/TopicSystem使用指南.md'
                 ];
+            }
+
+            async populateFiltersFromConfig() {
+                const searchCategory = document.getElementById('search-category');
+                if (!searchCategory) return;
+
+                try {
+                    const config = await (window.SiteConfig
+                        ? (window.SiteConfig.get() || window.SiteConfig.load())
+                        : fetch('docs/config.json').then(r => {
+                              if (!r.ok) throw new Error(`无法加载config.json: ${r.status}`);
+                              return r.json();
+                          }));
+
+                    if (!config || !config.categories) return;
+
+                    const entries = Object.entries(config.categories);
+                    entries.sort((a, b) => {
+                        const ao = (a[1] && a[1].order != null) ? a[1].order : 999;
+                        const bo = (b[1] && b[1].order != null) ? b[1].order : 999;
+                        if (ao !== bo) return ao - bo;
+                        return String(a[0]).localeCompare(String(b[0]), 'zh-CN');
+                    });
+
+                    searchCategory.innerHTML = '<option value="">全部分类</option>';
+                    entries.forEach(([key, info]) => {
+                        const option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = (info && info.title) ? info.title : key;
+                        searchCategory.appendChild(option);
+                    });
+                } catch (error) {
+                    console.warn('搜索页面：加载分类筛选失败，将使用默认选项', error);
+                }
             }
 
             // 解析文件元数据 - 增强版，支持从config.json获取元数据
@@ -854,9 +916,10 @@
 
                 // 尝试从config.json获取更完整的元数据
                 try {
-                    const response = await fetch('docs/config.json');
-                    if (response.ok) {
-                        const config = await response.json();
+                    const config = await (window.SiteConfig ? window.SiteConfig.load() : fetch('docs/config.json').then(r => {
+                        if (!r.ok) throw new Error(`无法加载config.json: ${r.status}`);
+                        return r.json();
+                    }));
 
                         // 在all_files中查找当前文件
                         const fileInfo = config.all_files.find(file => file.filename === fileName);
@@ -892,7 +955,6 @@
                                 }
                             }
                         }
-                    }
                 } catch (error) {
                     console.warn('从config.json获取元数据失败:', error);
                 }

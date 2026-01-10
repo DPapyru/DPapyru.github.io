@@ -33,8 +33,9 @@ class ThemeToggle {
             }
         });
         
-        // 创建主题切换按钮
+        // 创建或复用主题切换按钮
         this.createThemeToggleButton();
+        this.bindToggleButton();
     }
 
     /**
@@ -105,20 +106,39 @@ class ThemeToggle {
                 
                 const button = document.createElement('button');
                 button.className = 'theme-toggle-btn nav-link';
+                button.type = 'button';
                 button.setAttribute('aria-label', '切换主题');
                 button.innerHTML = `
                     <span class="theme-icon">🌙</span>
                     <span class="theme-text">深色</span>
                 `;
                 
-                button.addEventListener('click', () => this.toggleTheme());
-                
                 li.appendChild(button);
                 mainNav.querySelector('.nav-list').appendChild(li);
                 
                 themeToggleContainer = li;
             }
+        } else {
+            // 页面已有按钮/容器时也要确保能点击切换
+            const existingButton = themeToggleContainer.querySelector('.theme-toggle-btn');
+            if (existingButton) {
+                this.updateToggleButtonState(
+                    document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
+                );
+            }
         }
+    }
+
+    /**
+     * 绑定（或复用）主题切换按钮点击事件
+     */
+    bindToggleButton() {
+        const button = document.querySelector('.theme-toggle-btn');
+        if (!button) return;
+
+        if (button.dataset.themeToggleBound === '1') return;
+        button.addEventListener('click', () => this.toggleTheme());
+        button.dataset.themeToggleBound = '1';
     }
 
     /**
@@ -131,6 +151,8 @@ class ThemeToggle {
         
         const icon = button.querySelector('.theme-icon');
         const text = button.querySelector('.theme-text');
+
+        button.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
         
         if (theme === 'dark') {
             icon.textContent = '☀️';

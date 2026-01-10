@@ -18,6 +18,18 @@
     <meta property="og:description" content="泰拉瑞亚Mod制作教程文档导航，提供完整的教程分类和快速访问链接">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://dpapyru.github.io/docs/">
+    <meta property="og:image" content="https://dpapyru.github.io/assets/imgs/Green_tModLoader.png">
+    <meta property="og:site_name" content="泰拉瑞亚Mod制作教程">
+    <meta property="og:locale" content="zh_CN">
+
+    <!-- Twitter Card标签 -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="文档导航 - 泰拉瑞亚Mod制作教程">
+    <meta name="twitter:description" content="泰拉瑞亚Mod制作教程文档导航，提供完整的教程分类和快速访问链接">
+    <meta name="twitter:image" content="https://dpapyru.github.io/assets/imgs/Green_tModLoader.png">
+
+    <!-- 规范URL -->
+    <link rel="canonical" href="https://dpapyru.github.io/docs/">
     
     <!-- 样式和图标 -->
     <link rel="stylesheet" href="../assets/css/variables.css">
@@ -28,13 +40,7 @@
     <link rel="icon" type="image/png" href="../assets/imgs/Green_tModLoader.png">
     
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
-    <script>
-        // 主题切换早期加载脚本 - 防止页面加载时主题闪烁
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-        })();
-    </script>
+    <script src="../assets/js/theme-init.js"></script>
     
     <!-- 自定义样式 -->
     <style>
@@ -266,6 +272,7 @@
 </head>
 
 <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
     <!-- 网站头部导航区域 -->
     <header class="site-header">
         <div class="container">
@@ -278,17 +285,16 @@
                     </a>
                 </div>
                 <!-- 主导航菜单 -->
-                <nav class="main-nav">
-                    <ul class="nav-list">
-                        <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
-                        <li class="nav-item"><a href="index.html" class="nav-link active">文档</a></li>
-                        <li class="nav-item"><a href="editor.html" class="nav-link">文档编辑器</a></li>
-                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
-                                target="_blank">GitHub</a></li>
-                    </ul>
-                </nav>
+	                <nav class="main-nav" id="main-nav">
+	                    <ul class="nav-list">
+	                        <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
+	                        <li class="nav-item"><a href="index.html" class="nav-link active" aria-current="page">文档</a></li>
+	                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
+	                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
+	                    </ul>
+	                </nav>
                 <!-- 移动端菜单切换按钮 -->
-                <button class="mobile-menu-toggle" aria-label="切换菜单">
+                <button class="mobile-menu-toggle" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
                     <span class="bar"></span>
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -298,7 +304,7 @@
     </header>
 
     <!-- 文档导航主要内容区域 -->
-    <main>
+    <main id="main-content" tabindex="-1">
         <!-- 文档导航英雄区域 -->
         <section class="docs-hero">
             <div class="container">
@@ -339,32 +345,33 @@
                     <h4>关于项目</h4>
                     <p>这是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛。</p>
                 </div>
-                <div class="footer-section">
-                    <h4>快速链接</h4>
-                    <ul>
-                        <li><a href="../index.html">首页</a></li>
-                        <li><a href="index.html">文档</a></li>
-                        <li><a href="editor.html">文档编辑器</a></li>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
-                    </ul>
-                </div>
+	                <div class="footer-section">
+	                    <h4>快速链接</h4>
+	                    <ul>
+	                        <li><a href="../index.html">首页</a></li>
+	                        <li><a href="index.html">文档</a></li>
+	                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+	                    </ul>
+	                </div>
                 <div class="footer-section">
                     <h4>联系我们</h4>
                     <ul>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank">GitHub</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li><a href="mailto:contact@example.com">邮箱</a></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC
+                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC
                         BY 4.0</a> 许可协议。</p>
             </div>
         </div>
     </footer>
 
     <!-- 加载JavaScript文件 -->
+    <script src="../assets/js/site-config.js"></script>
     <script src="../assets/js/main.js"></script> <!-- 主要功能脚本 -->
+    <script src="../assets/js/navigation.js"></script> <!-- 导航增强脚本 -->
     <script src="../assets/js/theme-toggle.js"></script> <!-- 主题切换功能脚本 -->
     <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
     <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
@@ -386,17 +393,7 @@
         // 页面加载完成后执行
         document.addEventListener('DOMContentLoaded', function() {
             console.log('=== docs/index.html: 页面加载完成 ===');
-           
-            // 初始化主题切换功能
-            const themeToggle = new ThemeToggle({
-                targetSelector: '.main-nav .nav-list',
-                position: 'last' // 作为导航菜单的最后一项
-            });
-            themeToggle.init();
-           
-            // 初始化移动端菜单
-            initMobileMenu();
-           
+
             // 初始化文档配置
             initializeDocumentConfig().then(() => {
                 // 生成文档分类卡片
@@ -404,28 +401,32 @@
                
                 // 生成快速链接
                 generateQuickLinks();
-               
-                // 初始化平滑滚动
-                initSmoothScroll();
             });
         });
 
         // 初始化文档配置
         async function initializeDocumentConfig() {
             try {
-                // 尝试加载配置文件
                 console.log('正在加载配置文件，当前路径:', window.location.pathname);
-                const configResponse = await fetch('./config.json');
-                if (configResponse.ok) {
+                if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
+                    window.DOC_CONFIG = await window.SiteConfig.load();
+                } else {
+                    const configResponse = await fetch('./config.json');
+                    if (!configResponse.ok) throw new Error('无法加载config.json: ' + configResponse.status);
                     window.DOC_CONFIG = await configResponse.json();
+                }
+
+                if (typeof DOC_CONFIG !== 'undefined') {
                     DOC_CONFIG = window.DOC_CONFIG;
-                    console.log('成功加载配置文件:', DOC_CONFIG);
+                }
+
+                console.log('成功加载配置文件:', window.DOC_CONFIG);
                     
                     // 从配置文件加载主分类配置
-                    if (DOC_CONFIG.categories) {
+                    if (window.DOC_CONFIG.categories) {
                         MAIN_CATEGORIES = {};
-                        Object.keys(DOC_CONFIG.categories).forEach(categoryKey => {
-                            const category = DOC_CONFIG.categories[categoryKey];
+                        Object.keys(window.DOC_CONFIG.categories).forEach(categoryKey => {
+                            const category = window.DOC_CONFIG.categories[categoryKey];
                             
                             // 检查是否是特殊分类
                             const isSpecial = ["怎么贡献", "Modder入门"].includes(categoryKey);
@@ -443,10 +444,10 @@
                     }
                     
                     // 从配置文件加载主题领域配置
-                    if (DOC_CONFIG.topics) {
+                    if (window.DOC_CONFIG.topics) {
                         TOPIC_AREAS = {};
-                        Object.keys(DOC_CONFIG.topics).forEach(topicKey => {
-                            const topic = DOC_CONFIG.topics[topicKey];
+                        Object.keys(window.DOC_CONFIG.topics).forEach(topicKey => {
+                            const topic = window.DOC_CONFIG.topics[topicKey];
                             TOPIC_AREAS[topicKey] = {
                                 title: topic.title,
                                 description: topic.description,
@@ -457,16 +458,13 @@
                         });
                         console.log('成功加载主题配置:', TOPIC_AREAS);
                     }
-                } else {
-                    console.warn('配置文件不存在，使用默认配置');
-                    window.DOC_CONFIG = generateDefaultConfig();
-                    DOC_CONFIG = window.DOC_CONFIG;
-                }
             } catch (error) {
                 console.warn('加载配置文件失败，使用默认配置:', error);
                 window.DOC_CONFIG = generateDefaultConfig();
-                DOC_CONFIG = window.DOC_CONFIG;
+                if (typeof DOC_CONFIG !== 'undefined') {
+                    DOC_CONFIG = window.DOC_CONFIG;
                 }
+            }
             
             // 从配置文件加载文档列表，而不是扫描目录
             await loadDocumentsFromConfig();
@@ -973,9 +971,19 @@
             };
         }
 
-        // 生成文档分类卡片
-        function generateCategoryCards() {
-            const categoryGrid = document.getElementById('category-grid');
+	        // 生成文档分类卡片
+	        function generateCategoryCards() {
+	            const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
+	                ? window.SiteUtils.escapeHtml
+	                : (v) => String(v);
+
+	            const normalizeDifficultyClass = (difficulty) => {
+	                const allowed = ['beginner', 'intermediate', 'advanced'];
+	                if (difficulty === 'all') return 'beginner';
+	                return allowed.includes(difficulty) ? difficulty : 'beginner';
+	            };
+
+	            const categoryGrid = document.getElementById('category-grid');
             
             // 清空现有内容
             categoryGrid.innerHTML = '';
@@ -1010,11 +1018,11 @@
                     window.location.href = `folder.html?path=${encodeURIComponent(categoryKey)}`;
                 });
                 
-                categoryHeader.innerHTML = `
-                    <h3 class="category-title">${category.title}</h3>
-                    <p class="category-description">${category.description}</p>
-                    <div class="category-icon">${category.icon}</div>
-                `;
+	                categoryHeader.innerHTML = `
+	                    <h3 class="category-title">${esc(category.title)}</h3>
+	                    <p class="category-description">${esc(category.description)}</p>
+	                    <div class="category-icon">${esc(category.icon)}</div>
+	                `;
                 
                 // 创建分类内容
                 const categoryContent = document.createElement('div');
@@ -1049,22 +1057,22 @@
                         
                         const docLink = document.createElement('a');
                         docLink.className = 'doc-link';
-                        docLink.href = `viewer.html?file=${doc.path || doc.filename}`;
+                        docLink.href = `viewer.html?file=${encodeURIComponent(doc.path || doc.filename)}`;
                         docLink.title = `${doc.author} - ${doc.description || doc.title}`;
                         
-                        const difficultyClass = doc.difficulty === 'all' ? 'beginner' : doc.difficulty;
-                        const difficultyText = getDifficultyText(doc.difficulty);
+	                        const difficultyClass = normalizeDifficultyClass(doc.difficulty);
+	                        const difficultyText = getDifficultyText(doc.difficulty);
                         
-                        docLink.innerHTML = `
-                            <div class="doc-icon">${topic ? topic.icon : '📄'}</div>
-                            <div class="doc-info">
-                                <div class="doc-title">${doc.title}</div>
-                                <div class="doc-meta">
-                                    <span class="difficulty-badge ${difficultyClass}">${difficultyText}</span>
-                                    <span>👤 ${doc.author}</span>
-                                </div>
-                            </div>
-                        `;
+	                        docLink.innerHTML = `
+	                            <div class="doc-icon">${esc(topic ? topic.icon : '📄')}</div>
+	                            <div class="doc-info">
+	                                <div class="doc-title">${esc(doc.title)}</div>
+	                                <div class="doc-meta">
+	                                    <span class="difficulty-badge ${difficultyClass}">${esc(difficultyText)}</span>
+	                                    <span>👤 ${esc(doc.author)}</span>
+	                                </div>
+	                            </div>
+	                        `;
                         
                         docItem.appendChild(docLink);
                         docList.appendChild(docItem);
@@ -1204,14 +1212,14 @@
                     case 'view-all':
                         // 查找第一个文档
                         if (ALL_DOCS.length > 0) {
-                            buttonLink = `viewer.html?file=${ALL_DOCS[0].filename}`;
+                            buttonLink = `viewer.html?file=${encodeURIComponent(ALL_DOCS[0].path || ALL_DOCS[0].filename)}`;
                         }
                         break;
                     case 'get-started':
                         // 查找入门分类的第一个文档
                         const beginnerDoc = ALL_DOCS.find(doc => doc.category === '入门');
                         if (beginnerDoc) {
-                            buttonLink = `viewer.html?file=${beginnerDoc.path || beginnerDoc.filename}`;
+                            buttonLink = `viewer.html?file=${encodeURIComponent(beginnerDoc.path || beginnerDoc.filename)}`;
                         }
                         break;
                     case 'api-reference':
@@ -1220,7 +1228,7 @@
                             doc.category === '高级' || doc.category === '进阶'
                         );
                         if (apiDoc) {
-                            buttonLink = `viewer.html?file=${apiDoc.path || apiDoc.filename}`;
+                            buttonLink = `viewer.html?file=${encodeURIComponent(apiDoc.path || apiDoc.filename)}`;
                         }
                         break;
                     case 'community':
@@ -1233,7 +1241,7 @@
                     <h3 class="quick-link-title">${linkConfig.title}</h3>
                     <p class="quick-link-description">${linkConfig.description}</p>
                     <a href="${buttonLink}" class="btn btn-small ${linkConfig.buttonClass}"
-                       ${linkConfig.action === 'community' ? 'target="_blank"' : ''}>
+                       ${linkConfig.action === 'community' ? 'target="_blank" rel="noopener noreferrer"' : ''}>
                         ${linkConfig.action === 'view-all' ? '查看索引' :
                           linkConfig.action === 'get-started' ? '开始学习' :
                           linkConfig.action === 'api-reference' ? '查看API' : 'GitHub'}

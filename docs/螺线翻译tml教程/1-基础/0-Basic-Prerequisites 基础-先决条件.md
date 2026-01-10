@@ -45,5 +45,5 @@
 Aseprite 是专为像素艺术设计的，使用起来相当简单直观。
 
 ## 制作一个简单的模组
-现在你作好准备了, 请访问[基础-模组开发指引](https://dpapyru.github.io/LogSpiral/viewer.html?file=1-%E5%9F%BA%E7%A1%80/EX2-Basic-tModLoader-Modding-Guide%20%E5%9F%BA%E7%A1%80-%E6%A8%A1%E7%BB%84%E5%BC%80%E5%8F%91%E6%8C%87%E5%BC%95.md)，然后跟随这篇教程中的每一步，在尝试任何其它基础级指引之前  
+现在你作好准备了, 请访问[基础-模组开发指引](https://dpapyru.github.io/docs/viewer.html?file=螺线翻译tml教程/1-基础/EX2-Basic-tModLoader-Modding-Guide%20基础-模组开发指引.md)，然后跟随这篇教程中的每一步，在尝试任何其它基础级指引之前  
 [译注-此处原文](https://github.com/tModLoader/tModLoader/wiki/Basic-tModLoader-Modding-Guide)

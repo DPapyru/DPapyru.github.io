@@ -49,13 +49,27 @@ jobs:
             echo "No package.json found, skipping npm install"
           fi
           
-      - name: Generate tutorial index (if needed)
+      - name: Build generated assets (if needed)
         run: |
-          if [ -f generate-index.js ]; then
-            echo "Generating tutorial index..."
+          if [ -f package.json ]; then
+            echo "Running npm build..."
+            npm run build
+          elif [ -f generate-index.js ]; then
+            echo "Running generate-index.js..."
             node generate-index.js
           else
-            echo "No generate-index.js found, skipping index generation"
+            echo "No build step found, skipping"
+          fi
+
+      - name: Verify generated files are committed (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Generated files are out of date. Please run: npm run build (or node generate-index.js) and commit the changes."
+            echo ""
+            echo "Changed files:"
+            git status --porcelain
+            exit 1
           fi
           
       - name: Prepare build directory

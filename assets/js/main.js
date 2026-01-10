@@ -46,31 +46,23 @@ document.addEventListener('DOMContentLoaded', function () {
  */
 async function initializeConfig() {
     try {
-        // 检查当前页面路径，决定配置文件的相对路径
-        const currentPath = window.location.pathname;
-        let configPath = './config.json';
-        
-        // 如果在docs目录下，直接使用config.json
-        if (currentPath.includes('/docs/')) {
-            configPath = './config.json';
-        } else if (currentPath.includes('/LogSpiral/')) {
-            configPath = './LogSpiral/docs/config.json';
-        } else {
-            // 在根目录下，尝试docs/config.json
-            configPath = './docs/config.json';
+        if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
+            DOC_CONFIG = await window.SiteConfig.load();
+            PATH_REDIRECTS = window.PATH_REDIRECTS || DOC_CONFIG.pathMappings || {};
+            console.log('成功加载配置文件 (SiteConfig):', DOC_CONFIG);
+            return;
         }
-        
+
+        // 兼容：如果 SiteConfig 未加载，则退回到旧逻辑
+        const currentPath = window.location.pathname;
+        const configPath = currentPath.includes('/docs/') ? './config.json' : './docs/config.json';
+
         console.log('尝试加载配置文件，路径:', configPath);
         const configResponse = await fetch(configPath);
-        if (configResponse.ok) {
-            DOC_CONFIG = await configResponse.json();
-            PATH_REDIRECTS = DOC_CONFIG.pathMappings || {};
-            console.log('成功加载配置文件:', DOC_CONFIG);
-        } else {
-            console.warn('无法加载配置文件，使用默认配置');
-            DOC_CONFIG = generateDefaultConfig();
-            PATH_REDIRECTS = {};
-        }
+        if (!configResponse.ok) throw new Error('无法加载config.json: ' + configResponse.status);
+        DOC_CONFIG = await configResponse.json();
+        PATH_REDIRECTS = DOC_CONFIG.pathMappings || {};
+        console.log('成功加载配置文件:', DOC_CONFIG);
     } catch (error) {
         console.error('加载配置文件时出错:', error);
         DOC_CONFIG = generateDefaultConfig();
@@ -148,8 +140,17 @@ function initMobileMenu() {
     const mainNav = document.querySelector('.main-nav');
 
     if (mobileMenuToggle && mainNav) {
+        // 初始化无障碍属性
+        if (!mobileMenuToggle.hasAttribute('aria-expanded')) {
+            mobileMenuToggle.setAttribute('aria-expanded', 'false');
+        }
+        if (mainNav.id) {
+            mobileMenuToggle.setAttribute('aria-controls', mainNav.id);
+        }
+
         mobileMenuToggle.addEventListener('click', function () {
             mainNav.classList.toggle('active');
+            mobileMenuToggle.setAttribute('aria-expanded', mainNav.classList.contains('active') ? 'true' : 'false');
 
             // 切换汉堡菜单图标
             const bars = mobileMenuToggle.querySelectorAll('.bar');
@@ -169,8 +170,21 @@ function initMobileMenu() {
         document.addEventListener('click', function (event) {
             if (!mobileMenuToggle.contains(event.target) && !mainNav.contains(event.target)) {
                 mainNav.classList.remove('active');
+                mobileMenuToggle.setAttribute('aria-expanded', 'false');
 
                 // 重置汉堡菜单图标
+                const bars = mobileMenuToggle.querySelectorAll('.bar');
+                bars.forEach(bar => {
+                    bar.style.transform = 'none';
+                    bar.style.opacity = '1';
+                });
+            }
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && mainNav.classList.contains('active')) {
+                mainNav.classList.remove('active');
+                mobileMenuToggle.setAttribute('aria-expanded', 'false');
                 const bars = mobileMenuToggle.querySelectorAll('.bar');
                 bars.forEach(bar => {
                     bar.style.transform = 'none';
@@ -408,13 +422,9 @@ function initRouter() {
     const isExplicitHtml = currentPath.endsWith('.html') || currentPath.includes('.html?');
     console.log(`是否为明确HTML页面: ${isExplicitHtml}`);
 
-    // 检查是否为需要加载Markdown的页面 - 更新为新的扁平化文档结构
-    const isMarkdownPage = currentPath.includes('/docs/') && !currentPath.includes('.html') ||
-        currentPath.endsWith('.md') ||
-        (currentPath.includes('tutorial-index') && !currentPath.includes('.html')) ||
-        (currentPath.includes('DPapyru-ForNewModder') && !currentPath.includes('.html')) ||
-        (currentPath.includes('DPapyru-ForContributors-Basic') && !currentPath.includes('.html')) ||
-        (currentPath.includes('TopicSystemGuide') && !currentPath.includes('.html'));
+    // GitHub Pages + .nojekyll 下，Markdown 文件不会执行任何脚本。
+    // 因此这里仅在“当前 URL 本身就是 .md”时才认为需要处理 Markdown。
+    const isMarkdownPage = currentPath.endsWith('.md');
 
     // 只有在不是HTML页面的情况下才考虑加载Markdown内容
     const isDocsPage = !isExplicitHtml && isMarkdownPage;
@@ -488,29 +498,31 @@ function initRouter() {
             });
     } else {
         console.log('当前页面不是Markdown页面，跳过加载');
-
-        // 检查特殊情况：有markdown-content元素但没有加载内容
-        const markdownContent = document.getElementById('markdown-content');
-        if (markdownContent && window.location.pathname.includes('docs/')) {
-            console.log('检测到docs页面但没有触发Markdown加载，尝试手动加载...');
-            // 尝试加载默认的tutorial-index.md
-            setTimeout(() => {
-                loadMarkdownContent('docs/tutorial-index.md');
-            }, 100);
-        }
     }
 
-    // 监听页面内链接点击事件，处理Markdown文件链接
+    // 监听页面内链接点击事件，处理Markdown文件链接（统一改为 viewer.html 打开）
     document.addEventListener('click', function (e) {
         const link = e.target.closest('a');
         if (link && link.href && link.getAttribute('href').endsWith('.md')) {
             e.preventDefault();
             let href = link.getAttribute('href');
 
-            // 将Markdown文件链接重定向到viewer.html页面
+            // 将Markdown文件链接重定向到viewer.html页面（保留完整相对路径，避免同名文件冲突）
             if (!href.includes('viewer.html')) {
-                const fileName = href.split('/').pop();
-                href = `docs/viewer.html?file=${fileName}`;
+                try {
+                    const resolved = new URL(href, window.location.href);
+                    if (resolved.pathname.includes('/docs/') && resolved.pathname.endsWith('.md')) {
+                        const relativePath = decodeURIComponent(resolved.pathname.split('/docs/')[1]);
+                        const viewerBase = window.location.pathname.includes('/docs/') ? 'viewer.html' : 'docs/viewer.html';
+                        href = `${viewerBase}?file=${encodeURIComponent(relativePath)}`;
+                    } else {
+                        const fileName = href.split('/').pop();
+                        href = `docs/viewer.html?file=${encodeURIComponent(fileName)}`;
+                    }
+                } catch (_) {
+                    const fileName = href.split('/').pop();
+                    href = `docs/viewer.html?file=${encodeURIComponent(fileName)}`;
+                }
             }
 
             console.log(`点击了Markdown链接，重定向到: ${href}`);
@@ -519,11 +531,17 @@ function initRouter() {
             if (window.location.pathname.includes('viewer.html')) {
                 const urlParams = new URLSearchParams(window.location.search);
                 const currentFile = urlParams.get('file');
-                const newFile = href.split('file=')[1];
+                let newFile = null;
+                try {
+                    const u = new URL(href, window.location.href);
+                    newFile = u.searchParams.get('file');
+                } catch (_) {
+                    newFile = href.split('file=')[1];
+                }
 
                 if (currentFile !== newFile) {
                     // 更新浏览器URL参数（不刷新页面）
-                    const newUrl = window.location.pathname + '?file=' + newFile;
+                    const newUrl = window.location.pathname + '?file=' + encodeURIComponent(newFile);
                     history.pushState({}, '', newUrl);
 
                     // 加载新的Markdown内容
@@ -543,10 +561,8 @@ function initRouter() {
         const currentPath = window.location.pathname;
         console.log(`浏览器前进后退，当前路径: ${currentPath}`);
 
-        // 使用增强的路径检测逻辑 - 更新为新的文档结构
-        const isDocsPage = currentPath.includes('/docs/') || currentPath.includes('.md') ||
-            currentPath.includes('tutorial-index') || currentPath.includes('DPapyru-ForNewModder') ||
-            currentPath.includes('DPapyru-ForContributors-Basic') || currentPath.includes('TopicSystemGuide');
+        // 仅在 URL 本身就是 Markdown 文件时尝试处理
+        const isDocsPage = currentPath.endsWith('.md');
 
         if (isDocsPage) {
             // 处理路径，确保使用正确的相对路径
@@ -567,8 +583,51 @@ function initMarkdownRenderer() {
     // 检查marked.js库是否已加载并配置选项
     if (typeof marked !== 'undefined') {
         console.log('Marked.js已加载，正在配置...');
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function isSafeUrl(href) {
+            if (!href) return true;
+            const trimmed = String(href).trim().toLowerCase();
+            return !(
+                trimmed.startsWith('javascript:') ||
+                trimmed.startsWith('data:') ||
+                trimmed.startsWith('vbscript:')
+            );
+        }
+
+        const renderer = (marked.Renderer && typeof marked.Renderer === 'function')
+            ? new marked.Renderer()
+            : null;
+
+        if (renderer) {
+            // 禁止 Markdown 原始 HTML
+            renderer.html = (html) => escapeHtml(html);
+            renderer.link = (href, title, text) => {
+                if (!isSafeUrl(href)) return escapeHtml(text || '');
+                const safeHref = escapeHtml(href);
+                const safeTitle = title ? ` title="${escapeHtml(title)}"` : '';
+                return `<a href="${safeHref}"${safeTitle}>${text || ''}</a>`;
+            };
+            renderer.image = (href, title, text) => {
+                if (!isSafeUrl(href)) return '';
+                const safeSrc = escapeHtml(href);
+                const safeAlt = escapeHtml(text || '');
+                const safeTitle = title ? ` title="${escapeHtml(title)}"` : '';
+                return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} />`;
+            };
+        }
+
         // 配置marked.js库
         marked.setOptions({
+            renderer: renderer || undefined,
             highlight: function (code, lang) {
                 if (typeof Prism !== 'undefined' && Prism.languages[lang]) {
                     return Prism.highlight(code, Prism.languages[lang], lang);
@@ -578,7 +637,6 @@ function initMarkdownRenderer() {
             breaks: true,
             gfm: true,
             tables: true,
-            sanitize: false,
             smartLists: true,
             smartypants: true,
             mangle: true,
@@ -628,13 +686,19 @@ function markdownRenderColorLD() {
             const allMatch = token.allMatch;
             let result = token.raw;
             const rule = /\{color:\s*([a-zA-Z0-9_-]+)\}\{([^{}]*)\}/; // 还是需要遍历规则
+            const escapeHtml = (text) => String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
             allMatch.forEach(item => {
                 const match = item.match(rule); // 获取匹配结果
                 if (match) {
                     const drawColor = match[1]; // 颜色
                     const text = match[2]; // 文本
 
-                    const spanColor = `<span style="color: var(--marked-text-color-${drawColor});">${text}</span>`;
+                    const spanColor = `<span style="color: var(--marked-text-color-${drawColor});">${escapeHtml(text)}</span>`;
                     result = result.replace(match[0], spanColor); // 替换原本内容
                 }
                 else {
@@ -679,13 +743,19 @@ function markdownRenderColorChange() {
             const allMatch = token.allMatch;
             let result = token.raw;
             const rule = /\{colorChange:\s*([a-zA-Z0-9_-]+)\}\{([^{}]*)\}/;
+            const escapeHtml = (text) => String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
             allMatch.forEach(item => {
                 const match = item.match(rule); // 获取匹配结果
                 if (match) {
                     const drawColor = match[1]; // 颜色
                     const text = match[2]; // 文本
 
-                    const spanColor = `<span style="animation: colorChange-${drawColor} 2s infinite; display: inline-block;">${text}</span>`;
+                    const spanColor = `<span style="animation: colorChange-${drawColor} 2s infinite; display: inline-block;">${escapeHtml(text)}</span>`;
                     result = result.replace(match[0], spanColor); // 替换原本内容
                     console.log('修改内容:', spanColor);
                 }
@@ -770,14 +840,18 @@ function cleanPath(path) {
     } else {
         // 默认的旧结构映射（向后兼容）
         const defaultOldStructureMappings = {
-            '01-入门指南/README.md': 'DPapyru-ForNewModder.md',
-            '02-基础概念/README.md': 'tutorial-index.md',
-            '03-内容创建/README.md': 'tutorial-index.md',
-            '04-高级开发/README.md': 'tutorial-index.md',
-            '05-专题主题/README.md': 'tutorial-index.md',
-            '06-资源参考/README.md': 'tutorial-index.md',
-            'getting-started.md': 'DPapyru-ForNewModder.md',
-            'basic-concepts.md': 'tutorial-index.md'
+            '01-入门指南/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '02-基础概念/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '03-内容创建/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '04-高级开发/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '05-专题主题/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '06-资源参考/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            'getting-started.md': 'Modder入门/DPapyru-给新人的前言.md',
+            'basic-concepts.md': 'Modder入门/DPapyru-给新人的前言.md',
+            'tutorial-index.md': 'Modder入门/DPapyru-给新人的前言.md',
+            'DPapyru-ForNewModder.md': 'Modder入门/DPapyru-给新人的前言.md',
+            'DPapyru-ForContributors-Basic.md': '怎么贡献/DPapyru-贡献者如何编写文章基础.md',
+            'TopicSystemGuide.md': '怎么贡献/TopicSystem使用指南.md'
         };
 
         // 检查是否需要映射旧路径到新路径
@@ -866,14 +940,18 @@ function tryFallbackPaths(originalPath) {
     } else {
         // 默认的旧结构到新结构的映射（向后兼容）
         const defaultOldToNewMappings = {
-            'docs/01-入门指南/README.md': 'docs/DPapyru-ForNewModder.md',
-            'docs/02-基础概念/README.md': 'docs/tutorial-index.md',
-            'docs/03-内容创建/README.md': 'docs/tutorial-index.md',
-            'docs/04-高级开发/README.md': 'docs/tutorial-index.md',
-            'docs/05-专题主题/README.md': 'docs/tutorial-index.md',
-            'docs/06-资源参考/README.md': 'docs/tutorial-index.md',
-            'docs/getting-started.md': 'docs/DPapyru-ForNewModder.md',
-            'docs/basic-concepts.md': 'docs/tutorial-index.md'
+            'docs/01-入门指南/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
+            'docs/02-基础概念/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
+            'docs/03-内容创建/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
+            'docs/04-高级开发/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
+            'docs/05-专题主题/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
+            'docs/06-资源参考/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
+            'docs/getting-started.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
+            'docs/basic-concepts.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
+            'docs/tutorial-index.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
+            'docs/DPapyru-ForNewModder.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
+            'docs/DPapyru-ForContributors-Basic.md': 'docs/怎么贡献/DPapyru-贡献者如何编写文章基础.md',
+            'docs/TopicSystemGuide.md': 'docs/怎么贡献/TopicSystem使用指南.md'
         };
 
         // 检查原始路径是否匹配旧结构，如果是则添加新结构路径作为备用
@@ -1278,22 +1356,21 @@ window.addEventListener('load', function () {
     // 检查是否直接访问了Markdown文件，如果是则重定向到查看器页面
     if (currentPath.endsWith('.md') && !window.location.pathname.includes('viewer.html')) {
         console.log('检测到直接访问Markdown文件，重定向到viewer.html');
-        const fileName = currentPath.split('/').pop();
-        const newPath = currentPath.replace(fileName, `viewer.html?file=${fileName}`);
-        window.location.replace(newPath);
+        if (currentPath.includes('/docs/')) {
+            const relativePath = decodeURIComponent(currentPath.split('/docs/')[1]);
+            const newPath = `/docs/viewer.html?file=${encodeURIComponent(relativePath)}`;
+            window.location.replace(newPath);
+        } else {
+            const fileName = currentPath.split('/').pop();
+            const newPath = `/docs/viewer.html?file=${encodeURIComponent(fileName)}`;
+            window.location.replace(newPath);
+        }
         return;
     }
 
     // 使用更精确的文档页面检测逻辑 - 排除HTML页面
     const isExplicitHtml = currentPath.endsWith('.html') || currentPath.includes('.html?');
-    const isDocsPage = !isExplicitHtml && (
-        currentPath.includes('/docs/') ||
-        currentPath.endsWith('.md') ||
-        currentPath.includes('tutorial-index') ||
-        currentPath.includes('DPapyru-ForNewModder') ||
-        currentPath.includes('DPapyru-ForContributors-Basic') ||
-        currentPath.includes('TopicSystemGuide')
-    );
+    const isDocsPage = !isExplicitHtml && currentPath.endsWith('.md');
 
     console.log(`页面加载检查 - 是否为HTML页面: ${isExplicitHtml}`);
     console.log(`页面加载检查 - 是否为文档页面: ${isDocsPage}`);

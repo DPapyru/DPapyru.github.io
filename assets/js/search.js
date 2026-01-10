@@ -20,16 +20,19 @@ class TutorialSearch {
     // 加载配置文件
     async loadConfig() {
         try {
-            // 根据当前页面位置确定配置文件路径
+            // 优先使用共享的 SiteConfig（避免重复 fetch）
+            if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
+                this.config = await window.SiteConfig.load();
+                console.log('搜索模块成功加载配置文件 (SiteConfig)');
+                return;
+            }
+
+            // 兼容：SiteConfig 不存在时退回到旧逻辑
             const configPath = window.location.pathname.includes('/docs/') ? './config.json' : 'docs/config.json';
             const response = await fetch(configPath);
-            if (response.ok) {
-                this.config = await response.json();
-                console.log('搜索模块成功加载配置文件');
-            } else {
-                console.warn('搜索模块无法加载配置文件，使用默认配置');
-                this.config = this.generateDefaultConfig();
-            }
+            if (!response.ok) throw new Error('无法加载config.json: ' + response.status);
+            this.config = await response.json();
+            console.log('搜索模块成功加载配置文件');
         } catch (error) {
             console.error('搜索模块加载配置文件时出错:', error);
             this.config = this.generateDefaultConfig();
@@ -247,6 +250,14 @@ class TutorialSearch {
         try {
             // 显示加载状态
             this.showLoadingState();
+
+            // 优先使用构建时生成的搜索索引（性能更好）
+            const loaded = await this.loadSearchIndexFromJson();
+            if (loaded) {
+                console.log(`已从 search-index.json 加载索引，共 ${this.searchIndex.length} 个教程`);
+                this.hideLoadingState();
+                return;
+            }
             
             // 首先尝试从config.json获取文档列表
             let tutorialFiles = await this.getTutorialFilesFromConfig();
@@ -259,7 +270,7 @@ class TutorialSearch {
             // 为每个文件创建索引
             for (const file of tutorialFiles) {
                 try {
-                    const response = await fetch(file);
+                    const response = await fetch(encodeURI(file));
                     if (!response.ok) continue;
                     
                     const content = await response.text();
@@ -275,7 +286,9 @@ class TutorialSearch {
                     
                     // 更新URL，使其指向viewer.html并加载相应的文件
                     // 使用完整路径，包括子目录
-                    const viewerUrl = `docs/viewer.html?file=${encodeURIComponent(relativePath)}`;
+                    const inDocs = window.location.pathname.includes('/docs/');
+                    const viewerBase = inDocs ? 'viewer.html' : 'docs/viewer.html';
+                    const viewerUrl = `${viewerBase}?file=${encodeURIComponent(relativePath)}`;
                     
                     this.searchIndex.push({
                         title: metadata.title || this.extractTitle(content),
@@ -299,6 +312,49 @@ class TutorialSearch {
         } catch (error) {
             console.error('加载搜索索引失败:', error);
             this.hideLoadingState();
+        }
+    }
+
+    getSearchIndexPath() {
+        return window.location.pathname.includes('/docs/')
+            ? '../assets/search-index.json'
+            : 'assets/search-index.json';
+    }
+
+    async loadSearchIndexFromJson() {
+        try {
+            const indexPath = this.getSearchIndexPath();
+            const response = await fetch(indexPath);
+            if (!response.ok) return false;
+            const payload = await response.json();
+            if (!payload || !Array.isArray(payload.docs)) return false;
+
+            const viewerBase = (window.SiteUtils && typeof window.SiteUtils.getViewerBase === 'function')
+                ? window.SiteUtils.getViewerBase()
+                : (window.location.pathname.includes('/docs/') ? 'viewer.html' : 'docs/viewer.html');
+
+            this.searchIndex = payload.docs.map(doc => {
+                const relativePath = doc.path || doc.filename;
+                const viewerUrl = `${viewerBase}?file=${encodeURIComponent(relativePath)}`;
+
+                return {
+                    title: doc.title || this.extractTitle(doc.content || ''),
+                    url: viewerUrl,
+                    content: doc.content || '',
+                    description: doc.description || '',
+                    category: doc.category || '未分类',
+                    difficulty: doc.difficulty || '未知',
+                    time: doc.time || '未知',
+                    author: doc.author || '未知',
+                    date: doc.last_updated || '未知',
+                    filePath: `docs/${relativePath}`
+                };
+            });
+
+            return this.searchIndex.length > 0;
+        } catch (error) {
+            console.warn('search-index.json 加载失败，回退到逐文件索引:', error);
+            return false;
         }
     }
 
@@ -378,9 +434,8 @@ class TutorialSearch {
         // 返回所有教程文件的路径 - 更新为新的嵌套文档结构
         return [
             'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/给贡献者阅读的文章/DPapyru-贡献者如何编写文章基础.md',
-            'docs/给贡献者阅读的文章/TopicSystem使用指南.md',
-            'docs/tutorial-index.md'
+            'docs/怎么贡献/DPapyru-贡献者如何编写文章基础.md',
+            'docs/怎么贡献/TopicSystem使用指南.md'
         ];
     }
 
@@ -390,14 +445,18 @@ class TutorialSearch {
         
         // 尝试从config.json获取更完整的元数据
         try {
-            // 根据当前页面位置确定配置文件路径
-            const configPath = window.location.pathname.includes('/docs/') ? './config.json' : 'docs/config.json';
-            const response = await fetch(configPath);
-            if (response.ok) {
-                const config = await response.json();
+            const config = await (window.SiteConfig ? window.SiteConfig.load() : (async () => {
+                const configPath = window.location.pathname.includes('/docs/') ? './config.json' : 'docs/config.json';
+                const response = await fetch(configPath);
+                if (!response.ok) throw new Error(`无法加载config.json: ${response.status}`);
+                return response.json();
+            })());
+
+            if (config) {
+                const normalizedFullPath = fullPath && fullPath.startsWith('docs/') ? fullPath.substring(5) : fullPath;
                 
                 // 在all_files中查找当前文件，先尝试完整路径匹配，再尝试文件名匹配
-                let fileInfo = config.all_files.find(file => file.path === fullPath || file.filename === fileName);
+                let fileInfo = config.all_files.find(file => file.path === normalizedFullPath || file.filename === fileName);
                 
                 // 如果没找到，尝试只使用文件名部分进行匹配
                 if (!fileInfo) {
@@ -648,7 +707,9 @@ class TutorialSearch {
         if (!this.currentQuery) return;
         
         // 跳转到搜索结果页面
-        const searchUrl = `search-results.html?q=${encodeURIComponent(this.currentQuery)}`;
+        const isInDocs = window.location.pathname.includes('/docs/');
+        const base = isInDocs ? '../' : '';
+        const searchUrl = `${base}search-results.html?q=${encodeURIComponent(this.currentQuery)}`;
         window.location.href = searchUrl;
     }
     
@@ -657,7 +718,9 @@ class TutorialSearch {
         if (!this.currentQuery) return;
         
         // 跳转到搜索结果页面
-        const searchUrl = `search-results.html?q=${encodeURIComponent(this.currentQuery)}`;
+        const isInDocs = window.location.pathname.includes('/docs/');
+        const base = isInDocs ? '../' : '';
+        const searchUrl = `${base}search-results.html?q=${encodeURIComponent(this.currentQuery)}`;
         window.location.href = searchUrl;
     }
 
@@ -975,18 +1038,28 @@ class TutorialSearch {
 
     // 创建搜索结果项
     createResultItem(result) {
+        const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
+            ? window.SiteUtils.escapeHtml
+            : (v) => String(v);
+        const escAttr = (v) => esc(v).replace(/`/g, '&#96;');
+        const normalizeDifficultyClass = (difficulty) => {
+            const allowed = ['beginner', 'intermediate', 'advanced', 'all'];
+            return allowed.includes(difficulty) ? difficulty : 'beginner';
+        };
+
         const highlightedTitle = this.highlightText(result.title, this.currentQuery);
         const highlightedDescription = this.highlightText(result.description, this.currentQuery);
+        const safeDifficultyClass = normalizeDifficultyClass(result.difficulty);
         
         return `
-            <div class="search-result-item" data-url="${result.url}">
+            <div class="search-result-item" data-url="${escAttr(result.url)}">
                 <h4 class="search-result-title">${highlightedTitle}</h4>
                 <p class="search-result-description">${highlightedDescription}</p>
                 ${result.snippet ? `<p class="search-result-snippet">${result.snippet}</p>` : ''}
                 <div class="search-result-meta">
-                    <span class="search-result-category">${this.getCategoryText(result.category)}</span>
-                    <span class="search-result-difficulty ${result.difficulty}">${this.getDifficultyText(result.difficulty)}</span>
-                    <span class="search-result-time">${result.time}分钟</span>
+                    <span class="search-result-category">${esc(this.getCategoryText(result.category))}</span>
+                    <span class="search-result-difficulty ${safeDifficultyClass}">${esc(this.getDifficultyText(result.difficulty))}</span>
+                    <span class="search-result-time">${esc(result.time)}分钟</span>
                 </div>
             </div>
         `;
@@ -994,10 +1067,16 @@ class TutorialSearch {
 
     // 高亮文本
     highlightText(text, query) {
-        if (!query) return text;
+        const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
+            ? window.SiteUtils.escapeHtml
+            : (v) => String(v);
+
+        const safeText = esc(text);
+        if (!query) return safeText;
         
-        const regex = new RegExp(`(${this.escapeRegex(query)})`, 'gi');
-        return text.replace(regex, '<mark>$1</mark>');
+        const safeQuery = esc(query);
+        const regex = new RegExp(`(${this.escapeRegex(safeQuery)})`, 'gi');
+        return safeText.replace(regex, '<mark>$1</mark>');
     }
 
     // 转义正则表达式特殊字符
