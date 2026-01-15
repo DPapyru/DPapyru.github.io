@@ -269,6 +269,16 @@
 
 /* 面包屑导航 */
 [data-theme="dark"] .breadcrumb {
+    background-color: var(--bg-secondary) !important;
+    border-bottom-color: var(--border-color) !important;
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .breadcrumb-item:not(:last-child)::after {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .breadcrumb-item.active {
     color: var(--text-muted) !important;
 }
 

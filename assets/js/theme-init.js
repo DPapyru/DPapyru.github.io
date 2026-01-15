@@ -2,20 +2,11 @@
 // Must be loaded in <head> (non-defer).
 (function () {
   try {
-    var storageKey = 'theme';
-    var savedTheme = localStorage.getItem(storageKey);
-    var prefersDark =
-      typeof window.matchMedia === 'function' &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var theme = savedTheme || (prefersDark ? 'dark' : 'light');
-
-    if (theme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
+    // This site is now dark-mode only.
+    document.documentElement.setAttribute('data-theme', 'dark');
+    // Clear any previously saved preference to avoid conflicts.
+    localStorage.removeItem('theme');
   } catch (_) {
     // Ignore any storage/privacy errors.
   }
 })();
-

@@ -146,23 +146,23 @@
   --secondary-color: #6c757d;
   --secondary-hover: #545b62;
 
-  /* 背景颜色 */
-  --bg-color: #121212;
-  --bg-secondary: #1e1e1e;
-  --bg-tertiary: #2a2a2a;
-  --bg-content: #1e1e1e;
+  /* 背景颜色（极简文档风格：弱对比、少装饰） */
+  --bg-color: #0f0f10;
+  --bg-secondary: #141416;
+  --bg-tertiary: #1b1b1e;
+  --bg-content: #0f0f10;
 
 
   /* 文本颜色 */
-  --text-color: #fff;
-  --text-secondary: #ccc;
-  --text-muted: #aaa;
-  --text-light: #999;
+  --text-color: #eaeaea;
+  --text-secondary: #c6c6c6;
+  --text-muted: #9a9a9a;
+  --text-light: #7f7f7f;
 
   /* 边框颜色 */
-  --border-color: #333;
-  --border-light: #444;
-  --border-dark: #555;
+  --border-color: #2a2a2e;
+  --border-light: #303036;
+  --border-dark: #3a3a40;
 
   /* 链接颜色 */
   --link-color: #28a745;
@@ -173,7 +173,7 @@
   --sidebar-text: #fff;
   --sidebar-link: #ccc;
   --sidebar-hover: #2a2a2a;
-  --sidebar-active: #e7f6ec;
+  --sidebar-active: var(--bg-secondary);
 
   /* 头部颜色 */
   --header-bg: #1e1e1e;
@@ -186,7 +186,7 @@
 
   /* 表格颜色 */
   --table-stripe: #2a2a2a;
-  --table-hover: #e7f6ec;
+  --table-hover: var(--bg-secondary);
 
   /* 搜索框颜色 */
   --search-bg: #2a2a2a;
@@ -201,15 +201,15 @@
   --sidebar-scrollbar-thumb: #28a745;
   --sidebar-scrollbar-thumb-hover: #1e7e34;
 
-  /* 阴影 */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.15);
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 10px 20px rgba(0, 0, 0, 0.3);
+  /* 阴影（极简：尽量用边框分割，减少浮层感） */
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
 
   /* 引用(>)颜色 */
-  --import-color: #666;
+  --import-color: rgba(255, 255, 255, 0.06);
   
   /* 危险/错误颜色 */
   --danger-color: #dc3545;

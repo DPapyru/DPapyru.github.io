@@ -8,6 +8,7 @@
 @import url('header.css');
 @import url('sidebar.css');
 @import url('content.css');
+@import url('minimal-docs.css');
 
 /* 兼容性样式 - 保持与原有样式的兼容性 */
 body {
@@ -1589,6 +1590,7 @@ a:hover {
     z-index: 1000;
     display: none;
     flex-direction: column;
+    overscroll-behavior: contain;
 }
 
 .mobile-nav-overlay.active {
@@ -1598,10 +1600,13 @@ a:hover {
 /* 导航内容区域 (占屏幕2/3) */
 .mobile-nav-content {
     height: 66.67vh;
-    background-color: white;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
 }
 
 .mobile-nav-header {
@@ -1609,8 +1614,8 @@ a:hover {
     justify-content: space-between;
     align-items: center;
     padding: 15px 20px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 10;
@@ -1618,7 +1623,7 @@ a:hover {
 
 .mobile-nav-header h3 {
     margin: 0;
-    color: #333;
+    color: var(--text-color);
     font-size: 1.2rem;
 }
 
@@ -1627,7 +1632,7 @@ a:hover {
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: #666;
+    color: var(--text-secondary);
     padding: 5px;
     border-radius: 50%;
     width: 32px;
@@ -1639,8 +1644,8 @@ a:hover {
 }
 
 .mobile-nav-close:hover {
-    background-color: #e9ecef;
-    color: #333;
+    background-color: var(--bg-tertiary);
+    color: var(--text-color);
 }
 
 .mobile-nav-body {
@@ -1650,6 +1655,7 @@ a:hover {
 
 .mobile-nav-sections {
     padding: 15px 20px;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* 半透明返回区域 (占屏幕1/3) */
@@ -2788,13 +2794,13 @@ mark {
 }
 
 .sidebar-list.collapsible {
-    max-height: 500px;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
+    /* Do not cap height; long lists should remain scrollable in the sidebar. */
+    max-height: none;
 }
 
 .sidebar-list.collapsed {
     max-height: 0;
+    overflow: hidden;
 }
 
 .sidebar-list li.active>a {

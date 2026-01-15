@@ -1,0 +1,361 @@
+/* 极简文档站风格（参考 LearnOpenGL CN 的“文档优先”观感） */
+
+/* 保留站点主题色（tModLoader 绿色），仅调整布局/排版到“书籍式文档”观感 */
+
+/* 全局：减少动效与装饰 */
+html[data-theme="dark"] body {
+    transition: none;
+}
+
+html[data-theme="dark"] a {
+    text-decoration: underline;
+    text-underline-offset: 0.16em;
+}
+
+html[data-theme="dark"] a:hover {
+    text-decoration-color: var(--link-color);
+}
+
+/* 头部：去阴影，使用分割线 */
+html[data-theme="dark"] .site-header {
+    box-shadow: none !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+html[data-theme="dark"] .header-content {
+    padding: 10px 0 !important;
+}
+
+html[data-theme="dark"] .logo-image {
+    display: none;
+}
+
+html[data-theme="dark"] .site-title {
+    font-size: 1.15rem !important;
+    font-weight: 600 !important;
+}
+
+html[data-theme="dark"] .nav-link {
+    border-bottom: none !important;
+    padding: 0 !important;
+    opacity: 0.9;
+}
+
+html[data-theme="dark"] .nav-link:hover,
+html[data-theme="dark"] .nav-link.active {
+    opacity: 1;
+}
+
+/* 侧边栏：去阴影，使用分割线，降低“卡片感” */
+html[data-theme="dark"] .sidebar {
+    box-shadow: none !important;
+    border-right: 1px solid var(--border-color);
+    width: 260px !important;
+}
+
+/* 主内容与内容容器：用边框替代阴影，收敛内边距 */
+html[data-theme="dark"] .main-content {
+    background-color: var(--bg-color) !important;
+    padding: 24px 18px !important;
+}
+
+html[data-theme="dark"] .content-wrapper {
+    background-color: var(--bg-content) !important;
+    box-shadow: none !important;
+    border: 1px solid var(--border-color);
+    border-radius: 6px !important;
+    padding: 24px 26px !important;
+}
+
+html[data-theme="dark"] .content-wrapper:hover {
+    box-shadow: none !important;
+}
+
+/* 侧边栏：移除位移/箭头等装饰，变为书籍式目录 */
+html[data-theme="dark"] .sidebar-title::before,
+html[data-theme="dark"] .category-header::after {
+    display: none !important;
+}
+
+html[data-theme="dark"] .sidebar-list a:hover {
+    transform: none !important;
+}
+
+html[data-theme="dark"] .sidebar-list a.active {
+    border-left-width: 2px !important;
+}
+
+html[data-theme="dark"] .category-item {
+    border: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+html[data-theme="dark"] .category-item:hover {
+    transform: none !important;
+}
+
+html[data-theme="dark"] .category-header {
+    background: transparent !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 10px 12px !important;
+    font-size: 0.95rem !important;
+}
+
+html[data-theme="dark"] .topic-header {
+    background: transparent !important;
+    border-bottom: none !important;
+    padding: 10px 12px 6px !important;
+    font-size: 0.85rem !important;
+    color: var(--text-muted) !important;
+}
+
+html[data-theme="dark"] .file-item a {
+    padding: 7px 12px 7px 12px !important;
+    font-size: 0.9rem !important;
+}
+
+html[data-theme="dark"] .file-item a::before,
+html[data-theme="dark"] .file-item a.active::before {
+    display: none !important;
+}
+
+html[data-theme="dark"] .file-item a:hover {
+    padding-left: 12px !important;
+}
+
+html[data-theme="dark"] .file-item a.active {
+    border-left-width: 2px !important;
+}
+
+/* 首页各区块：减少大留白与花哨分段背景 */
+html[data-theme="dark"] .features,
+html[data-theme="dark"] .tutorials,
+html[data-theme="dark"] .tutorial-categories,
+html[data-theme="dark"] .latest-updates,
+html[data-theme="dark"] .getting-started-guide,
+html[data-theme="dark"] .contribute {
+    padding: 48px 0 !important;
+    background-color: var(--bg-color) !important;
+}
+
+/* 首页：更像“书籍入口”，隐藏营销式区块（保留搜索与入口按钮） */
+html[data-theme="dark"] .latest-updates {
+    display: none !important;
+}
+
+html[data-theme="dark"] .tutorial-content {
+    padding: 18px 22px !important;
+}
+
+html[data-theme="dark"] .tutorial-header {
+    border-bottom-color: var(--border-color) !important;
+}
+
+/* 按钮：移除高光与位移，保持简洁 */
+html[data-theme="dark"] .btn {
+    box-shadow: none !important;
+}
+
+html[data-theme="dark"] .btn::before {
+    display: none !important;
+}
+
+html[data-theme="dark"] .btn-primary:hover,
+html[data-theme="dark"] .btn-secondary:hover,
+html[data-theme="dark"] .btn-outline:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* 英雄区/标题区：去渐变、减少高度，改为文档式横条 */
+html[data-theme="dark"] .hero,
+html[data-theme="dark"] .docs-hero,
+html[data-theme="dark"] .folder-hero {
+    background: var(--bg-color) !important;
+    color: var(--text-color) !important;
+    padding: 34px 0 !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* 底部：更克制 */
+html[data-theme="dark"] .site-footer {
+    border-top: 1px solid var(--border-color);
+}
+
+html[data-theme="dark"] .footer-content {
+    padding-top: 18px !important;
+}
+
+html[data-theme="dark"] .hero-title {
+    letter-spacing: 0.2px;
+}
+
+/* 首页搜索框：去浮层阴影与上移动画 */
+html[data-theme="dark"] .hero-search {
+    margin-bottom: 22px !important;
+}
+
+html[data-theme="dark"] .hero-search .search-box {
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+html[data-theme="dark"] .hero-search .search-box:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+html[data-theme="dark"] .hero-search .search-input {
+    padding: 14px 56px 14px 16px !important;
+    font-size: 1rem !important;
+}
+
+html[data-theme="dark"] .hero-search .search-button {
+    width: 40px !important;
+    height: 40px !important;
+    right: 8px !important;
+    box-shadow: none !important;
+}
+
+html[data-theme="dark"] .hero-search .search-button:hover {
+    transform: none !important;
+}
+
+/* Markdown：减少装饰性效果（图片/代码标记/阴影） */
+html[data-theme="dark"] .markdown-content img {
+    box-shadow: none !important;
+    border: 1px solid var(--border-color);
+}
+
+html[data-theme="dark"] .markdown-content img:hover {
+    transform: none !important;
+}
+
+html[data-theme="dark"] .markdown-content pre,
+html[data-theme="dark"] .markdown-content table,
+html[data-theme="dark"] .markdown-content blockquote {
+    box-shadow: none !important;
+}
+
+html[data-theme="dark"] .markdown-content pre::before {
+    display: none !important;
+}
+
+/* Markdown 排版：去“装饰箭头/强调条”，更像书籍正文 */
+html[data-theme="dark"] .markdown-content p {
+    text-align: left !important;
+}
+
+html[data-theme="dark"] .markdown-content h1::before,
+html[data-theme="dark"] .markdown-content h2::before,
+html[data-theme="dark"] .markdown-content h3::before {
+    display: none !important;
+}
+
+html[data-theme="dark"] .markdown-content h1,
+html[data-theme="dark"] .markdown-content h2 {
+    border-bottom-color: var(--border-color) !important;
+}
+
+html[data-theme="dark"] .markdown-content h3 {
+    padding-left: 0 !important;
+}
+
+html[data-theme="dark"] .markdown-content a {
+    text-decoration: underline !important;
+    text-decoration-thickness: from-font;
+    text-underline-offset: 0.16em;
+}
+
+html[data-theme="dark"] .table-of-contents {
+    background: transparent !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px !important;
+}
+
+/* 卡片类组件：统一为“边框 + 轻 hover”，无位移 */
+html[data-theme="dark"] .feature-card,
+html[data-theme="dark"] .tutorial-card,
+html[data-theme="dark"] .category-card,
+html[data-theme="dark"] .update-card,
+html[data-theme="dark"] .guide-step,
+html[data-theme="dark"] .tutorial-item,
+html[data-theme="dark"] .doc-card,
+html[data-theme="dark"] .category-item {
+    box-shadow: none !important;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transform: none !important;
+}
+
+html[data-theme="dark"] .feature-card:hover,
+html[data-theme="dark"] .tutorial-card:hover,
+html[data-theme="dark"] .category-card:hover,
+html[data-theme="dark"] .update-card:hover,
+html[data-theme="dark"] .guide-step:hover,
+html[data-theme="dark"] .tutorial-item:hover,
+html[data-theme="dark"] .doc-card:hover,
+html[data-theme="dark"] .category-item:hover {
+    box-shadow: none !important;
+    transform: none !important;
+    background-color: var(--bg-secondary) !important;
+}
+
+/* 搜索结果页：减少“卡片化” */
+html[data-theme="dark"] .advanced-search-form,
+html[data-theme="dark"] .search-results-page,
+html[data-theme="dark"] .search-results-stats,
+html[data-theme="dark"] .search-history,
+html[data-theme="dark"] .no-search-results {
+    box-shadow: none !important;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+html[data-theme="dark"] .search-page-header {
+    background-color: var(--bg-color) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* docs/index：从“卡片网格”更接近“章节列表” */
+html[data-theme="dark"] .category-grid {
+    display: block !important;
+}
+
+html[data-theme="dark"] .category-card {
+    padding: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    background: transparent !important;
+}
+
+html[data-theme="dark"] .category-header {
+    padding: 14px 14px !important;
+}
+
+/* docs/folder：列表化 */
+html[data-theme="dark"] .doc-grid {
+    display: block !important;
+}
+
+html[data-theme="dark"] .doc-card {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    background: transparent !important;
+}
+
+html[data-theme="dark"] .doc-card-header,
+html[data-theme="dark"] .doc-card-body,
+html[data-theme="dark"] .doc-card-footer {
+    padding: 14px 14px !important;
+    background: transparent !important;
+}

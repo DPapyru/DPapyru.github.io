@@ -63,32 +63,6 @@
     border-bottom-color: var(--primary-color);
 }
 
-/* 主题切换按钮样式 */
-.theme-toggle-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-    padding: 5px 10px;
-    border-radius: 4px;
-    transition: var(--transition);
-}
-
-.theme-toggle-btn:hover {
-    background-color: var(--bg-secondary);
-}
-
-.theme-icon {
-    font-size: 1rem;
-}
-
-.theme-text {
-    font-weight: 500;
-}
-
 .mobile-menu-toggle {
     display: none;
     flex-direction: column;

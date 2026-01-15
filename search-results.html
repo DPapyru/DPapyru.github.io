@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- 搜索结果页面 -->
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -33,36 +33,36 @@
         }
 
         /* 搜索页面头部 */
-        .search-page-header {
-            background-color: #fff;
-            padding: 30px 0;
-            border-bottom: 1px solid #e9ecef;
-            margin-bottom: 30px;
-        }
+	        .search-page-header {
+	            background-color: var(--bg-content);
+	            padding: 30px 0;
+	            border-bottom: 1px solid var(--border-color);
+	            margin-bottom: 30px;
+	        }
 
-        .search-page-title {
-            font-size: 2rem;
-            color: #333;
-            margin-bottom: 15px;
-        }
+	        .search-page-title {
+	            font-size: 2rem;
+	            color: var(--text-color);
+	            margin-bottom: 15px;
+	        }
 
         /* 高级搜索表单 */
-        .advanced-search-form {
-            background-color: #fff;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
-        }
+	        .advanced-search-form {
+	            background-color: var(--bg-content);
+	            border-radius: 12px;
+	            padding: 25px;
+	            box-shadow: var(--shadow-md);
+	            margin-bottom: 30px;
+	        }
 
-        .search-form-title {
-            font-size: 1.3rem;
-            color: #333;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+	        .search-form-title {
+	            font-size: 1.3rem;
+	            color: var(--text-color);
+	            margin-bottom: 20px;
+	            display: flex;
+	            align-items: center;
+	            gap: 10px;
+	        }
 
         .search-form-title::before {
             content: "🔍";
@@ -74,29 +74,30 @@
             margin-bottom: 20px;
         }
 
-        .search-input-large {
+	        .search-input-large {
             width: 100%;
             padding: 15px 50px 15px 20px;
-            border: 2px solid #e9ecef;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            outline: none;
-            transition: all 0.3s ease;
-            background-color: #f8f9fa;
-        }
+	            border: 2px solid var(--border-color);
+	            border-radius: 50px;
+	            font-size: 1.1rem;
+	            outline: none;
+	            transition: all 0.3s ease;
+	            background-color: var(--search-bg);
+	            color: var(--text-color);
+	        }
 
-        .search-input-large:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
-            background-color: #fff;
-        }
+	        .search-input-large:focus {
+	            border-color: var(--primary-color);
+	            box-shadow: 0 0 0 3px var(--search-focus);
+	            background-color: var(--bg-color);
+	        }
 
-        .search-button-large {
+	        .search-button-large {
             position: absolute;
             right: 8px;
             top: 50%;
             transform: translateY(-50%);
-            background: #007bff;
+	            background: var(--primary-color);
             border: none;
             color: white;
             cursor: pointer;
@@ -110,10 +111,10 @@
             height: 44px;
         }
 
-        .search-button-large:hover {
-            background: #0056b3;
-            transform: translateY(-50%) scale(1.05);
-        }
+	        .search-button-large:hover {
+	            background: var(--primary-hover);
+	            transform: translateY(-50%) scale(1.05);
+	        }
 
         /* 搜索选项 */
         .search-options {
@@ -128,62 +129,63 @@
             flex-direction: column;
         }
 
-        .search-option-label {
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: #495057;
-        }
+	        .search-option-label {
+	            font-weight: 500;
+	            margin-bottom: 8px;
+	            color: var(--text-secondary);
+	        }
 
-        .search-option-select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            background-color: #fff;
-        }
+	        .search-option-select {
+	            padding: 8px 12px;
+	            border: 1px solid var(--border-color);
+	            border-radius: 6px;
+	            font-size: 0.95rem;
+	            background-color: var(--bg-color);
+	            color: var(--text-color);
+	        }
 
         /* 搜索帮助 */
-        .search-help {
-            background-color: #a3e7a7;
-            border: 2px solid #003309;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
+	        .search-help {
+	            background-color: var(--import-color);
+	            border: 1px solid var(--primary-color);
+	            border-radius: 8px;
+	            padding: 15px;
+	            margin-bottom: 20px;
+	        }
 
-        .search-help-title {
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #000000;
-        }
+	        .search-help-title {
+	            font-weight: 600;
+	            margin-bottom: 10px;
+	            color: var(--text-color);
+	        }
 
         .search-help-list {
             margin: 0;
             padding-left: 20px;
         }
 
-        .search-help-list li {
-            margin-bottom: 5px;
-            color: #1d1d1d;
-        }
+	        .search-help-list li {
+	            margin-bottom: 5px;
+	            color: var(--text-secondary);
+	        }
 
         /* 搜索历史 */
-        .search-history {
-            background-color: #fff;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
-        }
+	        .search-history {
+	            background-color: var(--bg-content);
+	            border-radius: 12px;
+	            padding: 20px;
+	            box-shadow: var(--shadow-md);
+	            margin-bottom: 30px;
+	        }
 
-        .search-history-title {
-            font-size: 1.1rem;
-            color: #333;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+	        .search-history-title {
+	            font-size: 1.1rem;
+	            color: var(--text-color);
+	            margin-bottom: 15px;
+	            display: flex;
+	            justify-content: space-between;
+	            align-items: center;
+	        }
 
         .clear-history-btn {
             background: none;
@@ -196,9 +198,9 @@
             transition: background-color 0.3s ease;
         }
 
-        .clear-history-btn:hover {
-            background-color: #f8d7da;
-        }
+	        .clear-history-btn:hover {
+	            background-color: var(--danger-bg);
+	        }
 
         .search-history-list {
             display: flex;
@@ -206,51 +208,51 @@
             gap: 10px;
         }
 
-        .search-history-item {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 20px;
-            padding: 6px 12px;
-            font-size: 0.9rem;
-            color: #495057;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+	        .search-history-item {
+	            background-color: var(--bg-secondary);
+	            border: 1px solid var(--border-color);
+	            border-radius: 20px;
+	            padding: 6px 12px;
+	            font-size: 0.9rem;
+	            color: var(--text-secondary);
+	            cursor: pointer;
+	            transition: all 0.3s ease;
+	            display: flex;
+	            align-items: center;
+	            gap: 5px;
+	        }
 
-        .search-history-item:hover {
-            background-color: #e9ecef;
-            color: #007bff;
-        }
+	        .search-history-item:hover {
+	            background-color: var(--bg-tertiary);
+	            color: var(--link-color);
+	        }
 
-        .search-history-item .remove {
-            color: #6c757d;
-            font-size: 0.8rem;
-            margin-left: 5px;
-        }
+	        .search-history-item .remove {
+	            color: var(--text-muted);
+	            font-size: 0.8rem;
+	            margin-left: 5px;
+	        }
 
         /* 搜索结果统计 */
-        .search-results-stats {
-            background-color: #fff;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+	        .search-results-stats {
+	            background-color: var(--bg-content);
+	            border-radius: 12px;
+	            padding: 20px;
+	            box-shadow: var(--shadow-md);
+	            margin-bottom: 20px;
+	            display: flex;
+	            justify-content: space-between;
+	            align-items: center;
+	        }
 
-        .search-results-count {
-            font-size: 1.1rem;
-            color: #333;
-        }
+	        .search-results-count {
+	            font-size: 1.1rem;
+	            color: var(--text-color);
+	        }
 
-        .search-results-count strong {
-            color: #007bff;
-        }
+	        .search-results-count strong {
+	            color: var(--link-color);
+	        }
 
         .search-sort {
             display: flex;
@@ -258,73 +260,75 @@
             gap: 10px;
         }
 
-        .search-sort-label {
-            font-weight: 500;
-            color: #495057;
-        }
+	        .search-sort-label {
+	            font-weight: 500;
+	            color: var(--text-secondary);
+	        }
 
-        .search-sort-select {
-            padding: 6px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
+	        .search-sort-select {
+	            padding: 6px 12px;
+	            border: 1px solid var(--border-color);
+	            border-radius: 6px;
+	            font-size: 0.9rem;
+	            background-color: var(--bg-color);
+	            color: var(--text-color);
+	        }
 
         /* 搜索结果列表 */
-        .search-results-page {
-            background-color: #fff;
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
-        }
+	        .search-results-page {
+	            background-color: var(--bg-content);
+	            border-radius: 12px;
+	            padding: 25px;
+	            box-shadow: var(--shadow-md);
+	            margin-bottom: 30px;
+	        }
 
-        .search-result-item-page {
-            padding: 20px;
-            border-bottom: 1px solid #e9ecef;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
+	        .search-result-item-page {
+	            padding: 20px;
+	            border-bottom: 1px solid var(--border-color);
+	            transition: all 0.3s ease;
+	            cursor: pointer;
+	        }
 
         .search-result-item-page:last-child {
             border-bottom: none;
         }
 
-        .search-result-item-page:hover {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-        }
+	        .search-result-item-page:hover {
+	            background-color: var(--sidebar-hover);
+	            border-radius: 8px;
+	        }
 
-        .search-result-title-page {
-            font-size: 1.3rem;
-            margin-bottom: 10px;
-            color: #333;
-        }
+	        .search-result-title-page {
+	            font-size: 1.3rem;
+	            margin-bottom: 10px;
+	            color: var(--text-color);
+	        }
 
-        .search-result-description-page {
-            color: #666;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
+	        .search-result-description-page {
+	            color: var(--text-secondary);
+	            margin-bottom: 15px;
+	            line-height: 1.5;
+	        }
 
-        .search-result-snippet {
-            color: #555;
-            margin-bottom: 15px;
-            line-height: 1.5;
-            font-size: 0.9rem;
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 6px;
-            border-left: 3px solid #007bff;
-        }
+	        .search-result-snippet {
+	            color: var(--text-secondary);
+	            margin-bottom: 15px;
+	            line-height: 1.5;
+	            font-size: 0.9rem;
+	            background-color: var(--bg-secondary);
+	            padding: 10px;
+	            border-radius: 6px;
+	            border-left: 3px solid var(--link-color);
+	        }
 
-        .search-result-snippet mark {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-weight: 600;
-        }
+	        .search-result-snippet mark {
+	            background-color: var(--highlight-bg);
+	            color: var(--highlight-text);
+	            padding: 2px 4px;
+	            border-radius: 3px;
+	            font-weight: 600;
+	        }
 
         .search-result-meta-page {
             display: flex;
@@ -339,70 +343,70 @@
             font-weight: 500;
         }
 
-        .search-result-score {
-            background-color: #e7f3ff;
-            color: #0056b3;
-        }
+	        .search-result-score {
+	            background-color: var(--primary-light);
+	            color: var(--primary-color);
+	        }
 
         /* 无搜索结果 */
-        .no-search-results {
-            text-align: center;
-            padding: 60px 20px;
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        }
+	        .no-search-results {
+	            text-align: center;
+	            padding: 60px 20px;
+	            background-color: var(--bg-content);
+	            border-radius: 12px;
+	            box-shadow: var(--shadow-md);
+	        }
 
         .no-results-icon {
             font-size: 4rem;
             margin-bottom: 20px;
         }
 
-        .no-results-title {
-            font-size: 1.5rem;
-            color: #333;
-            margin-bottom: 10px;
-        }
+	        .no-results-title {
+	            font-size: 1.5rem;
+	            color: var(--text-color);
+	            margin-bottom: 10px;
+	        }
 
-        .no-results-description {
-            color: #666;
-            margin-bottom: 20px;
-        }
+	        .no-results-description {
+	            color: var(--text-secondary);
+	            margin-bottom: 20px;
+	        }
 
-        .no-results-suggestions {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: left;
+	        .no-results-suggestions {
+	            background-color: var(--bg-secondary);
+	            border-radius: 8px;
+	            padding: 15px;
+	            text-align: left;
             max-width: 500px;
             margin: 0 auto;
         }
 
-        .no-results-suggestions h4 {
-            margin-bottom: 10px;
-            color: #333;
-        }
+	        .no-results-suggestions h4 {
+	            margin-bottom: 10px;
+	            color: var(--text-color);
+	        }
 
         .no-results-suggestions ul {
             margin: 0;
             padding-left: 20px;
         }
 
-        .no-results-suggestions li {
-            margin-bottom: 5px;
-            color: #495057;
-        }
+	        .no-results-suggestions li {
+	            margin-bottom: 5px;
+	            color: var(--text-secondary);
+	        }
 
         /* 搜索建议 */
-        .search-suggestions-page {
+	        .search-suggestions-page {
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
-            background-color: #fff;
-            border: 1px solid #e9ecef;
-            border-top: none;
-            border-radius: 0 0 12px 12px;
+	            background-color: var(--bg-color);
+	            border: 1px solid var(--border-color);
+	            border-top: none;
+	            border-radius: 0 0 12px 12px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
             max-height: 300px;
             overflow-y: auto;
@@ -461,11 +465,11 @@
                         <li class="nav-item"><a href="search-results.html" class="nav-link active" aria-current="page">搜索</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
                                 target="_blank" rel="noopener noreferrer">GitHub</a></li>
-                        <!-- 主题切换按钮将通过 theme-toggle.js 自动添加 -->
+                        <!-- 站点固定为深色主题 -->
                     </ul>
                 </nav>
                 <!-- 移动端菜单切换按钮 -->
-                <button class="mobile-menu-toggle" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
+                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
                     <span class="bar"></span>
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -626,11 +630,10 @@
         </div>
     </footer>
 
-    <!-- 加载JavaScript文件 -->
-    <script src="assets/js/site-config.js"></script>
-    <script src="assets/js/theme-toggle.js"></script> <!-- 主题切换功能脚本 -->
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/navigation.js"></script>
+	    <!-- 加载JavaScript文件 -->
+	    <script src="assets/js/site-config.js"></script>
+	    <script src="assets/js/main.js"></script>
+	    <script src="assets/js/navigation.js"></script>
 
     <!-- 搜索结果页面专用脚本 -->
     <script>

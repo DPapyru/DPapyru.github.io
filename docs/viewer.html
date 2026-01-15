@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- 泰拉瑞亚Mod制作教程文档查看器页面 -->
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -65,16 +65,16 @@
                     </ul>
                 </nav>
                 <!-- 移动端菜单切换按钮 -->
-                <button class="mobile-menu-toggle" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
-                    <span class="bar"></span>
-                    <span class="bar"></span>
-                    <span class="bar"></span>
-                </button>
-                <!-- 手机端文档导航按钮 -->
-                <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="文档导航" aria-controls="mobile-nav-overlay" aria-expanded="false">
-                    <span class="nav-icon">☰</span>
-                    <span class="nav-text">导航</span>
-                </button>
+	                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
+	                    <span class="bar"></span>
+	                    <span class="bar"></span>
+	                    <span class="bar"></span>
+	                </button>
+	                <!-- 手机端文档导航按钮 -->
+	                <button class="mobile-nav-toggle" id="mobile-nav-toggle" type="button" aria-label="文档导航" aria-controls="mobile-nav-overlay" aria-expanded="false">
+	                    <span class="nav-icon">☰</span>
+	                    <span class="nav-text">导航</span>
+	                </button>
             </div>
         </div>
     </header>
@@ -237,12 +237,11 @@
         </button>
     </div>
 
-    <!-- 加载JavaScript文件 -->
-    <script src="../assets/js/site-config.js"></script>
-    <script src="../assets/js/theme-toggle.js"></script> <!-- 主题切换功能脚本 -->
-    <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
-    <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
-    <script src="../assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
+	    <!-- 加载JavaScript文件 -->
+	    <script src="../assets/js/site-config.js"></script>
+	    <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
+	    <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
+	    <script src="../assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
     <script>
         // 设置一个标志，告诉main.js这是viewer.html页面，不要执行自动加载
         window.IS_VIEWER_PAGE = true;
@@ -2688,26 +2687,34 @@
             }
 
             // 打开手机端导航
-            function openMobileNav() {
-                lastFocusedElement = document.activeElement;
-                mobileNavOverlay.classList.add('active');
-                document.body.style.overflow = 'hidden'; // 防止背景滚动
-                generateMobileNavContent();
-                mobileNavToggle.setAttribute('aria-expanded', 'true');
-                mobileNavOverlay.setAttribute('aria-hidden', 'false');
-                mobileNavClose.focus();
-                document.addEventListener('keydown', trapFocus, true);
-            }
+	            let previousBodyOverflow = '';
+	            let previousHtmlOverflow = '';
 
-            // 关闭手机端导航
-            function closeMobileNav() {
-                mobileNavOverlay.classList.remove('active');
-                document.body.style.overflow = ''; // 恢复滚动
-                mobileNavToggle.setAttribute('aria-expanded', 'false');
-                mobileNavOverlay.setAttribute('aria-hidden', 'true');
-                document.removeEventListener('keydown', trapFocus, true);
-                if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
-                    lastFocusedElement.focus();
+	            function openMobileNav() {
+	                lastFocusedElement = document.activeElement;
+	                previousBodyOverflow = document.body.style.overflow || '';
+	                previousHtmlOverflow = document.documentElement.style.overflow || '';
+	                mobileNavOverlay.classList.add('active');
+	                // 防止背景滚动（移动端需要同时锁定 html/body 才更稳定）
+	                document.body.style.overflow = 'hidden';
+	                document.documentElement.style.overflow = 'hidden';
+	                generateMobileNavContent();
+	                mobileNavToggle.setAttribute('aria-expanded', 'true');
+	                mobileNavOverlay.setAttribute('aria-hidden', 'false');
+	                mobileNavClose.focus();
+	                document.addEventListener('keydown', trapFocus, true);
+	            }
+
+	            // 关闭手机端导航
+	            function closeMobileNav() {
+	                mobileNavOverlay.classList.remove('active');
+	                document.body.style.overflow = previousBodyOverflow; // 恢复滚动
+	                document.documentElement.style.overflow = previousHtmlOverflow;
+	                mobileNavToggle.setAttribute('aria-expanded', 'false');
+	                mobileNavOverlay.setAttribute('aria-hidden', 'true');
+	                document.removeEventListener('keydown', trapFocus, true);
+	                if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+	                    lastFocusedElement.focus();
                 } else {
                     mobileNavToggle.focus();
                 }

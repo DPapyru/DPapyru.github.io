@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- 泰拉瑞亚Mod制作教程文档导航页面 -->
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
@@ -76,18 +76,18 @@
             margin-bottom: 50px;
         }
         
-        .category-card {
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
+	        .category-card {
+	            background-color: var(--bg-content);
+	            border-radius: 12px;
+	            box-shadow: var(--shadow-md);
+	            overflow: hidden;
+	            transition: transform 0.3s ease, box-shadow 0.3s ease;
+	        }
         
-        .category-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-        }
+	        .category-card:hover {
+	            transform: translateY(-5px);
+	            box-shadow: var(--shadow-xl);
+	        }
         
         .category-header {
             background-color: #28a745;
@@ -98,9 +98,9 @@
             transition: background-color 0.3s ease;
         }
         
-        .category-header:hover {
-            background-color: #218838;
-        }
+	        .category-header:hover {
+	            background-color: var(--primary-hover);
+	        }
         
         .category-icon {
             position: absolute;
@@ -133,37 +133,37 @@
             padding: 0;
         }
         
-        .doc-item {
-            border-bottom: 1px solid #f1f3f4;
-            transition: background-color 0.2s ease;
-        }
+	        .doc-item {
+	            border-bottom: 1px solid var(--border-light);
+	            transition: background-color 0.2s ease;
+	        }
         
         .doc-item:last-child {
             border-bottom: none;
         }
         
-        .doc-item:hover {
-            background-color: #f8f9fa;
-        }
+	        .doc-item:hover {
+	            background-color: var(--sidebar-hover);
+	        }
         
-        .doc-link {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            color: #333;
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
+	        .doc-link {
+	            display: flex;
+	            align-items: center;
+	            padding: 15px 20px;
+	            color: var(--text-color);
+	            text-decoration: none;
+	            transition: color 0.2s ease;
+	        }
         
-        .doc-link:hover {
-            color: #007bff;
-        }
+	        .doc-link:hover {
+	            color: var(--link-color);
+	        }
         
-        .doc-icon {
-            margin-right: 15px;
-            color: #007bff;
-            font-size: 1.2rem;
-        }
+	        .doc-icon {
+	            margin-right: 15px;
+	            color: var(--link-color);
+	            font-size: 1.2rem;
+	        }
         
         .doc-info {
             flex: 1;
@@ -174,10 +174,10 @@
             margin-bottom: 5px;
         }
         
-        .doc-meta {
-            font-size: 0.85rem;
-            color: #666;
-        }
+	        .doc-meta {
+	            font-size: 0.85rem;
+	            color: var(--text-secondary);
+	        }
         
         .doc-meta span {
             margin-right: 10px;
@@ -191,26 +191,26 @@
             text-transform: uppercase;
         }
         
-        .difficulty-badge.beginner {
-            background-color: #d4edda;
-            color: #155724;
-        }
+	        .difficulty-badge.beginner {
+	            background-color: rgba(40, 167, 69, 0.18);
+	            color: #b7f5c5;
+	        }
         
-        .difficulty-badge.intermediate {
-            background-color: #fff3cd;
-            color: #856404;
-        }
+	        .difficulty-badge.intermediate {
+	            background-color: rgba(255, 193, 7, 0.18);
+	            color: #ffe8a6;
+	        }
         
-        .difficulty-badge.advanced {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
+	        .difficulty-badge.advanced {
+	            background-color: rgba(220, 53, 69, 0.18);
+	            color: #ffc1c7;
+	        }
         
-        .quick-links {
-            background-color: #f8f9fa;
-            padding: 40px 0;
-            border-top: 1px solid #e9ecef;
-        }
+	        .quick-links {
+	            background-color: var(--bg-secondary);
+	            padding: 40px 0;
+	            border-top: 1px solid var(--border-color);
+	        }
         
         .quick-links-grid {
             display: grid;
@@ -218,37 +218,37 @@
             gap: 20px;
         }
         
-        .quick-link-card {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+	        .quick-link-card {
+	            background-color: var(--bg-content);
+	            border-radius: 8px;
+	            padding: 20px;
+	            text-align: center;
+	            box-shadow: var(--shadow-sm);
+	            transition: transform 0.2s ease, box-shadow 0.2s ease;
+	        }
         
-        .quick-link-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
+	        .quick-link-card:hover {
+	            transform: translateY(-3px);
+	            box-shadow: var(--shadow-lg);
+	        }
         
-        .quick-link-icon {
-            font-size: 2rem;
-            margin-bottom: 15px;
-            color: #007bff;
-        }
+	        .quick-link-icon {
+	            font-size: 2rem;
+	            margin-bottom: 15px;
+	            color: var(--link-color);
+	        }
         
-        .quick-link-title {
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-            color: #333;
-        }
+	        .quick-link-title {
+	            font-size: 1.1rem;
+	            margin-bottom: 10px;
+	            color: var(--text-color);
+	        }
         
-        .quick-link-description {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 15px;
-        }
+	        .quick-link-description {
+	            font-size: 0.9rem;
+	            color: var(--text-secondary);
+	            margin-bottom: 15px;
+	        }
         
         /* 响应式设计 */
         @media (max-width: 768px) {
@@ -294,7 +294,7 @@
 	                    </ul>
 	                </nav>
                 <!-- 移动端菜单切换按钮 -->
-                <button class="mobile-menu-toggle" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
+                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
                     <span class="bar"></span>
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -368,14 +368,13 @@
         </div>
     </footer>
 
-    <!-- 加载JavaScript文件 -->
-    <script src="../assets/js/site-config.js"></script>
-    <script src="../assets/js/main.js"></script> <!-- 主要功能脚本 -->
-    <script src="../assets/js/navigation.js"></script> <!-- 导航增强脚本 -->
-    <script src="../assets/js/theme-toggle.js"></script> <!-- 主题切换功能脚本 -->
-    <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
-    <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
-    <script src="../assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
+	    <!-- 加载JavaScript文件 -->
+	    <script src="../assets/js/site-config.js"></script>
+	    <script src="../assets/js/main.js"></script> <!-- 主要功能脚本 -->
+	    <script src="../assets/js/navigation.js"></script> <!-- 导航增强脚本 -->
+	    <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
+	    <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
+	    <script src="../assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
     <script>
         // 设置一个标志，告诉main.js这是index.html页面，不要执行自动加载
         window.IS_INDEX_PAGE = true;
@@ -1086,7 +1085,7 @@
                         const moreLink = document.createElement('div');
                         moreLink.className = 'doc-link';
                         moreLink.style.cursor = 'pointer';
-                        moreLink.style.color = '#007bff';
+                        moreLink.style.color = 'var(--link-color)';
                         moreLink.style.fontStyle = 'italic';
                         moreLink.innerHTML = `
                             <div class="doc-icon">⋯</div>

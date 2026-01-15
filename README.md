@@ -82,7 +82,7 @@ DPapyru.github.io/
 │   │   ├── prism-csharp.min.js # C#语言支持
 │   │   ├── search.js      # 搜索功能
 │   │   ├── navigation.js  # 导航功能
-│   │   └── theme-toggle.js # 主题切换
+│   │   └── theme-init.js  # 主题初始化（固定深色）
 │   └── imgs/              # 图片资源
 ├── docs/                  # 文档与站内页面
 │   ├── index.html         # 文档首页（分类/目录）
