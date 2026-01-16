@@ -586,14 +586,14 @@ function initMarkdownRenderer() {
 
         // viewer.html 会自行配置 marked（包含相对路径解析等），这里避免覆盖其 renderer/options
         if (window.IS_VIEWER_PAGE) {
-            if (!window.__MARKED_CUSTOM_EXTENSIONS_INSTALLED) {
-                try {
-                    marked.use({ extensions: [markdownRenderColorLD(), markdownRenderColorChange()] });
-                    window.__MARKED_CUSTOM_EXTENSIONS_INSTALLED = true;
-                } catch (e) {
-                    console.warn('viewer页面安装marked扩展失败:', e);
-                }
-            }
+	            if (!window.__MARKED_CUSTOM_EXTENSIONS_INSTALLED) {
+	                try {
+	                    marked.use({ extensions: [markdownRenderColor(), markdownRenderColorChange()] });
+	                    window.__MARKED_CUSTOM_EXTENSIONS_INSTALLED = true;
+	                } catch (e) {
+	                    console.warn('viewer页面安装marked扩展失败:', e);
+	                }
+	            }
             return;
         }
 
@@ -673,7 +673,7 @@ function initMarkdownRenderer() {
 
         // 将扩展添加到marked（避免重复安装）
         if (!window.__MARKED_CUSTOM_EXTENSIONS_INSTALLED) {
-            marked.use({ extensions: [markdownRenderColorLD(), markdownRenderColorChange()] });
+            marked.use({ extensions: [markdownRenderColor(), markdownRenderColorChange()] });
             window.__MARKED_CUSTOM_EXTENSIONS_INSTALLED = true;
         }
 
@@ -684,9 +684,9 @@ function initMarkdownRenderer() {
 }
 
 /**
- * 让md渲染支持使用深浅颜色变量
+ * 让md渲染支持使用颜色变量
  */
-function markdownRenderColorLD() {
+	function markdownRenderColor() {
     return {
         name: 'color',
         level: 'inline',

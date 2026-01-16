@@ -4,18 +4,15 @@ author: 小天使
 date: 2025-12-02
 last_updated: 2025-12-02
 category: Modder入门
-tags: ["Modder入门", "新手必看"]
 difficulty: beginner
 time: 5分钟
 description: 新人要看一下前言
 prev_chapter: null
-next_chapter: DPapyru-贡献者如何编写文章基础.md
+next_chapter: DPapyru-提问的艺术.md
 topic: mod-basics
 order: 5
-colorLD:
-   Mad:
-    - #f30
-    - #f00
+colors:
+  Mad: "#f00"
 ---
 
 # 致谢

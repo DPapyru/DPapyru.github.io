@@ -23,12 +23,6 @@
         "body": "last_updated: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
         "description": "添加最后更新日期"
     },
-    "标签": {
-        "scope": "yaml",
-        "prefix": "tags",
-        "body": "tags: [\"${1:标签1}\", \"${2:标签2}\"]",
-        "description": "添加文章标签"
-    },
     "分类": {
         "scope": "yaml",
         "prefix": "category",
@@ -57,23 +51,19 @@
         "scope": "yaml",
         "prefix": "topic",
         "body": [
-            "topic: ${1|mod-basics,env,items,npcsworld-gen,ui,networking,advanced|}"
+            "topic: ${1|mod-basics,env,items,npcs,world-gen,ui,networking,advanced|}"
         ],
         "description": "添加主题颜色配置(注意！exColor这一类变量名不能使用非英文字符,否则无法显示内容！)"
     },
-    "深浅颜色": {
+    "颜色": {
         "scope": "yaml",
-        "prefix": "colorLD",
+        "prefix": "colors",
         "body": [
-            "colorLD:",
-            "   exColor:",
-            "    - ${1:#f0f}",
-            "    - ${2:#0f0}",
-            "   exColorB:",
-            "    - ${3:#f0fff2}",
-            "    - ${4:#22f02b}",
+            "colors:",
+            "  exColor: \"${1:#f0f}\"",
+            "  exColorB: \"${2:#f0fff2}\""
         ],
-        "description": "添加主题颜色配置(亮色和暗色)(注意！exColor这一类变量名不能使用非英文字符,否则无法显示内容！)"
+        "description": "添加颜色配置(单色；变量名建议英文/ASCII)"
     },
     "颜色动画": {
         "scope": "yaml",
@@ -84,7 +74,7 @@
             "    - ${1:#f0f}",
             "    - ${2:#0f0}",
             "    - ${3:#ff0}",
-            "    - ${4:#f0f}",
+            "    - ${4:#f0f}"
         ],
         "description": "添加颜色动画(注意！exColor这一类变量名不能使用非英文字符,否则无法显示内容！)"
     },

@@ -7,7 +7,6 @@ order: 999
 difficulty: beginner
 time: 5分钟
 description: 如何给这个教程网页进行一个文档编写？
-tags: ["贡献者","文章编写"]
 last_updated: 2025-11-27
 prev_chapter: null
 next_chapter: TopicSystem使用指南.md
@@ -33,7 +32,6 @@ next_chapter: TopicSystem使用指南.md
 - difficulty: 文章难度,可以写英文,也可以写中文,之后会补充这里应该填什么
 - time: 学习时间
 - description: 文章说明
-- tags: 文章的tag
 - last_updated: 最后更新日期,当然你能不改
 
 ## 文章内容

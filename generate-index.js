@@ -172,10 +172,10 @@ class ConfigManager {
                 defaultCategory: '资源参考',
                 defaultTopic: 'mod-basics',
                 pathMappings: {},
-                customFields: ['last_updated', 'tags', 'time', 'prev_chapter', 'next_chapter', 'colorLD', 'colorChange'],
+                customFields: ['last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange'],
                 validationRules: {
                     requiredFields: ['title'],
-                    optionalFields: ['author', 'description', 'date', 'difficulty', 'order', 'category', 'topic', 'last_updated', 'tags', 'time', 'prev_chapter', 'next_chapter', 'colorLD', 'colorChange']
+                    optionalFields: ['author', 'description', 'date', 'difficulty', 'order', 'category', 'topic', 'last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange']
                 }
             }
         };
@@ -259,6 +259,19 @@ class ConfigManager {
                     this.config.settings[key].optionalFields = currentOptionalFields;
                 }
             });
+        }
+
+        // 清理已废弃字段（向后兼容旧配置）
+        if (Array.isArray(this.config.settings.customFields)) {
+            this.config.settings.customFields = this.config.settings.customFields.filter(f => f !== 'tags');
+            this.config.settings.customFields = this.config.settings.customFields.filter(f => f !== 'colorLD');
+        }
+        if (this.config.settings.validationRules &&
+            Array.isArray(this.config.settings.validationRules.optionalFields)) {
+            this.config.settings.validationRules.optionalFields =
+                this.config.settings.validationRules.optionalFields.filter(f => f !== 'tags');
+            this.config.settings.validationRules.optionalFields =
+                this.config.settings.validationRules.optionalFields.filter(f => f !== 'colorLD');
         }
 
         // 合并默认分类
@@ -662,7 +675,6 @@ function generateSearchIndex(config) {
             category: doc.category || '',
             topic: doc.topic || '',
             author: doc.author || '',
-            tags: Array.isArray(doc.tags) ? doc.tags : [],
             difficulty: doc.difficulty || '',
             time: doc.time || '',
             last_updated: doc.last_updated || '',
@@ -858,12 +870,11 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
             description: metadata.description || '无描述',
             last_updated: metadata.last_updated || metadata.date || '2017-9-18',
             // 添加新的自定义字段
-            tags: metadata.tags || [],
             time: metadata.time || '不具体',
             difficulty: metadata.difficulty || 'beginner',
             prev_chapter: metadata.prev_chapter || null,
             next_chapter: metadata.next_chapter || null,
-            colorLD: metadata.colorLD || null,
+            colors: metadata.colors || metadata.colorLD || null,
             colorChange: metadata.colorChange || null
         };
 
@@ -894,12 +905,11 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
             topic: topic,
             order: parseInt(metadata.order) || 999,
             // 添加新的自定义字段
-            tags: metadata.tags || [],
             time: metadata.time || '不具体',
             difficulty: metadata.difficulty || 'beginner',
             prev_chapter: metadata.prev_chapter || null,
             next_chapter: metadata.next_chapter || null,
-            colorLD: metadata.colorLD || null,
+            colors: metadata.colors || metadata.colorLD || null,
             colorChange: metadata.colorChange || null,
             last_updated: metadata.last_updated || metadata.date || '2017-9-18'
         });

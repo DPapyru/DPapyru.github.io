@@ -9,22 +9,21 @@
 			"date: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
 			"last_updated: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
 			"category: ${3:分类}",
-			"tags: [\"${4:标签1}\", \"${5:标签2}\"]",
-			"difficulty: ${6|beginner,intermediate,advanced,expert|}",
-			"time: ${7:预计阅读时间}",
-			"description: ${8:简短描述}",
-			"prev_chapter: ${9:上一章}",
-			"next_chapter: ${10:下一章}",
-			"topic: ${11:分类}"
+			"difficulty: ${4|beginner,intermediate,advanced,expert|}",
+			"time: ${5:预计阅读时间}",
+			"description: ${6:简短描述}",
+			"prev_chapter: ${7:上一章}",
+			"next_chapter: ${8:下一章}",
+			"topic: ${9:主题}",
 			"---",
 			"",
 			"$0"
 		],
 		"description": "md yaml元数据补全"
 	},
-	"md颜色添加(需要在元数据定义colorLD的变量)": {
+	"md颜色添加(需要在元数据定义colors变量)": {
 		"scope": "markdown",
-		"prefix": "colorLD",
+		"prefix": "color",
 		"body": "{color:${1:颜色变量}}{${2:内容}}",
 		"description": "md颜色添加(本项目独有)"
 	},

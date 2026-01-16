@@ -735,40 +735,22 @@
                         console.log('从配置文件加载的文档数量:', ALL_DOCS.length);
                         console.log('从配置文件加载的文档:', ALL_DOCS);
 
-                        // 如果配置文件中有文档，直接使用
-                        if (ALL_DOCS.length > 0) {
-                            // 确保每个文档都有必要的属性
-                            ALL_DOCS = ALL_DOCS.map(doc => {
-                                // 处理标签格式
-                                let tags = [];
-                                if (doc.tags) {
-                                    if (Array.isArray(doc.tags)) {
-                                        tags = doc.tags;
-                                    } else if (typeof doc.tags === 'string') {
-                                        // 处理可能的JSON字符串格式
-                                        try {
-                                            const parsedTags = JSON.parse(doc.tags);
-                                            tags = Array.isArray(parsedTags) ? parsedTags : [parsedTags];
-                                        } catch (e) {
-                                            // 如果不是JSON，按逗号分割
-                                            tags = doc.tags.split(',').map(t => t.trim());
-                                        }
-                                    }
-                                }
-
-                                return {
-                                    ...doc,
-                                    path: doc.path || doc.filename,
-                                    title: doc.title || doc.filename.replace('.md', ''),
-                                    author: doc.author || '未知',
-                                    category: doc.category || '入门',
-                                    topic: doc.topic || 'mod-basics',
-                                    order: parseInt(doc.order) || 999,
-                                    description: doc.description || '',
-                                    tags: tags,
-                                    last_updated: doc.last_updated || '未知'
-                                };
-                            });
+	                        // 如果配置文件中有文档，直接使用
+	                        if (ALL_DOCS.length > 0) {
+	                            // 确保每个文档都有必要的属性
+	                            ALL_DOCS = ALL_DOCS.map(doc => {
+	                                return {
+	                                    ...doc,
+	                                    path: doc.path || doc.filename,
+	                                    title: doc.title || doc.filename.replace('.md', ''),
+	                                    author: doc.author || '未知',
+	                                    category: doc.category || '入门',
+	                                    topic: doc.topic || 'mod-basics',
+	                                    order: parseInt(doc.order) || 999,
+	                                    description: doc.description || '',
+	                                    last_updated: doc.last_updated || '未知'
+	                                };
+	                            });
 
                             console.log('处理后的文档列表:', ALL_DOCS);
                             console.log('=== scanAllDocuments() 诊断结束 ===');
@@ -814,17 +796,16 @@
                                 console.log(`文档 ${filename} 的分类从 ${oldCategory} 映射到 ${category}`);
                             }
 
-                            const docInfo = {
-                                filename: filename,
-                                title: metadata.title || filename.replace('.md', ''),
-                                author: metadata.author || '未知',
-                                category: category,
-                                topic: metadata.topic || 'mod-basics',
-                                order: parseInt(metadata.order) || 999,
-                                description: metadata.description || '',
-                                tags: metadata.tags ? metadata.tags.split(',').map(t => t.trim()) : [],
-                                last_updated: metadata.last_updated || '未知'
-                            };
+	                            const docInfo = {
+	                                filename: filename,
+	                                title: metadata.title || filename.replace('.md', ''),
+	                                author: metadata.author || '未知',
+	                                category: category,
+	                                topic: metadata.topic || 'mod-basics',
+	                                order: parseInt(metadata.order) || 999,
+	                                description: metadata.description || '',
+	                                last_updated: metadata.last_updated || '未知'
+	                            };
 
                             ALL_DOCS.push(docInfo);
                             console.log('成功添加文档:', docInfo.title);
@@ -853,20 +834,19 @@
                 console.error('扫描文档失败:', error);
                 console.log('=== scanAllDocuments() 因错误结束 ===');
                 // 提供一些默认文档
-                ALL_DOCS = [
-                    {
-                        filename: 'DPapyru-给新人的前言.md',
-                        path: 'Modder入门/DPapyru-给新人的前言.md',
-                        title: '给新人的前言',
-                        author: 'DPapyru',
-                        category: 'Modder入门',
-                        topic: 'mod-basics',
-                        order: 1,
-                        description: '面向新人的入门引导文档',
-                        tags: ['入门'],
-                        last_updated: '未知'
-                    }
-                ];
+	                ALL_DOCS = [
+	                    {
+	                        filename: 'DPapyru-给新人的前言.md',
+	                        path: 'Modder入门/DPapyru-给新人的前言.md',
+	                        title: '给新人的前言',
+	                        author: 'DPapyru',
+	                        category: 'Modder入门',
+	                        topic: 'mod-basics',
+	                        order: 1,
+	                        description: '面向新人的入门引导文档',
+	                        last_updated: '未知'
+	                    }
+	                ];
                 console.log('使用默认文档配置');
                 buildDocLookupMap();
             }
@@ -1220,18 +1200,20 @@
                             const p = d.path || d.filename;
                             return p === fetchPath || d.filename === fetchPath || d.path === fetchPath;
                         });
-                        if (docFromConfig) {
-                            if (!metadata.title && docFromConfig.title) metadata.title = docFromConfig.title;
-                            if (!metadata.author && docFromConfig.author) metadata.author = docFromConfig.author;
-                            if (!metadata.description && docFromConfig.description) metadata.description = docFromConfig.description;
-                            if (!metadata.category && docFromConfig.category) metadata.category = docFromConfig.category;
-                            if (!metadata.topic && docFromConfig.topic) metadata.topic = docFromConfig.topic;
-                            if (!metadata.difficulty && docFromConfig.difficulty) metadata.difficulty = docFromConfig.difficulty;
-                            if (!metadata.time && docFromConfig.time) metadata.time = docFromConfig.time;
-                            if (!metadata.last_updated && docFromConfig.last_updated) metadata.last_updated = docFromConfig.last_updated;
-                            if (!metadata.prev_chapter && docFromConfig.prev_chapter) metadata.prev_chapter = docFromConfig.prev_chapter;
-                            if (!metadata.next_chapter && docFromConfig.next_chapter) metadata.next_chapter = docFromConfig.next_chapter;
-                        }
+	                        if (docFromConfig) {
+	                            if (!metadata.title && docFromConfig.title) metadata.title = docFromConfig.title;
+	                            if (!metadata.author && docFromConfig.author) metadata.author = docFromConfig.author;
+	                            if (!metadata.description && docFromConfig.description) metadata.description = docFromConfig.description;
+	                            if (!metadata.category && docFromConfig.category) metadata.category = docFromConfig.category;
+	                            if (!metadata.topic && docFromConfig.topic) metadata.topic = docFromConfig.topic;
+	                            if (!metadata.difficulty && docFromConfig.difficulty) metadata.difficulty = docFromConfig.difficulty;
+	                            if (!metadata.time && docFromConfig.time) metadata.time = docFromConfig.time;
+	                            if (!metadata.last_updated && docFromConfig.last_updated) metadata.last_updated = docFromConfig.last_updated;
+	                            if (!metadata.prev_chapter && docFromConfig.prev_chapter) metadata.prev_chapter = docFromConfig.prev_chapter;
+	                            if (!metadata.next_chapter && docFromConfig.next_chapter) metadata.next_chapter = docFromConfig.next_chapter;
+	                            if (!metadata.colors && docFromConfig.colors) metadata.colors = docFromConfig.colors;
+	                            if (!metadata.colorChange && docFromConfig.colorChange) metadata.colorChange = docFromConfig.colorChange;
+	                        }
 
                         console.log('解析的元数据:', metadata);
 
@@ -1506,10 +1488,10 @@
             const last_updated = metadata.last_updated || '未知';
             const prevChapter = metadata.prev_chapter || null;
             const nextChapter = metadata.next_chapter || null;
-            const colorLD = metadata.colorLD || null;
-            const colorChange = metadata.colorChange || null;
-
-            console.log('更新页面元数据:', { title, difficulty, time, author, last_updated, prevChapter, nextChapter, colorLD, colorChange });
+	            const colors = metadata.colors || metadata.colorLD || null;
+	            const colorChange = metadata.colorChange || null;
+	
+	            console.log('更新页面元数据:', { title, difficulty, time, author, last_updated, prevChapter, nextChapter, colors, colorChange });
 
             document.title = `${title} - 泰拉瑞亚Mod制作教程`;
             document.getElementById('current-doc-name').textContent = title;
@@ -1521,7 +1503,7 @@
             document.getElementById('doc-date').textContent = last_updated;
 
             // 更新特殊颜色
-            updateColorStyle(colorLD, colorChange);
+	            updateColorStyle(colors, colorChange);
 
             // 更新面包屑导航
             updateBreadcrumbNavigation(metadata, filePath);
@@ -1570,66 +1552,65 @@
             setMetaContent('meta[name="twitter:description"]', safeDescription);
         }
 
-        function updateColorStyle(colorLDArray, colorChangeArray) {
-            const style = document.createElement('style'); // 创建一个style
-            // 深浅字体颜色
-            let colorLD = null;
-            if (!colorLDArray)
-                console.warn('没有设置深浅字体颜色!跳过深浅颜色的设置!');
-            else
-                colorLD = colorLDStyle(colorLDArray);
-            // 颜色动画
-            let colorChange = null;
-            if (!colorChangeArray)
-                console.warn('没有设置颜色转换变量!跳过颜色转换变量的设置!');
-            else
-                colorChange = colorChangeStyle(colorChangeArray);
-            
-            const light = colorLD ? colorLD.light : '';
-            const dark = colorLD ? colorLD.dark : '';
-            style.textContent = `
-                        ${colorChange || ''}
-                        :root{
-                            ${light}
-                        }
-                        [data-theme="dark"]{
-                            ${dark}
-                        }
-                    `;
-            document.head.appendChild(style);
-        }
+	        function updateColorStyle(colorsConfig, colorChangeConfig) {
+	            const existing = document.getElementById('dynamic-color-style');
+	            if (existing) existing.remove();
 
-        function colorLDStyle(colorLDArray) {
-            try {
-                const forEach_color = colorLDArray;
-                let style_text_light = '';
-                let style_text_dark = '';
-                if (forEach_color) {
-                    Object.entries(forEach_color).forEach(color => {
-                        // 为每种颜色生成唯一的CSS类名
-                        // color0是名字
-                        // color1是颜色数组
-                        // color1下:
-                        // 0是浅色,1是深色
-                        style_text_light = style_text_light.concat(`
-                            --marked-text-color-${color[0]}:${color[1][0]};
-                        `).trim();
-                        style_text_dark = style_text_dark.concat(`
-                            --marked-text-color-${color[0]}:${color[1][1]};
-                        `).trim();
-                    });
-                    return {
-                        light: style_text_light,
-                        dark: style_text_dark
-                    };
-                }
-                else {
-                    console.error('特殊字体颜色配置失效！');
-                }
-            } catch (error) {
-                console.error('创建css时候出现严重问题!问题:', error);
-            }
-        }
+	            const style = document.createElement('style');
+	            style.id = 'dynamic-color-style';
+
+	            // 文字颜色变量（单色）
+	            let colors = '';
+	            if (!colorsConfig) {
+	                console.warn('没有设置文字颜色变量!跳过文字颜色的设置!');
+	            } else {
+	                colors = colorStyle(colorsConfig);
+	            }
+
+	            // 颜色动画
+	            let colorChange = '';
+	            if (!colorChangeConfig) {
+	                console.warn('没有设置颜色转换变量!跳过颜色转换变量的设置!');
+	            } else {
+	                colorChange = colorChangeStyle(colorChangeConfig) || '';
+	            }
+
+	            style.textContent = `
+	                        ${colorChange}
+	                        :root{
+	                            ${colors}
+	                        }
+	                    `;
+	            document.head.appendChild(style);
+	        }
+
+	        function colorStyle(colorsConfig) {
+	            try {
+	                if (!colorsConfig) {
+	                    console.error('特殊字体颜色配置失效！');
+	                    return '';
+	                }
+
+	                let styleText = '';
+	                Object.entries(colorsConfig).forEach(([name, value]) => {
+	                    let resolved = '';
+	                    if (Array.isArray(value)) {
+	                        resolved = (value.length > 1 ? value[1] : value[0]) || '';
+	                    } else if (typeof value === 'string') {
+	                        resolved = value;
+	                    }
+
+	                    if (!resolved) return;
+	                    styleText = styleText.concat(`
+	                            --marked-text-color-${name}:${resolved};
+	                        `).trim();
+	                });
+
+	                return styleText;
+	            } catch (error) {
+	                console.error('创建css时候出现严重问题!问题:', error);
+	            }
+	        }
 
         /**
          * 根据颜色变化数组生成CSS动画样式

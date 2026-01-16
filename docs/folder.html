@@ -357,33 +357,18 @@
             padding: 20px;
         }
 
-	        .doc-description {
-	            font-size: 0.95rem;
-	            color: var(--text-secondary);
-	            margin-bottom: 15px;
-	            line-height: 1.5;
-	        }
+		        .doc-description {
+		            font-size: 0.95rem;
+		            color: var(--text-secondary);
+		            margin-bottom: 15px;
+		            line-height: 1.5;
+		        }
 
-        .doc-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 15px;
-        }
-
-	        .doc-tag {
-	            background-color: var(--bg-tertiary);
-	            color: var(--text-secondary);
-	            font-size: 0.75rem;
-	            padding: 3px 8px;
-	            border-radius: 4px;
-	        }
-
-	        .doc-card-footer {
-	            padding: 15px 20px;
-	            background-color: var(--bg-secondary);
-	            display: flex;
-	            justify-content: space-between;
+		        .doc-card-footer {
+		            padding: 15px 20px;
+		            background-color: var(--bg-secondary);
+		            display: flex;
+		            justify-content: space-between;
 	            align-items: center;
 	        }
 
@@ -1020,29 +1005,12 @@
                     console.log('从配置文件加载文档列表');
                     ALL_DOCS = [...FOLDER_DOC_CONFIG.all_files];
 
-                    // 确保每个文档都有必要的字段
-                    ALL_DOCS = ALL_DOCS.map(doc => {
-                        // 处理标签格式
-                        let tags = [];
-                        if (doc.tags) {
-                            if (Array.isArray(doc.tags)) {
-                                tags = doc.tags;
-                            } else if (typeof doc.tags === 'string') {
-                                // 处理可能的JSON字符串格式
-                                try {
-                                    const parsedTags = JSON.parse(doc.tags);
-                                    tags = Array.isArray(parsedTags) ? parsedTags : [parsedTags];
-                                } catch (e) {
-                                    // 如果不是JSON，按逗号分割
-                                    tags = doc.tags.split(',').map(t => t.trim());
-                                }
-                            }
-                        }
-
-                        // 尝试从分类的topics中获取description
-                        let description = doc.description || '';
-                        if (!description && doc.category && doc.topic && FOLDER_DOC_CONFIG.categories &&
-                            FOLDER_DOC_CONFIG.categories[doc.category] &&
+	                    // 确保每个文档都有必要的字段
+	                    ALL_DOCS = ALL_DOCS.map(doc => {
+	                        // 尝试从分类的topics中获取description
+	                        let description = doc.description || '';
+	                        if (!description && doc.category && doc.topic && FOLDER_DOC_CONFIG.categories &&
+	                            FOLDER_DOC_CONFIG.categories[doc.category] &&
                             FOLDER_DOC_CONFIG.categories[doc.category].topics &&
                             FOLDER_DOC_CONFIG.categories[doc.category].topics[doc.topic] &&
                             FOLDER_DOC_CONFIG.categories[doc.category].topics[doc.topic].files) {
@@ -1061,13 +1029,12 @@
                             author: doc.author || '未知',
                             category: doc.category || '入门',
                             topic: doc.topic || 'mod-basics',
-                            order: parseInt(doc.order) || 999,
-                            description: description,
-                            tags: tags,
-                            last_updated: doc.last_updated || '未知',
-                            difficulty: doc.difficulty || 'beginner'
-                        };
-                    });
+	                            order: parseInt(doc.order) || 999,
+	                            description: description,
+	                            last_updated: doc.last_updated || '未知',
+	                            difficulty: doc.difficulty || 'beginner'
+	                        };
+	                    });
 
                     console.log('从配置文件加载的文档:', ALL_DOCS);
                     return;
@@ -1242,18 +1209,12 @@
                     const docCard = document.createElement('div');
                     docCard.className = 'doc-card';
 
-	                    const difficultyClass = normalizeDifficultyClass(doc.difficulty);
-	                    const difficultyText = getDifficultyText(doc.difficulty);
+		                    const difficultyClass = normalizeDifficultyClass(doc.difficulty);
+		                    const difficultyText = getDifficultyText(doc.difficulty);
 
-                    // 生成标签HTML
-	                    let tagsHtml = '';
-	                    if (doc.tags && doc.tags.length > 0) {
-	                        tagsHtml = doc.tags.map(tag => `<span class="doc-tag">${escapeHtml(tag)}</span>`).join('');
-	                    }
-
-                    // 处理描述
-	                    let description = '暂无描述';
-	                    if (doc.description && typeof doc.description === 'string' && doc.description.trim() !== '') {
+	                    // 处理描述
+		                    let description = '暂无描述';
+		                    if (doc.description && typeof doc.description === 'string' && doc.description.trim() !== '') {
 	                        description = doc.description;
 	                    }
 
@@ -1271,14 +1232,13 @@
 	                                    <span>更新: ${escapeHtml(doc.last_updated)}</span>
 	                                </div>
 	                            </div>
-	                        </div>
-	                        <div class="doc-card-body">
-	                            <p class="doc-description">${escapeHtml(description)}</p>
-	                            ${tagsHtml ? `<div class="doc-tags">${tagsHtml}</div>` : ''}
-	                        </div>
-	                        <div class="doc-card-footer">
-	                            <div class="doc-author">作者: ${escapeHtml(doc.author)}</div>
-	                            <a href="viewer.html?file=${encodeURIComponent(doc.path)}" class="doc-link">查看文档</a>
+		                        </div>
+		                        <div class="doc-card-body">
+		                            <p class="doc-description">${escapeHtml(description)}</p>
+		                        </div>
+		                        <div class="doc-card-footer">
+		                            <div class="doc-author">作者: ${escapeHtml(doc.author)}</div>
+		                            <a href="viewer.html?file=${encodeURIComponent(doc.path)}" class="doc-link">查看文档</a>
 	                        </div>
 	                    `;
 
@@ -1339,12 +1299,11 @@
                 let filteredDocs = applyCurrentFilters();
 
                 // 在过滤后的结果中搜索
-                const results = filteredDocs.filter(doc =>
-                    doc.title.toLowerCase().includes(query) ||
-                    doc.author.toLowerCase().includes(query) ||
-                    (doc.description && doc.description.toLowerCase().includes(query)) ||
-                    (doc.tags && doc.tags.some(tag => tag.toLowerCase().includes(query)))
-                );
+	                const results = filteredDocs.filter(doc =>
+	                    doc.title.toLowerCase().includes(query) ||
+	                    doc.author.toLowerCase().includes(query) ||
+	                    (doc.description && doc.description.toLowerCase().includes(query))
+	                );
 
                 // 应用当前排序
                 const sortFilter = document.getElementById('sort-filter');
@@ -1419,12 +1378,11 @@
                 // 先应用过滤器，然后在这些结果中搜索
                 let filteredDocs = applyCurrentFilters();
 
-                const results = filteredDocs.filter(doc =>
-                    doc.title.toLowerCase().includes(query.toLowerCase()) ||
-                    doc.author.toLowerCase().includes(query.toLowerCase()) ||
-                    (doc.description && doc.description.toLowerCase().includes(query.toLowerCase())) ||
-                    (doc.tags && doc.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase())))
-                );
+	                const results = filteredDocs.filter(doc =>
+	                    doc.title.toLowerCase().includes(query.toLowerCase()) ||
+	                    doc.author.toLowerCase().includes(query.toLowerCase()) ||
+	                    (doc.description && doc.description.toLowerCase().includes(query.toLowerCase()))
+	                );
 
                 // 应用当前排序
                 const sortFilter = document.getElementById('sort-filter');
@@ -1751,18 +1709,12 @@
                 const docCard = document.createElement('div');
                 docCard.className = 'doc-card';
 
-                const difficultyClass = doc.difficulty === 'all' ? 'beginner' : doc.difficulty;
-                const difficultyText = getDifficultyText(doc.difficulty);
+	                const difficultyClass = doc.difficulty === 'all' ? 'beginner' : doc.difficulty;
+	                const difficultyText = getDifficultyText(doc.difficulty);
 
-                // 生成标签HTML
-                let tagsHtml = '';
-                if (doc.tags && doc.tags.length > 0) {
-                    tagsHtml = doc.tags.map(tag => `<span class="doc-tag">${tag}</span>`).join('');
-                }
-
-                // 卡片简介
-                let description = '暂无描述';
-                if (doc.description && typeof doc.description === 'string' && doc.description.trim() !== '') {
+	                // 卡片简介
+	                let description = '暂无描述';
+	                if (doc.description && typeof doc.description === 'string' && doc.description.trim() !== '') {
                     description = doc.description;
                 }
 
@@ -1780,14 +1732,13 @@
                                 <span>更新: ${doc.last_updated}</span>
                             </div>
                         </div>
-                    </div>
-                    <div class="doc-card-body">
-                        <p class="doc-description">${description}</p>
-                        ${tagsHtml ? `<div class="doc-tags">${tagsHtml}</div>` : ''}
-                    </div>
-                    <div class="doc-card-footer">
-                        <div class="doc-author">作者: ${doc.author}</div>
-                        <a href="viewer.html?file=${encodeURIComponent(doc.path)}" class="doc-link">查看文档</a>
+	                    </div>
+	                    <div class="doc-card-body">
+	                        <p class="doc-description">${description}</p>
+	                    </div>
+	                    <div class="doc-card-footer">
+	                        <div class="doc-author">作者: ${doc.author}</div>
+	                        <a href="viewer.html?file=${encodeURIComponent(doc.path)}" class="doc-link">查看文档</a>
                     </div>
                 `;
 
