@@ -537,6 +537,23 @@ a:hover {
     box-shadow: var(--shadow-lg);
 }
 
+/* viewer.html: widen content area on desktop */
+body.viewer-page .content-wrapper {
+    max-width: 1180px;
+}
+
+body.viewer-page .tutorial-content {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+@media (min-width: 1200px) {
+    body.viewer-page .main-content {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+}
+
 /* 首页样式 */
 .homepage {
     padding: 0;
@@ -1343,26 +1360,6 @@ a:hover {
 
 /* 响应式设计 */
 @media (max-width: 992px) {
-    .site-container {
-        flex-direction: column;
-    }
-
-    .sidebar {
-        width: 100%;
-        position: static;
-        height: auto;
-        max-height: 60vh;
-        order: 2;
-        /* 在中等屏幕上保持滚动功能 */
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .main-content {
-        order: 1;
-    }
-
     .hero .container {
         flex-direction: column;
         text-align: center;
@@ -1383,6 +1380,26 @@ a:hover {
 }
 
 @media (max-width: 768px) {
+    .site-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        position: static;
+        height: auto;
+        max-height: 60vh;
+        order: 2;
+        /* 在中等屏幕上保持滚动功能 */
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .main-content {
+        order: 1;
+    }
+
     .header-content {
         flex-wrap: wrap;
         padding: 10px 0;
@@ -1824,6 +1841,10 @@ a:hover {
 .mobile-category.all-docs .mobile-category-title {
     background-color: #e7f6ec;
     color: #28a745;
+}
+
+.mobile-category.all-docs .mobile-category-toggle {
+    display: none;
 }
 
 /* 手机端分割线样式 */

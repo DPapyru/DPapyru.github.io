@@ -70,56 +70,58 @@
         }
         
         .category-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
             margin-bottom: 50px;
         }
-        
-	        .category-card {
-	            background-color: var(--bg-content);
-	            border-radius: 12px;
-	            box-shadow: var(--shadow-md);
-	            overflow: hidden;
-	            transition: transform 0.3s ease, box-shadow 0.3s ease;
-	        }
-        
-	        .category-card:hover {
-	            transform: translateY(-5px);
-	            box-shadow: var(--shadow-xl);
-	        }
-        
+
+        .category-card {
+            background-color: transparent !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            overflow: visible;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .category-card:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
         .category-header {
-            background-color: #28a745;
-            color: white;
-            padding: 20px;
+            background-color: transparent !important;
+            color: var(--text-color) !important;
+            padding: 4px 0 12px;
             position: relative;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: color 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            border-bottom: 1px solid var(--border-color);
         }
-        
-	        .category-header:hover {
-	            background-color: var(--primary-hover);
-	        }
-        
-        .category-icon {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 2rem;
-            opacity: 0.8;
+
+        .category-header:hover {
+            color: var(--link-color) !important;
         }
-        
+
+        .category-header::after {
+            display: none !important;
+            background: none !important;
+        }
+
         .category-title {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             margin: 0;
             font-weight: 600;
+            color: var(--text-color) !important;
         }
-        
+
         .category-description {
-            margin: 10px 0 0;
-            opacity: 0.9;
+            margin: 0;
+            color: var(--text-secondary) !important;
             font-size: 0.95rem;
         }
         
@@ -134,7 +136,8 @@
         }
         
 	        .doc-item {
-	            border-bottom: 1px solid var(--border-light);
+	            border-bottom: 1px solid var(--border-color);
+                background-color: transparent !important;
 	            transition: background-color 0.2s ease;
 	        }
         
@@ -149,38 +152,127 @@
 	        .doc-link {
 	            display: flex;
 	            align-items: center;
-	            padding: 15px 20px;
-	            color: var(--text-color);
+	            gap: 0;
+	            padding: 12px 0;
+	            color: var(--text-color) !important;
+                background-color: transparent !important;
+                border-radius: 0 !important;
 	            text-decoration: none;
-	            transition: color 0.2s ease;
+	            transition: color 0.2s ease, background-color 0.2s ease;
 	        }
-        
+
 	        .doc-link:hover {
-	            color: var(--link-color);
+	            color: var(--link-color) !important;
+                background-color: var(--bg-secondary) !important;
 	        }
-        
-	        .doc-icon {
-	            margin-right: 15px;
-	            color: var(--link-color);
-	            font-size: 1.2rem;
-	        }
-        
+
         .doc-info {
             flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-width: 0;
         }
-        
+
         .doc-title {
             font-weight: 600;
-            margin-bottom: 5px;
         }
         
 	        .doc-meta {
 	            font-size: 0.85rem;
-	            color: var(--text-secondary);
+	            color: var(--text-secondary) !important;
+	            display: flex;
+	            align-items: center;
+	            gap: 10px;
+	            margin-left: auto;
+	            white-space: nowrap;
 	        }
         
         .doc-meta span {
-            margin-right: 10px;
+            margin-right: 0;
+        }
+
+        .subfolder-section {
+            margin-top: 8px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+        }
+
+        .subfolder-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin: 0 0 6px;
+        }
+
+        .subfolder-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .subfolder-item {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .subfolder-item:last-child {
+            border-bottom: none;
+        }
+
+        .subfolder-link {
+            display: block;
+            padding: 10px 0;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .subfolder-link:hover {
+            color: var(--link-color);
+            background-color: var(--bg-secondary);
+        }
+
+        html[data-theme="dark"] .docs-content .category-card {
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
+
+        html[data-theme="dark"] .docs-content .category-header {
+            background-color: transparent !important;
+            color: var(--text-color) !important;
+        }
+
+        html[data-theme="dark"] .docs-content .category-header::after {
+            display: none !important;
+            background: none !important;
+        }
+
+        html[data-theme="dark"] .docs-content .category-title {
+            color: var(--text-color) !important;
+        }
+
+        html[data-theme="dark"] .docs-content .category-description {
+            color: var(--text-secondary) !important;
+        }
+
+        html[data-theme="dark"] .docs-content .doc-item:hover {
+            background-color: transparent !important;
+        }
+
+        html[data-theme="dark"] .docs-content .doc-link {
+            background-color: transparent !important;
+            color: var(--text-color) !important;
+        }
+
+        html[data-theme="dark"] .docs-content .doc-link:hover {
+            background-color: var(--bg-secondary) !important;
+            color: var(--link-color) !important;
+        }
+
+        html[data-theme="dark"] .quick-links .quick-link-card {
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
         }
         
         .difficulty-badge {
@@ -213,41 +305,45 @@
 	        }
         
         .quick-links-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
         }
-        
+
 	        .quick-link-card {
-	            background-color: var(--bg-content);
-	            border-radius: 8px;
-	            padding: 20px;
-	            text-align: center;
-	            box-shadow: var(--shadow-sm);
-	            transition: transform 0.2s ease, box-shadow 0.2s ease;
+	            background-color: transparent !important;
+	            border-radius: 0 !important;
+	            padding: 16px 0;
+	            text-align: left;
+	            box-shadow: none !important;
+                border-bottom: 1px solid var(--border-color);
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+	            transition: background-color 0.2s ease;
 	        }
-        
+
 	        .quick-link-card:hover {
-	            transform: translateY(-3px);
-	            box-shadow: var(--shadow-lg);
+	            transform: none;
+	            box-shadow: none !important;
+                background-color: var(--bg-secondary);
 	        }
-        
-	        .quick-link-icon {
-	            font-size: 2rem;
-	            margin-bottom: 15px;
-	            color: var(--link-color);
-	        }
-        
+
+        .quick-link-card:last-child {
+            border-bottom: none;
+        }
+
 	        .quick-link-title {
 	            font-size: 1.1rem;
-	            margin-bottom: 10px;
+	            margin: 0;
 	            color: var(--text-color);
 	        }
-        
+
 	        .quick-link-description {
 	            font-size: 0.9rem;
 	            color: var(--text-secondary);
-	            margin-bottom: 15px;
+	            margin: 0;
 	        }
         
         /* 响应式设计 */
@@ -261,11 +357,23 @@
             }
             
             .category-grid {
-                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .doc-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .doc-meta {
+                margin-left: 0;
+                flex-wrap: wrap;
+                white-space: normal;
             }
             
             .quick-links-grid {
-                grid-template-columns: 1fr;
+                flex-direction: column;
             }
         }
     </style>
@@ -370,6 +478,7 @@
 
 	    <!-- 加载JavaScript文件 -->
 	    <script src="../assets/js/site-config.js"></script>
+	    <script src="../assets/js/folder-filter.js"></script>
 	    <script src="../assets/js/main.js"></script> <!-- 主要功能脚本 -->
 	    <script src="../assets/js/navigation.js"></script> <!-- 导航增强脚本 -->
 	    <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
@@ -450,7 +559,7 @@
                             TOPIC_AREAS[topicKey] = {
                                 title: topic.title,
                                 description: topic.description,
-                                icon: topic.icon || '📄',
+                                icon: topic.icon || '',
                                 display_names: topic.display_names || {},
                                 aliases: topic.aliases || []
                             };
@@ -471,21 +580,7 @@
 
         // 获取分类图标 - 优先从配置文件读取，否则使用默认值
         function getCategoryIcon(categoryKey) {
-            // 首先尝试从配置文件中获取图标
-            if (DOC_CONFIG && DOC_CONFIG.categories && DOC_CONFIG.categories[categoryKey] && DOC_CONFIG.categories[categoryKey].icon) {
-                return DOC_CONFIG.categories[categoryKey].icon;
-            }
-            
-            // 默认图标映射
-            const iconMap = {
-                '入门': '🚀',
-                '进阶': '📚',
-                '高级': '🔥',
-                '个人分享': '💡',
-                '怎么贡献': '🤝',
-                'Modder入门': '🎮'
-            };
-            return iconMap[categoryKey] || '📄';
+            return '';
         }
 
         // 获取分类颜色 - 优先从配置文件读取，否则使用默认值
@@ -527,35 +622,35 @@
                 "入门": {
                     "title": "入门",
                     "description": "适合初学者的基础教程",
-                    "icon": "🚀",
+                    "icon": "",
                     "color": "#4CAF50",
                     "order": 1
                 },
                 "进阶": {
                     "title": "进阶",
                     "description": "有一定基础后的进阶教程",
-                    "icon": "📚",
+                    "icon": "",
                     "color": "#2196F3",
                     "order": 2
                 },
                 "高级": {
                     "title": "高级",
                     "description": "面向有经验开发者的高级教程",
-                    "icon": "🔥",
+                    "icon": "",
                     "color": "#FF5722",
                     "order": 3
                 },
                 "个人分享": {
                     "title": "个人分享",
                     "description": "社区成员的个人经验和技巧分享",
-                    "icon": "💡",
+                    "icon": "",
                     "color": "#FFC107",
                     "order": 4
                 },
                 "怎么贡献": {
                     "title": "怎么贡献",
                     "description": "介绍贡献者应该怎么贡献文章",
-                    "icon": "🤝",
+                    "icon": "",
                     "color": "#9C27B0",
                     "order": 5,
                     "special": true
@@ -563,7 +658,7 @@
                 "Modder入门": {
                     "title": "Modder入门",
                     "description": "Modder入门相关的教程",
-                    "icon": "🎮",
+                    "icon": "",
                     "color": "#00BCD4",
                     "order": 6,
                     "special": true
@@ -577,49 +672,49 @@
                 "mod-basics": {
                     "title": "Mod基础",
                     "description": "Mod开发的基础概念和核心API",
-                    "icon": "📖",
+                    "icon": "",
                     "order": 1
                 },
                 "env": {
                     "title": "环境配置",
                     "description": "开发环境搭建和配置",
-                    "icon": "🛠️",
+                    "icon": "",
                     "order": 2
                 },
                 "items": {
                     "title": "物品系统",
                     "description": "物品、武器和装备的开发",
-                    "icon": "⚔️",
+                    "icon": "",
                     "order": 3
                 },
                 "npcs": {
                     "title": "NPC系统",
                     "description": "NPC的创建和行为定制",
-                    "icon": "👥",
+                    "icon": "",
                     "order": 4
                 },
                 "world-gen": {
                     "title": "世界生成",
                     "description": "世界生成和地形修改",
-                    "icon": "🌍",
+                    "icon": "",
                     "order": 5
                 },
                 "ui": {
                     "title": "UI界面",
                     "description": "用户界面和交互设计",
-                    "icon": "🎨",
+                    "icon": "",
                     "order": 6
                 },
                 "networking": {
                     "title": "网络功能",
                     "description": "多人游戏和网络通信",
-                    "icon": "🌐",
+                    "icon": "",
                     "order": 7
                 },
                 "advanced": {
                     "title": "高级功能",
                     "description": "高级开发技巧和优化",
-                    "icon": "🔧",
+                    "icon": "",
                     "order": 8
                 }
             };
@@ -919,7 +1014,7 @@
                 DOC_CONFIG.categories[category].topics[topic] = {
                     title: getTopicDisplayName(topicInfo) || topic,
                     description: topicInfo?.description || '',
-                    icon: topicInfo?.icon || '📄',
+                    icon: topicInfo?.icon || '',
                     files: []
                 };
             }
@@ -1020,7 +1115,6 @@
 	                categoryHeader.innerHTML = `
 	                    <h3 class="category-title">${esc(category.title)}</h3>
 	                    <p class="category-description">${esc(category.description)}</p>
-	                    <div class="category-icon">${esc(category.icon)}</div>
 	                `;
                 
                 // 创建分类内容
@@ -1063,12 +1157,11 @@
 	                        const difficultyText = getDifficultyText(doc.difficulty);
                         
 	                        docLink.innerHTML = `
-	                            <div class="doc-icon">${esc(topic ? topic.icon : '📄')}</div>
 	                            <div class="doc-info">
 	                                <div class="doc-title">${esc(doc.title)}</div>
 	                                <div class="doc-meta">
 	                                    <span class="difficulty-badge ${difficultyClass}">${esc(difficultyText)}</span>
-	                                    <span>👤 ${esc(doc.author)}</span>
+	                                    <span>作者: ${esc(doc.author)}</span>
 	                                </div>
 	                            </div>
 	                        `;
@@ -1088,9 +1181,8 @@
                         moreLink.style.color = 'var(--link-color)';
                         moreLink.style.fontStyle = 'italic';
                         moreLink.innerHTML = `
-                            <div class="doc-icon">⋯</div>
                             <div class="doc-info">
-                                <div class="doc-title">还有 ${topicDocs.length - 3} 个文档...</div>
+                                <div class="doc-title">... 还有 ${topicDocs.length - 3} 个文档</div>
                                 <div class="doc-meta">
                                     <span>点击查看所有文档</span>
                                 </div>
@@ -1106,8 +1198,42 @@
                         docList.appendChild(moreItem);
                     }
                 });
-                
+
                 categoryContent.appendChild(docList);
+
+                const docPaths = categoryDocs.map(doc => doc.path || doc.filename).filter(Boolean);
+                const subfolderEntries = (window.FolderFilter && typeof window.FolderFilter.buildSubfolderEntries === 'function')
+                    ? window.FolderFilter.buildSubfolderEntries(docPaths, categoryKey)
+                    : [];
+
+                if (subfolderEntries.length > 0) {
+                    const subfolderSection = document.createElement('div');
+                    subfolderSection.className = 'subfolder-section';
+
+                    const subfolderTitle = document.createElement('div');
+                    subfolderTitle.className = 'subfolder-title';
+                    subfolderTitle.textContent = '子目录';
+
+                    const subfolderList = document.createElement('ul');
+                    subfolderList.className = 'subfolder-list';
+
+                    subfolderEntries.forEach(entry => {
+                        const subfolderItem = document.createElement('li');
+                        subfolderItem.className = 'subfolder-item';
+
+                        const subfolderLink = document.createElement('a');
+                        subfolderLink.className = 'subfolder-link';
+                        subfolderLink.href = `folder.html?path=${encodeURIComponent(entry.path)}`;
+                        subfolderLink.textContent = esc(entry.label);
+
+                        subfolderItem.appendChild(subfolderLink);
+                        subfolderList.appendChild(subfolderItem);
+                    });
+
+                    subfolderSection.appendChild(subfolderTitle);
+                    subfolderSection.appendChild(subfolderList);
+                    categoryContent.appendChild(subfolderSection);
+                }
                 categoryCard.appendChild(categoryHeader);
                 categoryCard.appendChild(categoryContent);
                 categoryGrid.appendChild(categoryCard);
@@ -1169,28 +1295,24 @@
             // 定义快速链接配置
             const quickLinksConfig = [
                 {
-                    icon: '📚',
                     title: '完整教程索引',
                     description: '查看所有教程的完整列表和详细信息',
                     action: 'view-all',
                     buttonClass: 'btn-outline'
                 },
                 {
-                    icon: '🚀',
                     title: '快速开始',
                     description: '立即开始你的第一个Mod制作之旅',
                     action: 'get-started',
                     buttonClass: 'btn-primary'
                 },
                 {
-                    icon: '🔧',
                     title: 'API参考',
                     description: '查阅完整的tModLoader API文档',
                     action: 'api-reference',
                     buttonClass: 'btn-outline'
                 },
                 {
-                    icon: '💬',
                     title: '社区支持',
                     description: '获取帮助和参与社区讨论',
                     action: 'community',
@@ -1236,7 +1358,6 @@
                 }
                 
                 quickLinkCard.innerHTML = `
-                    <div class="quick-link-icon">${linkConfig.icon}</div>
                     <h3 class="quick-link-title">${linkConfig.title}</h3>
                     <p class="quick-link-description">${linkConfig.description}</p>
                     <a href="${buttonLink}" class="btn btn-small ${linkConfig.buttonClass}"

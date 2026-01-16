@@ -2304,13 +2304,24 @@
           ]
         }
       }
+    },
+    "resources": {
+      "title": "resources",
+      "description": "resources相关的教程",
+      "topics": {
+        "mod-basics": {
+          "title": "Mod基础",
+          "description": "Mod开发的基础概念和核心API",
+          "files": []
+        }
+      }
     }
   },
   "topics": {
     "mod-basics": {
       "title": "Mod基础",
       "description": "Mod开发的基础概念和核心API",
-      "icon": "📖",
+      "icon": "",
       "display_names": {
         "zh": "Mod基础",
         "en": "Mod Basics"
@@ -2322,7 +2333,7 @@
     "env": {
       "title": "环境配置",
       "description": "开发环境搭建和配置",
-      "icon": "🛠️",
+      "icon": "",
       "display_names": {
         "zh": "环境配置",
         "en": "Environment Setup"
@@ -2334,7 +2345,7 @@
     "items": {
       "title": "物品系统",
       "description": "物品、武器和装备的开发",
-      "icon": "⚔️",
+      "icon": "",
       "display_names": {
         "zh": "物品系统",
         "en": "Item System"
@@ -2346,7 +2357,7 @@
     "npcs": {
       "title": "NPC系统",
       "description": "NPC的创建和行为定制",
-      "icon": "👥",
+      "icon": "",
       "display_names": {
         "zh": "NPC系统",
         "en": "NPC System"
@@ -2358,7 +2369,7 @@
     "world-gen": {
       "title": "世界生成",
       "description": "世界生成和地形修改",
-      "icon": "🌍",
+      "icon": "",
       "display_names": {
         "zh": "世界生成",
         "en": "World Generation"
@@ -2370,7 +2381,7 @@
     "ui": {
       "title": "UI界面",
       "description": "用户界面和交互设计",
-      "icon": "🎨",
+      "icon": "",
       "display_names": {
         "zh": "UI界面",
         "en": "UI Interface"
@@ -2382,7 +2393,7 @@
     "networking": {
       "title": "网络功能",
       "description": "多人游戏和网络通信",
-      "icon": "🌐",
+      "icon": "",
       "display_names": {
         "zh": "网络功能",
         "en": "Networking"
@@ -2394,7 +2405,7 @@
     "advanced": {
       "title": "高级功能",
       "description": "高级开发技巧和优化",
-      "icon": "🔧",
+      "icon": "",
       "display_names": {
         "zh": "高级功能",
         "en": "Advanced Features"
@@ -2406,7 +2417,7 @@
     "article-contribution": {
       "title": "文章贡献",
       "description": "如何为教程网站贡献文章",
-      "icon": "✍️",
+      "icon": "",
       "display_names": {
         "zh": "文章贡献",
         "en": "Article Contribution"

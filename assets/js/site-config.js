@@ -54,12 +54,12 @@
         lastUpdated: new Date().toISOString()
       },
       categories: {
-        '入门': { icon: '🚀', order: 1, description: '新手入门教程' },
-        '进阶': { icon: '📚', order: 2, description: '进阶开发技巧' },
-        '高级': { icon: '🔥', order: 3, description: '高级开发技术' },
-        '个人分享': { icon: '💡', order: 4, description: '个人开发经验分享' },
-        '怎么贡献': { icon: '🤝', order: 5, description: '贡献指南' },
-        'Modder入门': { icon: '🎮', order: 6, description: 'Modder入门教程' }
+        '入门': { icon: '', order: 1, description: '新手入门教程' },
+        '进阶': { icon: '', order: 2, description: '进阶开发技巧' },
+        '高级': { icon: '', order: 3, description: '高级开发技术' },
+        '个人分享': { icon: '', order: 4, description: '个人开发经验分享' },
+        '怎么贡献': { icon: '', order: 5, description: '贡献指南' },
+        'Modder入门': { icon: '', order: 6, description: 'Modder入门教程' }
       },
       topics: {},
       pathMappings: {},

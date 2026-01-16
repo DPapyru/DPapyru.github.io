@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const { resolveCategory, mapToExistingCategory } = require('./lib/category-utils');
 
 const SITE_BASE_URL = 'https://dpapyru.github.io';
 const SEARCH_INDEX_PATH = './assets/search-index.json';
@@ -76,7 +77,7 @@ class ConfigManager {
                 'mod-basics': {
                     title: 'Mod基础',
                     description: 'Mod开发的基础概念和核心API',
-                    icon: '📖',
+                    icon: '',
                     display_names: {
                         zh: 'Mod基础',
                         en: 'Mod Basics'
@@ -86,7 +87,7 @@ class ConfigManager {
                 'env': {
                     title: '环境配置',
                     description: '开发环境搭建和配置',
-                    icon: '🛠️',
+                    icon: '',
                     display_names: {
                         zh: '环境配置',
                         en: 'Environment Setup'
@@ -96,7 +97,7 @@ class ConfigManager {
                 'items': {
                     title: '物品系统',
                     description: '物品、武器和装备的开发',
-                    icon: '⚔️',
+                    icon: '',
                     display_names: {
                         zh: '物品系统',
                         en: 'Item System'
@@ -106,7 +107,7 @@ class ConfigManager {
                 'npcs': {
                     title: 'NPC系统',
                     description: 'NPC的创建和行为定制',
-                    icon: '👥',
+                    icon: '',
                     display_names: {
                         zh: 'NPC系统',
                         en: 'NPC System'
@@ -116,7 +117,7 @@ class ConfigManager {
                 'world-gen': {
                     title: '世界生成',
                     description: '世界生成和地形修改',
-                    icon: '🌍',
+                    icon: '',
                     display_names: {
                         zh: '世界生成',
                         en: 'World Generation'
@@ -126,7 +127,7 @@ class ConfigManager {
                 'ui': {
                     title: 'UI界面',
                     description: '用户界面和交互设计',
-                    icon: '🎨',
+                    icon: '',
                     display_names: {
                         zh: 'UI界面',
                         en: 'UI Interface'
@@ -136,7 +137,7 @@ class ConfigManager {
                 'networking': {
                     title: '网络功能',
                     description: '多人游戏和网络通信',
-                    icon: '🌐',
+                    icon: '',
                     display_names: {
                         zh: '网络功能',
                         en: 'Networking'
@@ -146,7 +147,7 @@ class ConfigManager {
                 'advanced': {
                     title: '高级功能',
                     description: '高级开发技巧和优化',
-                    icon: '🔧',
+                    icon: '',
                     display_names: {
                         zh: '高级功能',
                         en: 'Advanced Features'
@@ -156,7 +157,7 @@ class ConfigManager {
                 'article-contribution': {
                     title: '文章贡献',
                     description: '如何为教程网站贡献文章',
-                    icon: '✍️',
+                    icon: '',
                     display_names: {
                         zh: '文章贡献',
                         en: 'Article Contribution'
@@ -273,6 +274,13 @@ class ConfigManager {
                 this.config.topics[topic] = JSON.parse(JSON.stringify(this.defaultConfig.topics[topic]));
             }
         });
+
+        // 清理主题图标，避免生成 emoji
+        Object.keys(this.config.topics).forEach(topic => {
+            if (this.config.topics[topic] && this.config.topics[topic].icon) {
+                this.config.topics[topic].icon = '';
+            }
+        });
     }
 
     // 保存配置
@@ -303,28 +311,12 @@ class ConfigManager {
 
     // 映射分类名称
     mapCategoryName(categoryName) {
-        // 首先尝试直接映射
-        if (this.categoryMappings[categoryName]) {
-            return this.categoryMappings[categoryName];
-        }
-
-        // 如果是英文，尝试反向映射
-        if (this.reverseCategoryMappings[categoryName]) {
-            return categoryName; // 已经是英文键
-        }
-
-        // 如果是中文分类名，直接返回
-        if (this.config.categories[categoryName]) {
-            return categoryName;
-        }
-
-        // 如果是不存在上面的分类内容，新建一个分类
-        if(categoryName !== '' && categoryName !== null){
-            return categoryName;
-        }
-
-        // 默认返回
-        return this.getSettings().defaultCategory;
+        return mapToExistingCategory(
+            categoryName,
+            this.config.categories,
+            this.categoryMappings,
+            this.reverseCategoryMappings
+        );
     }
 
     // 通过别名查找主题
@@ -375,12 +367,16 @@ class ConfigManager {
 // 递归扫描目录获取所有Markdown文件和翻译器配置
 function scanDirectoryRecursively(dir, baseDir, fileList = [], translatorConfigs = {}) {
     const items = fs.readdirSync(dir);
+    const ignoredDirs = new Set(['plans']);
 
     items.forEach(item => {
         const fullPath = path.join(dir, item);
         const stat = fs.statSync(fullPath);
 
         if (stat.isDirectory()) {
+            if (ignoredDirs.has(item)) {
+                return;
+            }
             // 递归扫描子目录
             scanDirectoryRecursively(fullPath, baseDir, fileList, translatorConfigs);
         } else if (item === 'Translator.yaml') {
@@ -464,8 +460,14 @@ function processMainProject() {
         metadata = processCustomFields(metadata, configManager);
 
         // 使用配置管理器处理分类
-        let targetCategory = metadata.category || configManager.getSettings().defaultCategory;
-        targetCategory = configManager.mapCategoryName(targetCategory);
+        const targetCategory = resolveCategory({
+            metadataCategory: metadata.category,
+            filePath: file,
+            categories: configManager.getCategories(),
+            categoryMappings: configManager.categoryMappings,
+            reverseCategoryMappings: configManager.reverseCategoryMappings,
+            defaultCategory: configManager.getSettings().defaultCategory
+        });
 
         // 特殊分类处理
         if (configManager.isSpecialCategory(targetCategory)) {
@@ -709,8 +711,14 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
             }
 
             // 使用配置管理器确定类别
-            let category = metadata.category || configManager.getSettings().defaultCategory;
-            category = configManager.mapCategoryName(category);
+            const category = resolveCategory({
+                metadataCategory: metadata.category,
+                filePath: file,
+                categories: configManager.getCategories(),
+                categoryMappings: configManager.categoryMappings,
+                reverseCategoryMappings: configManager.reverseCategoryMappings,
+                defaultCategory: configManager.getSettings().defaultCategory
+            });
 
             fileToCorrectCategory[file] = category;
         } catch (error) {
@@ -800,8 +808,14 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
         metadata = processCustomFields(metadata, configManager);
 
         // 使用配置管理器确定类别
-        let category = metadata.category || configManager.getSettings().defaultCategory;
-        category = configManager.mapCategoryName(category);
+        const category = resolveCategory({
+            metadataCategory: metadata.category,
+            filePath: file,
+            categories: configManager.getCategories(),
+            categoryMappings: configManager.categoryMappings,
+            reverseCategoryMappings: configManager.reverseCategoryMappings,
+            defaultCategory: configManager.getSettings().defaultCategory
+        });
 
         // 确定主题
         let topic = metadata.topic || configManager.getSettings().defaultTopic;
@@ -1143,8 +1157,8 @@ function validateMetadata(metadata, configManager) {
     // 验证分类
     if (metadata.category) {
         const mappedCategory = configManager.mapCategoryName(metadata.category);
-        if (!configManager.getCategories()[mappedCategory]) {
-            warnings.push(`未知分类: ${metadata.category}，将使用默认分类`);
+        if (!mappedCategory) {
+            warnings.push(`未知分类: ${metadata.category}，将按目录名分类`);
         }
     }
 

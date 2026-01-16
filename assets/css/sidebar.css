@@ -401,7 +401,7 @@
 }
 
 /* 响应式设计 */
-@media (max-width: 992px) {
+@media (max-width: 768px) {
     .site-container {
         flex-direction: column;
     }
@@ -416,9 +416,7 @@
         -webkit-overflow-scrolling: touch;
         min-height: 300px;
     }
-}
 
-@media (max-width: 768px) {
     .sidebar {
         padding: 15px 0;
         height: 50vh;

@@ -28,6 +28,7 @@ yarn-error.log*
 *.backup
 
 # 测试文件和测试结果
+tests/
 test-results/
 test-*.html
 test-*.js
@@ -39,6 +40,7 @@ dist/
 build/
 out/
 .cache/
+.worktrees/
 
 # Node.js相关文件
 node_modules/
@@ -80,3 +82,5 @@ site/
 config.local.js
 config.local.json
 GitHub错误10054故障排除指南.md
+
+docs/plans

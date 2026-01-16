@@ -41,7 +41,7 @@
     <script src="../assets/js/theme-init.js"></script>
 </head>
 
-<body>
+<body class="viewer-page">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <!-- 网站头部导航区域 -->
     <header class="site-header">
@@ -2486,6 +2486,10 @@
                     // 为按钮添加点击事件
                     categoryToggleBtn.addEventListener('click', function (e) {
                         e.stopPropagation();
+                        console.log('[viewer-mobile-toggle-click]', {
+                            type: 'category',
+                            category: categoryKey
+                        });
                         toggleMobileCategory(categoryKey, categoryDiv, categoryToggleBtn);
                     });
 
@@ -2493,9 +2497,15 @@
 
                     // 获取该分类下的所有主题
                     const categoryTopics = VIEWER_DOC_CONFIG.categories[categoryKey]?.topics || {};
+                    const topicKeys = Object.keys(categoryTopics);
+                    const topicCount = topicKeys.filter(key => {
+                        const topic = categoryTopics[key];
+                        return topic && topic.files && topic.files.length > 0;
+                    }).length;
 
-                    if (Object.keys(categoryTopics).length > 0) {
-                        Object.keys(categoryTopics).forEach(topicKey => {
+                    if (topicCount > 0) {
+                        const shouldShowTopicToggle = shouldRenderMobileTopicToggle(categoryKey, topicCount);
+                        topicKeys.forEach(topicKey => {
                             const topic = categoryTopics[topicKey];
 
                             // 检查主题是否有文档，如果没有则跳过
@@ -2513,24 +2523,36 @@
                             topicTitle.textContent = topic.title;
 
                             // 添加展开/收起按钮
-                            const topicToggleBtn = document.createElement('button');
-                            topicToggleBtn.className = 'mobile-topic-toggle';
-                            topicToggleBtn.setAttribute('aria-label', '展开/收起主题');
-                            topicToggleBtn.innerHTML = '▼';
-                            topicTitle.appendChild(topicToggleBtn);
+                            let topicToggleBtn = null;
+                            if (shouldShowTopicToggle) {
+                                topicToggleBtn = document.createElement('button');
+                                topicToggleBtn.className = 'mobile-topic-toggle';
+                                topicToggleBtn.setAttribute('aria-label', '展开/收起主题');
+                                topicToggleBtn.innerHTML = '▼';
+                                topicTitle.appendChild(topicToggleBtn);
+                            }
 
                             // 为主题标题添加点击事件
-                            topicTitle.addEventListener('click', function (e) {
-                                // 如果点击的是按钮，让按钮处理
-                                if (e.target === topicToggleBtn) return;
-                                toggleMobileTopic(categoryKey, topicKey, topicDiv, topicToggleBtn);
-                            });
+                            if (shouldShowTopicToggle) {
+                                topicTitle.addEventListener('click', function (e) {
+                                    // 如果点击的是按钮，让按钮处理
+                                    if (topicToggleBtn && e.target === topicToggleBtn) return;
+                                    toggleMobileTopic(categoryKey, topicKey, topicDiv, topicToggleBtn);
+                                });
+                            }
 
                             // 为按钮添加点击事件
-                            topicToggleBtn.addEventListener('click', function (e) {
-                                e.stopPropagation();
-                                toggleMobileTopic(categoryKey, topicKey, topicDiv, topicToggleBtn);
-                            });
+                            if (topicToggleBtn) {
+                                topicToggleBtn.addEventListener('click', function (e) {
+                                    e.stopPropagation();
+                                    console.log('[viewer-mobile-toggle-click]', {
+                                        type: 'topic',
+                                        category: categoryKey,
+                                        topic: topicKey
+                                    });
+                                    toggleMobileTopic(categoryKey, topicKey, topicDiv, topicToggleBtn);
+                                });
+                            }
 
                             topicDiv.appendChild(topicTitle);
 
@@ -2568,11 +2590,15 @@
                             categoryDiv.appendChild(topicDiv);
 
                             // 恢复主题的展开/收起状态
-                            const isTopicCollapsed = getMobileCollapsedState('topic', `${categoryKey}-${topicKey}`);
-                            if (isTopicCollapsed) {
-                                topicDiv.classList.add('collapsed');
-                                topicToggleBtn.classList.add('collapsed');
-                                // topicToggleBtn.innerHTML = '▶';
+                            if (shouldShowTopicToggle) {
+                                const isTopicCollapsed = getMobileCollapsedState('topic', `${categoryKey}-${topicKey}`);
+                                if (isTopicCollapsed) {
+                                    topicDiv.classList.add('collapsed');
+                                    if (topicToggleBtn) {
+                                        topicToggleBtn.classList.add('collapsed');
+                                    }
+                                    // topicToggleBtn.innerHTML = '▶';
+                                }
                             }
                         });
                     }
@@ -2621,6 +2647,9 @@
                 // 为按钮添加点击事件
                 allDocsToggleBtn.addEventListener('click', function (e) {
                     e.stopPropagation();
+                    console.log('[viewer-mobile-toggle-click]', {
+                        type: 'all-docs'
+                    });
                     toggleMobileAllDocs(allDocsDiv, allDocsToggleBtn);
                 });
 
@@ -2752,6 +2781,10 @@
             window.addEventListener('resize', updateMobileNavVisibility);
         }
 
+        function shouldRenderMobileTopicToggle(categoryKey, topicCount) {
+            return topicCount > 1;
+        }
+
         // 移动端分类展开/收起功能
         function toggleMobileCategory(categoryKey, categoryDiv, toggleBtn) {
             const isCollapsed = categoryDiv.classList.contains('collapsed');
@@ -2778,13 +2811,17 @@
             if (isCollapsed) {
                 // 展开
                 topicDiv.classList.remove('collapsed');
-                toggleBtn.classList.remove('collapsed');
-                toggleBtn.innerHTML = '▼';
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('collapsed');
+                    toggleBtn.innerHTML = '▼';
+                }
                 setMobileCollapsedState('topic', `${categoryKey}-${topicKey}`, false);
             } else {
                 // 收起
                 topicDiv.classList.add('collapsed');
-                toggleBtn.classList.add('collapsed');
+                if (toggleBtn) {
+                    toggleBtn.classList.add('collapsed');
+                }
                 // toggleBtn.innerHTML = '▶';
                 setMobileCollapsedState('topic', `${categoryKey}-${topicKey}`, true);
             }
