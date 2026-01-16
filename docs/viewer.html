@@ -269,15 +269,18 @@
         let VIEWER_PATH_REDIRECTS = {};
 
         // 文档查看器的主要JavaScript逻辑
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('=== docs/viewer.html: 页面加载完成 ===');
-            console.log('=== 诊断信息 ===');
-            console.log('当前页面URL:', window.location.href);
-            console.log('当前页面路径:', window.location.pathname);
-            console.log('当前搜索参数:', window.location.search);
+	        document.addEventListener('DOMContentLoaded', function () {
+	            console.log('=== docs/viewer.html: 页面加载完成 ===');
+	            console.log('=== 诊断信息 ===');
+	            console.log('当前页面URL:', window.location.href);
+	            console.log('当前页面路径:', window.location.pathname);
+	            console.log('当前搜索参数:', window.location.search);
 
-            // 初始化侧边栏滚动功能
-            initializeSidebarScrolling();
+	            // 初始化MD渲染器（优先，避免其它初始化异常导致 Markdown 无法渲染）
+	            initializeMarkedRender();
+
+	            // 初始化侧边栏滚动功能
+	            initializeSidebarScrolling();
 
             // 初始化文档配置
             initializeDocumentConfig().then(() => {
@@ -319,15 +322,12 @@
                 }, 200);
             });
 
-            // 初始化下拉菜单
-            initializeDropdownMenu();
+	            // 初始化下拉菜单
+	            initializeDropdownMenu();
 
-            // 初始化手机端导航
-            initializeMobileNavigation();
-
-            // 初始化MD渲染器
-            initializeMarkedRender();
-        });
+	            // 初始化手机端导航
+	            initializeMobileNavigation();
+	        });
 
 	        async function initializeMarkedRender() {
 	            console.log('初始化MD渲染器...');
@@ -2382,7 +2382,7 @@
         }
 
         // 初始化手机端导航
-        function initializeMobileNavigation() {
+	        function initializeMobileNavigation() {
             const mobileNavToggle = document.getElementById('mobile-nav-toggle');
             const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
             const mobileNavClose = document.getElementById('mobile-nav-close');
@@ -2396,7 +2396,9 @@
             mobileNavToggle.setAttribute('aria-expanded', 'false');
             mobileNavOverlay.setAttribute('aria-hidden', 'true');
 
-            let lastFocusedElement = null;
+	            let lastFocusedElement = null;
+	            let previousBodyOverflow = '';
+	            let previousHtmlOverflow = '';
 
             function getFocusableElements(container) {
                 const selectors = [
@@ -2728,24 +2730,21 @@
                 mobileNavSections.appendChild(allDocsDiv);
             }
 
-            // 打开手机端导航
-	            let previousBodyOverflow = '';
-	            let previousHtmlOverflow = '';
-
-	            function openMobileNav() {
-	                lastFocusedElement = document.activeElement;
-	                previousBodyOverflow = document.body.style.overflow || '';
-	                previousHtmlOverflow = document.documentElement.style.overflow || '';
-	                mobileNavOverlay.classList.add('active');
-	                // 防止背景滚动（移动端需要同时锁定 html/body 才更稳定）
-	                document.body.style.overflow = 'hidden';
-	                document.documentElement.style.overflow = 'hidden';
-	                generateMobileNavContent();
-	                mobileNavToggle.setAttribute('aria-expanded', 'true');
-	                mobileNavOverlay.setAttribute('aria-hidden', 'false');
-	                mobileNavClose.focus();
-	                document.addEventListener('keydown', trapFocus, true);
-	            }
+	            // 打开手机端导航
+		            function openMobileNav() {
+		                lastFocusedElement = document.activeElement;
+		                previousBodyOverflow = document.body.style.overflow || '';
+		                previousHtmlOverflow = document.documentElement.style.overflow || '';
+		                mobileNavOverlay.classList.add('active');
+		                // 防止背景滚动（移动端需要同时锁定 html/body 才更稳定）
+		                document.body.style.overflow = 'hidden';
+		                document.documentElement.style.overflow = 'hidden';
+		                generateMobileNavContent();
+		                mobileNavToggle.setAttribute('aria-expanded', 'true');
+		                mobileNavOverlay.setAttribute('aria-hidden', 'false');
+		                mobileNavClose.focus();
+		                document.addEventListener('keydown', trapFocus, true);
+		            }
 
 	            // 关闭手机端导航
 	            function closeMobileNav() {

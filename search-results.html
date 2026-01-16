@@ -770,7 +770,7 @@
                             const plainText = this.stripMarkdown(content); // 使用stripMarkdown方法去除Markdown格式
 
                             // 更新URL，使其指向viewer.html并加载相应的文件（保留完整相对路径）
-                            const relativePath = file.replace(/^docs\\//, '');
+                            const relativePath = file.replace(/^docs\//, '');
                             const viewerUrl = `docs/viewer.html?file=${encodeURIComponent(relativePath)}`;
                             console.log('更新后的URL:', viewerUrl);
 

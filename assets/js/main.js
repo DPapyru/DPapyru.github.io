@@ -584,6 +584,19 @@ function initMarkdownRenderer() {
     if (typeof marked !== 'undefined') {
         console.log('Marked.js已加载，正在配置...');
 
+        // viewer.html 会自行配置 marked（包含相对路径解析等），这里避免覆盖其 renderer/options
+        if (window.IS_VIEWER_PAGE) {
+            if (!window.__MARKED_CUSTOM_EXTENSIONS_INSTALLED) {
+                try {
+                    marked.use({ extensions: [markdownRenderColorLD(), markdownRenderColorChange()] });
+                    window.__MARKED_CUSTOM_EXTENSIONS_INSTALLED = true;
+                } catch (e) {
+                    console.warn('viewer页面安装marked扩展失败:', e);
+                }
+            }
+            return;
+        }
+
         function escapeHtml(text) {
             return String(text)
                 .replace(/&/g, '&amp;')
@@ -658,8 +671,11 @@ function initMarkdownRenderer() {
             pedantic: false
         });
 
-        // 将扩展添加到marked
-        marked.use({ extensions: [markdownRenderColorLD(), markdownRenderColorChange()] });
+        // 将扩展添加到marked（避免重复安装）
+        if (!window.__MARKED_CUSTOM_EXTENSIONS_INSTALLED) {
+            marked.use({ extensions: [markdownRenderColorLD(), markdownRenderColorChange()] });
+            window.__MARKED_CUSTOM_EXTENSIONS_INSTALLED = true;
+        }
 
         console.log('Marked.js配置完成');
     } else {
