@@ -8,7 +8,7 @@ difficulty: beginner
 time: 5分钟
 description: 如果新人需要提问，需要注意的事情
 prev_chapter: DPapyru-给新人的前言.md
-next_chapter: null
+next_chapter: DPapyru-快速开始构建Mod.md
 topic: mod-basics
 colors:
   Mad: "#f00"

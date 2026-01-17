@@ -86,7 +86,25 @@
               "time": "5分钟",
               "difficulty": "beginner",
               "prev_chapter": "DPapyru-给新人的前言.md",
-              "next_chapter": "null",
+              "next_chapter": "DPapyru-快速开始构建Mod.md",
+              "colors": {
+                "Mad": "#f00"
+              },
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-快速开始构建Mod.md",
+              "path": "Modder入门/DPapyru-快速开始构建Mod.md",
+              "originalPath": "Modder入门/DPapyru-快速开始构建Mod.md",
+              "title": "快速开始构建Mod（tModLoader 1.4）",
+              "author": "小天使",
+              "order": 1000,
+              "description": "从环境准备到跑起第一个可编译的 tModLoader Mod",
+              "last_updated": "2026-01-17",
+              "time": "15分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-提问的艺术.md",
+              "next_chapter": null,
               "colors": {
                 "Mad": "#f00"
               },
@@ -2298,6 +2316,7 @@
     "小天使": {
       "name": "小天使",
       "files": [
+        "DPapyru-快速开始构建Mod.md",
         "DPapyru-提问的艺术.md",
         "DPapyru-给新人的前言.md",
         "DPapyru-贡献者如何编写文章基础.md"
@@ -4663,7 +4682,7 @@
       "time": "5分钟",
       "difficulty": "beginner",
       "prev_chapter": "DPapyru-给新人的前言.md",
-      "next_chapter": "null",
+      "next_chapter": "DPapyru-快速开始构建Mod.md",
       "colors": {
         "Mad": "#f00"
       },
@@ -4686,6 +4705,25 @@
       "colors": null,
       "colorChange": null,
       "last_updated": "2026-01-16"
+    },
+    {
+      "filename": "DPapyru-快速开始构建Mod.md",
+      "path": "Modder入门/DPapyru-快速开始构建Mod.md",
+      "originalPath": "Modder入门/DPapyru-快速开始构建Mod.md",
+      "title": "快速开始构建Mod（tModLoader 1.4）",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 1000,
+      "time": "15分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-提问的艺术.md",
+      "next_chapter": null,
+      "colors": {
+        "Mad": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-17"
     }
   ],
   "settings": {
