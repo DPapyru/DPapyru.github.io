@@ -237,11 +237,43 @@
         </button>
     </div>
 
-	    <!-- 加载JavaScript文件 -->
-	    <script src="../assets/js/site-config.js"></script>
-	    <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
-	    <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
-	    <script src="../assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
+		    <!-- 加载JavaScript文件 -->
+			    <script src="../assets/js/site-config.js"></script>
+			    <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
+			    <script src="../assets/js/mermaid.min.js"></script> <!-- Mermaid流程图渲染 -->
+			    <script src="../assets/js/site-quiz.js"></script> <!-- Quiz 题目渲染 -->
+			    <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
+			    <script src="../assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
+    <script>
+        // Mermaid 兜底加载：如果本地资源缺失/加载失败，则尝试从 CDN 加载（不影响已有本地加载）
+        (function ensureMermaidLoaded() {
+            if (window.mermaid) {
+                window.__MERMAID_LOADED = true;
+                window.__MERMAID_LOAD_PROMISE = Promise.resolve(true);
+                return;
+            }
+
+            if (window.__MERMAID_LOAD_PROMISE) return;
+
+            const cdnUrl = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
+            window.__MERMAID_LOAD_PROMISE = new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.src = cdnUrl;
+                script.async = true;
+                script.referrerPolicy = 'no-referrer';
+                script.onload = () => {
+                    window.__MERMAID_LOADED = true;
+                    console.log('Mermaid 已从 CDN 加载');
+                    resolve(true);
+                };
+                script.onerror = () => {
+                    console.warn('Mermaid CDN 加载失败，请检查 assets/js/mermaid.min.js 是否存在');
+                    resolve(false);
+                };
+                document.head.appendChild(script);
+            });
+        })();
+    </script>
     <script>
         // 设置一个标志，告诉main.js这是viewer.html页面，不要执行自动加载
         window.IS_VIEWER_PAGE = true;
@@ -256,8 +288,212 @@
         // 文档配置和元数据管理
         let VIEWER_DOC_CONFIG = null;
         let ALL_DOCS = [];
-        let CURRENT_DOC_PATH = null;
-        let DOC_LOOKUP_MAP = null;
+	        let CURRENT_DOC_PATH = null;
+	        let DOC_LOOKUP_MAP = null;
+	        
+	        function initializeMermaidOnce() {
+	            if (window.__MERMAID_INITIALIZED) return;
+	            if (!window.mermaid || typeof window.mermaid.initialize !== 'function') return;
+	            window.mermaid.initialize({
+	                startOnLoad: false,
+	                theme: 'dark',
+	                securityLevel: 'strict',
+	                flowchart: {
+	                    htmlLabels: true
+	                }
+	            });
+	            window.__MERMAID_INITIALIZED = true;
+	        }
+
+	        function autoWrapMermaidFlowchartSource(source, maxCharsPerLine = 16) {
+	            const text = String(source || '');
+	            const lines = text.split('\n');
+	            const firstNonEmpty = lines.find(line => String(line).trim()) || '';
+	            const diagramType = String(firstNonEmpty).trim().split(/\s+/)[0] || '';
+
+	            // 仅对 flowchart/graph 做自动换行，避免误伤 sequenceDiagram 等其它语法
+	            if (diagramType !== 'flowchart' && diagramType !== 'graph') return text;
+
+	            function isBreakChar(ch) {
+	                return (
+	                    ch === ' ' ||
+	                    ch === '　' ||
+	                    ch === '/' ||
+	                    ch === '／' ||
+	                    ch === '|' ||
+	                    ch === '：' ||
+	                    ch === ':' ||
+	                    ch === '，' ||
+	                    ch === ',' ||
+	                    ch === '、' ||
+	                    ch === ';' ||
+	                    ch === '；' ||
+	                    ch === '-' ||
+	                    ch === '—'
+	                );
+	            }
+
+	            function trimStartSpaces(chars) {
+	                while (chars.length > 0 && (chars[0] === ' ' || chars[0] === '　')) chars.shift();
+	                return chars;
+	            }
+
+	            function trimEndSpaces(chars) {
+	                while (chars.length > 0 && (chars[chars.length - 1] === ' ' || chars[chars.length - 1] === '　')) chars.pop();
+	                return chars;
+	            }
+
+	            function findLastBreakIndex(chars) {
+	                for (let i = chars.length - 1; i >= 0; i--) {
+	                    if (isBreakChar(chars[i])) return i + 1; // 在该字符后断行
+	                }
+	                return -1;
+	            }
+
+	            function wrapLabel(label) {
+	                const raw = String(label || '');
+	                if (!raw) return raw;
+	                if (raw.includes('<br') || raw.includes('\\n')) return raw;
+
+	                const chars = Array.from(raw);
+	                const out = [];
+	                let line = [];
+	                let lastBreakIndex = -1;
+
+	                for (let i = 0; i < chars.length; i++) {
+	                    const ch = chars[i];
+	                    line.push(ch);
+	                    if (isBreakChar(ch)) lastBreakIndex = line.length;
+
+	                    const isLast = i === chars.length - 1;
+	                    if (!isLast && line.length >= maxCharsPerLine) {
+	                        const cut = lastBreakIndex > 0 ? lastBreakIndex : line.length;
+	                        const before = trimEndSpaces(line.slice(0, cut)).join('');
+	                        out.push(before);
+	                        out.push('<br/>');
+
+	                        line = trimStartSpaces(line.slice(cut));
+	                        lastBreakIndex = findLastBreakIndex(line);
+	                    }
+	                }
+
+	                if (line.length > 0) out.push(line.join(''));
+	                return out.join('');
+	            }
+
+	            function wrapSquareBracketLabels(line) {
+	                let cursor = 0;
+	                let output = '';
+	                while (cursor < line.length) {
+	                    const open = line.indexOf('[', cursor);
+	                    if (open === -1) {
+	                        output += line.slice(cursor);
+	                        break;
+	                    }
+	                    const close = line.indexOf(']', open + 1);
+	                    if (close === -1) {
+	                        output += line.slice(cursor);
+	                        break;
+	                    }
+
+	                    const label = line.slice(open + 1, close);
+	                    output += line.slice(cursor, open + 1);
+	                    output += wrapLabel(label);
+	                    output += ']';
+	                    cursor = close + 1;
+	                }
+	                return output;
+	            }
+
+		            return lines.map(wrapSquareBracketLabels).join('\n');
+		        }
+
+		        function postProcessMermaidSvg(container) {
+		            if (!container) return;
+		            const svg = container.querySelector('svg');
+		            if (!svg) return;
+
+		            try {
+		                // 1) 修复绘制层级：确保节点层永远在连线层上方，避免连线“穿过”节点的视觉问题
+		                const root = svg.querySelector('g.root');
+		                if (root) {
+		                    const edgePaths = root.querySelector(':scope > g.edgePaths');
+		                    const edgeLabels = root.querySelector(':scope > g.edgeLabels');
+		                    const nodes = root.querySelector(':scope > g.nodes');
+		                    if (edgePaths) root.appendChild(edgePaths);
+		                    if (edgeLabels) root.appendChild(edgeLabels);
+		                    if (nodes) root.appendChild(nodes);
+		                }
+
+		                // 2) 防御性修复：某些配置/浏览器下节点填充可能变成透明，导致底下的连线可见
+		                const shapes = svg.querySelectorAll(
+		                    '.node rect, .node polygon, .node ellipse, .node circle, .node path,' +
+		                    '.rough-node rect, .rough-node polygon, .rough-node ellipse, .rough-node circle, .rough-node path'
+		                );
+
+		                shapes.forEach((shape) => {
+		                    if (!shape || !window.getComputedStyle) return;
+		                    const computed = window.getComputedStyle(shape);
+		                    const fill = String(computed.fill || '').trim();
+		                    const fillOpacity = String(computed.fillOpacity || '').trim();
+
+		                    const opacityNumber = parseFloat(fillOpacity);
+		                    const isTransparentFill =
+		                        !fill ||
+		                        fill === 'none' ||
+		                        fill === 'transparent' ||
+		                        /rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*0\s*\)/.test(fill) ||
+		                        (!Number.isNaN(opacityNumber) && opacityNumber === 0);
+
+		                    if (!isTransparentFill) return;
+		                    shape.style.fill = 'var(--bg-color)';
+		                    shape.style.fillOpacity = '1';
+		                });
+		            } catch (error) {
+		                console.warn('Mermaid SVG 后处理失败:', error);
+		            }
+		        }
+
+		        async function renderMermaidFlowcharts(root) {
+		            try {
+		                if (!root) return;
+		                const nodes = root.querySelectorAll('.flowchart.mermaid');
+	                if (!nodes || nodes.length === 0) return;
+	                if (!window.mermaid) {
+	                    if (window.__MERMAID_LOAD_PROMISE) {
+	                        await window.__MERMAID_LOAD_PROMISE;
+	                    }
+	                    if (!window.mermaid) {
+	                        console.warn('Mermaid 未加载，跳过流程图渲染');
+	                        return;
+	                    }
+	                }
+
+	                initializeMermaidOnce();
+
+	                // 自动换行：在 Mermaid 布局计算之前改写 source，避免长中文文本被裁切
+	                nodes.forEach((node) => {
+	                    if (!node || node.getAttribute('data-processed') === 'true') return;
+	                    const original = node.textContent || '';
+	                    const updated = autoWrapMermaidFlowchartSource(original, 16);
+	                    if (updated !== original) node.textContent = updated;
+	                });
+
+	                if (document.fonts && document.fonts.ready && typeof document.fonts.ready.then === 'function') {
+	                    await document.fonts.ready;
+	                }
+
+		                if (typeof window.mermaid.run === 'function') {
+		                    await window.mermaid.run({ nodes });
+		                } else if (typeof window.mermaid.init === 'function') {
+		                    window.mermaid.init(undefined, nodes);
+		                }
+
+		                nodes.forEach((node) => postProcessMermaidSvg(node));
+		            } catch (error) {
+		                console.warn('流程图渲染失败:', error);
+		            }
+		        }
 
         // 主分类配置 - 将从配置文件动态加载
         let MAIN_CATEGORIES = {};
@@ -329,8 +565,8 @@
 	            initializeMobileNavigation();
 	        });
 
-	        async function initializeMarkedRender() {
-	            console.log('初始化MD渲染器...');
+		        async function initializeMarkedRender() {
+		            console.log('初始化MD渲染器...');
 
 	            try {
 	                function escapeHtml(text) {
@@ -367,7 +603,7 @@
 	                    ? new marked.Renderer()
 	                    : null;
 
-	                if (renderer) {
+		                if (renderer) {
 	                    // 禁止在 Markdown 中渲染原始 HTML（防止 XSS）
 	                    renderer.html = (html) => escapeHtml(html);
 
@@ -411,7 +647,7 @@
 	                        return `<a href="${escapeHtml(finalHref)}"${safeTitle}>${safeText}</a>`;
 	                    };
 
-	                    renderer.image = (href, title, text) => {
+		                    renderer.image = (href, title, text) => {
 	                        const normalized = normalizeMarkedArgs(href, title, text);
 	                        if (!isSafeUrl(normalized.href)) return '';
 	                        const resolvedSrc = resolveRelativeHref(normalized.href, CURRENT_DOC_PATH);
@@ -419,8 +655,28 @@
 	                        const safeAlt = escapeHtml(normalized.text || '');
 	                        const safeTitle = normalized.title ? ` title="${escapeHtml(normalized.title)}"` : '';
 	                        return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} loading="lazy" decoding="async" />`;
-	                    };
-	                }
+		                    };
+
+		                    renderer.code = (code, lang) => {
+		                        // marked 版本差异兼容：有的版本传入 (code, lang)，有的版本传入 token 对象
+		                        if (code && typeof code === 'object') {
+		                            lang = code.lang;
+		                            code = code.text || code.raw || '';
+		                        }
+
+		                        const language = String(lang || '').trim().toLowerCase();
+		                        const safeCode = escapeHtml(code || '');
+
+		                        if (language === 'mermaid') {
+		                            return `<div class="flowchart mermaid">${safeCode}</div>`;
+		                        }
+
+		                        if (language) {
+		                            return `<pre><code class="language-${escapeHtml(language)}">${safeCode}</code></pre>`;
+		                        }
+		                        return `<pre><code>${safeCode}</code></pre>`;
+		                    };
+		                }
 
 	                // 配置 marked.js 选项（GitHub Pages 纯静态环境）
 	                marked.setOptions({
@@ -1184,7 +1440,7 @@
                     }
                     return response.text();
                 })
-                .then(markdownText => {
+                .then(async markdownText => {
                     console.log(`docs/viewer.html: 成功获取Markdown内容，长度: ${markdownText.length}`);
 
                     if (typeof marked !== 'undefined') {
@@ -1223,14 +1479,27 @@
                         // 更新当前分类的文档列表
                         updateCurrentCategoryDocs(fetchPath);
 
-                        const renderedHTML = marked.parse(content);
-                        console.log('Markdown渲染完成，HTML长度:', renderedHTML.length);
-                        markdownContent.innerHTML = renderedHTML;
+	                        const renderedHTML = marked.parse(content);
+	                        console.log('Markdown渲染完成，HTML长度:', renderedHTML.length);
+	                        markdownContent.innerHTML = renderedHTML;
 
-                        // 应用代码语法高亮
-                        if (typeof Prism !== 'undefined') {
-                            console.log('应用代码高亮');
-                            Prism.highlightAllUnder(markdownContent);
+	                        // 渲染题目组件（quiz）
+	                        if (window.SiteQuiz && typeof window.SiteQuiz.renderQuizzes === 'function') {
+	                            window.SiteQuiz.renderQuizzes(markdownContent);
+	                        }
+
+	                        // 为 Mermaid 测量提供可布局的容器（display:none 会导致尺寸计算错误/文字截断）
+	                        markdownContent.style.display = 'block';
+	                        markdownContent.style.visibility = 'hidden';
+	                        markdownContent.style.pointerEvents = 'none';
+
+	                        // 渲染流程图（Mermaid）
+	                        await renderMermaidFlowcharts(markdownContent);
+
+	                        // 应用代码语法高亮
+	                        if (typeof Prism !== 'undefined') {
+	                            console.log('应用代码高亮');
+	                            Prism.highlightAllUnder(markdownContent);
                         } else {
                             console.warn('Prism.js未加载，跳过代码高亮');
                         }
@@ -1244,6 +1513,8 @@
                             loadingIndicator.setAttribute('aria-busy', 'false');
                         }
                         markdownContent.style.display = 'block';
+                        markdownContent.style.visibility = 'visible';
+                        markdownContent.style.pointerEvents = '';
                         document.getElementById('table-of-contents').style.display = 'block';
                         if (errorMessage) errorMessage.setAttribute('aria-hidden', 'true');
 

@@ -548,6 +548,15 @@ function generateSitemap(config) {
         return;
     }
 
+    // 为了让 CI 与本地构建输出一致：避免使用 localeCompare 的“默认 locale”路径，
+    // 这里统一用简单的 Unicode 码点顺序排序，保证跨平台/跨语言环境可复现。
+    function stableStringCompare(left, right) {
+        const a = String(left || '');
+        const b = String(right || '');
+        if (a === b) return 0;
+        return a < b ? -1 : 1;
+    }
+
     const staticPages = [
         { path: '/', file: 'index.html', priority: '1.0', changefreq: 'weekly' },
         { path: '/docs/', file: 'docs/index.html', priority: '0.9', changefreq: 'weekly' }
@@ -572,7 +581,7 @@ function generateSitemap(config) {
         if (topLevel) folders.add(topLevel);
     }
 
-    for (const folder of [...folders].sort((a, b) => a.localeCompare(b, 'zh-CN'))) {
+    for (const folder of [...folders].sort(stableStringCompare)) {
         urls.push({
             loc: `${SITE_BASE_URL}/docs/folder.html?path=${encodeURIComponent(folder)}`,
             lastmod: getLastModForPath('docs/config.json'),
@@ -601,7 +610,7 @@ function generateSitemap(config) {
         uniqueByLoc.set(entry.loc, entry);
     }
 
-    const finalUrls = [...uniqueByLoc.values()].sort((a, b) => a.loc.localeCompare(b.loc));
+    const finalUrls = [...uniqueByLoc.values()].sort((a, b) => stableStringCompare(a.loc, b.loc));
 
     const xmlLines = [
         '<?xml version="1.0" encoding="UTF-8"?>',

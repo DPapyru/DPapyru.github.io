@@ -84,3 +84,6 @@ config.local.json
 GitHub错误10054故障排除指南.md
 
 docs/plans
+
+# 本地导出/临时预览文件
+.test/

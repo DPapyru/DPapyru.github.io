@@ -49,13 +49,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E5%8E%9F%E7%89%88%E4%BB%A3%E7%A0%81%E6%96%87%E6%A1%A3%2F%E6%9D%82%E9%A1%B9%2FNetMessage-Class-Documentation%20NetMessage%E7%B1%BB%20%E6%96%87%E6%A1%A3.md</loc>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E5%8E%9F%E7%89%88%E4%BB%A3%E7%A0%81%E6%96%87%E6%A1%A3%2F%E6%9D%82%E9%A1%B9%2FNPC-Class-Documentation%20NPC%E7%B1%BB%20%E6%96%87%E6%A1%A3.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E5%8E%9F%E7%89%88%E4%BB%A3%E7%A0%81%E6%96%87%E6%A1%A3%2F%E6%9D%82%E9%A1%B9%2FNPC-Class-Documentation%20NPC%E7%B1%BB%20%E6%96%87%E6%A1%A3.md</loc>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E5%8E%9F%E7%89%88%E4%BB%A3%E7%A0%81%E6%96%87%E6%A1%A3%2F%E6%9D%82%E9%A1%B9%2FNetMessage-Class-Documentation%20NetMessage%E7%B1%BB%20%E6%96%87%E6%A1%A3.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -301,6 +301,24 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E6%9D%82%E9%A1%B9%2FUpdate-Migration-Guide%20%E6%9B%B4%E6%96%B0%E8%BF%81%E7%A7%BB%E6%8C%87%E5%BC%95.md</loc>
+    <lastmod>2025-12-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E6%9D%82%E9%A1%B9%2FUpdate-Migration-Guide-Previous-Versions%20%E6%9B%B4%E6%96%B0%E8%BF%81%E7%A7%BB%E6%8C%87%E5%BC%95%20%E5%85%88%E5%89%8D%E7%89%88%E6%9C%AC.md</loc>
+    <lastmod>2025-12-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E6%9D%82%E9%A1%B9%2FVisual-Studio-Snippets%20VisualStudio%E4%BB%A3%E7%A0%81%E7%89%87%E6%AE%B5.md</loc>
+    <lastmod>2025-12-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E6%9D%82%E9%A1%B9%2FtModCodeAssist%20tMod%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90%E5%99%A8.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
@@ -320,24 +338,6 @@
   </url>
   <url>
     <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E6%9D%82%E9%A1%B9%2FtModLoader-Style-Guide%20tModLoader%E4%BB%A3%E7%A0%81%E9%A3%8E%E6%A0%BC%E6%8C%87%E5%BC%95.md</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E6%9D%82%E9%A1%B9%2FUpdate-Migration-Guide-Previous-Versions%20%E6%9B%B4%E6%96%B0%E8%BF%81%E7%A7%BB%E6%8C%87%E5%BC%95%20%E5%85%88%E5%89%8D%E7%89%88%E6%9C%AC.md</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E6%9D%82%E9%A1%B9%2FUpdate-Migration-Guide%20%E6%9B%B4%E6%96%B0%E8%BF%81%E7%A7%BB%E6%8C%87%E5%BC%95.md</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F%E6%9D%82%E9%A1%B9%2FVisual-Studio-Snippets%20VisualStudio%E4%BB%A3%E7%A0%81%E7%89%87%E6%AE%B5.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -427,13 +427,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F0-%E5%BC%80%E5%A7%8B%2F%E5%8E%9F%E6%96%87%E4%BB%B6%E5%90%8D%E9%A1%BA%E5%BA%8F-%E6%96%B9%E4%BE%BF%E6%9F%A5%E6%89%BE%E5%8E%9F%E6%96%87%E5%AF%B9%E6%AF%94%2FDeveloping-with-Visual-Studio-Code%20%E4%BD%BF%E7%94%A8VisualStudioCode%E5%BC%80%E5%8F%91.md</loc>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F0-%E5%BC%80%E5%A7%8B%2F%E5%8E%9F%E6%96%87%E4%BB%B6%E5%90%8D%E9%A1%BA%E5%BA%8F-%E6%96%B9%E4%BE%BF%E6%9F%A5%E6%89%BE%E5%8E%9F%E6%96%87%E5%AF%B9%E6%AF%94%2FDeveloping-with-Visual-Studio%20%E4%BD%BF%E7%94%A8VisualStudio%E5%BC%80%E5%8F%91.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F0-%E5%BC%80%E5%A7%8B%2F%E5%8E%9F%E6%96%87%E4%BB%B6%E5%90%8D%E9%A1%BA%E5%BA%8F-%E6%96%B9%E4%BE%BF%E6%9F%A5%E6%89%BE%E5%8E%9F%E6%96%87%E5%AF%B9%E6%AF%94%2FDeveloping-with-Visual-Studio%20%E4%BD%BF%E7%94%A8VisualStudio%E5%BC%80%E5%8F%91.md</loc>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F0-%E5%BC%80%E5%A7%8B%2F%E5%8E%9F%E6%96%87%E4%BB%B6%E5%90%8D%E9%A1%BA%E5%BA%8F-%E6%96%B9%E4%BE%BF%E6%9F%A5%E6%89%BE%E5%8E%9F%E6%96%87%E5%AF%B9%E6%AF%94%2FDeveloping-with-Visual-Studio-Code%20%E4%BD%BF%E7%94%A8VisualStudioCode%E5%BC%80%E5%8F%91.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -446,6 +446,18 @@
   </url>
   <url>
     <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F0-%E5%BC%80%E5%A7%8B%2F%E5%8E%9F%E6%96%87%E4%BB%B6%E5%90%8D%E9%A1%BA%E5%BA%8F-%E6%96%B9%E4%BE%BF%E6%9F%A5%E6%89%BE%E5%8E%9F%E6%96%87%E5%AF%B9%E6%AF%94%2FLearn-How-To-Debug%20%E5%AD%A6%E4%B9%A0%E5%A6%82%E4%BD%95%E8%B0%83%E8%AF%95.md</loc>
+    <lastmod>2025-12-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F0-%E5%BC%80%E5%A7%8B%2F%E5%8E%9F%E6%96%87%E4%BB%B6%E5%90%8D%E9%A1%BA%E5%BA%8F-%E6%96%B9%E4%BE%BF%E6%9F%A5%E6%89%BE%E5%8E%9F%E6%96%87%E5%AF%B9%E6%AF%94%2FUseful-Resources%20%E5%AE%9E%E7%94%A8%E8%B5%84%E6%BA%90.md</loc>
+    <lastmod>2025-12-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F0-%E5%BC%80%E5%A7%8B%2F%E5%8E%9F%E6%96%87%E4%BB%B6%E5%90%8D%E9%A1%BA%E5%BA%8F-%E6%96%B9%E4%BE%BF%E6%9F%A5%E6%89%BE%E5%8E%9F%E6%96%87%E5%AF%B9%E6%AF%94%2FWhy-Use-an-IDE%20%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8IDE%E5%BC%80%E5%8F%91.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -464,18 +476,6 @@
   </url>
   <url>
     <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F0-%E5%BC%80%E5%A7%8B%2F%E5%8E%9F%E6%96%87%E4%BB%B6%E5%90%8D%E9%A1%BA%E5%BA%8F-%E6%96%B9%E4%BE%BF%E6%9F%A5%E6%89%BE%E5%8E%9F%E6%96%87%E5%AF%B9%E6%AF%94%2FtModLoader-guide-for-players%20tModLoader%E7%8E%A9%E5%AE%B6%E6%8C%87%E5%BC%95.md</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F0-%E5%BC%80%E5%A7%8B%2F%E5%8E%9F%E6%96%87%E4%BB%B6%E5%90%8D%E9%A1%BA%E5%BA%8F-%E6%96%B9%E4%BE%BF%E6%9F%A5%E6%89%BE%E5%8E%9F%E6%96%87%E5%AF%B9%E6%AF%94%2FUseful-Resources%20%E5%AE%9E%E7%94%A8%E8%B5%84%E6%BA%90.md</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F0-%E5%BC%80%E5%A7%8B%2F%E5%8E%9F%E6%96%87%E4%BB%B6%E5%90%8D%E9%A1%BA%E5%BA%8F-%E6%96%B9%E4%BE%BF%E6%9F%A5%E6%89%BE%E5%8E%9F%E6%96%87%E5%AF%B9%E6%AF%94%2FWhy-Use-an-IDE%20%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8IDE%E5%BC%80%E5%8F%91.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -655,13 +655,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F1-%E5%9F%BA%E7%A1%80%2F9-Basic-NPC-Drops-and-Loot-1.4%20%E5%9F%BA%E7%A1%80-NPC%E6%8E%89%E8%90%BD%E4%B8%8E%E6%8E%89%E8%90%BD%E7%89%A9-1.4.md</loc>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F1-%E5%9F%BA%E7%A1%80%2F9-Basic-NPC-Drops-and-Loot%20%E5%9F%BA%E7%A1%80-NPC%E6%8E%89%E8%90%BD%E4%B8%8E%E6%8E%89%E8%90%BD%E7%89%A9.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F1-%E5%9F%BA%E7%A1%80%2F9-Basic-NPC-Drops-and-Loot%20%E5%9F%BA%E7%A1%80-NPC%E6%8E%89%E8%90%BD%E4%B8%8E%E6%8E%89%E8%90%BD%E7%89%A9.md</loc>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2F1-%E5%9F%BA%E7%A1%80%2F9-Basic-NPC-Drops-and-Loot-1.4%20%E5%9F%BA%E7%A1%80-NPC%E6%8E%89%E8%90%BD%E4%B8%8E%E6%8E%89%E8%90%BD%E7%89%A9-1.4.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -793,18 +793,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2FtModLoader%E6%96%87%E6%A1%A3%2Fbuild.txt%20build.txt%E6%96%87%E4%BB%B6.md</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2FtModLoader%E6%96%87%E6%A1%A3%2Fdescription.txt%20description.txt%E6%96%87%E4%BB%B6.md</loc>
-    <lastmod>2025-12-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2FtModLoader%E6%96%87%E6%A1%A3%2FMod-Loading-Steps%20%E6%A8%A1%E7%BB%84%E5%8A%A0%E8%BD%BD%E9%A1%BA%E5%BA%8F.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
@@ -812,6 +800,18 @@
   </url>
   <url>
     <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2FtModLoader%E6%96%87%E6%A1%A3%2FTerraria.Player.Update()-Execution-Order%20Player%E6%9B%B4%E6%96%B0%E5%87%BD%E6%95%B0%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F.md</loc>
+    <lastmod>2025-12-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2FtModLoader%E6%96%87%E6%A1%A3%2Fbuild.txt%20build.txt%E6%96%87%E4%BB%B6.md</loc>
+    <lastmod>2025-12-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B%2FtModLoader%E6%96%87%E6%A1%A3%2Fdescription.txt%20description.txt%E6%96%87%E4%BB%B6.md</loc>
     <lastmod>2025-12-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
