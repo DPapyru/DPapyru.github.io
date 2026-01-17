@@ -1165,6 +1165,111 @@ body.viewer-page .tutorial-content {
     margin-bottom: 15px;
 }
 
+/* Mermaid 流程图容器 */
+div.flowchart {
+    margin: 16px 0;
+    padding: 12px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+div.flowchart > svg {
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    display: block;
+}
+
+/* Quiz 题目组件 */
+.site-quiz {
+    margin: 16px 0;
+    padding: 12px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.site-quiz-title {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 8px;
+}
+
+.site-quiz-question {
+    color: var(--text-color);
+    margin-bottom: 12px;
+}
+
+.site-quiz-options {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.site-quiz-option {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 10px;
+    align-items: start;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-color);
+}
+
+.site-quiz-option input {
+    margin-top: 3px;
+}
+
+.site-quiz-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+}
+
+.site-quiz-submit,
+.site-quiz-reset {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.site-quiz-submit:hover,
+.site-quiz-reset:hover {
+    background-color: var(--bg-secondary);
+}
+
+.site-quiz-result {
+    min-height: 22px;
+    color: var(--text-secondary);
+    margin: 6px 0;
+}
+
+.site-quiz[data-quiz-status="correct"] .site-quiz-result {
+    color: var(--success-color, #4ade80);
+}
+
+.site-quiz[data-quiz-status="wrong"] .site-quiz-result {
+    color: var(--danger-color, #f87171);
+}
+
+.site-quiz-explain {
+    margin-top: 8px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 8px;
+}
+
+.site-quiz-explain-summary {
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
 .content-section code {
     background-color: var(--code-bg);
     padding: 2px 4px;
