@@ -539,7 +539,7 @@ a:hover {
 
 /* viewer.html: widen content area on desktop */
 body.viewer-page .content-wrapper {
-    max-width: 1180px;
+    max-width: 1400px;
 }
 
 body.viewer-page .tutorial-content {
