@@ -8,7 +8,6 @@
 			"author: ${2:作者}",
 			"date: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
 			"last_updated: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
-			"category: ${3:分类}",
 			"difficulty: ${4|beginner,intermediate,advanced,expert|}",
 			"time: ${5:预计阅读时间}",
 			"description: ${6:简短描述}",

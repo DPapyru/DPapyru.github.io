@@ -23,12 +23,6 @@
         "body": "last_updated: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
         "description": "添加最后更新日期"
     },
-    "分类": {
-        "scope": "yaml",
-        "prefix": "category",
-        "body": "category: ${1:分类}",
-        "description": "添加文章分类"
-    },
     "难度级别": {
         "scope": "yaml",
         "prefix": "difficulty",

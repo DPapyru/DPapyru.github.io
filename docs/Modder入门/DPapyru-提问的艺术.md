@@ -3,7 +3,6 @@ title: 提问的艺术
 author: 小天使
 date: 2026-01-17
 last_updated: 2026-01-17
-category: Modder入门
 difficulty: beginner
 time: 5分钟
 description: 如果新人需要提问，需要注意的事情

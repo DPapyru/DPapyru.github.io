@@ -3,7 +3,6 @@ title: 给新人的前言
 author: 小天使
 date: 2025-12-02
 last_updated: 2025-12-02
-category: Modder入门
 difficulty: beginner
 time: 5分钟
 description: 新人要看一下前言

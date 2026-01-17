@@ -3,7 +3,6 @@ title: 快速开始构建Mod（tModLoader 1.4）
 author: 小天使
 date: 2026-01-17
 last_updated: 2026-01-17
-category: Modder入门
 difficulty: beginner
 time: 15分钟
 description: 从环境准备到跑起第一个可编译的 tModLoader Mod
@@ -13,7 +12,6 @@ order: 1000
 colors:
   Mad: "#f00"
 ---
-
 # 快速开始构建 Mod
 
 你现在要做的事很简单：**先把 Mod 跑起来**。跑起来之后你再去学 API、再去整活，效率会高很多。
@@ -64,16 +62,26 @@ dotnet --list-sdks
 
 操作（中文界面）：  
 1. 启动 `tModLoader`  
-2. 在主菜单点击 `Workshop（工作坊）`  
+2. 在主菜单点击 `Workshop（创意工坊）`  
+
+![Workshop（创意工坊）](imgs/快速开始-创意工坊.png)
+
 3. 点击 `Develop Mods（开发模组）`  
+
+![Develop Mods（开发模组）](imgs/快速开始-开发模组.png)
+
 4. 打开 `Mod Sources`  
 5. 点击 `Create Mod（创建模组）`（或名字非常接近的按钮）并按提示生成
+
+![Create Mod（创建模组）](imgs/快速开始-创建模组.png)
 
 目的：让 tModLoader 给你生成一个可编译的项目骨架。  
 验收：在 `文档\My Games\Terraria\tModLoader\ModSources\` 下出现一个你的 Mod 文件夹，里面至少有 `<ModName>.csproj`。
 
 建议：Mod 名称只用英文/数字/下划线，例如 `MyFirstMod`。  
 原因：少踩路径/打包/协作相关坑（这些坑经常被大家拿来当“玄学”讲）。
+
+![Build + Reload（构建模组）](imgs/快速开始-构建模组.png)
 
 ---
 
@@ -156,7 +164,7 @@ namespace MyFirstMod.Items
 
 ## 5.2 加载进 tModLoader（Build + Reload）
 
-操作：回到 `tModLoader -> Workshop（工作坊） -> Develop Mods（开发模组） -> Mod Sources`，找到你的 Mod，点击 `Build + Reload`。  
+操作：回到 `tModLoader -> Workshop（创意工坊） -> Develop Mods（开发模组） -> Mod Sources`，找到你的 Mod，点击 `Build + Reload`。  
 目的：把刚编译出来的内容打包成 `.tmod` 并加载进游戏。  
 验收：在 `Mods（模组）` 菜单里能看到你的 Mod，并且可以启用。
 
@@ -197,4 +205,3 @@ namespace MyFirstMod.Items
 - [tModLoader开发者指引](../螺线翻译tml教程/0-开始/2-tModLoader-guide-for-developers%20tModLoader开发者指引.md)
 - [使用VisualStudio开发](../螺线翻译tml教程/0-开始/6-Developing-with-Visual-Studio%20使用VisualStudio开发.md)
 - [使用VisualStudioCode开发](../螺线翻译tml教程/0-开始/7-Developing-with-Visual-Studio-Code%20使用VisualStudioCode开发.md)
-

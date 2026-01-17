@@ -175,7 +175,7 @@ class ConfigManager {
                 customFields: ['last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange'],
                 validationRules: {
                     requiredFields: ['title'],
-                    optionalFields: ['author', 'description', 'date', 'difficulty', 'order', 'category', 'topic', 'last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange']
+                    optionalFields: ['author', 'description', 'date', 'difficulty', 'order', 'topic', 'last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange']
                 }
             }
         };
@@ -474,7 +474,6 @@ function processMainProject() {
 
         // 使用配置管理器处理分类
         const targetCategory = resolveCategory({
-            metadataCategory: metadata.category,
             filePath: file,
             categories: configManager.getCategories(),
             categoryMappings: configManager.categoryMappings,
@@ -724,7 +723,6 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
 
             // 使用配置管理器确定类别
             const category = resolveCategory({
-                metadataCategory: metadata.category,
                 filePath: file,
                 categories: configManager.getCategories(),
                 categoryMappings: configManager.categoryMappings,
@@ -821,7 +819,6 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
 
         // 使用配置管理器确定类别
         const category = resolveCategory({
-            metadataCategory: metadata.category,
             filePath: file,
             categories: configManager.getCategories(),
             categoryMappings: configManager.categoryMappings,
@@ -1162,14 +1159,6 @@ function validateMetadata(metadata, configManager) {
                 warnings.push(`未知字段: ${field}`);
             }
         });
-    }
-
-    // 验证分类
-    if (metadata.category) {
-        const mappedCategory = configManager.mapCategoryName(metadata.category);
-        if (!mappedCategory) {
-            warnings.push(`未知分类: ${metadata.category}，将按目录名分类`);
-        }
     }
 
     // 验证主题

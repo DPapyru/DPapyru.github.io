@@ -2,7 +2,6 @@
 title: 如何贡献文章（详细指南）
 author: 小天使
 date: 2025-11-27
-category: 怎么贡献
 topic: article-contribution
 order: 999
 difficulty: beginner
@@ -65,7 +64,6 @@ title: 文章标题（必填）
 ---
 title: 文章标题
 author: 你的名字
-category: 怎么贡献
 topic: article-contribution
 order: 100
 difficulty: beginner
@@ -81,7 +79,7 @@ next_chapter: null
 
 - `title`：文章标题（必填）
 - `author`：作者名（推荐）
-- `category`：分类（推荐；不写时会尝试按目录归类）
+- 分类规则：文章所属“分类”由文件所在目录决定（例如 `docs/Modder入门/`、`docs/怎么贡献/`），请不要在 YAML 里写 `category`
 - `topic`：主题（推荐；用于把同一分类下的文章再分组）
   - 建议写 Topic key，例如 `article-contribution`、`mod-basics`、`env`…
   - 也允许写别名（例如“文章贡献”），但为了稳定建议写 key
