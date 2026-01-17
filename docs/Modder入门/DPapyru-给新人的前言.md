@@ -9,7 +9,7 @@ description: 新人要看一下前言
 prev_chapter: null
 next_chapter: DPapyru-提问的艺术.md
 topic: mod-basics
-order: 5
+order: 0
 colors:
   Mad: "#f00"
 ---

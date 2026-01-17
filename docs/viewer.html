@@ -34,7 +34,7 @@
     <!-- 加载CSS样式文件 -->
     <link rel="stylesheet" href="../assets/css/style.css"> <!-- 主样式文件 -->
     <link rel="stylesheet" href="../assets/css/prism.min.css"> <!-- 代码高亮样式 -->
-    <link rel="stylesheet" href="../assets/css/vs2022-theme.css"> <!-- VS2022代码高亮主题 -->
+    <link rel="stylesheet" href="../assets/css/rider-dark-theme.css"> <!-- Rider Dark代码高亮主题 -->
     <link rel="icon" type="image/png" href="../assets/imgs/Green_tModLoader.png"> <!-- 网站图标 -->
 
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
@@ -796,16 +796,16 @@
                                 console.log(`文档 ${filename} 的分类从 ${oldCategory} 映射到 ${category}`);
                             }
 
-	                            const docInfo = {
-	                                filename: filename,
-	                                title: metadata.title || filename.replace('.md', ''),
-	                                author: metadata.author || '未知',
-	                                category: category,
-	                                topic: metadata.topic || 'mod-basics',
-	                                order: parseInt(metadata.order) || 999,
-	                                description: metadata.description || '',
-	                                last_updated: metadata.last_updated || '未知'
-	                            };
+		                            const docInfo = {
+		                                filename: filename,
+		                                title: metadata.title || filename.replace('.md', ''),
+		                                author: metadata.author || '未知',
+		                                category: category,
+		                                topic: metadata.topic || 'mod-basics',
+		                                order: parseOrder(metadata.order),
+		                                description: metadata.description || '',
+		                                last_updated: metadata.last_updated || '未知'
+		                            };
 
                             ALL_DOCS.push(docInfo);
                             console.log('成功添加文档:', docInfo.title);
@@ -818,12 +818,12 @@
                 }
 
                 // 按分类和排序
-                ALL_DOCS.sort((a, b) => {
-                    if (a.category !== b.category) {
-                        return (MAIN_CATEGORIES[a.category]?.order || 999) - (MAIN_CATEGORIES[b.category]?.order || 999);
-                    }
-                    return a.order - b.order;
-                });
+	                ALL_DOCS.sort((a, b) => {
+	                    if (a.category !== b.category) {
+	                        return (MAIN_CATEGORIES[a.category]?.order ?? 999) - (MAIN_CATEGORIES[b.category]?.order ?? 999);
+	                    }
+	                    return a.order - b.order;
+	                });
 
                 console.log('扫描到的文档数量:', ALL_DOCS.length);
                 console.log('扫描到的文档:', ALL_DOCS);
@@ -1319,15 +1319,20 @@
         }
 
         // 从旧路径获取对应的分类
-        function getCategoryFromOldPath(oldPath) {
-            console.log(`从旧路径获取分类: ${oldPath}`);
-            const category = mapCategoryToNewSystem(oldPath);
-            console.log(`映射结果: ${category}`);
-            return category;
-        }
+	        function getCategoryFromOldPath(oldPath) {
+	            console.log(`从旧路径获取分类: ${oldPath}`);
+	            const category = mapCategoryToNewSystem(oldPath);
+	            console.log(`映射结果: ${category}`);
+	            return category;
+	        }
 
-        // 解析Front Matter（文档开头的元数据部分）
-        function parseFrontMatter(text) {
+	        function parseOrder(value, fallback = 999) {
+	            const parsed = Number.parseInt(value, 10);
+	            return Number.isFinite(parsed) ? parsed : fallback;
+	        }
+
+	        // 解析Front Matter（文档开头的元数据部分）
+	        function parseFrontMatter(text) {
             const frontMatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
             const match = text.match(frontMatterRegex);
 
@@ -2092,13 +2097,13 @@
                 // 按分类和排序组织文档
                 const sortedDocs = [...allDocs].sort((a, b) => {
                     // 先按分类排序
-                    const categoryOrderA = MAIN_CATEGORIES[a.category]?.order || 999;
-                    const categoryOrderB = MAIN_CATEGORIES[b.category]?.order || 999;
+                    const categoryOrderA = MAIN_CATEGORIES[a.category]?.order ?? 999;
+                    const categoryOrderB = MAIN_CATEGORIES[b.category]?.order ?? 999;
                     if (categoryOrderA !== categoryOrderB) {
                         return categoryOrderA - categoryOrderB;
                     }
                     // 同一分类内按排序值排序
-                    return (a.order || 999) - (b.order || 999);
+                    return (a.order ?? 999) - (b.order ?? 999);
                 });
 
                 sortedDocs.forEach(doc => {
@@ -2278,13 +2283,13 @@
                 // 按分类和排序组织文档
                 const sortedDocs = [...ALL_DOCS].sort((a, b) => {
                     // 先按分类排序
-                    const categoryOrderA = MAIN_CATEGORIES[a.category]?.order || 999;
-                    const categoryOrderB = MAIN_CATEGORIES[b.category]?.order || 999;
+                    const categoryOrderA = MAIN_CATEGORIES[a.category]?.order ?? 999;
+                    const categoryOrderB = MAIN_CATEGORIES[b.category]?.order ?? 999;
                     if (categoryOrderA !== categoryOrderB) {
                         return categoryOrderA - categoryOrderB;
                     }
                     // 同一分类内按排序值排序
-                    return (a.order || 999) - (b.order || 999);
+                    return (a.order ?? 999) - (b.order ?? 999);
                 });
 
                 sortedDocs.forEach(doc => {
@@ -2320,9 +2325,9 @@
             currentCategoryDocs.innerHTML = '';
 
             // 显示同一分类和主题下的其他文档
-            const relatedDocs = ALL_DOCS.filter(doc =>
-                doc.category === currentDoc.category && doc.topic === currentDoc.topic
-            ).sort((a, b) => (a.order || 999) - (b.order || 999));
+	            const relatedDocs = ALL_DOCS.filter(doc =>
+	                doc.category === currentDoc.category && doc.topic === currentDoc.topic
+	            ).sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
             if (relatedDocs.length > 0) {
                 relatedDocs.forEach(doc => {
@@ -2341,9 +2346,9 @@
                 });
             } else {
                 // 如果没有相关文档，显示同一分类下的所有文档
-                const categoryDocs = ALL_DOCS.filter(doc =>
-                    doc.category === currentDoc.category
-                ).sort((a, b) => (a.order || 999) - (b.order || 999));
+	                const categoryDocs = ALL_DOCS.filter(doc =>
+	                    doc.category === currentDoc.category
+	                ).sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 
 	                categoryDocs.forEach(doc => {
 	                    const li = document.createElement('li');
@@ -2666,13 +2671,13 @@
                     // 按分类和排序组织文档
                     const sortedDocs = [...allDocs].sort((a, b) => {
                         // 先按分类排序
-                        const categoryOrderA = MAIN_CATEGORIES[a.category]?.order || 999;
-                        const categoryOrderB = MAIN_CATEGORIES[b.category]?.order || 999;
+                        const categoryOrderA = MAIN_CATEGORIES[a.category]?.order ?? 999;
+                        const categoryOrderB = MAIN_CATEGORIES[b.category]?.order ?? 999;
                         if (categoryOrderA !== categoryOrderB) {
                             return categoryOrderA - categoryOrderB;
                         }
                         // 同一分类内按排序值排序
-                        return (a.order || 999) - (b.order || 999);
+                        return (a.order ?? 999) - (b.order ?? 999);
                     });
 
                     sortedDocs.forEach(doc => {

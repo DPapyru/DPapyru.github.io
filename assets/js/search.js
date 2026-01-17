@@ -472,7 +472,7 @@ class TutorialSearch {
                         author: fileInfo.author || metadata.author,
                         category: fileInfo.category || metadata.category,
                         topic: fileInfo.topic || metadata.topic,
-                        order: fileInfo.order || metadata.order,
+                        order: fileInfo.order ?? metadata.order,
                         path: fileInfo.path || fullPath
                     };
                     
@@ -493,7 +493,7 @@ class TutorialSearch {
                                     author: fileInTopic.author || metadata.author,
                                     description: fileInTopic.description || metadata.description,
                                     last_updated: fileInTopic.last_updated || metadata.last_updated,
-                                    order: fileInTopic.order || metadata.order,
+                                    order: fileInTopic.order ?? metadata.order,
                                     path: fileInTopic.path || metadata.path
                                 };
                             }

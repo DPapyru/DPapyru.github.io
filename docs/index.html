@@ -902,17 +902,17 @@
                                 const content = await docResponse.text();
                                 const { metadata } = parseFrontMatter(content);
                                 
-	                                const docInfo = {
-	                                    filename: filename,
-	                                    title: metadata.title || filename.replace('.md', ''),
-	                                    author: metadata.author || '未知',
-	                                    category: metadata.category || '入门',
-	                                    topic: metadata.topic || 'mod-basics',
-	                                    order: parseInt(metadata.order) || 999,
-	                                    description: metadata.description || '',
-	                                    last_updated: metadata.last_updated || '未知',
-	                                    difficulty: metadata.difficulty || 'beginner',
-	                                };
+		                                const docInfo = {
+		                                    filename: filename,
+		                                    title: metadata.title || filename.replace('.md', ''),
+		                                    author: metadata.author || '未知',
+		                                    category: metadata.category || '入门',
+		                                    topic: metadata.topic || 'mod-basics',
+		                                    order: parseOrder(metadata.order),
+		                                    description: metadata.description || '',
+		                                    last_updated: metadata.last_updated || '未知',
+		                                    difficulty: metadata.difficulty || 'beginner',
+		                                };
                                 
                                 ALL_DOCS.push(docInfo);
                             }
@@ -1020,10 +1020,15 @@
             
             // 添加到所有文件列表
             DOC_CONFIG.all_files.push(docInfo);
-        }
+	        }
 
-        // 解析Front Matter（文档开头的元数据部分）
-        function parseFrontMatter(text) {
+	        function parseOrder(value, fallback = 999) {
+	            const parsed = Number.parseInt(value, 10);
+	            return Number.isFinite(parsed) ? parsed : fallback;
+	        }
+
+	        // 解析Front Matter（文档开头的元数据部分）
+	        function parseFrontMatter(text) {
             const frontMatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
             const match = text.match(frontMatterRegex);
 

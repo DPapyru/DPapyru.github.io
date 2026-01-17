@@ -863,7 +863,7 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
             originalPath: file, // 保留原始路径
             title: metadata.title || path.basename(file, '.md'),
             author: metadata.author || '未知',
-            order: parseInt(metadata.order) || 999,
+            order: parseOrder(metadata.order),
             description: metadata.description || '无描述',
             last_updated: metadata.last_updated || metadata.date || '2017-9-18',
             // 添加新的自定义字段
@@ -900,7 +900,7 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
             author: metadata.author || '未知',
             category: category,
             topic: topic,
-            order: parseInt(metadata.order) || 999,
+            order: parseOrder(metadata.order),
             // 添加新的自定义字段
             time: metadata.time || '不具体',
             difficulty: metadata.difficulty || 'beginner',
@@ -1002,6 +1002,11 @@ function parseMetadata(content) {
         console.error('解析元数据时出错:', error.message);
         return {};
     }
+}
+
+function parseOrder(value, fallback = 999) {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 // 简单的YAML解析器，支持嵌套对象和数组

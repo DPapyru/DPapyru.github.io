@@ -57,30 +57,12 @@
           "description": "Mod开发的基础概念和核心API",
           "files": [
             {
-              "filename": "DPapyru-给新人的前言.md",
-              "path": "Modder入门/DPapyru-给新人的前言.md",
-              "originalPath": "Modder入门/DPapyru-给新人的前言.md",
-              "title": "给新人的前言",
-              "author": "小天使",
-              "order": 5,
-              "description": "新人要看一下前言",
-              "last_updated": "2025-12-02",
-              "time": "5分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "null",
-              "next_chapter": "DPapyru-提问的艺术.md",
-              "colors": {
-                "Mad": "#f00"
-              },
-              "colorChange": null
-            },
-            {
               "filename": "DPapyru-提问的艺术.md",
               "path": "Modder入门/DPapyru-提问的艺术.md",
               "originalPath": "Modder入门/DPapyru-提问的艺术.md",
               "title": "提问的艺术",
               "author": "小天使",
-              "order": 999,
+              "order": 0,
               "description": "如果新人需要提问，需要注意的事情",
               "last_updated": "2026-01-17",
               "time": "5分钟",
@@ -93,18 +75,54 @@
               "colorChange": null
             },
             {
+              "filename": "DPapyru-给新人的前言.md",
+              "path": "Modder入门/DPapyru-给新人的前言.md",
+              "originalPath": "Modder入门/DPapyru-给新人的前言.md",
+              "title": "给新人的前言",
+              "author": "小天使",
+              "order": 0,
+              "description": "新人要看一下前言",
+              "last_updated": "2025-12-02",
+              "time": "5分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "null",
+              "next_chapter": "DPapyru-提问的艺术.md",
+              "colors": {
+                "Mad": "#f00"
+              },
+              "colorChange": null
+            },
+            {
               "filename": "DPapyru-快速开始构建Mod.md",
               "path": "Modder入门/DPapyru-快速开始构建Mod.md",
               "originalPath": "Modder入门/DPapyru-快速开始构建Mod.md",
               "title": "快速开始构建Mod（tModLoader 1.4）",
               "author": "小天使",
-              "order": 1000,
+              "order": 1,
               "description": "从环境准备到跑起第一个可编译的 tModLoader Mod",
               "last_updated": "2026-01-17",
               "time": "15分钟",
               "difficulty": "beginner",
               "prev_chapter": "DPapyru-提问的艺术.md",
-              "next_chapter": null,
+              "next_chapter": "DPapyru-第一个武器.md",
+              "colors": {
+                "Mad": "#f00"
+              },
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-第一个武器.md",
+              "path": "Modder入门/DPapyru-第一个武器.md",
+              "originalPath": "Modder入门/DPapyru-第一个武器.md",
+              "title": "第一个武器",
+              "author": "小天使",
+              "order": 2,
+              "description": "包括C#最基础的教程",
+              "last_updated": "2026-01-17",
+              "time": "15分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-快速开始构建Mod.md",
+              "next_chapter": "null",
               "colors": {
                 "Mad": "#f00"
               },
@@ -2402,6 +2420,7 @@
       "files": [
         "DPapyru-快速开始构建Mod.md",
         "DPapyru-提问的艺术.md",
+        "DPapyru-第一个武器.md",
         "DPapyru-给新人的前言.md",
         "DPapyru-贡献者如何编写文章基础.md"
       ]
@@ -2551,6 +2570,63 @@
     }
   },
   "all_files": [
+    {
+      "filename": "DPapyru-提问的艺术.md",
+      "path": "Modder入门/DPapyru-提问的艺术.md",
+      "originalPath": "Modder入门/DPapyru-提问的艺术.md",
+      "title": "提问的艺术",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 0,
+      "time": "5分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-给新人的前言.md",
+      "next_chapter": "DPapyru-快速开始构建Mod.md",
+      "colors": {
+        "Mad": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-17"
+    },
+    {
+      "filename": "DPapyru-给新人的前言.md",
+      "path": "Modder入门/DPapyru-给新人的前言.md",
+      "originalPath": "Modder入门/DPapyru-给新人的前言.md",
+      "title": "给新人的前言",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 0,
+      "time": "5分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "null",
+      "next_chapter": "DPapyru-提问的艺术.md",
+      "colors": {
+        "Mad": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2025-12-02"
+    },
+    {
+      "filename": "DPapyru-快速开始构建Mod.md",
+      "path": "Modder入门/DPapyru-快速开始构建Mod.md",
+      "originalPath": "Modder入门/DPapyru-快速开始构建Mod.md",
+      "title": "快速开始构建Mod（tModLoader 1.4）",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "15分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-提问的艺术.md",
+      "next_chapter": "DPapyru-第一个武器.md",
+      "colors": {
+        "Mad": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-17"
+    },
     {
       "filename": "0-Home 主页.md",
       "path": "螺线翻译tml教程/0-开始/0-Home 主页.md",
@@ -4745,23 +4821,23 @@
       "last_updated": "2017-9-18"
     },
     {
-      "filename": "DPapyru-给新人的前言.md",
-      "path": "Modder入门/DPapyru-给新人的前言.md",
-      "originalPath": "Modder入门/DPapyru-给新人的前言.md",
-      "title": "给新人的前言",
+      "filename": "DPapyru-第一个武器.md",
+      "path": "Modder入门/DPapyru-第一个武器.md",
+      "originalPath": "Modder入门/DPapyru-第一个武器.md",
+      "title": "第一个武器",
       "author": "小天使",
       "category": "Modder入门",
       "topic": "mod-basics",
-      "order": 5,
-      "time": "5分钟",
+      "order": 2,
+      "time": "15分钟",
       "difficulty": "beginner",
-      "prev_chapter": "null",
-      "next_chapter": "DPapyru-提问的艺术.md",
+      "prev_chapter": "DPapyru-快速开始构建Mod.md",
+      "next_chapter": "null",
       "colors": {
         "Mad": "#f00"
       },
       "colorChange": null,
-      "last_updated": "2025-12-02"
+      "last_updated": "2026-01-17"
     },
     {
       "filename": "世界观.md",
@@ -4840,25 +4916,6 @@
       "last_updated": "2026-1-17"
     },
     {
-      "filename": "DPapyru-提问的艺术.md",
-      "path": "Modder入门/DPapyru-提问的艺术.md",
-      "originalPath": "Modder入门/DPapyru-提问的艺术.md",
-      "title": "提问的艺术",
-      "author": "小天使",
-      "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 999,
-      "time": "5分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "DPapyru-给新人的前言.md",
-      "next_chapter": "DPapyru-快速开始构建Mod.md",
-      "colors": {
-        "Mad": "#f00"
-      },
-      "colorChange": null,
-      "last_updated": "2026-01-17"
-    },
-    {
       "filename": "DPapyru-贡献者如何编写文章基础.md",
       "path": "怎么贡献/DPapyru-贡献者如何编写文章基础.md",
       "originalPath": "怎么贡献/DPapyru-贡献者如何编写文章基础.md",
@@ -4874,25 +4931,6 @@
       "colors": null,
       "colorChange": null,
       "last_updated": "2026-01-16"
-    },
-    {
-      "filename": "DPapyru-快速开始构建Mod.md",
-      "path": "Modder入门/DPapyru-快速开始构建Mod.md",
-      "originalPath": "Modder入门/DPapyru-快速开始构建Mod.md",
-      "title": "快速开始构建Mod（tModLoader 1.4）",
-      "author": "小天使",
-      "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 1000,
-      "time": "15分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "DPapyru-提问的艺术.md",
-      "next_chapter": null,
-      "colors": {
-        "Mad": "#f00"
-      },
-      "colorChange": null,
-      "last_updated": "2026-01-17"
     }
   ],
   "settings": {

@@ -1,0 +1,249 @@
+/* Rider Dark code highlighting theme (Prism.js) */
+/* Derived from ./Rider_Dark.icls */
+
+:root {
+    --rider-code-bg: #191A1C;
+    --rider-code-bg-inline: #303030;
+    --rider-code-border: #404040;
+    --rider-code-fg: #BDBDBD;
+    --rider-code-selection: #08335E;
+
+    --rider-code-comment: #85C46C;
+    --rider-code-keyword: #6178FF;
+    --rider-code-string: #FF9D70;
+    --rider-code-number: #ED94C0;
+    --rider-code-function: #39CC9B;
+    --rider-code-class: #FFED19;
+    --rider-code-namespace: #C191FF;
+    --rider-code-attr-name: #85C46C;
+    --rider-code-attr-value: #C9A26D;
+    --rider-code-entity: #FFD49E;
+    --rider-code-constant: #66C3CC;
+    --rider-code-variable: #95FFE2;
+    --rider-code-field: #B370FF;
+    --rider-code-escape: #D688D4;
+    --rider-code-link: #6C95EB;
+    --rider-code-line-number: #808080;
+}
+
+/* Code block container */
+pre[class*="language-"] {
+    background-color: var(--rider-code-bg) !important;
+    border: 1px solid var(--rider-code-border) !important;
+    border-radius: 8px !important;
+    padding: 1.2em !important;
+    margin: 1.5em 0 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    overflow-x: auto !important;
+    position: relative !important;
+}
+
+/* Code */
+code[class*="language-"] {
+    color: var(--rider-code-fg) !important;
+    font-family: 'Consolas', 'Courier New', monospace !important;
+    font-size: 0.95em !important;
+    line-height: 1.5 !important;
+    text-shadow: none !important;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+    background-color: var(--rider-code-bg-inline) !important;
+    border: 1px solid var(--rider-code-border) !important;
+    border-radius: 4px !important;
+    padding: 0.2em 0.4em !important;
+    color: var(--rider-code-fg) !important;
+}
+
+/* Selection (inside code blocks) */
+pre[class*="language-"] ::selection,
+code[class*="language-"] ::selection {
+    background: var(--rider-code-selection) !important;
+    text-shadow: none !important;
+}
+
+/* Comments */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+    color: var(--rider-code-comment) !important;
+    font-style: italic !important;
+}
+
+/* Punctuation / operators */
+.token.punctuation,
+.token.operator {
+    color: var(--rider-code-fg) !important;
+}
+
+/* Keywords */
+.token.keyword,
+.token.atrule {
+    color: var(--rider-code-keyword) !important;
+}
+
+/* Strings */
+.token.string,
+.token.char {
+    color: var(--rider-code-string) !important;
+}
+
+/* Numbers */
+.token.number {
+    color: var(--rider-code-number) !important;
+}
+
+/* Functions / methods */
+.token.function,
+.token.method,
+.token.selector {
+    color: var(--rider-code-function) !important;
+}
+
+/* Class / types */
+.token.class-name,
+.token.builtin {
+    color: var(--rider-code-class) !important;
+}
+
+/* Namespaces / tags */
+.token.namespace,
+.token.tag {
+    color: var(--rider-code-namespace) !important;
+}
+
+/* Attributes */
+.token.attr-name {
+    color: var(--rider-code-attr-name) !important;
+}
+
+.token.attr-value {
+    color: var(--rider-code-attr-value) !important;
+}
+
+/* Variables / properties / fields */
+.token.variable {
+    color: var(--rider-code-variable) !important;
+}
+
+.token.property {
+    color: var(--rider-code-field) !important;
+}
+
+/* Constants / booleans / symbols */
+.token.boolean,
+.token.constant,
+.token.symbol {
+    color: var(--rider-code-constant) !important;
+}
+
+/* Entities */
+.token.entity {
+    color: var(--rider-code-entity) !important;
+}
+
+/* Regex / escapes */
+.token.regex,
+.token.escape {
+    color: var(--rider-code-escape) !important;
+}
+
+/* URLs / links */
+.token.url {
+    color: var(--rider-code-link) !important;
+}
+
+.token.important {
+    font-weight: bold !important;
+}
+
+/* Code block title */
+pre[class*="language-"]::before {
+    content: attr(data-language);
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: var(--rider-code-bg-inline) !important;
+    color: var(--rider-code-fg) !important;
+    font-size: 0.75rem !important;
+    padding: 4px 12px !important;
+    border-radius: 0 8px 0 8px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Line numbers (Prism plugin, if enabled) */
+.line-numbers .line-numbers-rows {
+    border-right: 1px solid var(--rider-code-border) !important;
+    background-color: var(--rider-code-bg) !important;
+}
+
+.line-numbers-rows > span:before {
+    color: var(--rider-code-line-number) !important;
+}
+
+/* Scrollbar */
+pre[class*="language-"]::-webkit-scrollbar {
+    height: 8px !important;
+}
+
+pre[class*="language-"]::-webkit-scrollbar-track {
+    background: var(--rider-code-bg) !important;
+    border-radius: 4px !important;
+}
+
+pre[class*="language-"]::-webkit-scrollbar-thumb {
+    background: rgba(136, 136, 153, 0.25) !important;
+    border-radius: 4px !important;
+}
+
+pre[class*="language-"]::-webkit-scrollbar-thumb:hover {
+    background: rgba(136, 136, 153, 0.45) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    pre[class*="language-"] {
+        padding: 0.8em !important;
+        font-size: 0.85em !important;
+    }
+
+    pre[class*="language-"]::before {
+        font-size: 0.7rem !important;
+        padding: 3px 8px !important;
+    }
+}
+
+/* Copy button (if added by JS) */
+.copy-button {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    background-color: var(--rider-code-bg-inline) !important;
+    color: var(--rider-code-fg) !important;
+    border: 1px solid var(--rider-code-border) !important;
+    border-radius: 4px !important;
+    padding: 6px 10px !important;
+    font-size: 0.8rem !important;
+    cursor: pointer !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s ease !important;
+    z-index: 10 !important;
+}
+
+pre[class*="language-"]:hover .copy-button {
+    opacity: 1 !important;
+}
+
+.copy-button:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #F0F0F0 !important;
+}
+
+.copy-button:active {
+    background-color: var(--rider-code-selection) !important;
+}
+

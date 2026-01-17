@@ -7,8 +7,9 @@ difficulty: beginner
 time: 15分钟
 description: 从环境准备到跑起第一个可编译的 tModLoader Mod
 prev_chapter: DPapyru-提问的艺术.md
+next_chapter: DPapyru-第一个武器.md
 topic: mod-basics
-order: 1000
+order: 1
 colors:
   Mad: "#f00"
 ---
