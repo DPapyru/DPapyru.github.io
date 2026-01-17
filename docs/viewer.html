@@ -405,13 +405,59 @@
 	                return output;
 	            }
 
-	            return lines.map(wrapSquareBracketLabels).join('\n');
-	        }
+		            return lines.map(wrapSquareBracketLabels).join('\n');
+		        }
 
-	        async function renderMermaidFlowcharts(root) {
-	            try {
-	                if (!root) return;
-	                const nodes = root.querySelectorAll('.flowchart.mermaid');
+		        function postProcessMermaidSvg(container) {
+		            if (!container) return;
+		            const svg = container.querySelector('svg');
+		            if (!svg) return;
+
+		            try {
+		                // 1) 修复绘制层级：确保节点层永远在连线层上方，避免连线“穿过”节点的视觉问题
+		                const root = svg.querySelector('g.root');
+		                if (root) {
+		                    const edgePaths = root.querySelector(':scope > g.edgePaths');
+		                    const edgeLabels = root.querySelector(':scope > g.edgeLabels');
+		                    const nodes = root.querySelector(':scope > g.nodes');
+		                    if (edgePaths) root.appendChild(edgePaths);
+		                    if (edgeLabels) root.appendChild(edgeLabels);
+		                    if (nodes) root.appendChild(nodes);
+		                }
+
+		                // 2) 防御性修复：某些配置/浏览器下节点填充可能变成透明，导致底下的连线可见
+		                const shapes = svg.querySelectorAll(
+		                    '.node rect, .node polygon, .node ellipse, .node circle, .node path,' +
+		                    '.rough-node rect, .rough-node polygon, .rough-node ellipse, .rough-node circle, .rough-node path'
+		                );
+
+		                shapes.forEach((shape) => {
+		                    if (!shape || !window.getComputedStyle) return;
+		                    const computed = window.getComputedStyle(shape);
+		                    const fill = String(computed.fill || '').trim();
+		                    const fillOpacity = String(computed.fillOpacity || '').trim();
+
+		                    const opacityNumber = parseFloat(fillOpacity);
+		                    const isTransparentFill =
+		                        !fill ||
+		                        fill === 'none' ||
+		                        fill === 'transparent' ||
+		                        /rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*0\s*\)/.test(fill) ||
+		                        (!Number.isNaN(opacityNumber) && opacityNumber === 0);
+
+		                    if (!isTransparentFill) return;
+		                    shape.style.fill = 'var(--bg-color)';
+		                    shape.style.fillOpacity = '1';
+		                });
+		            } catch (error) {
+		                console.warn('Mermaid SVG 后处理失败:', error);
+		            }
+		        }
+
+		        async function renderMermaidFlowcharts(root) {
+		            try {
+		                if (!root) return;
+		                const nodes = root.querySelectorAll('.flowchart.mermaid');
 	                if (!nodes || nodes.length === 0) return;
 	                if (!window.mermaid) {
 	                    if (window.__MERMAID_LOAD_PROMISE) {
@@ -437,18 +483,17 @@
 	                    await document.fonts.ready;
 	                }
 
-	                if (typeof window.mermaid.run === 'function') {
-	                    await window.mermaid.run({ nodes });
-	                    return;
-	                }
+		                if (typeof window.mermaid.run === 'function') {
+		                    await window.mermaid.run({ nodes });
+		                } else if (typeof window.mermaid.init === 'function') {
+		                    window.mermaid.init(undefined, nodes);
+		                }
 
-	                if (typeof window.mermaid.init === 'function') {
-	                    window.mermaid.init(undefined, nodes);
-	                }
-	            } catch (error) {
-	                console.warn('流程图渲染失败:', error);
-	            }
-	        }
+		                nodes.forEach((node) => postProcessMermaidSvg(node));
+		            } catch (error) {
+		                console.warn('流程图渲染失败:', error);
+		            }
+		        }
 
         // 主分类配置 - 将从配置文件动态加载
         let MAIN_CATEGORIES = {};
