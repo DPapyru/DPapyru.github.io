@@ -183,6 +183,26 @@ explain: |
 把配方写进 `AddRecipes()`，你就能在合成列表里看到它。
 它一般发生在“加载模组/注册内容”的阶段，不会在你每次挥刀时都执行。
 
+如果你对“它到底什么时候跑”没概念，可以先看这个简化版流程（这里刻意不用 `subgraph`，避免某些渲染版本里箭头和标题挤在一起）：
+
+```mermaid
+flowchart TD
+  L0["启动/加载阶段"]:::phase
+  L0 --> L1["扫描并注册 ModItem 类型"]
+  L1 --> L2["（可选）SetStaticDefaults: 文字/静态信息"]
+  L1 --> L3["AddRecipes: 注册合成配方"]
+
+  U0["游玩/使用阶段"]:::phase
+  U0 --> U1["玩家获得物品/生成 Item 实例"]
+  U1 --> U2["SetDefaults: 设置属性"]
+  U2 --> U3["玩家使用物品（挥动/刺击）"]
+  U3 --> U4["根据属性计算伤害/攻速/击退等效果"]
+
+  L3 -.-> U1
+
+  classDef phase fill:#2a2b2b,stroke:#81B1DB,stroke-width:1px,color:#ccc;
+```
+
 模板里这几行的意思非常直白：
 
 - `CreateRecipe()`：创建一个“这把物品自己的配方”
