@@ -45,7 +45,7 @@ async function graphqlRequest(token, query, variables) {
     return json.data;
 }
 
-async function getDiscussionCategoryId(token, owner, repo, categoryName) {
+async function getDiscussionCategory(token, owner, repo, categoryName) {
     const query = `
         query($owner: String!, $name: String!, $after: String) {
             repository(owner: $owner, name: $name) {
@@ -64,7 +64,13 @@ async function getDiscussionCategoryId(token, owner, repo, categoryName) {
         const categories = (data && data.repository && data.repository.discussionCategories) || null;
         const nodes = (categories && categories.nodes) || [];
         const match = nodes.find(n => n && String(n.name) === target);
-        if (match && match.id) return match.id;
+        if (match && match.id) {
+            return {
+                id: match.id,
+                name: match.name || target,
+                slug: match.slug || ''
+            };
+        }
         const pageInfo = categories && categories.pageInfo;
         if (!pageInfo || !pageInfo.hasNextPage) break;
         after = pageInfo.endCursor;
@@ -134,8 +140,8 @@ async function main() {
         throw new Error('缺少 token：请设置环境变量 GITHUB_TOKEN（或 GH_TOKEN）');
     }
 
-    const categoryId = await getDiscussionCategoryId(token, owner, repo, category);
-    const discussions = await getDiscussions(token, owner, repo, categoryId, maxCount);
+    const categoryInfo = await getDiscussionCategory(token, owner, repo, category);
+    const discussions = await getDiscussions(token, owner, repo, categoryInfo.id, maxCount);
 
     const payload = {
         version: 1,
@@ -143,8 +149,11 @@ async function main() {
         source: {
             owner,
             repo,
-            category,
-            categoryId
+            category: {
+                name: categoryInfo.name,
+                id: categoryInfo.id,
+                slug: categoryInfo.slug
+            }
         },
         count: discussions.length,
         items: discussions

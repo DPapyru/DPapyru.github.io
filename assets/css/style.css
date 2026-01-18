@@ -1350,7 +1350,7 @@ div.flowchart > svg {
 
 .qa-layout {
     display: grid;
-    grid-template-columns: 1fr 1.2fr;
+    grid-template-columns: 1fr;
     gap: 22px;
     margin-top: 18px;
 }
@@ -1376,12 +1376,12 @@ div.flowchart > svg {
 }
 
 .qa-view {
-    grid-row: 1 / span 2;
+    grid-row: auto;
 }
 
 .qa-form-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
 }
 
@@ -1461,6 +1461,10 @@ div.flowchart > svg {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    max-height: min(52vh, 560px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding-right: 6px;
 }
 
 .qa-item {
@@ -1552,20 +1556,12 @@ div.flowchart > svg {
 }
 
 @media (max-width: 980px) {
-    .qa-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .qa-view {
-        grid-row: auto;
-    }
-
-    .qa-form-grid {
-        grid-template-columns: 1fr;
-    }
-
     .qa-search {
         width: 100%;
+    }
+
+    .qa-list-items {
+        max-height: min(40vh, 420px);
     }
 }
 

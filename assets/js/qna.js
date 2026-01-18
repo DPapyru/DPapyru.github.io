@@ -12,6 +12,8 @@
         lang: 'zh-CN'
     };
 
+    const ASK_DRAFT_KEY = 'qna.askDraft.v1';
+
     function $(id) {
         return document.getElementById(id);
     }
@@ -253,19 +255,44 @@
         return res.json();
     }
 
+    function updateNewDiscussionLinkFromPayload(payload) {
+        const openGithubEl = $('qa-open-github');
+        if (!openGithubEl) return;
+
+        const source = payload && payload.source ? payload.source : null;
+        const owner = source && source.owner ? String(source.owner) : '';
+        const repo = source && source.repo ? String(source.repo) : '';
+
+        const category = source && source.category ? source.category : null;
+        const categorySlug = category && category.slug ? String(category.slug).trim() : '';
+
+        if (!owner || !repo || !categorySlug) return;
+
+        const url = new URL(`https://github.com/${owner}/${repo}/discussions/new`);
+        url.searchParams.set('category', categorySlug);
+        openGithubEl.href = url.toString();
+    }
+
     function initAskForm() {
         const titleEl = $('qa-title');
         const generateBtn = $('qa-generate');
         const copyBtn = $('qa-copy');
         const copyGoBtn = $('qa-copy-and-go');
+        const clearDraftBtn = $('qa-clear-draft');
         const outputEl = $('qa-markdown');
         const hintEl = $('qa-action-hint');
         const openGithubEl = $('qa-open-github');
 
         if (!titleEl || !generateBtn || !copyBtn || !copyGoBtn || !outputEl || !hintEl || !openGithubEl) return;
 
+        let isDirty = false;
+
         function setHint(text) {
             hintEl.textContent = text || '';
+        }
+
+        if (clearDraftBtn) {
+            clearDraftBtn.disabled = true;
         }
 
         function readValues() {
@@ -287,6 +314,103 @@
             copyGoBtn.disabled = !hasContent;
         }
 
+        function buildIfNeeded() {
+            const hasContent = Boolean(String(outputEl.value || '').trim());
+            if (hasContent && !isDirty) return true;
+
+            const title = String(titleEl.value || '').trim();
+            if (!title) return false;
+
+            outputEl.value = buildQuestionMarkdown(readValues());
+            setHint('已生成内容：建议复制后到 GitHub 发布。');
+            updateButtons();
+            isDirty = false;
+            saveDraftSoon();
+            return true;
+        }
+
+        let saveTimer = null;
+        function saveDraftSoon() {
+            if (saveTimer) window.clearTimeout(saveTimer);
+            saveTimer = window.setTimeout(function () {
+                saveTimer = null;
+                try {
+                    const draft = {
+                        version: 1,
+                        updatedAt: new Date().toISOString(),
+                        values: readValues(),
+                        markdown: outputEl.value
+                    };
+                    window.localStorage.setItem(ASK_DRAFT_KEY, JSON.stringify(draft));
+                    if (clearDraftBtn) clearDraftBtn.disabled = false;
+                } catch {
+                    // ignore
+                }
+            }, 250);
+        }
+
+        function restoreDraft() {
+            try {
+                const raw = window.localStorage.getItem(ASK_DRAFT_KEY);
+                if (!raw) return;
+                if (clearDraftBtn) clearDraftBtn.disabled = false;
+                const draft = JSON.parse(raw);
+                const values = draft && draft.values ? draft.values : null;
+                if (!values) return;
+
+                titleEl.value = values.title || '';
+                const map = [
+                    ['qa-background', 'background'],
+                    ['qa-repro', 'repro'],
+                    ['qa-expected', 'expected'],
+                    ['qa-actual', 'actual'],
+                    ['qa-env', 'env'],
+                    ['qa-tried', 'tried'],
+                    ['qa-links', 'links']
+                ];
+                map.forEach(pair => {
+                    const el = $(pair[0]);
+                    if (!el) return;
+                    el.value = values[pair[1]] || '';
+                });
+
+                const markdown = draft && typeof draft.markdown === 'string' ? draft.markdown : '';
+                if (markdown) {
+                    outputEl.value = markdown;
+                }
+                isDirty = false;
+                updateButtons();
+
+                const hasAny = Boolean(String(titleEl.value || '').trim())
+                    || ['qa-background', 'qa-repro', 'qa-expected', 'qa-actual', 'qa-env', 'qa-tried', 'qa-links']
+                        .some(id => Boolean(String((($(id) || {}).value) || '').trim()));
+                if (hasAny) {
+                    setHint('已恢复本地草稿。');
+                }
+            } catch {
+                // ignore
+            }
+        }
+
+        function clearDraft() {
+            try {
+                window.localStorage.removeItem(ASK_DRAFT_KEY);
+            } catch {
+                // ignore
+            }
+        }
+
+        function resetForm() {
+            titleEl.value = '';
+            ['qa-background', 'qa-repro', 'qa-expected', 'qa-actual', 'qa-env', 'qa-tried', 'qa-links'].forEach(id => {
+                const el = $(id);
+                if (el) el.value = '';
+            });
+            outputEl.value = '';
+            isDirty = false;
+            updateButtons();
+        }
+
         generateBtn.addEventListener('click', function () {
             setHint('');
             const title = String(titleEl.value || '').trim();
@@ -301,10 +425,17 @@
             outputEl.value = buildQuestionMarkdown(readValues());
             setHint('已生成内容：建议复制后到 GitHub 发布。');
             updateButtons();
+            isDirty = false;
+            saveDraftSoon();
         });
 
         copyBtn.addEventListener('click', async function () {
             setHint('');
+            if (!buildIfNeeded()) {
+                setHint('请先填写标题。');
+                titleEl.focus();
+                return;
+            }
             try {
                 await requestCopy(outputEl.value);
                 setHint('已复制到剪贴板。');
@@ -317,6 +448,11 @@
 
         copyGoBtn.addEventListener('click', async function () {
             setHint('');
+            if (!buildIfNeeded()) {
+                setHint('请先填写标题。');
+                titleEl.focus();
+                return;
+            }
             try {
                 await requestCopy(outputEl.value);
                 setHint('已复制：已打开 GitHub 发布页面。');
@@ -328,6 +464,26 @@
 
             window.open(openGithubEl.href, '_blank', 'noopener');
         });
+
+        [titleEl, $('qa-background'), $('qa-repro'), $('qa-expected'), $('qa-actual'), $('qa-env'), $('qa-tried'), $('qa-links')]
+            .filter(Boolean)
+            .forEach(el => {
+                el.addEventListener('input', saveDraftSoon);
+                el.addEventListener('input', function () {
+                    isDirty = true;
+                });
+            });
+
+        if (clearDraftBtn) {
+            clearDraftBtn.addEventListener('click', function () {
+                clearDraft();
+                resetForm();
+                setHint('已清空本地草稿。');
+                clearDraftBtn.disabled = true;
+            });
+        }
+
+        restoreDraft();
     }
 
     async function init() {
@@ -372,6 +528,7 @@
 
         try {
             const payload = await loadIndex();
+            updateNewDiscussionLinkFromPayload(payload);
             state.allItems = normalizeIndexPayload(payload);
 
             const selectedFromUrl = getSelectedNumberFromUrl();

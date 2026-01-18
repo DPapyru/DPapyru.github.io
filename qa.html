@@ -72,84 +72,13 @@
             </div>
         </section>
 
-        <section class="qa-content">
-            <div class="container">
-                <div class="qa-layout">
-                    <section class="qa-card qa-ask" aria-label="提问">
-                        <div class="qa-card-header">
-                            <h3>提问（高质量模板）</h3>
-                            <a class="btn btn-outline qa-gh-link" id="qa-open-github" href="https://github.com/DPapyru/DPapyru.github.io/discussions/new"
-                                target="_blank" rel="noopener noreferrer">去 GitHub 发布</a>
-                        </div>
-
-                        <form id="qa-ask-form" class="qa-form">
-                            <div class="qa-form-row">
-                                <label for="qa-title" class="qa-label">标题（必填）</label>
-                                <input id="qa-title" class="qa-input" type="text" maxlength="120" required
-                                    placeholder="一句话说明你卡住的点，例如：为什么我的 Mod 加载后没有效果？">
-                            </div>
-
-                            <div class="qa-form-grid">
-                                <div class="qa-form-row">
-                                    <label for="qa-background" class="qa-label">背景</label>
-                                    <textarea id="qa-background" class="qa-textarea" rows="3"
-                                        placeholder="你在做什么？目标是什么？在哪一章/哪一段遇到问题？"></textarea>
-                                </div>
-
-                                <div class="qa-form-row">
-                                    <label for="qa-repro" class="qa-label">复现步骤</label>
-                                    <textarea id="qa-repro" class="qa-textarea" rows="4"
-                                        placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea>
-                                </div>
-
-                                <div class="qa-form-row">
-                                    <label for="qa-expected" class="qa-label">期望结果</label>
-                                    <textarea id="qa-expected" class="qa-textarea" rows="2" placeholder="你希望看到什么？"></textarea>
-                                </div>
-
-                                <div class="qa-form-row">
-                                    <label for="qa-actual" class="qa-label">实际结果</label>
-                                    <textarea id="qa-actual" class="qa-textarea" rows="2" placeholder="你实际看到了什么？报错是什么？"></textarea>
-                                </div>
-
-                                <div class="qa-form-row">
-                                    <label for="qa-env" class="qa-label">环境信息</label>
-                                    <textarea id="qa-env" class="qa-textarea" rows="3"
-                                        placeholder="例如：tModLoader 版本、Terraria 版本、操作系统、IDE、关键依赖版本等"></textarea>
-                                </div>
-
-                                <div class="qa-form-row">
-                                    <label for="qa-tried" class="qa-label">已尝试</label>
-                                    <textarea id="qa-tried" class="qa-textarea" rows="3"
-                                        placeholder="你已经排查过哪些方向？做过哪些尝试？结果如何？"></textarea>
-                                </div>
-
-                                <div class="qa-form-row qa-form-row-wide">
-                                    <label for="qa-links" class="qa-label">相关链接/代码片段</label>
-                                    <textarea id="qa-links" class="qa-textarea" rows="3"
-                                        placeholder="贴 GitHub 仓库/日志/截图链接；代码建议用 Markdown 代码块"></textarea>
-                                </div>
-                            </div>
-
-                            <div class="qa-actions">
-                                <button class="btn btn-secondary" id="qa-generate" type="button">生成 Markdown</button>
-                                <button class="btn btn-outline" id="qa-copy" type="button" disabled>复制 Markdown</button>
-                                <button class="btn btn-primary" id="qa-copy-and-go" type="button" disabled>复制并去 GitHub 发布</button>
-                                <span class="qa-actions-hint" id="qa-action-hint" aria-live="polite"></span>
-                            </div>
-
-                            <div class="qa-form-row">
-                                <label for="qa-markdown" class="qa-label">发布内容（预览/可复制）</label>
-                                <textarea id="qa-markdown" class="qa-textarea qa-output" rows="10" readonly
-                                    placeholder="点击“生成 Markdown”后这里会出现内容"></textarea>
-                            </div>
-                        </form>
-                    </section>
-
-                    <section class="qa-card qa-list" aria-label="问题列表">
-                        <div class="qa-card-header">
-                            <h3>问题列表</h3>
-                            <div class="qa-list-controls">
+	        <section class="qa-content">
+	            <div class="container">
+	                <div class="qa-layout">
+	                    <section class="qa-card qa-list" aria-label="问题列表">
+	                        <div class="qa-card-header">
+	                            <h3>问题列表</h3>
+	                            <div class="qa-list-controls">
                                 <input id="qa-search" class="qa-input qa-search" type="search" placeholder="搜索标题/作者…">
                                 <select id="qa-filter" class="qa-select" aria-label="筛选">
                                     <option value="all">全部</option>
@@ -174,13 +103,85 @@
                                 target="_blank" rel="noopener noreferrer" style="display: none;">在 GitHub 打开</a>
                         </div>
 
-                        <div id="qa-giscus-container" class="giscus-container">
-                            <p class="comments-placeholder" id="qa-giscus-placeholder">选择一个问题后加载讨论区…</p>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        </section>
+	                        <div id="qa-giscus-container" class="giscus-container">
+	                            <p class="comments-placeholder" id="qa-giscus-placeholder">选择一个问题后加载讨论区…</p>
+	                        </div>
+	                    </section>
+
+	                    <section class="qa-card qa-ask" aria-label="提问">
+	                        <div class="qa-card-header">
+	                            <h3>提问（高质量模板）</h3>
+	                            <a class="btn btn-outline qa-gh-link" id="qa-open-github" href="https://github.com/DPapyru/DPapyru.github.io/discussions/new"
+	                                target="_blank" rel="noopener noreferrer">去 GitHub 发布</a>
+	                        </div>
+
+	                        <form id="qa-ask-form" class="qa-form">
+	                            <div class="qa-form-row">
+	                                <label for="qa-title" class="qa-label">标题（必填）</label>
+	                                <input id="qa-title" class="qa-input" type="text" maxlength="120" required
+	                                    placeholder="一句话说明你卡住的点，例如：为什么我的 Mod 加载后没有效果？">
+	                            </div>
+
+	                            <div class="qa-form-grid">
+	                                <div class="qa-form-row">
+	                                    <label for="qa-background" class="qa-label">背景</label>
+	                                    <textarea id="qa-background" class="qa-textarea" rows="3"
+	                                        placeholder="你在做什么？目标是什么？在哪一章/哪一段遇到问题？"></textarea>
+	                                </div>
+
+	                                <div class="qa-form-row">
+	                                    <label for="qa-repro" class="qa-label">复现步骤</label>
+	                                    <textarea id="qa-repro" class="qa-textarea" rows="4"
+	                                        placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea>
+	                                </div>
+
+	                                <div class="qa-form-row">
+	                                    <label for="qa-expected" class="qa-label">期望结果</label>
+	                                    <textarea id="qa-expected" class="qa-textarea" rows="2" placeholder="你希望看到什么？"></textarea>
+	                                </div>
+
+	                                <div class="qa-form-row">
+	                                    <label for="qa-actual" class="qa-label">实际结果</label>
+	                                    <textarea id="qa-actual" class="qa-textarea" rows="2" placeholder="你实际看到了什么？报错是什么？"></textarea>
+	                                </div>
+
+	                                <div class="qa-form-row">
+	                                    <label for="qa-env" class="qa-label">环境信息</label>
+	                                    <textarea id="qa-env" class="qa-textarea" rows="3"
+	                                        placeholder="例如：tModLoader 版本、Terraria 版本、操作系统、IDE、关键依赖版本等"></textarea>
+	                                </div>
+
+	                                <div class="qa-form-row">
+	                                    <label for="qa-tried" class="qa-label">已尝试</label>
+	                                    <textarea id="qa-tried" class="qa-textarea" rows="3"
+	                                        placeholder="你已经排查过哪些方向？做过哪些尝试？结果如何？"></textarea>
+	                                </div>
+
+	                                <div class="qa-form-row qa-form-row-wide">
+	                                    <label for="qa-links" class="qa-label">相关链接/代码片段</label>
+	                                    <textarea id="qa-links" class="qa-textarea" rows="3"
+	                                        placeholder="贴 GitHub 仓库/日志/截图链接；代码建议用 Markdown 代码块"></textarea>
+	                                </div>
+	                            </div>
+
+	                            <div class="qa-actions">
+	                                <button class="btn btn-secondary" id="qa-generate" type="button">生成 Markdown</button>
+	                                <button class="btn btn-outline" id="qa-copy" type="button" disabled>复制 Markdown</button>
+	                                <button class="btn btn-primary" id="qa-copy-and-go" type="button" disabled>复制并去 GitHub 发布</button>
+	                                <button class="btn btn-outline" id="qa-clear-draft" type="button">清空草稿</button>
+	                                <span class="qa-actions-hint" id="qa-action-hint" aria-live="polite"></span>
+	                            </div>
+
+	                            <div class="qa-form-row">
+	                                <label for="qa-markdown" class="qa-label">发布内容（预览/可复制）</label>
+	                                <textarea id="qa-markdown" class="qa-textarea qa-output" rows="10" readonly
+	                                    placeholder="点击“生成 Markdown”后这里会出现内容"></textarea>
+	                            </div>
+	                        </form>
+	                    </section>
+	                </div>
+	            </div>
+	        </section>
     </main>
 
     <footer class="site-footer">
