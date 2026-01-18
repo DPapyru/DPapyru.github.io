@@ -10,6 +10,11 @@ if (typeof window.PATH_REDIRECTS === 'undefined') {
 let DOC_CONFIG = window.DOC_CONFIG;
 let PATH_REDIRECTS = window.PATH_REDIRECTS;
 
+// 兼容：viewer.html 可能会调用此函数；缺失时不应阻断文档加载
+if (typeof window.updateGiscusForDoc !== 'function') {
+    window.updateGiscusForDoc = function () { };
+}
+
 // DOM加载完成后执行
 document.addEventListener('DOMContentLoaded', function () {
     // 初始化配置
