@@ -166,17 +166,88 @@
                 background-color: var(--bg-secondary) !important;
 	        }
 
-        .doc-info {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            min-width: 0;
-        }
+	        .doc-link.tree-row {
+	            --tree-depth: 0;
+	            --tree-indent-step: 12px;
+	            --tree-shrink-step: 24px;
+	            box-sizing: border-box;
+	            margin-left: calc(var(--tree-depth) * var(--tree-indent-step));
+	            width: calc(100% - (var(--tree-depth) * var(--tree-shrink-step)));
+	        }
 
-        .doc-title {
-            font-weight: 600;
-        }
+	        .doc-link.tree-folder-row {
+	            cursor: pointer;
+	        }
+
+	        .tree-toggle {
+	            width: 22px;
+	            height: 22px;
+	            flex: 0 0 22px;
+	            margin-right: 10px;
+	            border: 1px solid var(--border-color);
+	            border-radius: 6px;
+	            background: transparent;
+	            color: var(--text-secondary);
+	            display: inline-flex;
+	            align-items: center;
+	            justify-content: center;
+	            cursor: pointer;
+	            transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+	        }
+
+	        .tree-toggle::before {
+	            content: "▸";
+	            font-size: 14px;
+	            line-height: 1;
+	        }
+
+	        .tree-toggle[aria-expanded="true"]::before {
+	            content: "▾";
+	        }
+
+	        .tree-toggle:hover {
+	            color: var(--link-color);
+	            border-color: var(--link-color);
+	        }
+
+	        .tree-children {
+	            padding: 0;
+	        }
+
+	        .tree-open {
+	            color: var(--link-color);
+	            text-decoration: none;
+	            padding: 2px 8px;
+	            border-radius: 999px;
+	            border: 1px solid var(--border-color);
+	            transition: border-color 0.2s ease, background-color 0.2s ease;
+	        }
+
+	        .tree-open:hover {
+	            border-color: var(--link-color);
+	            background-color: var(--bg-secondary);
+	        }
+
+	        .tree-more-row {
+	            font-style: italic;
+	            color: var(--link-color);
+	            cursor: pointer;
+	        }
+
+	        .doc-info {
+	            flex: 1;
+	            display: flex;
+	            align-items: center;
+	            gap: 16px;
+	            min-width: 0;
+	        }
+
+	        .doc-title {
+	            font-weight: 600;
+	            overflow: hidden;
+	            text-overflow: ellipsis;
+	            white-space: nowrap;
+	        }
         
 	        .doc-meta {
 	            font-size: 0.85rem;
@@ -188,9 +259,13 @@
 	            white-space: nowrap;
 	        }
         
-        .doc-meta span {
-            margin-right: 0;
-        }
+	        .doc-meta span {
+	            margin-right: 0;
+	        }
+
+	        .doc-meta .tree-open {
+	            margin-right: 6px;
+	        }
 
         .subfolder-section {
             margin-top: 8px;
@@ -507,8 +582,8 @@
         let TOPIC_AREAS = {};
 
         // 页面加载完成后执行
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('=== docs/index.html: 页面加载完成 ===');
+	        document.addEventListener('DOMContentLoaded', function() {
+	            console.log('=== docs/index.html: 页面加载完成 ===');
 
             // 初始化文档配置
             initializeDocumentConfig().then(() => {
@@ -1114,124 +1189,23 @@
                 const categoryContent = document.createElement('div');
                 categoryContent.className = 'category-content';
                 
-                // 创建文档列表
-                const docList = document.createElement('ul');
-                docList.className = 'doc-list';
-                
-                // 按主题分组显示文档
-                const topicGroups = {};
-                categoryDocs.forEach(doc => {
-                    if (!topicGroups[doc.topic]) {
-                        topicGroups[doc.topic] = [];
-                    }
-                    topicGroups[doc.topic].push(doc);
-                });
-                
-                // 为每个主题创建文档项
-                Object.keys(topicGroups).forEach(topicKey => {
-                    // 使用新的辅助函数查找主题信息
-                    const topic = findTopicInfo(topicKey);
-                    const topicDocs = topicGroups[topicKey];
-                    
-                    // 限制最多显示3个文档
-                    const docsToShow = topicDocs.slice(0, 3);
-                    const hasMore = topicDocs.length > 3;
-                    
-                    docsToShow.forEach(doc => {
-                        const docItem = document.createElement('li');
-                        docItem.className = 'doc-item';
-                        
-                        const docLink = document.createElement('a');
-                        docLink.className = 'doc-link';
-                        docLink.href = `viewer.html?file=${encodeURIComponent(doc.path || doc.filename)}`;
-                        docLink.title = `${doc.author} - ${doc.description || doc.title}`;
-                        
-	                        const difficultyClass = normalizeDifficultyClass(doc.difficulty);
-	                        const difficultyText = getDifficultyText(doc.difficulty);
-                        
-	                        docLink.innerHTML = `
-	                            <div class="doc-info">
-	                                <div class="doc-title">${esc(doc.title)}</div>
-	                                <div class="doc-meta">
-	                                    <span class="difficulty-badge ${difficultyClass}">${esc(difficultyText)}</span>
-	                                    <span>作者: ${esc(doc.author)}</span>
-	                                </div>
-	                            </div>
-	                        `;
-                        
-                        docItem.appendChild(docLink);
-                        docList.appendChild(docItem);
-                    });
-                    
-                    // 如果有更多文档，添加省略号项
-                    if (hasMore) {
-                        const moreItem = document.createElement('li');
-                        moreItem.className = 'doc-item';
-                        
-                        const moreLink = document.createElement('div');
-                        moreLink.className = 'doc-link';
-                        moreLink.style.cursor = 'pointer';
-                        moreLink.style.color = 'var(--link-color)';
-                        moreLink.style.fontStyle = 'italic';
-                        moreLink.innerHTML = `
-                            <div class="doc-info">
-                                <div class="doc-title">... 还有 ${topicDocs.length - 3} 个文档</div>
-                                <div class="doc-meta">
-                                    <span>点击查看所有文档</span>
-                                </div>
-                            </div>
-                        `;
-                        
-                        // 添加点击事件，跳转到文件夹页面
-                        moreLink.addEventListener('click', function() {
-                            window.location.href = `folder.html?path=${encodeURIComponent(categoryKey)}`;
-                        });
-                        
-                        moreItem.appendChild(moreLink);
-                        docList.appendChild(moreItem);
-                    }
-                });
+	                const previewList = document.createElement('ul');
+	                previewList.className = 'doc-list';
 
-                const docPaths = categoryDocs.map(doc => doc.path || doc.filename).filter(Boolean);
-                const subfolderEntries = (window.FolderFilter && typeof window.FolderFilter.buildSubfolderEntries === 'function')
-                    ? window.FolderFilter.buildSubfolderEntries(docPaths, categoryKey)
-                    : [];
+	                const children = getDirectChildrenFromDocs(categoryDocs, categoryKey);
+	                renderFolderChildren(previewList, {
+	                    folderPath: categoryKey,
+	                    folderLabel: category.title || categoryKey,
+	                    depth: 1,
+	                    docs: categoryDocs,
+	                    children: children
+	                });
 
-                if (subfolderEntries.length === 0) {
-                    categoryContent.appendChild(docList);
-                }
-
-                if (subfolderEntries.length > 0) {
-                    const subfolderList = document.createElement('ul');
-                    subfolderList.className = 'doc-list';
-
-                    subfolderEntries.forEach(entry => {
-                        const subfolderItem = document.createElement('li');
-                        subfolderItem.className = 'doc-item';
-
-                        const subfolderLink = document.createElement('a');
-                        subfolderLink.className = 'doc-link';
-                        subfolderLink.href = `folder.html?path=${encodeURIComponent(entry.path)}`;
-
-                        subfolderLink.innerHTML = `
-                            <div class="doc-info">
-                                <div class="doc-title">${esc(entry.label)}</div>
-                                <div class="doc-meta">
-                                    <span>子目录</span>
-                                </div>
-                            </div>
-                        `;
-
-                        subfolderItem.appendChild(subfolderLink);
-                        subfolderList.appendChild(subfolderItem);
-                    });
-
-                    categoryContent.appendChild(subfolderList);
-                }
-                categoryCard.appendChild(categoryHeader);
-                categoryCard.appendChild(categoryContent);
-                categoryGrid.appendChild(categoryCard);
-            });
+	                categoryContent.appendChild(previewList);
+	                categoryCard.appendChild(categoryHeader);
+	                categoryCard.appendChild(categoryContent);
+	                categoryGrid.appendChild(categoryCard);
+	            });
             
             // 如果没有任何文档，显示提示信息
             if (ALL_DOCS.length === 0) {
@@ -1244,7 +1218,259 @@
                     </div>
                 `;
                 categoryGrid.appendChild(noDocsMessage);
-            }
+	        }
+
+	        function normalizeDocPath(value) {
+	            return String(value || '')
+	                .replace(/\\/g, '/')
+	                .replace(/^\/+|\/+$/g, '');
+	        }
+
+	        function getDirectChildrenFromDocs(docs, folderPath) {
+	            const normalizedFolder = normalizeDocPath(folderPath);
+	            const folderEntries = new Map();
+	            const directFiles = [];
+
+	            if (!Array.isArray(docs)) {
+	                return { folders: [], files: [], folderCount: 0, fileCount: 0 };
+	            }
+
+	            docs.forEach(doc => {
+	                const fullPath = normalizeDocPath(doc.path || doc.filename);
+	                if (!fullPath) return;
+
+	                let remainder = fullPath;
+	                if (normalizedFolder) {
+	                    if (remainder.indexOf(normalizedFolder + '/') !== 0) return;
+	                    remainder = remainder.slice(normalizedFolder.length + 1);
+	                }
+
+	                const parts = remainder.split('/').filter(Boolean);
+	                if (parts.length === 0) return;
+
+	                if (parts.length === 1) {
+	                    directFiles.push(doc);
+	                    return;
+	                }
+
+	                const childName = parts[0];
+	                const childPath = normalizedFolder ? normalizedFolder + '/' + childName : childName;
+	                if (!folderEntries.has(childPath)) {
+	                    folderEntries.set(childPath, { path: childPath, label: childName });
+	                }
+	            });
+
+	            const folders = Array.from(folderEntries.values()).sort((a, b) => {
+	                return (a.label || a.path).localeCompare((b.label || b.path), 'zh-CN');
+	            });
+
+	            const files = directFiles.sort((a, b) => {
+	                const orderDiff = (Number(a.order) || 999) - (Number(b.order) || 999);
+	                if (orderDiff !== 0) return orderDiff;
+	                return String(a.title || '').localeCompare(String(b.title || ''), 'zh-CN');
+	            });
+
+	            return {
+	                folders,
+	                files,
+	                folderCount: folders.length,
+	                fileCount: files.length
+	            };
+	        }
+
+	        function renderFileRow(doc, depth) {
+	            const docItem = document.createElement('li');
+	            docItem.className = 'doc-item';
+
+	            const docLink = document.createElement('a');
+	            docLink.className = 'doc-link tree-row';
+	            docLink.style.setProperty('--tree-depth', depth);
+	            docLink.href = `viewer.html?file=${encodeURIComponent(doc.path || doc.filename)}`;
+	            docLink.title = `${doc.author} - ${doc.description || doc.title}`;
+
+	            const difficultyClass = normalizeDifficultyClass(doc.difficulty);
+	            const difficultyText = getDifficultyText(doc.difficulty);
+
+	            docLink.innerHTML = `
+	                <div class="doc-info">
+	                    <div class="doc-title">${esc(doc.title)}</div>
+	                    <div class="doc-meta">
+	                        <span class="difficulty-badge ${difficultyClass}">${esc(difficultyText)}</span>
+	                        <span>作者: ${esc(doc.author)}</span>
+	                    </div>
+	                </div>
+	            `;
+
+	            docItem.appendChild(docLink);
+	            return docItem;
+	        }
+
+	        function renderMoreRow(folderPath, depth, remainingContentCount, remainingDocCount) {
+	            const moreItem = document.createElement('li');
+	            moreItem.className = 'doc-item';
+
+	            const moreRow = document.createElement('div');
+	            moreRow.className = 'doc-link tree-row tree-more-row';
+	            moreRow.style.setProperty('--tree-depth', depth);
+	            moreRow.setAttribute('role', 'button');
+	            moreRow.setAttribute('tabindex', '0');
+
+	            const metaParts = [];
+	            if (remainingDocCount > 0) metaParts.push(`其中 ${remainingDocCount} 个文档`);
+	            metaParts.push('点击查看完整目录');
+
+	            moreRow.innerHTML = `
+	                <div class="doc-info">
+	                    <div class="doc-title">... 还有 ${remainingContentCount} 个内容</div>
+	                    <div class="doc-meta">
+	                        <span>${esc(metaParts.join(' · '))}</span>
+	                    </div>
+	                </div>
+	            `;
+
+	            function navigate() {
+	                window.location.href = `folder.html?path=${encodeURIComponent(folderPath)}`;
+	            }
+
+	            moreRow.addEventListener('click', navigate);
+	            moreRow.addEventListener('keydown', function (event) {
+	                if (event.key === 'Enter' || event.key === ' ') {
+	                    event.preventDefault();
+	                    navigate();
+	                }
+	            });
+
+	            moreItem.appendChild(moreRow);
+	            return moreItem;
+	        }
+
+	        function createFolderRow(folderEntry, depth, docs) {
+	            const folderItem = document.createElement('li');
+	            folderItem.className = 'doc-item';
+
+	            const row = document.createElement('div');
+	            row.className = 'doc-link tree-row tree-folder-row';
+	            row.style.setProperty('--tree-depth', depth);
+	            row.setAttribute('role', 'button');
+	            row.setAttribute('tabindex', '0');
+	            row.setAttribute('data-folder-path', folderEntry.path);
+	            row.setAttribute('data-depth', String(depth));
+
+	            const toggle = document.createElement('button');
+	            toggle.type = 'button';
+	            toggle.className = 'tree-toggle';
+	            toggle.setAttribute('aria-expanded', 'false');
+	            toggle.setAttribute('aria-label', '展开');
+
+	            const openLink = document.createElement('a');
+	            openLink.className = 'tree-open';
+	            openLink.href = `folder.html?path=${encodeURIComponent(folderEntry.path)}`;
+	            openLink.textContent = '打开';
+
+	            row.appendChild(toggle);
+
+	            const info = document.createElement('div');
+	            info.className = 'doc-info';
+	            info.innerHTML = `
+	                <div class="doc-title">${esc(folderEntry.label || folderEntry.path)}</div>
+	                <div class="doc-meta">
+	                    <span></span>
+	                </div>
+	            `;
+
+	            const meta = info.querySelector('.doc-meta');
+	            meta.insertBefore(openLink, meta.firstChild);
+
+	            const subLabel = document.createElement('span');
+	            subLabel.textContent = '子目录';
+	            meta.appendChild(subLabel);
+
+	            row.appendChild(info);
+	            folderItem.appendChild(row);
+
+	            function toggleFolder(explicitExpand) {
+	                const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+	                const nextExpanded = typeof explicitExpand === 'boolean' ? explicitExpand : !isExpanded;
+	                const folderPath = row.getAttribute('data-folder-path');
+	                const currentDepth = Number(row.getAttribute('data-depth') || depth);
+
+	                toggle.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
+	                row.setAttribute('aria-expanded', nextExpanded ? 'true' : 'false');
+
+	                const existing = Array.from(folderItem.children).find(el => {
+	                    return el && el.tagName === 'UL' && el.classList && el.classList.contains('tree-children');
+	                });
+	                if (!nextExpanded) {
+	                    if (existing) existing.remove();
+	                    return;
+	                }
+
+	                if (existing) return;
+
+	                const childList = document.createElement('ul');
+	                childList.className = 'doc-list tree-children';
+
+	                const children = getDirectChildrenFromDocs(docs, folderPath);
+	                renderFolderChildren(childList, {
+	                    folderPath: folderPath,
+	                    folderLabel: folderEntry.label || folderEntry.path,
+	                    depth: currentDepth + 1,
+	                    docs: docs,
+	                    children: children
+	                });
+
+	                folderItem.appendChild(childList);
+	            }
+
+	            toggle.addEventListener('click', function (event) {
+	                event.stopPropagation();
+	                toggleFolder();
+	            });
+
+	            row.addEventListener('click', function (event) {
+	                if (event.target && event.target.closest && event.target.closest('a.tree-open')) {
+	                    return;
+	                }
+	                toggleFolder();
+	            });
+
+	            row.addEventListener('keydown', function (event) {
+	                if (event.key === 'Enter' || event.key === ' ') {
+	                    event.preventDefault();
+	                    toggleFolder();
+	                }
+	            });
+
+	            return folderItem;
+	        }
+
+	        function renderFolderChildren(container, options) {
+	            const MAX_FOLDERS = 2;
+	            const MAX_FILES = 3;
+
+	            const children = options.children || { folders: [], files: [], folderCount: 0, fileCount: 0 };
+	            const folders = children.folders || [];
+	            const files = children.files || [];
+
+	            const foldersToShow = folders.slice(0, MAX_FOLDERS);
+	            const filesToShow = files.slice(0, MAX_FILES);
+
+	            foldersToShow.forEach(entry => {
+	                container.appendChild(createFolderRow(entry, options.depth, options.docs));
+	            });
+
+	            filesToShow.forEach(doc => {
+	                container.appendChild(renderFileRow(doc, options.depth));
+	            });
+
+	            const remainingFolderCount = Math.max(0, folders.length - foldersToShow.length);
+	            const remainingDocCount = Math.max(0, files.length - filesToShow.length);
+	            const remainingContentCount = remainingFolderCount + remainingDocCount;
+
+	            if (remainingContentCount > 0) {
+	                container.appendChild(renderMoreRow(options.folderPath, options.depth, remainingContentCount, remainingDocCount));
+	            }
+	        }
         }
 
         // 获取难度文本 - 优先从配置文件读取，否则使用默认值
