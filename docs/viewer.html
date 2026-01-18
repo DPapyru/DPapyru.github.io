@@ -293,104 +293,27 @@
     <script src="../assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
 
     <script>
-	        // 文档配置和元数据管理
-	        let VIEWER_DOC_CONFIG = null;
-	        let ALL_DOCS = [];
-		        let CURRENT_DOC_PATH = null;
-		        let DOC_LOOKUP_MAP = null;
-
-		        const GISCUS_OPTIONS = {
-		            repo: 'DPapyru/DPapyru.github.io',
-		            repoId: 'R_kgDOQczhug',
-		            category: 'Comments',
-		            categoryId: 'DIC_kwDOQczhus4C1F4-',
-		            mapping: 'specific',
-		            theme: 'dark_dimmed',
-		            lang: 'zh-CN'
-		        };
-
-		        function isGiscusConfigured() {
-		            return Boolean(GISCUS_OPTIONS.category && GISCUS_OPTIONS.categoryId);
-		        }
-
-		        function renderGiscusNotConfigured(container) {
-		            if (!container) return;
-		            container.innerHTML =
-		                '<div class="comments-unconfigured">' +
-		                '<p>评论区尚未配置：请在 <code>docs/viewer.html</code> 里填写 <code>GISCUS_OPTIONS.category</code> 和 <code>GISCUS_OPTIONS.categoryId</code>。</p>' +
-		                '<p>获取方式：打开 <a href="https://giscus.app/zh-CN" target="_blank" rel="noopener noreferrer">giscus.app</a> 配置向导。</p>' +
-		                '</div>';
-		        }
-
-		        function updateGiscusForDoc(docPath) {
-		            const container = document.getElementById('giscus-container');
-		            if (!container) return;
-
-		            if (!isGiscusConfigured()) {
-		                renderGiscusNotConfigured(container);
-		                return;
-		            }
-
-		            const term = String(docPath || '').trim();
-		            if (!term) return;
-
-		            const existingScript = container.querySelector('script[data-giscus-script="true"]');
-		            if (window.__GISCUS_REQUESTED_TERM === term && (existingScript || container.querySelector('iframe.giscus-frame'))) {
-		                return;
-		            }
-		            window.__GISCUS_REQUESTED_TERM = term;
-
-		            const iframe = container.querySelector('iframe.giscus-frame');
-		            if (iframe && iframe.contentWindow) {
-		                if (window.__GISCUS_LAST_TERM !== term) {
-		                    iframe.contentWindow.postMessage(
-		                        { giscus: { setConfig: { term: term } } },
-		                        'https://giscus.app'
-		                    );
-		                    window.__GISCUS_LAST_TERM = term;
+        // 文档配置和元数据管理
+        let VIEWER_DOC_CONFIG = null;
+        let ALL_DOCS = [];
+	        let CURRENT_DOC_PATH = null;
+	        let DOC_LOOKUP_MAP = null;
+	        
+	        function initializeMermaidOnce() {
+	            if (window.__MERMAID_INITIALIZED) return;
+	            if (!window.mermaid || typeof window.mermaid.initialize !== 'function') return;
+		            window.mermaid.initialize({
+		                startOnLoad: false,
+		                theme: 'dark',
+		                securityLevel: 'strict',
+		                flowchart: {
+		                    htmlLabels: true,
+		                    // Mermaid 会为箭头预留一点长度，子图标题区域太紧时箭头会“戳进标题里”
+		                    titleTopMargin: 36
 		                }
-		                return;
-		            }
-
-		            container.innerHTML = '';
-
-		            const script = document.createElement('script');
-		            script.src = 'https://giscus.app/client.js';
-		            script.async = true;
-		            script.crossOrigin = 'anonymous';
-		            script.setAttribute('data-giscus-script', 'true');
-
-		            script.setAttribute('data-repo', GISCUS_OPTIONS.repo);
-		            script.setAttribute('data-repo-id', GISCUS_OPTIONS.repoId);
-		            script.setAttribute('data-category', GISCUS_OPTIONS.category);
-		            script.setAttribute('data-category-id', GISCUS_OPTIONS.categoryId);
-		            script.setAttribute('data-mapping', GISCUS_OPTIONS.mapping);
-		            script.setAttribute('data-term', term);
-		            script.setAttribute('data-strict', '0');
-		            script.setAttribute('data-reactions-enabled', '1');
-		            script.setAttribute('data-emit-metadata', '0');
-		            script.setAttribute('data-input-position', 'top');
-		            script.setAttribute('data-theme', GISCUS_OPTIONS.theme);
-		            script.setAttribute('data-lang', GISCUS_OPTIONS.lang);
-		            script.setAttribute('data-loading', 'lazy');
-
-		            container.appendChild(script);
-		            window.__GISCUS_LAST_TERM = term;
+		            });
+		            window.__MERMAID_INITIALIZED = true;
 		        }
-		        
-		        function initializeMermaidOnce() {
-		            if (window.__MERMAID_INITIALIZED) return;
-		            if (!window.mermaid || typeof window.mermaid.initialize !== 'function') return;
-	            window.mermaid.initialize({
-	                startOnLoad: false,
-	                theme: 'dark',
-	                securityLevel: 'strict',
-	                flowchart: {
-	                    htmlLabels: true
-	                }
-	            });
-	            window.__MERMAID_INITIALIZED = true;
-	        }
 
 	        function autoWrapMermaidFlowchartSource(source, maxCharsPerLine = 16) {
 	            const text = String(source || '');

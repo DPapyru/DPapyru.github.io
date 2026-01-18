@@ -28,6 +28,13 @@
 
 然后打开 `http://localhost:8000`。
 
+## 使用的库 / 依赖
+
+- Markdown 渲染：`marked`（`assets/js/marked.min.js`）
+- 代码高亮：`Prism.js`（`assets/js/prism.min.js`、`assets/js/prism-csharp.min.js`）
+- 流程图：`Mermaid`（`assets/js/mermaid.min.js`；`docs/viewer.html` 在本地缺失时会尝试从 CDN 兜底加载）
+- 构建脚本依赖：`js-yaml`（用于 `generate-index.js` 解析 Markdown 的 YAML Front Matter）
+
 ## 写文章/改文档：构建与校验
 
 修改 `docs/**/*.md` 后，需要重新生成索引与搜索文件（Node `>=18`）：
