@@ -78,6 +78,13 @@ code[class*="language-"] ::selection {
     color: var(--rider-code-fg) !important;
 }
 
+/* Prism 默认主题会给 operator/entity/url 加浅色背景；深色主题下会变成“方块”效果 */
+.token.operator,
+.token.entity,
+.token.url {
+    background: transparent !important;
+}
+
 /* Keywords */
 .token.keyword,
 .token.atrule {
