@@ -290,10 +290,11 @@
         // 禁用main.js中的路由系统，避免干扰viewer.html的文件加载
         window.DISABLE_ROUTER = true;
     </script>
-    <script src="../assets/js/main.js"></script> <!-- 主要功能脚本 -->
-    <script src="../assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
-
-    <script>
+	    <script src="../assets/js/main.js"></script> <!-- 主要功能脚本 -->
+	    <script src="../assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
+	    <script src="../assets/js/giscus-docs.js"></script> <!-- 文档评论（Giscus） -->
+	
+	    <script>
         // 文档配置和元数据管理
         let VIEWER_DOC_CONFIG = null;
         let ALL_DOCS = [];
@@ -1426,12 +1427,14 @@
 	                console.log(`docs/viewer.html: 添加.md扩展名: ${fetchPath}`);
 	            }
 
-	            console.log(`docs/viewer.html: 最终使用路径: ${fetchPath}`);
-	            CURRENT_DOC_PATH = fetchPath;
-	            updateGiscusForDoc(fetchPath);
-	
-	            // 确保路径相对于当前页面（docs目录）
-	            let fetchUrl = fetchPath.startsWith('./') ? fetchPath : `./${fetchPath}`;
+		            console.log(`docs/viewer.html: 最终使用路径: ${fetchPath}`);
+		            CURRENT_DOC_PATH = fetchPath;
+		            if (typeof window.updateGiscusForDoc === 'function') {
+		                window.updateGiscusForDoc(fetchPath);
+		            }
+		
+		            // 确保路径相对于当前页面（docs目录）
+		            let fetchUrl = fetchPath.startsWith('./') ? fetchPath : `./${fetchPath}`;
 
             // 避免重复的docs路径
             if (fetchUrl.startsWith('./docs/')) {
