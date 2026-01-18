@@ -5,7 +5,7 @@ date: 2026-01-17
 last_updated: 2026-01-17
 difficulty: beginner
 time: 15分钟
-description: 边做第一把武器边补 C# 基础
+description: 做第一把武器同时入门C#
 prev_chapter: DPapyru-快速开始构建Mod.md
 next_chapter: null
 topic: mod-basics
@@ -14,35 +14,45 @@ colors:
   Red: "#f00"
 ---
 
-# 学习方向
+# 第一个武器：做一把能用的剑（顺便认识一点 C#）
 
-上一章知道怎么构建Mod了，那么这一章就做到：
+这一章的目标很简单：做出你 Mod 里的第一把武器，并且你敢改它的关键数值与配方。
 
-- 知道基础武器模板
-- 知道C#基础知识内容
+你不需要先“学会 C# 才能写 Mod”。你只需要先学会两件事：
 
-快速开始成功写出第一个武器，同时了解C#的基础知识，是最好的办法。
+- 能看懂这份代码大概在干什么（像看说明书一样）
+- 知道“你应该改哪几行”，改完能编译、能进游戏测试
 
----
+> 本文里会出现 `YourModName`。它是占位符：你要把它换成你自己的 Mod 名（更准确地说，是你的 Mod 的“命名空间前缀/根名字”）。不知道自己的 Mod 名也没关系，先照抄，后面我们会说怎么判断。
 
-# 1) 先认一下模板长什么样
+## 你准备好了吗？
 
-你可能是用 tModLoader 的模板生成的物品，也可能是像上一章那样自己新建 `.cs` 文件。
-不管哪种，核心都一样：**一个继承 `ModItem` 的类 + 两个常用方法（`SetDefaults` / `AddRecipes`）**。
+你需要完成上一章：已经能打开 tModLoader 的 Mod 项目，并且能成功编译/进入游戏。
 
-下面是一份“典型模板”，把 `YourModName` 换成你自己的 Mod 命名空间就行：
+## 第一步：先让它跑起来（你可以先复制）
+
+建议你把文件放在类似位置（文件夹名字随你，但先跟着模板走最省事）：
+
+- `Content/Items/FirstSword.cs`
+
+然后把下面这份代码整段复制进去。复制完成后先编译一次，确保“能跑”。能跑之后我们再来“只手敲关键行”。
 
 ```csharp
+// 这三行相当于“我今天要用哪些工具箱”
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace YourModName.Content.Item
+// namespace 相当于“收纳盒的地址”，先照抄就行
+namespace YourModName.Content.Items
 {
+    // class 相当于“蓝图/说明书”。这份蓝图要做的是一把物品（ModItem）
     public class FirstSword : ModItem
     {
+        // SetDefaults：设置这把武器的“出厂参数”
         public override void SetDefaults()
         {
+            // 你后面最常改的就是这一段：像在填一张“武器属性表”
             Item.damage = 50;
             Item.DamageType = DamageClass.Melee;
             Item.width = 40;
@@ -57,6 +67,7 @@ namespace YourModName.Content.Item
             Item.autoReuse = true;
         }
 
+        // AddRecipes：告诉游戏“这东西怎么合成”
         public override void AddRecipes()
         {
             Recipe recipe = CreateRecipe();
@@ -68,275 +79,206 @@ namespace YourModName.Content.Item
 }
 ```
 
-- `SetDefaults()`: 这把武器的属性在这修改
-- `AddRecipes()`：这把武器的合成途径在这修改
+### 题目（30 秒）
 
-## C#基础：`using` 和 `namespace`
-
-- `using ...;`：告诉编译器“我要用这些库里的东西”（比如 `ItemID`、`Recipe` 这些类型/常量）
-- `namespace ... { }`：给你的代码分个组，方便管理；它不一定必须跟文件夹完全一致，但**跟着项目习惯走**最省心(一般默认和文件夹路径一致，tModLoader寻找贴图默认根据命名空间作为索引，乱改会导致无法获取贴图然后无法生成Mod)
-
-````quiz
+```quiz
 type: choice
-id: first-weapon-step1-q1
+id: mod-basics-first-weapon-edit-lines
 question: |
-  下面哪个 `using` 让你能写 `ItemID.Wood`、`ItemID.CopperBar` 这类常量？
+  下面哪些行是“你以后想改伤害/攻速/配方材料”最常会动到的？
 options:
   - id: A
     text: |
-      `using Terraria;`
+      `Item.damage = 50;`
   - id: B
     text: |
-      `using Terraria.ID;`
+      `Item.useTime = 20;` 和 `Item.useAnimation = 20;`
   - id: C
+    text: |
+      `recipe.AddIngredient(ItemID.Wood, 10);`
+  - id: D
     text: |
       `using Terraria.ModLoader;`
 answer:
-  - B
-explain: |
-  `ItemID`、`TileID` 都在 `Terraria.ID` 里。
-````
-
-````quiz
-type: tf
-id: first-weapon-step1-q2
-question: |
-  现在假如你的命名空间为`MyMod.Content.Items`，但是实际这个贴图的路径为`MyMod/Items`，那么实际加载Mod时候会出现错误，tModLoader显示无法找到资源并且给你路径提示。
-answer: True
-explain: |
-  答案确实如此，ModItem等需要加载贴图的内容是有一个`Texture`作为贴图资源的索引，而这个默认指定文件的命名空间。
-````
-
----
-
-# 2) **类**与**继承**
-
-先盯着这一行：
-
-```csharp
-public class FirstSword : ModItem
-```
-
-你可以把它当成一句大白话：
-
-- `FirstSword`：你要做的“物品类型”（你写的是“一个物品”）
-- `: ModItem`：这句的意思是“它是一个 ModItem”（继承）。tModLoader 看到这种类，就知道你在定义一个物品
-
-## C#基础：类名、继承、约定
-
-- `class`：定义一个类（类型）
-- `:`：表示继承（`FirstSword` 在 `ModItem` 的基础上增加/覆盖一些行为）
--- 关于继承更多内容，也就是面向对象的事情，之后会详细说。
-- 文件名不强制必须和类名一致，但**强烈建议一致**：比如 `FirstSword.cs` 里写 `class FirstSword`
-  - 你以后要在项目里搜索/定位，真的会省很多时间
-
-````quiz
-type: tf
-id: first-weapon-step2-q1
-question: |
-  判断：C# 里“文件名必须和类名完全一致”，否则无法编译。
-answer: false
-explain: |
-  不要求一致，但保持一致是非常推荐的项目习惯（尤其是新手阶段）。
-  （吐槽一下Java，byd公开的类必须和文件名一致，不然直接报错）
-````
-
----
-
-# 3) 改数值时间（SetDefaults）
-
-你现在先做一个最简单的验证：把伤害改大一点，重新合成一把，看它是不是更痛了。
-
-你最常改的就是这些：
-
-- `Item.damage`：基础伤害
-- `Item.useTime` / `Item.useAnimation`：挥动频率/动作时长（手感相关）
-- `Item.knockBack`：击退
-- `Item.rare` / `Item.value`：稀有度/价值
-
-{color:Red}{提示：你改完 `SetDefaults()` 后，手里那把旧武器经常不会“自动变身”。最稳的验证方式是：重新合成一把新的。}
-
-## C#基础：赋值（`=`）和数字类型
-
-像 `Item.damage = 50;` 这种就是最经典的“赋值”：把右边的值塞进左边的字段里。
-
-- `damage`、`useTime` 这类一般是整数（`int`）
-- `knockBack` 往往是小数，所以你会看到 `4.5f`（`f` 表示这是 `float`）
-
-````quiz
-type: choice
-id: first-weapon-step3-q1
-question: |
-  你想让武器“更痛”，最直接应该先改哪一行？
-options:
-  - id: A
-    text: |
-      `Item.damage = ...;`
-  - id: B
-    text: |
-      `Item.width = ...;`
-  - id: C
-    text: |
-      `Item.value = ...;`
-answer:
   - A
-explain: |
-  其它参数也会影响体验，但“基础伤害”最直接就是 `Item.damage`。
-````
-
----
-
-# 4) 再让它“能合成”（AddRecipes）
-
-把配方写进 `AddRecipes()`，你就能在合成列表里看到它。
-它一般发生在“加载模组/注册内容”的阶段，不会在你每次挥刀时都执行。
-
-如果你对“它到底什么时候跑”没概念，可以先看这个简化版流程（这里刻意不用 `subgraph`，避免某些渲染版本里箭头和标题挤在一起）：
-
-```mermaid
-flowchart TD
-  L0["启动/加载阶段"]:::phase
-  L0 --> L1["扫描并注册 ModItem 类型"]
-  L1 --> L2["（可选）SetStaticDefaults: 文字/静态信息"]
-  L1 --> L3["AddRecipes: 注册合成配方"]
-
-  U0["游玩/使用阶段"]:::phase
-  U0 --> U1["玩家获得物品/生成 Item 实例"]
-  U1 --> U2["SetDefaults: 设置属性"]
-  U2 --> U3["玩家使用物品（挥动/刺击）"]
-  U3 --> U4["根据属性计算伤害/攻速/击退等效果"]
-
-  L3 -.-> U1
-
-  classDef phase fill:#2a2b2b,stroke:#81B1DB,stroke-width:1px,color:#ccc;
-```
-
-模板里这几行的意思非常直白：
-
-- `CreateRecipe()`：创建一个“这把物品自己的配方”
-- `AddIngredient(...)`：加材料
-- `AddTile(...)`：指定在哪个工作站制作
-- `Register()`：注册进游戏（这句没了就等于没写）
-
-## C#基础：变量、对象、调用方法
-
-```csharp
-Recipe recipe = CreateRecipe();
-```
-
-- `Recipe`：类型（你可以理解成“配方对象”）
-- `recipe`：变量名（你给这个对象起的名字）
-- `=`：把右边创建出来的对象塞到左边变量里
-
-你也会看到另一种写法（链式调用），只是“写法不同，效果一样”：
-
-```csharp
-CreateRecipe()
-    .AddIngredient(ItemID.Wood, 10)
-    .AddTile(TileID.WorkBenches)
-    .Register();
-```
-
-````quiz
-type: choice
-id: first-weapon-step4-q1
-question: |
-  下面哪一步是“让配方真正生效”的关键？
-options:
-  - id: A
-    text: |
-      `CreateRecipe()`
-  - id: B
-    text: |
-      `AddIngredient(...)`
-  - id: C
-    text: |
-      `Register()`
-answer:
+  - B
   - C
 explain: |
-  没有 `Register()` 就相当于“写了配方，但没有把它注册进游戏”。
-````
-
----
-
-# 5) 实战：改成“铜阔剑”风格（保持 Swing 手感）
-
-目标：保持 `Swing` 的挥动方式，把伤害、击退、稀有度、价值、配方改得更像原版早期的铜剑，并把配方放到铁砧上。
-
-建议你分两次验证：
-
-1. 先只改 `SetDefaults()`，重新合成一把，确认数值/手感变化
-2. 再改 `AddRecipes()`，确认合成材料和工作站变化
-
-```csharp
-public override void SetDefaults()
-{
-    Item.damage = 7;
-    Item.DamageType = DamageClass.Melee;
-    Item.width = 40;
-    Item.height = 40;
-
-    Item.useTime = 20;
-    Item.useAnimation = 20;
-    Item.useStyle = ItemUseStyleID.Swing;
-
-    Item.knockBack = 4.5f;
-    Item.value = Item.buyPrice(copper: 90);
-    Item.rare = ItemRarityID.White;
-    Item.UseSound = SoundID.Item1;
-    Item.autoReuse = true;
-}
-
-public override void AddRecipes()
-{
-    Recipe recipe = CreateRecipe();
-    recipe.AddIngredient(ItemID.CopperBar, 7);
-    recipe.AddTile(TileID.Anvils);
-    recipe.Register();
-}
+  伤害/攻速在 `SetDefaults()` 里改，配方材料在 `AddRecipes()` 里改。
+  `using ...` 一般不用动，除非你删了/加了新东西导致编译报错。
 ```
 
-## C#基础：`4.5f` 和 `buyPrice(copper: 90)`
+## 第二步：只手敲关键行（练手但不折磨）
 
-- `4.5f`：`f` 表示这是 `float`（小数），很多 API 字段就是要 `float`
-- `Item.buyPrice(copper: 90)`：这是 C# 的“命名参数”，意思是“把 90 传给 copper 这个参数”
-  - 好处：读起来更像人话，也不容易把顺序写错
-  - 但是这玩意还有一个sellPrice，建议统一使用buyPrice
+现在开始“中间形态”的练习：你可以保留其它代码不动，只对下面这些行做一次“删掉 → 自己敲回去”。
 
-````quiz
+建议练习顺序：
+
+1. 在 `SetDefaults()` 里把这些行删掉，再自己敲回去：
+   - `Item.damage = 50;`
+   - `Item.useTime = 20;`
+   - `Item.useAnimation = 20;`
+   - `Item.knockBack = 6;`
+   - `Item.rare = ItemRarityID.Blue;`
+   - `Item.autoReuse = true;`
+2. 在 `AddRecipes()` 里把这三行删掉，再自己敲回去：
+   - `Recipe recipe = CreateRecipe();`
+   - `recipe.AddIngredient(ItemID.Wood, 10);`
+   - `recipe.AddTile(TileID.WorkBenches);`
+   - `recipe.Register();`
+
+你会发现：你不需要知道“C# 的全部规则”，也能写出一个能工作的东西。
+
+## 第三步：教你“怎么读这份代码”（从上往下）
+
+下面我们按“阅读顺序”讲一下：每段在干嘛、你现在需要记住什么。
+
+### 1）`using`：我需要哪些工具箱
+
+你可以把 `using` 理解成：**我这份文件里会用到哪些东西，所以先把对应的工具箱拿过来**。
+
+- `using Terraria;`：泰拉瑞亚本体里的一些常用类型
+- `using Terraria.ID;`：各种 ID（比如 `ItemID.Wood`、`TileID.WorkBenches`）
+- `using Terraria.ModLoader;`：tModLoader 的核心（比如 `ModItem`、`Recipe`）
+
+这三行你目前不需要背，先记住一个排错技巧：
+
+- 如果你删掉 `using Terraria.ID;`，那么 `ItemID` / `TileID` 往往会“变红报错”
+
+```quiz
 type: choice
-id: first-weapon-step5-q1
+id: mod-basics-itemid-wood
 question: |
-  `Item.knockBack = 4.5f;` 里的 `f` 主要是为了：
+  `ItemID.Wood` 更接近下面哪个意思？
 options:
   - id: A
     text: |
-      让数字变得更大
+      一个“木头”的固定编号（原版物品 ID）
   - id: B
     text: |
-      告诉编译器这是 `float`（小数类型）
+      你自己新建的物品类 `Wood`
   - id: C
     text: |
-      让击退产生火焰效果
-answer:
-  - B
+      木头贴图的文件路径
+answer: A
 explain: |
-  `4.5` 默认会被当成 `double`，加 `f` 明确告诉编译器这是 `float`。
-````
+  `Terraria.ID.ItemID` 里收录了原版所有物品的 ID，`Wood` 就是木头。
+```
 
----
+### 2）`namespace`：给这份蓝图一个“地址”
 
-# 6) 常见坑（真的很常见）
+`namespace YourModName.Content.Items` 你可以先当成“收纳盒地址”：
 
-- 改了 `SetDefaults()` 但没变化：重新合成一把新的再验收
-- 配方不出现：检查是不是漏了 `Register()`，以及工作站/材料 ID 写对没
-- 类名拼错/改名改一半：`FirstSword` 这类名字尽量一次写对，少给自己挖坑
+- `YourModName`：你的 Mod 的名字（占位符，之后要换成自己的）
+- `Content.Items`：你自己给“物品类”起的分类名
 
----
+它最大的好处是：当你项目变大时，不同文件里可以有更清晰的分类，也不容易撞名字。
 
-# 小结：你现在应该会什么？
+```quiz
+type: choice
+id: mod-basics-duplicate-class-name
+question: |
+  如果你在**同一个** `namespace` 里写了两个 `public class FirstSword`，最可能发生什么？
+options:
+  - id: A
+    text: |
+      编译报错：类型/类名重复
+  - id: B
+    text: |
+      游戏会随机选择其中一个作为最终武器
+  - id: C
+    text: |
+      两个类会自动“合并”成一个
+answer: A
+explain: |
+  在同一个 `namespace` 下同名 `class` 会冲突，C# 会直接编译失败。
+```
 
-- 会改 `SetDefaults()`：能把“手感/数值”改到你想要的样子
-- 会写 `AddRecipes()`：能把合成材料和工作站改正确并验收
-- C# 不用一口吃成胖子：这一章你至少掌握了 `using`、`namespace`、类/继承、赋值、变量与方法调用这些“够用基础”
+### 3）`class FirstSword : ModItem`：这份文件在“定义一个新物品”
+
+你可以把 `class` 当成“蓝图”。蓝图的名字是 `FirstSword`，也就是这把武器的“代码名字”。
+
+后面的 `: ModItem` 先不要被吓到，你现在只要这样理解：
+
+- `ModItem` 是 tModLoader 里“物品的通用模板”
+- 我们写的 `FirstSword` 是“基于这个模板做出来的一把新物品”
+
+严格说这叫“继承”，但现在先别钻定义：你只需要知道——**我们能用 `ModItem` 提供的能力（比如 `Item`、`SetDefaults`、`AddRecipes`）来写自己的物品**。
+
+### 4）方法（函数）：一段“要做的事情”
+
+代码里有两个“方法”（你可以理解成“步骤/流程”）：
+
+- `SetDefaults()`：设置这把武器的属性（伤害、攻速、稀有度……）
+- `AddRecipes()`：设置合成配方
+
+方法前面有 `public override void`，你先只记两句话：
+
+- `void`：这段代码“做事情”，但不会“返回一个结果给你”
+- `override`：我在告诉 tModLoader：这个步骤我需要“自己写一份”，用我的规则来替换默认规则
+
+### 5）`Item.xxx = ...;`：像在填“属性表”（你最常改的地方）
+
+把 `Item` 想象成“这把武器本身”。`Item.damage` 就是它的伤害，`Item.useTime` 就是它挥动需要的时间……
+
+你可以先把最常用的几行记成一句话：
+
+- `Item.damage`：伤害
+- `Item.useTime` / `Item.useAnimation`：挥动速度（初学者先让它俩一样就好）
+- `Item.knockBack`：击退
+- `Item.rare`：稀有度（颜色）
+- `Item.value`：卖店价格
+- `Item.autoReuse`：按住鼠标是否自动连续挥动
+
+**练习（推荐一定要做）**：
+
+1. 把 `Item.damage = 50;` 改成 `Item.damage = 12;`
+2. 编译进游戏试一下手感
+3. 再改回 50（你会明显感受到“我改了代码，游戏变了”）
+
+### 6）`=`：把右边“装进”左边
+
+`Item.damage = 50;` 这句话你可以翻译成：
+
+> 把“50”这个数，装到“damage”这个格子里
+
+所以你以后改数值，本质上就是在改 `=` 右边。
+
+### 7）这一章用到的数据类型（只讲够用的）
+
+你现在只需要认识两种：
+
+- 数字：比如 `50`、`20`、`6`（你可以先当它们都是“整数”）
+- 布尔值：`true` / `false`（只有“是/否”两种）
+
+像 `ItemRarityID.Blue`、`ItemUseStyleID.Swing` 这种，看起来不是数字，但你可以先把它当成：**游戏里提前写好的“选项列表”**。
+
+### 8）配方：`CreateRecipe()` + `AddIngredient` + `AddTile` + `Register`
+
+`AddRecipes()` 里每行都很像“中文”：
+
+- `Recipe recipe = CreateRecipe();`：开始写一个配方
+- `recipe.AddIngredient(ItemID.Wood, 10);`：需要 10 个木头
+- `recipe.AddTile(TileID.WorkBenches);`：需要在工作台旁边制作
+- `recipe.Register();`：把这个配方登记到游戏里（不登记就等于没写）
+
+**练习（推荐）**：把木头数量从 `10` 改成 `1`，进游戏看看合成条件有没有变化。
+
+## 常见问题（先救命，后讲道理）
+
+### 1）我编译报错，最常见是哪里？
+
+- `YourModName` 没替换：如果你项目默认命名空间不是这个，可能会提示找不到类型/命名空间。你可以先把 `namespace YourModName...` 里的 `YourModName` 换成你项目里其它 `.cs` 文件最上面用的那个名字。
+- `Content.Items` 写错了：`namespace` 的后半段你可以随便取，但要确保它只是“分类名”，不要写奇怪符号。
+- `using` 少了：如果 `ItemID` 或 `TileID` 变红，检查 `using Terraria.ID;` 是否存在。
+
+### 2）我进游戏找不到这把武器/配方
+
+- 确认 Mod 已启用，且你确实重新“编译并加载”了 Mod
+- 配方需要在工作台旁边打开合成栏才会出现
+
+## 下一步会学什么？
+
+这一章你已经完成最关键的一步：**你能改武器参数与配方，并且知道从哪里下手排错**。
+
+下一章开始我们会逐步把“看着像魔法的词”（比如 `override`、`class`、`DamageClass`）变成你真正理解并能举例的概念。

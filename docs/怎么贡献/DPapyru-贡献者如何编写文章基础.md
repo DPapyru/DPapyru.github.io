@@ -140,6 +140,62 @@ colorChange:
 
 尽量避免硬编码站点域名链接（方便本地预览与未来迁移）。
 
+## 可选：题目组件（Quiz）
+
+站点支持把 `quiz` 代码块渲染成可交互的题目（选择题/判断题），渲染逻辑在 `assets/js/site-quiz.js`，由 `docs/viewer.html` 加载调用。写法是：在 Markdown 里写一个语言标记为 `quiz` 的代码块，内部用“类 YAML”的键值对描述题目。
+
+常用字段：
+
+- `type`：题型，`choice`（选择题）或 `tf`（判断题）
+- `id`：题目唯一 ID（可选，但强烈建议填，方便后续定位/复用）
+- `question`：题干（必填；支持 Markdown；推荐用 `|` 写多行）
+- `options`：选项列表（仅 `choice` 需要）
+  - 每个选项至少包含：`id`（例如 `A`/`B`）和 `text`（支持 Markdown）
+- `answer`：答案（`choice` 可写单个 `A`，也可写列表表示多选；`tf` 写 `true` / `false`）
+- `explain`：解析（可选；支持 Markdown；推荐用 `|` 写多行）
+
+示例（注意：为了在 Markdown 里展示“三反引号代码块”的写法，这里用“四反引号”包裹示例本身）：
+
+````md
+```quiz
+type: choice
+id: example-choice
+question: |
+  2 + 2 等于几？
+options:
+  - id: A
+    text: |
+      3
+  - id: B
+    text: |
+      4
+answer: B
+explain: |
+  2 + 2 = 4。
+```
+````
+
+````md
+```quiz
+type: tf
+id: example-tf
+question: |
+  `Item.damage` 用来设置物品伤害。
+answer: true
+explain: |
+  `SetDefaults()` 里设置的 `Item.damage` 就是这把武器的伤害值。
+```
+````
+
+### 常见坑（强烈建议看完）
+
+1. `type: tf` 的 `answer` 必须写成 `true` / `false`（不加引号）。如果写成 `answer: "false"`，会被当作字符串，最终可能被当作 `true` 处理，导致判题结果异常。
+2. `choice` 是否多选由 `answer` 决定：`answer` 是单个值 → 单选；`answer` 是列表（多行 `- ...`）→ 多选（复选框）。
+3. `id`/选项必须对得上：
+   - 每道题都建议写 `id`，且同一篇文章内不要重复。
+   - 每个 `options[*].id` 不能为空。
+   - `answer` 必须与 `options[*].id` 精确一致（大小写也要一致）。
+
 ## 构建、校验与本地预览
 
 首次安装依赖：
