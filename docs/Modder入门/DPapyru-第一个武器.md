@@ -11,7 +11,7 @@ next_chapter: null
 topic: mod-basics
 order: 2
 colors:
-  Mad: "#f00"
+  Red: "#f00"
 ---
 
 # 学习方向
@@ -68,15 +68,13 @@ namespace YourModName.Content.Item
 }
 ```
 
-你现在先别追求“全都懂”，只要知道两件事：
+- `SetDefaults()`: 这把武器的属性在这修改
+- `AddRecipes()`：这把武器的合成途径在这修改
 
-- `SetDefaults()`：这把武器的“手感/数值”基本都在这改
-- `AddRecipes()`：这把武器“怎么合成”在这写
-
-## C# 小知识：`using` 和 `namespace`（够用版）
+## C#基础：`using` 和 `namespace`
 
 - `using ...;`：告诉编译器“我要用这些库里的东西”（比如 `ItemID`、`Recipe` 这些类型/常量）
-- `namespace ... { }`：给你的代码分个组，方便管理；它不一定必须跟文件夹完全一致，但**跟着项目习惯走**最省心
+- `namespace ... { }`：给你的代码分个组，方便管理；它不一定必须跟文件夹完全一致，但**跟着项目习惯走**最省心(一般默认和文件夹路径一致，tModLoader寻找贴图默认根据命名空间作为索引，乱改会导致无法获取贴图然后无法生成Mod)
 
 ````quiz
 type: choice
@@ -99,9 +97,19 @@ explain: |
   `ItemID`、`TileID` 都在 `Terraria.ID` 里。
 ````
 
+````quiz
+type: tf
+id: first-weapon-step1-q2
+question: |
+  现在假如你的命名空间为`MyMod.Content.Items`，但是实际这个贴图的路径为`MyMod/Items`，那么实际加载Mod时候会出现错误，tModLoader显示无法找到资源并且给你路径提示。
+answer: True
+explain: |
+  答案确实如此，ModItem等需要加载贴图的内容是有一个`Texture`作为贴图资源的索引，而这个默认指定文件的命名空间。
+````
+
 ---
 
-# 2) 把“类”和“继承”这件事搞清楚
+# 2) **类**与**继承**
 
 先盯着这一行：
 
@@ -111,13 +119,14 @@ public class FirstSword : ModItem
 
 你可以把它当成一句大白话：
 
-- `FirstSword`：你要做的“物品类型”（你写的是“模板/蓝图”）
+- `FirstSword`：你要做的“物品类型”（你写的是“一个物品”）
 - `: ModItem`：这句的意思是“它是一个 ModItem”（继承）。tModLoader 看到这种类，就知道你在定义一个物品
 
-## C# 小知识：类名、继承、约定
+## C#基础：类名、继承、约定
 
 - `class`：定义一个类（类型）
 - `:`：表示继承（`FirstSword` 在 `ModItem` 的基础上增加/覆盖一些行为）
+-- 关于继承更多内容，也就是面向对象的事情，之后会详细说。
 - 文件名不强制必须和类名一致，但**强烈建议一致**：比如 `FirstSword.cs` 里写 `class FirstSword`
   - 你以后要在项目里搜索/定位，真的会省很多时间
 
@@ -129,11 +138,12 @@ question: |
 answer: false
 explain: |
   不要求一致，但保持一致是非常推荐的项目习惯（尤其是新手阶段）。
+  （吐槽一下Java，byd公开的类必须和文件名一致，不然直接报错）
 ````
 
 ---
 
-# 3) 先把“手感/数值”改出来（SetDefaults）
+# 3) 改数值时间（SetDefaults）
 
 你现在先做一个最简单的验证：把伤害改大一点，重新合成一把，看它是不是更痛了。
 
@@ -144,9 +154,9 @@ explain: |
 - `Item.knockBack`：击退
 - `Item.rare` / `Item.value`：稀有度/价值
 
-{color:Mad}{提示：你改完 `SetDefaults()` 后，手里那把旧武器经常不会“自动变身”。最稳的验证方式是：重新合成一把新的。}
+{color:Red}{提示：你改完 `SetDefaults()` 后，手里那把旧武器经常不会“自动变身”。最稳的验证方式是：重新合成一把新的。}
 
-## C# 小知识：赋值（`=`）和数字类型
+## C#基础：赋值（`=`）和数字类型
 
 像 `Item.damage = 50;` 这种就是最经典的“赋值”：把右边的值塞进左边的字段里。
 
@@ -208,7 +218,7 @@ flowchart TD
 - `AddTile(...)`：指定在哪个工作站制作
 - `Register()`：注册进游戏（这句没了就等于没写）
 
-## C# 小知识：变量、对象、调用方法
+## C#基础：变量、对象、调用方法
 
 ```csharp
 Recipe recipe = CreateRecipe();
@@ -287,11 +297,12 @@ public override void AddRecipes()
 }
 ```
 
-## C# 小知识：`4.5f` 和 `buyPrice(copper: 90)`
+## C#基础：`4.5f` 和 `buyPrice(copper: 90)`
 
 - `4.5f`：`f` 表示这是 `float`（小数），很多 API 字段就是要 `float`
 - `Item.buyPrice(copper: 90)`：这是 C# 的“命名参数”，意思是“把 90 传给 copper 这个参数”
   - 好处：读起来更像人话，也不容易把顺序写错
+  - 但是这玩意还有一个sellPrice，建议统一使用buyPrice
 
 ````quiz
 type: choice
