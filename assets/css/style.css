@@ -1283,6 +1283,46 @@ div.flowchart > svg {
     padding: 0;
 }
 
+.comments-section {
+    margin-top: 40px;
+}
+
+.comments-title {
+    margin: 0 0 12px 0;
+    color: var(--text-color);
+}
+
+.giscus-container {
+    min-height: 120px;
+}
+
+.comments-placeholder {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.comments-unconfigured {
+    padding: 14px 16px;
+    background-color: var(--bg-secondary);
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+    color: var(--text-secondary);
+}
+
+.comments-unconfigured p {
+    margin: 0 0 10px 0;
+}
+
+.comments-unconfigured p:last-child {
+    margin-bottom: 0;
+}
+
+.comments-unconfigured code {
+    background-color: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
 .tutorial-footer {
     margin-top: 40px;
     padding-top: 20px;
