@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<!-- 泰拉瑞亚Mod制作教程问答广场 -->
+<html lang="zh-CN" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问答广场 - 泰拉瑞亚Mod制作教程</title>
+
+    <!-- SEO优化标签 -->
+    <meta name="description" content="泰拉瑞亚Mod制作教程问答广场：高质量提问模板、问题列表与讨论区（GitHub Discussions）。">
+    <meta name="keywords" content="泰拉瑞亚,Mod,tModLoader,教程,问答,Q&A,Discussions">
+    <meta name="author" content="泰拉瑞亚Mod社区">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph标签 -->
+    <meta property="og:title" content="问答广场 - 泰拉瑞亚Mod制作教程">
+    <meta property="og:description" content="高质量提问模板、问题列表与讨论区（GitHub Discussions）。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dpapyru.github.io/qa.html">
+    <meta property="og:image" content="https://dpapyru.github.io/assets/imgs/Green_tModLoader.png">
+    <meta property="og:site_name" content="泰拉瑞亚Mod制作教程">
+    <meta property="og:locale" content="zh_CN">
+
+    <!-- 规范URL -->
+    <link rel="canonical" href="https://dpapyru.github.io/qa.html">
+
+    <!-- 主题初始化脚本 - 早期加载以避免闪烁 -->
+    <script src="assets/js/theme-init.js"></script>
+
+    <!-- 样式和图标 -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="icon" type="image/png" href="assets/imgs/Green_tModLoader.png">
+</head>
+
+<body class="qa-page">
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <!-- 网站头部导航区域 -->
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
+                        <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
+                    </a>
+                </div>
+                <nav class="main-nav" id="main-nav">
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="docs/index.html" class="nav-link">文档</a></li>
+                        <li class="nav-item"><a href="qa.html" class="nav-link active" aria-current="page">问答</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
+                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="qa-main" id="main-content" tabindex="-1">
+        <section class="qa-hero">
+            <div class="container">
+                <h2 class="qa-hero-title">问答广场</h2>
+                <p class="qa-hero-subtitle">请先用模板把问题讲清楚；发布与最佳答案由 GitHub Discussions 管理。</p>
+            </div>
+        </section>
+
+        <section class="qa-content">
+            <div class="container">
+                <div class="qa-layout">
+                    <section class="qa-card qa-ask" aria-label="提问">
+                        <div class="qa-card-header">
+                            <h3>提问（高质量模板）</h3>
+                            <a class="btn btn-outline qa-gh-link" id="qa-open-github" href="https://github.com/DPapyru/DPapyru.github.io/discussions/new"
+                                target="_blank" rel="noopener noreferrer">去 GitHub 发布</a>
+                        </div>
+
+                        <form id="qa-ask-form" class="qa-form">
+                            <div class="qa-form-row">
+                                <label for="qa-title" class="qa-label">标题（必填）</label>
+                                <input id="qa-title" class="qa-input" type="text" maxlength="120" required
+                                    placeholder="一句话说明你卡住的点，例如：为什么我的 Mod 加载后没有效果？">
+                            </div>
+
+                            <div class="qa-form-grid">
+                                <div class="qa-form-row">
+                                    <label for="qa-background" class="qa-label">背景</label>
+                                    <textarea id="qa-background" class="qa-textarea" rows="3"
+                                        placeholder="你在做什么？目标是什么？在哪一章/哪一段遇到问题？"></textarea>
+                                </div>
+
+                                <div class="qa-form-row">
+                                    <label for="qa-repro" class="qa-label">复现步骤</label>
+                                    <textarea id="qa-repro" class="qa-textarea" rows="4"
+                                        placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea>
+                                </div>
+
+                                <div class="qa-form-row">
+                                    <label for="qa-expected" class="qa-label">期望结果</label>
+                                    <textarea id="qa-expected" class="qa-textarea" rows="2" placeholder="你希望看到什么？"></textarea>
+                                </div>
+
+                                <div class="qa-form-row">
+                                    <label for="qa-actual" class="qa-label">实际结果</label>
+                                    <textarea id="qa-actual" class="qa-textarea" rows="2" placeholder="你实际看到了什么？报错是什么？"></textarea>
+                                </div>
+
+                                <div class="qa-form-row">
+                                    <label for="qa-env" class="qa-label">环境信息</label>
+                                    <textarea id="qa-env" class="qa-textarea" rows="3"
+                                        placeholder="例如：tModLoader 版本、Terraria 版本、操作系统、IDE、关键依赖版本等"></textarea>
+                                </div>
+
+                                <div class="qa-form-row">
+                                    <label for="qa-tried" class="qa-label">已尝试</label>
+                                    <textarea id="qa-tried" class="qa-textarea" rows="3"
+                                        placeholder="你已经排查过哪些方向？做过哪些尝试？结果如何？"></textarea>
+                                </div>
+
+                                <div class="qa-form-row qa-form-row-wide">
+                                    <label for="qa-links" class="qa-label">相关链接/代码片段</label>
+                                    <textarea id="qa-links" class="qa-textarea" rows="3"
+                                        placeholder="贴 GitHub 仓库/日志/截图链接；代码建议用 Markdown 代码块"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="qa-actions">
+                                <button class="btn btn-secondary" id="qa-generate" type="button">生成 Markdown</button>
+                                <button class="btn btn-outline" id="qa-copy" type="button" disabled>复制 Markdown</button>
+                                <button class="btn btn-primary" id="qa-copy-and-go" type="button" disabled>复制并去 GitHub 发布</button>
+                                <span class="qa-actions-hint" id="qa-action-hint" aria-live="polite"></span>
+                            </div>
+
+                            <div class="qa-form-row">
+                                <label for="qa-markdown" class="qa-label">发布内容（预览/可复制）</label>
+                                <textarea id="qa-markdown" class="qa-textarea qa-output" rows="10" readonly
+                                    placeholder="点击“生成 Markdown”后这里会出现内容"></textarea>
+                            </div>
+                        </form>
+                    </section>
+
+                    <section class="qa-card qa-list" aria-label="问题列表">
+                        <div class="qa-card-header">
+                            <h3>问题列表</h3>
+                            <div class="qa-list-controls">
+                                <input id="qa-search" class="qa-input qa-search" type="search" placeholder="搜索标题/作者…">
+                                <select id="qa-filter" class="qa-select" aria-label="筛选">
+                                    <option value="all">全部</option>
+                                    <option value="unsolved">未解决</option>
+                                    <option value="solved">已解决</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="qa-list-meta" id="qa-list-meta"></div>
+                        <div class="qa-list-items" id="qa-list-items" role="list"></div>
+                        <div class="qa-empty" id="qa-empty" style="display: none;">暂无问题列表数据（可能还没生成或正在更新）。</div>
+                        <div class="qa-error" id="qa-error" style="display: none;"></div>
+                    </section>
+
+                    <section class="qa-card qa-view" aria-label="讨论区">
+                        <div class="qa-card-header">
+                            <div class="qa-view-title">
+                                <h3 id="qa-selected-title">请选择一个问题</h3>
+                                <div class="qa-view-subtitle" id="qa-selected-subtitle"></div>
+                            </div>
+                            <a class="btn btn-outline" id="qa-open-selected" href="https://github.com/DPapyru/DPapyru.github.io/discussions"
+                                target="_blank" rel="noopener noreferrer" style="display: none;">在 GitHub 打开</a>
+                        </div>
+
+                        <div id="qa-giscus-container" class="giscus-container">
+                            <p class="comments-placeholder" id="qa-giscus-placeholder">选择一个问题后加载讨论区…</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>关于项目</h4>
+                    <p>这是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛。</p>
+                </div>
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="index.html">首页</a></li>
+                        <li><a href="docs/index.html">文档</a></li>
+                        <li><a href="qa.html">问答</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>联系我们</h4>
+                    <ul>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li><a href="mailto:contact@example.com">邮箱</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC
+                        BY 4.0</a> 许可协议。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/navigation.js"></script>
+    <script src="assets/js/qna.js"></script>
+</body>
+
+</html>

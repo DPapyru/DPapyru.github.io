@@ -559,7 +559,8 @@ function generateSitemap(config) {
 
     const staticPages = [
         { path: '/', file: 'index.html', priority: '1.0', changefreq: 'weekly' },
-        { path: '/docs/', file: 'docs/index.html', priority: '0.9', changefreq: 'weekly' }
+        { path: '/docs/', file: 'docs/index.html', priority: '0.9', changefreq: 'weekly' },
+        { path: '/qa.html', file: 'qa.html', priority: '0.7', changefreq: 'daily' }
     ];
 
     const urls = [];
