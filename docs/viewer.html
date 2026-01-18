@@ -151,16 +151,24 @@
                         <ul id="toc-list"></ul>
                     </nav>
 
-                    <!-- Markdown内容容器：渲染后的HTML内容将插入这里 -->
-                    <div id="markdown-content" class="markdown-content" style="display: none;">
-                        <!-- 文档内容将通过Markdown渲染后插入这里 -->
-                    </div>
-                </div>
+	                    <!-- Markdown内容容器：渲染后的HTML内容将插入这里 -->
+	                    <div id="markdown-content" class="markdown-content" style="display: none;">
+	                        <!-- 文档内容将通过Markdown渲染后插入这里 -->
+	                    </div>
+	                </div>
 
-                <!-- 教程底部区域：导航链接和反馈表单 -->
-                <div class="tutorial-footer">
-                    <!-- 教程导航：上一篇/下一篇链接 -->
-                    <div class="tutorial-navigation">
+	                <!-- 评论区（Giscus） -->
+	                <section class="comments-section" id="comments" aria-label="评论区">
+	                    <h3 class="comments-title">评论</h3>
+	                    <div id="giscus-container" class="giscus-container">
+	                        <p class="comments-placeholder">评论区加载中…</p>
+	                    </div>
+	                </section>
+	
+	                <!-- 教程底部区域：导航链接和反馈表单 -->
+	                <div class="tutorial-footer">
+	                    <!-- 教程导航：上一篇/下一篇链接 -->
+	                    <div class="tutorial-navigation">
                         <a href="index.html" class="btn btn-outline prev-tutorial">← 返回文档列表</a>
                         <a href="?file=Modder入门/DPapyru-给新人的前言.md" class="btn btn-secondary">查看教程</a>
                         <a href="?file=怎么贡献/DPapyru-贡献者如何编写文章基础.md" class="btn btn-primary next-tutorial">贡献指南 →</a>
@@ -285,15 +293,94 @@
     <script src="../assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
 
     <script>
-        // 文档配置和元数据管理
-        let VIEWER_DOC_CONFIG = null;
-        let ALL_DOCS = [];
-	        let CURRENT_DOC_PATH = null;
-	        let DOC_LOOKUP_MAP = null;
-	        
-	        function initializeMermaidOnce() {
-	            if (window.__MERMAID_INITIALIZED) return;
-	            if (!window.mermaid || typeof window.mermaid.initialize !== 'function') return;
+	        // 文档配置和元数据管理
+	        let VIEWER_DOC_CONFIG = null;
+	        let ALL_DOCS = [];
+		        let CURRENT_DOC_PATH = null;
+		        let DOC_LOOKUP_MAP = null;
+
+		        const GISCUS_OPTIONS = {
+		            repo: 'DPapyru/DPapyru.github.io',
+		            repoId: 'R_kgDOQczhug',
+		            category: 'Comments',
+		            categoryId: 'DIC_kwDOQczhus4C1F4-',
+		            mapping: 'specific',
+		            theme: 'dark_dimmed',
+		            lang: 'zh-CN'
+		        };
+
+		        function isGiscusConfigured() {
+		            return Boolean(GISCUS_OPTIONS.category && GISCUS_OPTIONS.categoryId);
+		        }
+
+		        function renderGiscusNotConfigured(container) {
+		            if (!container) return;
+		            container.innerHTML =
+		                '<div class="comments-unconfigured">' +
+		                '<p>评论区尚未配置：请在 <code>docs/viewer.html</code> 里填写 <code>GISCUS_OPTIONS.category</code> 和 <code>GISCUS_OPTIONS.categoryId</code>。</p>' +
+		                '<p>获取方式：打开 <a href="https://giscus.app/zh-CN" target="_blank" rel="noopener noreferrer">giscus.app</a> 配置向导。</p>' +
+		                '</div>';
+		        }
+
+		        function updateGiscusForDoc(docPath) {
+		            const container = document.getElementById('giscus-container');
+		            if (!container) return;
+
+		            if (!isGiscusConfigured()) {
+		                renderGiscusNotConfigured(container);
+		                return;
+		            }
+
+		            const term = String(docPath || '').trim();
+		            if (!term) return;
+
+		            const existingScript = container.querySelector('script[data-giscus-script="true"]');
+		            if (window.__GISCUS_REQUESTED_TERM === term && (existingScript || container.querySelector('iframe.giscus-frame'))) {
+		                return;
+		            }
+		            window.__GISCUS_REQUESTED_TERM = term;
+
+		            const iframe = container.querySelector('iframe.giscus-frame');
+		            if (iframe && iframe.contentWindow) {
+		                if (window.__GISCUS_LAST_TERM !== term) {
+		                    iframe.contentWindow.postMessage(
+		                        { giscus: { setConfig: { term: term } } },
+		                        'https://giscus.app'
+		                    );
+		                    window.__GISCUS_LAST_TERM = term;
+		                }
+		                return;
+		            }
+
+		            container.innerHTML = '';
+
+		            const script = document.createElement('script');
+		            script.src = 'https://giscus.app/client.js';
+		            script.async = true;
+		            script.crossOrigin = 'anonymous';
+		            script.setAttribute('data-giscus-script', 'true');
+
+		            script.setAttribute('data-repo', GISCUS_OPTIONS.repo);
+		            script.setAttribute('data-repo-id', GISCUS_OPTIONS.repoId);
+		            script.setAttribute('data-category', GISCUS_OPTIONS.category);
+		            script.setAttribute('data-category-id', GISCUS_OPTIONS.categoryId);
+		            script.setAttribute('data-mapping', GISCUS_OPTIONS.mapping);
+		            script.setAttribute('data-term', term);
+		            script.setAttribute('data-strict', '0');
+		            script.setAttribute('data-reactions-enabled', '1');
+		            script.setAttribute('data-emit-metadata', '0');
+		            script.setAttribute('data-input-position', 'top');
+		            script.setAttribute('data-theme', GISCUS_OPTIONS.theme);
+		            script.setAttribute('data-lang', GISCUS_OPTIONS.lang);
+		            script.setAttribute('data-loading', 'lazy');
+
+		            container.appendChild(script);
+		            window.__GISCUS_LAST_TERM = term;
+		        }
+		        
+		        function initializeMermaidOnce() {
+		            if (window.__MERMAID_INITIALIZED) return;
+		            if (!window.mermaid || typeof window.mermaid.initialize !== 'function') return;
 	            window.mermaid.initialize({
 	                startOnLoad: false,
 	                theme: 'dark',
@@ -1415,11 +1502,12 @@
 	                console.log(`docs/viewer.html: 添加.md扩展名: ${fetchPath}`);
 	            }
 
-            console.log(`docs/viewer.html: 最终使用路径: ${fetchPath}`);
-            CURRENT_DOC_PATH = fetchPath;
-
-            // 确保路径相对于当前页面（docs目录）
-            let fetchUrl = fetchPath.startsWith('./') ? fetchPath : `./${fetchPath}`;
+	            console.log(`docs/viewer.html: 最终使用路径: ${fetchPath}`);
+	            CURRENT_DOC_PATH = fetchPath;
+	            updateGiscusForDoc(fetchPath);
+	
+	            // 确保路径相对于当前页面（docs目录）
+	            let fetchUrl = fetchPath.startsWith('./') ? fetchPath : `./${fetchPath}`;
 
             // 避免重复的docs路径
             if (fetchUrl.startsWith('./docs/')) {
