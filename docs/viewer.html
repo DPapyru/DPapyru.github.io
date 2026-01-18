@@ -294,16 +294,18 @@
 	        function initializeMermaidOnce() {
 	            if (window.__MERMAID_INITIALIZED) return;
 	            if (!window.mermaid || typeof window.mermaid.initialize !== 'function') return;
-	            window.mermaid.initialize({
-	                startOnLoad: false,
-	                theme: 'dark',
-	                securityLevel: 'strict',
-	                flowchart: {
-	                    htmlLabels: true
-	                }
-	            });
-	            window.__MERMAID_INITIALIZED = true;
-	        }
+		            window.mermaid.initialize({
+		                startOnLoad: false,
+		                theme: 'dark',
+		                securityLevel: 'strict',
+		                flowchart: {
+		                    htmlLabels: true,
+		                    // Mermaid 会为箭头预留一点长度，子图标题区域太紧时箭头会“戳进标题里”
+		                    titleTopMargin: 36
+		                }
+		            });
+		            window.__MERMAID_INITIALIZED = true;
+		        }
 
 	        function autoWrapMermaidFlowchartSource(source, maxCharsPerLine = 16) {
 	            const text = String(source || '');
