@@ -14,16 +14,14 @@ colors:
   Mad: "#f00"
 ---
 
-# 第一个武器：先做出来，再顺手补 C#
+# 学习方向
 
-你上一章已经能 `Build + Reload` 了，这一章我们不整花活：**先把第一把武器做出来**。
+上一章知道怎么构建Mod了，那么这一章就做到：
 
-本节的验收点（都能在游戏里看到）：
+- 知道基础武器模板
+- 知道C#基础知识内容
 
-- 验收点 1：你能合成这把武器（配方出现在合成列表里）
-- 验收点 2：你改了属性，重新合成后手感/数值真的变了
-
-接下来按步骤来：每做完一步，只补这一小步用到的 C#。
+快速开始成功写出第一个武器，同时了解C#的基础知识，是最好的办法。
 
 ---
 
@@ -39,7 +37,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace YourModName.Items
+namespace YourModName.Content.Item
 {
     public class FirstSword : ModItem
     {
