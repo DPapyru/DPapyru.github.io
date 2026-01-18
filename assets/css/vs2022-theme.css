@@ -96,6 +96,13 @@ code[class*="language-"] {
     color: #D4D4D4 !important;
 }
 
+/* Prism 默认主题会给 operator/entity/url 加浅色背景；深色主题下会变成“方块”效果 */
+.token.operator,
+.token.entity,
+.token.url {
+    background: transparent !important;
+}
+
 /* 正则表达式 */
 .token.regex {
     color: #D16969 !important;

@@ -28,6 +28,13 @@
 
 然后打开 `http://localhost:8000`。
 
+## 使用的库 / 依赖
+
+- Markdown 渲染：`marked`（`assets/js/marked.min.js`）
+- 代码高亮：`Prism.js`（`assets/js/prism.min.js`、`assets/js/prism-csharp.min.js`）
+- 流程图：`Mermaid`（`assets/js/mermaid.min.js`；`docs/viewer.html` 在本地缺失时会尝试从 CDN 兜底加载）
+- 构建脚本依赖：`js-yaml`（用于 `generate-index.js` 解析 Markdown 的 YAML Front Matter）
+
 ## 写文章/改文档：构建与校验
 
 修改 `docs/**/*.md` 后，需要重新生成索引与搜索文件（Node `>=18`）：
@@ -45,7 +52,7 @@
 ## 贡献文章（简版）
 
 - 放到 `docs/` 下面，并带 YAML Front Matter（至少要有 `title`）
-- 推荐命名：`docs/<分类>/<作者>-<标题>.md`（作者名尽量用英文/ASCII，避免路径兼容问题）
+- 命名建议：优先沿用当前分类目录的习惯；常见是 `docs/<分类>/作者-标题.md`（如 `docs/Modder入门/DPapyru-提问的艺术.md`），系列内容可以像现有目录那样继续分子目录/用 `0-`、`1-` 这类前缀。文件名尽量别用空格和特殊符号，作者名用英文/ASCII 会更省心。
 - 图片建议放 `assets/imgs/`，并用相对路径引用
 - 文章尽量自己写；AI 可以用来查资料/润色，但别整篇直接生成
 
