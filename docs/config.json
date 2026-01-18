@@ -117,14 +117,32 @@
               "title": "第一个武器",
               "author": "小天使",
               "order": 2,
-              "description": "边做第一把武器边补 C# 基础",
+              "description": "做第一把武器同时入门C#",
               "last_updated": "2026-01-17",
               "time": "15分钟",
               "difficulty": "beginner",
               "prev_chapter": "DPapyru-快速开始构建Mod.md",
               "next_chapter": "null",
               "colors": {
-                "Mad": "#f00"
+                "Red": "#f00"
+              },
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-第一个弹幕.md",
+              "path": "Modder入门/DPapyru-第一个弹幕.md",
+              "originalPath": "Modder入门/DPapyru-第一个弹幕.md",
+              "title": "第一个弹幕",
+              "author": "小天使",
+              "order": 3,
+              "description": "做第一个弹幕，理解物品和弹幕的关系",
+              "last_updated": "2026-01-18",
+              "time": "20分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-第一个武器.md",
+              "next_chapter": "DPapyru-第一个NPC.md",
+              "colors": {
+                "Red": "#f00"
               },
               "colorChange": null
             }
@@ -2420,6 +2438,7 @@
       "files": [
         "DPapyru-快速开始构建Mod.md",
         "DPapyru-提问的艺术.md",
+        "DPapyru-第一个弹幕.md",
         "DPapyru-第一个武器.md",
         "DPapyru-给新人的前言.md",
         "DPapyru-贡献者如何编写文章基础.md"
@@ -4834,10 +4853,29 @@
       "prev_chapter": "DPapyru-快速开始构建Mod.md",
       "next_chapter": "null",
       "colors": {
-        "Mad": "#f00"
+        "Red": "#f00"
       },
       "colorChange": null,
       "last_updated": "2026-01-17"
+    },
+    {
+      "filename": "DPapyru-第一个弹幕.md",
+      "path": "Modder入门/DPapyru-第一个弹幕.md",
+      "originalPath": "Modder入门/DPapyru-第一个弹幕.md",
+      "title": "第一个弹幕",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 3,
+      "time": "20分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-第一个武器.md",
+      "next_chapter": "DPapyru-第一个NPC.md",
+      "colors": {
+        "Red": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-18"
     },
     {
       "filename": "世界观.md",
