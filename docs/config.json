@@ -165,6 +165,42 @@
               "colorChange": null
             },
             {
+              "filename": "DPapyru-第一个饰品.md",
+              "path": "Modder入门/DPapyru-第一个饰品.md",
+              "originalPath": "Modder入门/DPapyru-第一个饰品.md",
+              "title": "第一个饰品",
+              "author": "小天使",
+              "order": 6,
+              "description": "做第一个饰品同时学习如何修改玩家属性",
+              "last_updated": "2026-01-19",
+              "time": "15分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-第一个NPC.md",
+              "next_chapter": "DPapyru-第一个Buff.md",
+              "colors": {
+                "Red": "#f00"
+              },
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-第一个Buff.md",
+              "path": "Modder入门/DPapyru-第一个Buff.md",
+              "originalPath": "Modder入门/DPapyru-第一个Buff.md",
+              "title": "第一个Buff",
+              "author": "小天使",
+              "order": 7,
+              "description": "做第一个Buff同时学习如何创建持续效果",
+              "last_updated": "2026-01-19",
+              "time": "20分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-第一个饰品.md",
+              "next_chapter": "DPapyru-第一个召唤物.md",
+              "colors": {
+                "Red": "#f00"
+              },
+              "colorChange": null
+            },
+            {
               "filename": "DPapyru-第一个弹药.md",
               "path": "Modder入门/DPapyru-第一个弹药.md",
               "originalPath": "Modder入门/DPapyru-第一个弹药.md",
@@ -195,6 +231,60 @@
               "difficulty": "beginner",
               "prev_chapter": "DPapyru-第一个弹药.md",
               "next_chapter": "DPapyru-第一个Boss.md",
+              "colors": {
+                "Red": "#f00"
+              },
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-第一个召唤物.md",
+              "path": "Modder入门/DPapyru-第一个召唤物.md",
+              "originalPath": "Modder入门/DPapyru-第一个召唤物.md",
+              "title": "第一个召唤物",
+              "author": "小天使",
+              "order": 8,
+              "description": "做第一个召唤物同时学习AI系统",
+              "last_updated": "2026-01-19",
+              "time": "25分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-第一个Buff.md",
+              "next_chapter": "DPapyru-第一个Boss.md",
+              "colors": {
+                "Red": "#f00"
+              },
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-第一个Boss.md",
+              "path": "Modder入门/DPapyru-第一个Boss.md",
+              "originalPath": "Modder入门/DPapyru-第一个Boss.md",
+              "title": "第一个Boss",
+              "author": "小天使",
+              "order": 9,
+              "description": "做第一个Boss同时学习阶段转换",
+              "last_updated": "2026-01-19",
+              "time": "30分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-第一个召唤物.md",
+              "next_chapter": "DPapyru-第一个世界生成.md",
+              "colors": {
+                "Red": "#f00"
+              },
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-第一个世界生成.md",
+              "path": "Modder入门/DPapyru-第一个世界生成.md",
+              "originalPath": "Modder入门/DPapyru-第一个世界生成.md",
+              "title": "第一个世界生成",
+              "author": "小天使",
+              "order": 10,
+              "description": "做第一个世界生成同时学习世界系统",
+              "last_updated": "2026-01-19",
+              "time": "25分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-第一个Boss.md",
+              "next_chapter": "null",
               "colors": {
                 "Red": "#f00"
               },
@@ -2492,11 +2582,16 @@
       "files": [
         "DPapyru-快速开始构建Mod.md",
         "DPapyru-提问的艺术.md",
+        "DPapyru-第一个Boss.md",
+        "DPapyru-第一个Buff.md",
         "DPapyru-第一个NPC.md",
+        "DPapyru-第一个世界生成.md",
+        "DPapyru-第一个召唤物.md",
         "DPapyru-第一个弹幕.md",
         "DPapyru-第一个弹药.md",
         "DPapyru-第一个武器.md",
         "DPapyru-第一个物块.md",
+        "DPapyru-第一个饰品.md",
         "DPapyru-给新人的前言.md",
         "教学文章写作指南.md"
       ]
@@ -5047,6 +5142,44 @@
       "last_updated": "2026-1-17"
     },
     {
+      "filename": "DPapyru-第一个饰品.md",
+      "path": "Modder入门/DPapyru-第一个饰品.md",
+      "originalPath": "Modder入门/DPapyru-第一个饰品.md",
+      "title": "第一个饰品",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 6,
+      "time": "15分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-第一个NPC.md",
+      "next_chapter": "DPapyru-第一个Buff.md",
+      "colors": {
+        "Red": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-19"
+    },
+    {
+      "filename": "DPapyru-第一个Buff.md",
+      "path": "Modder入门/DPapyru-第一个Buff.md",
+      "originalPath": "Modder入门/DPapyru-第一个Buff.md",
+      "title": "第一个Buff",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 7,
+      "time": "20分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-第一个饰品.md",
+      "next_chapter": "DPapyru-第一个召唤物.md",
+      "colors": {
+        "Red": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-19"
+    },
+    {
       "filename": "DPapyru-第一个弹药.md",
       "path": "Modder入门/DPapyru-第一个弹药.md",
       "originalPath": "Modder入门/DPapyru-第一个弹药.md",
@@ -5078,6 +5211,63 @@
       "difficulty": "beginner",
       "prev_chapter": "DPapyru-第一个弹药.md",
       "next_chapter": "DPapyru-第一个Boss.md",
+      "colors": {
+        "Red": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-19"
+    },
+    {
+      "filename": "DPapyru-第一个召唤物.md",
+      "path": "Modder入门/DPapyru-第一个召唤物.md",
+      "originalPath": "Modder入门/DPapyru-第一个召唤物.md",
+      "title": "第一个召唤物",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 8,
+      "time": "25分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-第一个Buff.md",
+      "next_chapter": "DPapyru-第一个Boss.md",
+      "colors": {
+        "Red": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-19"
+    },
+    {
+      "filename": "DPapyru-第一个Boss.md",
+      "path": "Modder入门/DPapyru-第一个Boss.md",
+      "originalPath": "Modder入门/DPapyru-第一个Boss.md",
+      "title": "第一个Boss",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 9,
+      "time": "30分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-第一个召唤物.md",
+      "next_chapter": "DPapyru-第一个世界生成.md",
+      "colors": {
+        "Red": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-19"
+    },
+    {
+      "filename": "DPapyru-第一个世界生成.md",
+      "path": "Modder入门/DPapyru-第一个世界生成.md",
+      "originalPath": "Modder入门/DPapyru-第一个世界生成.md",
+      "title": "第一个世界生成",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 10,
+      "time": "25分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-第一个Boss.md",
+      "next_chapter": "null",
       "colors": {
         "Red": "#f00"
       },
