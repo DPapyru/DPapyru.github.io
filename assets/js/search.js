@@ -430,14 +430,14 @@ class TutorialSearch {
     }
 
     // 获取所有教程文件（默认后备方案）
-    async getTutorialFiles() {
-        // 返回所有教程文件的路径 - 更新为新的嵌套文档结构
-        return [
-            'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/怎么贡献/DPapyru-贡献者如何编写文章基础.md',
-            'docs/怎么贡献/TopicSystem使用指南.md'
-        ];
-    }
+	    async getTutorialFiles() {
+	        // 返回所有教程文件的路径 - 更新为新的嵌套文档结构
+	        return [
+	            'docs/Modder入门/DPapyru-给新人的前言.md',
+	            'docs/怎么贡献/教学文章写作指南.md',
+	            'docs/怎么贡献/TopicSystem使用指南.md'
+	        ];
+	    }
 
     // 解析文件元数据 - 增强版，支持从config.json获取元数据
     async parseMetadataWithConfig(content, fileName, fullPath) {
@@ -957,12 +957,12 @@ class TutorialSearch {
         }
         
         // 默认分类映射（向后兼容）
-        const defaultCategoryMappings = {
-            'DPapyru-给新人的前言.md': 'Modder入门',
-            'DPapyru-贡献者如何编写文章基础.md': '怎么贡献',
-            'TopicSystem使用指南.md': '怎么贡献',
-            'tutorial-index.md': '教程索引'
-        };
+	        const defaultCategoryMappings = {
+	            'DPapyru-给新人的前言.md': 'Modder入门',
+	            '教学文章写作指南.md': '怎么贡献',
+	            'TopicSystem使用指南.md': '怎么贡献',
+	            'tutorial-index.md': '教程索引'
+	        };
         
         return defaultCategoryMappings[fileName] || '未分类';
     }

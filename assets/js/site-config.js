@@ -7,13 +7,14 @@
     redirects: {}
   };
 
-  var DEFAULT_PATH_MAPPINGS = {
-    'DPapyru-ForNewModder.md': 'Modder入门/DPapyru-给新人的前言.md',
-    'DPapyru-ForContributors-Basic.md': '怎么贡献/DPapyru-贡献者如何编写文章基础.md',
-    'TopicSystemGuide.md': '怎么贡献/TopicSystem使用指南.md',
-    'getting-started.md': 'Modder入门/DPapyru-给新人的前言.md',
-    'basic-concepts.md': 'Modder入门/DPapyru-给新人的前言.md',
-    'tutorial-index.md': 'Modder入门/DPapyru-给新人的前言.md',
+	  var DEFAULT_PATH_MAPPINGS = {
+	    'DPapyru-ForNewModder.md': 'Modder入门/DPapyru-给新人的前言.md',
+	    'DPapyru-ForContributors-Basic.md': '怎么贡献/教学文章写作指南.md',
+	    '怎么贡献/DPapyru-贡献者如何编写文章基础.md': '怎么贡献/教学文章写作指南.md',
+	    'TopicSystemGuide.md': '怎么贡献/TopicSystem使用指南.md',
+	    'getting-started.md': 'Modder入门/DPapyru-给新人的前言.md',
+	    'basic-concepts.md': 'Modder入门/DPapyru-给新人的前言.md',
+	    'tutorial-index.md': 'Modder入门/DPapyru-给新人的前言.md',
     '01-入门指南/README.md': 'Modder入门/DPapyru-给新人的前言.md',
     '02-基础概念/README.md': 'Modder入门/DPapyru-给新人的前言.md',
     '03-内容创建/README.md': 'Modder入门/DPapyru-给新人的前言.md',

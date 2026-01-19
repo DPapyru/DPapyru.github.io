@@ -29,18 +29,18 @@
           "description": "如何为教程网站贡献文章",
           "files": [
             {
-              "filename": "DPapyru-贡献者如何编写文章基础.md",
-              "path": "怎么贡献/DPapyru-贡献者如何编写文章基础.md",
-              "originalPath": "怎么贡献/DPapyru-贡献者如何编写文章基础.md",
-              "title": "如何贡献文章（详细指南）",
+              "filename": "教学文章写作指南.md",
+              "path": "怎么贡献/教学文章写作指南.md",
+              "originalPath": "怎么贡献/教学文章写作指南.md",
+              "title": "教学文章写作指南",
               "author": "小天使",
-              "order": 999,
-              "description": "如何在本仓库新增/修改教程文章，并通过构建与 CI 检查",
-              "last_updated": "2026-01-16",
-              "time": "10分钟",
+              "order": 1,
+              "description": "写教程文章的统一规范（结构、站点特殊语法、发布流程）",
+              "last_updated": "2026-01-18",
+              "time": "30分钟",
               "difficulty": "beginner",
-              "prev_chapter": "null",
-              "next_chapter": "null",
+              "prev_chapter": null,
+              "next_chapter": null,
               "colors": null,
               "colorChange": null
             }
@@ -85,7 +85,7 @@
               "last_updated": "2025-12-02",
               "time": "5分钟",
               "difficulty": "beginner",
-              "prev_chapter": "null",
+              "prev_chapter": null,
               "next_chapter": "DPapyru-提问的艺术.md",
               "colors": {
                 "Mad": "#f00"
@@ -118,11 +118,11 @@
               "author": "小天使",
               "order": 2,
               "description": "做第一把武器同时入门C#",
-              "last_updated": "2026-01-17",
+              "last_updated": "2026-01-19",
               "time": "15分钟",
               "difficulty": "beginner",
               "prev_chapter": "DPapyru-快速开始构建Mod.md",
-              "next_chapter": "null",
+              "next_chapter": "DPapyru-第一个弹幕.md",
               "colors": {
                 "Red": "#f00"
               },
@@ -135,12 +135,66 @@
               "title": "第一个弹幕",
               "author": "小天使",
               "order": 3,
-              "description": "做第一个弹幕，理解物品和弹幕的关系",
-              "last_updated": "2026-01-18",
+              "description": "让武器发射弹幕，理解物品和弹幕的关系",
+              "last_updated": "2026-01-19",
               "time": "20分钟",
               "difficulty": "beginner",
               "prev_chapter": "DPapyru-第一个武器.md",
+              "next_chapter": "DPapyru-第一个物块.md",
+              "colors": {
+                "Red": "#f00"
+              },
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-第一个物块.md",
+              "path": "Modder入门/DPapyru-第一个物块.md",
+              "originalPath": "Modder入门/DPapyru-第一个物块.md",
+              "title": "第一个物块",
+              "author": "小天使",
+              "order": 4,
+              "description": "创建可放置的物块，理解物块的基本属性和行为",
+              "last_updated": "2026-01-19",
+              "time": "25分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-第一个弹幕.md",
+              "next_chapter": "DPapyru-第一个合成表.md",
+              "colors": {
+                "Red": "#f00"
+              },
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-第一个弹药.md",
+              "path": "Modder入门/DPapyru-第一个弹药.md",
+              "originalPath": "Modder入门/DPapyru-第一个弹药.md",
+              "title": "第一个弹药",
+              "author": "小天使",
+              "order": 7,
+              "description": "创建可消耗的弹药，理解弹药和武器的关系",
+              "last_updated": "2026-01-19",
+              "time": "20分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-第一个合成表.md",
               "next_chapter": "DPapyru-第一个NPC.md",
+              "colors": {
+                "Red": "#f00"
+              },
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-第一个NPC.md",
+              "path": "Modder入门/DPapyru-第一个NPC.md",
+              "originalPath": "Modder入门/DPapyru-第一个NPC.md",
+              "title": "第一个NPC",
+              "author": "小天使",
+              "order": 8,
+              "description": "创建可交互的NPC，理解NPC的基本属性和行为",
+              "last_updated": "2026-01-19",
+              "time": "30分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-第一个弹药.md",
+              "next_chapter": "DPapyru-第一个Boss.md",
               "colors": {
                 "Red": "#f00"
               },
@@ -2438,10 +2492,13 @@
       "files": [
         "DPapyru-快速开始构建Mod.md",
         "DPapyru-提问的艺术.md",
+        "DPapyru-第一个NPC.md",
         "DPapyru-第一个弹幕.md",
+        "DPapyru-第一个弹药.md",
         "DPapyru-第一个武器.md",
+        "DPapyru-第一个物块.md",
         "DPapyru-给新人的前言.md",
-        "DPapyru-贡献者如何编写文章基础.md"
+        "教学文章写作指南.md"
       ]
     },
     "错数螺线": {
@@ -2619,7 +2676,7 @@
       "order": 0,
       "time": "5分钟",
       "difficulty": "beginner",
-      "prev_chapter": "null",
+      "prev_chapter": null,
       "next_chapter": "DPapyru-提问的艺术.md",
       "colors": {
         "Mad": "#f00"
@@ -2645,6 +2702,23 @@
       },
       "colorChange": null,
       "last_updated": "2026-01-17"
+    },
+    {
+      "filename": "教学文章写作指南.md",
+      "path": "怎么贡献/教学文章写作指南.md",
+      "originalPath": "怎么贡献/教学文章写作指南.md",
+      "title": "教学文章写作指南",
+      "author": "小天使",
+      "category": "怎么贡献",
+      "topic": "article-contribution",
+      "order": 1,
+      "time": "30分钟",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2026-01-18"
     },
     {
       "filename": "0-Home 主页.md",
@@ -4851,12 +4925,12 @@
       "time": "15分钟",
       "difficulty": "beginner",
       "prev_chapter": "DPapyru-快速开始构建Mod.md",
-      "next_chapter": "null",
+      "next_chapter": "DPapyru-第一个弹幕.md",
       "colors": {
         "Red": "#f00"
       },
       "colorChange": null,
-      "last_updated": "2026-01-17"
+      "last_updated": "2026-01-19"
     },
     {
       "filename": "DPapyru-第一个弹幕.md",
@@ -4870,12 +4944,31 @@
       "time": "20分钟",
       "difficulty": "beginner",
       "prev_chapter": "DPapyru-第一个武器.md",
-      "next_chapter": "DPapyru-第一个NPC.md",
+      "next_chapter": "DPapyru-第一个物块.md",
       "colors": {
         "Red": "#f00"
       },
       "colorChange": null,
-      "last_updated": "2026-01-18"
+      "last_updated": "2026-01-19"
+    },
+    {
+      "filename": "DPapyru-第一个物块.md",
+      "path": "Modder入门/DPapyru-第一个物块.md",
+      "originalPath": "Modder入门/DPapyru-第一个物块.md",
+      "title": "第一个物块",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 4,
+      "time": "25分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-第一个弹幕.md",
+      "next_chapter": "DPapyru-第一个合成表.md",
+      "colors": {
+        "Red": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-19"
     },
     {
       "filename": "世界观.md",
@@ -4954,21 +5047,42 @@
       "last_updated": "2026-1-17"
     },
     {
-      "filename": "DPapyru-贡献者如何编写文章基础.md",
-      "path": "怎么贡献/DPapyru-贡献者如何编写文章基础.md",
-      "originalPath": "怎么贡献/DPapyru-贡献者如何编写文章基础.md",
-      "title": "如何贡献文章（详细指南）",
+      "filename": "DPapyru-第一个弹药.md",
+      "path": "Modder入门/DPapyru-第一个弹药.md",
+      "originalPath": "Modder入门/DPapyru-第一个弹药.md",
+      "title": "第一个弹药",
       "author": "小天使",
-      "category": "怎么贡献",
-      "topic": "article-contribution",
-      "order": 999,
-      "time": "10分钟",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 7,
+      "time": "20分钟",
       "difficulty": "beginner",
-      "prev_chapter": "null",
-      "next_chapter": "null",
-      "colors": null,
+      "prev_chapter": "DPapyru-第一个合成表.md",
+      "next_chapter": "DPapyru-第一个NPC.md",
+      "colors": {
+        "Red": "#f00"
+      },
       "colorChange": null,
-      "last_updated": "2026-01-16"
+      "last_updated": "2026-01-19"
+    },
+    {
+      "filename": "DPapyru-第一个NPC.md",
+      "path": "Modder入门/DPapyru-第一个NPC.md",
+      "originalPath": "Modder入门/DPapyru-第一个NPC.md",
+      "title": "第一个NPC",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 8,
+      "time": "30分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-第一个弹药.md",
+      "next_chapter": "DPapyru-第一个Boss.md",
+      "colors": {
+        "Red": "#f00"
+      },
+      "colorChange": null,
+      "last_updated": "2026-01-19"
     }
   ],
   "settings": {

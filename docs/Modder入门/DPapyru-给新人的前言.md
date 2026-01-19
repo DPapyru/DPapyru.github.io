@@ -6,7 +6,6 @@ last_updated: 2025-12-02
 difficulty: beginner
 time: 5分钟
 description: 新人要看一下前言
-prev_chapter: null
 next_chapter: DPapyru-提问的艺术.md
 topic: mod-basics
 order: 0

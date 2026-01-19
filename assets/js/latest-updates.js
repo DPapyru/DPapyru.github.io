@@ -5,11 +5,11 @@
  */
 
 // 文档路径列表 - 更新为新的扁平化结构
-const DOC_PATHS = [
-    'Modder入门/DPapyru-给新人的前言.md',
-    '怎么贡献/DPapyru-贡献者如何编写文章基础.md',
-    '怎么贡献/TopicSystem使用指南.md'
-];
+	const DOC_PATHS = [
+	    'Modder入门/DPapyru-给新人的前言.md',
+	    '怎么贡献/教学文章写作指南.md',
+	    '怎么贡献/TopicSystem使用指南.md'
+	];
 
 // 从config.json获取文档列表的函数
 async function getDocumentsFromConfig() {
@@ -167,7 +167,7 @@ function getFallbackDocumentInfo(url) {
     const fileName = url.split('/').pop();
 
     // 默认文档信息映射 - 基于新的文件名
-    const defaultDocs = {
+	    const defaultDocs = {
         'DPapyru-给新人的前言.md': {
             title: '给新人的前言',
             description: '新人要看一下前言',
@@ -175,13 +175,13 @@ function getFallbackDocumentInfo(url) {
             time: '5分钟',
             lastUpdated: '2025-12-02'
         },
-        'DPapyru-贡献者如何编写文章基础.md': {
-            title: '贡献者怎么编写文章？',
-            description: '如何给这个教程网页进行一个文档编写？',
-            difficulty: 'beginner',
-            time: '5分钟',
-            lastUpdated: '2025-11-27'
-        },
+	        '教学文章写作指南.md': {
+	            title: '教学文章写作指南',
+	            description: '写教程文章的统一规范（结构、站点特殊语法、发布流程）',
+	            difficulty: 'beginner',
+	            time: '30分钟',
+	            lastUpdated: '2026-01-18'
+	        },
         'TopicSystem使用指南.md': {
             title: 'Topic系统使用指南',
             description: '详细介绍Topic系统的使用方法和最佳实践',
