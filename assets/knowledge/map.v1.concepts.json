@@ -1,0 +1,1282 @@
+{
+    "concepts": {
+        "api-player-addbuff": {
+            "title": "Player.AddBuff(...)",
+            "notes": [
+                "给玩家添加 Buff/DeBuff；持续时间单位通常是 tick（60 tick ≈ 1 秒）。",
+                "常见用法：在 OnHitPlayer / ModifyHitPlayer 里给目标施加状态。",
+                "注意参数里的 type 通常是 BuffID，duration 是持续 tick。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-main-newtext": {
+            "title": "Main.NewText(...)",
+            "notes": [
+                "向聊天/屏幕输出一条文本消息（常用于调试或提示）。",
+                "多人模式下要注意调用位置与同步；不是所有环境都适合直接输出。",
+                "如果你只是想临时看变量值，这是最省事的方式之一。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "dev-tooling",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-main-getmoonphase": {
+            "title": "Main.GetMoonPhase(...)",
+            "notes": [
+                "获取当前月相（MoonPhase 枚举）。",
+                "月相影响某些生物的行为和生成条件。",
+                "常见用法：检查是否满月、新月等特殊时间。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-main-quickspawnitem": {
+            "title": "Main.QuickSpawnItem(...)",
+            "notes": [
+                "快速生成物品到世界中，返回生成的物品索引。",
+                "第一个参数 source 用于追踪物品来源（重要！）。",
+                "支持传入 Item 对象或物品 ID，stack 参数指定堆叠数量。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-main-spawnnpc": {
+            "title": "Main.SpawnNPC(...)",
+            "notes": [
+                "在指定位置生成 NPC。",
+                "参数包括 NPC 类型、X/Y 坐标等。",
+                "常用于 Mod 中动态生成敌人或友方 NPC。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-public": {
+            "title": "C# 关键字：public",
+            "notes": [
+                "public 成员对所有代码可见；用于对外暴露 API。",
+                "在 tModLoader 里，很多 Hook 是 public/protected virtual，让你 override。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-modplayer-hooks",
+                    "boost": 1
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-override": {
+            "title": "C# 关键字：override",
+            "notes": [
+                "override 用来重写基类的 virtual/abstract 成员。",
+                "tModLoader 的“钩子函数”本质上就是让你 override 这些可重写方法。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-modplayer-hooks",
+                    "boost": 2
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-virtual": {
+            "title": "C# 关键字：virtual",
+            "notes": [
+                "virtual 声明一个可被派生类 override 的成员（默认实现存在）。",
+                "tModLoader 的许多可扩展点就是基类提供 virtual hook。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-abstract": {
+            "title": "C# 关键字：abstract",
+            "notes": [
+                "abstract 成员没有实现，派生类必须 override 才能使用。",
+                "abstract 类不能被直接实例化，只能继承。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-static": {
+            "title": "C# 关键字：static",
+            "notes": [
+                "static 成员属于类型本身，不依赖实例；常用于全局入口/工具方法。",
+                "在 Terraria 里常见：Main.* 作为大量全局状态/工具入口。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-private": {
+            "title": "C# 关键字：private",
+            "notes": [
+                "private 成员只在当前类型内部可见；用于封装实现细节。",
+                "写 Mod 时通常把内部状态设为 private，再通过方法/属性暴露必要接口。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-protected": {
+            "title": "C# 关键字：protected",
+            "notes": [
+                "protected 成员在派生类可见（外部不可见）。",
+                "tModLoader hook 往往是 protected virtual，鼓励继承扩展。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-internal": {
+            "title": "C# 关键字：internal",
+            "notes": [
+                "internal 成员只在同一程序集内可见；在大型项目中常用于模块边界。",
+                "当你看 tModLoader 源码时，会遇到大量 internal 用法。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-readonly": {
+            "title": "C# 关键字：readonly",
+            "notes": [
+                "readonly 字段只能在声明处或构造函数中赋值；用于不可变引用。",
+                "适合存放不会变的依赖/常量引用，减少意外修改。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-const": {
+            "title": "C# 关键字：const",
+            "notes": [
+                "const 是编译期常量；会被内联到使用处。",
+                "跨 Mod/跨版本时不建议对可能变化的值用 const（更新会导致二进制不一致）。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-ref": {
+            "title": "C# 关键字：ref",
+            "notes": [
+                "ref 以引用方式传参：方法内修改会影响调用方变量。",
+                "tModLoader hook 经常用 ref 让你修改伤害、暴击、击退等数值。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-out": {
+            "title": "C# 关键字：out",
+            "notes": [
+                "out 参数用于“返回多个值”；调用前不要求初始化，但方法内必须赋值。",
+                "常见于 TryParse / TryGet* 模式。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-params": {
+            "title": "C# 关键字：params",
+            "notes": [
+                "params 允许可变参数列表（数组形式传入）。",
+                "看 API 签名时遇到 params，要记得它可以传 0 个或多个参数。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-using": {
+            "title": "C# 关键字：using",
+            "notes": [
+                "using 常用于引入命名空间，简化类型名书写。",
+                "也可用于 using 语句管理 IDisposable 资源生命周期（自动释放）。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-namespace": {
+            "title": "C# 关键字：namespace",
+            "notes": [
+                "namespace 用于组织类型，避免命名冲突。",
+                "tModLoader / Terraria 类型大多位于 Terraria.* 与 Terraria.ModLoader.*。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-class": {
+            "title": "C# 关键字：class",
+            "notes": [
+                "class 是引用类型；支持继承（tModLoader 扩展点大量依赖继承）。",
+                "典型：ModItem / ModNPC / ModPlayer 通过继承获得 hook。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-modplayer-hooks",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-struct": {
+            "title": "C# 关键字：struct",
+            "notes": [
+                "struct 是值类型；拷贝语义不同于 class，注意避免不必要的复制。",
+                "Terraria 中常见 struct：Vector2、Rectangle 等。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-var": {
+            "title": "C# 关键字：var",
+            "notes": [
+                "var 是“隐式类型局部变量”；编译期仍有确定类型，不是动态类型。",
+                "常用于减少冗长类型名，但在可读性差时建议写显式类型。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-this": {
+            "title": "C# 关键字：this",
+            "notes": [
+                "this 指向当前实例；在实例成员中用来区分字段/参数同名。",
+                "扩展方法的第一个参数也会写成 this T，使调用像实例方法一样。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-base": {
+            "title": "C# 关键字：base",
+            "notes": [
+                "base 访问基类实现；override 中常用 base.Method() 保留原行为。",
+                "写 tModLoader hook 时，是否调用 base 取决于该 hook 的语义。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-interface": {
+            "title": "C# 关键字：interface",
+            "notes": [
+                "interface 定义契约；类可以实现多个接口。",
+                "tModLoader 中常见接口：IModItem、IModNPC 等，用于标记特定能力。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-enum": {
+            "title": "C# 关键字：enum",
+            "notes": [
+                "enum 定义命名常量集合；底层是整数类型。",
+                "Terraria 中大量使用 enum：ItemID、NPCID、ProjectileID 等。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-sealed": {
+            "title": "C# 关键字：sealed",
+            "notes": [
+                "sealed 阻止类被继承或方法被重写。",
+                "用于防止进一步扩展，确保行为稳定。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-new": {
+            "title": "C# 关键字：new",
+            "notes": [
+                "new 用于创建对象实例或隐藏基类成员。",
+                "在 Mod 中常用 new 创建物品、NPC、弹幕等实例。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-typeof": {
+            "title": "C# 关键字：typeof",
+            "notes": [
+                "typeof 获取类型的 System.Type 对象（编译期）。",
+                "常用于反射、类型检查或作为参数传递类型信息。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-is": {
+            "title": "C# 关键字：is",
+            "notes": [
+                "is 检查对象是否兼容指定类型（运行时类型检查）。",
+                "常用于类型转换前的安全检查。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-as": {
+            "title": "C# 关键字：as",
+            "notes": [
+                "as 尝试安全转换类型；失败返回 null 而非抛异常。",
+                "比 is + cast 更高效，但要注意 null 检查。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-async": {
+            "title": "C# 关键字：async",
+            "notes": [
+                "async 标记方法为异步，可使用 await 等待 Task。",
+                "tModLoader 中主要用于网络同步或延迟操作。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-await": {
+            "title": "C# 关键字：await",
+            "notes": [
+                "await 暂停 async 方法执行，等待 Task 完成。",
+                "必须在 async 方法中使用，避免阻塞主线程。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-try": {
+            "title": "C# 关键字：try",
+            "notes": [
+                "try 块包含可能抛出异常的代码。",
+                "与 catch/finally 配合使用，确保资源正确释放。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-catch": {
+            "title": "C# 关键字：catch",
+            "notes": [
+                "catch 捕获并处理 try 块中抛出的异常。",
+                "可以指定特定异常类型或捕获所有异常。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-finally": {
+            "title": "C# 关键字：finally",
+            "notes": [
+                "finally 块无论是否发生异常都会执行。",
+                "常用于清理资源、释放锁等必须执行的操作。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-throw": {
+            "title": "C# 关键字：throw",
+            "notes": [
+                "throw 抛出异常或重新抛出当前异常。",
+                "用于报告错误或传递异常信息。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-if": {
+            "title": "C# 关键字：if",
+            "notes": [
+                "if 条件语句；根据布尔值决定是否执行代码块。",
+                "可与 else、else if 组合使用。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-else": {
+            "title": "C# 关键字：else",
+            "notes": [
+                "else 与 if 配合；当 if 条件为 false 时执行。",
+                "也可用于 try-catch-finally 中的 catch 块。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-switch": {
+            "title": "C# 关键字：switch",
+            "notes": [
+                "switch 多分支选择语句；根据表达式值跳转到对应 case。",
+                "比多个 if-else 更清晰，性能也更好。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-case": {
+            "title": "C# 关键字：case",
+            "notes": [
+                "case 定义 switch 中的分支标签。",
+                "每个 case 后通常跟 break 或 return。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-default": {
+            "title": "C# 关键字：default",
+            "notes": [
+                "default 在 switch 中表示默认分支。",
+                "也可用于获取类型的默认值（如 default(int)）。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-for": {
+            "title": "C# 关键字：for",
+            "notes": [
+                "for 循环；适合已知迭代次数的场景。",
+                "语法：for (初始化; 条件; 迭代) { 循环体 }"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-foreach": {
+            "title": "C# 关键字：foreach",
+            "notes": [
+                "foreach 遍历集合中的每个元素。",
+                "比 for 更简洁，但无法修改集合结构。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-while": {
+            "title": "C# 关键字：while",
+            "notes": [
+                "while 循环；条件为 true 时重复执行。",
+                "适合不确定迭代次数的场景。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-do": {
+            "title": "C# 关键字：do",
+            "notes": [
+                "do-while 循环；先执行一次，再检查条件。",
+                "保证循环体至少执行一次。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-break": {
+            "title": "C# 关键字：break",
+            "notes": [
+                "break 跳出最近的循环或 switch。",
+                "用于提前终止循环或结束 switch 分支。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-continue": {
+            "title": "C# 关键字：continue",
+            "notes": [
+                "continue 跳过当前迭代，进入下一次循环。",
+                "用于跳过某些条件下的处理。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-return": {
+            "title": "C# 关键字：return",
+            "notes": [
+                "return 从方法返回，可返回值或 void。",
+                "立即终止方法执行。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-void": {
+            "title": "C# 关键字：void",
+            "notes": [
+                "void 表示方法无返回值。",
+                "常见于事件处理、初始化方法等。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-null": {
+            "title": "C# 关键字：null",
+            "notes": [
+                "null 表示引用类型的空引用。",
+                "使用前应检查 null，避免 NullReferenceException。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-true": {
+            "title": "C# 关键字：true",
+            "notes": [
+                "true 表示布尔值真。",
+                "常用于条件判断、逻辑运算。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-false": {
+            "title": "C# 关键字：false",
+            "notes": [
+                "false 表示布尔值假。",
+                "常用于条件判断、逻辑运算。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-operator": {
+            "title": "C# 关键字：operator",
+            "notes": [
+                "operator 用于重载运算符，自定义类型的行为。",
+                "常见重载：+、-、==、!=、implicit、explicit 等。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-implicit": {
+            "title": "C# 关键字：implicit",
+            "notes": [
+                "implicit 定义隐式类型转换；自动执行无需显式转换。",
+                "注意避免意外的隐式转换导致错误。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-explicit": {
+            "title": "C# 关键字：explicit",
+            "notes": [
+                "explicit 定义显式类型转换；需要强制转换语法。",
+                "比 implicit 更安全，避免意外转换。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-event": {
+            "title": "C# 关键字：event",
+            "notes": [
+                "event 声明事件；基于委托的发布-订阅模式。",
+                "tModLoader 中用于 hook 系统、事件通知。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-delegate": {
+            "title": "C# 关键字：delegate",
+            "notes": [
+                "delegate 定义委托类型；引用方法的类型安全指针。",
+                "常用于回调、事件处理、LINQ 等。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-lambda": {
+            "title": "C# 特性：Lambda 表达式",
+            "notes": [
+                "Lambda 表达式创建匿名方法；语法简洁。",
+                "常用于 LINQ、事件处理、回调等场景。",
+                "语法：参数 => 表达式 或 (参数) => { 语句块 }"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-linq": {
+            "title": "C# 特性：LINQ",
+            "notes": [
+                "LINQ（Language Integrated Query）提供统一的数据查询语法。",
+                "支持查询内存集合、数据库、XML 等数据源。",
+                "常用方法：Where、Select、OrderBy、GroupBy、First 等。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-generic": {
+            "title": "C# 特性：泛型",
+            "notes": [
+                "泛型允许类型参数化，提高代码复用性和类型安全。",
+                "常见泛型：List<T>、Dictionary<TKey,TValue>、IEnumerable<T> 等。",
+                "可以定义泛型类、方法、接口、委托。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-property": {
+            "title": "C# 特性：属性",
+            "notes": [
+                "Property 提供灵活的字段访问机制，可包含逻辑。",
+                "语法：public int Value { get; set; } 或带逻辑的 get/set。",
+                "比公共字段更安全，支持数据验证、延迟加载等。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-indexer": {
+            "title": "C# 特性：索引器",
+            "notes": [
+                "Indexer 允许对象像数组一样通过索引访问。",
+                "语法：public T this[int index] { get; set; }",
+                "常见于集合类型，如 List、Dictionary。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-extension": {
+            "title": "C# 特性：扩展方法",
+            "notes": [
+                "Extension Method 为现有类型添加方法，无需修改原类型。",
+                "定义在静态类中，第一个参数用 this 修饰。",
+                "常用于为系统类型添加实用方法。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-nullable": {
+            "title": "C# 特性：可空类型",
+            "notes": [
+                "Nullable<T> 或 T? 允许值类型为 null。",
+                "语法：int? x = null; 等价于 Nullable<int> x = null;",
+                "常用于数据库映射、可选参数等场景。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-string-interpolation": {
+            "title": "C# 特性：字符串插值",
+            "notes": [
+                "String Interpolation 简化字符串格式化。",
+                "语法：$\"Hello, {name}\" 等价于 string.Format(\"Hello, {0}\", name)。",
+                "支持表达式、格式化、对齐等高级用法。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-pattern-matching": {
+            "title": "C# 特性：模式匹配",
+            "notes": [
+                "Pattern Matching 提供更简洁的类型检查和转换语法。",
+                "常见模式：is 模式、switch 模式、属性模式等。",
+                "示例：if (obj is string s) { /* 使用 s */ }"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-tuple": {
+            "title": "C# 特性：元组",
+            "notes": [
+                "Tuple 轻量级数据结构，用于临时组合多个值。",
+                "语法：(string name, int age) person = (\"Alice\", 30);",
+                "支持解构、命名元素，简化多返回值场景。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-keyword-record": {
+            "title": "C# 特性：record",
+            "notes": [
+                "record 定义不可变数据类型，自动实现值语义。",
+                "语法：public record Person(string Name, int Age);",
+                "自动生成构造函数、属性、Equals、GetHashCode 等。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-int": {
+            "title": "C# 类型：int",
+            "notes": [
+                "int 是 32 位有符号整数；范围约 -21 亿到 21 亿。",
+                "最常用的整数类型，适合大多数计数场景。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-float": {
+            "title": "C# 类型：float",
+            "notes": [
+                "float 是 32 位单精度浮点数；精度约 7 位数字。",
+                "适合需要小数但精度要求不高的场景。",
+                "字面量后缀：f 或 F，如 3.14f。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-double": {
+            "title": "C# 类型：double",
+            "notes": [
+                "double 是 64 位双精度浮点数；精度约 15 位数字。",
+                "默认浮点类型，适合大多数小数计算。",
+                "字面量后缀：d 或 D（可选），如 3.14。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-string": {
+            "title": "C# 类型：string",
+            "notes": [
+                "string 是不可变的 Unicode 字符序列。",
+                "常用方法：Contains、StartsWith、EndsWith、Split、Replace 等。",
+                "字符串拼接建议用 StringBuilder 或字符串插值。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-bool": {
+            "title": "C# 类型：bool",
+            "notes": [
+                "bool 是布尔类型，只有 true 和 false 两个值。",
+                "用于条件判断、逻辑运算、状态标记等。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-list": {
+            "title": "C# 类型：List<T>",
+            "notes": [
+                "List<T> 是动态数组，支持快速随机访问和添加。",
+                "常用方法：Add、Remove、Contains、IndexOf、Sort 等。",
+                "适合元素数量变化频繁的场景。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-dictionary": {
+            "title": "C# 类型：Dictionary<TKey,TValue>",
+            "notes": [
+                "Dictionary<TKey,TValue> 是键值对集合，基于哈希表。",
+                "常用方法：Add、Remove、ContainsKey、TryGetValue 等。",
+                "适合快速查找、键值映射的场景。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-array": {
+            "title": "C# 类型：数组",
+            "notes": [
+                "Array 是固定大小的同类型元素集合。",
+                "语法：int[] arr = new int[5]; 或 int[] arr = {1, 2, 3};",
+                "支持多维数组和交错数组。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-operator-equals": {
+            "title": "C# 运算符：==",
+            "notes": [
+                "== 相等运算符；比较值是否相等。",
+                "引用类型默认比较引用，可重载实现值比较。",
+                "注意区分 == 和 Equals()。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-operator-notequals": {
+            "title": "C# 运算符：!=",
+            "notes": [
+                "!= 不等运算符；比较值是否不相等。",
+                "是 == 的反义运算符。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-operator-and": {
+            "title": "C# 运算符：&&",
+            "notes": [
+                "&& 逻辑与运算符；两边都为 true 时结果为 true。",
+                "短路求值：左边为 false 时右边不执行。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-operator-or": {
+            "title": "C# 运算符：||",
+            "notes": [
+                "|| 逻辑或运算符；任意一边为 true 时结果为 true。",
+                "短路求值：左边为 true 时右边不执行。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-operator-not": {
+            "title": "C# 运算符：!",
+            "notes": [
+                "! 逻辑非运算符；反转布尔值。",
+                "true 变 false，false 变 true。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-operator-nullcoalescing": {
+            "title": "C# 运算符：??",
+            "notes": [
+                "?? 空合并运算符；左边为 null 时返回右边。",
+                "示例：string name = input ?? \"Default\";",
+                "简化 null 检查和默认值设置。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-operator-nullconditional": {
+            "title": "C# 运算符：?.",
+            "notes": [
+                "?. 空条件运算符；左边为 null 时返回 null 而不抛异常。",
+                "示例：int? length = person?.Address?.Street?.Length;",
+                "链式调用时避免 NullReferenceException。"
+            ],
+            "collections": [
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-terraria-player-addbuff": {
+            "title": "Player.AddBuff(...)",
+            "notes": [
+                "（自动生成占位）后续可补充：用途、常见场景、注意事项。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-terraria-player-healeffect": {
+            "title": "Player.HealEffect(...)",
+            "notes": [
+                "（自动生成占位）后续可补充：用途、常见场景、注意事项。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-terraria-player-hurt": {
+            "title": "Player.Hurt(...)",
+            "notes": [
+                "（自动生成占位）后续可补充：用途、常见场景、注意事项。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-terraria-player-killme": {
+            "title": "Player.KillMe(...)",
+            "notes": [
+                "（自动生成占位）后续可补充：用途、常见场景、注意事项。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-terraria-npc-addbuff": {
+            "title": "NPC.AddBuff(...)",
+            "notes": [
+                "（自动生成占位）后续可补充：用途、常见场景、注意事项。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-terraria-npc-strikenpc": {
+            "title": "NPC.StrikeNPC(...)",
+            "notes": [
+                "（自动生成占位）后续可补充：用途、常见场景、注意事项。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-terraria-npc-targetclosest": {
+            "title": "NPC.TargetClosest(...)",
+            "notes": [
+                "（自动生成占位）后续可补充：用途、常见场景、注意事项。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-terraria-npc-anynpcs": {
+            "title": "NPC.AnyNPCs(...)",
+            "notes": [
+                "（自动生成占位）后续可补充：用途、常见场景、注意事项。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-terraria-main-newtext": {
+            "title": "Main.NewText(...)",
+            "notes": [
+                "（自动生成占位）后续可补充：用途、常见场景、注意事项。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 1
+                }
+            ]
+        }
+    }
+}

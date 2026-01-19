@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="../assets/css/style.css"> <!-- 主样式文件 -->
     <link rel="stylesheet" href="../assets/css/prism.min.css"> <!-- 代码高亮样式 -->
     <link rel="stylesheet" href="../assets/css/rider-dark-theme.css"> <!-- Rider Dark代码高亮主题 -->
+    <link rel="stylesheet" href="../assets/css/knowledge-cards.css"> <!-- 浮动知识卡牌 -->
     <link rel="icon" type="image/png" href="../assets/imgs/Green_tModLoader.png"> <!-- 网站图标 -->
 
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
@@ -253,6 +254,8 @@
 			    <script src="../assets/js/site-quiz.js"></script> <!-- Quiz 题目渲染 -->
 			    <script src="../assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
 			    <script src="../assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
+                <script src="../assets/js/knowledge-core.js"></script> <!-- 知识卡牌：核心逻辑 -->
+                <script src="../assets/js/knowledge-cards.js"></script> <!-- 知识卡牌：UI -->
     <script>
         // Mermaid 兜底加载：如果本地资源缺失/加载失败，则尝试从 CDN 加载（不影响已有本地加载）
         (function ensureMermaidLoaded() {
@@ -676,7 +679,10 @@
 		                            code = code.text || code.raw || '';
 		                        }
 
-		                        const language = String(lang || '').trim().toLowerCase();
+		                        let language = String(lang || '').trim().toLowerCase();
+		                        if (language === 'c#' || language === 'cs' || language === 'dotnet') {
+		                            language = 'csharp';
+		                        }
 		                        const safeCode = escapeHtml(code || '');
 
 		                        if (language === 'mermaid') {
@@ -694,8 +700,12 @@
 	                marked.setOptions({
 	                    renderer: renderer || undefined,
 	                    highlight: function (code, lang) {
-	                        if (typeof Prism !== 'undefined' && lang && Prism.languages[lang]) {
-	                            return Prism.highlight(code, Prism.languages[lang], lang);
+	                        let language = String(lang || '').trim().toLowerCase();
+	                        if (language === 'c#' || language === 'cs' || language === 'dotnet') {
+	                            language = 'csharp';
+	                        }
+	                        if (typeof Prism !== 'undefined' && language && Prism.languages[language]) {
+	                            return Prism.highlight(code, Prism.languages[language], language);
 	                        }
 	                        return code;
 	                    },
@@ -1299,6 +1309,10 @@
 	            const errorMessage = document.getElementById('error-message');
 	            const markdownContent = document.getElementById('markdown-content');
 
+                if (window.KnowledgeCards && typeof window.KnowledgeCards.reset === 'function') {
+                    window.KnowledgeCards.reset();
+                }
+
                 if (loadingIndicator) {
                     loadingIndicator.style.display = 'block';
                     loadingIndicator.setAttribute('aria-busy', 'true');
@@ -1515,8 +1529,14 @@
 	                        if (typeof Prism !== 'undefined') {
 	                            console.log('应用代码高亮');
 	                            Prism.highlightAllUnder(markdownContent);
+                                document.dispatchEvent(new CustomEvent('viewer:content-ready', {
+                                    detail: { container: markdownContent }
+                                }));
                         } else {
                             console.warn('Prism.js未加载，跳过代码高亮');
+                            document.dispatchEvent(new CustomEvent('viewer:content-ready', {
+                                detail: { container: markdownContent }
+                            }));
                         }
 
                         // 自动生成文档目录

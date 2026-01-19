@@ -1,0 +1,135 @@
+{
+    "schemaVersion": 1,
+    "collections": {
+        "tmodloader-vanilla-methods": {
+            "label": "原版 API 常用方法",
+            "items": [
+                {
+                    "path": "螺线翻译tml教程/原版代码文档/Useful-Vanilla-Methods 实用原版函数.md",
+                    "title": "Useful-Vanilla-Methods 实用原版函数",
+                    "keywords": ["vanilla", "api", "player", "npc", "main", "addbuff", "newtext"],
+                    "aliases": ["实用原版函数", "Useful Vanilla Methods"],
+                    "weight": 6
+                },
+                {
+                    "path": "螺线翻译tml教程/原版代码文档/杂项/NPC-Class-Documentation NPC类 文档.md",
+                    "title": "NPC-Class-Documentation NPC类 文档",
+                    "keywords": ["vanilla", "npc", "api", "fields", "properties", "methods"],
+                    "aliases": ["NPC 类 文档"],
+                    "weight": 5
+                },
+                {
+                    "path": "螺线翻译tml教程/tModLoader文档/Terraria.Player.Update()-Execution-Order Player更新函数执行顺序.md",
+                    "title": "Terraria.Player.Update() - 执行顺序",
+                    "keywords": ["player", "update", "order", "vanilla", "api"],
+                    "aliases": ["Player 更新顺序"],
+                    "weight": 4
+                }
+            ]
+        },
+        "tmodloader-npc-basics": {
+            "label": "NPC / AI 与生成",
+            "items": [
+                {
+                    "path": "Modder入门/DPapyru-第一个NPC.md",
+                    "title": "第一个NPC",
+                    "keywords": ["npc", "modnpc", "ai", "main.newtext"],
+                    "aliases": ["First NPC"],
+                    "weight": 6
+                },
+                {
+                    "path": "螺线翻译tml教程/1-基础/8-Basic-NPC 基础-NPC.md",
+                    "title": "基础 - NPC",
+                    "keywords": ["npc", "modnpc", "ai"],
+                    "aliases": ["Basic NPC"],
+                    "weight": 4
+                },
+                {
+                    "path": "螺线翻译tml教程/1-基础/10-Basic-NPC-Spawning 基础-NPC生成.md",
+                    "title": "基础 - NPC 生成",
+                    "keywords": ["npc", "spawn", "spawning"],
+                    "aliases": ["NPC 生成"],
+                    "weight": 4
+                },
+                {
+                    "path": "螺线翻译tml教程/2-中阶/2-Intermediate-Guide-to-AI 中阶-AI编写指引.md",
+                    "title": "中阶 - AI 编写指引",
+                    "keywords": ["ai", "npc", "projectile", "onhitplayer", "modifyhitplayer", "addbuff"],
+                    "aliases": ["Intermediate AI Guide"],
+                    "weight": 5
+                }
+            ]
+        },
+        "tmodloader-modplayer-hooks": {
+            "label": "ModPlayer / Hooks",
+            "items": [
+                {
+                    "path": "螺线翻译tml教程/杂项/ModPlayer ModPlayer类.md",
+                    "title": "ModPlayer 类",
+                    "keywords": ["modplayer", "hooks", "override", "player"],
+                    "aliases": ["ModPlayer"],
+                    "weight": 5
+                }
+            ]
+        },
+        "dev-tooling": {
+            "label": "开发工具与调试",
+            "items": [
+                {
+                    "path": "螺线翻译tml教程/0-开始/4-Why-Use-an-IDE 为什么使用IDE开发.md",
+                    "title": "为什么使用 IDE 开发",
+                    "keywords": ["ide", "intellisense", "debug", "addbuff"],
+                    "aliases": ["Why Use an IDE"],
+                    "weight": 3
+                },
+                {
+                    "path": "螺线翻译tml教程/概念了解/Reflection 反射.md",
+                    "title": "Reflection 反射",
+                    "keywords": ["reflection", "api", "main.newtext"],
+                    "aliases": ["反射"],
+                    "weight": 3
+                },
+                {
+                    "path": "螺线翻译tml教程/杂项/Debugging-Multiplayer-Usage-Issues 多人模式常见问题.md",
+                    "title": "多人模式常见问题",
+                    "keywords": ["debug", "multiplayer", "net", "sync"],
+                    "aliases": ["Debugging Multiplayer"],
+                    "weight": 2
+                },
+                {
+                    "url": "https://github.com/tModLoader/tModLoader/wiki",
+                    "title": "tModLoader Wiki",
+                    "keywords": ["tmodloader", "wiki", "api"],
+                    "aliases": ["tML Wiki"],
+                    "weight": 1
+                }
+            ]
+        },
+        "csharp-basics": {
+            "label": "C# 基础与关键字",
+            "items": [
+                {
+                    "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/",
+                    "title": "C# 关键字参考（Microsoft Learn）",
+                    "keywords": ["csharp", "keyword", "public", "private", "protected", "internal", "static", "override", "virtual", "abstract", "sealed"],
+                    "aliases": ["C# keywords"],
+                    "weight": 3
+                },
+                {
+                    "url": "https://learn.microsoft.com/dotnet/csharp/programming-guide/classes-and-structs/",
+                    "title": "类与结构（Microsoft Learn）",
+                    "keywords": ["csharp", "class", "struct", "method", "field", "property"],
+                    "aliases": ["classes and structs"],
+                    "weight": 2
+                },
+                {
+                    "url": "https://learn.microsoft.com/dotnet/csharp/language-reference/keywords/override",
+                    "title": "override（Microsoft Learn）",
+                    "keywords": ["override", "virtual", "abstract"],
+                    "aliases": ["override keyword"],
+                    "weight": 2
+                }
+            ]
+        }
+    }
+}

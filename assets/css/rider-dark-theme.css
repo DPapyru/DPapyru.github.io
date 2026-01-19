@@ -12,9 +12,13 @@
     --rider-code-keyword: #6178FF;
     --rider-code-string: #FF9D70;
     --rider-code-number: #ED94C0;
+    --rider-code-punctuation: #A7B0BE;
+    --rider-code-operator: #B6C2FF;
     --rider-code-function: #39CC9B;
     --rider-code-class: #FFED19;
     --rider-code-namespace: #C191FF;
+    --rider-code-parameter: #F2C77D;
+    --rider-code-preprocessor: #FF7CCB;
     --rider-code-attr-name: #85C46C;
     --rider-code-attr-value: #C9A26D;
     --rider-code-entity: #FFD49E;
@@ -73,10 +77,8 @@ code[class*="language-"] ::selection {
 }
 
 /* Punctuation / operators */
-.token.punctuation,
-.token.operator {
-    color: var(--rider-code-fg) !important;
-}
+.token.punctuation { color: var(--rider-code-punctuation) !important; }
+.token.operator { color: var(--rider-code-operator) !important; }
 
 /* Prism 默认主题会给 operator/entity/url 加浅色背景；深色主题下会变成“方块”效果 */
 .token.operator,
@@ -107,6 +109,11 @@ code[class*="language-"] ::selection {
 .token.method,
 .token.selector {
     color: var(--rider-code-function) !important;
+}
+
+/* Parameters */
+.token.parameter {
+    color: var(--rider-code-parameter) !important;
 }
 
 /* Class / types */
@@ -149,6 +156,14 @@ code[class*="language-"] ::selection {
 /* Entities */
 .token.entity {
     color: var(--rider-code-entity) !important;
+}
+
+/* Preprocessor / directives (Prism token names vary by language) */
+.token.directive,
+.token.preprocessor,
+.token.macro,
+.token.pragma {
+    color: var(--rider-code-preprocessor) !important;
 }
 
 /* Regex / escapes */

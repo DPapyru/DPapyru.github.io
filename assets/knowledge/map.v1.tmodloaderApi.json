@@ -1,0 +1,79 @@
+{
+    "tmodloaderApi": {
+        "indexPath": "assets/knowledge/tmodloader-api-index.v1.json",
+        "routes": [
+            {
+                "declaringType": "Terraria.Player",
+                "memberKind": "method",
+                "name": "AddBuff",
+                "conceptId": "api-player-addbuff"
+            },
+            {
+                "declaringType": "Terraria.Main",
+                "memberKind": "method",
+                "name": "NewText",
+                "conceptId": "api-main-newtext"
+            },
+            {
+                "declaringType": "Terraria.Main",
+                "memberKind": "method",
+                "name": "GetMoonPhase",
+                "conceptId": "api-main-getmoonphase"
+            },
+            {
+                "declaringType": "Terraria.Main",
+                "memberKind": "method",
+                "name": "QuickSpawnItem",
+                "conceptId": "api-main-quickspawnitem"
+            },
+            {
+                "declaringType": "Terraria.Main",
+                "memberKind": "method",
+                "name": "SpawnNPC",
+                "conceptId": "api-main-spawnnpc"
+            },
+            {
+                "declaringType": "Terraria.Player",
+                "memberKind": "method",
+                "name": "HealEffect",
+                "conceptId": "api-terraria-player-healeffect"
+            },
+            {
+                "declaringType": "Terraria.Player",
+                "memberKind": "method",
+                "name": "Hurt",
+                "conceptId": "api-terraria-player-hurt"
+            },
+            {
+                "declaringType": "Terraria.Player",
+                "memberKind": "method",
+                "name": "KillMe",
+                "conceptId": "api-terraria-player-killme"
+            },
+            {
+                "declaringType": "Terraria.NPC",
+                "memberKind": "method",
+                "name": "AddBuff",
+                "conceptId": "api-terraria-npc-addbuff"
+            },
+            {
+                "declaringType": "Terraria.NPC",
+                "memberKind": "method",
+                "name": "StrikeNPC",
+                "conceptId": "api-terraria-npc-strikenpc"
+            },
+            {
+                "declaringType": "Terraria.NPC",
+                "memberKind": "method",
+                "name": "TargetClosest",
+                "conceptId": "api-terraria-npc-targetclosest"
+            },
+            {
+                "declaringType": "Terraria.NPC",
+                "memberKind": "method",
+                "name": "AnyNPCs",
+                "conceptId": "api-terraria-npc-anynpcs"
+            }
+        ]
+    }
+}
