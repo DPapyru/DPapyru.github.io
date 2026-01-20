@@ -235,6 +235,75 @@ function inferDeclaringTypeHintFromReceiverText(receiverText) {
     return null;
 }
 
+const MODLOADER_SHORT_TYPE_MAP = {
+    'mod': 'Terraria.ModLoader.Mod',
+    'moditem': 'Terraria.ModLoader.ModItem',
+    'modprojectile': 'Terraria.ModLoader.ModProjectile',
+    'modnpc': 'Terraria.ModLoader.ModNPC',
+    'modtile': 'Terraria.ModLoader.ModTile',
+    'modplayer': 'Terraria.ModLoader.ModPlayer',
+    'modsystem': 'Terraria.ModLoader.ModSystem'
+};
+
+function inferDeclaringTypeHintFromTypeText(typeText) {
+    const raw = String(typeText || '').trim();
+    if (!raw) return null;
+
+    const normalized = raw.replace(/\s+/g, '');
+    const lower = normalized.toLowerCase();
+    if (MODLOADER_SHORT_TYPE_MAP[lower]) return MODLOADER_SHORT_TYPE_MAP[lower];
+    if (normalized.startsWith('Terraria.ModLoader.')) return normalized;
+    return null;
+}
+
+function findNamedChildOfType(node, type) {
+    if (!node || !type) return null;
+    if (!Array.isArray(node.namedChildren)) return null;
+    for (let i = 0; i < node.namedChildren.length; i++) {
+        const child = node.namedChildren[i];
+        if (child && child.type === type) return child;
+    }
+    return null;
+}
+
+function inferDeclaringTypeFromContainingType(methodNode, source) {
+    const typeNode = findAncestorOfType(methodNode, 'class_declaration', 120)
+        || findAncestorOfType(methodNode, 'struct_declaration', 120)
+        || findAncestorOfType(methodNode, 'record_declaration', 120);
+    if (!typeNode) return null;
+
+    const baseList = findNamedChildOfType(typeNode, 'base_list');
+    if (!baseList || !Array.isArray(baseList.namedChildren)) return null;
+
+    for (let i = 0; i < baseList.namedChildren.length; i++) {
+        const baseTypeNode = baseList.namedChildren[i];
+        const baseText = sliceNodeText(source, baseTypeNode).trim();
+        const declaringType = inferDeclaringTypeHintFromTypeText(baseText);
+        if (declaringType) return declaringType;
+    }
+
+    return null;
+}
+
+function extractApiRouteFromMethodDeclaration(node, source) {
+    const methodNode = findAncestorOfType(node, 'method_declaration', 120);
+    if (!methodNode || typeof methodNode.childForFieldName !== 'function') return null;
+    const nameNode = methodNode.childForFieldName('name');
+    if (!nameNode) return null;
+    const methodName = sliceNodeText(source, nameNode).trim();
+    if (!methodName) return null;
+
+    const declaringType = inferDeclaringTypeFromContainingType(methodNode, source);
+    if (!declaringType) return null;
+
+    return {
+        declaringType,
+        memberKind: 'method',
+        name: methodName,
+        argc: null
+    };
+}
+
 function extractApiRouteFromInvocation(invocationNode, source) {
     if (!invocationNode || typeof invocationNode.childForFieldName !== 'function') return null;
     const fn = invocationNode.childForFieldName('function');
@@ -530,16 +599,25 @@ self.onmessage = async function (event) {
                                                 apiRoute = extractApiRouteFromElementAccess(elementAccess, candidate.source);
                                                 queryText = 'indexer';
                                                 syntax = { kind: 'elementAccess' };
-                                            } else if (findArrayishAncestor(node)) {
-                                                queryText = 'array';
-                                                syntax = { kind: 'array' };
-                                            }
-                                        }
+                                    } else if (findArrayishAncestor(node)) {
+                                        queryText = 'array';
+                                        syntax = { kind: 'array' };
                                     }
+                                }
+                            }
+
+                            if (!apiRoute) {
+                                const declRoute = extractApiRouteFromMethodDeclaration(node, candidate.source);
+                                if (declRoute && declRoute.declaringType && declRoute.name) {
+                                    apiRoute = declRoute;
+                                    queryText = declRoute.name;
+                                    syntax = { kind: 'declaration', name: declRoute.name };
                                 }
                             }
                         }
                     }
+                }
+            }
                 }
             }
 

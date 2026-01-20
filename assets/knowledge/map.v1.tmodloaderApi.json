@@ -73,6 +73,216 @@
                 "memberKind": "method",
                 "name": "AnyNPCs",
                 "conceptId": "api-terraria-npc-anynpcs"
+            },
+            {
+                "declaringType": "Terraria.Main",
+                "memberKind": "method",
+                "name": "ToggleGameplayUpdates",
+                "conceptId": "api-main-togglegameplayupdates"
+            },
+            {
+                "declaringType": "Terraria.Main",
+                "memberKind": "method",
+                "name": "RunOnMainThread",
+                "conceptId": "api-main-runonmainthread"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.Mod",
+                "memberKind": "method",
+                "name": "Call",
+                "conceptId": "api-modloader-mod-call"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.Mod",
+                "memberKind": "method",
+                "name": "Load",
+                "conceptId": "api-modloader-mod-load"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.Mod",
+                "memberKind": "method",
+                "name": "Unload",
+                "conceptId": "api-modloader-mod-unload"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.Mod",
+                "memberKind": "method",
+                "name": "AddRecipes",
+                "conceptId": "api-modloader-mod-addrecipes"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.Mod",
+                "memberKind": "method",
+                "name": "HandlePacket",
+                "conceptId": "api-modloader-mod-handlepacket"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModItem",
+                "memberKind": "method",
+                "name": "SetDefaults",
+                "conceptId": "api-modloader-moditem-setdefaults"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModItem",
+                "memberKind": "method",
+                "name": "CreateRecipe",
+                "conceptId": "api-modloader-moditem-createrecipe"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModItem",
+                "memberKind": "method",
+                "name": "CanShoot",
+                "conceptId": "api-modloader-moditem-canshoot"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModItem",
+                "memberKind": "method",
+                "name": "ModifyShootStats",
+                "conceptId": "api-modloader-moditem-modifyshootstats"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModItem",
+                "memberKind": "method",
+                "name": "SafeSetDefaults",
+                "conceptId": "api-modloader-moditem-safesetdefaults"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModItem",
+                "memberKind": "method",
+                "name": "SetStaticDefaults",
+                "conceptId": "api-modloader-moditem-setstaticdefaults"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModItem",
+                "memberKind": "method",
+                "name": "AutoDefaults",
+                "conceptId": "api-modloader-moditem-autodefaults"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModItem",
+                "memberKind": "method",
+                "name": "UseItem",
+                "conceptId": "api-modloader-moditem-useitem"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModItem",
+                "memberKind": "method",
+                "name": "HoldItem",
+                "conceptId": "api-modloader-moditem-holditem"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModProjectile",
+                "memberKind": "method",
+                "name": "SetDefaults",
+                "conceptId": "api-modloader-modprojectile-setdefaults"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModProjectile",
+                "memberKind": "method",
+                "name": "AI",
+                "conceptId": "api-modloader-modprojectile-ai"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModProjectile",
+                "memberKind": "method",
+                "name": "SetStaticDefaults",
+                "conceptId": "api-modloader-modprojectile-setstaticdefaults"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModTile",
+                "memberKind": "method",
+                "name": "SetStaticDefaults",
+                "conceptId": "api-modloader-modtile-setstaticdefaults"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModTile",
+                "memberKind": "method",
+                "name": "AddMapEntry",
+                "conceptId": "api-modloader-modtile-addmapentry"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModTile",
+                "memberKind": "method",
+                "name": "CreateMapEntryName",
+                "conceptId": "api-modloader-modtile-createmapentryname"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModTile",
+                "memberKind": "method",
+                "name": "NumDust",
+                "conceptId": "api-modloader-modtile-numdust"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModNPC",
+                "memberKind": "method",
+                "name": "SetDefaults",
+                "conceptId": "api-modloader-modnpc-setdefaults"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModNPC",
+                "memberKind": "method",
+                "name": "SetStaticDefaults",
+                "conceptId": "api-modloader-modnpc-setstaticdefaults"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModNPC",
+                "memberKind": "method",
+                "name": "AI",
+                "conceptId": "api-modloader-modnpc-ai"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModNPC",
+                "memberKind": "method",
+                "name": "CanTownNPCSpawn",
+                "conceptId": "api-modloader-modnpc-cantownnpcspawn"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModNPC",
+                "memberKind": "method",
+                "name": "TownNPCName",
+                "conceptId": "api-modloader-modnpc-townnpcname"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModNPC",
+                "memberKind": "method",
+                "name": "FindFrame",
+                "conceptId": "api-modloader-modnpc-findframe"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModNPC",
+                "memberKind": "method",
+                "name": "SetupShop",
+                "conceptId": "api-modloader-modnpc-setupshop"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModNPC",
+                "memberKind": "method",
+                "name": "GetChat",
+                "conceptId": "api-modloader-modnpc-getchat"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModNPC",
+                "memberKind": "method",
+                "name": "SetChatButtons",
+                "conceptId": "api-modloader-modnpc-setchatbuttons"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.ModNPC",
+                "memberKind": "method",
+                "name": "OnChatButtonClicked",
+                "conceptId": "api-modloader-modnpc-onchatbuttonclicked"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.Mod",
+                "memberKind": "method",
+                "name": "AddRecipe",
+                "conceptId": "api-modloader-mod-addrecipe"
+            },
+            {
+                "declaringType": "Terraria.ModLoader.Mod",
+                "memberKind": "method",
+                "name": "AddRecipeGroup",
+                "conceptId": "api-modloader-mod-addrecipegroup"
             }
         ]
     }
