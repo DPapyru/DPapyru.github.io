@@ -1274,6 +1274,308 @@
 	        const TRANSCLUSION_MAX_FILES = 30;
 	        const TRANSCLUSION_CACHE = new Map();
 
+	        function clampLearningLevel(value) {
+	            const n = Number.parseInt(value, 10);
+	            if (!Number.isFinite(n)) return 0;
+	            return Math.max(0, Math.min(2, n));
+	        }
+
+	        function getLearningConditionContext() {
+	            try {
+	                const raw = window.localStorage.getItem('learningProfile');
+	                if (!raw) return { C: 0, T: 0 };
+	                const parsed = JSON.parse(raw);
+	                if (!parsed || typeof parsed !== 'object') return { C: 0, T: 0 };
+	                return {
+	                    C: clampLearningLevel(parsed.c),
+	                    T: clampLearningLevel(parsed.t)
+	                };
+	            } catch (e) {
+	                return { C: 0, T: 0 };
+	            }
+	        }
+
+	        function tokenizeLearningCondition(expr) {
+	            const s = String(expr || '');
+	            const tokens = [];
+	            let i = 0;
+
+	            function isWs(ch) {
+	                return ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r';
+	            }
+
+	            while (i < s.length) {
+	                const ch = s[i];
+	                if (isWs(ch)) {
+	                    i += 1;
+	                    continue;
+	                }
+
+	                const two = s.slice(i, i + 2);
+	                if (two === '&&' || two === '||' || two === '>=' || two === '<=' || two === '==' || two === '!=') {
+	                    tokens.push({ type: 'op', value: two });
+	                    i += 2;
+	                    continue;
+	                }
+
+	                if (ch === '>' || ch === '<' || ch === '!' || ch === '(' || ch === ')') {
+	                    if (ch === '(' || ch === ')') {
+	                        tokens.push({ type: 'paren', value: ch });
+	                    } else {
+	                        tokens.push({ type: 'op', value: ch });
+	                    }
+	                    i += 1;
+	                    continue;
+	                }
+
+	                if (ch >= '0' && ch <= '9') {
+	                    let j = i + 1;
+	                    while (j < s.length && s[j] >= '0' && s[j] <= '9') j += 1;
+	                    tokens.push({ type: 'num', value: Number.parseInt(s.slice(i, j), 10) });
+	                    i = j;
+	                    continue;
+	                }
+
+	                if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch === '_') {
+	                    let j = i + 1;
+	                    while (j < s.length) {
+	                        const cj = s[j];
+	                        const ok =
+	                            (cj >= 'A' && cj <= 'Z') ||
+	                            (cj >= 'a' && cj <= 'z') ||
+	                            (cj >= '0' && cj <= '9') ||
+	                            cj === '_';
+	                        if (!ok) break;
+	                        j += 1;
+	                    }
+	                    const ident = s.slice(i, j);
+	                    tokens.push({ type: 'id', value: ident });
+	                    i = j;
+	                    continue;
+	                }
+
+	                throw new Error('无法识别的字符: ' + ch);
+	            }
+
+	            return tokens;
+	        }
+
+	        function evaluateLearningCondition(expr, ctx) {
+	            const tokens = tokenizeLearningCondition(expr);
+	            const output = [];
+	            const ops = [];
+
+	            function precedence(op) {
+	                if (op === '!') return 4;
+	                if (op === '>' || op === '<' || op === '>=' || op === '<=' || op === '==' || op === '!=') return 3;
+	                if (op === '&&') return 2;
+	                if (op === '||') return 1;
+	                return 0;
+	            }
+
+	            function isRightAssociative(op) {
+	                return op === '!';
+	            }
+
+	            tokens.forEach(function (t) {
+	                if (t.type === 'num' || t.type === 'id') {
+	                    output.push(t);
+	                    return;
+	                }
+	                if (t.type === 'paren') {
+	                    if (t.value === '(') {
+	                        ops.push(t);
+	                        return;
+	                    }
+	                    while (ops.length && ops[ops.length - 1].type !== 'paren') {
+	                        output.push(ops.pop());
+	                    }
+	                    if (!ops.length) throw new Error('括号不匹配');
+	                    ops.pop();
+	                    return;
+	                }
+	                if (t.type === 'op') {
+	                    while (ops.length) {
+	                        const top = ops[ops.length - 1];
+	                        if (top.type !== 'op') break;
+	                        const p1 = precedence(t.value);
+	                        const p2 = precedence(top.value);
+	                        const shouldPop = isRightAssociative(t.value) ? (p1 < p2) : (p1 <= p2);
+	                        if (!shouldPop) break;
+	                        output.push(ops.pop());
+	                    }
+	                    ops.push(t);
+	                    return;
+	                }
+	            });
+
+	            while (ops.length) {
+	                const op = ops.pop();
+	                if (op.type === 'paren') throw new Error('括号不匹配');
+	                output.push(op);
+	            }
+
+	            const stack = [];
+	            function toBool(v) { return Boolean(v); }
+	            function toNum(v) { return typeof v === 'number' ? v : (toBool(v) ? 1 : 0); }
+
+	            output.forEach(function (t) {
+	                if (t.type === 'num') {
+	                    stack.push(t.value);
+	                    return;
+	                }
+	                if (t.type === 'id') {
+	                    const id = String(t.value || '').trim().toUpperCase();
+	                    if (id === 'C') stack.push(Number(ctx && ctx.C != null ? ctx.C : 0));
+	                    else if (id === 'T') stack.push(Number(ctx && ctx.T != null ? ctx.T : 0));
+	                    else throw new Error('未知变量: ' + t.value);
+	                    return;
+	                }
+	                if (t.type === 'op') {
+	                    const op = t.value;
+	                    if (op === '!') {
+	                        if (stack.length < 1) throw new Error('表达式缺少操作数');
+	                        const a = stack.pop();
+	                        stack.push(!toBool(a));
+	                        return;
+	                    }
+	                    if (stack.length < 2) throw new Error('表达式缺少操作数');
+	                    const b = stack.pop();
+	                    const a = stack.pop();
+	                    if (op === '&&') stack.push(toBool(a) && toBool(b));
+	                    else if (op === '||') stack.push(toBool(a) || toBool(b));
+	                    else if (op === '>') stack.push(toNum(a) > toNum(b));
+	                    else if (op === '<') stack.push(toNum(a) < toNum(b));
+	                    else if (op === '>=') stack.push(toNum(a) >= toNum(b));
+	                    else if (op === '<=') stack.push(toNum(a) <= toNum(b));
+	                    else if (op === '==') stack.push(toNum(a) === toNum(b));
+	                    else if (op === '!=') stack.push(toNum(a) !== toNum(b));
+	                    else throw new Error('未知操作符: ' + op);
+	                    return;
+	                }
+	            });
+
+	            if (stack.length !== 1) throw new Error('表达式解析失败');
+	            return Boolean(stack[0]);
+	        }
+
+	        function applyLearningConditionBlocks(markdown, ctx) {
+	            const lines = String(markdown || '').split('\n');
+	            const out = [];
+	            const stack = [];
+	            const IF_RE = /^\s*\{if\s+(.+?)\}\s*$/;
+	            const ELSEIF_RE = /^\s*\{else\s+if\s+(.+?)\}\s*$/;
+	            const ELSE_RE = /^\s*\{else\}\s*$/;
+	            const END_RE = /^\s*\{end\}\s*$/;
+
+	            let inFence = false;
+	            let fenceChar = '';
+
+	            function currentActive() {
+	                if (!stack.length) return true;
+	                return Boolean(stack[stack.length - 1].active);
+	            }
+
+	            for (let i = 0; i < lines.length; i++) {
+	                const line = lines[i];
+	                const fenceMatch = line.match(/^\s*(```+|~~~+)\s*/);
+	                if (fenceMatch) {
+	                    const currentFence = fenceMatch[1][0];
+	                    if (!inFence) {
+	                        inFence = true;
+	                        fenceChar = currentFence;
+	                    } else if (fenceChar === currentFence) {
+	                        inFence = false;
+	                        fenceChar = '';
+	                    }
+	                    if (currentActive()) out.push(line);
+	                    continue;
+	                }
+
+	                if (inFence) {
+	                    if (currentActive()) out.push(line);
+	                    continue;
+	                }
+
+	                const ifMatch = line.match(IF_RE);
+	                if (ifMatch) {
+	                    const parentActive = currentActive();
+	                    let ok = false;
+	                    if (parentActive) {
+	                        try {
+	                            ok = evaluateLearningCondition(ifMatch[1], ctx);
+	                        } catch (e) {
+	                            console.warn('条件表达式解析失败:', ifMatch[1], e);
+	                            ok = false;
+	                        }
+	                    }
+	                    stack.push({
+	                        parentActive: parentActive,
+	                        branchTaken: ok,
+	                        inElse: false,
+	                        active: parentActive && ok
+	                    });
+	                    continue;
+	                }
+
+	                const elseifMatch = line.match(ELSEIF_RE);
+	                if (elseifMatch) {
+	                    if (!stack.length) {
+	                        if (currentActive()) out.push(line);
+	                        continue;
+	                    }
+	                    const top = stack[stack.length - 1];
+	                    if (top.inElse) {
+	                        top.active = false;
+	                        continue;
+	                    }
+	                    if (!top.parentActive || top.branchTaken) {
+	                        top.active = false;
+	                        continue;
+	                    }
+	                    let ok = false;
+	                    try {
+	                        ok = evaluateLearningCondition(elseifMatch[1], ctx);
+	                    } catch (e) {
+	                        console.warn('条件表达式解析失败:', elseifMatch[1], e);
+	                        ok = false;
+	                    }
+	                    top.branchTaken = Boolean(top.branchTaken || ok);
+	                    top.active = top.parentActive && ok;
+	                    continue;
+	                }
+
+	                if (line.match(ELSE_RE)) {
+	                    if (!stack.length) {
+	                        if (currentActive()) out.push(line);
+	                        continue;
+	                    }
+	                    const top = stack[stack.length - 1];
+	                    if (top.inElse) {
+	                        top.active = false;
+	                        continue;
+	                    }
+	                    top.inElse = true;
+	                    top.active = top.parentActive && !top.branchTaken;
+	                    top.branchTaken = true;
+	                    continue;
+	                }
+
+	                if (line.match(END_RE)) {
+	                    if (!stack.length) {
+	                        if (currentActive()) out.push(line);
+	                        continue;
+	                    }
+	                    stack.pop();
+	                    continue;
+	                }
+
+	                if (currentActive()) out.push(line);
+	            }
+
+	            return out.join('\n');
+	        }
+
 	        function isUnsafeTransclusionTarget(target) {
 	            const value = String(target || '');
 	            return (
@@ -1431,7 +1733,7 @@
 	            return await TRANSCLUSION_CACHE.get(key);
 	        }
 
-	        async function expandMarkdownTransclusions(markdown, currentDocPath, depth = 0, stack = []) {
+	        async function expandMarkdownTransclusions(markdown, currentDocPath, depth = 0, stack = [], ctx) {
 	            if (!markdown) return markdown;
 	            if (depth > TRANSCLUSION_MAX_DEPTH) return markdown;
 
@@ -1494,8 +1796,9 @@
 	                    const fm = parseFrontMatter(rawText);
 	                    let body = fm.content || '';
 	                    body = stripLeadingTitleHeading(body, [m.title, fm.metadata && fm.metadata.title]);
+	                    body = applyLearningConditionBlocks(body, ctx);
 	                    body = rewriteTranscludedLinksAndImages(body, resolvedDoc);
-	                    body = await expandMarkdownTransclusions(body, resolvedDoc, depth + 1, stack.concat(resolvedDoc));
+	                    body = await expandMarkdownTransclusions(body, resolvedDoc, depth + 1, stack.concat(resolvedDoc), ctx);
 	                    body = shiftMarkdownHeadings(body, 1);
 	                    return `\n\n## ${m.title}\n\n${body}\n\n`;
 	                } catch (err) {
@@ -1762,7 +2065,9 @@
 	                        updateCurrentCategoryDocs(fetchPath);
 
 	                        try {
-	                            content = await expandMarkdownTransclusions(content, fetchPath);
+	                            const learningCtx = getLearningConditionContext();
+	                            content = applyLearningConditionBlocks(content, learningCtx);
+	                            content = await expandMarkdownTransclusions(content, fetchPath, 0, [], learningCtx);
 	                        } catch (err) {
 	                            console.warn('展开引用内容失败，继续渲染原始文档:', err);
 	                        }
