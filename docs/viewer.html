@@ -175,7 +175,7 @@
 	                    <!-- 教程导航：上一篇/下一篇链接 -->
 	                    <div class="tutorial-navigation">
                         <a href="index.html" class="btn btn-outline prev-tutorial">← 返回文档列表</a>
-                        <a href="?file=Modder入门/DPapyru-给新人的前言.md" class="btn btn-secondary">查看教程</a>
+	                        <a href="?file=Modder入门/0-指南/DPapyru-给新人的前言.md" class="btn btn-secondary">查看教程</a>
                         <a href="?file=怎么贡献/教学文章写作指南.md" class="btn btn-primary next-tutorial">贡献指南 →</a>
                     </div>
                     <!-- 教程反馈：用户反馈和问题提交 -->
@@ -559,12 +559,12 @@
                     if (ALL_DOCS && ALL_DOCS.length > 0) {
                         markdownFile = ALL_DOCS[0].filename || ALL_DOCS[0].path;
                         console.log('使用配置中的第一个文档:', markdownFile);
-                    } else {
-                        // 如果没有配置，使用已知的文档
-                        markdownFile = 'Modder入门/DPapyru-给新人的前言.md';
-                        console.log('使用默认文档:', markdownFile);
-                    }
-                }
+	                    } else {
+	                        // 如果没有配置，使用已知的文档
+	                        markdownFile = 'Modder入门/0-指南/DPapyru-给新人的前言.md';
+	                        console.log('使用默认文档:', markdownFile);
+	                    }
+	                }
 
                 console.log(`docs/viewer.html: 准备加载Markdown文件: ${markdownFile}`);
 
@@ -1049,12 +1049,12 @@
 
                 // 如果配置文件加载失败或没有文档，尝试扫描常见的文档文件
                 console.warn('配置文件不可用，尝试扫描常见文档文件');
-                const commonFiles = [
-                    'Modder入门/DPapyru-给新人的前言.md',
-                    '怎么贡献/教学文章写作指南.md',
-                    '怎么贡献/TopicSystem使用指南.md',
-                    '螺线翻译tml教程/0-开始/0-Home 主页.md'
-                ];
+	                const commonFiles = [
+	                    'Modder入门/0-指南/DPapyru-给新人的前言.md',
+	                    '怎么贡献/教学文章写作指南.md',
+	                    '怎么贡献/TopicSystem使用指南.md',
+	                    '螺线翻译tml教程/0-开始/0-Home 主页.md'
+	                ];
 
                 ALL_DOCS = [];
 
@@ -1115,13 +1115,13 @@
                 console.error('扫描文档失败:', error);
                 console.log('=== scanAllDocuments() 因错误结束 ===');
                 // 提供一些默认文档
-	                ALL_DOCS = [
-	                    {
-	                        filename: 'DPapyru-给新人的前言.md',
-	                        path: 'Modder入门/DPapyru-给新人的前言.md',
-	                        title: '给新人的前言',
-	                        author: 'DPapyru',
-	                        category: 'Modder入门',
+		                ALL_DOCS = [
+		                    {
+		                        filename: 'DPapyru-给新人的前言.md',
+		                        path: 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+		                        title: '给新人的前言',
+		                        author: 'DPapyru',
+		                        category: 'Modder入门',
 	                        topic: 'mod-basics',
 	                        order: 1,
 	                        description: '面向新人的入门引导文档',
@@ -1593,6 +1593,78 @@
 	            return { base: raw.slice(0, hashIndex), hash: raw.slice(hashIndex) };
 	        }
 
+	        function normalizeHeadingForMatch(text) {
+	            let t = String(text || '').trim();
+	            if (!t) return '';
+	            t = t
+	                .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+	                .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+	                .replace(/[`*_~]/g, '')
+	                .replace(/\s+/g, ' ')
+	                .trim()
+	                .toLowerCase();
+	            return t;
+	        }
+
+	        function extractMarkdownSectionByHeading(markdown, selector) {
+	            const selRaw = String(selector || '').trim();
+	            if (!selRaw) return null;
+	            const sel = normalizeHeadingForMatch(selRaw);
+	            if (!sel) return null;
+
+	            const lines = String(markdown || '').split('\n');
+	            let inFence = false;
+	            let fenceChar = '';
+
+	            let startIndex = -1;
+	            let startLevel = 0;
+
+	            for (let i = 0; i < lines.length; i++) {
+	                const line = lines[i];
+	                const fenceMatch = line.match(/^\s*(```+|~~~+)\s*/);
+	                if (fenceMatch) {
+	                    const currentFence = fenceMatch[1][0];
+	                    if (!inFence) {
+	                        inFence = true;
+	                        fenceChar = currentFence;
+	                    } else if (fenceChar === currentFence) {
+	                        inFence = false;
+	                        fenceChar = '';
+	                    }
+	                    continue;
+	                }
+	                if (inFence) continue;
+
+	                const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+	                if (!headingMatch) continue;
+
+	                const level = headingMatch[1].length;
+	                const rawText = String(headingMatch[2] || '').trim().replace(/\s+#*$/, '').trim();
+	                const normalized = normalizeHeadingForMatch(rawText);
+	                if (!normalized) continue;
+
+	                if (startIndex < 0) {
+	                    if (normalized === sel) {
+	                        startIndex = i + 1; // exclude the heading line itself
+	                        startLevel = level;
+	                    }
+	                    continue;
+	                }
+
+	                if (level <= startLevel) {
+	                    const chunk = lines.slice(startIndex, i).join('\n');
+	                    return chunk.replace(/^\s*\n+/, '').replace(/\n+\s*$/, '');
+	                }
+	            }
+
+	            if (startIndex >= 0) {
+	                const chunk = lines.slice(startIndex).join('\n');
+	                return chunk.replace(/^\s*\n+/, '').replace(/\n+\s*$/, '');
+	            }
+
+	            return null;
+	        }
+
 	        function stripLeadingTitleHeading(markdown, titles) {
 	            const titleSet = new Set(
 	                (titles || [])
@@ -1776,6 +1848,16 @@
 	                }
 
 	                const { base, hash } = splitHash(m.target);
+	                let sectionSelector = '';
+	                if (hash && hash.startsWith('#')) {
+	                    sectionSelector = hash.slice(1);
+	                    try {
+	                        sectionSelector = decodeURIComponent(sectionSelector);
+	                    } catch (e) {
+	                        sectionSelector = hash.slice(1);
+	                    }
+	                    sectionSelector = String(sectionSelector || '').trim();
+	                }
 	                let resolvedDoc = resolveDocLinkPath(base, currentDocPath);
 	                if (!resolvedDoc) {
 	                    const fallback = resolveRelativeHref(base, currentDocPath);
@@ -1797,6 +1879,13 @@
 	                    let body = fm.content || '';
 	                    body = stripLeadingTitleHeading(body, [m.title, fm.metadata && fm.metadata.title]);
 	                    body = applyLearningConditionBlocks(body, ctx);
+	                    if (sectionSelector) {
+	                        const extracted = extractMarkdownSectionByHeading(body, sectionSelector);
+	                        if (extracted == null) {
+	                            return `\n\n> 无法载入引用：在 \`${resolvedDoc}\` 中找不到标题 \`${sectionSelector}\`\n\n`;
+	                        }
+	                        body = extracted;
+	                    }
 	                    body = rewriteTranscludedLinksAndImages(body, resolvedDoc);
 	                    body = await expandMarkdownTransclusions(body, resolvedDoc, depth + 1, stack.concat(resolvedDoc), ctx);
 	                    body = shiftMarkdownHeadings(body, 1);
@@ -1899,14 +1988,42 @@
 	                    throw new Error('非法路径参数');
 	                }
 
-            // 2. 如果只是文件名，尝试在文档列表中查找完整路径
-            if (!fetchPath.includes('/') && ALL_DOCS.length > 0) {
-                const doc = ALL_DOCS.find(d => d.filename === fetchPath || d.path === fetchPath);
-                if (doc && doc.path) {
-                    fetchPath = doc.path;
-                    console.log(`docs/viewer.html: 通过文档列表找到完整路径: ${fetchPath}`);
-                }
-            }
+	            // 2. 尝试通过索引映射解析到真实路径（兼容旧链接/移动文件）
+	            if (ALL_DOCS.length > 0) {
+	                const candidates = [
+	                    fetchPath,
+	                    fetchPath.replace(/^\.?\//, ''),
+	                    fetchPath.replace(/^docs\//, ''),
+	                    fetchPath.replace(/^\.?\//, '').replace(/^docs\//, '')
+	                ].filter(Boolean);
+
+	                let resolved = null;
+	                if (DOC_LOOKUP_MAP) {
+	                    for (const c of candidates) {
+	                        resolved = DOC_LOOKUP_MAP.get(c) || DOC_LOOKUP_MAP.get(String(c).toLowerCase());
+	                        if (resolved) break;
+	                        const noExt = String(c).replace(/\.md$/i, '');
+	                        resolved = DOC_LOOKUP_MAP.get(noExt) || DOC_LOOKUP_MAP.get(noExt.toLowerCase());
+	                        if (resolved) break;
+	                    }
+	                }
+
+	                // fallback: category/filename 形式的旧链接（例如 Modder入门/<filename>.md）
+	                if (!resolved) {
+	                    const tail = String(fetchPath).split('/').pop();
+	                    if (tail && tail !== fetchPath) {
+	                        const matches = ALL_DOCS.filter(d => d && d.filename === tail);
+	                        if (matches.length === 1 && matches[0].path) {
+	                            resolved = matches[0].path;
+	                        }
+	                    }
+	                }
+
+	                if (resolved) {
+	                    fetchPath = resolved;
+	                    console.log(`docs/viewer.html: 通过索引映射解析到真实路径: ${fetchPath}`);
+	                }
+	            }
 
             // 3. 移除开头的docs/前缀（因为viewer.html已经在docs目录中）
             if (fetchPath.startsWith('docs/')) {
@@ -2058,8 +2175,8 @@
 
                         console.log('解析的元数据:', metadata);
 
-                        // 更新页面元数据（标题、难度、作者等）
-                        updatePageMetadata(metadata, fetchPath);
+	                        // 更新页面元数据（标题、难度、作者等）
+	                        updatePageMetadata(metadata, fetchPath);
 
 	                        // 更新当前分类的文档列表
 	                        updateCurrentCategoryDocs(fetchPath);
@@ -2075,6 +2192,9 @@
 	                        const renderedHTML = marked.parse(content);
 	                        console.log('Markdown渲染完成，HTML长度:', renderedHTML.length);
 	                        markdownContent.innerHTML = renderedHTML;
+
+	                        // 移除正文内重复的“章节进度”导航（统一使用页脚导航）
+	                        removeDuplicateChapterProgress(markdownContent);
 
 	                        // 渲染题目组件（quiz）
 	                        if (window.SiteQuiz && typeof window.SiteQuiz.renderQuizzes === 'function') {
@@ -2384,7 +2504,7 @@
             updateBreadcrumbNavigation(metadata, filePath);
 
             // 更新导航按钮
-            updateNavigationButtons(prevChapter, nextChapter);
+	            updateNavigationButtons(prevChapter, nextChapter, filePath);
 
             // 更新 SEO 元标签（canonical/OG/Twitter/description）
             updateSeoMeta({
@@ -2604,13 +2724,13 @@
             breadcrumb.appendChild(currentSpan);
         }
 
-        // 更新导航按钮
-	        function updateNavigationButtons(prevChapter, nextChapter) {
-            const navigationContainer = document.querySelector('.tutorial-navigation');
-            if (!navigationContainer) {
-                console.warn('找不到导航容器');
-                return;
-            }
+	        // 更新导航按钮
+		        function updateNavigationButtons(prevChapter, nextChapter, currentDocPath) {
+	            const navigationContainer = document.querySelector('.tutorial-navigation');
+	            if (!navigationContainer) {
+	                console.warn('找不到导航容器');
+	                return;
+	            }
 
             // 清空现有导航内容
             navigationContainer.innerHTML = '';
@@ -2619,29 +2739,99 @@
 	            const backToListBtn = document.createElement('a');
 	            backToListBtn.href = 'index.html';
 	            backToListBtn.className = 'btn btn-outline prev-tutorial';
-	            backToListBtn.textContent = '← 返回文档列表';
-	            navigationContainer.appendChild(backToListBtn);
+		            backToListBtn.textContent = '← 返回文档列表';
+		            navigationContainer.appendChild(backToListBtn);
 
-            // 添加上一章按钮（如果存在）
-	            if (prevChapter) {
-	                const prevBtn = document.createElement('a');
-	                prevBtn.href = `?file=${encodeURIComponent(prevChapter)}`;
-	                prevBtn.className = 'btn btn-secondary prev-tutorial';
-	                prevBtn.textContent = '← 上一章';
-	                navigationContainer.appendChild(prevBtn);
+	            function findDocByPath(docPath) {
+	                const p = String(docPath || '');
+	                if (!p || !Array.isArray(ALL_DOCS)) return null;
+	                return ALL_DOCS.find(d => d && (d.path === p || d.filename === p)) || null;
 	            }
 
-            // 添加下一章按钮（如果存在）
-	            if (nextChapter) {
-	                const nextBtn = document.createElement('a');
-	                nextBtn.href = `?file=${encodeURIComponent(nextChapter)}`;
-	                nextBtn.className = 'btn btn-primary next-tutorial';
-	                nextBtn.textContent = '下一章 →';
-	                navigationContainer.appendChild(nextBtn);
+	            function getDocTitle(docPath) {
+	                const doc = findDocByPath(docPath);
+	                if (doc && doc.title) return String(doc.title);
+	                const tail = String(docPath || '').split('/').pop() || '';
+	                return tail.replace(/\.md$/i, '') || String(docPath || '');
 	            }
 
-            console.log('导航按钮已更新:', { prevChapter, nextChapter });
-        }
+	            function resolveNavPath(raw) {
+	                if (!raw) return null;
+	                const href = String(raw).trim();
+	                if (!href) return null;
+	                const resolved = resolveDocLinkPath(href, currentDocPath || CURRENT_DOC_PATH);
+	                if (resolved) return resolved;
+	                const fallback = resolveRelativeHref(href, currentDocPath || CURRENT_DOC_PATH);
+	                if (!fallback) return href;
+	                return String(fallback).replace(/^\.?\//, '').replace(/^docs\//, '');
+	            }
+
+	            function appendNavButton(kind, resolvedPath) {
+	                const title = getDocTitle(resolvedPath);
+	                const btn = document.createElement('a');
+	                btn.href = `?file=${encodeURIComponent(resolvedPath)}`;
+	                btn.className = kind === 'prev'
+	                    ? 'btn btn-secondary prev-tutorial'
+	                    : 'btn btn-primary next-tutorial';
+
+	                const label = document.createElement('span');
+	                label.className = 'tutorial-nav-label';
+	                label.textContent = kind === 'prev' ? '← 上一章' : '下一章 →';
+
+	                const sep = document.createElement('span');
+	                sep.className = 'tutorial-nav-sep';
+	                sep.textContent = '：';
+
+	                const t = document.createElement('span');
+	                t.className = 'tutorial-nav-title';
+	                t.textContent = title;
+
+	                if (kind === 'prev') {
+	                    btn.appendChild(label);
+	                    btn.appendChild(sep);
+	                    btn.appendChild(t);
+	                } else {
+	                    const arrow = document.createElement('span');
+	                    arrow.className = 'tutorial-nav-arrow';
+	                    arrow.textContent = '→';
+	                    label.textContent = '下一章';
+	                    btn.appendChild(label);
+	                    btn.appendChild(sep);
+	                    btn.appendChild(t);
+	                    btn.appendChild(document.createTextNode(' '));
+	                    btn.appendChild(arrow);
+	                }
+
+	                navigationContainer.appendChild(btn);
+	            }
+
+	            // 添加上一章按钮（如果存在）
+		            if (prevChapter) {
+		                const resolvedPrev = resolveNavPath(prevChapter);
+		                if (resolvedPrev) appendNavButton('prev', resolvedPrev);
+		            }
+
+	            // 添加下一章按钮（如果存在）
+		            if (nextChapter) {
+		                const resolvedNext = resolveNavPath(nextChapter);
+		                if (resolvedNext) appendNavButton('next', resolvedNext);
+		            }
+
+	            console.log('导航按钮已更新:', { prevChapter, nextChapter });
+	        }
+
+	        function removeDuplicateChapterProgress(container) {
+	            const root = container || document.getElementById('markdown-content');
+	            if (!root) return;
+	            const blockquotes = root.querySelectorAll('blockquote');
+	            blockquotes.forEach(function (bq) {
+	                const text = String(bq.textContent || '').replace(/\s+/g, ' ').trim();
+	                if (!text) return;
+	                if (!text.includes('章节进度')) return;
+	                if (!(text.includes('上一章') && text.includes('下一章'))) return;
+	                bq.remove();
+	            });
+	        }
 
         // 将难度代码转换为中文文本
         function getDifficultyText(difficulty) {

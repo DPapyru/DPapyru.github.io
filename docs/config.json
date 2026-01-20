@@ -43,6 +43,22 @@
               "next_chapter": null,
               "colors": null,
               "colorChange": null
+            },
+            {
+              "filename": "站点Markdown扩展语法说明.md",
+              "path": "怎么贡献/站点Markdown扩展语法说明.md",
+              "originalPath": "怎么贡献/站点Markdown扩展语法说明.md",
+              "title": "站点 Markdown 扩展语法说明（引用/条件/组件）",
+              "author": "小天使",
+              "order": 2,
+              "description": "本站 docs/viewer.html 渲染器支持的 Markdown 扩展语法：引用展开、条件分流、题目与颜色标记",
+              "last_updated": "2026-01-20",
+              "time": "12分钟",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "colors": null,
+              "colorChange": null
             }
           ]
         }
@@ -288,6 +304,54 @@
               "colors": {
                 "Red": "#f00"
               },
+              "colorChange": null
+            },
+            {
+              "filename": "第一个武器-C0-CSharp读代码.md",
+              "path": "Modder入门/1-入门/_分流/第一个武器-C0-CSharp读代码.md",
+              "originalPath": "Modder入门/1-入门/_分流/第一个武器-C0-CSharp读代码.md",
+              "title": "第一个武器（C0 补课）：C# 读代码",
+              "author": "小天使",
+              "order": 9001,
+              "description": "给从没接触过 C# 的读者，看懂“第一个武器”里出现的关键语法",
+              "last_updated": "2026-01-20",
+              "time": "10分钟",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "第一个武器-T0-tML读代码.md",
+              "path": "Modder入门/1-入门/_分流/第一个武器-T0-tML读代码.md",
+              "originalPath": "Modder入门/1-入门/_分流/第一个武器-T0-tML读代码.md",
+              "title": "第一个武器（T0 补课）：tModLoader 读代码",
+              "author": "小天使",
+              "order": 9002,
+              "description": "给第一次接触 tModLoader API 的读者，定位“第一个武器”里该看懂的 API",
+              "last_updated": "2026-01-20",
+              "time": "12分钟",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "第一个武器-进阶-惯用写法.md",
+              "path": "Modder入门/1-入门/_分流/第一个武器-进阶-惯用写法.md",
+              "originalPath": "Modder入门/1-入门/_分流/第一个武器-进阶-惯用写法.md",
+              "title": "第一个武器（进阶）：更贴近实战的写法",
+              "author": "小天使",
+              "order": 9003,
+              "description": "当你已经有 C# 基础且熟悉 tML API 时，这里给出更贴近实战的组织方式与注意点",
+              "last_updated": "2026-01-20",
+              "time": "8分钟",
+              "difficulty": "intermediate",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "colors": null,
               "colorChange": null
             }
           ]
@@ -2584,6 +2648,9 @@
         "DPapyru-给新人的前言.md",
         "DPapyru-快速开始构建Mod.md",
         "DPapyru-第一个武器.md",
+        "第一个武器-C0-CSharp读代码.md",
+        "第一个武器-T0-tML读代码.md",
+        "第一个武器-进阶-惯用写法.md",
         "DPapyru-第一个弹药.md",
         "DPapyru-第一个物块.md",
         "DPapyru-第一个Buff.md",
@@ -2593,7 +2660,8 @@
         "DPapyru-第一个饰品.md",
         "DPapyru-第一个Boss.md",
         "DPapyru-第一个世界生成.md",
-        "教学文章写作指南.md"
+        "教学文章写作指南.md",
+        "站点Markdown扩展语法说明.md"
       ]
     },
     "错数螺线": {
@@ -5028,6 +5096,23 @@
       "last_updated": "2026-01-19"
     },
     {
+      "filename": "站点Markdown扩展语法说明.md",
+      "path": "怎么贡献/站点Markdown扩展语法说明.md",
+      "originalPath": "怎么贡献/站点Markdown扩展语法说明.md",
+      "title": "站点 Markdown 扩展语法说明（引用/条件/组件）",
+      "author": "小天使",
+      "category": "怎么贡献",
+      "topic": "article-contribution",
+      "order": 2,
+      "time": "12分钟",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2026-01-20"
+    },
+    {
       "filename": "DPapyru-第一个弹幕.md",
       "path": "Modder入门/3-战斗/DPapyru-第一个弹幕.md",
       "originalPath": "Modder入门/3-战斗/DPapyru-第一个弹幕.md",
@@ -5273,6 +5358,57 @@
       },
       "colorChange": null,
       "last_updated": "2026-01-19"
+    },
+    {
+      "filename": "第一个武器-C0-CSharp读代码.md",
+      "path": "Modder入门/1-入门/_分流/第一个武器-C0-CSharp读代码.md",
+      "originalPath": "Modder入门/1-入门/_分流/第一个武器-C0-CSharp读代码.md",
+      "title": "第一个武器（C0 补课）：C# 读代码",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 9001,
+      "time": "10分钟",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2026-01-20"
+    },
+    {
+      "filename": "第一个武器-T0-tML读代码.md",
+      "path": "Modder入门/1-入门/_分流/第一个武器-T0-tML读代码.md",
+      "originalPath": "Modder入门/1-入门/_分流/第一个武器-T0-tML读代码.md",
+      "title": "第一个武器（T0 补课）：tModLoader 读代码",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 9002,
+      "time": "12分钟",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2026-01-20"
+    },
+    {
+      "filename": "第一个武器-进阶-惯用写法.md",
+      "path": "Modder入门/1-入门/_分流/第一个武器-进阶-惯用写法.md",
+      "originalPath": "Modder入门/1-入门/_分流/第一个武器-进阶-惯用写法.md",
+      "title": "第一个武器（进阶）：更贴近实战的写法",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 9003,
+      "time": "8分钟",
+      "difficulty": "intermediate",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2026-01-20"
     }
   ],
   "settings": {

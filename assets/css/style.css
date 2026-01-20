@@ -1569,6 +1569,26 @@ div.flowchart > svg {
     display: flex;
     justify-content: space-between;
     margin-bottom: 30px;
+    gap: 12px;
+}
+
+.tutorial-navigation .btn {
+    min-width: 0;
+}
+
+.tutorial-nav-title {
+    display: inline-block;
+    max-width: 36ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    .tutorial-nav-title {
+        max-width: 18ch;
+    }
 }
 
 .tutorial-feedback {

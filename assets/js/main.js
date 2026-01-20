@@ -873,21 +873,21 @@ function cleanPath(path) {
         }
     } else {
         // 默认的旧结构映射（向后兼容）
-	        const defaultOldStructureMappings = {
-            '01-入门指南/README.md': 'Modder入门/DPapyru-给新人的前言.md',
-            '02-基础概念/README.md': 'Modder入门/DPapyru-给新人的前言.md',
-            '03-内容创建/README.md': 'Modder入门/DPapyru-给新人的前言.md',
-            '04-高级开发/README.md': 'Modder入门/DPapyru-给新人的前言.md',
-            '05-专题主题/README.md': 'Modder入门/DPapyru-给新人的前言.md',
-            '06-资源参考/README.md': 'Modder入门/DPapyru-给新人的前言.md',
-            'getting-started.md': 'Modder入门/DPapyru-给新人的前言.md',
-            'basic-concepts.md': 'Modder入门/DPapyru-给新人的前言.md',
-            'tutorial-index.md': 'Modder入门/DPapyru-给新人的前言.md',
-            'DPapyru-ForNewModder.md': 'Modder入门/DPapyru-给新人的前言.md',
-	            'DPapyru-ForContributors-Basic.md': '怎么贡献/教学文章写作指南.md',
-	            '怎么贡献/DPapyru-贡献者如何编写文章基础.md': '怎么贡献/教学文章写作指南.md',
-	            'TopicSystemGuide.md': '怎么贡献/TopicSystem使用指南.md'
-	        };
+		        const defaultOldStructureMappings = {
+	            '01-入门指南/README.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            '02-基础概念/README.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            '03-内容创建/README.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            '04-高级开发/README.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            '05-专题主题/README.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            '06-资源参考/README.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'getting-started.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'basic-concepts.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'tutorial-index.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'DPapyru-ForNewModder.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
+		            'DPapyru-ForContributors-Basic.md': '怎么贡献/教学文章写作指南.md',
+		            '怎么贡献/DPapyru-贡献者如何编写文章基础.md': '怎么贡献/教学文章写作指南.md',
+		            'TopicSystemGuide.md': '怎么贡献/TopicSystem使用指南.md'
+		        };
 
         // 检查是否需要映射旧路径到新路径
         for (const [oldPath, newPath] of Object.entries(defaultOldStructureMappings)) {
@@ -974,21 +974,21 @@ function tryFallbackPaths(originalPath) {
         }
     } else {
         // 默认的旧结构到新结构的映射（向后兼容）
-	        const defaultOldToNewMappings = {
-            'docs/01-入门指南/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/02-基础概念/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/03-内容创建/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/04-高级开发/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/05-专题主题/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/06-资源参考/README.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/getting-started.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/basic-concepts.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/tutorial-index.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
-            'docs/DPapyru-ForNewModder.md': 'docs/Modder入门/DPapyru-给新人的前言.md',
-	            'docs/DPapyru-ForContributors-Basic.md': 'docs/怎么贡献/教学文章写作指南.md',
-	            'docs/怎么贡献/DPapyru-贡献者如何编写文章基础.md': 'docs/怎么贡献/教学文章写作指南.md',
-	            'docs/TopicSystemGuide.md': 'docs/怎么贡献/TopicSystem使用指南.md'
-	        };
+		        const defaultOldToNewMappings = {
+	            'docs/01-入门指南/README.md': 'docs/Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'docs/02-基础概念/README.md': 'docs/Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'docs/03-内容创建/README.md': 'docs/Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'docs/04-高级开发/README.md': 'docs/Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'docs/05-专题主题/README.md': 'docs/Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'docs/06-资源参考/README.md': 'docs/Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'docs/getting-started.md': 'docs/Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'docs/basic-concepts.md': 'docs/Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'docs/tutorial-index.md': 'docs/Modder入门/0-指南/DPapyru-给新人的前言.md',
+	            'docs/DPapyru-ForNewModder.md': 'docs/Modder入门/0-指南/DPapyru-给新人的前言.md',
+		            'docs/DPapyru-ForContributors-Basic.md': 'docs/怎么贡献/教学文章写作指南.md',
+		            'docs/怎么贡献/DPapyru-贡献者如何编写文章基础.md': 'docs/怎么贡献/教学文章写作指南.md',
+		            'docs/TopicSystemGuide.md': 'docs/怎么贡献/TopicSystem使用指南.md'
+		        };
 
         // 检查原始路径是否匹配旧结构，如果是则添加新结构路径作为备用
         for (const [oldPath, newPath] of Object.entries(defaultOldToNewMappings)) {
