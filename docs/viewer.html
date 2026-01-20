@@ -1221,8 +1221,8 @@
             return `${joined}${hash}`;
         }
 
-        function resolveDocLinkPath(href, currentDocPath) {
-            if (!href) return null;
+	        function resolveDocLinkPath(href, currentDocPath) {
+	            if (!href) return null;
 
             const hrefStr = String(href);
             if (hrefStr.startsWith('/') || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(hrefStr)) return null;
@@ -1266,8 +1266,258 @@
                 if (hit) return hit;
             }
 
-            return null;
-        }
+	            return null;
+	        }
+
+	        const TRANSCLUSION_LINE_RE = /^\s*\{\[([^\]\n\r]+)\]\[([^\]\n\r]+)\]\}\s*$/;
+	        const TRANSCLUSION_MAX_DEPTH = 4;
+	        const TRANSCLUSION_MAX_FILES = 30;
+	        const TRANSCLUSION_CACHE = new Map();
+
+	        function isUnsafeTransclusionTarget(target) {
+	            const value = String(target || '');
+	            return (
+	                !value ||
+	                value.includes('\0') ||
+	                value.includes('\\') ||
+	                /(^|\/|\\)\.\.(\/|\\|$)/.test(value)
+	            );
+	        }
+
+	        function splitHash(href) {
+	            const raw = String(href || '');
+	            const hashIndex = raw.indexOf('#');
+	            if (hashIndex < 0) return { base: raw, hash: '' };
+	            return { base: raw.slice(0, hashIndex), hash: raw.slice(hashIndex) };
+	        }
+
+	        function stripLeadingTitleHeading(markdown, titles) {
+	            const titleSet = new Set(
+	                (titles || [])
+	                    .map(t => String(t || '').trim())
+	                    .filter(Boolean)
+	                    .map(t => t.toLowerCase())
+	            );
+	            if (!titleSet.size) return markdown;
+
+	            const lines = String(markdown || '').split('\n');
+	            let i = 0;
+	            while (i < lines.length && !lines[i].trim()) i++;
+	            if (i >= lines.length) return markdown;
+
+	            const m = lines[i].match(/^#\s+(.*)$/);
+	            if (!m) return markdown;
+
+	            const headingText = String(m[1] || '').trim().toLowerCase();
+	            if (!titleSet.has(headingText)) return markdown;
+
+	            lines.splice(i, 1);
+	            while (i < lines.length && !lines[i].trim()) lines.splice(i, 1);
+	            return lines.join('\n');
+	        }
+
+	        function shiftMarkdownHeadings(markdown, shift) {
+	            const delta = Number.isFinite(shift) ? shift : 0;
+	            if (delta <= 0) return markdown;
+
+	            const lines = String(markdown || '').split('\n');
+	            let inFence = false;
+	            let fenceChar = '';
+
+	            for (let i = 0; i < lines.length; i++) {
+	                const line = lines[i];
+	                const fenceMatch = line.match(/^\s*(```+|~~~+)\s*/);
+	                if (fenceMatch) {
+	                    const currentFence = fenceMatch[1][0];
+	                    if (!inFence) {
+	                        inFence = true;
+	                        fenceChar = currentFence;
+	                    } else if (fenceChar === currentFence) {
+	                        inFence = false;
+	                        fenceChar = '';
+	                    }
+	                    continue;
+	                }
+
+	                if (inFence) continue;
+	                const headingMatch = line.match(/^(#{1,6})(\s+.*)$/);
+	                if (!headingMatch) continue;
+
+	                const current = headingMatch[1].length;
+	                const next = Math.min(6, current + delta);
+	                lines[i] = `${'#'.repeat(next)}${headingMatch[2]}`;
+	            }
+
+	            return lines.join('\n');
+	        }
+
+	        function rewriteTranscludedLinksAndImages(markdown, includeDocPath) {
+	            const lines = String(markdown || '').split('\n');
+	            let inFence = false;
+	            let fenceChar = '';
+
+	            function resolveImageAbsolute(src) {
+	                if (!src) return src;
+	                const raw = String(src);
+	                if (
+	                    raw.startsWith('#') ||
+	                    raw.startsWith('/') ||
+	                    /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(raw)
+	                ) return raw;
+
+	                const resolved = resolveRelativeHref(raw, includeDocPath);
+	                if (!resolved) return raw;
+
+	                const cleaned = String(resolved).replace(/^\.?\//, '');
+	                if (cleaned.startsWith('assets/')) return `/${cleaned}`;
+	                return `/docs/${cleaned}`;
+	            }
+
+	            function rewriteInlineLink(line) {
+	                // 图片：![alt](src "title")
+	                line = line.replace(/!\[([^\]]*)\]\(([^)\s]+)(\s+\"[^\"]*\")?\)/g, (m, alt, href, title) => {
+	                    const fixed = resolveImageAbsolute(href);
+	                    return `![${alt}](${fixed}${title || ''})`;
+	                });
+
+	                // 链接：[text](href "title")
+	                line = line.replace(/(^|[^!])\[([^\]]+)\]\(([^)\s]+)(\s+\"[^\"]*\")?\)/g, (m, prefix, text, href, title) => {
+	                    const hrefStr = String(href || '');
+	                    const { base, hash } = splitHash(hrefStr);
+	                    const resolved = resolveDocLinkPath(base, includeDocPath);
+	                    if (!resolved) return m;
+	                    return `${prefix}[${text}](${resolved}${hash}${title || ''})`;
+	                });
+
+	                return line;
+	            }
+
+	            for (let i = 0; i < lines.length; i++) {
+	                const line = lines[i];
+	                const fenceMatch = line.match(/^\s*(```+|~~~+)\s*/);
+	                if (fenceMatch) {
+	                    const currentFence = fenceMatch[1][0];
+	                    if (!inFence) {
+	                        inFence = true;
+	                        fenceChar = currentFence;
+	                    } else if (fenceChar === currentFence) {
+	                        inFence = false;
+	                        fenceChar = '';
+	                    }
+	                    continue;
+	                }
+
+	                if (inFence) continue;
+	                lines[i] = rewriteInlineLink(line);
+	            }
+
+	            return lines.join('\n');
+	        }
+
+	        async function fetchMarkdownDocText(docPath) {
+	            const key = String(docPath || '');
+	            if (!key) throw new Error('空的文档路径');
+
+	            if (!TRANSCLUSION_CACHE.has(key)) {
+	                const fetchUrl = `./${key.replace(/^\.?\//, '').replace(/^docs\//, '')}`;
+	                const p = fetch(encodeURI(fetchUrl)).then(async response => {
+	                    if (!response.ok) {
+	                        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+	                    }
+	                    return await response.text();
+	                });
+	                TRANSCLUSION_CACHE.set(key, p);
+	            }
+	            return await TRANSCLUSION_CACHE.get(key);
+	        }
+
+	        async function expandMarkdownTransclusions(markdown, currentDocPath, depth = 0, stack = []) {
+	            if (!markdown) return markdown;
+	            if (depth > TRANSCLUSION_MAX_DEPTH) return markdown;
+
+	            const lines = String(markdown).split('\n');
+	            const matches = [];
+	            let inFence = false;
+	            let fenceChar = '';
+
+	            for (let i = 0; i < lines.length; i++) {
+	                const line = lines[i];
+	                const fenceMatch = line.match(/^\s*(```+|~~~+)\s*/);
+	                if (fenceMatch) {
+	                    const currentFence = fenceMatch[1][0];
+	                    if (!inFence) {
+	                        inFence = true;
+	                        fenceChar = currentFence;
+	                    } else if (fenceChar === currentFence) {
+	                        inFence = false;
+	                        fenceChar = '';
+	                    }
+	                    continue;
+	                }
+
+	                if (inFence) continue;
+	                const m = line.match(TRANSCLUSION_LINE_RE);
+	                if (!m) continue;
+	                matches.push({
+	                    lineIndex: i,
+	                    target: String(m[1] || '').trim(),
+	                    title: String(m[2] || '').trim()
+	                });
+	                if (matches.length >= TRANSCLUSION_MAX_FILES) break;
+	            }
+
+	            if (!matches.length) return markdown;
+
+	            const replacements = await Promise.all(matches.map(async (m) => {
+	                if (isUnsafeTransclusionTarget(m.target)) {
+	                    return `\n\n> 无法载入引用：非法路径 \`${m.target}\`\n\n`;
+	                }
+
+	                const { base, hash } = splitHash(m.target);
+	                let resolvedDoc = resolveDocLinkPath(base, currentDocPath);
+	                if (!resolvedDoc) {
+	                    const fallback = resolveRelativeHref(base, currentDocPath);
+	                    resolvedDoc = String(fallback || '').replace(/^\.?\//, '').replace(/^docs\//, '');
+	                }
+	                resolvedDoc = String(resolvedDoc || '').replace(/^\.?\//, '').replace(/^docs\//, '');
+	                if (!resolvedDoc) {
+	                    return `\n\n> 无法载入引用：找不到文档 \`${m.target}\`\n\n`;
+	                }
+	                if (!resolvedDoc.endsWith('.md')) resolvedDoc += '.md';
+
+	                if (stack.includes(resolvedDoc)) {
+	                    return `\n\n> 无法载入引用：检测到循环引用 \`${resolvedDoc}\`\n\n`;
+	                }
+
+	                try {
+	                    const rawText = await fetchMarkdownDocText(resolvedDoc);
+	                    const fm = parseFrontMatter(rawText);
+	                    let body = fm.content || '';
+	                    body = stripLeadingTitleHeading(body, [m.title, fm.metadata && fm.metadata.title]);
+	                    body = rewriteTranscludedLinksAndImages(body, resolvedDoc);
+	                    body = await expandMarkdownTransclusions(body, resolvedDoc, depth + 1, stack.concat(resolvedDoc));
+	                    body = shiftMarkdownHeadings(body, 1);
+	                    return `\n\n## ${m.title}\n\n${body}\n\n`;
+	                } catch (err) {
+	                    return `\n\n> 无法载入引用：\`${resolvedDoc}${hash || ''}\`（${String(err && err.message ? err.message : err)}）\n\n`;
+	                }
+	            }));
+
+	            const byLine = new Map();
+	            for (let i = 0; i < matches.length; i++) {
+	                byLine.set(matches[i].lineIndex, replacements[i]);
+	            }
+
+	            const out = [];
+	            for (let i = 0; i < lines.length; i++) {
+	                if (byLine.has(i)) {
+	                    out.push(byLine.get(i));
+	                } else {
+	                    out.push(lines[i]);
+	                }
+	            }
+	            return out.join('\n');
+	        }
 
         // 使用文档信息更新配置
         function updateConfigWithDocument(docInfo) {
@@ -1478,10 +1728,10 @@
                     if (typeof marked !== 'undefined') {
                         console.log('marked.js已加载，开始渲染');
 
-                        // 解析Front Matter（文档元数据）
-                        const frontMatter = parseFrontMatter(markdownText);
-                        const content = frontMatter.content;
-                        const metadata = frontMatter.metadata;
+	                        // 解析Front Matter（文档元数据）
+	                        const frontMatter = parseFrontMatter(markdownText);
+	                        let content = frontMatter.content;
+	                        const metadata = frontMatter.metadata;
 
                         // 补齐缺失的元数据：优先使用 config.json 中的索引信息（不修改 Markdown 原文）
                         const docFromConfig = ALL_DOCS.find(d => {
@@ -1508,8 +1758,14 @@
                         // 更新页面元数据（标题、难度、作者等）
                         updatePageMetadata(metadata, fetchPath);
 
-                        // 更新当前分类的文档列表
-                        updateCurrentCategoryDocs(fetchPath);
+	                        // 更新当前分类的文档列表
+	                        updateCurrentCategoryDocs(fetchPath);
+
+	                        try {
+	                            content = await expandMarkdownTransclusions(content, fetchPath);
+	                        } catch (err) {
+	                            console.warn('展开引用内容失败，继续渲染原始文档:', err);
+	                        }
 
 	                        const renderedHTML = marked.parse(content);
 	                        console.log('Markdown渲染完成，HTML长度:', renderedHTML.length);
