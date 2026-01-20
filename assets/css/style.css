@@ -3527,3 +3527,173 @@ html {
 [data-theme="dark"] .btn-primary:hover {
     background-color: var(--primary-hover) !important;
 }
+
+/* Learning onboarding + path filter */
+.learning-onboarding {
+    padding: 48px 0;
+}
+
+.learning-onboarding-header {
+    margin-bottom: 16px;
+}
+
+.learning-onboarding-title {
+    margin: 0 0 10px;
+}
+
+.learning-onboarding-subtitle {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+.learning-progress {
+    margin: 12px 0 16px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.learning-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.learning-section {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.learning-section-title {
+    margin: 0 0 12px;
+    font-size: 1.1rem;
+}
+
+.learning-question {
+    border-top: 1px solid var(--border-color);
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.learning-question:first-of-type {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.learning-question-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.learning-question-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.learning-choice {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    cursor: pointer;
+}
+
+.learning-choice input {
+    margin-top: 4px;
+}
+
+.learning-question-error {
+    margin-top: 8px;
+    color: var(--danger-color);
+    font-size: 0.9rem;
+}
+
+.learning-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 18px;
+}
+
+.learning-result {
+    color: var(--text-secondary);
+    margin-left: auto;
+}
+
+.learning-onboarding-error {
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background-color: var(--bg-secondary);
+    color: var(--text-color);
+}
+
+.learning-path-bar {
+    margin: 16px 0;
+    padding: 14px 16px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.learning-path-title {
+    font-weight: 600;
+}
+
+.learning-path-meta {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    flex: 0 0 100%;
+}
+
+.learning-path-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.learning-toggle {
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-color);
+    padding: 6px 10px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.learning-toggle:hover {
+    border-color: var(--link-color);
+    color: var(--link-color);
+}
+
+.learning-toggle[aria-pressed="true"] {
+    border-color: var(--link-color);
+    color: var(--link-color);
+    background-color: var(--bg-color);
+}
+
+.learning-empty-state {
+    padding: 22px;
+    border-radius: 16px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.learning-empty-state h3 {
+    margin: 0 0 10px;
+}
+
+.learning-empty-state p {
+    margin: 0 0 14px;
+    color: var(--text-secondary);
+}

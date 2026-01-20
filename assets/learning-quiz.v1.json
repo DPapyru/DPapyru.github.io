@@ -1,0 +1,466 @@
+{
+    "schemaVersion": 1,
+    "scoring": {
+        "levelByTotalScore": [
+            { "min": 0, "max": 4, "level": 0 },
+            { "min": 5, "max": 12, "level": 1 },
+            { "min": 13, "max": 18, "level": 2 }
+        ]
+    },
+    "slots": {
+        "csharp": [
+            {
+                "id": "csharp-1",
+                "prompt": "你能否读懂并修改这段 C#：`for (int i = 0; i < 10; i++) count++;`？",
+                "choices": [
+                    { "label": "没接触过，看不懂", "score": 0 },
+                    { "label": "能跟着教程看懂并做小改动", "score": 1 },
+                    { "label": "能独立读懂并修改/编写小功能", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-2",
+                "prompt": "你能否读/写 `class Foo { public int Value; public void Add(int x){ Value += x; } }` 并在别处 `new Foo()` 使用？",
+                "choices": [
+                    { "label": "不了解", "score": 0 },
+                    { "label": "知道大概，能照着写", "score": 1 },
+                    { "label": "熟练掌握并能组织代码结构", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-3",
+                "prompt": "看到 `public class MyItem : ModItem { public override void SetDefaults() { ... } }`，你是否理解继承（`:`）与 `override` 的意义？",
+                "choices": [
+                    { "label": "没用过", "score": 0 },
+                    { "label": "跟做过，能改但不稳", "score": 1 },
+                    { "label": "能独立设计并排查问题", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-4",
+                "prompt": "当程序报错/崩溃时，你是否能在 IDE 里：下断点→单步→查看调用堆栈→定位到自己代码行？",
+                "choices": [
+                    { "label": "不会", "score": 0 },
+                    { "label": "会一点，能跟着教程操作", "score": 1 },
+                    { "label": "熟练调试并定位错误原因", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-5",
+                "prompt": "你是否能使用 `List<T>`/`Dictionary<TKey,TValue>` 存数据并遍历（例如 `Dictionary<int,string>`）？",
+                "choices": [
+                    { "label": "不了解", "score": 0 },
+                    { "label": "用过，但不太会选型/排错", "score": 1 },
+                    { "label": "熟练使用，能根据需求选择结构", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-6",
+                "prompt": "当报错是 `NullReferenceException` 时，你是否知道“哪个对象是 null”并能定位触发位置？",
+                "choices": [
+                    { "label": "不太会", "score": 0 },
+                    { "label": "能靠搜索/教程解决一部分", "score": 1 },
+                    { "label": "能独立定位并修复", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-7",
+                "prompt": "你是否能理解 `static` / `public` / `private` 的基本含义，并能在合适的位置改它们？",
+                "choices": [
+                    { "label": "不理解", "score": 0 },
+                    { "label": "知道大概，照着改", "score": 1 },
+                    { "label": "理解访问性/静态语义并能独立改", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-8",
+                "prompt": "你是否能写/读事件或回调（例如 `button.OnClick += ...` / `Action`）并理解“什么时候会触发”？",
+                "choices": [
+                    { "label": "没接触过", "score": 0 },
+                    { "label": "跟着做过，能改但不稳", "score": 1 },
+                    { "label": "能独立使用并排查重复触发/未解绑等问题", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-9",
+                "prompt": "你是否用过 NuGet/引用依赖，并能解决“缺少程序集/类型找不到”这类编译错误？",
+                "choices": [
+                    { "label": "没碰过", "score": 0 },
+                    { "label": "遇到过，靠教程/搜索能解决一部分", "score": 1 },
+                    { "label": "能独立定位依赖来源并修复引用/版本问题", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-10",
+                "prompt": "你是否能看懂 `using Terraria; using Terraria.ID; using Terraria.ModLoader;` 这类 using 引用，并知道“类型来自哪里”？",
+                "choices": [
+                    { "label": "看不懂/不知道", "score": 0 },
+                    { "label": "知道大概，照着抄能用", "score": 1 },
+                    { "label": "能独立定位命名空间与类型来源", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-11",
+                "prompt": "你是否能读懂条件表达式/三元运算（例如 `x > 0 ? a : b`）并在合适时使用？",
+                "choices": [
+                    { "label": "没接触过", "score": 0 },
+                    { "label": "能看懂但不太会写", "score": 1 },
+                    { "label": "能熟练读写并避免可读性问题", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-12",
+                "prompt": "你是否能理解 `try/catch` 的用途，并能在合适的位置捕获/记录异常（避免吞异常）？",
+                "choices": [
+                    { "label": "不会/没用过", "score": 0 },
+                    { "label": "用过，但不太会放位置", "score": 1 },
+                    { "label": "能合理捕获并保留有效信息", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-13",
+                "prompt": "你是否能看懂 lambda（例如 `list.Where(x => x > 0)`）并能修改过滤条件？",
+                "choices": [
+                    { "label": "看不懂", "score": 0 },
+                    { "label": "能看懂一些，能改简单条件", "score": 1 },
+                    { "label": "能熟练使用并理解闭包风险", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-14",
+                "prompt": "你是否能读懂 `foreach (var item in items) { ... }` 并知道何时用 `for` vs `foreach`？",
+                "choices": [
+                    { "label": "看不懂", "score": 0 },
+                    { "label": "能看懂并会用其中一种", "score": 1 },
+                    { "label": "能根据场景选择并注意修改集合等坑", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-15",
+                "prompt": "你是否写过简单的文件读写/JSON 配置（例如保存一个设置到文件）？",
+                "choices": [
+                    { "label": "没写过", "score": 0 },
+                    { "label": "跟教程做过", "score": 1 },
+                    { "label": "能独立实现并处理路径/编码等问题", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-16",
+                "prompt": "你是否能区分“编译错误”和“运行时错误”，并分别用合适的方法处理？",
+                "choices": [
+                    { "label": "分不清", "score": 0 },
+                    { "label": "大概分得清，但处理不稳", "score": 1 },
+                    { "label": "能快速定位并选择合适工具（编译器/断点/日志）", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-17",
+                "prompt": "你是否能理解并使用 `enum`（例如 `ItemUseStyleID.Swing`）？",
+                "choices": [
+                    { "label": "没用过", "score": 0 },
+                    { "label": "见过，照抄能用", "score": 1 },
+                    { "label": "能独立查找并正确使用枚举值", "score": 2 }
+                ]
+            },
+            {
+                "id": "csharp-18",
+                "prompt": "你是否能看懂/修改一个方法签名（参数、返回值、可选参数），并根据报错修正调用？",
+                "choices": [
+                    { "label": "不太会", "score": 0 },
+                    { "label": "能改简单的", "score": 1 },
+                    { "label": "能独立根据编译器提示修正调用", "score": 2 }
+                ]
+            }
+        ],
+        "tmodloader": {
+            "basicApi": [
+                {
+                    "id": "tml-basic-1",
+                    "prompt": "你是否能从零创建一个 tModLoader Mod 项目并成功 Build/Reload，使 Mod 出现在列表并可启用？",
+                    "choices": [
+                        { "label": "没接触过", "score": 0 },
+                        { "label": "跟教程做过，能跑起来但不太会排错", "score": 1 },
+                        { "label": "能独立搭建并定位加载/运行问题", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-basic-2",
+                    "prompt": "你是否做过“一个小效果”：创建内容并用常见 Hook（使用/命中/更新等）实现加 Buff/发消息/生成弹幕之类的逻辑？",
+                    "choices": [
+                        { "label": "不会/不知道从哪找", "score": 0 },
+                        { "label": "能跟着例子改出来", "score": 1 },
+                        { "label": "能独立查找并组合使用", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-basic-3",
+                    "prompt": "你是否做过“资源/数据”工作流中的至少一项：贴图路径正确加载、中文/本地化显示、或写一个 Recipe 配方？",
+                    "choices": [
+                        { "label": "没做过", "score": 0 },
+                        { "label": "跟着做过，能改但不稳", "score": 1 },
+                        { "label": "能独立完成并排查资源问题", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-basic-4",
+                    "prompt": "你是否做过“生成/提示”类的小功能：例如 `Main.NewText`、生成掉落、或在特定条件下生成弹幕/NPC？",
+                    "choices": [
+                        { "label": "没做过", "score": 0 },
+                        { "label": "跟着做过，能改但不稳", "score": 1 },
+                        { "label": "能独立完成并处理边界情况", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-basic-5",
+                    "prompt": "你是否做过一个最基础的 ModItem：设置 `SetDefaults` 并让物品能正常使用/挥动？",
+                    "choices": [
+                        { "label": "没做过", "score": 0 },
+                        { "label": "跟着做过，能改但不稳", "score": 1 },
+                        { "label": "能独立实现并处理常见错误", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-basic-6",
+                    "prompt": "你是否做过一个简单的 Buff/状态效果（添加/移除，并在 Update 中生效）？",
+                    "choices": [
+                        { "label": "没做过", "score": 0 },
+                        { "label": "跟着做过，能改但不稳", "score": 1 },
+                        { "label": "能独立实现并排查叠加/时机问题", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-basic-7",
+                    "prompt": "你是否做过配方（Recipe）：能设置材料、工作台、产物，并能在游戏里验证？",
+                    "choices": [
+                        { "label": "没做过", "score": 0 },
+                        { "label": "跟着做过", "score": 1 },
+                        { "label": "能独立实现并处理条件/组等细节", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-basic-8",
+                    "prompt": "你是否做过弹幕（ModProjectile）：设置基本属性并让它发射/命中时触发效果？",
+                    "choices": [
+                        { "label": "没做过", "score": 0 },
+                        { "label": "跟着做过", "score": 1 },
+                        { "label": "能独立实现并处理 AI/命中等细节", "score": 2 }
+                    ]
+                }
+            ],
+            "modPlayer": [
+                {
+                    "id": "tml-modplayer-1",
+                    "prompt": "你是否用过 ModPlayer 做“玩家数据”：比如自定义一个计数/开关，并在存档保存与加载？",
+                    "choices": [
+                        { "label": "没用过", "score": 0 },
+                        { "label": "跟做过，能改但不太懂生命周期", "score": 1 },
+                        { "label": "能独立设计并处理生命周期/存档等", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-modplayer-2",
+                    "prompt": "你是否用 ModPlayer 改过“玩家行为/属性”：例如移动/跳跃/受伤/免疫、或自定义资源（类似 Mana/耐力）？",
+                    "choices": [
+                        { "label": "没用过", "score": 0 },
+                        { "label": "跟做过，能改但不太会排错", "score": 1 },
+                        { "label": "能独立实现并理解更新时机/叠加规则", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-modplayer-3",
+                    "prompt": "你是否用过 ModPlayer 在特定事件点插入逻辑（例如 OnHit、PostUpdate、ResetEffects 等）？",
+                    "choices": [
+                        { "label": "没用过", "score": 0 },
+                        { "label": "跟做过，知道几个常用点", "score": 1 },
+                        { "label": "能独立选择正确的 Hook 并排查时序问题", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-modplayer-4",
+                    "prompt": "你是否做过“玩家相关的 UI/提示”：例如显示一个自定义计量/状态提示？",
+                    "choices": [
+                        { "label": "没做过", "score": 0 },
+                        { "label": "跟教程做过", "score": 1 },
+                        { "label": "能独立实现并处理绘制/更新/性能", "score": 2 }
+                    ]
+                }
+            ],
+            "modSystem": [
+                {
+                    "id": "tml-modsystem-1",
+                    "prompt": "你是否用过 ModSystem 做“世界/全局数据”：比如世界级变量（开关/计数），并在世界存档保存与加载？",
+                    "choices": [
+                        { "label": "没用过", "score": 0 },
+                        { "label": "跟做过，能改但不太会组织", "score": 1 },
+                        { "label": "能独立组织系统并维护跨内容逻辑", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-modsystem-2",
+                    "prompt": "你是否用 ModSystem/系统类做过“统一注册/管理”：例如集中管理多个内容的配置、生成规则或全局逻辑？",
+                    "choices": [
+                        { "label": "没用过", "score": 0 },
+                        { "label": "跟做过，能改但组织能力一般", "score": 1 },
+                        { "label": "能独立设计并保持结构可维护", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-modsystem-3",
+                    "prompt": "你是否用过系统类处理加载阶段（例如 Load/Unload），并正确清理静态引用避免重载问题？",
+                    "choices": [
+                        { "label": "没用过", "score": 0 },
+                        { "label": "见过/跟做过，但容易漏清理", "score": 1 },
+                        { "label": "能独立处理并理解重载相关坑", "score": 2 }
+                    ]
+                },
+                {
+                    "id": "tml-modsystem-4",
+                    "prompt": "你是否做过跨内容的“系统配置/开关”，并让多个内容读取同一份配置生效？",
+                    "choices": [
+                        { "label": "没做过", "score": 0 },
+                        { "label": "跟教程做过", "score": 1 },
+                        { "label": "能独立实现并保持可维护", "score": 2 }
+                    ]
+                }
+            ],
+            "advanced": {
+                "buckets": {
+                    "worldSystem": [
+                        {
+                            "id": "tml-adv-world-1",
+                            "prompt": "（高级）你是否做过“世界生成/修改世界”：比如放置结构、改方块、或在世界加载时初始化一套系统数据？",
+                            "choices": [
+                                { "label": "没接触过", "score": 0 },
+                                { "label": "跟教程做过，能改但不稳", "score": 1 },
+                                { "label": "能独立实现并排查问题", "score": 2 }
+                            ]
+                        },
+                        {
+                            "id": "tml-adv-world-2",
+                            "prompt": "（高级）你是否处理过“世界/系统数据在联机中同步”（多人下保持一致）？",
+                            "choices": [
+                                { "label": "没接触过", "score": 0 },
+                                { "label": "跟教程做过，能改但不稳", "score": 1 },
+                                { "label": "能独立实现并排查问题", "score": 2 }
+                            ]
+                        }
+                    ],
+                    "hooks": [
+                        {
+                            "id": "tml-adv-hooks-1",
+                            "prompt": "（高级）你是否用过 GlobalItem/GlobalNPC 等“全局类”去修改原版所有物品/怪物的行为？",
+                            "choices": [
+                                { "label": "没接触过", "score": 0 },
+                                { "label": "跟例子改过一些", "score": 1 },
+                                { "label": "能独立设计与定位冲突/时序问题", "score": 2 }
+                            ]
+                        },
+                        {
+                            "id": "tml-adv-hooks-2",
+                            "prompt": "（高级）你是否做过更深的 Hook：比如改原版某个机制的执行流程，并能处理时序/冲突问题？",
+                            "choices": [
+                                { "label": "没接触过", "score": 0 },
+                                { "label": "跟例子改过一些", "score": 1 },
+                                { "label": "能独立设计与定位冲突/时序问题", "score": 2 }
+                            ]
+                        }
+                    ],
+                    "rendering": [
+                        {
+                            "id": "tml-adv-render-1",
+                            "prompt": "（高级）你是否在绘制阶段做过自定义绘制（SpriteBatch 绘制、使用 Effect/Shader）？",
+                            "choices": [
+                                { "label": "没接触过", "score": 0 },
+                                { "label": "跟教程做过，能改但不稳", "score": 1 },
+                                { "label": "能独立实现并排查渲染问题", "score": 2 }
+                            ]
+                        },
+                        {
+                            "id": "tml-adv-render-2",
+                            "prompt": "（高级）你是否做过顶点/Primitive 绘制（例如拖尾、光束、曲线特效）？",
+                            "choices": [
+                                { "label": "没接触过", "score": 0 },
+                                { "label": "跟教程做过，能改但不稳", "score": 1 },
+                                { "label": "能独立实现并排查渲染问题", "score": 2 }
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        "preferences": [
+            {
+                "id": "pref-csharp",
+                "prompt": "（偏好）你希望怎么补 C#？（不影响分档）",
+                "choices": [
+                    { "label": "先系统补基础，再写 Mod", "value": "csharp-first" },
+                    { "label": "边做边补（遇到不会再学）", "value": "learn-as-you-go" },
+                    { "label": "先做出成果，C# 够用就行", "value": "results-first" }
+                ]
+            },
+            {
+                "id": "pref-tml",
+                "prompt": "（偏好）你更关注哪类 tML 内容？（不影响分档）",
+                "choices": [
+                    { "label": "内容制作（物品/NPC/弹幕等）", "value": "content" },
+                    { "label": "机制系统（状态/系统/世界等）", "value": "systems" },
+                    { "label": "高级方向（Hook/绘制/UI/联机等）", "value": "advanced" }
+                ]
+            },
+            {
+                "id": "pref-goal",
+                "prompt": "（偏好）你当前更像哪种目标？（不影响分档）",
+                "choices": [
+                    { "label": "做出第一个能玩的 Mod（尽快出成果）", "value": "first-mod" },
+                    { "label": "系统学习（希望把知识补齐）", "value": "systematic" },
+                    { "label": "解决一个具体问题（遇到什么学什么）", "value": "problem-driven" }
+                ]
+            },
+            {
+                "id": "pref-time",
+                "prompt": "（偏好）你更能接受的学习节奏是？（不影响分档）",
+                "choices": [
+                    { "label": "短平快：先能跑起来再说", "value": "fast" },
+                    { "label": "正常：一步步做，每步都理解", "value": "balanced" },
+                    { "label": "深入：愿意读源码/文档搞明白", "value": "deep" }
+                ]
+            },
+            {
+                "id": "pref-help",
+                "prompt": "（偏好）遇到问题时你更倾向于？（不影响分档）",
+                "choices": [
+                    { "label": "直接搜报错/关键词，快速定位解法", "value": "search-first" },
+                    { "label": "先看教程步骤，尽量按路线走", "value": "tutorial-first" },
+                    { "label": "愿意读源码/文档追根究底", "value": "source-first" }
+                ]
+            },
+            {
+                "id": "pref-style",
+                "prompt": "（偏好）你更喜欢的学习材料形式？（不影响分档）",
+                "choices": [
+                    { "label": "短小示例 + 解释", "value": "snippets" },
+                    { "label": "完整可运行项目/模板", "value": "templates" },
+                    { "label": "系统化长文（概念→原理→实践）", "value": "longform" }
+                ]
+            },
+            {
+                "id": "pref-focus",
+                "prompt": "（偏好）你想优先避开哪类坑？（不影响分档）",
+                "choices": [
+                    { "label": "环境/工具链问题（装错版本、编译失败）", "value": "env" },
+                    { "label": "逻辑/时序问题（Hook 放错位置导致不生效）", "value": "timing" },
+                    { "label": "性能/联机问题（卡顿、多人不同步）", "value": "perf-net" }
+                ]
+            },
+            {
+                "id": "pref-output",
+                "prompt": "（偏好）你更希望先产出什么？（不影响分档）",
+                "choices": [
+                    { "label": "一个新内容（物品/NPC/弹幕）", "value": "new-content" },
+                    { "label": "一个新机制（系统/状态/世界规则）", "value": "new-system" },
+                    { "label": "一个酷炫特效（绘制/Shader/拖尾）", "value": "fx" }
+                ]
+            }
+        ]
+    }
+}
