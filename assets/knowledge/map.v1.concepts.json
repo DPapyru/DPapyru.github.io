@@ -1277,6 +1277,850 @@
                     "boost": 1
                 }
             ]
+        },
+        "api-main-togglegameplayupdates": {
+            "title": "Main.ToggleGameplayUpdates(...)",
+            "notes": [
+                "切换游戏逻辑更新状态；常用于暂停游戏或实现特定功能。",
+                "参数为 true 时允许更新，false 时暂停游戏逻辑。",
+                "谨慎使用，可能会影响多人游戏同步。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-main-runonmainthread": {
+            "title": "Main.RunOnMainThread(...)",
+            "notes": [
+                "等待一个 Action 在主线程上执行完成。",
+                "参数为 Action 或 Func<T>，返回 Task 或 Task<T>。",
+                "用于从非主线程（如网络回调、异步操作）安全调用游戏 API。",
+                "使用 await 可等待执行完成，确保线程安全。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-mod-call": {
+            "title": "Mod.Call(...)",
+            "notes": [
+                "Mod 之间的跨 Mod 通信机制；通过字符串标识调用其他 Mod 的公开方法。",
+                "常见用法：创建 API Mod 让其他 Mod 调用。",
+                "参数和返回值都是 object，需要自行处理类型转换。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-mod-advanced",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-mod-load": {
+            "title": "Mod.Load()",
+            "notes": [
+                "Mod 加载时调用；用于初始化资源、注册内容。",
+                "比构造函数更安全的初始化时机。",
+                "适合加载贴图、音频等资源。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-mod-unload": {
+            "title": "Mod.Unload()",
+            "notes": [
+                "Mod 卸载时调用；用于释放资源、清理静态字段。",
+                "必须实现以防止内存泄漏。",
+                "不要调用基类的 Unload。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-mod-addrecipes": {
+            "title": "Mod.AddRecipes()",
+            "notes": [
+                "注册 Mod 的合成表；在 Load 之后、PostAddRecipes 之前调用。",
+                "通常配合 AddRecipeGroups 一起使用。",
+                "使用 Recipe.Create 创建合成，使用 RecipeHelper 定义条件。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-recipes",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-mod-handlepacket": {
+            "title": "Mod.HandlePacket(...)",
+            "notes": [
+                "处理网络数据包；在多人游戏中同步 Mod 数据。",
+                "whoAmI 表示发送方索引，-1 表示服务器。",
+                "需要自行实现数据序列化和版本控制。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-networking",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-moditem-setdefaults": {
+            "title": "ModItem.SetDefaults()",
+            "notes": [
+                "设置物品的默认属性；在物品实例创建时调用。",
+                "使用 Item.CloneDefaults 设置模板。",
+                "可以在这里设置物品名称、伤害、稀有度等。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-items",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-moditem-createrecipe": {
+            "title": "ModItem.CreateRecipe(...)",
+            "notes": [
+                "创建以该 ModItem 为结果的配方；amount 参数决定产出堆叠数。",
+                "此方法仅创建配方，不会自动注册到游戏中。",
+                "需要调用 Register() 方法完成注册。",
+                "示例：CreateRecipe(1).AddIngredient(ItemID.DirtBlock).Register();"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-recipes",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-items",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-moditem-canshoot": {
+            "title": "ModItem.CanShoot(...)",
+            "notes": [
+                "允许你在物品使用时阻止发射弹射物。",
+                "返回 true 允许发射，返回 false 阻止发射。",
+                "默认返回 true。在本地、服务器和远程客户端上调用。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-items",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-projectiles",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-moditem-modifyshootstats": {
+            "title": "ModItem.ModifyShootStats(...)",
+            "notes": [
+                "修改发射时的弹射物属性；可修改位置、速度、类型等。",
+                "参数 stats 包含 position、velocity、type。",
+                "常用于改变子弹飞行方向、速度或替换弹射物类型。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-items",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-projectiles",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-moditem-safesetdefaults": {
+            "title": "ModItem.SafeSetDefaults()",
+            "notes": [
+                "安全设置物品默认属性；处理贴图未加载的情况。",
+                "建议在 SetDefaults 末尾调用以设置默认值。",
+                "确保物品在资源加载前有合理默认值。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-items",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-moditem-setstaticdefaults": {
+            "title": "ModItem.SetStaticDefaults()",
+            "notes": [
+                "设置物品的静态默认值；只调用一次。",
+                "在内容完全加载后调用，可安全使用 ModContent。",
+                "常用于设置物品稀有度、工具提示等。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-items",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-moditem-autodefaults": {
+            "title": "ModItem.AutoDefaults()",
+            "notes": [
+                "自动设置某些默认值。",
+                "如需自定义默认值可以重写此方法。",
+                "由 SetDefaults 自动调用。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-items",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-moditem-useitem": {
+            "title": "ModItem.UseItem(...)",
+            "notes": [
+                "当物品被使用时调用；返回值控制是否消耗物品。",
+                "可在这里实现特殊的使用效果。",
+                "返回 true 消耗物品，返回 false 不消耗。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-items",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-moditem-holditem": {
+            "title": "ModItem.HoldItem(...)",
+            "notes": [
+                "当玩家手持物品时每帧调用。",
+                "可用于实现持续效果或显示额外信息。",
+                "常用于法杖、工具等物品。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-items",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-modprojectile-setdefaults": {
+            "title": "ModProjectile.SetDefaults(...)",
+            "notes": [
+                "设置弹幕的默认属性；在弹幕实例创建时调用。",
+                "可设置伤害、穿透、友好/敌对、时间等。",
+                "使用 Projectile.CloneDefaults 从模板继承。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-projectiles",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-modprojectile-ai": {
+            "title": "ModProjectile.AI()",
+            "notes": [
+                "定义弹射物的行为逻辑；每帧调用一次。",
+                "仅在 PreAI 返回 true 时才会调用。",
+                "通过修改 Projectile.velocity、rotation 等实现行为。",
+                "常见模式：追踪玩家、周期性攻击、特殊移动。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-projectiles",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-modprojectile-setstaticdefaults": {
+            "title": "ModProjectile.SetStaticDefaults()",
+            "notes": [
+                "设置弹幕的静态默认值；只调用一次。",
+                "常用于设置 ProjectileID、ModProjectileName、DefaultLoaderState。",
+                "适合放置不会改变的属性。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-projectiles",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-modtile-setstaticdefaults": {
+            "title": "ModTile.SetStaticDefaults()",
+            "notes": [
+                "设置方块的静态默认值；只调用一次。",
+                "可设置 Main.tileSolid、Main.tileBlockLight、Main.tileLighted 等。",
+                "方块的核心属性在此设置。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-tiles",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-modtile-addmapentry": {
+            "title": "ModTile.AddMapEntry(...)",
+            "notes": [
+                "为该方块添加小地图条目；使用指定的颜色和显示名称。",
+                "应在 SetDefaults 中调用。",
+                "参数为 Color 或 (Color, LocalizedText name)。",
+                "使用 CreateMapEntryName() 创建默认的本地化名称。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-tiles",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-modtile-createmapentryname": {
+            "title": "ModTile.CreateMapEntryName(...)",
+            "notes": [
+                "创建地图条目名称；用于本地化显示。",
+                "返回的 string 可作为 AddMapEntry 的 name 参数。",
+                "自动使用 Mod 的本地化文件。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-tiles",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-modtile-numdust": {
+            "title": "ModTile.NumDust(...)",
+            "notes": [
+                "设置方块被挖掘时产生的尘埃类型。",
+                "返回 int 表示尘埃ID；-1 表示不产生尘埃。",
+                "默认值通常是 1（木头/泥土）。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-tiles",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-modnpc-setdefaults": {
+            "title": "ModNPC.SetDefaults()",
+            "notes": [
+                "设置NPC的默认属性；在NPC实例创建时调用。",
+                "可设置 width、height、lifeMax、defense 等。",
+                "使用 NPC.CloneDefaults 从模板继承。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-modnpc-setstaticdefaults": {
+            "title": "ModNPC.SetStaticDefaults()",
+            "notes": [
+                "设置NPC的静态默认值；只调用一次。",
+                "常用于设置 displayName、NPCID.Sets.* 等。",
+                "适合放置不会改变的属性。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-modnpc-ai": {
+            "title": "ModNPC.AI()",
+            "notes": [
+                "NPC的AI逻辑；每帧调用一次。",
+                "通过修改 NPC.velocity、rotation 等实现行为。",
+                "城镇NPC通常重写 GetChat 等方法而非 AI。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-modnpc-cantownnpcspawn": {
+            "title": "ModNPC.CanTownNPCSpawn()",
+            "notes": [
+                "判断城镇NPC是否可以生成；返回 true 允许生成。",
+                "用于自定义城镇NPC的出现条件。",
+                "通常是检查特定物品或完成特定任务。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-npc-townnpcs",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-modnpc-townnpcname": {
+            "title": "ModNPC.TownNPCName(...)",
+            "notes": [
+                "返回城镇NPC的名称；用于显示和本地化。",
+                "返回一个 string 数组，客户端随机选择。",
+                "可实现多名称功能。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-townnpcs",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-modnpc-findframe": {
+            "title": "ModNPC.FindFrame()",
+            "notes": [
+                "设置NPC的动画帧；每帧调用一次。",
+                "通过修改 NPC.frame 来显示不同动画帧。",
+                "需要先在 SetDefaults 中设置动画行数。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-modnpc-setupshop": {
+            "title": "ModNPC.SetupShop(...)",
+            "notes": [
+                "设置城镇NPC的商店内容。",
+                "参数 shop 为 ShopContent 列表。",
+                "使用 shop.Add() 添加商品。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "tmodloader-npc-townnpcs",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-modnpc-getchat": {
+            "title": "ModNPC.GetChat()",
+            "notes": [
+                "返回城镇NPC的聊天文本。",
+                "返回一个 string 或 string[]。",
+                "可实现随机对话或根据条件变化。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-townnpcs",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-modnpc-setchatbuttons": {
+            "title": "ModNPC.SetChatButtons(...)",
+            "notes": [
+                "设置城镇NPC的聊天按钮。",
+                "参数 buttons 为 string[]。",
+                "配合 OnChatButtonClicked 实现交互。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-townnpcs",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-modnpc-onchatbuttonclicked": {
+            "title": "ModNPC.OnChatButtonClicked(...)",
+            "notes": [
+                "处理聊天按钮点击事件。",
+                "参数 buttonIndex 表示点击的按钮索引。",
+                "可打开商店、执行特殊操作等。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-npc-townnpcs",
+                    "boost": 1
+                }
+            ]
+        },
+        "api-modloader-mod-addrecipe": {
+            "title": "Mod.AddRecipe()",
+            "notes": [
+                "注册单个合成配方。",
+                "返回 RecipeBuilder 用于链式调用。",
+                "推荐使用 ModItem.CreateRecipe 替代。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-recipes",
+                    "boost": 2
+                }
+            ]
+        },
+        "api-modloader-mod-addrecipegroup": {
+            "title": "Mod.AddRecipeGroup()",
+            "notes": [
+                "注册配方组；允许配方使用一组物品中的任意一个。",
+                "用于实现'任意木头'、'任意宝石'等配方。",
+                "需要在 Mod.AddRecipes 中调用。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 1
+                },
+                {
+                    "id": "tmodloader-recipes",
+                    "boost": 2
+                }
+            ]
+        },
+        "cs-type-item": {
+            "title": "Terraria.Item",
+            "notes": [
+                "Item 类代表游戏中的物品实体。",
+                "包含伤害、稀有度、使用时间、击退等属性。",
+                "ModItem 中通过 Item 字段访问。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-items",
+                    "boost": 2
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-projectile": {
+            "title": "Terraria.Projectile",
+            "notes": [
+                "Projectile 类代表游戏中的弹射物。",
+                "包含速度、伤害、穿透、敌对/友好等属性。",
+                "ModProjectile 中通过 Projectile 字段访问。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-projectiles",
+                    "boost": 2
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-npc": {
+            "title": "Terraria.NPC",
+            "notes": [
+                "NPC 类代表游戏中的非玩家角色。",
+                "包含生命值、防御力、移动速度、阵营等属性。",
+                "ModNPC 中通过 NPC 字段访问。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-npc-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-tile": {
+            "title": "Terraria.Tile",
+            "notes": [
+                "Tile 类代表游戏中的方块。",
+                "包含方块类型、坐标、状态等信息。",
+                "用于检测和操作世界中的方块。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-tiles",
+                    "boost": 2
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-player": {
+            "title": "Terraria.Player",
+            "notes": [
+                "Player 类代表玩家实体。",
+                "包含物品栏、背包、状态等信息。",
+                "在各种 Hook 中作为参数传入。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-worldgen": {
+            "title": "Terraria.WorldGen",
+            "notes": [
+                "WorldGen 类提供世界生成相关的方法。",
+                "用于放置方块、NPC、清理区域等。",
+                "只能在世界生成时调用。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-worldgen",
+                    "boost": 2
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-main": {
+            "title": "Terraria.Main",
+            "notes": [
+                "Main 类是游戏的核心入口和全局状态管理。",
+                "包含 dayTime、moonPhase、genRand 等全局属性。",
+                "提供 NewText、SpawnNPC、QuickSpawnItem 等工具方法。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-vanilla-methods",
+                    "boost": 2
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-chest": {
+            "title": "Terraria.Chest",
+            "notes": [
+                "Chest 类代表世界中的宝箱。",
+                "包含物品数组、坐标等信息。",
+                "用于创建自定义箱子或修改现有箱子。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-worldgen",
+                    "boost": 1
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-damageclass": {
+            "title": "Terraria.DamageClass",
+            "notes": [
+                "DamageClass 定义伤害类型。",
+                "如近战、远程、魔法、召唤等。",
+                "通过 DamageClass.Generic、DamageClass.Melee 等访问。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-items",
+                    "boost": 1
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
+        },
+        "cs-type-modcontent": {
+            "title": "Terraria.ModLoader.ModContent",
+            "notes": [
+                "ModContent 提供内容ID转换的方法。",
+                "ModContent.ItemType<T>() 返回物品ID。",
+                "ModContent.ProjectileType<T>() 返回弹幕ID。",
+                "ModContent.TileType<T>() 返回方块ID。",
+                "ModContent.NPCType<T>() 返回NPCID。"
+            ],
+            "collections": [
+                {
+                    "id": "tmodloader-mod-basics",
+                    "boost": 2
+                },
+                {
+                    "id": "csharp-basics",
+                    "boost": 1
+                }
+            ]
         }
     }
 }

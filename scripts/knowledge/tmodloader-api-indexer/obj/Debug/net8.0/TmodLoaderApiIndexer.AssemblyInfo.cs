@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TmodLoaderApiIndexer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+12f1e27ed66dd55b04f847755d5fd4689cb2f3f5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+843322780ee8630a5c11c38a82a389aa0c54cc1a")]
 [assembly: System.Reflection.AssemblyProductAttribute("TmodLoaderApiIndexer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TmodLoaderApiIndexer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
