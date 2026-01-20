@@ -6,8 +6,8 @@ last_updated: 2026-01-19
 difficulty: beginner
 time: 15分钟
 description: 做第一把武器同时入门C#
-prev_chapter: DPapyru-快速开始构建Mod.md
-next_chapter: DPapyru-第一个弹幕.md
+prev_chapter: ../1-入门/DPapyru-快速开始构建Mod.md
+next_chapter: ../3-战斗/DPapyru-第一个弹幕.md
 topic: mod-basics
 order: 2
 colors:
@@ -15,6 +15,35 @@ colors:
 ---
 
 # 第一个武器：做一把能用的剑同时学习C#基础
+
+> **[C#概念图谱]**
+>
+> 本章涉及的C#核心概念：
+> ```
+> namespace → class → 方法(override) → 变量/属性 → 赋值运算 → 数据类型
+> ```
+>
+> **[前置概念]**：无（本章是C#起点）
+> **[新增概念]**：`using`、`namespace`、`class`、继承、方法、`override`、`变量/属性`、`赋值运算符`、`数据类型`
+
+> **[章节概览与自测]**
+>
+> | 概念 | 预计掌握时间 | 你现在能回答吗？ |
+> |------|-------------|-----------------|
+> | `using` 是什么？ | 2分钟 | ⬜ 能 ⬜ 大概 ⬜ 不能 |
+> | `namespace` 作用？ | 3分钟 | ⬜ 能 ⬜ 大概 ⬜ 不能 |
+> | `class` 与继承？ | 5分钟 | ⬜ 能 ⬜ 大概 ⬜ 不能 |
+> | `override` 是什么意思？ | 3分钟 | ⬜ 能 ⬜ 大概 ⬜ 不能 |
+> | `=` 赋值运算符？ | 1分钟 | ⬜ 能 ⬜ 大概 ⬜ 不能 |
+>
+> **[阅读提示]**：先做自测，读完本章后再回来标记能✅
+
+> **[章节进度]**
+> - [上一章]：[快速开始构建Mod](./DPapyru-快速开始构建Mod.md)
+> - [下一章]：[第一个弹幕](../3-战斗/DPapyru-第一个弹幕.md)
+> - [全部章节]：[入门指南](../README.md)
+
+---
 
 这一章的目标很简单：做出你 Mod 里的第一把武器，并且你敢改它的关键数值与配方。
 
@@ -80,7 +109,9 @@ namespace YourModName.Content.Items
 }
 ```
 
-### 题目
+### 概念关联测验
+
+> **[测验对应概念]**：`namespace`、`class`、`AddRecipes()`配方逻辑
 
 ```quiz
 type: choice
@@ -134,17 +165,31 @@ explain: |
 
 下面我们按"阅读顺序"讲一下：每段在干嘛、你现在需要记住什么。
 
+> **[C#概念进度]**
+>
+> 学完这一节，你将掌握：
+> - [已掌握] `using`：引用命名空间
+> - [已掌握] `namespace`：定义命名空间
+> - [已掌握] `class`：定义类与继承
+> - [已掌握] `override`：重写方法
+> - [已掌握] `=`：赋值运算符
+> - [已掌握] 基本数据类型
+
 ### 1）`using`：引用命名空间
+
+> **[对应概念]**：`using`、namespace概念
 
 `using` 语句用于引用命名空间，让你可以使用其中的类型。
 
 - `using Terraria;`：引用 Terraria 命名空间，包含一些常用类型
-- `using Terraria.ID;`：引用 Terraria.ID 命名空间，包含各种 ID（比如 `ItemID.Wood`、`TileID.WorkBenches`）
+- `using Terraria.ID;`：引用 Terraria.ID 命名空间，包含各种 ID（比如 `ItemTileID.WorkBenID.Wood`、`ches`）
 - `using Terraria.ModLoader;`：引用 Terraria.ModLoader 命名空间，包含 tModLoader 的核心类型（比如 `ModItem`、`Recipe`）
 
 这三行你目前不需要背，先记住一个排错技巧：
 
 - 如果你删掉 `using Terraria.ID;`，那么 `ItemID` / `TileID` 往往会"变红报错"
+
+> **[概念小测]**
 
 ```quiz
 type: choice
@@ -167,6 +212,8 @@ explain: |
 ```
 
 ### 2）`namespace`：定义命名空间
+
+> **[对应概念]**：`namespace`、代码组织
 
 `namespace YourModName.Content.Items` 用于组织代码，避免命名冲突。
 
@@ -197,6 +244,8 @@ explain: |
 
 ### 3）`class FirstSword : ModItem`：定义一个新物品类
 
+> **[对应概念]**：`class`、继承、面向对象基础
+
 `class` 用于定义一个类。类的名字是 `FirstSword`，也就是这把武器的"代码名字"。
 
 后面的 `: ModItem` 表示这个类继承自 `ModItem`。
@@ -206,7 +255,16 @@ explain: |
 
 继承的意思是：`FirstSword` 拥有 `ModItem` 的所有功能，我们可以通过重写方法来修改或扩展这些功能。
 
+> **[类比理解]**
+>
+> 如果把 `ModItem` 想象成"武器的蓝图"，那么 `class FirstSword : ModItem` 就是：
+> > "我要基于这份蓝图，打造一把具体的剑"
+>
+> 你不需要从零设计武器的所有细节，只需要告诉游戏"我的剑和蓝图有什么不同"。
+
 ### 4）方法：定义一段可执行的代码
+
+> **[对应概念]**：方法、`override`、访问修饰符
 
 代码里有两个"方法"：
 
@@ -219,7 +277,16 @@ explain: |
 - `override`：这个方法重写了基类中的方法
 - `void`：这个方法不返回值
 
+> **[对比] override vs 普通方法**
+>
+> | 写法 | 含义 |
+> |------|------|
+> | `void SetDefaults()` | 新建一个方法 |
+> | `public override void SetDefaults()` | 重写基类已有的方法 |
+
 ### 5）`Item.xxx = ...;`：设置物品属性
+
+> **[对应概念]**：变量/属性、赋值运算
 
 `Item` 代表这个物品本身。`Item.damage` 就是它的伤害，`Item.useTime` 就是它挥动需要的时间……
 
@@ -240,6 +307,8 @@ explain: |
 
 ### 6）`=`：赋值运算符
 
+> **[对应概念]**：赋值运算符、基本语法
+
 `Item.damage = 50;` 这句话的意思是：
 
 > 把 50 这个值赋给 `damage` 属性
@@ -248,6 +317,8 @@ explain: |
 
 ### 7）这一章用到的数据类型（只讲够用的）
 
+> **[对应概念]**：数据类型、int、bool、枚举
+
 你现在只需要认识两种：
 
 - 数字：比如 `50`、`20`、`6`（整数）
@@ -255,7 +326,17 @@ explain: |
 
 像 `ItemRarityID.Blue`、`ItemUseStyleID.Swing` 这种，看起来不是数字，但它们是枚举类型，代表游戏里提前定义好的选项。
 
+> **[枚举小知识]**
+>
+> 枚举（Enum）就像游戏的"选项菜单"：
+> - `ItemRarityID.Blue` = 稀有度选"蓝色"
+> - `ItemUseStyleID.Swing` = 动作选"挥动"
+>
+> 你不需要记住所有选项，只需要知道"有这些预定义值可以用"。
+
 ### 8）配方：`CreateRecipe()` + `AddIngredient` + `AddTile` + `Register`
+
+> **[对应概念]**：方法调用、对象操作
 
 `AddRecipes()` 里每行都很直观：
 
@@ -284,3 +365,36 @@ explain: |
 这一章你已经完成最关键的一步：**你能改武器参数与配方，并且知道从哪里下手排错**。
 
 下一章我们会做第一个弹幕：你会看到"武器（物品）"是怎么把"弹幕（Projectile）"打出去的。
+
+---
+
+## [本章学习完成度自测]
+
+> 回到开头，对比一下你现在能回答哪些概念了？
+
+| 概念 | 读章前 | 读章后 |
+> |------|--------|--------|
+> | `using` 是什么？ | ⬜ | ⬜ 能 ⬜ 大概 ⬜ 不能 |
+> | `namespace` 作用？ | ⬜ | ⬜ 能 ⬜ 大概 ⬜ 不能 |
+> | `class` 与继承？ | ⬜ | ⬜ 能 ⬜ 大概 ⬜ 不能 |
+> | `override` 是什么意思？ | ⬜ | ⬜ 能 ⬜ 大概 ⬜ 不能 |
+> | `=` 赋值运算符？ | ⬜ | ⬜ 能 ⬜ 大概 ⬜ 不能 |
+
+> **[本章成就解锁]**
+>
+> - [ ] **C#初学者**：完成本章所有练习
+> - [ ] **能工巧匠**：成功修改武器数值并看到游戏变化
+> - [ ] **配方大师**：成功修改合成配方
+>
+> **[保存进度]**：把自测结果截图或记录下来，完成整个入门系列后可以回顾成长！
+
+---
+
+> **[继续学习之旅]**
+> - [上一章]：[快速开始构建Mod](./DPapyru-快速开始构建Mod.md)
+> - [下一章]：[第一个弹幕](../3-战斗/DPapyru-第一个弹幕.md)
+> - [返回总览]：[入门指南](../README.md)
+
+---
+
+*本章最后更新：2026-01-19*

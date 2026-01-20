@@ -6,8 +6,8 @@ last_updated: 2026-01-19
 difficulty: beginner
 time: 20分钟
 description: 创建可消耗的弹药，理解弹药和武器的关系
-prev_chapter: DPapyru-第一个合成表.md
-next_chapter: DPapyru-第一个NPC.md
+prev_chapter: ../2-物品/DPapyru-第一个物块.md
+next_chapter: ../4-玩家/DPapyru-第一个NPC.md
 topic: mod-basics
 order: 7
 colors:

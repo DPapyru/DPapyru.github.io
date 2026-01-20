@@ -6,8 +6,8 @@ last_updated: 2026-01-19
 difficulty: beginner
 time: 25分钟
 description: 创建可放置的物块，理解物块的基本属性和行为
-prev_chapter: DPapyru-第一个弹幕.md
-next_chapter: DPapyru-第一个合成表.md
+prev_chapter: ../3-战斗/DPapyru-第一个弹幕.md
+next_chapter: ../2-物品/DPapyru-第一个弹药.md
 topic: mod-basics
 order: 4
 colors:

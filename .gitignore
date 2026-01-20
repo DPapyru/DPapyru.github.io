@@ -88,3 +88,4 @@ docs/plans
 # 本地导出/临时预览文件
 .test/
 .kilocode/
+nul

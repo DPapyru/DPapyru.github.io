@@ -6,8 +6,8 @@ last_updated: 2026-01-19
 difficulty: beginner
 time: 30分钟
 description: 创建可交互的NPC，理解NPC的基本属性和行为
-prev_chapter: DPapyru-第一个弹药.md
-next_chapter: DPapyru-第一个Boss.md
+prev_chapter: ../2-物品/DPapyru-第一个弹药.md
+next_chapter: ../5-高级/DPapyru-第一个Boss.md
 topic: mod-basics
 order: 8
 colors:

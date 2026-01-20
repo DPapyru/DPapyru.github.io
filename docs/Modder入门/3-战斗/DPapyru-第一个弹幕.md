@@ -6,8 +6,8 @@ last_updated: 2026-01-19
 difficulty: beginner
 time: 20分钟
 description: 让武器发射弹幕，理解物品和弹幕的关系
-prev_chapter: DPapyru-第一个武器.md
-next_chapter: DPapyru-第一个物块.md
+prev_chapter: ../1-入门/DPapyru-第一个武器.md
+next_chapter: ../2-物品/DPapyru-第一个物块.md
 topic: mod-basics
 order: 3
 colors:

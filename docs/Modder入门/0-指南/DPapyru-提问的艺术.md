@@ -6,8 +6,8 @@ last_updated: 2026-01-17
 difficulty: beginner
 time: 5分钟
 description: 如果新人需要提问，需要注意的事情
-prev_chapter: DPapyru-给新人的前言.md
-next_chapter: DPapyru-快速开始构建Mod.md
+prev_chapter: ../0-指南/DPapyru-给新人的前言.md
+next_chapter: ../1-入门/DPapyru-快速开始构建Mod.md
 topic: mod-basics
 order: 0
 colors:
