@@ -16,11 +16,32 @@ colors:
 
 # 第一个弹药：创建可消耗的弹药
 
-这一章的目标是：创建一个可消耗的弹药，并且你理解"弹药"和"武器"是怎么配合工作的。
-
 弹药是"可以被武器消耗的物品"：子弹、箭矢、火箭……都是弹药。
 
+{if C == 0}
+> **适用人群**：首次接触 C#（C0）。
+>
+> **本章目标**：完成第一个弹药，并能独立修改弹药类型、伤害与发射逻辑。
+{else}
+> **适用人群**：已具备 C# 基础（C≥1）。
+>
+> **建议路径**：先完成"复制 → 编译 → 进游戏验证"，再集中修改 `Item.ammo / Item.useAmmo / ModifyShootStats` 等关键行。
+{end}
+
+---
+
+## 验收标准
+
+完成本章后，你应能：
+
+- 创建可消耗的弹药物品
+- 创建对应的弹药弹幕
+- 让武器正确消耗弹药并发射自定义弹幕
+- 理解弹药、武器、弹幕三者之间的关系
+
 > 本文里会出现 `YourModName`。它是占位符：你要把它换成你自己的 Mod 名。
+
+---
 
 ## 阅读前需求
 
@@ -28,14 +49,17 @@ colors:
 - 已完成"第一个弹幕"章节
 - 知道怎么新建 `.cs` 文件并编译
 
+---
+
 ## 第一步：了解代码
 
 我们需要三个文件：
-1. 一个弹药物品：负责"被消耗"
-2. 一个弹药弹幕：负责"飞出去"
-3. 一个使用弹药的武器：负责"发射"
 
-### 1）创建弹药物品：`Content/Items/FirstAmmo.cs`
+1. **弹药物品**：负责"被消耗"
+2. **弹药弹幕**：负责"飞出去"
+3. **使用弹药的武器**：负责"发射"
+
+### 1.1 创建弹药物品：`Content/Items/FirstAmmo.cs`
 
 ```csharp
 using Terraria;
@@ -74,7 +98,7 @@ namespace YourModName.Content.Items
 }
 ```
 
-### 2）创建弹药弹幕：`Content/Projectiles/FirstAmmoProjectile.cs`
+### 1.2 创建弹药弹幕：`Content/Projectiles/FirstAmmoProjectile.cs`
 
 ```csharp
 using Terraria;
@@ -99,7 +123,7 @@ namespace YourModName.Content.Projectiles
 }
 ```
 
-### 3）创建使用弹药的武器：`Content/Items/FirstAmmoGun.cs`
+### 1.3 创建使用弹药的武器：`Content/Items/FirstAmmoGun.cs`
 
 ```csharp
 using Terraria;
@@ -124,10 +148,10 @@ namespace YourModName.Content.Items
             Item.rare = ItemRarityID.Green;
             Item.UseSound = SoundID.Item11;
             Item.autoReuse = true;
-            
+
             // 关键：告诉游戏"这个武器使用什么弹药"
             Item.useAmmo = AmmoID.Bullet;
-            
+
             // 关键：告诉游戏"这个武器发射什么弹幕"
             Item.shoot = ProjectileID.Bullet; // 默认发射原版子弹
             Item.shootSpeed = 8f;
@@ -162,161 +186,80 @@ namespace YourModName.Content.Items
 }
 ```
 
-编译后进游戏，合成这把枪和弹药，然后试试发射效果。
+复制完成后先编译一次，确保"能跑"。
 
-### 题目
+### 概念关联测验
 
-```quiz
-type: choice
-id: mod-basics-ammo-property
-question: |
-  弹药物品必须设置哪个属性才能被武器消耗？
-options:
-  - id: A
-    text: |
-      Item.consumable
-  - id: B
-    text: |
-      Item.ammo
-  - id: C
-    text: |
-      Item.shoot
-answer: B
-explain: |
-  Item.ammo 告诉游戏"这个物品是什么类型的弹药"，武器通过这个属性来匹配弹药。
-```
+> **测验对应概念**：`Item.ammo`、`Item.useAmmo`、`HasAmmo()`
 
 ```quiz
 type: choice
-id: mod-basics-use-ammo
+id: mod-basics-ammo-basics
 question: |
-  武器要使用弹药，必须设置哪个属性？
+  下列哪些行是修改"弹药类型/发射逻辑"时最常改动的？
 options:
   - id: A
     text: |
-      Item.useAmmo
+      `Item.ammo = AmmoID.Bullet;`
   - id: B
     text: |
-      Item.shoot
+      `Item.useAmmo = AmmoID.Bullet;`
   - id: C
     text: |
-      Item.damage
-answer: A
+      `type = ModContent.ProjectileType<Projectiles.FirstAmmoProjectile>();`
+  - id: D
+    text: |
+      `using Terraria.ModLoader;`
+answer:
+  - A
+  - B
+  - C
 explain: |
-  Item.useAmmo 告诉游戏"这个武器使用什么类型的弹药"，比如 AmmoID.Bullet 表示使用子弹。
+  弹药类型在 `Item.ammo` 里改，武器弹药类型在 `Item.useAmmo` 里改，弹幕类型在 `ModifyShootStats()` 里改。
 ```
 
-## 第二步：学习关键内容
+---
 
-### 弹药物品里最常改的行：
+## 第二步：练习（建议）
 
-1. 在 `SetDefaults()` 里：
-   - `Item.ammo`：弹药类型
-   - `Item.damage`：弹药基础伤害
-   - `Item.shoot`：弹药发射的弹幕
+### 2.1 弹药物品里最常改的行
 
-### 武器里最常改的行：
+在 `SetDefaults()` 里：
 
-1. 在 `SetDefaults()` 里：
-   - `Item.useAmmo`：使用什么类型的弹药
-   - `Item.shoot`：默认发射什么弹幕
+- `Item.ammo`（弹药类型）
+- `Item.damage`（弹药基础伤害）
+- `Item.shoot`（弹药发射的弹幕）
 
-2. 在 `CanShoot()` 里：
-   - 判断"能不能发射"
+### 2.2 武器里最常改的行
 
-3. 在 `ModifyShootStats()` 里：
-   - 修改"发射参数"（比如弹幕类型、伤害、速度）
+在 `SetDefaults()` 里：
 
-练习方式：把这些行删掉，再自己敲回去。
+- `Item.useAmmo`（使用什么类型的弹药）
+- `Item.shoot`（默认发射什么弹幕）
 
-## 第三步：教你"怎么读这份代码"（从上往下）
+在 `ModifyShootStats()` 里：
 
-### 1）弹药和武器的关系
+- 修改发射参数（比如弹幕类型、伤害、速度）
 
-- **弹药物品**：背包里的"子弹"
-- **弹药弹幕**：飞出去的"子弹"
-- **武器**：发射弹药的"枪"
+### 2.3 练习方式
 
-当你"发射"武器时：
-1. 武器检查你有没有对应的弹药
-2. 如果有，消耗一个弹药物品
-3. 发射一个弹幕
+把这些行删掉，再自己敲回去。
 
-### 2）`Item.ammo`：弹药的类型
+---
 
-`Item.ammo` 告诉游戏"这个物品是什么类型的弹药"：
+## 第三步：补充阅读（按需）
 
-```csharp
-Item.ammo = AmmoID.Bullet; // 子弹类型
-```
+{if C == 0}
+{[./_分流/第一个弹药-C0-CSharp读代码.md][C# 补课（C0）：看懂本章语法]}
+{end}
 
-常见的弹药类型：
-- `AmmoID.Bullet`：子弹
-- `AmmoID.Arrow`：箭矢
-- `AmmoID.Rocket`：火箭
+{if T == 0}
+{[./_分流/第一个弹药-T0-tML读代码.md][tModLoader 补课（T0）：看懂本章 API]}
+{end}
 
-武器通过 `Item.useAmmo` 来匹配弹药类型。
+---
 
-### 3）`Item.useAmmo`：武器的弹药类型
-
-`Item.useAmmo` 告诉游戏"这个武器使用什么类型的弹药"：
-
-```csharp
-Item.useAmmo = AmmoID.Bullet; // 使用子弹
-```
-
-如果武器设置了 `Item.useAmmo`，发射时会自动消耗对应的弹药。
-
-### 4）`CanShoot()`：判断"能不能发射"
-
-`CanShoot()` 方法在武器发射前被调用，你可以在这里写"发射条件"：
-
-```csharp
-public override bool CanShoot(Player player)
-{
-    // 检查玩家是否有我们的弹药
-    return player.HasAmmo(Item, ModContent.ItemType<FirstAmmo>());
-}
-```
-
-如果返回 `true`，可以发射；如果返回 `false`，不能发射。
-
-### 5）`ModifyShootStats()`：修改"发射参数"
-
-`ModifyShootStats()` 方法在武器发射时被调用，你可以在这里修改"发射参数"：
-
-```csharp
-public override void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
-{
-    // 如果玩家有我们的弹药，就发射我们的弹幕
-    if (player.HasAmmo(Item, ModContent.ItemType<FirstAmmo>()))
-    {
-        type = ModContent.ProjectileType<Projectiles.FirstAmmoProjectile>();
-    }
-}
-```
-
-参数说明：
-- `position`：发射位置
-- `velocity`：发射速度和方向
-- `type`：弹幕类型
-- `damage`：伤害
-- `knockback`：击退
-
-### 6）`player.HasAmmo()`：检查"有没有弹药"
-
-`player.HasAmmo()` 方法检查玩家是否有指定的弹药：
-
-```csharp
-player.HasAmmo(Item, ModContent.ItemType<FirstAmmo>())
-```
-
-- 第一个参数：武器物品
-- 第二个参数：弹药物品类型
-
-如果返回 `true`，玩家有弹药；如果返回 `false`，玩家没有弹药。
-
-## 常见问题（先救命，后讲道理）
+## 常见问题（排错）
 
 ### 1）我发射了武器，但没消耗弹药
 
@@ -349,3 +292,21 @@ player.HasAmmo(Item, ModContent.ItemType<FirstAmmo>())
 **解决**：
 - 检查 `Item.shootSpeed` 是否设置
 - 检查 `Item.shootSpeed` 的数值是否合适
+
+---
+
+## 本章自测（可选）
+
+用于自查是否达到"能创建弹药"的最低标准：
+
+- [ ] 我能指出弹药物品中三处常改动点：类型/伤害/弹幕
+- [ ] 我能指出武器中两处常改动点：useAmmo/ModifyShootStats
+- [ ] 我能解释弹药、武器、弹幕三者之间的关系
+
+---
+
+## 下一步
+
+本章完成后，你应能独立创建弹药并让武器正确消耗它。
+
+下一章我们会做"第一个 NPC"：你会看到 NPC 是怎么拥有商店和对话的。

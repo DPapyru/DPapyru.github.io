@@ -16,24 +16,47 @@ colors:
 
 # 第一个Boss：做一个简单Boss同时学习阶段转换
 
-这一章的目标很简单：做出你 Mod 里的第一个 Boss，并且你敢改它的关键数值。
-
 Boss 是什么？简单来说，**Boss 是一个强大的敌人，通常有多个阶段，每个阶段有不同的行为**。比如原版的史莱姆王、克苏鲁之眼等。
 
-Boss 需要两个文件：
+{if C == 0}
+> **适用人群**：首次接触 C#（C0）。
+>
+> **本章目标**：完成第一个 Boss，并能独立修改 Boss 的属性与阶段转换逻辑。
+{else}
+> **适用人群**：已具备 C# 基础（C≥1）。
+>
+> **建议路径**：先完成"复制 → 编译 → 进游戏验证"，再集中修改 `NPC.boss / Phase / AI()` 等关键行。
+{end}
 
-1. **Boss 类（NPC）**：定义 Boss 的行为和AI
-2. **召唤 Boss 的物品**：用于召唤 Boss
+---
 
-> 本文里会出现 `YourModName`。它是占位符：你要把它换成你自己的 Mod 名（更准确地说，是你的 Mod 的"命名空间前缀/根名字"）。不知道自己的 Mod 名也没关系，先照抄，后面我们会说怎么判断。
+## 验收标准
+
+完成本章后，你应能：
+
+- 创建可召唤的 Boss
+- 编写自定义 AI 行为
+- 实现 Boss 阶段转换
+- 理解 Boss 与普通 NPC 的区别
+
+> 本文里会出现 `YourModName`。它是占位符：你要把它换成你自己的 Mod 名。
+
+---
 
 ## 阅读前需求
 
-- 已完成"第一个NPC"章节：知道如何创建NPC
-- 已完成"第一个召唤物"章节：知道如何编写AI
-- 知道怎么新建 `.cs` 文件（放进你的 Mod 项目里）
+- 已完成"第一个NPC"章节
+- 已完成"第一个召唤物"章节
+- 知道怎么新建 `.cs` 文件
+
+---
 
 ## 第一步：了解代码
+
+Boss 需要两个文件：
+
+1. **Boss 类（NPC）**：定义 Boss 的行为和 AI
+2. **召唤 Boss 的物品**：用于召唤 Boss
 
 建议你把文件放在类似位置：
 
@@ -42,7 +65,7 @@ Boss 需要两个文件：
 
 ### 1.1 创建 Boss 类
 
-先把下面这份代码复制到 `SimpleBoss.cs`：
+把下面这份代码复制到 `SimpleBoss.cs`：
 
 ```csharp
 // 引用必要的命名空间
@@ -64,7 +87,7 @@ namespace YourModName.Content.NPCs
         public override void SetStaticDefaults()
         {
             // 设置 Boss 的名字
-            DisplayName.SetDefault("简单Boss");
+            DisplayName.SetDefault("简单 Boss");
             // 设置 Boss 是 Boss 类型
             Main.npcFrameCount[NPC.type] = 4;  // 有 4 帧动画
         }
@@ -82,7 +105,7 @@ namespace YourModName.Content.NPCs
             NPC.DeathSound = SoundID.NPCDeath1;
             NPC.value = Item.buyPrice(gold: 5);
             NPC.knockBackResist = 0f;  // 不受击退影响
-            NPC.aiStyle = -1;  // 不使用原版AI，使用自定义AI
+            NPC.aiStyle = -1;  // 不使用原版 AI，使用自定义 AI
             NPC.noGravity = true;  // 不受重力影响
             NPC.noTileCollide = true;  // 不与物块碰撞
             NPC.boss = true;  // 是 Boss
@@ -90,7 +113,7 @@ namespace YourModName.Content.NPCs
             music = MusicID.Boss1;  // Boss 战音乐
         }
 
-        // 自定义AI
+        // 自定义 AI
         public override void AI()
         {
             // 获取最近的玩家
@@ -123,7 +146,7 @@ namespace YourModName.Content.NPCs
             Vector2 targetPos = player.Center;
             float distanceToTarget = Vector2.Distance(NPC.Center, targetPos);
 
-            // 根据阶段执行不同的AI
+            // 根据阶段执行不同的 AI
             if (Phase == 1)
             {
                 // 第一阶段：缓慢移动，偶尔冲刺
@@ -208,7 +231,7 @@ namespace YourModName.Content.NPCs
 
 ### 1.2 创建召唤物品
 
-再把下面这份代码复制到 `SimpleBossSummon.cs`：
+把下面这份代码复制到 `SimpleBossSummon.cs`：
 
 ```csharp
 // 引用必要的命名空间
@@ -263,7 +286,7 @@ namespace YourModName.Content.Items
 
             // 召唤 Boss
             NPC.SpawnOnPlayer(player.whoAmI, ModContent.NPCType<NPCs.SimpleBoss>());
-            Main.NewText("简单Boss 已经被召唤！", 255, 255, 0);
+            Main.NewText("简单 Boss 已经被召唤！", 255, 255, 0);
             return true;
         }
 
@@ -280,25 +303,27 @@ namespace YourModName.Content.Items
 }
 ```
 
-复制完成后先编译一次，确保"能跑"。能跑之后我们再来"只手敲关键行"。
+复制完成后先编译一次，确保"能跑"。
 
-### 题目
+### 概念关联测验
+
+> **测验对应概念**：`NPC.boss`、`Phase`、`NPC.SpawnOnPlayer()`
 
 ```quiz
 type: choice
-id: mod-basics-first-boss-edit-lines
+id: mod-basics-first-boss-basics
 question: |
-  下面哪些行是"你以后想改 Boss 生命值/阶段转换"最常会动到的？
+  下列哪些行是修改"Boss属性/阶段"时最常改动的？
 options:
   - id: A
     text: |
-      `NPC.lifeMax = 2000;`
+      `NPC.boss = true;`
   - id: B
     text: |
       `if (NPC.life < NPC.lifeMax * 0.5f && Phase == 1)`
   - id: C
     text: |
-      `NPC.velocity = direction * 3f;`
+      `NPC.damage = 50;`
   - id: D
     text: |
       `using Terraria.ModLoader;`
@@ -307,160 +332,83 @@ answer:
   - B
   - C
 explain: |
-  Boss 生命值在 `SetDefaults()` 里改，阶段转换在 `if (NPC.life < NPC.lifeMax * 0.5f && Phase == 1)` 里改，移动速度在 `NPC.velocity` 里改。
-  `using ...` 一般不用动，除非你删了/加了新东西导致编译报错。
+  Boss 标识在 `NPC.boss` 里改，阶段转换条件在 `if (NPC.life < NPC.lifeMax * 0.5f...)` 里改，伤害在 `NPC.damage` 里改。
 ```
 
-## 第二步：学习关键内容
+---
 
-现在开始"中间形态"的练习：你可以保留其它代码不动，只对下面这些行做一次"删掉 → 自己敲回去"。
+## 第二步：练习（建议）
 
-建议练习顺序：
+### 2.1 Boss 文件里最常改的行
 
-1. 在 `SimpleBoss.cs` 的 `SetDefaults()` 里把这些行删掉，再自己敲回去：
-   - `NPC.lifeMax = 2000;`
-   - `NPC.boss = true;`
-   - `music = MusicID.Boss1;`
-2. 在 `SimpleBoss.cs` 的 `AI()` 里把这几行删掉，再自己敲回去：
-   - `if (NPC.life < NPC.lifeMax * 0.5f && Phase == 1)`
-   - `Phase = 2;`
-   - `NPC.damage = 50;`
-   - `Vector2 direction = targetPos - NPC.Center;`
-   - `direction.Normalize();`
-   - `NPC.velocity = direction * 3f;`
-3. 在 `SimpleBossSummon.cs` 的 `UseItem()` 里把这几行删掉，再自己敲回去：
-   - `NPC.SpawnOnPlayer(player.whoAmI, ModContent.NPCType<NPCs.SimpleBoss>());`
-   - `Main.NewText("简单Boss 已经被召唤！", 255, 255, 0);`
+在 `SetDefaults()` 里：
 
-你会发现：你不需要知道"C# 的全部规则"，也能写出一个能工作的 Boss。
+- `NPC.lifeMax = 2000;`（生命值）
+- `NPC.boss = true;`（标识为 Boss）
+- `music = MusicID.Boss1;`（Boss 战音乐）
 
-## 第三步：教你"怎么读这份代码"（从上往下）
+在 `AI()` 里：
 
-下面我们按"阅读顺序"讲一下：每段在干嘛、你现在需要记住什么。
+- `if (NPC.life < NPC.lifeMax * 0.5f && Phase == 1)`（阶段转换条件）
+- `Phase = 2;`（切换阶段）
+- `NPC.velocity = direction * 3f;`（移动速度）
 
-### 1）`ModNPC`：NPC 的基类
+### 2.2 练习方式
 
-`ModNPC` 是 tModLoader 里"NPC 的基类"。
+把这些行删掉，再自己敲回去。
 
-我们写的 `SimpleBoss` 是"基于这个基类创建的一个新 NPC"。
+---
 
-### 2）`NPC.boss = true;`：最重要的那一行
+## 第三步：补充阅读（按需）
 
-这一行告诉游戏：**这是一个 Boss**。
+{if C == 0}
+{[./_分流/第一个Boss-C0-CSharp读代码.md][C# 补课（C0）：看懂本章语法]}
+{end}
 
-如果没有这一行，这个 NPC 就不会被当作 Boss 处理。
+{if T == 0}
+{[./_分流/第一个Boss-T0-tML读代码.md][tModLoader 补课（T0）：看懂本章 API]}
+{end}
 
-### 3）`NPC.aiStyle = -1;`：使用自定义AI
+---
 
-这一行告诉游戏：**不使用原版AI，使用自定义AI**。
-
-- `-1`：表示使用自定义AI
-- 其他值：使用原版AI（比如 `0` 表示默认AI）
-
-### 4）`Phase`：Boss 的阶段
-
-我们定义了一个 `Phase` 变量，用来表示 Boss 的当前阶段。
-
-- `Phase = 1`：第一阶段
-- `Phase = 2`：第二阶段
-
-```quiz
-type: choice
-id: mod-boss-phase-variable
-question: |
-  `Phase` 变量的作用是什么？
-options:
-  - id: A
-    text: |
-      表示 Boss 的当前阶段
-  - id: B
-    text: |
-      表示 Boss 的生命值
-  - id: C
-    text: |
-      表示 Boss 的移动速度
-answer: A
-explain: |
-  `Phase` 变量用来表示 Boss 的当前阶段，比如第一阶段、第二阶段等。
-```
-
-### 5）`if (NPC.life < NPC.lifeMax * 0.5f && Phase == 1)`：阶段转换条件
-
-这一行的作用是：**当 Boss 的生命值低于 50% 且当前是第一阶段时，切换到第二阶段**。
-
-- `NPC.life`：Boss 的当前生命值
-- `NPC.lifeMax`：Boss 的最大生命值
-- `0.5f`：50%
-- `&&`：逻辑与运算符，表示"并且"
-- `Phase == 1`：当前是第一阶段
-
-所以 `if (NPC.life < NPC.lifeMax * 0.5f && Phase == 1)` 的意思是：**当 Boss 的生命值低于 50% 且当前是第一阶段时**。
-
-```quiz
-type: choice
-id: mod-boss-phase-transition
-question: |
-  `if (NPC.life < NPC.lifeMax * 0.5f && Phase == 1)` 的作用是什么？
-options:
-  - id: A
-    text: |
-      当 Boss 的生命值低于 50% 且当前是第一阶段时，切换到第二阶段
-  - id: B
-    text: |
-      当 Boss 的生命值低于 50% 时，Boss 死亡
-  - id: C
-    text: |
-      当 Boss 的生命值等于 50% 时，Boss 恢复生命值
-answer: A
-explain: |
-  这一行是阶段转换的条件，当 Boss 的生命值低于 50% 且当前是第一阶段时，切换到第二阶段。
-```
-
-### 6）`NPC.ai[0]++`：计时器
-
-这一行的作用是：**增加计时器**。
-
-- `NPC.ai[0]`：NPC 的 AI 数组，可以用来存储各种数据
-- `++`：自增运算符，意思是"加 1"
-
-我们用 `NPC.ai[0]` 作为计时器，用来控制 Boss 的行为。
-
-### 7）`NPC.SpawnOnPlayer(player.whoAmI, ModContent.NPCType<NPCs.SimpleBoss>());`：召唤 Boss
-
-这一行的作用是：**在玩家位置召唤 Boss**。
-
-- `player.whoAmI`：玩家的 ID
-- `ModContent.NPCType<NPCs.SimpleBoss>()`：Boss 的类型
-
-### 8）`Main.NewText(...)`：显示提示信息
-
-这一行的作用是：**在屏幕上显示提示信息**。
-
-- `"简单Boss 已经被召唤！"`：提示信息
-- `255, 255, 0`：颜色（黄色）
-
-## 常见问题（先救命，后讲道理）
+## 常见问题（排错）
 
 ### 1）我编译报错，最常见是哪里？
 
-- `YourModName` 没替换：如果你项目默认命名空间不是这个，可能会提示找不到类型/命名空间。你可以先把 `namespace YourModName...` 里的 `YourModName` 换成你项目里其它 `.cs` 文件最上面用的那个名字。
-- `Content.NPCs` 写错了：`namespace` 的后半段你可以随便取，但要确保它只是"分类名"，不要写奇怪符号。
-- `using YourModName.Content.NPCs;` 没加：如果 `SimpleBoss` 变红，检查 `using YourModName.Content.NPCs;` 是否存在。
+**原因**：`YourModName` 没替换，或 `namespace` 写错了
+
+**解决**：
+- 检查 `namespace YourModName...` 里的 `YourModName` 是否换成你项目实际使用的名字
+- 检查 `using YourModName.Content.NPCs;` 是否正确
 
 ### 2）我进游戏找不到这个召唤物品/配方
 
+**解决**：
 - 确认 Mod 已启用，且你确实重新"编译并加载"了 Mod
 - 配方需要在恶魔祭坛旁边打开合成栏才会出现
 - 召唤物品需要右键使用才会召唤 Boss
 
 ### 3）我使用了召唤物品，但是没有 Boss
 
+**解决**：
 - 检查 `NPC.boss = true;` 是否存在
 - 检查 `AI()` 方法是否正确重写
 - 检查 `NPC.SpawnOnPlayer()` 是否在 `UseItem()` 方法里
 
-## 下一步会学什么？
+---
 
-这一章你已经完成最关键的一步：**你能创建 Boss，并且知道如何实现阶段转换**。
+## 本章自测（可选）
 
-下一章我们会做第一个世界生成：你会看到"世界生成"是怎么在游戏中生成新结构和矿物的。
+用于自查是否达到"能创建 Boss"的最低标准：
+
+- [ ] 我能指出 `SetDefaults()` 中三处常改动点：生命/Boss标识/音乐
+- [ ] 我能指出 `AI()` 中两处常改动点：阶段转换/移动速度
+- [ ] 我能解释阶段转换的工作原理
+
+---
+
+## 下一步
+
+本章完成后，你应能独立创建 Boss 并实现阶段转换。
+
+下一章我们会做"第一个世界生成"：你会看到世界生成是怎么在游戏中生成新结构和矿物的。

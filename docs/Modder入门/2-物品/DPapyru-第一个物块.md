@@ -16,20 +16,55 @@ colors:
 
 # 第一个物块：创建可放置的物块
 
-这一章的目标是：创建一个可放置的物块，并且你理解物块是怎么被放置、被挖掘、被交互的。
-
 物块是泰拉瑞亚世界里最基本的"建筑材料"：泥土、石头、工作台、箱子……都是物块。
 
+{if C == 0}
+> **适用人群**：首次接触 C#（C0）。
+>
+> **本章目标**：完成第一个物块，并能独立修改关键属性与配方。
+{else}
+> **适用人群**：已具备 C# 基础（C≥1）。
+>
+> **建议路径**：先完成"复制 → 编译 → 进游戏验证"，再集中修改 `Main.tileSolid / Item.createTile / ItemDrop` 等关键行。
+{end}
+
+---
+
+## 验收标准
+
+完成本章后，你应能：
+
+- 创建可放置的物块物品，并在游戏中成功放置
+- 修改物块的关键属性（实心、挡光、掉落物等）
+- 理解物块（Tile）和物品（Item）之间的关系
+- 能定位常见编译/放置错误的原因
+
 > 本文里会出现 `YourModName`。它是占位符：你要把它换成你自己的 Mod 名。
+
+---
 
 ## 阅读前需求
 
 - 已完成"第一个武器"章节
 - 知道怎么新建 `.cs` 文件并编译
+- 能在 tModLoader 中 Build + Reload
+
+---
 
 ## 第一步：了解代码
 
-创建文件：`Content/Tiles/FirstTile.cs`
+物块需要两个文件：
+1. **物块类（Tile）**：定义物块在世界里的行为
+2. **物块物品（Item）**：放在背包里，可以放置的物品
+
+建议你把文件放在如下位置：
+
+- `Content/Tiles/FirstTile.cs`（物块类）
+- `Content/Items/FirstTileItem.cs`（物块物品）
+
+### 1.1 创建物块类
+
+把下面代码复制到 `FirstTile.cs`：
 
 ```csharp
 using Terraria;
@@ -47,10 +82,10 @@ namespace YourModName.Content.Tiles
             Main.tileSolid[Type] = true; // 这个物块是实心的（玩家可以站在上面）
             Main.tileBlockLight[Type] = true; // 这个物块会挡光
             Main.tileLighted[Type] = true; // 这个物块可以被照亮
-            
+
             // 物块的贴图（暂时用原版石头代替）
             AddMapEntry(new Microsoft.Xna.Framework.Color(200, 200, 200), CreateMapEntryName());
-            
+
             // 物块的掉落物（挖掘后掉落什么）
             DustType = DustID.Stone;
             ItemDrop = ModContent.ItemType<Items.FirstTileItem>();
@@ -65,7 +100,9 @@ namespace YourModName.Content.Tiles
 }
 ```
 
-创建物品文件：`Content/Items/FirstTileItem.cs`
+### 1.2 创建物块物品
+
+把下面代码复制到 `FirstTileItem.cs`：
 
 ```csharp
 using Terraria;
@@ -101,143 +138,81 @@ namespace YourModName.Content.Items
 }
 ```
 
-编译后进游戏，合成这个物块物品，然后放置到地上试试。
+复制完成后先编译一次，确保"能跑"。
 
-### 题目
+### 概念关联测验
 
-```quiz
-type: choice
-id: mod-basics-tile-solid
-question: |
-  `Main.tileSolid[Type] = true;` 的作用是什么？
-options:
-  - id: A
-    text: |
-      这个物块是实心的，玩家可以站在上面
-  - id: B
-    text: |
-      这个物块是透明的，玩家可以穿过
-  - id: C
-    text: |
-      这个物块会发光
-answer: A
-explain: |
-  Main.tileSolid[Type] = true 表示这个物块是实心的，玩家可以站在上面，不能穿过。
-```
+> **测验对应概念**：`ModTile`、`SetStaticDefaults()`、`Item.createTile`
 
 ```quiz
 type: choice
-id: mod-basics-create-tile
+id: mod-basics-tile-basics
 question: |
-  物品要能放置物块，必须设置哪个属性？
+  下列哪些行是修改"物块属性/放置行为"时最常改动的？
 options:
   - id: A
     text: |
-      Item.consumable
+      `Main.tileSolid[Type] = true;`
   - id: B
     text: |
-      Item.createTile
+      `ItemDrop = ModContent.ItemType<Items.FirstTileItem>();`
   - id: C
     text: |
-      Item.useStyle
-answer: B
+      `Item.createTile = ModContent.TileType<Tiles.FirstTile>();`
+  - id: D
+    text: |
+      `using Terraria.ModLoader;`
+answer:
+  - A
+  - B
+  - C
 explain: |
-  Item.createTile 告诉游戏"这个物品放置后变成什么物块"，是物块物品最关键的属性。
+  物块属性在 `SetStaticDefaults()` 里改，掉落物在 `ItemDrop` 里改，放置行为在 `Item.createTile` 里改。
+  `using ...` 一般不用动，除非你删了/加了新东西导致编译报错。
 ```
 
-## 第二步：学习关键内容
+---
 
-### 物块文件里最常改的行：
+## 第二步：练习（建议）
 
-1. 在 `SetStaticDefaults()` 里：
-   - `Main.tileSolid[Type]`：是否实心
-   - `Main.tileBlockLight[Type]`：是否挡光
-   - `Main.tileLighted[Type]`：是否可被照亮
-   - `ItemDrop`：挖掘后掉落什么
+建议只对关键行进行一次"删除 → 手动输入还原"的练习；其目标不是背诵，而是确认你知道"改动点在哪里、改了会产生什么效果"。
 
-2. 在 `NumDust()` 里：
-   - `num`：挖掘时产生的粒子数量
+### 2.1 物块文件里最常改的行
 
-### 物品文件里最常改的行：
+在 `SetStaticDefaults()` 里：
 
-1. 在 `SetDefaults()` 里：
-   - `Item.createTile`：放置后变成什么物块
-   - `Item.consumable`：是否消耗品
-   - `Item.useTime` / `Item.useAnimation`：放置速度
+- `Main.tileSolid[Type] = true;`（是否实心）
+- `Main.tileBlockLight[Type] = true;`（是否挡光）
+- `Main.tileLighted[Type] = true;`（是否可被照亮）
+- `ItemDrop = ModContent.ItemType<Items.FirstTileItem>();`（挖掘后掉落什么）
 
-练习方式：把这些行删掉，再自己敲回去。
+### 2.2 物品文件里最常改的行
 
-## 第三步：教你"怎么读这份代码"（从上往下）
+在 `SetDefaults()` 里：
 
-### 1）物块和物品的关系
+- `Item.createTile = ModContent.TileType<Tiles.FirstTile>();`（放置后变成什么物块）
+- `Item.consumable = true;`（是否消耗品）
+- `Item.useTime / Item.useAnimation`（放置速度）
 
-- **物块（Tile）**：放在世界里的东西（比如地上的石头）
-- **物品（Item）**：背包里的东西（比如你手里的石头块）
+### 2.3 练习方式
 
-当你"放置"一个物块时：
-1. 你消耗一个"物块物品"
-2. 在世界里生成一个"物块"
+把这些行删掉，再自己敲回去。
 
-当你"挖掘"一个物块时：
-1. 你破坏世界里的"物块"
-2. 获得一个"物块物品"（掉落物）
+---
 
-### 2）`ModTile`：物块的类
+## 第三步：补充阅读（按需）
 
-`ModTile` 是物块的类，它定义了物块在世界里的行为：
+{if C == 0}
+{[./_分流/第一个物块-C0-CSharp读代码.md][C# 补课（C0）：看懂本章语法]}
+{end}
 
-- 能不能站在上面
-- 会不会挡光
-- 挖掘时掉落什么
-- 挖掘时产生多少粒子
+{if T == 0}
+{[./_分流/第一个物块-T0-tML读代码.md][tModLoader 补课（T0）：看懂本章 API]}
+{end}
 
-### 3）`SetStaticDefaults()`：物块的静态属性
+---
 
-物块的 `SetDefaults()` 叫 `SetStaticDefaults()`，因为物块的属性是"静态的"（所有这个物块都一样）：
-
-- `Main.tileSolid[Type]`：是否实心（true = 可以站，false = 不能站）
-- `Main.tileBlockLight[Type]`：是否挡光（true = 挡光，false = 不挡光）
-- `Main.tileLighted[Type]`：是否可被照亮（true = 可以，false = 不可以）
-- `ItemDrop`：挖掘后掉落什么物品
-
-### 4）`Item.createTile`：物品和物块的关联
-
-`Item.createTile` 是物品和物块之间的关联：
-
-- 它告诉游戏"这个物品放置后变成什么物块"
-- 如果不设置这个属性，物品就不能放置
-
-### 5）`Item.consumable`：是否消耗品
-
-`Item.consumable` 决定物品使用后是否消失：
-
-- `true`：使用后消失（比如放置物块、吃食物）
-- `false`：使用后不消失（比如挥动武器）
-
-对于物块物品，通常设置为 `true`，因为放置后物品就变成物块了。
-
-### 6）`AddMapEntry()`：地图上的显示
-
-`AddMapEntry()` 决定物块在地图上显示的颜色和名字：
-
-```csharp
-AddMapEntry(new Microsoft.Xna.Framework.Color(200, 200, 200), CreateMapEntryName());
-```
-
-- `Color(200, 200, 200)`：地图上的颜色（这里是灰色）
-- `CreateMapEntryName()`：地图上显示的名字（自动从物块名字生成）
-
-### 7）`DustType`：挖掘时的粒子
-
-`DustType` 决定挖掘时产生什么粒子：
-
-```csharp
-DustType = DustID.Stone;
-```
-
-这里用的是原版石头的粒子，你也可以用其他 `DustID`。
-
-## 常见问题（先救命，后讲道理）
+## 常见问题（排错）
 
 ### 1）我合成了物品，但放置不了
 
@@ -252,8 +227,7 @@ DustType = DustID.Stone;
 
 **原因**：`Main.tileSolid[Type]` 没设置为 `true`。
 
-**解决**：
-- 在 `SetStaticDefaults()` 里添加 `Main.tileSolid[Type] = true;`
+**解决**：在 `SetStaticDefaults()` 里添加 `Main.tileSolid[Type] = true;`
 
 ### 3）我挖掘了物块，但没掉落东西
 
@@ -267,11 +241,22 @@ DustType = DustID.Stone;
 
 **原因**：`AddMapEntry()` 没调用。
 
-**解决**：
-- 在 `SetStaticDefaults()` 里添加 `AddMapEntry(new Microsoft.Xna.Framework.Color(200, 200, 200), CreateMapEntryName());`
+**解决**：在 `SetStaticDefaults()` 里添加 `AddMapEntry(...)`
 
-## 下一步会学什么？
+---
 
-这一章你已经学会了"创建物块"，并且理解了"物块"和"物品"的关系。
+## 本章自测（可选）
 
-下一章我们会做"第一个合成表"：你会看到"合成表"是怎么让物品被制作出来的。
+用于自查是否达到"能创建并改动物块"的最低标准：
+
+- [ ] 我能指出 `SetStaticDefaults()` 中三处常改动点：实心/挡光/掉落物
+- [ ] 我能指出 `Item.createTile` 的作用，并能在物品里正确设置
+- [ ] 我能解释"物块"和"物块物品"的区别与联系
+
+---
+
+## 下一步
+
+本章完成后，你应能独立创建和修改物块，并能理解物块与物品之间的关系。
+
+下一章我们会做"第一个弹药"：你会看到"弹药"是怎么被武器消耗的。
