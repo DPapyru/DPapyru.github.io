@@ -172,10 +172,10 @@ class ConfigManager {
                 defaultCategory: '资源参考',
                 defaultTopic: 'mod-basics',
                 pathMappings: {},
-                customFields: ['last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange'],
+                customFields: ['last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange', 'min_c', 'min_t'],
                 validationRules: {
                     requiredFields: ['title'],
-                    optionalFields: ['author', 'description', 'date', 'difficulty', 'order', 'topic', 'last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange']
+                    optionalFields: ['author', 'description', 'date', 'difficulty', 'order', 'topic', 'last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange', 'min_c', 'min_t']
                 }
             }
         };
@@ -686,6 +686,8 @@ function generateSearchIndex(config) {
             author: doc.author || '',
             difficulty: doc.difficulty || '',
             time: doc.time || '',
+            min_c: (typeof doc.min_c === 'number' ? doc.min_c : null),
+            min_t: (typeof doc.min_t === 'number' ? doc.min_t : null),
             last_updated: doc.last_updated || '',
             content: stripMarkdown(markdown)
         });
@@ -881,6 +883,8 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
             difficulty: metadata.difficulty || 'beginner',
             prev_chapter: metadata.prev_chapter || null,
             next_chapter: metadata.next_chapter || null,
+            min_c: (typeof metadata.min_c === 'number' ? metadata.min_c : null),
+            min_t: (typeof metadata.min_t === 'number' ? metadata.min_t : null),
             colors: metadata.colors || metadata.colorLD || null,
             colorChange: metadata.colorChange || null
         };
@@ -916,6 +920,8 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
             difficulty: metadata.difficulty || 'beginner',
             prev_chapter: metadata.prev_chapter || null,
             next_chapter: metadata.next_chapter || null,
+            min_c: (typeof metadata.min_c === 'number' ? metadata.min_c : null),
+            min_t: (typeof metadata.min_t === 'number' ? metadata.min_t : null),
             colors: metadata.colors || metadata.colorLD || null,
             colorChange: metadata.colorChange || null,
             last_updated: metadata.last_updated || metadata.date || '2017-9-18'

@@ -41,6 +41,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -57,6 +59,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             }
@@ -73,27 +77,27 @@
           "description": "Mod开发的基础概念和核心API",
           "files": [
             {
-              "filename": "DPapyru-提问的艺术.md",
-              "path": "Modder入门/0-指南/DPapyru-提问的艺术.md",
-              "originalPath": "Modder入门/0-指南/DPapyru-提问的艺术.md",
-              "title": "提问的艺术",
+              "filename": "DPapyru-从这里开始.md",
+              "path": "Modder入门/DPapyru-从这里开始.md",
+              "originalPath": "Modder入门/DPapyru-从这里开始.md",
+              "title": "从这里开始：Modder 入门总览",
               "author": "小天使",
               "order": 0,
-              "description": "如果新人需要提问，需要注意的事情",
-              "last_updated": "2026-01-17",
-              "time": "5分钟",
+              "description": "解释 Modder入门的阅读方式，并按 C#/tML 熟练度与偏好给出建议入口",
+              "last_updated": "2026-01-21",
+              "time": "10分钟",
               "difficulty": "beginner",
-              "prev_chapter": "../0-指南/DPapyru-给新人的前言.md",
-              "next_chapter": "../1-入门/DPapyru-快速开始构建Mod.md",
-              "colors": {
-                "Mad": "#f00"
-              },
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": 0,
+              "min_t": 0,
+              "colors": null,
               "colorChange": null
             },
             {
               "filename": "DPapyru-给新人的前言.md",
-              "path": "Modder入门/0-指南/DPapyru-给新人的前言.md",
-              "originalPath": "Modder入门/0-指南/DPapyru-给新人的前言.md",
+              "path": "Modder入门/指南/DPapyru-给新人的前言.md",
+              "originalPath": "Modder入门/指南/DPapyru-给新人的前言.md",
               "title": "给新人的前言",
               "author": "小天使",
               "order": 0,
@@ -102,255 +106,187 @@
               "time": "5分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
-              "next_chapter": "../0-指南/DPapyru-提问的艺术.md",
+              "next_chapter": "DPapyru-提问的艺术.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
               "colorChange": null
             },
             {
-              "filename": "DPapyru-快速开始构建Mod.md",
-              "path": "Modder入门/1-入门/DPapyru-快速开始构建Mod.md",
-              "originalPath": "Modder入门/1-入门/DPapyru-快速开始构建Mod.md",
-              "title": "快速开始构建Mod（tModLoader 1.4）",
+              "filename": "DPapyru-文章使用内容索引-导读.md",
+              "path": "Modder入门/文章使用内容索引/DPapyru-文章使用内容索引-导读.md",
+              "originalPath": "Modder入门/文章使用内容索引/DPapyru-文章使用内容索引-导读.md",
+              "title": "文章使用内容索引：如何阅读与引用",
+              "author": "小天使",
+              "order": 0,
+              "description": "解释“文章使用内容索引”的用途、结构与引用展开写法",
+              "last_updated": "2026-01-21",
+              "time": "8分钟",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": 0,
+              "min_t": 0,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-推荐学习路径.md",
+              "path": "Modder入门/DPapyru-推荐学习路径.md",
+              "originalPath": "Modder入门/DPapyru-推荐学习路径.md",
+              "title": "推荐学习路径（按 C#/tML 熟练度分流）",
               "author": "小天使",
               "order": 1,
-              "description": "从环境准备到跑起第一个可编译的 tModLoader Mod",
-              "last_updated": "2026-01-17",
-              "time": "15分钟",
+              "description": "给出可执行的阅读路径：从零基础到能做出第一个可用内容",
+              "last_updated": "2026-01-21",
+              "time": "8分钟",
               "difficulty": "beginner",
-              "prev_chapter": "../0-指南/DPapyru-提问的艺术.md",
-              "next_chapter": "../1-入门/DPapyru-第一个武器.md",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": 0,
+              "min_t": 0,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-提问的艺术.md",
+              "path": "Modder入门/指南/DPapyru-提问的艺术.md",
+              "originalPath": "Modder入门/指南/DPapyru-提问的艺术.md",
+              "title": "提问的艺术",
+              "author": "小天使",
+              "order": 1,
+              "description": "如果新人需要提问，需要注意的事情",
+              "last_updated": "2026-01-17",
+              "time": "5分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-给新人的前言.md",
+              "next_chapter": "学习路线-从零到第一个武器.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
               "colorChange": null
             },
             {
-              "filename": "DPapyru-第一个武器.md",
-              "path": "Modder入门/1-入门/DPapyru-第一个武器.md",
-              "originalPath": "Modder入门/1-入门/DPapyru-第一个武器.md",
-              "title": "第一个武器",
+              "filename": "DPapyru-CSharp从零到能看懂Mod代码.md",
+              "path": "Modder入门/文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md",
+              "originalPath": "Modder入门/文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md",
+              "title": "C#：从零到能看懂 Mod 代码",
+              "author": "小天使",
+              "order": 1,
+              "description": "面向零基础与入门开发者的 C# 最小知识集，目标是“能读懂并改动 tModLoader 示例代码”",
+              "last_updated": "2026-01-21",
+              "time": "25分钟",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": 0,
+              "min_t": 0,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "学习路线-从零到第一个武器.md",
+              "path": "Modder入门/指南/学习路线-从零到第一个武器.md",
+              "originalPath": "Modder入门/指南/学习路线-从零到第一个武器.md",
+              "title": "学习路线：从零到第一个武器（索引版）",
               "author": "小天使",
               "order": 2,
-              "description": "做第一把武器同时入门C#",
-              "last_updated": "2026-01-19",
-              "time": "15分钟",
+              "description": "用“索引库 + 引用展开”的方式组织学习路线，按 C#/tML 熟练度与偏好显示不同内容",
+              "last_updated": "2026-01-21",
+              "time": "8分钟",
               "difficulty": "beginner",
-              "prev_chapter": "../1-入门/DPapyru-快速开始构建Mod.md",
-              "next_chapter": "../3-战斗/DPapyru-第一个弹幕.md",
-              "colors": {
-                "Red": "#f00"
-              },
+              "prev_chapter": "DPapyru-提问的艺术.md",
+              "next_chapter": null,
+              "min_c": 0,
+              "min_t": 0,
+              "colors": null,
               "colorChange": null
             },
             {
-              "filename": "DPapyru-第一个弹幕.md",
-              "path": "Modder入门/3-战斗/DPapyru-第一个弹幕.md",
-              "originalPath": "Modder入门/3-战斗/DPapyru-第一个弹幕.md",
-              "title": "第一个弹幕",
-              "author": "小天使",
-              "order": 3,
-              "description": "让武器发射弹幕，理解物品和弹幕的关系",
-              "last_updated": "2026-01-19",
-              "time": "20分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "../1-入门/DPapyru-第一个武器.md",
-              "next_chapter": "../2-物品/DPapyru-第一个物块.md",
-              "colors": {
-                "Red": "#f00"
-              },
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-第一个物块.md",
-              "path": "Modder入门/2-物品/DPapyru-第一个物块.md",
-              "originalPath": "Modder入门/2-物品/DPapyru-第一个物块.md",
-              "title": "第一个物块",
-              "author": "小天使",
-              "order": 4,
-              "description": "创建可放置的物块，理解物块的基本属性和行为",
-              "last_updated": "2026-01-19",
-              "time": "25分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "../3-战斗/DPapyru-第一个弹幕.md",
-              "next_chapter": "../2-物品/DPapyru-第一个弹药.md",
-              "colors": {
-                "Red": "#f00"
-              },
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-第一个饰品.md",
-              "path": "Modder入门/4-玩家/DPapyru-第一个饰品.md",
-              "originalPath": "Modder入门/4-玩家/DPapyru-第一个饰品.md",
-              "title": "第一个饰品",
-              "author": "小天使",
-              "order": 6,
-              "description": "做第一个饰品同时学习如何修改玩家属性",
-              "last_updated": "2026-01-19",
-              "time": "15分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "../4-玩家/DPapyru-第一个NPC.md",
-              "next_chapter": "../3-战斗/DPapyru-第一个Buff.md",
-              "colors": {
-                "Red": "#f00"
-              },
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-第一个弹药.md",
-              "path": "Modder入门/2-物品/DPapyru-第一个弹药.md",
-              "originalPath": "Modder入门/2-物品/DPapyru-第一个弹药.md",
-              "title": "第一个弹药",
-              "author": "小天使",
-              "order": 7,
-              "description": "创建可消耗的弹药，理解弹药和武器的关系",
-              "last_updated": "2026-01-19",
-              "time": "20分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "../2-物品/DPapyru-第一个物块.md",
-              "next_chapter": "../4-玩家/DPapyru-第一个NPC.md",
-              "colors": {
-                "Red": "#f00"
-              },
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-第一个Buff.md",
-              "path": "Modder入门/3-战斗/DPapyru-第一个Buff.md",
-              "originalPath": "Modder入门/3-战斗/DPapyru-第一个Buff.md",
-              "title": "第一个Buff",
-              "author": "小天使",
-              "order": 7,
-              "description": "做第一个Buff同时学习如何创建持续效果",
-              "last_updated": "2026-01-19",
-              "time": "20分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "../4-玩家/DPapyru-第一个饰品.md",
-              "next_chapter": "../3-战斗/DPapyru-第一个召唤物.md",
-              "colors": {
-                "Red": "#f00"
-              },
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-第一个召唤物.md",
-              "path": "Modder入门/3-战斗/DPapyru-第一个召唤物.md",
-              "originalPath": "Modder入门/3-战斗/DPapyru-第一个召唤物.md",
-              "title": "第一个召唤物",
-              "author": "小天使",
-              "order": 8,
-              "description": "做第一个召唤物同时学习AI系统",
-              "last_updated": "2026-01-19",
-              "time": "25分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "../3-战斗/DPapyru-第一个Buff.md",
-              "next_chapter": "../5-高级/DPapyru-第一个Boss.md",
-              "colors": {
-                "Red": "#f00"
-              },
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-第一个NPC.md",
-              "path": "Modder入门/4-玩家/DPapyru-第一个NPC.md",
-              "originalPath": "Modder入门/4-玩家/DPapyru-第一个NPC.md",
-              "title": "第一个NPC",
-              "author": "小天使",
-              "order": 8,
-              "description": "创建可交互的NPC，理解NPC的基本属性和行为",
-              "last_updated": "2026-01-19",
-              "time": "30分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "../2-物品/DPapyru-第一个弹药.md",
-              "next_chapter": "../5-高级/DPapyru-第一个Boss.md",
-              "colors": {
-                "Red": "#f00"
-              },
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-第一个Boss.md",
-              "path": "Modder入门/5-高级/DPapyru-第一个Boss.md",
-              "originalPath": "Modder入门/5-高级/DPapyru-第一个Boss.md",
-              "title": "第一个Boss",
-              "author": "小天使",
-              "order": 9,
-              "description": "做第一个Boss同时学习阶段转换",
-              "last_updated": "2026-01-19",
-              "time": "30分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "../3-战斗/DPapyru-第一个召唤物.md",
-              "next_chapter": "../5-高级/DPapyru-第一个世界生成.md",
-              "colors": {
-                "Red": "#f00"
-              },
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-第一个世界生成.md",
-              "path": "Modder入门/5-高级/DPapyru-第一个世界生成.md",
-              "originalPath": "Modder入门/5-高级/DPapyru-第一个世界生成.md",
-              "title": "第一个世界生成",
+              "filename": "DPapyru-ModItem生命周期与SetDefaults.md",
+              "path": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md",
+              "originalPath": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md",
+              "title": "tModLoader：ModItem 生命周期与 SetDefaults",
               "author": "小天使",
               "order": 10,
-              "description": "做第一个世界生成同时学习世界系统",
-              "last_updated": "2026-01-19",
-              "time": "25分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "../5-高级/DPapyru-第一个Boss.md",
-              "next_chapter": "null",
-              "colors": {
-                "Red": "#f00"
-              },
-              "colorChange": null
-            },
-            {
-              "filename": "第一个武器-C0-CSharp读代码.md",
-              "path": "Modder入门/1-入门/_分流/第一个武器-C0-CSharp读代码.md",
-              "originalPath": "Modder入门/1-入门/_分流/第一个武器-C0-CSharp读代码.md",
-              "title": "第一个武器（C0 补课）：C# 读代码",
-              "author": "小天使",
-              "order": 9001,
-              "description": "给从没接触过 C# 的读者，看懂“第一个武器”里出现的关键语法",
-              "last_updated": "2026-01-20",
-              "time": "10分钟",
+              "description": "解释 ModItem 常见生命周期方法的作用与调用时机，重点是 SetDefaults 的意义与常见误区",
+              "last_updated": "2026-01-21",
+              "time": "20分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": 0,
+              "min_t": 0,
               "colors": null,
               "colorChange": null
             },
             {
-              "filename": "第一个武器-T0-tML读代码.md",
-              "path": "Modder入门/1-入门/_分流/第一个武器-T0-tML读代码.md",
-              "originalPath": "Modder入门/1-入门/_分流/第一个武器-T0-tML读代码.md",
-              "title": "第一个武器（T0 补课）：tModLoader 读代码",
+              "filename": "DPapyru-绘制入门-Shader与顶点绘制.md",
+              "path": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-绘制入门-Shader与顶点绘制.md",
+              "originalPath": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-绘制入门-Shader与顶点绘制.md",
+              "title": "tModLoader：绘制入门（Shader / 顶点绘制）",
               "author": "小天使",
-              "order": 9002,
-              "description": "给第一次接触 tModLoader API 的读者，定位“第一个武器”里该看懂的 API",
-              "last_updated": "2026-01-20",
-              "time": "12分钟",
+              "order": 50,
+              "description": "为对渲染方向感兴趣的读者提供最小概念模型：Shader、顶点、绘制阶段与常见踩坑",
+              "last_updated": "2026-01-21",
+              "time": "20分钟",
+              "difficulty": "advanced",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": 1,
+              "min_t": 2,
+              "colors": null,
+              "colorChange": null
+            }
+          ]
+        },
+        "env": {
+          "title": "环境配置",
+          "description": "开发环境搭建和配置",
+          "files": [
+            {
+              "filename": "DPapyru-Content资源与路径规则.md",
+              "path": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-Content资源与路径规则.md",
+              "originalPath": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-Content资源与路径规则.md",
+              "title": "tModLoader：Content 资源与路径规则（贴图/声音）",
+              "author": "小天使",
+              "order": 11,
+              "description": "解释 Mod 资源（Texture/Sound）路径、自动加载、常见的“找不到贴图/声音”原因",
+              "last_updated": "2026-01-21",
+              "time": "15分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": 0,
+              "min_t": 1,
               "colors": null,
               "colorChange": null
-            },
+            }
+          ]
+        },
+        "items": {
+          "title": "物品系统",
+          "description": "物品、武器和装备的开发",
+          "files": [
             {
-              "filename": "第一个武器-进阶-惯用写法.md",
-              "path": "Modder入门/1-入门/_分流/第一个武器-进阶-惯用写法.md",
-              "originalPath": "Modder入门/1-入门/_分流/第一个武器-进阶-惯用写法.md",
-              "title": "第一个武器（进阶）：更贴近实战的写法",
+              "filename": "DPapyru-第一个物品.md",
+              "path": "Modder入门/1-入门/DPapyru-第一个物品.md",
+              "originalPath": "Modder入门/1-入门/DPapyru-第一个物品.md",
+              "title": "第一个物品：做一个最简单的“材料”",
               "author": "小天使",
-              "order": 9003,
-              "description": "当你已经有 C# 基础且熟悉 tML API 时，这里给出更贴近实战的组织方式与注意点",
-              "last_updated": "2026-01-20",
-              "time": "8分钟",
-              "difficulty": "intermediate",
+              "order": 10,
+              "description": "从零开始添加一个最简单的 ModItem，并理解 SetDefaults 的“出厂设置”含义",
+              "last_updated": "2026-01-21",
+              "time": "15分钟",
+              "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": 0,
+              "min_t": 0,
               "colors": null,
               "colorChange": null
             }
@@ -379,6 +315,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -395,6 +333,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -411,6 +351,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -427,6 +369,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -443,6 +387,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -459,6 +405,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -475,6 +423,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -491,6 +441,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -507,6 +459,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -523,6 +477,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -539,6 +495,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -555,6 +513,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -571,6 +531,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -587,6 +549,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -603,6 +567,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -619,6 +585,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -635,6 +603,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -651,6 +621,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -667,6 +639,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -683,6 +657,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -699,6 +675,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -715,6 +693,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -731,6 +711,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -747,6 +729,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -763,6 +747,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -779,6 +765,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -795,6 +783,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -811,6 +801,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -827,6 +819,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -843,6 +837,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -859,6 +855,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -875,6 +873,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -891,6 +891,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -907,6 +909,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -923,6 +927,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -939,6 +945,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -955,6 +963,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -971,6 +981,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -987,6 +999,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1003,6 +1017,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1019,6 +1035,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1035,6 +1053,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1051,6 +1071,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1067,6 +1089,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1083,6 +1107,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1099,6 +1125,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1115,6 +1143,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1131,6 +1161,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1147,6 +1179,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1163,6 +1197,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1179,6 +1215,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1195,6 +1233,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1211,6 +1251,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1227,6 +1269,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1243,6 +1287,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1259,6 +1305,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1275,6 +1323,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1291,6 +1341,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1307,6 +1359,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1323,6 +1377,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1339,6 +1395,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1355,6 +1413,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1371,6 +1431,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1387,6 +1449,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1403,6 +1467,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1419,6 +1485,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1435,6 +1503,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1451,6 +1521,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1467,6 +1539,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1483,6 +1557,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1499,6 +1575,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1515,6 +1593,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1531,6 +1611,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1547,6 +1629,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1563,6 +1647,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1579,6 +1665,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1595,6 +1683,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1611,6 +1701,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1627,6 +1719,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1643,6 +1737,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1659,6 +1755,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1675,6 +1773,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1691,6 +1791,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1707,6 +1809,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1723,6 +1827,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1739,6 +1845,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1755,6 +1863,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1771,6 +1881,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1787,6 +1899,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1803,6 +1917,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1819,6 +1935,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1835,6 +1953,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1851,6 +1971,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1867,6 +1989,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1883,6 +2007,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1899,6 +2025,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1915,6 +2043,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1931,6 +2061,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1947,6 +2079,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1963,6 +2097,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1979,6 +2115,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1995,6 +2133,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2011,6 +2151,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2027,6 +2169,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2043,6 +2187,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2059,6 +2205,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2075,6 +2223,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2091,6 +2241,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2107,6 +2259,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2123,6 +2277,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2139,6 +2295,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2155,6 +2313,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2171,6 +2331,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2187,6 +2349,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2203,6 +2367,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2219,6 +2385,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2235,6 +2403,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2251,6 +2421,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2267,6 +2439,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2283,6 +2457,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2299,6 +2475,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2315,6 +2493,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2331,6 +2511,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2347,6 +2529,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2363,6 +2547,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2379,6 +2565,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2395,6 +2583,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2411,6 +2601,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2427,6 +2619,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             }
@@ -2466,6 +2660,8 @@
               "difficulty": "beginner",
               "prev_chapter": "null",
               "next_chapter": "对象池思想.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
@@ -2484,6 +2680,8 @@
               "difficulty": "beginner",
               "prev_chapter": "null",
               "next_chapter": "物品原理.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
@@ -2502,6 +2700,8 @@
               "difficulty": "beginner",
               "prev_chapter": "null",
               "next_chapter": "前言.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
@@ -2520,6 +2720,8 @@
               "difficulty": "beginner",
               "prev_chapter": "null",
               "next_chapter": "世界观.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
@@ -2644,22 +2846,17 @@
     "小天使": {
       "name": "小天使",
       "files": [
+        "DPapyru-第一个物品.md",
+        "DPapyru-从这里开始.md",
+        "DPapyru-推荐学习路径.md",
         "DPapyru-提问的艺术.md",
         "DPapyru-给新人的前言.md",
-        "DPapyru-快速开始构建Mod.md",
-        "DPapyru-第一个武器.md",
-        "第一个武器-C0-CSharp读代码.md",
-        "第一个武器-T0-tML读代码.md",
-        "第一个武器-进阶-惯用写法.md",
-        "DPapyru-第一个弹药.md",
-        "DPapyru-第一个物块.md",
-        "DPapyru-第一个Buff.md",
-        "DPapyru-第一个召唤物.md",
-        "DPapyru-第一个弹幕.md",
-        "DPapyru-第一个NPC.md",
-        "DPapyru-第一个饰品.md",
-        "DPapyru-第一个Boss.md",
-        "DPapyru-第一个世界生成.md",
+        "学习路线-从零到第一个武器.md",
+        "DPapyru-CSharp从零到能看懂Mod代码.md",
+        "DPapyru-文章使用内容索引-导读.md",
+        "DPapyru-Content资源与路径规则.md",
+        "DPapyru-ModItem生命周期与SetDefaults.md",
+        "DPapyru-绘制入门-Shader与顶点绘制.md",
         "教学文章写作指南.md",
         "站点Markdown扩展语法说明.md"
       ]
@@ -2810,28 +3007,28 @@
   },
   "all_files": [
     {
-      "filename": "DPapyru-提问的艺术.md",
-      "path": "Modder入门/0-指南/DPapyru-提问的艺术.md",
-      "originalPath": "Modder入门/0-指南/DPapyru-提问的艺术.md",
-      "title": "提问的艺术",
+      "filename": "DPapyru-从这里开始.md",
+      "path": "Modder入门/DPapyru-从这里开始.md",
+      "originalPath": "Modder入门/DPapyru-从这里开始.md",
+      "title": "从这里开始：Modder 入门总览",
       "author": "小天使",
       "category": "Modder入门",
       "topic": "mod-basics",
       "order": 0,
-      "time": "5分钟",
+      "time": "10分钟",
       "difficulty": "beginner",
-      "prev_chapter": "../0-指南/DPapyru-给新人的前言.md",
-      "next_chapter": "../1-入门/DPapyru-快速开始构建Mod.md",
-      "colors": {
-        "Mad": "#f00"
-      },
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": 0,
+      "min_t": 0,
+      "colors": null,
       "colorChange": null,
-      "last_updated": "2026-01-17"
+      "last_updated": "2026-01-21"
     },
     {
       "filename": "DPapyru-给新人的前言.md",
-      "path": "Modder入门/0-指南/DPapyru-给新人的前言.md",
-      "originalPath": "Modder入门/0-指南/DPapyru-给新人的前言.md",
+      "path": "Modder入门/指南/DPapyru-给新人的前言.md",
+      "originalPath": "Modder入门/指南/DPapyru-给新人的前言.md",
       "title": "给新人的前言",
       "author": "小天使",
       "category": "Modder入门",
@@ -2840,7 +3037,9 @@
       "time": "5分钟",
       "difficulty": "beginner",
       "prev_chapter": null,
-      "next_chapter": "../0-指南/DPapyru-提问的艺术.md",
+      "next_chapter": "DPapyru-提问的艺术.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
@@ -2848,23 +3047,82 @@
       "last_updated": "2025-12-02"
     },
     {
-      "filename": "DPapyru-快速开始构建Mod.md",
-      "path": "Modder入门/1-入门/DPapyru-快速开始构建Mod.md",
-      "originalPath": "Modder入门/1-入门/DPapyru-快速开始构建Mod.md",
-      "title": "快速开始构建Mod（tModLoader 1.4）",
+      "filename": "DPapyru-文章使用内容索引-导读.md",
+      "path": "Modder入门/文章使用内容索引/DPapyru-文章使用内容索引-导读.md",
+      "originalPath": "Modder入门/文章使用内容索引/DPapyru-文章使用内容索引-导读.md",
+      "title": "文章使用内容索引：如何阅读与引用",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 0,
+      "time": "8分钟",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": 0,
+      "min_t": 0,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2026-01-21"
+    },
+    {
+      "filename": "DPapyru-推荐学习路径.md",
+      "path": "Modder入门/DPapyru-推荐学习路径.md",
+      "originalPath": "Modder入门/DPapyru-推荐学习路径.md",
+      "title": "推荐学习路径（按 C#/tML 熟练度分流）",
       "author": "小天使",
       "category": "Modder入门",
       "topic": "mod-basics",
       "order": 1,
-      "time": "15分钟",
+      "time": "8分钟",
       "difficulty": "beginner",
-      "prev_chapter": "../0-指南/DPapyru-提问的艺术.md",
-      "next_chapter": "../1-入门/DPapyru-第一个武器.md",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": 0,
+      "min_t": 0,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2026-01-21"
+    },
+    {
+      "filename": "DPapyru-提问的艺术.md",
+      "path": "Modder入门/指南/DPapyru-提问的艺术.md",
+      "originalPath": "Modder入门/指南/DPapyru-提问的艺术.md",
+      "title": "提问的艺术",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "5分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "DPapyru-给新人的前言.md",
+      "next_chapter": "学习路线-从零到第一个武器.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
       "colorChange": null,
       "last_updated": "2026-01-17"
+    },
+    {
+      "filename": "DPapyru-CSharp从零到能看懂Mod代码.md",
+      "path": "Modder入门/文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md",
+      "originalPath": "Modder入门/文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md",
+      "title": "C#：从零到能看懂 Mod 代码",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "25分钟",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": 0,
+      "min_t": 0,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2026-01-21"
     },
     {
       "filename": "教学文章写作指南.md",
@@ -2879,6 +3137,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2026-01-18"
@@ -2896,6 +3156,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2913,6 +3175,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2930,6 +3194,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2947,6 +3213,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2964,6 +3232,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2981,6 +3251,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2998,6 +3270,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3015,6 +3289,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3032,6 +3308,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3049,6 +3327,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3066,6 +3346,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3083,6 +3365,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3100,6 +3384,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3117,6 +3403,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3134,6 +3422,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3151,6 +3441,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3168,6 +3460,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3185,6 +3479,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3202,6 +3498,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3219,6 +3517,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3236,6 +3536,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3253,6 +3555,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3270,6 +3574,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3287,6 +3593,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3304,6 +3612,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3321,6 +3631,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3338,6 +3650,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3355,6 +3669,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3372,6 +3688,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3389,6 +3707,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3406,6 +3726,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3423,6 +3745,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3440,6 +3764,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3457,6 +3783,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3474,6 +3802,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3491,6 +3821,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3508,6 +3840,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3525,6 +3859,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3542,6 +3878,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3559,6 +3897,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3576,6 +3916,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3593,6 +3935,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3610,6 +3954,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3627,6 +3973,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3644,6 +3992,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3661,6 +4011,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3678,6 +4030,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3695,6 +4049,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3712,6 +4068,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3729,6 +4087,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3746,6 +4106,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3763,6 +4125,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3780,6 +4144,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3797,6 +4163,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3814,6 +4182,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3831,6 +4201,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3848,6 +4220,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3865,6 +4239,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3882,6 +4258,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3899,6 +4277,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3916,6 +4296,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3933,6 +4315,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3950,6 +4334,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3967,6 +4353,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3984,6 +4372,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4001,6 +4391,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4018,6 +4410,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4035,6 +4429,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4052,6 +4448,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4069,6 +4467,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4086,6 +4486,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4103,6 +4505,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4120,6 +4524,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4137,6 +4543,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4154,6 +4562,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4171,6 +4581,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4188,6 +4600,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4205,6 +4619,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4222,6 +4638,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4239,6 +4657,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4256,6 +4676,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4273,6 +4695,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4290,6 +4714,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4307,6 +4733,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4324,6 +4752,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4341,6 +4771,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4358,6 +4790,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4375,6 +4809,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4392,6 +4828,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4409,6 +4847,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4426,6 +4866,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4443,6 +4885,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4460,6 +4904,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4477,6 +4923,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4494,6 +4942,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4511,6 +4961,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4528,6 +4980,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4545,6 +4999,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4562,6 +5018,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4579,6 +5037,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4596,6 +5056,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4613,6 +5075,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4630,6 +5094,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4647,6 +5113,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4664,6 +5132,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4681,6 +5151,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4698,6 +5170,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4715,6 +5189,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4732,6 +5208,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4749,6 +5227,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4766,6 +5246,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4783,6 +5265,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4800,6 +5284,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4817,6 +5303,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4834,6 +5322,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4851,6 +5341,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4868,6 +5360,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4885,6 +5379,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4902,6 +5398,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4919,6 +5417,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4936,6 +5436,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4953,6 +5455,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4970,6 +5474,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4987,6 +5493,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5004,6 +5512,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5021,6 +5531,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5038,6 +5550,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5055,6 +5569,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5072,28 +5588,30 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
     },
     {
-      "filename": "DPapyru-第一个武器.md",
-      "path": "Modder入门/1-入门/DPapyru-第一个武器.md",
-      "originalPath": "Modder入门/1-入门/DPapyru-第一个武器.md",
-      "title": "第一个武器",
+      "filename": "学习路线-从零到第一个武器.md",
+      "path": "Modder入门/指南/学习路线-从零到第一个武器.md",
+      "originalPath": "Modder入门/指南/学习路线-从零到第一个武器.md",
+      "title": "学习路线：从零到第一个武器（索引版）",
       "author": "小天使",
       "category": "Modder入门",
       "topic": "mod-basics",
       "order": 2,
-      "time": "15分钟",
+      "time": "8分钟",
       "difficulty": "beginner",
-      "prev_chapter": "../1-入门/DPapyru-快速开始构建Mod.md",
-      "next_chapter": "../3-战斗/DPapyru-第一个弹幕.md",
-      "colors": {
-        "Red": "#f00"
-      },
+      "prev_chapter": "DPapyru-提问的艺术.md",
+      "next_chapter": null,
+      "min_c": 0,
+      "min_t": 0,
+      "colors": null,
       "colorChange": null,
-      "last_updated": "2026-01-19"
+      "last_updated": "2026-01-21"
     },
     {
       "filename": "站点Markdown扩展语法说明.md",
@@ -5108,47 +5626,11 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2026-01-20"
-    },
-    {
-      "filename": "DPapyru-第一个弹幕.md",
-      "path": "Modder入门/3-战斗/DPapyru-第一个弹幕.md",
-      "originalPath": "Modder入门/3-战斗/DPapyru-第一个弹幕.md",
-      "title": "第一个弹幕",
-      "author": "小天使",
-      "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 3,
-      "time": "20分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "../1-入门/DPapyru-第一个武器.md",
-      "next_chapter": "../2-物品/DPapyru-第一个物块.md",
-      "colors": {
-        "Red": "#f00"
-      },
-      "colorChange": null,
-      "last_updated": "2026-01-19"
-    },
-    {
-      "filename": "DPapyru-第一个物块.md",
-      "path": "Modder入门/2-物品/DPapyru-第一个物块.md",
-      "originalPath": "Modder入门/2-物品/DPapyru-第一个物块.md",
-      "title": "第一个物块",
-      "author": "小天使",
-      "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 4,
-      "time": "25分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "../3-战斗/DPapyru-第一个弹幕.md",
-      "next_chapter": "../2-物品/DPapyru-第一个弹药.md",
-      "colors": {
-        "Red": "#f00"
-      },
-      "colorChange": null,
-      "last_updated": "2026-01-19"
     },
     {
       "filename": "世界观.md",
@@ -5163,6 +5645,8 @@
       "difficulty": "beginner",
       "prev_chapter": "null",
       "next_chapter": "对象池思想.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
@@ -5182,6 +5666,8 @@
       "difficulty": "beginner",
       "prev_chapter": "null",
       "next_chapter": "物品原理.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
@@ -5201,6 +5687,8 @@
       "difficulty": "beginner",
       "prev_chapter": "null",
       "next_chapter": "前言.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
@@ -5220,6 +5708,8 @@
       "difficulty": "beginner",
       "prev_chapter": "null",
       "next_chapter": "世界观.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
@@ -5227,188 +5717,80 @@
       "last_updated": "2026-1-17"
     },
     {
-      "filename": "DPapyru-第一个饰品.md",
-      "path": "Modder入门/4-玩家/DPapyru-第一个饰品.md",
-      "originalPath": "Modder入门/4-玩家/DPapyru-第一个饰品.md",
-      "title": "第一个饰品",
+      "filename": "DPapyru-第一个物品.md",
+      "path": "Modder入门/1-入门/DPapyru-第一个物品.md",
+      "originalPath": "Modder入门/1-入门/DPapyru-第一个物品.md",
+      "title": "第一个物品：做一个最简单的“材料”",
       "author": "小天使",
       "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 6,
+      "topic": "items",
+      "order": 10,
       "time": "15分钟",
       "difficulty": "beginner",
-      "prev_chapter": "../4-玩家/DPapyru-第一个NPC.md",
-      "next_chapter": "../3-战斗/DPapyru-第一个Buff.md",
-      "colors": {
-        "Red": "#f00"
-      },
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": 0,
+      "min_t": 0,
+      "colors": null,
       "colorChange": null,
-      "last_updated": "2026-01-19"
+      "last_updated": "2026-01-21"
     },
     {
-      "filename": "DPapyru-第一个弹药.md",
-      "path": "Modder入门/2-物品/DPapyru-第一个弹药.md",
-      "originalPath": "Modder入门/2-物品/DPapyru-第一个弹药.md",
-      "title": "第一个弹药",
-      "author": "小天使",
-      "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 7,
-      "time": "20分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "../2-物品/DPapyru-第一个物块.md",
-      "next_chapter": "../4-玩家/DPapyru-第一个NPC.md",
-      "colors": {
-        "Red": "#f00"
-      },
-      "colorChange": null,
-      "last_updated": "2026-01-19"
-    },
-    {
-      "filename": "DPapyru-第一个Buff.md",
-      "path": "Modder入门/3-战斗/DPapyru-第一个Buff.md",
-      "originalPath": "Modder入门/3-战斗/DPapyru-第一个Buff.md",
-      "title": "第一个Buff",
-      "author": "小天使",
-      "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 7,
-      "time": "20分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "../4-玩家/DPapyru-第一个饰品.md",
-      "next_chapter": "../3-战斗/DPapyru-第一个召唤物.md",
-      "colors": {
-        "Red": "#f00"
-      },
-      "colorChange": null,
-      "last_updated": "2026-01-19"
-    },
-    {
-      "filename": "DPapyru-第一个召唤物.md",
-      "path": "Modder入门/3-战斗/DPapyru-第一个召唤物.md",
-      "originalPath": "Modder入门/3-战斗/DPapyru-第一个召唤物.md",
-      "title": "第一个召唤物",
-      "author": "小天使",
-      "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 8,
-      "time": "25分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "../3-战斗/DPapyru-第一个Buff.md",
-      "next_chapter": "../5-高级/DPapyru-第一个Boss.md",
-      "colors": {
-        "Red": "#f00"
-      },
-      "colorChange": null,
-      "last_updated": "2026-01-19"
-    },
-    {
-      "filename": "DPapyru-第一个NPC.md",
-      "path": "Modder入门/4-玩家/DPapyru-第一个NPC.md",
-      "originalPath": "Modder入门/4-玩家/DPapyru-第一个NPC.md",
-      "title": "第一个NPC",
-      "author": "小天使",
-      "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 8,
-      "time": "30分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "../2-物品/DPapyru-第一个弹药.md",
-      "next_chapter": "../5-高级/DPapyru-第一个Boss.md",
-      "colors": {
-        "Red": "#f00"
-      },
-      "colorChange": null,
-      "last_updated": "2026-01-19"
-    },
-    {
-      "filename": "DPapyru-第一个Boss.md",
-      "path": "Modder入门/5-高级/DPapyru-第一个Boss.md",
-      "originalPath": "Modder入门/5-高级/DPapyru-第一个Boss.md",
-      "title": "第一个Boss",
-      "author": "小天使",
-      "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 9,
-      "time": "30分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "../3-战斗/DPapyru-第一个召唤物.md",
-      "next_chapter": "../5-高级/DPapyru-第一个世界生成.md",
-      "colors": {
-        "Red": "#f00"
-      },
-      "colorChange": null,
-      "last_updated": "2026-01-19"
-    },
-    {
-      "filename": "DPapyru-第一个世界生成.md",
-      "path": "Modder入门/5-高级/DPapyru-第一个世界生成.md",
-      "originalPath": "Modder入门/5-高级/DPapyru-第一个世界生成.md",
-      "title": "第一个世界生成",
+      "filename": "DPapyru-ModItem生命周期与SetDefaults.md",
+      "path": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md",
+      "originalPath": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md",
+      "title": "tModLoader：ModItem 生命周期与 SetDefaults",
       "author": "小天使",
       "category": "Modder入门",
       "topic": "mod-basics",
       "order": 10,
-      "time": "25分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "../5-高级/DPapyru-第一个Boss.md",
-      "next_chapter": "null",
-      "colors": {
-        "Red": "#f00"
-      },
-      "colorChange": null,
-      "last_updated": "2026-01-19"
-    },
-    {
-      "filename": "第一个武器-C0-CSharp读代码.md",
-      "path": "Modder入门/1-入门/_分流/第一个武器-C0-CSharp读代码.md",
-      "originalPath": "Modder入门/1-入门/_分流/第一个武器-C0-CSharp读代码.md",
-      "title": "第一个武器（C0 补课）：C# 读代码",
-      "author": "小天使",
-      "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 9001,
-      "time": "10分钟",
+      "time": "20分钟",
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": 0,
+      "min_t": 0,
       "colors": null,
       "colorChange": null,
-      "last_updated": "2026-01-20"
+      "last_updated": "2026-01-21"
     },
     {
-      "filename": "第一个武器-T0-tML读代码.md",
-      "path": "Modder入门/1-入门/_分流/第一个武器-T0-tML读代码.md",
-      "originalPath": "Modder入门/1-入门/_分流/第一个武器-T0-tML读代码.md",
-      "title": "第一个武器（T0 补课）：tModLoader 读代码",
+      "filename": "DPapyru-Content资源与路径规则.md",
+      "path": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-Content资源与路径规则.md",
+      "originalPath": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-Content资源与路径规则.md",
+      "title": "tModLoader：Content 资源与路径规则（贴图/声音）",
       "author": "小天使",
       "category": "Modder入门",
-      "topic": "mod-basics",
-      "order": 9002,
-      "time": "12分钟",
+      "topic": "env",
+      "order": 11,
+      "time": "15分钟",
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": 0,
+      "min_t": 1,
       "colors": null,
       "colorChange": null,
-      "last_updated": "2026-01-20"
+      "last_updated": "2026-01-21"
     },
     {
-      "filename": "第一个武器-进阶-惯用写法.md",
-      "path": "Modder入门/1-入门/_分流/第一个武器-进阶-惯用写法.md",
-      "originalPath": "Modder入门/1-入门/_分流/第一个武器-进阶-惯用写法.md",
-      "title": "第一个武器（进阶）：更贴近实战的写法",
+      "filename": "DPapyru-绘制入门-Shader与顶点绘制.md",
+      "path": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-绘制入门-Shader与顶点绘制.md",
+      "originalPath": "Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-绘制入门-Shader与顶点绘制.md",
+      "title": "tModLoader：绘制入门（Shader / 顶点绘制）",
       "author": "小天使",
       "category": "Modder入门",
       "topic": "mod-basics",
-      "order": 9003,
-      "time": "8分钟",
-      "difficulty": "intermediate",
+      "order": 50,
+      "time": "20分钟",
+      "difficulty": "advanced",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": 1,
+      "min_t": 2,
       "colors": null,
       "colorChange": null,
-      "last_updated": "2026-01-20"
+      "last_updated": "2026-01-21"
     }
   ],
   "settings": {
@@ -5439,7 +5821,9 @@
         "prev_chapter",
         "next_chapter",
         "colorChange",
-        "colors"
+        "colors",
+        "min_c",
+        "min_t"
       ]
     }
   }
