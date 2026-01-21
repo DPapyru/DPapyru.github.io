@@ -48,6 +48,11 @@
 
 - 当前没有单元测试。请使用 `npm run check-generated` 做一致性校验，并在浏览器做基础冒烟测试（导航、渲染、搜索）。
 
+## Workspace Safety（重要）
+
+- 禁止修改仓库根目录的 `.git` 文件（worktree 指针文件）。该文件用于 Git 工作树定位，误改会导致 `git` 与脚本行为异常。
+- 如遇到跨平台（Windows/WSL）导致的 `git` 不可用问题：不要通过改 `.git` 解决；请改在对应平台的 Git 环境中运行 `npm run check-generated` / `git diff`，或仅运行 `npm run build` 做内容生成校验。
+
 ## CI 与部署
 
 - GitHub Actions 会在 PR 中执行构建，并检查生成文件是否已提交；请不要手动编辑 `docs/config.json`、`assets/search-index.json`、`sitemap.xml` 作为“最终结果”，而应修改源内容后再重新生成。

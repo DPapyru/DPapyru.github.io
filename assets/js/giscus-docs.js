@@ -23,11 +23,38 @@
     function postGiscusTerm(container, term) {
         const iframe = findGiscusIframe(container);
         if (!iframe || !iframe.contentWindow) return false;
-        iframe.contentWindow.postMessage(
-            { giscus: { setConfig: { term: String(term) } } },
-            GISCUS_ORIGIN
-        );
-        return true;
+
+        const src = String(iframe.getAttribute('src') || '').trim();
+        // When the iframe is created but not navigated yet, it can be about:blank (same-origin),
+        // posting with a strict targetOrigin would throw. Retry later.
+        if (!src || src === 'about:blank') return false;
+        if (!src.startsWith(GISCUS_ORIGIN)) return false;
+
+        try {
+            iframe.contentWindow.postMessage(
+                { giscus: { setConfig: { term: String(term) } } },
+                GISCUS_ORIGIN
+            );
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function retryPostTerm(container, term) {
+        if (!container) return;
+        const maxTries = 20;
+        const delayMs = 150;
+        let tries = 0;
+
+        const tick = function () {
+            tries += 1;
+            if (postGiscusTerm(container, term)) return;
+            if (tries >= maxTries) return;
+            window.setTimeout(tick, delayMs);
+        };
+
+        window.setTimeout(tick, delayMs);
     }
 
     function ensureGiscusLoaded(container, term) {
@@ -36,7 +63,9 @@
         const existingScript = container.querySelector('script[data-giscus-script="true"]');
         const existingIframe = findGiscusIframe(container);
         if (existingIframe) {
-            postGiscusTerm(container, term);
+            if (!postGiscusTerm(container, term)) {
+                retryPostTerm(container, term);
+            }
             return;
         }
 
@@ -60,6 +89,9 @@
         script.setAttribute('data-lang', GISCUS_OPTIONS.lang);
         script.setAttribute('data-loading', 'lazy');
         container.appendChild(script);
+
+        // The iframe is injected asynchronously; schedule a best-effort retry so term updates don't throw.
+        retryPostTerm(container, term);
     }
 
     function normalizeTerm(docPath) {

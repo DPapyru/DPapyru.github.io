@@ -40,6 +40,12 @@
         return Math.max(0, Math.min(2, n));
     }
 
+    function readOptionalLevel(value) {
+        if (typeof value === 'number' && Number.isFinite(value)) return clampLevel(value);
+        if (typeof value === 'string' && value.trim() !== '') return clampLevel(value);
+        return null;
+    }
+
     function readJsonFromLocalStorage(key) {
         try {
             var raw = window.localStorage.getItem(key);
@@ -189,6 +195,18 @@
         };
     }
 
+    function getMetaRule(doc) {
+        if (!doc || typeof doc !== 'object') return null;
+        var minC = readOptionalLevel(doc.min_c);
+        var minT = readOptionalLevel(doc.min_t);
+        if (minC == null && minT == null) return null;
+        return {
+            minC: minC == null ? 0 : minC,
+            minT: minT == null ? 0 : minT,
+            source: 'meta'
+        };
+    }
+
     async function applyFilter(docs) {
         var mapping = await load();
         var profile = getProfile();
@@ -223,7 +241,7 @@
         docList.forEach(function (doc) {
             var path = doc && (doc.path || doc.filename) ? String(doc.path || doc.filename) : '';
             var normalized = normalizePath(path);
-            var rule = getEffectiveRule(mapping, normalized);
+            var rule = getEffectiveRule(mapping, normalized) || getMetaRule(doc);
             if (!rule) {
                 counts.unmapped += 1;
                 if (prefs.showUnmapped) {
