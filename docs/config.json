@@ -41,6 +41,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -57,6 +59,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             }
@@ -84,7 +88,9 @@
               "time": "5分钟",
               "difficulty": "beginner",
               "prev_chapter": "../0-指南/DPapyru-给新人的前言.md",
-              "next_chapter": "../1-入门/DPapyru-快速开始构建Mod.md",
+              "next_chapter": "../0-指南/学习路线-从零到第一个武器.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
@@ -103,9 +109,29 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": "../0-指南/DPapyru-提问的艺术.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
+              "colorChange": null
+            },
+            {
+              "filename": "学习路线-从零到第一个武器.md",
+              "path": "Modder入门/0-指南/学习路线-从零到第一个武器.md",
+              "originalPath": "Modder入门/0-指南/学习路线-从零到第一个武器.md",
+              "title": "学习路线：从零到第一个武器",
+              "author": "小天使",
+              "order": 1,
+              "description": "路线页：按 C/T 档位与偏好分流，串联“快速开始构建 Mod → 第一个武器”",
+              "last_updated": "2026-01-21",
+              "time": "8分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "../0-指南/DPapyru-提问的艺术.md",
+              "next_chapter": "../1-入门/DPapyru-快速开始构建Mod.md",
+              "min_c": 0,
+              "min_t": 0,
+              "colors": null,
               "colorChange": null
             },
             {
@@ -119,8 +145,10 @@
               "last_updated": "2026-01-17",
               "time": "15分钟",
               "difficulty": "beginner",
-              "prev_chapter": "../0-指南/DPapyru-提问的艺术.md",
+              "prev_chapter": "../0-指南/学习路线-从零到第一个武器.md",
               "next_chapter": "../1-入门/DPapyru-第一个武器.md",
+              "min_c": 0,
+              "min_t": 0,
               "colors": {
                 "Mad": "#f00"
               },
@@ -139,6 +167,8 @@
               "difficulty": "beginner",
               "prev_chapter": "../1-入门/DPapyru-快速开始构建Mod.md",
               "next_chapter": "../3-战斗/DPapyru-第一个弹幕.md",
+              "min_c": 0,
+              "min_t": 0,
               "colors": {
                 "Red": "#f00"
               },
@@ -157,6 +187,8 @@
               "difficulty": "beginner",
               "prev_chapter": "../1-入门/DPapyru-第一个武器.md",
               "next_chapter": "../2-物品/DPapyru-第一个物块.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Red": "#f00"
               },
@@ -175,6 +207,8 @@
               "difficulty": "beginner",
               "prev_chapter": "../3-战斗/DPapyru-第一个弹幕.md",
               "next_chapter": "../2-物品/DPapyru-第一个弹药.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Red": "#f00"
               },
@@ -193,6 +227,8 @@
               "difficulty": "beginner",
               "prev_chapter": "../4-玩家/DPapyru-第一个NPC.md",
               "next_chapter": "../3-战斗/DPapyru-第一个Buff.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Red": "#f00"
               },
@@ -211,6 +247,8 @@
               "difficulty": "beginner",
               "prev_chapter": "../2-物品/DPapyru-第一个物块.md",
               "next_chapter": "../4-玩家/DPapyru-第一个NPC.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Red": "#f00"
               },
@@ -229,6 +267,8 @@
               "difficulty": "beginner",
               "prev_chapter": "../4-玩家/DPapyru-第一个饰品.md",
               "next_chapter": "../3-战斗/DPapyru-第一个召唤物.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Red": "#f00"
               },
@@ -247,6 +287,8 @@
               "difficulty": "beginner",
               "prev_chapter": "../3-战斗/DPapyru-第一个Buff.md",
               "next_chapter": "../5-高级/DPapyru-第一个Boss.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Red": "#f00"
               },
@@ -265,6 +307,8 @@
               "difficulty": "beginner",
               "prev_chapter": "../2-物品/DPapyru-第一个弹药.md",
               "next_chapter": "../5-高级/DPapyru-第一个Boss.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Red": "#f00"
               },
@@ -283,6 +327,8 @@
               "difficulty": "beginner",
               "prev_chapter": "../3-战斗/DPapyru-第一个召唤物.md",
               "next_chapter": "../5-高级/DPapyru-第一个世界生成.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Red": "#f00"
               },
@@ -301,6 +347,8 @@
               "difficulty": "beginner",
               "prev_chapter": "../5-高级/DPapyru-第一个Boss.md",
               "next_chapter": "null",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Red": "#f00"
               },
@@ -319,6 +367,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -335,6 +385,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -351,6 +403,8 @@
               "difficulty": "intermediate",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             }
@@ -379,6 +433,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -395,6 +451,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -411,6 +469,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -427,6 +487,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -443,6 +505,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -459,6 +523,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -475,6 +541,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -491,6 +559,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -507,6 +577,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -523,6 +595,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -539,6 +613,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -555,6 +631,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -571,6 +649,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -587,6 +667,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -603,6 +685,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -619,6 +703,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -635,6 +721,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -651,6 +739,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -667,54 +757,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "tModLoader-guide-for-contributors tModLoader贡献者指引.md",
-              "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-contributors tModLoader贡献者指引.md",
-              "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-contributors tModLoader贡献者指引.md",
-              "title": "tModLoader-guide-for-contributors tModLoader贡献者指引",
-              "author": "错数螺线",
-              "order": 1,
-              "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "tModLoader-guide-for-developers tModLoader开发者指引.md",
-              "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-developers tModLoader开发者指引.md",
-              "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-developers tModLoader开发者指引.md",
-              "title": "tModLoader-guide-for-developers tModLoader开发者指引",
-              "author": "错数螺线",
-              "order": 1,
-              "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "tModLoader-guide-for-players tModLoader玩家指引.md",
-              "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-players tModLoader玩家指引.md",
-              "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-players tModLoader玩家指引.md",
-              "title": "tModLoader-guide-for-players tModLoader玩家指引",
-              "author": "错数螺线",
-              "order": 1,
-              "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -731,6 +775,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -747,6 +793,62 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "tModLoader-guide-for-contributors tModLoader贡献者指引.md",
+              "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-contributors tModLoader贡献者指引.md",
+              "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-contributors tModLoader贡献者指引.md",
+              "title": "tModLoader-guide-for-contributors tModLoader贡献者指引",
+              "author": "错数螺线",
+              "order": 1,
+              "description": "错数螺线翻译",
+              "last_updated": "2017-9-18",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "tModLoader-guide-for-developers tModLoader开发者指引.md",
+              "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-developers tModLoader开发者指引.md",
+              "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-developers tModLoader开发者指引.md",
+              "title": "tModLoader-guide-for-developers tModLoader开发者指引",
+              "author": "错数螺线",
+              "order": 1,
+              "description": "错数螺线翻译",
+              "last_updated": "2017-9-18",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "tModLoader-guide-for-players tModLoader玩家指引.md",
+              "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-players tModLoader玩家指引.md",
+              "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-players tModLoader玩家指引.md",
+              "title": "tModLoader-guide-for-players tModLoader玩家指引",
+              "author": "错数螺线",
+              "order": 1,
+              "description": "错数螺线翻译",
+              "last_updated": "2017-9-18",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -763,6 +865,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -779,6 +883,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -795,6 +901,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -811,6 +919,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -827,6 +937,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -843,6 +955,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -859,6 +973,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -875,6 +991,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -891,6 +1009,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -907,6 +1027,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -923,6 +1045,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -939,6 +1063,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -955,6 +1081,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -971,6 +1099,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -987,6 +1117,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1003,6 +1135,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1019,6 +1153,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1035,6 +1171,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1051,6 +1189,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1067,6 +1207,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1083,6 +1225,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1099,6 +1243,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1115,6 +1261,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1131,6 +1279,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1147,6 +1297,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1163,6 +1315,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1179,6 +1333,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1195,6 +1351,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1211,6 +1369,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1227,6 +1387,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1243,6 +1405,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1259,6 +1423,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1275,6 +1441,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1291,6 +1459,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1307,6 +1477,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1323,6 +1495,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1339,6 +1513,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1355,6 +1531,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1371,6 +1549,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1387,38 +1567,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "build.txt build.txt文件.md",
-              "path": "螺线翻译tml教程/tModLoader文档/build.txt build.txt文件.md",
-              "originalPath": "螺线翻译tml教程/tModLoader文档/build.txt build.txt文件.md",
-              "title": "build.txt build.txt文件",
-              "author": "错数螺线",
-              "order": 1,
-              "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "description.txt description.txt文件.md",
-              "path": "螺线翻译tml教程/tModLoader文档/description.txt description.txt文件.md",
-              "originalPath": "螺线翻译tml教程/tModLoader文档/description.txt description.txt文件.md",
-              "title": "description.txt description.txt文件",
-              "author": "错数螺线",
-              "order": 1,
-              "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1435,6 +1585,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1451,6 +1603,44 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "build.txt build.txt文件.md",
+              "path": "螺线翻译tml教程/tModLoader文档/build.txt build.txt文件.md",
+              "originalPath": "螺线翻译tml教程/tModLoader文档/build.txt build.txt文件.md",
+              "title": "build.txt build.txt文件",
+              "author": "错数螺线",
+              "order": 1,
+              "description": "错数螺线翻译",
+              "last_updated": "2017-9-18",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "description.txt description.txt文件.md",
+              "path": "螺线翻译tml教程/tModLoader文档/description.txt description.txt文件.md",
+              "originalPath": "螺线翻译tml教程/tModLoader文档/description.txt description.txt文件.md",
+              "title": "description.txt description.txt文件",
+              "author": "错数螺线",
+              "order": 1,
+              "description": "错数螺线翻译",
+              "last_updated": "2017-9-18",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1467,6 +1657,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1483,6 +1675,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1499,6 +1693,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1515,6 +1711,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1531,6 +1729,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1547,6 +1747,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1563,6 +1765,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1579,6 +1783,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1595,6 +1801,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1611,6 +1819,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1627,6 +1837,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1643,6 +1855,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1659,6 +1873,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1675,22 +1891,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "NetMessage-Class-Documentation NetMessage类 文档.md",
-              "path": "螺线翻译tml教程/原版代码文档/杂项/NetMessage-Class-Documentation NetMessage类 文档.md",
-              "originalPath": "螺线翻译tml教程/原版代码文档/杂项/NetMessage-Class-Documentation NetMessage类 文档.md",
-              "title": "NetMessage-Class-Documentation NetMessage类 文档",
-              "author": "错数螺线",
-              "order": 1,
-              "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1707,6 +1909,26 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "NetMessage-Class-Documentation NetMessage类 文档.md",
+              "path": "螺线翻译tml教程/原版代码文档/杂项/NetMessage-Class-Documentation NetMessage类 文档.md",
+              "originalPath": "螺线翻译tml教程/原版代码文档/杂项/NetMessage-Class-Documentation NetMessage类 文档.md",
+              "title": "NetMessage-Class-Documentation NetMessage类 文档",
+              "author": "错数螺线",
+              "order": 1,
+              "description": "错数螺线翻译",
+              "last_updated": "2017-9-18",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1723,6 +1945,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1739,6 +1963,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1755,6 +1981,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1771,6 +1999,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1787,6 +2017,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1803,6 +2035,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1819,6 +2053,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1835,6 +2071,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1851,6 +2089,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1867,6 +2107,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1883,6 +2125,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1899,6 +2143,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1915,6 +2161,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1931,6 +2179,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1947,6 +2197,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1963,6 +2215,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1979,6 +2233,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -1995,6 +2251,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2011,6 +2269,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2027,6 +2287,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2043,6 +2305,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2059,6 +2323,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2075,6 +2341,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2091,6 +2359,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2107,6 +2377,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2123,70 +2395,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "tModCodeAssist tMod代码分析器.md",
-              "path": "螺线翻译tml教程/杂项/tModCodeAssist tMod代码分析器.md",
-              "originalPath": "螺线翻译tml教程/杂项/tModCodeAssist tMod代码分析器.md",
-              "title": "tModCodeAssist tMod代码分析器",
-              "author": "错数螺线",
-              "order": 1,
-              "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "tModLoader-Release-Cycle tModLoader发布循环.md",
-              "path": "螺线翻译tml教程/杂项/tModLoader-Release-Cycle tModLoader发布循环.md",
-              "originalPath": "螺线翻译tml教程/杂项/tModLoader-Release-Cycle tModLoader发布循环.md",
-              "title": "tModLoader-Release-Cycle tModLoader发布循环",
-              "author": "错数螺线",
-              "order": 1,
-              "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
-              "path": "螺线翻译tml教程/杂项/tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
-              "originalPath": "螺线翻译tml教程/杂项/tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
-              "title": "tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移",
-              "author": "错数螺线",
-              "order": 1,
-              "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "tModLoader-Style-Guide tModLoader代码风格指引.md",
-              "path": "螺线翻译tml教程/杂项/tModLoader-Style-Guide tModLoader代码风格指引.md",
-              "originalPath": "螺线翻译tml教程/杂项/tModLoader-Style-Guide tModLoader代码风格指引.md",
-              "title": "tModLoader-Style-Guide tModLoader代码风格指引",
-              "author": "错数螺线",
-              "order": 1,
-              "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2203,6 +2413,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2219,6 +2431,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2235,6 +2449,80 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "tModCodeAssist tMod代码分析器.md",
+              "path": "螺线翻译tml教程/杂项/tModCodeAssist tMod代码分析器.md",
+              "originalPath": "螺线翻译tml教程/杂项/tModCodeAssist tMod代码分析器.md",
+              "title": "tModCodeAssist tMod代码分析器",
+              "author": "错数螺线",
+              "order": 1,
+              "description": "错数螺线翻译",
+              "last_updated": "2017-9-18",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "tModLoader-Release-Cycle tModLoader发布循环.md",
+              "path": "螺线翻译tml教程/杂项/tModLoader-Release-Cycle tModLoader发布循环.md",
+              "originalPath": "螺线翻译tml教程/杂项/tModLoader-Release-Cycle tModLoader发布循环.md",
+              "title": "tModLoader-Release-Cycle tModLoader发布循环",
+              "author": "错数螺线",
+              "order": 1,
+              "description": "错数螺线翻译",
+              "last_updated": "2017-9-18",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
+              "path": "螺线翻译tml教程/杂项/tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
+              "originalPath": "螺线翻译tml教程/杂项/tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
+              "title": "tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移",
+              "author": "错数螺线",
+              "order": 1,
+              "description": "错数螺线翻译",
+              "last_updated": "2017-9-18",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "tModLoader-Style-Guide tModLoader代码风格指引.md",
+              "path": "螺线翻译tml教程/杂项/tModLoader-Style-Guide tModLoader代码风格指引.md",
+              "originalPath": "螺线翻译tml教程/杂项/tModLoader-Style-Guide tModLoader代码风格指引.md",
+              "title": "tModLoader-Style-Guide tModLoader代码风格指引",
+              "author": "错数螺线",
+              "order": 1,
+              "description": "错数螺线翻译",
+              "last_updated": "2017-9-18",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2251,6 +2539,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2267,6 +2557,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2283,6 +2575,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2299,6 +2593,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2315,6 +2611,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2331,6 +2629,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2347,6 +2647,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2363,6 +2665,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2379,6 +2683,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2395,6 +2701,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2411,6 +2719,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             },
@@ -2427,6 +2737,8 @@
               "difficulty": "beginner",
               "prev_chapter": null,
               "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
               "colors": null,
               "colorChange": null
             }
@@ -2466,6 +2778,8 @@
               "difficulty": "beginner",
               "prev_chapter": "null",
               "next_chapter": "对象池思想.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
@@ -2484,6 +2798,8 @@
               "difficulty": "beginner",
               "prev_chapter": "null",
               "next_chapter": "物品原理.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
@@ -2502,6 +2818,8 @@
               "difficulty": "beginner",
               "prev_chapter": "null",
               "next_chapter": "前言.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
@@ -2520,6 +2838,8 @@
               "difficulty": "beginner",
               "prev_chapter": "null",
               "next_chapter": "世界观.md",
+              "min_c": null,
+              "min_t": null,
               "colors": {
                 "Mad": "#f00"
               },
@@ -2646,6 +2966,7 @@
       "files": [
         "DPapyru-提问的艺术.md",
         "DPapyru-给新人的前言.md",
+        "学习路线-从零到第一个武器.md",
         "DPapyru-快速开始构建Mod.md",
         "DPapyru-第一个武器.md",
         "第一个武器-C0-CSharp读代码.md",
@@ -2686,11 +3007,11 @@
         "Developing-with-Visual-Studio-Code 使用VisualStudioCode开发.md",
         "Home 主页.md",
         "Learn-How-To-Debug 学习如何调试.md",
+        "Useful-Resources 实用资源.md",
+        "Why-Use-an-IDE 为什么使用IDE开发.md",
         "tModLoader-guide-for-contributors tModLoader贡献者指引.md",
         "tModLoader-guide-for-developers tModLoader开发者指引.md",
         "tModLoader-guide-for-players tModLoader玩家指引.md",
-        "Useful-Resources 实用资源.md",
-        "Why-Use-an-IDE 为什么使用IDE开发.md",
         "0-Basic-Prerequisites 基础-先决条件.md",
         "1-Basic-Item 基础-物品.md",
         "10-Basic-NPC-Spawning 基础-NPC生成.md",
@@ -2731,10 +3052,10 @@
         "2-Expert-Shader-Guide 专家-着色器指引.md",
         "3-Expert-IL-Editing 专家-IL编辑.md",
         ".tmod-File-format .tmod文件格式.md",
-        "build.txt build.txt文件.md",
-        "description.txt description.txt文件.md",
         "Mod-Loading-Steps 模组加载顺序.md",
         "Terraria.Player.Update()-Execution-Order Player更新函数执行顺序.md",
+        "build.txt build.txt文件.md",
+        "description.txt description.txt文件.md",
         "Useful-Vanilla-Fields 实用原版字段.md",
         "Useful-Vanilla-Methods 实用原版函数.md",
         "Vanilla-Ammo-IDs 原版-弹药ID表.md",
@@ -2749,8 +3070,8 @@
         "Vanilla-Tile-IDs 原版-物块ID表.md",
         "Vanilla-World-Generation-Steps 原版-世界生成顺序.md",
         "Item-Class-Documentation Item类 文档.md",
-        "NetMessage-Class-Documentation NetMessage类 文档.md",
         "NPC-Class-Documentation NPC类 文档.md",
+        "NetMessage-Class-Documentation NetMessage类 文档.md",
         "Projectile-Class-Documentation 弹幕类 文档.md",
         "Tile-Class-Documentation Tile类 文档.md",
         "Wall 墙.md",
@@ -2777,13 +3098,13 @@
         "Starting-a-modded-server 启动一个模组服务器.md",
         "The-tModLoader-development-pipeline tModLoader开发管线.md",
         "Time-and-Timers 时间和计时器.md",
+        "Update-Migration-Guide 更新迁移指引.md",
+        "Update-Migration-Guide-Previous-Versions 更新迁移指引 先前版本.md",
+        "Visual-Studio-Snippets VisualStudio代码片段.md",
         "tModCodeAssist tMod代码分析器.md",
         "tModLoader-Release-Cycle tModLoader发布循环.md",
         "tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
         "tModLoader-Style-Guide tModLoader代码风格指引.md",
-        "Update-Migration-Guide 更新迁移指引.md",
-        "Update-Migration-Guide-Previous-Versions 更新迁移指引 先前版本.md",
-        "Visual-Studio-Snippets VisualStudio代码片段.md",
         "zh‐Localization‐本地化.md",
         "Armor-Texture-Migration-Guide 盔甲贴图迁移指南.md",
         "Assets 资源文件.md",
@@ -2821,7 +3142,9 @@
       "time": "5分钟",
       "difficulty": "beginner",
       "prev_chapter": "../0-指南/DPapyru-给新人的前言.md",
-      "next_chapter": "../1-入门/DPapyru-快速开始构建Mod.md",
+      "next_chapter": "../0-指南/学习路线-从零到第一个武器.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
@@ -2841,11 +3164,32 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": "../0-指南/DPapyru-提问的艺术.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
       "colorChange": null,
       "last_updated": "2025-12-02"
+    },
+    {
+      "filename": "学习路线-从零到第一个武器.md",
+      "path": "Modder入门/0-指南/学习路线-从零到第一个武器.md",
+      "originalPath": "Modder入门/0-指南/学习路线-从零到第一个武器.md",
+      "title": "学习路线：从零到第一个武器",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "8分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "../0-指南/DPapyru-提问的艺术.md",
+      "next_chapter": "../1-入门/DPapyru-快速开始构建Mod.md",
+      "min_c": 0,
+      "min_t": 0,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2026-01-21"
     },
     {
       "filename": "DPapyru-快速开始构建Mod.md",
@@ -2858,8 +3202,10 @@
       "order": 1,
       "time": "15分钟",
       "difficulty": "beginner",
-      "prev_chapter": "../0-指南/DPapyru-提问的艺术.md",
+      "prev_chapter": "../0-指南/学习路线-从零到第一个武器.md",
       "next_chapter": "../1-入门/DPapyru-第一个武器.md",
+      "min_c": 0,
+      "min_t": 0,
       "colors": {
         "Mad": "#f00"
       },
@@ -2879,6 +3225,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2026-01-18"
@@ -2896,6 +3244,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2913,6 +3263,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2930,6 +3282,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2947,6 +3301,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2964,6 +3320,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2981,6 +3339,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -2998,6 +3358,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3015,6 +3377,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3032,6 +3396,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3049,6 +3415,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3066,6 +3434,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3083,6 +3453,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3100,6 +3472,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3117,6 +3491,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3134,6 +3510,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3151,6 +3529,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3168,6 +3548,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3185,6 +3567,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3202,57 +3586,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
-      "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
-    },
-    {
-      "filename": "tModLoader-guide-for-contributors tModLoader贡献者指引.md",
-      "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-contributors tModLoader贡献者指引.md",
-      "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-contributors tModLoader贡献者指引.md",
-      "title": "tModLoader-guide-for-contributors tModLoader贡献者指引",
-      "author": "错数螺线",
-      "category": "螺线翻译tml教程",
-      "topic": "mod-basics",
-      "order": 1,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
-      "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
-    },
-    {
-      "filename": "tModLoader-guide-for-developers tModLoader开发者指引.md",
-      "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-developers tModLoader开发者指引.md",
-      "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-developers tModLoader开发者指引.md",
-      "title": "tModLoader-guide-for-developers tModLoader开发者指引",
-      "author": "错数螺线",
-      "category": "螺线翻译tml教程",
-      "topic": "mod-basics",
-      "order": 1,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
-      "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
-    },
-    {
-      "filename": "tModLoader-guide-for-players tModLoader玩家指引.md",
-      "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-players tModLoader玩家指引.md",
-      "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-players tModLoader玩家指引.md",
-      "title": "tModLoader-guide-for-players tModLoader玩家指引",
-      "author": "错数螺线",
-      "category": "螺线翻译tml教程",
-      "topic": "mod-basics",
-      "order": 1,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3270,6 +3605,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3287,6 +3624,65 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2017-9-18"
+    },
+    {
+      "filename": "tModLoader-guide-for-contributors tModLoader贡献者指引.md",
+      "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-contributors tModLoader贡献者指引.md",
+      "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-contributors tModLoader贡献者指引.md",
+      "title": "tModLoader-guide-for-contributors tModLoader贡献者指引",
+      "author": "错数螺线",
+      "category": "螺线翻译tml教程",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2017-9-18"
+    },
+    {
+      "filename": "tModLoader-guide-for-developers tModLoader开发者指引.md",
+      "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-developers tModLoader开发者指引.md",
+      "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-developers tModLoader开发者指引.md",
+      "title": "tModLoader-guide-for-developers tModLoader开发者指引",
+      "author": "错数螺线",
+      "category": "螺线翻译tml教程",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2017-9-18"
+    },
+    {
+      "filename": "tModLoader-guide-for-players tModLoader玩家指引.md",
+      "path": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-players tModLoader玩家指引.md",
+      "originalPath": "螺线翻译tml教程/0-开始/原文件名顺序-方便查找原文对比/tModLoader-guide-for-players tModLoader玩家指引.md",
+      "title": "tModLoader-guide-for-players tModLoader玩家指引",
+      "author": "错数螺线",
+      "category": "螺线翻译tml教程",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3304,6 +3700,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3321,6 +3719,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3338,6 +3738,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3355,6 +3757,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3372,6 +3776,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3389,6 +3795,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3406,6 +3814,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3423,6 +3833,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3440,6 +3852,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3457,6 +3871,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3474,6 +3890,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3491,6 +3909,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3508,6 +3928,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3525,6 +3947,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3542,6 +3966,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3559,6 +3985,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3576,6 +4004,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3593,6 +4023,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3610,6 +4042,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3627,6 +4061,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3644,6 +4080,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3661,6 +4099,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3678,6 +4118,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3695,6 +4137,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3712,6 +4156,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3729,6 +4175,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3746,6 +4194,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3763,6 +4213,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3780,6 +4232,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3797,6 +4251,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3814,6 +4270,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3831,6 +4289,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3848,6 +4308,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3865,6 +4327,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3882,6 +4346,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3899,6 +4365,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3916,6 +4384,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3933,6 +4403,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3950,6 +4422,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -3967,40 +4441,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
-      "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
-    },
-    {
-      "filename": "build.txt build.txt文件.md",
-      "path": "螺线翻译tml教程/tModLoader文档/build.txt build.txt文件.md",
-      "originalPath": "螺线翻译tml教程/tModLoader文档/build.txt build.txt文件.md",
-      "title": "build.txt build.txt文件",
-      "author": "错数螺线",
-      "category": "螺线翻译tml教程",
-      "topic": "mod-basics",
-      "order": 1,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
-      "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
-    },
-    {
-      "filename": "description.txt description.txt文件.md",
-      "path": "螺线翻译tml教程/tModLoader文档/description.txt description.txt文件.md",
-      "originalPath": "螺线翻译tml教程/tModLoader文档/description.txt description.txt文件.md",
-      "title": "description.txt description.txt文件",
-      "author": "错数螺线",
-      "category": "螺线翻译tml教程",
-      "topic": "mod-basics",
-      "order": 1,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4018,6 +4460,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4035,6 +4479,46 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2017-9-18"
+    },
+    {
+      "filename": "build.txt build.txt文件.md",
+      "path": "螺线翻译tml教程/tModLoader文档/build.txt build.txt文件.md",
+      "originalPath": "螺线翻译tml教程/tModLoader文档/build.txt build.txt文件.md",
+      "title": "build.txt build.txt文件",
+      "author": "错数螺线",
+      "category": "螺线翻译tml教程",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2017-9-18"
+    },
+    {
+      "filename": "description.txt description.txt文件.md",
+      "path": "螺线翻译tml教程/tModLoader文档/description.txt description.txt文件.md",
+      "originalPath": "螺线翻译tml教程/tModLoader文档/description.txt description.txt文件.md",
+      "title": "description.txt description.txt文件",
+      "author": "错数螺线",
+      "category": "螺线翻译tml教程",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4052,6 +4536,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4069,6 +4555,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4086,6 +4574,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4103,6 +4593,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4120,6 +4612,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4137,6 +4631,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4154,6 +4650,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4171,6 +4669,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4188,6 +4688,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4205,6 +4707,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4222,6 +4726,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4239,6 +4745,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4256,6 +4764,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4273,23 +4783,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
-      "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
-    },
-    {
-      "filename": "NetMessage-Class-Documentation NetMessage类 文档.md",
-      "path": "螺线翻译tml教程/原版代码文档/杂项/NetMessage-Class-Documentation NetMessage类 文档.md",
-      "originalPath": "螺线翻译tml教程/原版代码文档/杂项/NetMessage-Class-Documentation NetMessage类 文档.md",
-      "title": "NetMessage-Class-Documentation NetMessage类 文档",
-      "author": "错数螺线",
-      "category": "螺线翻译tml教程",
-      "topic": "mod-basics",
-      "order": 1,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4307,6 +4802,27 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2017-9-18"
+    },
+    {
+      "filename": "NetMessage-Class-Documentation NetMessage类 文档.md",
+      "path": "螺线翻译tml教程/原版代码文档/杂项/NetMessage-Class-Documentation NetMessage类 文档.md",
+      "originalPath": "螺线翻译tml教程/原版代码文档/杂项/NetMessage-Class-Documentation NetMessage类 文档.md",
+      "title": "NetMessage-Class-Documentation NetMessage类 文档",
+      "author": "错数螺线",
+      "category": "螺线翻译tml教程",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4324,6 +4840,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4341,6 +4859,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4358,6 +4878,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4375,6 +4897,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4392,6 +4916,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4409,6 +4935,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4426,6 +4954,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4443,6 +4973,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4460,6 +4992,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4477,6 +5011,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4494,6 +5030,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4511,6 +5049,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4528,6 +5068,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4545,6 +5087,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4562,6 +5106,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4579,6 +5125,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4596,6 +5144,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4613,6 +5163,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4630,6 +5182,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4647,6 +5201,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4664,6 +5220,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4681,6 +5239,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4698,6 +5258,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4715,6 +5277,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4732,6 +5296,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4749,74 +5315,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
-      "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
-    },
-    {
-      "filename": "tModCodeAssist tMod代码分析器.md",
-      "path": "螺线翻译tml教程/杂项/tModCodeAssist tMod代码分析器.md",
-      "originalPath": "螺线翻译tml教程/杂项/tModCodeAssist tMod代码分析器.md",
-      "title": "tModCodeAssist tMod代码分析器",
-      "author": "错数螺线",
-      "category": "螺线翻译tml教程",
-      "topic": "mod-basics",
-      "order": 1,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
-      "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
-    },
-    {
-      "filename": "tModLoader-Release-Cycle tModLoader发布循环.md",
-      "path": "螺线翻译tml教程/杂项/tModLoader-Release-Cycle tModLoader发布循环.md",
-      "originalPath": "螺线翻译tml教程/杂项/tModLoader-Release-Cycle tModLoader发布循环.md",
-      "title": "tModLoader-Release-Cycle tModLoader发布循环",
-      "author": "错数螺线",
-      "category": "螺线翻译tml教程",
-      "topic": "mod-basics",
-      "order": 1,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
-      "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
-    },
-    {
-      "filename": "tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
-      "path": "螺线翻译tml教程/杂项/tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
-      "originalPath": "螺线翻译tml教程/杂项/tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
-      "title": "tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移",
-      "author": "错数螺线",
-      "category": "螺线翻译tml教程",
-      "topic": "mod-basics",
-      "order": 1,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
-      "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
-    },
-    {
-      "filename": "tModLoader-Style-Guide tModLoader代码风格指引.md",
-      "path": "螺线翻译tml教程/杂项/tModLoader-Style-Guide tModLoader代码风格指引.md",
-      "originalPath": "螺线翻译tml教程/杂项/tModLoader-Style-Guide tModLoader代码风格指引.md",
-      "title": "tModLoader-Style-Guide tModLoader代码风格指引",
-      "author": "错数螺线",
-      "category": "螺线翻译tml教程",
-      "topic": "mod-basics",
-      "order": 1,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4834,6 +5334,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4851,6 +5353,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4868,6 +5372,84 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2017-9-18"
+    },
+    {
+      "filename": "tModCodeAssist tMod代码分析器.md",
+      "path": "螺线翻译tml教程/杂项/tModCodeAssist tMod代码分析器.md",
+      "originalPath": "螺线翻译tml教程/杂项/tModCodeAssist tMod代码分析器.md",
+      "title": "tModCodeAssist tMod代码分析器",
+      "author": "错数螺线",
+      "category": "螺线翻译tml教程",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2017-9-18"
+    },
+    {
+      "filename": "tModLoader-Release-Cycle tModLoader发布循环.md",
+      "path": "螺线翻译tml教程/杂项/tModLoader-Release-Cycle tModLoader发布循环.md",
+      "originalPath": "螺线翻译tml教程/杂项/tModLoader-Release-Cycle tModLoader发布循环.md",
+      "title": "tModLoader-Release-Cycle tModLoader发布循环",
+      "author": "错数螺线",
+      "category": "螺线翻译tml教程",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2017-9-18"
+    },
+    {
+      "filename": "tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
+      "path": "螺线翻译tml教程/杂项/tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
+      "originalPath": "螺线翻译tml教程/杂项/tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
+      "title": "tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移",
+      "author": "错数螺线",
+      "category": "螺线翻译tml教程",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2017-9-18"
+    },
+    {
+      "filename": "tModLoader-Style-Guide tModLoader代码风格指引.md",
+      "path": "螺线翻译tml教程/杂项/tModLoader-Style-Guide tModLoader代码风格指引.md",
+      "originalPath": "螺线翻译tml教程/杂项/tModLoader-Style-Guide tModLoader代码风格指引.md",
+      "title": "tModLoader-Style-Guide tModLoader代码风格指引",
+      "author": "错数螺线",
+      "category": "螺线翻译tml教程",
+      "topic": "mod-basics",
+      "order": 1,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4885,6 +5467,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4902,6 +5486,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4919,6 +5505,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4936,6 +5524,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4953,6 +5543,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4970,6 +5562,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -4987,6 +5581,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5004,6 +5600,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5021,6 +5619,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5038,6 +5638,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5055,6 +5657,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5072,6 +5676,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2017-9-18"
@@ -5089,6 +5695,8 @@
       "difficulty": "beginner",
       "prev_chapter": "../1-入门/DPapyru-快速开始构建Mod.md",
       "next_chapter": "../3-战斗/DPapyru-第一个弹幕.md",
+      "min_c": 0,
+      "min_t": 0,
       "colors": {
         "Red": "#f00"
       },
@@ -5108,6 +5716,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2026-01-20"
@@ -5125,6 +5735,8 @@
       "difficulty": "beginner",
       "prev_chapter": "../1-入门/DPapyru-第一个武器.md",
       "next_chapter": "../2-物品/DPapyru-第一个物块.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Red": "#f00"
       },
@@ -5144,6 +5756,8 @@
       "difficulty": "beginner",
       "prev_chapter": "../3-战斗/DPapyru-第一个弹幕.md",
       "next_chapter": "../2-物品/DPapyru-第一个弹药.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Red": "#f00"
       },
@@ -5163,6 +5777,8 @@
       "difficulty": "beginner",
       "prev_chapter": "null",
       "next_chapter": "对象池思想.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
@@ -5182,6 +5798,8 @@
       "difficulty": "beginner",
       "prev_chapter": "null",
       "next_chapter": "物品原理.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
@@ -5201,6 +5819,8 @@
       "difficulty": "beginner",
       "prev_chapter": "null",
       "next_chapter": "前言.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
@@ -5220,6 +5840,8 @@
       "difficulty": "beginner",
       "prev_chapter": "null",
       "next_chapter": "世界观.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Mad": "#f00"
       },
@@ -5239,6 +5861,8 @@
       "difficulty": "beginner",
       "prev_chapter": "../4-玩家/DPapyru-第一个NPC.md",
       "next_chapter": "../3-战斗/DPapyru-第一个Buff.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Red": "#f00"
       },
@@ -5258,6 +5882,8 @@
       "difficulty": "beginner",
       "prev_chapter": "../2-物品/DPapyru-第一个物块.md",
       "next_chapter": "../4-玩家/DPapyru-第一个NPC.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Red": "#f00"
       },
@@ -5277,6 +5903,8 @@
       "difficulty": "beginner",
       "prev_chapter": "../4-玩家/DPapyru-第一个饰品.md",
       "next_chapter": "../3-战斗/DPapyru-第一个召唤物.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Red": "#f00"
       },
@@ -5296,6 +5924,8 @@
       "difficulty": "beginner",
       "prev_chapter": "../3-战斗/DPapyru-第一个Buff.md",
       "next_chapter": "../5-高级/DPapyru-第一个Boss.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Red": "#f00"
       },
@@ -5315,6 +5945,8 @@
       "difficulty": "beginner",
       "prev_chapter": "../2-物品/DPapyru-第一个弹药.md",
       "next_chapter": "../5-高级/DPapyru-第一个Boss.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Red": "#f00"
       },
@@ -5334,6 +5966,8 @@
       "difficulty": "beginner",
       "prev_chapter": "../3-战斗/DPapyru-第一个召唤物.md",
       "next_chapter": "../5-高级/DPapyru-第一个世界生成.md",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Red": "#f00"
       },
@@ -5353,6 +5987,8 @@
       "difficulty": "beginner",
       "prev_chapter": "../5-高级/DPapyru-第一个Boss.md",
       "next_chapter": "null",
+      "min_c": null,
+      "min_t": null,
       "colors": {
         "Red": "#f00"
       },
@@ -5372,6 +6008,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2026-01-20"
@@ -5389,6 +6027,8 @@
       "difficulty": "beginner",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2026-01-20"
@@ -5406,6 +6046,8 @@
       "difficulty": "intermediate",
       "prev_chapter": null,
       "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
       "colors": null,
       "colorChange": null,
       "last_updated": "2026-01-20"
@@ -5439,7 +6081,9 @@
         "prev_chapter",
         "next_chapter",
         "colorChange",
-        "colors"
+        "colors",
+        "min_c",
+        "min_t"
       ]
     }
   }

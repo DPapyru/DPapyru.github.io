@@ -10,6 +10,8 @@ prev_chapter: ../1-入门/DPapyru-快速开始构建Mod.md
 next_chapter: ../3-战斗/DPapyru-第一个弹幕.md
 topic: mod-basics
 order: 2
+min_c: 0
+min_t: 0
 colors:
   Red: "#f00"
 ---
@@ -26,11 +28,6 @@ colors:
 > 建议路径：先完成“复制 → 编译 → 进游戏验证”，再集中修改 `Item.damage / useTime / recipe.AddIngredient` 等关键行。
 {end}
 
-> **[章节进度]**
-> - [上一章]：[快速开始构建Mod](./DPapyru-快速开始构建Mod.md)
-> - [下一章]：[第一个弹幕](../3-战斗/DPapyru-第一个弹幕.md)
-> - [全部章节]：[入门指南](../README.md)
-
 ---
 
 本章的验收标准如下：
@@ -45,6 +42,12 @@ colors:
 
 - 已完成上一章：能打开 tModLoader 的 Mod 项目，并且能成功编译/进入游戏
 - 知道怎么新建 `.cs` 文件（放进你的 Mod 项目里）
+
+## 本章要点（可引用）
+
+- `ModItem` 的核心入口是 `SetDefaults()` 与 `AddRecipes()`：前者定义属性，后者定义配方。
+- 最常修改的行通常集中在：`Item.damage`、`Item.useTime/useAnimation`、`recipe.AddIngredient(...)`。
+- 命名空间（`namespace`）是“地址前缀”：写错时，编译器无法把你的类放进正确的项目结构里。
 
 ## 第一步：了解代码
 
@@ -162,7 +165,7 @@ explain: |
 {[./_分流/第一个武器-进阶-惯用写法.md][进阶（C≥1 且 T≥1）：更贴近实战的写法]}
 {end}
 
-## 常见问题（排错）
+## 常见坑（可引用）
 
 ### 1）我编译报错，最常见是哪里？
 
@@ -175,7 +178,7 @@ explain: |
 - 确认 Mod 已启用，且你确实重新"编译并加载"了 Mod
 - 配方需要在工作台旁边打开合成栏才会出现
 
-## 下一步会学什么？
+## 下一步（可引用）
 
 本章完成后，你应能独立修改武器参数与配方，并能定位常见编译错误的来源。
 

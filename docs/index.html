@@ -1253,12 +1253,37 @@
 	            const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
 	                ? window.SiteUtils.escapeHtml
 	                : (v) => String(v);
+	            const profile = (window.LearningPaths && typeof window.LearningPaths.getProfile === 'function')
+	                ? window.LearningPaths.getProfile()
+	                : null;
 
 	            const normalizeDifficultyClass = (difficulty) => {
 	                const allowed = ['beginner', 'intermediate', 'advanced'];
 	                if (difficulty === 'all') return 'beginner';
 	                return allowed.includes(difficulty) ? difficulty : 'beginner';
 	            };
+
+	            function buildRecommendationBadge(doc) {
+	                const minC = (doc && typeof doc.min_c === 'number') ? doc.min_c : null;
+	                const minT = (doc && typeof doc.min_t === 'number') ? doc.min_t : null;
+	                if (minC == null && minT == null) return '';
+
+	                const parts = [];
+	                if (minC != null) parts.push('C≥' + String(minC));
+	                if (minT != null) parts.push('T≥' + String(minT));
+
+	                let below = false;
+	                if (profile) {
+	                    if (minC != null && Number(profile.c) < Number(minC)) below = true;
+	                    if (minT != null && Number(profile.t) < Number(minT)) below = true;
+	                }
+
+	                const title = profile
+	                    ? ('建议 ' + parts.join(' · ') + '（当前 C' + Number(profile.c) + '/T' + Number(profile.t) + '）')
+	                    : ('建议 ' + parts.join(' · '));
+
+	                return `<span class="recommendation-badge${below ? ' low' : ''}" title="${esc(title)}">建议 ${esc(parts.join(' · '))}</span>`;
+	            }
 
 	            const categoryGrid = document.getElementById('category-grid');
             
@@ -1461,12 +1486,14 @@
 
 	            const difficultyClass = normalizeDifficultyClass(doc.difficulty);
 	            const difficultyText = getDifficultyText(doc.difficulty);
+	            const recommendationBadge = buildRecommendationBadge(doc);
 
 	            docLink.innerHTML = `
 	                <div class="doc-info">
 	                    <div class="doc-title">${esc(doc.title)}</div>
 	                    <div class="doc-meta">
 	                        <span class="difficulty-badge ${difficultyClass}">${esc(difficultyText)}</span>
+	                        ${recommendationBadge}
 	                        <span>作者: ${esc(doc.author)}</span>
 	                    </div>
 	                </div>

@@ -6,10 +6,12 @@ last_updated: 2026-01-17
 difficulty: beginner
 time: 15分钟
 description: 从环境准备到跑起第一个可编译的 tModLoader Mod
-prev_chapter: ../0-指南/DPapyru-提问的艺术.md
+prev_chapter: ../0-指南/学习路线-从零到第一个武器.md
 next_chapter: ../1-入门/DPapyru-第一个武器.md
 topic: mod-basics
 order: 1
+min_c: 0
+min_t: 0
 colors:
   Mad: "#f00"
 ---
@@ -21,6 +23,15 @@ colors:
 > **适用人群**：首次接触 tModLoader + C#（C0/T0）。
 >
 > **本章目标**：完成 Mod 项目创建 + 编译验证，确保后续章节能顺利进行。
+
+---
+
+## 本章要点（可引用）
+
+- 先启动一次 `tModLoader`：生成 `ModSources` 等目录结构，避免后续“路径不存在/找不到工程”的连锁问题。
+- 安装 **.NET 8 SDK**：这是 tModLoader 1.4 的编译前置条件（SDK ≠ Runtime）。
+- 用“项目方式”打开：VS 打开 `.csproj`，VS Code 打开整个文件夹；否则智能提示/引用解析会严重缺失。
+- 先做一个最小可跑的内容（HelloSword）：用它来验证“编译 → Build+Reload → 游戏内验证”的闭环。
 
 ---
 
@@ -197,7 +208,7 @@ namespace MyFirstMod.Items
 
 ---
 
-## 常见问题
+## 常见坑（可引用）
 
 ### 1）tModLoader 提示找不到 SDK / 无法编译
 
@@ -245,7 +256,7 @@ namespace MyFirstMod.Items
 
 ---
 
-## 下一步
+## 下一步（可引用）
 
 你现在已经把"能跑起来"的流程走通了。接下来建议去看：
 

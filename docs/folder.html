@@ -690,6 +690,32 @@
 	            return allowed.includes(difficulty) ? difficulty : 'beginner';
 	        }
 
+	        function buildRecommendationBadge(doc) {
+	            const minC = (doc && typeof doc.min_c === 'number') ? doc.min_c : null;
+	            const minT = (doc && typeof doc.min_t === 'number') ? doc.min_t : null;
+	            if (minC == null && minT == null) return '';
+
+	            const parts = [];
+	            if (minC != null) parts.push('C≥' + String(minC));
+	            if (minT != null) parts.push('T≥' + String(minT));
+
+	            const profile = (window.LearningPaths && typeof window.LearningPaths.getProfile === 'function')
+	                ? window.LearningPaths.getProfile()
+	                : null;
+
+	            let below = false;
+	            if (profile) {
+	                if (minC != null && Number(profile.c) < Number(minC)) below = true;
+	                if (minT != null && Number(profile.t) < Number(minT)) below = true;
+	            }
+
+	            const title = profile
+	                ? ('建议 ' + parts.join(' · ') + '（当前 C' + Number(profile.c) + '/T' + Number(profile.t) + '）')
+	                : ('建议 ' + parts.join(' · '));
+
+	            return `<span class="recommendation-badge${below ? ' low' : ''}" title="${escapeHtml(title)}">建议 ${escapeHtml(parts.join(' · '))}</span>`;
+	        }
+
         // 页面加载完成后执行
         document.addEventListener('DOMContentLoaded', function () {
             console.log('=== docs/folder.html: 页面加载完成 ===');
@@ -1328,6 +1354,7 @@
 
 		                    const difficultyClass = normalizeDifficultyClass(doc.difficulty);
 		                    const difficultyText = getDifficultyText(doc.difficulty);
+		                    const recommendationBadge = buildRecommendationBadge(doc);
 
 	                    // 处理描述
 		                    let description = '暂无描述';
@@ -1342,6 +1369,7 @@
 	                                <div class="doc-meta-item">
 	                                    <span class="difficulty-badge ${difficultyClass}">${escapeHtml(difficultyText)}</span>
 	                                </div>
+	                                ${recommendationBadge ? `<div class="doc-meta-item">${recommendationBadge}</div>` : ''}
 	                                <div class="doc-meta-item">
 	                                    <span>作者: ${escapeHtml(doc.author)}</span>
 	                                </div>
