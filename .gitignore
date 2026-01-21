@@ -89,3 +89,5 @@ docs/plans
 .test/
 .kilocode/
 nul
+scripts/knowledge/tmodloader-api-indexer/obj/Debug/net8.0/TmodLoaderApiIndexer.AssemblyInfo.cs
+scripts/knowledge/tmodloader-api-indexer/obj/Debug/net8.0/TmodLoaderApiIndexer.AssemblyInfoInputs.cache
