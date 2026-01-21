@@ -16,23 +16,46 @@ colors:
 
 # 第一个世界生成：做一个新矿物同时学习世界系统
 
-这一章的目标很简单：在游戏中生成一个新的矿物，并且你敢改它的关键数值。
-
 世界生成是什么？简单来说，**世界生成是在创建新世界时，自动在地图上生成各种东西的过程**。比如原版的铜矿、铁矿、金矿等。
+
+{if C == 0}
+> **适用人群**：首次接触 C#（C0）。
+>
+> **本章目标**：完成第一个世界生成，并能独立修改矿物的生成逻辑。
+{else}
+> **适用人群**：已具备 C# 基础（C≥1）。
+>
+> **建议路径**：先完成"复制 → 编译 → 进游戏验证"，再集中修改 `Main.tileOre / GenerateMyOre / WorldGen.PlaceTile` 等关键行。
+{end}
+
+---
+
+## 验收标准
+
+完成本章后，你应能：
+
+- 创建可生成的矿物
+- 编写世界生成逻辑
+- 修改矿物的生成概率和深度
+- 理解世界生成的工作原理
+
+> 本文里会出现 `YourModName`。它是占位符：你要把它换成你自己的 Mod 名。
+
+---
+
+## 阅读前需求
+
+- 已完成"第一个物块"章节
+- 知道怎么新建 `.cs` 文件
+
+---
+
+## 第一步：了解代码
 
 世界生成需要两个文件：
 
 1. **矿物类（Tile）**：定义矿物的属性
 2. **世界生成类（ModWorld）**：在世界生成时生成矿物
-
-> 本文里会出现 `YourModName`。它是占位符：你要把它换成你自己的 Mod 名（更准确地说，是你的 Mod 的"命名空间前缀/根名字"）。不知道自己的 Mod 名也没关系，先照抄，后面我们会说怎么判断。
-
-## 阅读前需求
-
-- 已完成"第一个物块"章节：知道如何创建物块
-- 知道怎么新建 `.cs` 文件（放进你的 Mod 项目里）
-
-## 第一步：了解代码
 
 建议你把文件放在类似位置：
 
@@ -41,7 +64,7 @@ colors:
 
 ### 1.1 创建矿物类
 
-先把下面这份代码复制到 `MyOre.cs`：
+把下面这份代码复制到 `MyOre.cs`：
 
 ```csharp
 // 引用必要的命名空间
@@ -95,7 +118,7 @@ namespace YourModName.Content.Tiles
 
 ### 1.2 创建矿物物品
 
-再把下面这份代码复制到 `MyOreItem.cs`：
+把下面这份代码复制到 `MyOreItem.cs`：
 
 ```csharp
 // 引用必要的命名空间
@@ -141,7 +164,7 @@ namespace YourModName.Content.Items
 
 ### 1.3 创建世界生成类
 
-再把下面这份代码复制到 `MyWorld.cs`：
+把下面这份代码复制到 `MyWorld.cs`：
 
 ```csharp
 // 引用必要的命名空间
@@ -209,7 +232,7 @@ namespace YourModName.Content.World
                                 int offsetY = WorldGen.genRand.Next(-2, 3);
 
                                 // 检查位置是否合适
-                                if (Main.tile[oreX + offsetX, oreY + offsetY].active() && 
+                                if (Main.tile[oreX + offsetX, oreY + offsetY].active() &&
                                     Main.tile[oreX + offsetX, oreY + offsetY].type == TileID.Stone)
                                 {
                                     // 放置矿物
@@ -225,25 +248,27 @@ namespace YourModName.Content.World
 }
 ```
 
-复制完成后先编译一次，确保"能跑"。能跑之后我们再来"只手敲关键行"。
+复制完成后先编译一次，确保"能跑"。
 
-### 题目
+### 概念关联测验
+
+> **测验对应概念**：`Main.tileOre`、`ModifyWorldGenTasks()`、`WorldGen.PlaceTile()`
 
 ```quiz
 type: choice
-id: mod-basics-first-worldgen-edit-lines
+id: mod-basics-first-worldgen-basics
 question: |
-  下面哪些行是"你以后想改矿物生成概率/生成深度"最常会动到的？
+  下列哪些行是修改"矿物生成逻辑"时最常改动的？
 options:
   - id: A
     text: |
-      `if (WorldGen.genRand.NextBool(10))`
+      `Main.tileOre[Type] = true;`
   - id: B
     text: |
-      `if (y < Main.rockLayer)`
+      `if (WorldGen.genRand.NextBool(10))`
   - id: C
     text: |
-      `int clusterSize = WorldGen.genRand.Next(3, 8);`
+      `WorldGen.PlaceTile(oreX + offsetX, oreY + offsetY, ModContent.TileType<Tiles.MyOre>());`
   - id: D
     text: |
       `using Terraria.ModLoader;`
@@ -252,178 +277,85 @@ answer:
   - B
   - C
 explain: |
-  矿物生成概率在 `if (WorldGen.genRand.NextBool(10))` 里改，生成深度在 `if (y < Main.rockLayer)` 里改，矿物簇大小在 `int clusterSize = WorldGen.genRand.Next(3, 8);` 里改。
-  `using ...` 一般不用动，除非你删了/加了新东西导致编译报错。
+  矿物标识在 `Main.tileOre` 里改，生成概率在 `if (WorldGen.genRand.NextBool(10))` 里改，放置位置在 `WorldGen.PlaceTile()` 里改。
 ```
 
-## 第二步：学习关键内容
+---
 
-现在开始"中间形态"的练习：你可以保留其它代码不动，只对下面这些行做一次"删掉 → 自己敲回去"。
+## 第二步：练习（建议）
 
-建议练习顺序：
+### 2.1 矿物文件里最常改的行
 
-1. 在 `MyOre.cs` 的 `SetStaticDefaults()` 里把这些行删掉，再自己敲回去：
-   - `Main.tileSolid[Type] = true;`
-   - `Main.tileOre[Type] = true;`
-   - `MinPick = 40;`
-   - `AddMapEntry(new Color(200, 200, 200), "我的矿物");`
-2. 在 `MyWorld.cs` 的 `GenerateMyOre()` 里把这几行删掉，再自己敲回去：
-   - `if (y < Main.rockLayer)`
-   - `if (WorldGen.genRand.NextBool(10))`
-   - `int clusterSize = WorldGen.genRand.Next(3, 8);`
-   - `WorldGen.PlaceTile(oreX + offsetX, oreY + offsetY, ModContent.TileType<Tiles.MyOre>());`
+在 `SetStaticDefaults()` 里：
 
-你会发现：你不需要知道"C# 的全部规则"，也能写出一个能工作的世界生成。
+- `Main.tileOre[Type] = true;`（标识为矿物）
+- `MinPick = 40;`（最低镐力）
+- `AddMapEntry(...)`（地图显示）
 
-## 第三步：教你"怎么读这份代码"（从上往下）
+### 2.2 世界生成文件里最常改的行
 
-下面我们按"阅读顺序"讲一下：每段在干嘛、你现在需要记住什么。
+在 `GenerateMyOre()` 里：
 
-### 1）`ModTile`：物块的基类
+- `if (y < Main.rockLayer)`（生成深度）
+- `if (WorldGen.genRand.NextBool(10))`（生成概率）
+- `int clusterSize = WorldGen.genRand.Next(3, 8);`（矿物簇大小）
 
-`ModTile` 是 tModLoader 里"物块的基类"。
+### 2.3 练习方式
 
-我们写的 `MyOre` 是"基于这个基类创建的一个新物块"。
+把这些行删掉，再自己敲回去。
 
-### 2）`Main.tileOre[Type] = true;`：最重要的那一行
+---
 
-这一行告诉游戏：**这是一个矿物**。
+## 第三步：补充阅读（按需）
 
-如果没有这一行，这个物块就不会被当作矿物处理。
+{if C == 0}
+{[./_分流/第一个世界生成-C0-CSharp读代码.md][C# 补课（C0）：看懂本章语法]}
+{end}
 
-### 3）`ModWorld`：世界生成的基类
+{if T == 0}
+{[./_分流/第一个世界生成-T0-tML读代码.md][tModLoader 补课（T0）：看懂本章 API]}
+{end}
 
-`ModWorld` 是 tModLoader 里"世界生成的基类"。
+---
 
-我们写的 `MyWorld` 是"基于这个基类创建的一个新世界生成类"。
-
-### 4）`ModifyWorldGenTasks(List<GenPass> tasks)`：修改世界生成任务
-
-这个方法的作用是：**修改世界生成任务列表**。
-
-- `tasks`：世界生成任务列表
-- `tasks.FindIndex(genpass => genpass.Name.Equals("Shinies"))`：查找"放置矿石"任务
-- `tasks.Insert(shiniesIndex + 1, new PassLegacy("My Ore Generation", GenerateMyOre));`：在"放置矿石"任务之后添加我们的矿物生成任务
-
-```quiz
-type: choice
-id: mod-worldgen-modify-tasks
-question: |
-  `tasks.Insert(shiniesIndex + 1, new PassLegacy("My Ore Generation", GenerateMyOre));` 的作用是什么？
-options:
-  - id: A
-    text: |
-      在"放置矿石"任务之后添加我们的矿物生成任务
-  - id: B
-    text: |
-      删除"放置矿石"任务
-  - id: C
-    text: |
-      修改"放置矿石"任务的参数
-answer: A
-explain: |
-  这一行在"放置矿石"任务之后添加我们的矿物生成任务，确保我们的矿物在原版矿物之后生成。
-```
-
-### 5）`if (y < Main.rockLayer)`：生成深度限制
-
-这一行的作用是：**只在地下生成矿物**。
-
-- `y`：Y 坐标（深度）
-- `Main.rockLayer`：岩石层深度（地下开始的位置）
-- `<`：小于运算符
-
-所以 `if (y < Main.rockLayer)` 的意思是：**如果 Y 坐标小于岩石层深度（即在地表），跳过**。
-
-```quiz
-type: choice
-id: mod-worldgen-depth-limit
-question: |
-  `if (y < Main.rockLayer)` 的作用是什么？
-options:
-  - id: A
-    text: |
-      只在地下生成矿物
-  - id: B
-    text: |
-      只在地表生成矿物
-  - id: C
-    text: |
-      在整个世界生成矿物
-answer: A
-explain: |
-  这一行限制了矿物的生成深度，只在地下（岩石层以下）生成矿物。
-```
-
-### 6）`if (WorldGen.genRand.NextBool(10))`：生成概率
-
-这一行的作用是：**10% 的概率生成矿物**。
-
-- `WorldGen.genRand.NextBool(10)`：随机生成一个布尔值，10% 的概率为 true
-- `10`：概率（1/10）
-
-所以 `if (WorldGen.genRand.NextBool(10))` 的意思是：**10% 的概率生成矿物**。
-
-```quiz
-type: choice
-id: mod-worldgen-probability
-question: |
-  `if (WorldGen.genRand.NextBool(10))` 的作用是什么？
-options:
-  - id: A
-    text: |
-      10% 的概率生成矿物
-  - id: B
-    text: |
-      10% 的概率不生成矿物
-  - id: C
-    text: |
-      生成 10 个矿物
-answer: A
-explain: |
-  `WorldGen.genRand.NextBool(10)` 随机生成一个布尔值，10% 的概率为 true，即 10% 的概率生成矿物。
-```
-
-### 7）`int clusterSize = WorldGen.genRand.Next(3, 8);`：矿物簇大小
-
-这一行的作用是：**随机生成 3-7 个矿物**。
-
-- `WorldGen.genRand.Next(3, 8)`：随机生成一个 3-7 之间的整数
-- `3`：最小值
-- `8`：最大值（不包含）
-
-所以 `int clusterSize = WorldGen.genRand.Next(3, 8);` 的意思是：**随机生成 3-7 个矿物**。
-
-### 8）`WorldGen.PlaceTile(...)`：放置物块
-
-这一行的作用是：**在指定位置放置物块**。
-
-- `oreX + offsetX`：X 坐标
-- `oreY + offsetY`：Y 坐标
-- `ModContent.TileType<Tiles.MyOre>()`：物块类型
-
-## 常见问题（先救命，后讲道理）
+## 常见问题（排错）
 
 ### 1）我编译报错，最常见是哪里？
 
-- `YourModName` 没替换：如果你项目默认命名空间不是这个，可能会提示找不到类型/命名空间。你可以先把 `namespace YourModName...` 里的 `YourModName` 换成你项目里其它 `.cs` 文件最上面用的那个名字。
-- `Content.Tiles` 写错了：`namespace` 的后半段你可以随便取，但要确保它只是"分类名"，不要写奇怪符号。
-- `using YourModName.Content.Tiles;` 没加：如果 `MyOre` 变红，检查 `using YourModName.Content.Tiles;` 是否存在。
+**原因**：`YourModName` 没替换，或 `namespace` 写错了
+
+**解决**：
+- 检查 `namespace YourModName...` 里的 `YourModName` 是否换成你项目实际使用的名字
+- 检查 `using YourModName.Content.Tiles;` 是否正确
 
 ### 2）我创建了新世界，但是没有找到矿物
 
+**解决**：
 - 确认 Mod 已启用，且你确实重新"编译并加载"了 Mod
 - 矿物只在地下生成，需要挖到地下才能找到
 - 矿物生成概率是 10%，可能需要多挖几个地方
 
 ### 3）我找到了矿物，但是不能挖掘
 
+**解决**：
 - 检查 `MinPick = 40;` 是否存在
 - 检查你的镐力是否足够（需要 40 以上）
 - 检查 `Main.tileSolid[Type] = true;` 是否存在
 
+---
+
+## 本章自测（可选）
+
+用于自查是否达到"能创建世界生成"的最低标准：
+
+- [ ] 我能指出 `SetStaticDefaults()` 中三处常改动点：Ore/MinPick/AddMapEntry
+- [ ] 我能指出 `GenerateMyOre()` 中三处常改动点：深度/概率/簇大小
+- [ ] 我能解释世界生成的工作原理
+
+---
+
 ## 总结
 
-这一章你已经完成最关键的一步：**你能创建世界生成，并且知道如何生成新矿物**。
+本章你已经完成最关键的一步：**你能创建世界生成，并且知道如何生成新矿物**。
 
 现在你已经掌握了 Mod 开发的基础知识，可以开始创建更复杂的内容了！
