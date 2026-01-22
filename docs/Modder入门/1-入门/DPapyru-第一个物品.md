@@ -8,6 +8,7 @@ time: 15分钟
 description: 从零开始添加一个最简单的 ModItem，并理解 SetDefaults 的“出厂设置”含义
 topic: items
 order: 10
+next_chapter: DPapyru-第一把武器.md
 min_c: 0
 min_t: 0
 ---
@@ -98,3 +99,7 @@ namespace YourMod.Items
 
 - 如果你想做武器：新增 `Item.damage`、`Item.useTime` 等属性，并理解 `useTime`/`useAnimation` 的关系。
 - 如果你想做消耗品：给它一个使用效果，并确认消耗逻辑与堆叠逻辑一致。
+
+推荐继续阅读：
+
+- [第一把武器：最小可用的近战武器](DPapyru-第一把武器.md)

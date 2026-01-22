@@ -30,6 +30,15 @@
         if (!src || src === 'about:blank') return false;
         if (!src.startsWith(GISCUS_ORIGIN)) return false;
 
+        // If the frame is still same-origin (e.g. about:blank inherited origin, or navigation blocked),
+        // posting with targetOrigin=https://giscus.app would throw and pollute console.
+        try {
+            const currentOrigin = String(iframe.contentWindow.location && iframe.contentWindow.location.origin || '');
+            if (currentOrigin && currentOrigin !== 'null' && currentOrigin !== GISCUS_ORIGIN) return false;
+        } catch (e) {
+            // Cross-origin access throws; that's expected once navigated to Giscus.
+        }
+
         try {
             iframe.contentWindow.postMessage(
                 { giscus: { setConfig: { term: String(term) } } },
