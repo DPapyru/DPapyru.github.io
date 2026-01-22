@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.anims.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@animts/*": ["_lib/*"]
+    }
+  },
+  "include": ["**/*.ts"]
+}
+

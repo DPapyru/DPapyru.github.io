@@ -63,6 +63,24 @@
               "min_t": null,
               "colors": null,
               "colorChange": null
+            },
+            {
+              "filename": "使用网页特殊动画模块.md",
+              "path": "怎么贡献/使用网页特殊动画模块.md",
+              "originalPath": "怎么贡献/使用网页特殊动画模块.md",
+              "title": "使用网页特殊动画模块",
+              "author": "DPapyru",
+              "order": 999,
+              "description": "用 TypeScript 编写可视化动画，并在 docs/viewer.html 中嵌入（含：AI 状态机分析、数学渲染、可复用 UI 组件）",
+              "last_updated": "2026-01-22",
+              "time": "10分钟",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
             }
           ]
         }
@@ -2973,6 +2991,12 @@
         "DPapyru-绘制入门-Shader与顶点绘制.md",
         "教学文章写作指南.md",
         "站点Markdown扩展语法说明.md"
+      ]
+    },
+    "DPapyru": {
+      "name": "DPapyru",
+      "files": [
+        "使用网页特殊动画模块.md"
       ]
     },
     "错数螺线": {
@@ -6019,6 +6043,25 @@
       "colors": null,
       "colorChange": null,
       "last_updated": "2026-01-21"
+    },
+    {
+      "filename": "使用网页特殊动画模块.md",
+      "path": "怎么贡献/使用网页特殊动画模块.md",
+      "originalPath": "怎么贡献/使用网页特殊动画模块.md",
+      "title": "使用网页特殊动画模块",
+      "author": "DPapyru",
+      "category": "怎么贡献",
+      "topic": "article-contribution",
+      "order": 999,
+      "time": "10分钟",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null,
+      "last_updated": "2026-01-22"
     }
   ],
   "settings": {

@@ -198,6 +198,26 @@ explain: |
 
 ---
 
+## 4）TS 动画组件（animts 代码块）
+
+用途：在文章中嵌入一个由 TypeScript 脚本驱动的动画/可视化（例如：弹幕演示、NPC 对话演示、Boss AI 状态机分析）。
+
+语法：用 fenced code block，语言标记为 `animts`，**第一行写 TS 文件路径**（相对 `docs/`，且必须位于 `docs/anims/` 下）：
+
+````
+```animts
+anims/demo-eoc-ai.ts
+```
+````
+
+工作流：
+
+- TS 源文件：`docs/anims/**/*.ts`
+- 构建产物：`assets/anims/**/*.js`（由 `npm run build` 或 `npm run build:anims` 生成）
+- 使用前请先构建，否则页面会提示“动画未构建/路径无效”
+
+更多示例与写法请看：`docs/怎么贡献/使用网页特殊动画模块.md`。
+
 ## 4）颜色标记（color）
 
 如果你在 Front Matter 里配置了：

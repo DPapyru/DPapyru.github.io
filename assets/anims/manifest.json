@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-01-22T08:08:49.798Z",
+  "sources": [
+    "anims/_lib/calc.ts",
+    "anims/_lib/math2d.ts",
+    "anims/_lib/math3d.ts",
+    "anims/_lib/types.ts",
+    "anims/_lib/ui.ts",
+    "anims/demo-danmaku.ts",
+    "anims/demo-eoc-ai.ts",
+    "anims/demo-eow-ai.ts",
+    "anims/demo-math-axes-3d.ts",
+    "anims/demo-math-calculus.ts",
+    "anims/demo-math-matrix.ts",
+    "anims/demo-math-vectors.ts",
+    "anims/demo-npc.ts"
+  ]
+}

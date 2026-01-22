@@ -1,0 +1,109 @@
+.animts-embed {
+    margin: 18px 0;
+}
+
+.animts-frame {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.animts-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-content);
+}
+
+.animts-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.animts-controls {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.animts-stage {
+    position: relative;
+    height: 240px;
+    background: var(--bg-color);
+}
+
+.animts-error {
+    padding: 10px 12px;
+    border-top: 1px solid var(--border-color);
+    color: #ff8a8a;
+    background: rgba(255, 0, 0, 0.08);
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+}
+
+.animts-danmaku-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.animts-danmaku {
+    position: absolute;
+    left: 0;
+    padding: 2px 8px;
+    font-weight: 600;
+    color: var(--text-color);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+    will-change: transform;
+    white-space: nowrap;
+    opacity: 0.95;
+}
+
+.animts-npc-layer {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.animts-npc-bubble {
+    max-width: 90%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-content);
+    box-shadow: var(--shadow-md);
+}
+
+.animts-npc-name {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.animts-npc-text {
+    font-size: 1rem;
+    color: var(--text-color);
+    line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animts-stage * {
+        animation-duration: 1ms !important;
+        transition-duration: 1ms !important;
+    }
+}
+
