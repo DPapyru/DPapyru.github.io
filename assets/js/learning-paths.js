@@ -23,9 +23,18 @@
     }
 
     function normalizePath(value) {
-        return String(value || '')
+        var p = String(value || '')
             .replace(/\\/g, '/')
-            .replace(/^\/+|\/+$/g, '');
+            .trim();
+
+        p = p.replace(/^\.\//, '');
+        p = p.replace(/^\/+|\/+$/g, '');
+
+        // config.json 的 doc.path 是以 docs/ 目录为根的相对路径；
+        // learning-paths 映射可能使用 docs/ 前缀，为兼容两种写法，这里统一去掉 docs/。
+        p = p.replace(/^docs\//, '');
+
+        return p;
     }
 
     function normalizePrefix(prefix) {
@@ -132,6 +141,16 @@
         var out = mapping && typeof mapping === 'object' ? mapping : {};
         if (!Array.isArray(out.prefixRules)) out.prefixRules = [];
         if (!out.docRules || typeof out.docRules !== 'object') out.docRules = {};
+
+        // 归一化 docRules 的 key，避免 docs/ 前缀不一致导致全量“未标注”。
+        var normalizedDocRules = {};
+        Object.keys(out.docRules).forEach(function (key) {
+            var normalizedKey = normalizePath(key);
+            if (!normalizedKey) return;
+            normalizedDocRules[normalizedKey] = out.docRules[key];
+        });
+        out.docRules = normalizedDocRules;
+
         return out;
     }
 

@@ -26,7 +26,7 @@ min_t: 0
 ## 扩展阅读
 
 {if T == 0}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md][tML：弹幕最小模板]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md#最小示例][tML：弹幕最小模板]}
 {end}
 
 ## 目标：可验证的行为清单
@@ -126,5 +126,5 @@ public override void AI()
 {end}
 
 {if P_api_reference}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md][弹幕：字段速查]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md#API 速查][弹幕：字段速查]}
 {end}

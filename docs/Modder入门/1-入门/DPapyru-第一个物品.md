@@ -31,11 +31,11 @@ min_t: 0
 ## 扩展阅读
 
 {if C == 0}
-{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md][C#：最小示例]}
+{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#最小示例][C#：最小示例]}
 {end}
 
 {if T == 0}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md][tML：SetDefaults 最小示例]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#最小示例][tML：SetDefaults 最小示例]}
 {end}
 
 ## 实例：创建第一个物品

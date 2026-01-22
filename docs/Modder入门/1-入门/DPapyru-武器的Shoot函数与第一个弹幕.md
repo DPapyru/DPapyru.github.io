@@ -32,8 +32,8 @@ min_t: 0
 ## 扩展阅读
 
 {if T == 0}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem-Shoot与第一个弹幕.md][tML：Shoot 与默认发射的关系]}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md][tML：弹幕是什么]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem-Shoot与第一个弹幕.md#概览][tML：Shoot 与默认发射的关系]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md#概览][tML：弹幕是什么]}
 {end}
 
 ## 实例：创建第一个弹幕
