@@ -9,6 +9,10 @@ html[data-theme="dark"] body {
 
 html[data-theme="dark"] {
     font-size: 17px;
+    --header-height: 56px;
+    --learn-surface: #151517;
+    --learn-surface-2: #1b1b1e;
+    --learn-banner-bg: #2b1f3d;
 }
 
 html[data-theme="dark"] body {
@@ -32,6 +36,7 @@ html[data-theme="dark"] .site-header {
 
 html[data-theme="dark"] .header-content {
     padding: 8px 0 !important;
+    min-height: var(--header-height, 70px);
 }
 
 html[data-theme="dark"] .logo-image {
@@ -56,9 +61,291 @@ html[data-theme="dark"] .nav-link.active {
 
 /* 侧边栏：去阴影，使用分割线，降低“卡片感” */
 html[data-theme="dark"] .sidebar {
-    box-shadow: none !important;
-    border-right: 1px solid var(--border-color);
-    width: 260px !important;
+	    box-shadow: none !important;
+	    border-right: 1px solid var(--border-color);
+	    width: 400px !important;
+	    top: var(--header-height, 70px);
+	    height: calc(100vh - var(--header-height, 70px));
+	}
+
+/* viewer：隐藏侧边栏滚动条（接近 Microsoft Learn） */
+html[data-theme="dark"] .sidebar,
+html[data-theme="dark"] .sidebar-content {
+    scrollbar-width: none;
+}
+
+html[data-theme="dark"] .sidebar::-webkit-scrollbar,
+html[data-theme="dark"] .sidebar-content::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+html[data-theme="dark"] .sidebar-content {
+    padding: 0 16px !important;
+}
+
+/* viewer：左侧树形导航（接近 Microsoft Learn 的“文件夹树”） */
+html[data-theme="dark"] .learn-tree-root,
+html[data-theme="dark"] .learn-tree-children {
+    --learn-indent-step: 24px;
+    --learn-tree-line: rgba(255, 255, 255, 0.14);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+html[data-theme="dark"] .learn-tree-folder,
+html[data-theme="dark"] .learn-tree-file {
+    margin: 0;
+}
+
+html[data-theme="dark"] .learn-tree-row {
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    width: 100%;
+    color: var(--text-color);
+    user-select: none;
+}
+
+html[data-theme="dark"] .learn-tree-link {
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0;
+    width: 100%;
+    color: var(--sidebar-link) !important;
+    text-decoration: none !important;
+}
+
+html[data-theme="dark"] .learn-tree-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+html[data-theme="dark"] .learn-tree-link-label {
+    display: inline-block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1 1 auto;
+}
+
+html[data-theme="dark"] .learn-tree-guides {
+    display: flex;
+    align-items: stretch;
+    flex: 0 0 auto;
+    pointer-events: none;
+    user-select: none;
+}
+
+html[data-theme="dark"] .learn-tree-guide {
+    position: relative;
+    width: var(--learn-indent-step, 20px);
+    flex: 0 0 auto;
+}
+
+html[data-theme="dark"] .learn-tree-guide.has-vertical::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -12px;
+    bottom: -12px;
+    border-left: 1px solid var(--learn-tree-line, rgba(255, 255, 255, 0.14));
+}
+
+html[data-theme="dark"] .learn-tree-guide.current::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    right: 0;
+    top: 50%;
+    border-top: 1px solid var(--learn-tree-line, rgba(255, 255, 255, 0.14));
+}
+
+html[data-theme="dark"] .learn-tree-guide.current.is-last.has-vertical::before {
+    bottom: 50%;
+}
+
+html[data-theme="dark"] .learn-tree-item {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: inherit;
+}
+
+html[data-theme="dark"] .learn-tree-row .learn-tree-item,
+html[data-theme="dark"] .learn-tree-link .learn-tree-item {
+    cursor: pointer;
+}
+
+html[data-theme="dark"] .learn-tree-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: transform 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+    flex: 0 0 auto;
+}
+
+html[data-theme="dark"] .learn-tree-label {
+    flex: 1 1 auto;
+}
+
+html[data-theme="dark"] .learn-tree-toggle-spacer {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+}
+
+html[data-theme="dark"] .learn-tree-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--text-color);
+}
+
+html[data-theme="dark"] .learn-tree-folder[data-collapsed="1"] > .learn-tree-children {
+    display: none;
+}
+
+html[data-theme="dark"] .learn-tree-folder[data-collapsed="1"] > .learn-tree-row .learn-tree-toggle {
+    transform: rotate(-90deg);
+}
+
+html[data-theme="dark"] .learn-tree-row:hover .learn-tree-item {
+    background-color: var(--sidebar-hover);
+}
+
+html[data-theme="dark"] .learn-tree-link:hover .learn-tree-item {
+    background-color: var(--sidebar-hover) !important;
+    color: var(--text-color) !important;
+}
+
+html[data-theme="dark"] .learn-tree-link.active .learn-tree-item {
+    background-color: var(--sidebar-active) !important;
+    color: var(--primary-color) !important;
+    border-left: 2px solid var(--primary-color);
+    border-radius: 0 6px 6px 0;
+    padding-left: 8px;
+}
+
+/* viewer：关闭旧的滚动提示气泡（Learn 不显示） */
+html[data-theme="dark"] body.viewer-page .scroll-indicator {
+    display: none !important;
+}
+
+html[data-theme="dark"] .sidebar-section {
+    margin-bottom: 22px !important;
+    padding-bottom: 16px !important;
+}
+
+html[data-theme="dark"] .sidebar-title {
+    font-size: 0.95rem !important;
+    font-weight: 650 !important;
+    letter-spacing: 0.2px;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding-bottom: 10px !important;
+}
+
+html[data-theme="dark"] .sidebar-list a {
+    padding: 9px 10px !important;
+}
+
+/* 学习分流：更接近 Learn 的“设置面板”密度 */
+html[data-theme="dark"] .learning-pref-name {
+    max-width: 210px !important;
+}
+
+html[data-theme="dark"] .learning-pref-select {
+    min-width: 92px;
+}
+
+/* viewer：顶部 Learn 风格提示条 */
+html[data-theme="dark"] .learn-top-banner {
+    background: var(--learn-banner-bg);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .learn-top-banner-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+}
+
+html[data-theme="dark"] .learn-top-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding-left: 10px;
+    border-left: 3px solid var(--primary-color);
+}
+
+html[data-theme="dark"] .learn-top-banner-icon {
+    color: var(--primary-color);
+    font-size: 0.95rem;
+}
+
+html[data-theme="dark"] .learn-top-banner-text {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+html[data-theme="dark"] .learn-top-banner-close {
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+html[data-theme="dark"] .learn-top-banner-close:hover {
+    color: var(--text-color);
+    border-color: var(--border-dark);
+}
+
+/* viewer：侧边栏快速查找 */
+html[data-theme="dark"] .learn-sidebar-search {
+    padding: 0 0 12px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+html[data-theme="dark"] .learn-sidebar-search-input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-color);
+    outline: none;
+}
+
+html[data-theme="dark"] .learn-sidebar-search-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
 }
 
 /* 主内容与内容容器：用边框替代阴影，收敛内边距 */
@@ -68,15 +355,61 @@ html[data-theme="dark"] .main-content {
 }
 
 html[data-theme="dark"] .content-wrapper {
-    background-color: var(--bg-content) !important;
+    background-color: transparent !important;
     box-shadow: none !important;
-    border: 1px solid var(--border-color);
-    border-radius: 6px !important;
-    padding: 18px 22px !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 18px 10px !important;
 }
 
 html[data-theme="dark"] .content-wrapper:hover {
     box-shadow: none !important;
+}
+
+html[data-theme="dark"] body.viewer-page .content-wrapper {
+    max-width: 1320px;
+}
+
+/* viewer：标题区更像 Learn（弱装饰，紧凑） */
+html[data-theme="dark"] body.viewer-page .tutorial-header {
+    margin-bottom: 18px !important;
+    padding-bottom: 14px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+html[data-theme="dark"] body.viewer-page .tutorial-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+html[data-theme="dark"] body.viewer-page .breadcrumb {
+    margin-bottom: 0 !important;
+}
+
+html[data-theme="dark"] body.viewer-page .tutorial-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+html[data-theme="dark"] body.viewer-page .tutorial-title {
+    font-size: 2.35rem !important;
+    margin: 14px 0 12px !important;
+}
+
+html[data-theme="dark"] body.viewer-page .tutorial-meta {
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    gap: 16px !important;
+    color: var(--text-secondary) !important;
+}
+
+html[data-theme="dark"] body.viewer-page .difficulty-badge {
+    border: 1px solid var(--border-color);
 }
 
 /* 侧边栏：移除位移/箭头等装饰，变为书籍式目录 */
@@ -91,6 +424,18 @@ html[data-theme="dark"] .sidebar-list a:hover {
 
 html[data-theme="dark"] .sidebar-list a.active {
     border-left-width: 2px !important;
+}
+
+/* viewer：Learn 树导航链接不使用 sidebar-list 的 active 样式（避免双重高亮/缩进异常） */
+html[data-theme="dark"] .sidebar-list a.learn-tree-link {
+    padding: 0 !important;
+    border-left: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+}
+
+html[data-theme="dark"] .sidebar-list a.learn-tree-link.active {
+    border-left: none !important;
 }
 
 html[data-theme="dark"] .category-item {
@@ -287,6 +632,205 @@ html[data-theme="dark"] .table-of-contents {
     background: transparent !important;
     border: 1px solid var(--border-color) !important;
     border-radius: 6px !important;
+}
+
+/* 阅读页提示条：更接近 Microsoft Learn 的信息横幅 */
+html[data-theme="dark"] .learning-hints {
+    margin-top: 10px;
+}
+
+/* viewer：减少“卡片提示”占位，统一使用顶部条 */
+html[data-theme="dark"] body.viewer-page #learning-hint-recommendation,
+html[data-theme="dark"] body.viewer-page #learning-hint-prefs {
+    display: none !important;
+}
+
+html[data-theme="dark"] body.viewer-page #learning-hints {
+    margin-top: 0 !important;
+}
+
+html[data-theme="dark"] .learning-hint-card {
+    border-radius: 6px;
+    background-color: var(--learn-surface-2);
+    border-left: 3px solid var(--primary-color);
+}
+
+html[data-theme="dark"] .learning-recommend-card.low {
+    border-left-color: var(--danger-color);
+}
+
+/* viewer：接近 Microsoft Learn 的三栏观感（左侧导航 / 正文 / 右侧“目录”） */
+html[data-theme="dark"] body.viewer-page .tutorial-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    justify-content: start;
+    gap: 24px;
+    align-items: start;
+}
+
+html[data-theme="dark"] body.viewer-page #loading-indicator,
+html[data-theme="dark"] body.viewer-page #error-message {
+    grid-column: 1 / -1;
+}
+
+html[data-theme="dark"] body.viewer-page #markdown-content {
+    grid-column: 1;
+    grid-row: 1;
+    max-width: 760px;
+}
+
+html[data-theme="dark"] body.viewer-page #table-of-contents {
+    grid-column: 2;
+    grid-row: 1;
+    width: 300px;
+    position: sticky;
+    top: calc(var(--header-height, 70px) + 18px);
+    max-height: calc(100vh - var(--header-height, 70px) - 36px);
+    overflow: auto;
+    padding: 8px 0 0 !important;
+    border: none !important;
+    border-left: 1px solid var(--border-color) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+html[data-theme="dark"] body.viewer-page #table-of-contents h3 {
+    padding: 0 14px 10px !important;
+    margin: 0 0 10px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    font-size: 0.95rem !important;
+    color: var(--text-color) !important;
+}
+
+html[data-theme="dark"] body.viewer-page #table-of-contents ul {
+    padding: 0 14px 14px !important;
+}
+
+html[data-theme="dark"] body.viewer-page #table-of-contents a {
+    color: var(--text-secondary) !important;
+    text-decoration: none !important;
+    font-size: 0.92rem !important;
+}
+
+html[data-theme="dark"] body.viewer-page #table-of-contents a:hover {
+    color: var(--primary-color) !important;
+}
+
+/* viewer：焦点模式（隐藏左右栏） */
+html[data-theme="dark"] body.viewer-page.focus-mode .sidebar {
+    display: none !important;
+}
+
+html[data-theme="dark"] body.viewer-page.focus-mode #table-of-contents {
+    display: none !important;
+}
+
+html[data-theme="dark"] body.viewer-page.focus-mode .content-wrapper {
+    max-width: 920px !important;
+}
+
+html[data-theme="dark"] body.viewer-page.focus-mode .tutorial-content {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+/* viewer：Learn 风格弹层（分流设置） */
+html[data-theme="dark"] .learn-modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.62);
+    z-index: 1200;
+}
+
+html[data-theme="dark"] .learn-modal {
+    width: min(820px, calc(100vw - 24px));
+    max-height: calc(100vh - 24px);
+    overflow: auto;
+    background: var(--learn-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme="dark"] .learn-modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--learn-surface-2);
+    border-bottom: 1px solid var(--border-color);
+}
+
+html[data-theme="dark"] .learn-modal-title {
+    font-weight: 650;
+    letter-spacing: 0.2px;
+}
+
+html[data-theme="dark"] .learn-modal-close {
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+html[data-theme="dark"] .learn-modal-close:hover {
+    color: var(--text-color);
+    border-color: var(--primary-color);
+}
+
+html[data-theme="dark"] .learn-modal-body {
+    padding: 14px 16px 16px;
+}
+
+/* viewer：作者模式诊断区域（正文内，不挤侧边栏） */
+html[data-theme="dark"] .learning-author-diagnostics {
+    margin-top: 18px;
+    padding: 14px 14px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--learn-surface);
+}
+
+html[data-theme="dark"] .learning-author-diagnostics-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+html[data-theme="dark"] .learning-author-diagnostics-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 650;
+}
+
+@media (max-width: 1100px) {
+    html[data-theme="dark"] body.viewer-page .tutorial-content {
+        grid-template-columns: 1fr;
+    }
+
+    html[data-theme="dark"] body.viewer-page #table-of-contents {
+        grid-column: 1;
+        grid-row: auto;
+        position: static;
+        max-height: none;
+    }
+
+    html[data-theme="dark"] body.viewer-page #markdown-content {
+        grid-row: auto;
+    }
 }
 
 /* 卡片类组件：统一为“边框 + 轻 hover”，无位移 */

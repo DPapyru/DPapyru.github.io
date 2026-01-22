@@ -53,3 +53,15 @@ min_t: 0
 
 偏好变量以 `P_` 开头，例如 `P_step`、`P_code`、`P_api_reference`、`P_rendering` 等（更完整说明见：`docs/怎么贡献/站点Markdown扩展语法说明.md`）。
 
+## 常用主题（入口）
+
+- C#：从零到能看懂 Mod 代码
+  - `docs/Modder入门/文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md`
+- tML：ModItem 生命周期与 SetDefaults
+  - `docs/Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md`
+- tML：武器物品的关键字段（damage/useTime/useStyle）
+  - `docs/Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-武器物品的关键字段.md`
+- tML：Shoot 与自定义弹幕
+  - `docs/Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-ModItem-Shoot与第一个弹幕.md`
+- tML：ModProjectile 基础字段与 AI
+  - `docs/Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md`

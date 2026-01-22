@@ -11,6 +11,11 @@
         return /\/onboarding\.html$/i.test(path);
     }
 
+    function isDocsContentPage() {
+        var path = String(window.location.pathname || '');
+        return /\/docs\/(viewer|index|folder)\.html$/i.test(path);
+    }
+
     function getOnboardingUrl() {
         var inDocs = String(window.location.pathname || '').indexOf('/docs/') !== -1;
         return inDocs ? '../onboarding.html' : 'onboarding.html';
@@ -28,8 +33,8 @@
     }
 
     if (isOnboardingPage()) return;
+    if (isDocsContentPage()) return;
     if (!shouldRedirect()) return;
 
     window.location.replace(getOnboardingUrl());
 }());
-
