@@ -867,7 +867,7 @@
                 if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
                     VIEWER_DOC_CONFIG = await window.SiteConfig.load();
                 } else {
-                    const configResponse = await fetch('./config.json');
+                    const configResponse = await fetch('./config.json', { cache: 'no-store' });
                     if (!configResponse.ok) throw new Error('无法加载config.json: ' + configResponse.status);
                     VIEWER_DOC_CONFIG = await configResponse.json();
                 }
@@ -1195,7 +1195,7 @@
                         console.log(`尝试处理文档: ${filename}`);
                         // 获取文档内容和元数据
                         const docUrl = `./${filename}`;
-                        const docResponse = await fetch(docUrl);
+                        const docResponse = await fetch(docUrl, { cache: 'no-store' });
 
                         if (docResponse.ok) {
                             const content = await docResponse.text();
@@ -1424,18 +1424,18 @@
 	        const LEARNING_NO_PREFS_HINT_DISMISSED_SESSION_KEY = 'learningNoPrefsHintDismissedSession';
 	        const LEARNING_AUTHOR_MODE_KEY = 'learningAuthorMode';
 
-	        const LEARNING_PREF_KEYS = [
-	            { key: 'P_step', label: '更细步骤', description: '更偏好按步骤走（少跳步）' },
-	            { key: 'P_code', label: '更多代码', description: '更偏好直接看可运行代码' },
-	            { key: 'P_theory', label: '原理解释', description: '更偏好先讲原理/概念再上手' },
-	            { key: 'P_minimal', label: '最小示例', description: '更偏好最小可用示例（减少扩展）' },
-	            { key: 'P_troubleshoot', label: '排错清单', description: '更偏好常见坑/排错清单' },
-	            { key: 'P_best_practice', label: '规范写法', description: '更偏好规范/惯用写法（可维护性）' },
-	            { key: 'P_api_reference', label: 'API 说明', description: '更偏好 API 说明/查表式解释' },
-	            { key: 'P_visual', label: '图示类比', description: '更偏好图示/类比/结构图' },
-	            { key: 'P_performance', label: '性能敏感', description: '更偏好性能/GC/帧率相关内容' },
-	            { key: 'P_rendering', label: '渲染方向', description: '更偏好绘制/Shader/顶点绘制相关内容' }
-	        ];
+		        const LEARNING_PREF_KEYS = [
+		            { key: 'P_step', label: '更细步骤', description: '按步骤走，像照着菜谱做，不漏关键操作' },
+		            { key: 'P_code', label: '更多代码', description: '代码占比更高，优先给能跑的示例' },
+		            { key: 'P_theory', label: '原理解释', description: '先讲概念与原理，再动手实现' },
+		            { key: 'P_minimal', label: '最小示例', description: '最小可用示例，先跑通再扩展' },
+		            { key: 'P_troubleshoot', label: '排错清单', description: '排错导向，给常见坑与检查清单' },
+		            { key: 'P_best_practice', label: '规范写法', description: '偏规范与惯用写法，方便长期维护' },
+		            { key: 'P_api_reference', label: 'API 说明', description: '查表式 API 说明，参数与行为一眼对上' },
+		            { key: 'P_visual', label: '图示类比', description: '用图示与类比解释结构，帮助建立直觉' },
+		            { key: 'P_performance', label: '性能敏感', description: '强调性能点，例如 GC 与帧率影响' },
+		            { key: 'P_rendering', label: '渲染方向', description: '偏渲染实现，例如绘制流程与 Shader 相关' }
+		        ];
 
 	        function safeJsonParse(raw, fallback) {
 	            try {
@@ -1888,13 +1888,14 @@
 	                            return;
 	                        }
 
-	                        fileEls.forEach(function (li) {
-	                            const link = li.querySelector('.learn-tree-link');
-	                            const text = normalize(link ? link.textContent : '');
-	                            const hit = !!text && text.indexOf(q) !== -1;
-	                            li.style.display = hit ? '' : 'none';
-	                            li.dataset.match = hit ? '1' : '0';
-	                        });
+		                        fileEls.forEach(function (li) {
+		                            const link = li.querySelector('.learn-tree-link');
+		                            const titleEl = li.querySelector('.learn-tree-link-label');
+		                            const text = normalize(titleEl ? titleEl.textContent : (link ? link.textContent : ''));
+		                            const hit = !!text && text.indexOf(q) !== -1;
+		                            li.style.display = hit ? '' : 'none';
+		                            li.dataset.match = hit ? '1' : '0';
+		                        });
 
 	                        // 由深到浅，确保父节点根据子节点显隐更新
 	                        folderEls.sort(function (a, b) {
@@ -1973,10 +1974,10 @@
 
 	        function scanRequiredReferenceHeadings(sourceMarkdown) {
 	            const text = String(sourceMarkdown || '');
-	            const required = [
-	                '本章要点（可引用）',
-	                '常见坑（可引用）',
-	                '下一步（可引用）'
+	            const requiredGroups = [
+	                { label: '本章要点', options: ['本章要点', '小结'] },
+	                { label: '常见坑', options: ['常见坑', '常见问题'] },
+	                { label: '下一步', options: ['下一步'] }
 	            ];
 
 	            function escapeRegExp(s) {
@@ -1984,9 +1985,12 @@
 	            }
 
 	            const missing = [];
-	            required.forEach(function (h) {
-	                const re = new RegExp('^##\\s+' + escapeRegExp(h) + '\\s*$', 'm');
-	                if (!re.test(text)) missing.push(h);
+	            requiredGroups.forEach(function (group) {
+	                const ok = (group.options || []).some(function (h) {
+	                    const re = new RegExp('^##\\s+' + escapeRegExp(h) + '\\s*$', 'm');
+	                    return re.test(text);
+	                });
+	                if (!ok) missing.push(group.label);
 	            });
 	            return missing;
 	        }
@@ -2248,29 +2252,30 @@
 	                    .replace(/'/g, '&#039;');
 	            }
 
-	            const rows = LEARNING_PREF_KEYS.map(function (p) {
-	                const key = p.key;
-	                const tri = normalizeTriState(overrides[key]);
-	                const final = Number(ctx[key] || 0) ? 1 : 0;
-	                const auto = Number(autoFlags[key] || 0) ? 1 : 0;
-	                const source = tri === 'auto' ? ('自动：' + (auto ? '开' : '关')) : ('手动：' + (tri === 'on' ? '开' : '关'));
-	                return [
-	                    '<div class="learning-pref-row">',
-	                    '<div class="learning-pref-main">',
-	                    '<div class="learning-pref-name" title="' + escapeHtml(p.description) + '">' + escapeHtml(p.label) + '</div>',
-	                    '<div class="learning-pref-meta">' + escapeHtml(key) + ' · ' + escapeHtml(source) + '</div>',
-	                    '</div>',
-	                    '<div class="learning-pref-control">',
-	                    '<select class="learning-pref-select" data-pref-key="' + escapeHtml(key) + '">',
-	                    '<option value="auto"' + (tri === 'auto' ? ' selected' : '') + '>自动</option>',
-	                    '<option value="on"' + (tri === 'on' ? ' selected' : '') + '>强制开</option>',
-	                    '<option value="off"' + (tri === 'off' ? ' selected' : '') + '>强制关</option>',
-	                    '</select>',
-	                    '<span class="learning-pref-badge ' + (final ? 'on' : 'off') + '">' + (final ? '开' : '关') + '</span>',
-	                    '</div>',
-	                    '</div>'
-	                ].join('');
-	            }).join('');
+		            const rows = LEARNING_PREF_KEYS.map(function (p) {
+		                const key = p.key;
+		                const tri = normalizeTriState(overrides[key]);
+		                const final = Number(ctx[key] || 0) ? 1 : 0;
+		                const auto = Number(autoFlags[key] || 0) ? 1 : 0;
+		                const source = tri === 'auto' ? ('自动：' + (auto ? '开' : '关')) : ('手动：' + (tri === 'on' ? '开' : '关'));
+		                return [
+		                    '<div class="learning-pref-row">',
+		                    '<div class="learning-pref-main">',
+		                    '<div class="learning-pref-name" title="' + escapeHtml(p.description) + '">' + escapeHtml(p.label) + '</div>',
+		                    '<div class="learning-pref-desc">' + escapeHtml(p.description) + '</div>',
+		                    '<div class="learning-pref-meta">' + escapeHtml(key) + ' · ' + escapeHtml(source) + '</div>',
+		                    '</div>',
+		                    '<div class="learning-pref-control">',
+		                    '<select class="learning-pref-select" data-pref-key="' + escapeHtml(key) + '">',
+		                    '<option value="auto"' + (tri === 'auto' ? ' selected' : '') + '>自动</option>',
+		                    '<option value="on"' + (tri === 'on' ? ' selected' : '') + '>强制开</option>',
+		                    '<option value="off"' + (tri === 'off' ? ' selected' : '') + '>强制关</option>',
+		                    '</select>',
+		                    '<span class="learning-pref-badge ' + (final ? 'on' : 'off') + '">' + (final ? '开' : '关') + '</span>',
+		                    '</div>',
+		                    '</div>'
+		                ].join('');
+		            }).join('');
 
 		            root.innerHTML = [
 		                '<div class="learning-ct">',
@@ -2505,7 +2510,7 @@
 
 	        function applyLearningConditionBlocks(markdown, ctx) {
 	            const diag = getCurrentLearningDiagnostics();
-	            const lines = String(markdown || '').split('\n');
+	            const lines = String(markdown || '').split(/\r?\n/);
 	            const out = [];
 	            const stack = [];
 	            const IF_RE = /^\s*\{if\s+(.+?)\}\s*$/;
@@ -2684,7 +2689,7 @@
 	            const sel = normalizeHeadingForMatch(selRaw);
 	            if (!sel) return null;
 
-	            const lines = String(markdown || '').split('\n');
+	            const lines = String(markdown || '').split(/\r?\n/);
 	            let inFence = false;
 	            let fenceChar = '';
 
@@ -2746,7 +2751,7 @@
 	            );
 	            if (!titleSet.size) return markdown;
 
-	            const lines = String(markdown || '').split('\n');
+	            const lines = String(markdown || '').split(/\r?\n/);
 	            let i = 0;
 	            while (i < lines.length && !lines[i].trim()) i++;
 	            if (i >= lines.length) return markdown;
@@ -2766,7 +2771,7 @@
 	            const delta = Number.isFinite(shift) ? shift : 0;
 	            if (delta <= 0) return markdown;
 
-	            const lines = String(markdown || '').split('\n');
+	            const lines = String(markdown || '').split(/\r?\n/);
 	            let inFence = false;
 	            let fenceChar = '';
 
@@ -2798,7 +2803,7 @@
 	        }
 
 	        function getMarkdownMinHeadingLevel(markdown) {
-	            const lines = String(markdown || '').split('\n');
+	            const lines = String(markdown || '').split(/\r?\n/);
 	            let inFence = false;
 	            let fenceChar = '';
 	            let minLevel = 0;
@@ -2830,7 +2835,7 @@
 	        }
 
 	        function demoteMarkdownHeadingsToBold(markdown) {
-	            const lines = String(markdown || '').split('\n');
+	            const lines = String(markdown || '').split(/\r?\n/);
 	            let inFence = false;
 	            let fenceChar = '';
 
@@ -2861,7 +2866,7 @@
 	        }
 
 	        function rewriteTranscludedLinksAndImages(markdown, includeDocPath) {
-	            const lines = String(markdown || '').split('\n');
+	            const lines = String(markdown || '').split(/\r?\n/);
 	            let inFence = false;
 	            let fenceChar = '';
 
@@ -2929,7 +2934,7 @@
 
 	            if (!TRANSCLUSION_CACHE.has(key)) {
 	                const fetchUrl = `./${key.replace(/^\.?\//, '').replace(/^docs\//, '')}`;
-	                const p = fetch(encodeURI(fetchUrl)).then(async response => {
+	                const p = fetch(encodeURI(fetchUrl), { cache: 'no-store' }).then(async response => {
 	                    if (!response.ok) {
 	                        throw new Error(`HTTP ${response.status} ${response.statusText}`);
 	                    }
@@ -2945,7 +2950,7 @@
 	            if (!markdown) return markdown;
 	            if (depth > TRANSCLUSION_MAX_DEPTH) return markdown;
 
-	            const lines = String(markdown).split('\n');
+	            const lines = String(markdown).split(/\r?\n/);
 	            const matches = [];
 	            let inFence = false;
 	            let fenceChar = '';
@@ -3375,7 +3380,7 @@
             console.log(`docs/viewer.html: 实际fetch URL: ${fetchUrl}`);
             console.log(`完整请求URL将是: ${window.location.origin}${window.location.pathname.replace(/\/[^\/]*$/, '/')}${fetchUrl}`);
 
-	            fetch(encodeURI(fetchUrl))
+	            fetch(encodeURI(fetchUrl), { cache: 'no-store' })
 	                .then(response => {
                     console.log(`获取响应状态: ${response.status} ${response.statusText}`);
                     if (!response.ok) {
@@ -3455,6 +3460,9 @@
 
 	                        // 移除正文内重复的“章节进度”导航（统一使用页脚导航）
 	                        removeDuplicateChapterProgress(markdownContent);
+
+	                        // 清理历史写法中的“（可引用）”标记，避免在目录/标题中出现
+	                        stripReferenceMarkersInDom(markdownContent);
 
 	                        // 渲染题目组件（quiz）
 	                        if (window.SiteQuiz && typeof window.SiteQuiz.renderQuizzes === 'function') {
@@ -4139,6 +4147,34 @@
         }
 
         // 生成文档目录（基于标题h1-h6）
+        function stripReferenceMarkerText(text) {
+            return String(text || '')
+                .replace(/（可引用）/g, '')
+                .replace(/\(可引用\)/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function stripReferenceMarkersInDom(container) {
+            const root = container || document.getElementById('markdown-content');
+            if (!root) return;
+
+            function rewriteTextNodes(node) {
+                const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+                const nodes = [];
+                while (walker.nextNode()) nodes.push(walker.currentNode);
+                nodes.forEach(function (n) {
+                    const next = stripReferenceMarkerText(n.nodeValue);
+                    if (next !== n.nodeValue) n.nodeValue = next;
+                });
+            }
+
+            const headings = root.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            headings.forEach(function (h) {
+                rewriteTextNodes(h);
+            });
+        }
+
         function generateTableOfContents(contentElement) {
             const tableOfContents = document.getElementById('table-of-contents');
             const tocList = document.getElementById('toc-list');
@@ -4167,7 +4203,7 @@
                 const li = document.createElement('li');
                 const a = document.createElement('a');
                 a.href = `#${heading.id}`;
-                a.textContent = heading.textContent;
+                a.textContent = stripReferenceMarkerText(heading.textContent);
 
                 // 根据标题级别设置缩进
                 const level = parseInt(heading.tagName.substring(1));
@@ -4424,12 +4460,12 @@
 	                    parentUl.appendChild(li);
 	                });
 
-	                fileNames.forEach(function (fileName) {
-	                    var isLast = fileName === fileNames[fileNames.length - 1];
-	                    const fileNode = treeNode.children[fileName];
-	                    const doc = (fileNode && fileNode.doc) || {};
-	                    const docPath = normalizePath(doc.__normalizedPath || doc.path || doc.filename);
-	                    if (!docPath) return;
+		                fileNames.forEach(function (fileName) {
+		                    var isLast = fileName === fileNames[fileNames.length - 1];
+		                    const fileNode = treeNode.children[fileName];
+		                    const doc = (fileNode && fileNode.doc) || {};
+		                    const docPath = normalizePath(doc.__normalizedPath || doc.path || doc.filename);
+		                    if (!docPath) return;
 
 	                    const li = document.createElement('li');
 	                    li.className = 'learn-tree-file';
@@ -4448,14 +4484,29 @@
 	                    label.className = 'learn-tree-link-label';
 	                    label.textContent = doc.title || fileName.replace(/\.md$/i, '');
 
-	                    const spacer = document.createElement('span');
-	                    spacer.className = 'learn-tree-toggle-spacer';
-	                    spacer.setAttribute('aria-hidden', 'true');
+		                    const spacer = document.createElement('span');
+		                    spacer.className = 'learn-tree-toggle-spacer';
+		                    spacer.setAttribute('aria-hidden', 'true');
 
-	                    const item = document.createElement('span');
-	                    item.className = 'learn-tree-item';
-	                    item.appendChild(spacer);
-	                    item.appendChild(label);
+		                    const item = document.createElement('span');
+		                    item.className = 'learn-tree-item';
+
+		                    const text = document.createElement('span');
+		                    text.className = 'learn-tree-link-text';
+		                    text.appendChild(label);
+
+		                    const normalizedDocPath = normalizePath(docPath).replace(/^docs\//, '');
+		                    const shouldShowDesc = normalizedDocPath.startsWith('Modder入门/');
+		                    const descText = shouldShowDesc ? String(doc.description || '') : '';
+		                    if (descText) {
+		                        const desc = document.createElement('span');
+		                        desc.className = 'learn-tree-link-desc';
+		                        desc.textContent = descText;
+		                        text.appendChild(desc);
+		                    }
+
+		                    item.appendChild(spacer);
+		                    item.appendChild(text);
 
 	                    link.appendChild(guides);
 	                    link.appendChild(item);
@@ -4472,10 +4523,10 @@
 	                        });
 	                    }
 
-	                    li.appendChild(link);
-	                    parentUl.appendChild(li);
-	                });
-	            }
+		                    li.appendChild(link);
+		                    parentUl.appendChild(li);
+		                });
+		            }
 
 	            const tree = buildFolderTree(docs);
 	            renderTree(rootUl, tree, '', 0);
@@ -4850,7 +4901,7 @@
         }
 
         // 更新当前分类的文档列表
-	        function updateCurrentCategoryDocs(filePath) {
+		        function updateCurrentCategoryDocs(filePath) {
 	            const currentCategoryTitle = document.getElementById('current-category-title');
 	            const currentCategoryDocs = document.getElementById('current-category-docs');
 
@@ -4906,16 +4957,31 @@
 	                    return compareName(a.title || '', b.title || '');
 	                });
 
-	                sortedDocs.forEach(doc => {
-	                    const li = document.createElement('li');
-	                    const link = document.createElement('a');
-		                    link.href = `?file=${encodeURIComponent(normalizePath(doc.path || doc.filename))}`;
-		                    link.textContent = doc.title;
-		                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
+		                sortedDocs.forEach(doc => {
+		                    const li = document.createElement('li');
+		                    const link = document.createElement('a');
+			                    link.href = `?file=${encodeURIComponent(normalizePath(doc.path || doc.filename))}`;
 
-		                    if (normalizePath(doc.path || doc.filename) === normalizedFilePath) {
-		                        link.classList.add('active');
-		                    }
+			                    const titleSpan = document.createElement('span');
+			                    titleSpan.className = 'sidebar-doc-title';
+			                    titleSpan.textContent = doc.title;
+			                    link.appendChild(titleSpan);
+
+			                    const docPath = normalizePath(doc.path || doc.filename);
+			                    const shouldShowDesc = docPath.replace(/^docs\//, '').startsWith('Modder入门/');
+			                    const descText = shouldShowDesc ? String(doc.description || '') : '';
+			                    if (descText) {
+			                        const descSpan = document.createElement('span');
+			                        descSpan.className = 'sidebar-doc-desc';
+			                        descSpan.textContent = descText;
+			                        link.appendChild(descSpan);
+			                    }
+
+			                    link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
+
+			                    if (docPath === normalizedFilePath) {
+			                        link.classList.add('active');
+			                    }
 
 	                    li.appendChild(link);
 	                    currentCategoryDocs.appendChild(li);
@@ -4950,13 +5016,27 @@
 	                return;
 	            }
 
-	            siblingDocs.forEach(doc => {
-	                const li = document.createElement('li');
-	                const link = document.createElement('a');
-	                const docPath = normalizePath(doc.path || doc.filename);
-	                link.href = `?file=${encodeURIComponent(docPath)}`;
-	                link.textContent = doc.title;
-	                link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
+		            siblingDocs.forEach(doc => {
+		                const li = document.createElement('li');
+		                const link = document.createElement('a');
+		                const docPath = normalizePath(doc.path || doc.filename);
+		                link.href = `?file=${encodeURIComponent(docPath)}`;
+
+		                const titleSpan = document.createElement('span');
+		                titleSpan.className = 'sidebar-doc-title';
+		                titleSpan.textContent = doc.title;
+		                link.appendChild(titleSpan);
+
+		                const shouldShowDesc = docPath.replace(/^docs\//, '').startsWith('Modder入门/');
+		                const descText = shouldShowDesc ? String(doc.description || '') : '';
+		                if (descText) {
+		                    const descSpan = document.createElement('span');
+		                    descSpan.className = 'sidebar-doc-desc';
+		                    descSpan.textContent = descText;
+		                    link.appendChild(descSpan);
+		                }
+
+		                link.title = `${doc.author || '未知作者'} - ${doc.description || doc.title}`;
 
 	                if (docPath === normalizedFilePath) {
 	                    link.classList.add('active');

@@ -16,29 +16,29 @@ min_t: 0
 
 # 武器的 Shoot 函数与第一个弹幕
 
-在本文中，你将完成两件事：
+本节目标：做出第一个自定义弹幕，并让武器发射它。
 
-1. 新建一个自定义弹幕（`ModProjectile`）。
-2. 让你的武器在使用时发射该弹幕，并通过 `Shoot(...)` 控制发射。
+你会做两件事：
+
+1. 新建一个 `ModProjectile`。
+2. 让武器发射这个弹幕，然后用 `Shoot(...)` 接管发射逻辑。
+
+类比一下更好记：`Item.shoot` 是默认发射方案，`Shoot(...)` 是你接管这一发。
 
 ## 先决条件
 
 - 你已经完成：[第一把武器：最小可用的近战武器](DPapyru-第一把武器.md)。
 
-## 前置（按需补课）
+## 扩展阅读
 
 {if T == 0}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem-Shoot与第一个弹幕.md#概览（可引用）][tML：Shoot 与默认发射的关系]}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md#概览（可引用）][tML：弹幕是什么（实体与每帧更新）]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem-Shoot与第一个弹幕.md#概览][tML：Shoot 与默认发射的关系]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md#概览][tML：弹幕是什么]}
 {end}
 
-{if P_troubleshoot}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem-Shoot与第一个弹幕.md#常见坑（可引用）][tML：Shoot 常见坑]}
-{end}
+## 实例：创建第一个弹幕
 
-## Step 1：创建第一个弹幕类
-
-新建文件（例如 `Projectiles/FirstBolt.cs`），写一个最小弹幕：
+新建文件 `Projectiles/FirstBolt.cs`，写入下面的代码：
 
 ```csharp
 using Terraria;
@@ -66,32 +66,24 @@ namespace YourMod.Projectiles
 }
 ```
 
-{if P_theory}
-这里的关键是“阵营与寿命”：
+## 字段说明
 
-- `friendly=true`：它会伤害敌人，而不是伤害玩家。
-- `timeLeft`：避免弹幕永远存在（验证阶段尤其重要）。
-{end}
+- `friendly = true` 表示它会伤害敌人。
+- `hostile = false` 表示它不会伤害玩家。
+- `timeLeft` 用来防止弹幕无限存在，验证阶段尤其重要。
 
-## Step 2：让武器默认能发射这个弹幕
+## 实例：让武器默认发射弹幕
 
-回到你的武器（例如 `Items/FirstSword.cs`），在 `SetDefaults()` 里加上：
+回到你的武器文件 `Items/FirstSword.cs`，在 `SetDefaults()` 里加入两行：
 
 ```csharp
 Item.shoot = ModContent.ProjectileType<Projectiles.FirstBolt>();
 Item.shootSpeed = 9f;
 ```
 
-注意：这里假设 `FirstBolt` 的命名空间是 `YourMod.Projectiles`；你也可以 `using YourMod.Projectiles;` 并写成 `ModContent.ProjectileType<FirstBolt>()`。
+这里假设 `FirstBolt` 的命名空间是 `YourMod.Projectiles`。如果你更喜欢简写，也可以加 `using YourMod.Projectiles;`，然后写 `ModContent.ProjectileType<FirstBolt>()`。
 
-{if P_step}
-检查点：
-
-- 能编译通过（`using Terraria.ModLoader;` 存在，且 `FirstBolt` 可被解析）。
-- 在游戏里使用武器时，确实出现了弹幕（哪怕弹幕还没有自定义 AI）。
-{end}
-
-## Step 3：用 Shoot(...) 精确控制发射
+## 实例：用 Shoot 接管发射
 
 如果你只用 `Item.shoot`，系统会按默认逻辑发射；当你需要控制“这一次怎么发射”时，重写 `Shoot(...)`：
 
@@ -114,23 +106,29 @@ public override bool Shoot(
 }
 ```
 
-这段代码的行为是：由你手动生成弹幕，并返回 `false` 阻止默认发射（避免双发）。
+这段代码的行为是：由你手动生成弹幕，并返回 `false` 阻止默认发射，避免双发。
 
-{if P_code}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem-Shoot与第一个弹幕.md#最小示例（可引用）][Shoot：完整最小模板]}
-{end}
+类比一下：你已经手动按了一次发射键，就要告诉系统别再帮你按一次。
 
-{if P_theory}
-`type` 参数通常来自 `Item.shoot`（或弹药系统）。在“第一个弹幕”阶段，沿用 `type/damage/knockback` 的好处是：你修改 `SetDefaults()` 的数值仍然能稳定地影响发射结果。
-{end}
+## 实例：在游戏里验证
 
-## 本章要点（可引用）
+1. 重新加载 Mod。
+2. 生成并使用你的武器。
+3. 确认屏幕上出现了你创建的弹幕。
 
-- `Item.shoot/shootSpeed` 让物品“默认能发射”；`Shoot(...)` 让你“控制如何发射”。
-- `Shoot` 里手动 `NewProjectile` 后，通常返回 `false` 防止默认逻辑再发一次。
-- 弹幕的 `friendly/timeLeft` 是最先需要确认的两项默认值。
+## 常见问题
 
-## 下一步（可引用）
+- 看不到弹幕，先确认 `Item.shoot` 指向的是你的弹幕类型。
+- 出现双发，通常是 `Shoot` 里生成弹幕后还返回了 `true`。
+- 弹幕一闪而过，检查 `timeLeft` 是否过小，或是否立刻碰撞消失。
+
+## 小结
+
+- `Item.shoot/shootSpeed` 让武器具备默认发射能力。
+- `Shoot(...)` 用来接管这一发的发射逻辑。
+- 接管后通常返回 `false`，避免默认逻辑再发一次。
+
+## 下一步
 
 下一章将把“会飞的弹幕”升级为“有行为的弹幕”，并用 `AI()` 控制每帧逻辑：
 

@@ -14,7 +14,7 @@ min_t: 0
 
 # tModLoader：ModItem 生命周期与 SetDefaults
 
-## 概览（可引用）
+## 概览
 
 对初学者来说，`ModItem` 的学习关键不在“记住所有方法”，而在于理解：**tModLoader 会在特定阶段调用你的方法**，你只需要把“该阶段应该写的内容”放进去。
 
@@ -22,7 +22,7 @@ min_t: 0
 
 - `SetDefaults()`：设置物品的默认属性（伤害、使用时间、大小、稀有度等）
 
-## 最小示例（可引用）
+## 最小示例
 
 {if T == 0}
 先抓“它在哪里被调用”：
@@ -43,7 +43,7 @@ public override void SetDefaults()
 `SetDefaults()` 适合放静态默认值；对动态变化（根据玩家状态、世界状态变动）更常用 `UpdateInventory` / `HoldItem` / `ModifyWeaponDamage` 等链路（按需求选择）。
 {end}
 
-## 常见坑（可引用）
+## 常见坑
 
 {if P_troubleshoot}
 - 修改 `SetDefaults()` 后“热重载没变化”：默认值通常在对象生成时读取；你需要重新生成物品实例。
@@ -51,14 +51,14 @@ public override void SetDefaults()
 - 把“动态逻辑”写进 `SetDefaults()`：结果往往是“看似能跑，但到处都是例外”。
 {end}
 
-## 进阶与惯用写法（可引用）
+## 进阶与惯用写法
 
 {if P_best_practice}
 - 区分“默认值”和“运行时修正”：默认值放 `SetDefaults()`，修正放对应生命周期链路。
 - 优先用 tML 提供的辅助方法设置常见类型（如果版本提供），减少遗漏字段。
 {end}
 
-## API 速查（可引用）
+## API 速查
 
 {if P_api_reference}
 - `SetDefaults()`：默认字段初始化

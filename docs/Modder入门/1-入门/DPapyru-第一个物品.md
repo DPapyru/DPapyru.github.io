@@ -15,24 +15,32 @@ min_t: 0
 
 # 第一个物品：做一个最简单的“材料”
 
-目标：添加一个**能正常出现、可堆叠、可在背包里显示**的物品，并通过它建立两件事：
+本节要做的事很简单：添加一个**能出现、能堆叠、能在背包里显示**的物品。
 
-1. `ModItem` 是“物品蓝图”，`SetDefaults()` 是“出厂设置”。
-2. 你改的是“默认值”，所以验证时要学会“重新生成一个新物品”。
+你需要记住两句话就够用：
 
-## 前置（按需补课）
+- `ModItem` 是物品的蓝图。
+- `SetDefaults()` 是出厂参数表，你改的是默认值。
+
+类比一下更好记：你现在不是在改手里那一件成品，而是在改生产线的默认配置。验证改动时要用新生成的物品实例。
+
+## 先决条件
+
+- 你已经有一个能正常编译并加载的 Mod 项目。
+
+## 扩展阅读
 
 {if C == 0}
-{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#最小示例（可引用）][C#：先能读懂模板]}
+{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#最小示例][C#：最小示例]}
 {end}
 
 {if T == 0}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#最小示例（可引用）][tML：SetDefaults 最小示例]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#最小示例][tML：SetDefaults 最小示例]}
 {end}
 
-## Step 1：创建一个物品类
+## 实例：创建第一个物品
 
-在 Mod 项目的源代码里新建一个 C# 文件（例如 `Items/FirstMaterial.cs`），写一个最小的 `ModItem`：
+新建文件 `Items/FirstMaterial.cs`，写入下面的代码：
 
 ```csharp
 using Terraria;
@@ -54,46 +62,37 @@ namespace YourMod.Items
 }
 ```
 
-注意：把 `YourMod` 替换为你项目实际使用的命名空间；如果你不确定命名空间规则，也可以先去掉 `namespace ... { ... }` 这一层，保证代码能编译后再整理结构。
+把 `YourMod` 换成你自己的命名空间。如果你暂时不想处理命名空间，也可以先去掉 `namespace ...` 这一层，保证能编译通过后再整理。
 
-{if P_step}
-逐行解释（只解释“你现在必须知道的部分”）：
+## 代码说明
 
-- `public class FirstMaterial : ModItem`：声明“这是一个物品”。
-- `public override void SetDefaults()`：把这个物品的默认属性填好；你可以把它当作“出厂设置单”。
-- `Item.* = ...`：给当前物品对象的字段赋值。
-{end}
+- `FirstMaterial : ModItem` 表示这是一个物品类型。
+- `SetDefaults()` 负责填写默认属性。
+- `Item.width/height` 决定物品贴图碰撞盒大小。
+- `Item.maxStack` 决定堆叠上限。
 
-{if P_api_reference}
-{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#API 速查（可引用）][C#：语法速查]}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#API 速查（可引用）][tML：ModItem 入口速查]}
-{end}
+## 实例：在游戏里验证
 
-## Step 2：让物品“可验证”
+验证流程按这个顺序来：
 
-不同 tModLoader 版本/模板里，把物品拿到手的方法不完全一致，但验证思路一致：
+1. 重新加载 Mod。
+2. 生成一个新的 `FirstMaterial`。
+3. 检查三件事：能出现、能堆叠、背包显示正常。
 
-1. 重新加载 Mod（或重新编译并加载）。
-2. 在游戏内用“生成物品/拿物品”的方式得到一个 `FirstMaterial`。
-3. 确认：物品能出现、堆叠上限为 999、在背包里显示正常。
+如果你修改了 `SetDefaults()`，务必重新生成一个新物品实例再看效果。
 
-把这个过程想成“验收出厂设置”：你拿到的是一个“新出厂的实例”，才能看到 `SetDefaults()` 改动的效果。
+## 常见问题
 
-## 本章要点（可引用）
+- 热重载后没变化，多半是你还在看旧实例，重新生成一个新物品。
+- 类名重复或命名空间冲突，会让加载行为变得不可预测，先保证类名唯一。
+- 报类型找不到，先检查 `using Terraria;` 与 `using Terraria.ModLoader;` 是否存在。
 
-- `ModItem` 是物品的“蓝图”；`SetDefaults()` 是把默认值填好。
-- 默认值通常在物品实例创建时读取；修改后要用“新生成的物品实例”验证。
-- 第一个物品优先做成“材料”：属性少、验证快、出错面更窄。
+## 小结
 
-## 常见坑（可引用）
+- 先做最小可用的物品，再逐步加字段。
+- 改默认值后，用新生成的实例验证。
 
-{if P_troubleshoot}
-- 热重载后看不到变化：你看的可能是旧实例；重新生成一个新物品再对比。
-- 类名/命名空间冲突：同名类会让加载行为变得不可预测，确保类名唯一。
-- `using` 缺失导致类型找不到：先补齐 `Terraria` / `Terraria.ModLoader` 的引用，再看其它错误。
-{end}
-
-## 下一步（可引用）
+## 下一步
 
 下一步建议把“材料”升级成“可用的物品”：
 

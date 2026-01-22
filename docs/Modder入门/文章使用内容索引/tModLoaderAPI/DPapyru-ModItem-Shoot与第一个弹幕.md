@@ -14,7 +14,7 @@ min_t: 0
 
 # tModLoader：ModItem 的 Shoot（自定义发射）与第一个弹幕
 
-## 概览（可引用）
+## 概览
 
 当一个物品需要“发射弹幕”时，你通常会用到两层机制：
 
@@ -23,7 +23,7 @@ min_t: 0
 
 这两层的关系是：`Item.shoot` 决定“默认会发射什么”，`Shoot(...)` 决定“这次具体怎么发射”。
 
-## 最小示例（可引用）
+## 最小示例
 
 {if T == 0}
 下面示例展示最常见的做法：在 `Shoot(...)` 中手动生成弹幕，并返回 `false` 阻止默认发射（避免重复）：
@@ -60,7 +60,7 @@ public override bool Shoot(
 进阶做法会考虑联机同步、随机种子一致性与性能（例如减少每帧随机、避免不必要的实体生成）；但在“第一个弹幕”阶段不必过早复杂化。
 {end}
 
-## 常见坑（可引用）
+## 常见坑
 
 {if P_troubleshoot}
 - `Shoot` 方法签名不匹配：不同 tML 版本/模板可能有差异；以 IDE 自动生成的 `override` 为准。
@@ -69,14 +69,14 @@ public override bool Shoot(
 - 位置/速度为 0：检查是否正确设置 `Item.shootSpeed`，以及是否在 `Shoot` 中覆盖了 `velocity`。
 {end}
 
-## 进阶与惯用写法（可引用）
+## 进阶与惯用写法
 
 {if P_best_practice}
 - 保持“数据在 SetDefaults、逻辑在 Shoot”的分工：默认参数写进 `SetDefaults()`，只在 `Shoot` 做本次发射的差异化调整。
 - 多弹与散射建议用“基向量 + 小角度旋转”的写法，避免直接对 `velocity.X/Y` 加随机导致不可控。
 {end}
 
-## API 速查（可引用）
+## API 速查
 
 {if P_api_reference}
 - `Item.shoot`：默认弹幕类型

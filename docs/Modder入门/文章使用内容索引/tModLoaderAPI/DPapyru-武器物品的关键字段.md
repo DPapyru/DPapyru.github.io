@@ -14,7 +14,7 @@ min_t: 0
 
 # tModLoader：武器物品的关键字段（从能用到好用）
 
-## 概览（可引用）
+## 概览
 
 在 tModLoader 里，“武器”首先是一个 `ModItem`，它的核心是：**伤害模型 + 使用动作 +（可选）发射**。
 
@@ -37,7 +37,7 @@ min_t: 0
 
 把它类比成“乐谱”更准确：`damage` 是音高，`useTime/useAnimation` 是节拍，`useStyle` 是演奏方式；写对了才谈得上“好听”。
 
-## 最小示例（可引用）
+## 最小示例
 
 {if T == 0}
 下面是一个“能用”的近战武器最小集合（字段不求完备，但要能解释清楚）：
@@ -74,7 +74,7 @@ public class FirstSword : ModItem
 对工程化写法而言，关键是把“手感相关”的字段分组并集中调参（例如用 `const` 或一处表驱动），避免在多处写魔法数字导致手感不可控。
 {end}
 
-## 常见坑（可引用）
+## 常见坑
 
 {if P_troubleshoot}
 - 忘了设置 `Item.DamageType`：伤害加成与 UI 表现可能不符合预期（尤其从示例改动时）。
@@ -83,7 +83,7 @@ public class FirstSword : ModItem
 - 设置了 `Item.shoot` 却没设置 `Item.shootSpeed`：弹幕会出现但速度为 0 或表现异常。
 {end}
 
-## 进阶与惯用写法（可引用）
+## 进阶与惯用写法
 
 {if P_best_practice}
 - 把“需要频繁调参”的字段放在一起（`damage/useTime/useAnimation/knockBack/shootSpeed`），并避免在多处重复写同一组值。
@@ -91,7 +91,7 @@ public class FirstSword : ModItem
 - 先做一个“可验证的最小武器”，再叠加发射、特效与 AI；这样排错成本最低。
 {end}
 
-## API 速查（可引用）
+## API 速查
 
 {if P_api_reference}
 - `Item.damage`：基础伤害

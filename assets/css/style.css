@@ -322,6 +322,22 @@ a:hover {
     position: relative;
 }
 
+.sidebar-doc-title {
+    display: block;
+    line-height: 1.2;
+}
+
+.sidebar-doc-desc {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    line-height: 1.25;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .sidebar-list a:hover {
     color: var(--primary-color);
     background-color: var(--sidebar-hover);
@@ -383,7 +399,7 @@ a:hover {
 .learning-pref-main {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
     min-width: 0;
 }
 
@@ -395,6 +411,19 @@ a:hover {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 150px;
+}
+
+.learning-pref-desc {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.25;
+    max-width: 260px;
+    white-space: normal;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .learning-pref-meta {
