@@ -14,7 +14,7 @@ min_t: 0
 
 # tModLoader：ModProjectile 基础字段与 AI（行为逻辑）
 
-## 概览（可引用）
+## 概览
 
 弹幕（Projectile）是一种“每帧更新的实体”。你通常需要做两件事：
 
@@ -23,7 +23,7 @@ min_t: 0
 
 `AI()` 的语义可以理解为“每个 tick 的更新函数”：它会被频繁调用，所以尽量保持逻辑清晰、可控、可验证。
 
-## 最小示例（可引用）
+## 最小示例
 
 {if T == 0}
 下面是一个“能飞、能打、可调”的最小 `ModProjectile`：
@@ -65,7 +65,7 @@ public class FirstBolt : ModProjectile
 进阶写法需要考虑联机同步（只在必要时写网络敏感的状态）、以及性能（避免每帧分配对象、避免过多 Dust/粒子生成）。
 {end}
 
-## 常见坑（可引用）
+## 常见坑
 
 {if P_troubleshoot}
 - 弹幕不动：检查生成时是否传入了 `velocity`，以及是否把速度归零了。
@@ -74,14 +74,14 @@ public class FirstBolt : ModProjectile
 - 寿命太短/太长：调 `timeLeft` 并结合 `shootSpeed` 验证飞行距离。
 {end}
 
-## 进阶与惯用写法（可引用）
+## 进阶与惯用写法
 
 {if P_best_practice}
 - 用 `Projectile.ai[]` 保存“可被网络同步的状态”，用 `Projectile.localAI[]` 保存“本地表现状态”（例如粒子计时器）。
 - 先写“可预测”的 AI（线性/重力/固定加速度），再引入随机或寻敌；否则难以验证与排错。
 {end}
 
-## API 速查（可引用）
+## API 速查
 
 {if P_api_reference}
 - `Projectile.friendly/hostile`：阵营与伤害归属

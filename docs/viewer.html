@@ -838,7 +838,7 @@
                 if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
                     VIEWER_DOC_CONFIG = await window.SiteConfig.load();
                 } else {
-                    const configResponse = await fetch('./config.json');
+                    const configResponse = await fetch('./config.json', { cache: 'no-store' });
                     if (!configResponse.ok) throw new Error('无法加载config.json: ' + configResponse.status);
                     VIEWER_DOC_CONFIG = await configResponse.json();
                 }
@@ -1166,7 +1166,7 @@
                         console.log(`尝试处理文档: ${filename}`);
                         // 获取文档内容和元数据
                         const docUrl = `./${filename}`;
-                        const docResponse = await fetch(docUrl);
+                        const docResponse = await fetch(docUrl, { cache: 'no-store' });
 
                         if (docResponse.ok) {
                             const content = await docResponse.text();
@@ -1944,10 +1944,10 @@
 
 	        function scanRequiredReferenceHeadings(sourceMarkdown) {
 	            const text = String(sourceMarkdown || '');
-	            const required = [
-	                '本章要点（可引用）',
-	                '常见坑（可引用）',
-	                '下一步（可引用）'
+	            const requiredGroups = [
+	                { label: '本章要点', options: ['本章要点', '小结'] },
+	                { label: '常见坑', options: ['常见坑', '常见问题'] },
+	                { label: '下一步', options: ['下一步'] }
 	            ];
 
 	            function escapeRegExp(s) {
@@ -1955,9 +1955,12 @@
 	            }
 
 	            const missing = [];
-	            required.forEach(function (h) {
-	                const re = new RegExp('^##\\s+' + escapeRegExp(h) + '\\s*$', 'm');
-	                if (!re.test(text)) missing.push(h);
+	            requiredGroups.forEach(function (group) {
+	                const ok = (group.options || []).some(function (h) {
+	                    const re = new RegExp('^##\\s+' + escapeRegExp(h) + '\\s*$', 'm');
+	                    return re.test(text);
+	                });
+	                if (!ok) missing.push(group.label);
 	            });
 	            return missing;
 	        }
@@ -2900,7 +2903,7 @@
 
 	            if (!TRANSCLUSION_CACHE.has(key)) {
 	                const fetchUrl = `./${key.replace(/^\.?\//, '').replace(/^docs\//, '')}`;
-	                const p = fetch(encodeURI(fetchUrl)).then(async response => {
+	                const p = fetch(encodeURI(fetchUrl), { cache: 'no-store' }).then(async response => {
 	                    if (!response.ok) {
 	                        throw new Error(`HTTP ${response.status} ${response.statusText}`);
 	                    }
@@ -3346,7 +3349,7 @@
             console.log(`docs/viewer.html: 实际fetch URL: ${fetchUrl}`);
             console.log(`完整请求URL将是: ${window.location.origin}${window.location.pathname.replace(/\/[^\/]*$/, '/')}${fetchUrl}`);
 
-	            fetch(encodeURI(fetchUrl))
+	            fetch(encodeURI(fetchUrl), { cache: 'no-store' })
 	                .then(response => {
                     console.log(`获取响应状态: ${response.status} ${response.statusText}`);
                     if (!response.ok) {

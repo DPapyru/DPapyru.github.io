@@ -28,37 +28,37 @@ min_t: 0
 ## 你可能需要的补课
 
 {if C == 0}
-{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#概览（可引用）][C#：先把“结构”读懂]}
-{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#最小示例（可引用）][C#：最小示例（能看懂模板）]}
+{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#概览][C#：先把“结构”读懂]}
+{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#最小示例][C#：最小示例（能看懂模板）]}
 {else if C == 1}
-{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#进阶与惯用写法（可引用）][C#：更易维护的写法]}
+{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#进阶与惯用写法][C#：更易维护的写法]}
 {else}
-{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#常见坑（可引用）][C#：常见坑（避免浪费时间）]}
+{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#常见坑][C#：常见坑（避免浪费时间）]}
 {end}
 
 {if T == 0}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#概览（可引用）][tML：先理解生命周期]}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#最小示例（可引用）][tML：SetDefaults 最小示例]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#概览][tML：先理解生命周期]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#最小示例][tML：SetDefaults 最小示例]}
 {else if T == 1}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#常见坑（可引用）][tML：常见坑（热重载/默认值）]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#常见坑][tML：常见坑（热重载/默认值）]}
 {else}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-Content资源与路径规则.md#进阶与惯用写法（可引用）][资源：组织与命名规范]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-Content资源与路径规则.md#进阶与惯用写法][资源：组织与命名规范]}
 {end}
 
 ## 按偏好补充（可跳过）
 
 {if P_troubleshoot}
-{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#常见坑（可引用）][排错清单：C# 常见坑]}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#常见坑（可引用）][排错清单：tML 常见坑]}
+{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#常见坑][排错清单：C# 常见坑]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#常见坑][排错清单：tML 常见坑]}
 {end}
 
 {if P_api_reference}
-{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#API 速查（可引用）][速查：C# 关键语法]}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#API 速查（可引用）][速查：ModItem 常用入口]}
+{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#API 速查][速查：C# 关键语法]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModItem生命周期与SetDefaults.md#API 速查][速查：ModItem 常用入口]}
 {end}
 
 {if P_rendering}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-绘制入门-Shader与顶点绘制.md#概览（可引用）][渲染方向：概览]}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-绘制入门-Shader与顶点绘制.md#概览][渲染方向：概览]}
 {end}
 
 ## 第一篇实作（建议）
