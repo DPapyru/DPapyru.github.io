@@ -90,4 +90,5 @@ docs/plans
 .kilocode/
 nul
 scripts/knowledge/tmodloader-api-indexer/obj/
+scripts/knowledge/tmodloader-api-indexer/bin/
 
