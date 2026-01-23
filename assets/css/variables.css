@@ -414,31 +414,66 @@
 }
 
 [data-theme="dark"][data-accent="white"] {
-  --primary-color: #f0f0f0;
-  --primary-hover: #ffffff;
-  --link-color: #f0f0f0;
-  --link-hover: #ffffff;
-  --search-focus: rgba(255, 255, 255, 0.22);
-  --primary-light: rgba(255, 255, 255, 0.12);
+  --primary-color: #111;
+  --primary-hover: #000;
+  --secondary-color: #6c757d;
+  --secondary-hover: #545b62;
 
-  --bg-color: #0f0f10;
-  --bg-secondary: #141416;
-  --bg-tertiary: #1b1b1e;
-  --bg-content: #0f0f10;
+  --bg-color: #fff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --bg-content: #fff;
 
-  --header-bg: #1e1e1e;
-  --sidebar-bg: #1e1e1e;
+  --text-color: #111;
+  --text-secondary: #444;
+  --text-muted: #666;
+  --text-light: #999;
 
-  --border-color: #2a2a2e;
-  --border-light: #303036;
-  --border-dark: #3a3a40;
+  --border-color: #e9ecef;
+  --border-light: #f1f3f4;
+  --border-dark: #dee2e6;
 
-  --code-bg: #2a2a2a;
-  --code-border: #333;
+  --link-color: #0969da;
+  --link-hover: #054da4;
 
-  --search-bg: #2a2a2a;
-  --search-border: #333;
+  --sidebar-bg: #fff;
+  --sidebar-text: #111;
+  --sidebar-link: #495057;
+  --sidebar-hover: #f8f9fa;
+  --sidebar-active: #eef1f4;
 
-  --import-color: rgba(255, 255, 255, 0.07);
-  --table-stripe: #2a2a2a;
+  --header-bg: #fff;
+  --header-shadow: rgba(0, 0, 0, 0.1);
+
+  --code-bg: #f6f8fa;
+  --code-border: #e9ecef;
+  --code-text: #e83e8c;
+
+  --table-stripe: #f8f9fa;
+  --table-hover: #eef1f4;
+
+  --search-bg: #f8f9fa;
+  --search-border: #e9ecef;
+  --search-focus: rgba(9, 105, 218, 0.20);
+
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a8a8a8;
+  --sidebar-scrollbar-track: #f8f9fa;
+
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 10px 20px rgba(0, 0, 0, 0.1);
+
+  --import-color: rgba(0, 0, 0, 0.03);
+
+  --danger-color: #dc3545;
+  --danger-bg: rgba(220, 53, 69, 0.1);
+
+  --highlight-bg: #fff3cd;
+  --highlight-text: #856404;
+
+  --primary-light: rgba(17, 17, 17, 0.08);
 }
