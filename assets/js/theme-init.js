@@ -9,16 +9,28 @@
 
     // Accent preset (still dark-mode only). Set early to avoid FOUC.
     var allowedAccents = {
-      forest: true,
-      ocean: true,
-      grape: true,
-      amber: true,
-      crimson: true,
-      dim: true
+      green: true,
+      blue: true,
+      purple: true,
+      orange: true,
+      red: true,
+      cyan: true,
+      black: true,
+      white: true
+    };
+
+    var legacyMap = {
+      forest: 'green',
+      ocean: 'blue',
+      grape: 'purple',
+      amber: 'orange',
+      crimson: 'red',
+      dim: 'cyan'
     };
 
     var accent = localStorage.getItem('accent');
-    if (!allowedAccents[accent]) accent = 'forest';
+    if (legacyMap[accent]) accent = legacyMap[accent];
+    if (!allowedAccents[accent]) accent = 'green';
     document.documentElement.setAttribute('data-accent', accent);
   } catch (_) {
     // Ignore any storage/privacy errors.

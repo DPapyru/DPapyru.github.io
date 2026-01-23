@@ -2,27 +2,39 @@
 (function () {
     'use strict';
 
-    const ALLOWED_ACCENTS = {
-        forest: true,
-        ocean: true,
-        grape: true,
-        amber: true,
-        crimson: true,
-        dim: true
+    var ALLOWED_ACCENTS = {
+        green: true,
+        blue: true,
+        purple: true,
+        orange: true,
+        red: true,
+        cyan: true,
+        black: true,
+        white: true
+    };
+
+    var LEGACY_MAP = {
+        forest: 'green',
+        ocean: 'blue',
+        grape: 'purple',
+        amber: 'orange',
+        crimson: 'red',
+        dim: 'cyan'
     };
 
     function normalizeAccent(value) {
-        const key = String(value || '').trim();
-        return ALLOWED_ACCENTS[key] ? key : 'forest';
+        var key = String(value || '').trim();
+        if (LEGACY_MAP[key]) key = LEGACY_MAP[key];
+        return ALLOWED_ACCENTS[key] ? key : 'green';
     }
 
     function getCurrentAccent() {
-        const attr = document.documentElement.getAttribute('data-accent');
-        return normalizeAccent(attr || 'forest');
+        var attr = document.documentElement.getAttribute('data-accent');
+        return normalizeAccent(attr || 'green');
     }
 
     function setAccent(value) {
-        const accent = normalizeAccent(value);
+        var accent = normalizeAccent(value);
         document.documentElement.setAttribute('data-accent', accent);
 
         try {
@@ -33,10 +45,10 @@
     }
 
     function init() {
-        const select = document.getElementById('accent-select');
+        var select = document.getElementById('accent-select');
         if (!select) return;
 
-        const current = getCurrentAccent();
+        var current = getCurrentAccent();
         if (select.value !== current) select.value = current;
 
         select.addEventListener('change', function () {

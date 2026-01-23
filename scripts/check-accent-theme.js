@@ -24,6 +24,14 @@ function checkHtmlFile(relativePath, expectedScriptPath) {
         html.includes(`src="${expectedScriptPath}"`),
         `${relativePath}: missing script include ${expectedScriptPath}`
     );
+
+    const expectedValues = ['green', 'blue', 'purple', 'orange', 'red', 'cyan', 'black', 'white'];
+    for (const value of expectedValues) {
+        assert(
+            html.includes(`value="${value}"`),
+            `${relativePath}: missing accent option value="${value}"`
+        );
+    }
 }
 
 function main() {
@@ -47,12 +55,22 @@ function main() {
         /data-accent|dataset\.accent/.test(themeInit),
         'assets/js/theme-init.js: expected early data-accent initialization'
     );
+    assert(
+        themeInit.includes('black') && themeInit.includes('white'),
+        'assets/js/theme-init.js: expected black/white in allowed accents'
+    );
 
     const variablesCss = readText('assets/css/variables.css');
     assert(
         /\[data-theme="dark"\]\[data-accent="/.test(variablesCss),
         'assets/css/variables.css: expected [data-theme="dark"][data-accent="..."] overrides'
     );
+    for (const value of ['green', 'blue', 'purple', 'orange', 'red', 'cyan', 'black', 'white']) {
+        assert(
+            variablesCss.includes(`[data-theme="dark"][data-accent="${value}"]`),
+            `assets/css/variables.css: missing accent block for ${value}`
+        );
+    }
 
     console.log('OK: accent preset wiring detected');
 }
