@@ -103,7 +103,7 @@ class TutorialSearch {
         const searchInput = document.createElement('input');
         searchInput.type = 'text';
         searchInput.className = 'search-input';
-        searchInput.placeholder = '搜索教程...';
+        searchInput.placeholder = '引导学习与内容查找...';
         searchInput.id = 'search-input';
         
         const searchButton = document.createElement('button');
@@ -1179,7 +1179,7 @@ class TutorialSearch {
     hideLoadingState() {
         const searchInput = document.getElementById('search-input');
         if (searchInput) {
-            searchInput.placeholder = '搜索教程...';
+            searchInput.placeholder = '引导学习与内容查找...';
             searchInput.disabled = false;
         }
     }

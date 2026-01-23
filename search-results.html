@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<!-- 搜索结果页面 -->
+<!-- 引导学习与内容查找页面（引用式回答） -->
 <html lang="zh-CN" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>搜索结果 - 泰拉瑞亚Mod制作教程</title>
+    <title>引导学习与内容查找 - 泰拉瑞亚Mod制作教程</title>
 
     <!-- SEO优化标签 -->
-    <meta name="description" content="泰拉瑞亚Mod制作教程搜索结果页面，支持高级搜索、搜索历史和智能建议。">
-    <meta name="keywords" content="泰拉瑞亚,Mod,教程,搜索,tModLoader,C#,游戏开发">
+    <meta name="description" content="引导学习与内容查找：支持自然语言提问，基于站内文章提供引用式答案与相关文章推荐。">
+    <meta name="keywords" content="泰拉瑞亚,Mod,教程,引导学习,内容查找,tModLoader,C#,游戏开发">
     <meta name="robots" content="noindex, follow">
 
     <!-- 规范URL（避免搜索结果页被误收录） -->
@@ -246,6 +246,188 @@
 	            align-items: center;
 	        }
 
+        /* 引用式解答（引导） */
+        .guided-answer {
+            background-color: var(--bg-content);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .guided-answer-title {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .guided-answer-title::before {
+            content: "🧭";
+            font-size: 1.1rem;
+        }
+
+        .guided-answer-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .guided-answer-item {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 14px;
+        }
+
+        .guided-answer-meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .guided-answer-source a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .guided-answer-source a:hover {
+            text-decoration: underline;
+        }
+
+        .guided-answer-snippet {
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .guided-dialog {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 14px;
+            margin-bottom: 14px;
+        }
+
+        .guided-dialog-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .guided-dialog-title {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .guided-dialog-mode {
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+
+        .guided-dialog-body {
+            color: var(--text-color);
+            line-height: 1.7;
+        }
+
+        .guided-dialog-body a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .guided-dialog-body a:hover {
+            text-decoration: underline;
+        }
+
+        /* 可展开卡片（通用） */
+        .expand-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 14px;
+        }
+
+        .expand-card + .expand-card {
+            margin-top: 12px;
+        }
+
+        .expand-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .expand-card-title {
+            font-weight: 600;
+            color: var(--text-color);
+            line-height: 1.3;
+        }
+
+        .expand-card-title a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .expand-card-title a:hover {
+            text-decoration: underline;
+        }
+
+        .expand-card-meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+
+        .expand-card-body {
+            color: var(--text-color);
+            line-height: 1.7;
+            word-break: break-word;
+        }
+
+        /* 默认收起：限制高度，减少密集感 */
+        .expand-card[data-expanded="false"] .expand-card-body {
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .expand-toggle {
+            flex: 0 0 auto;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .expand-toggle:hover {
+            border-color: var(--primary-color);
+            background-color: var(--bg-content);
+        }
+
+        .guided-answer-list {
+            display: grid;
+            gap: 14px;
+        }
+
 	        .search-results-count {
 	            font-size: 1.1rem;
 	            color: var(--text-color);
@@ -464,7 +646,7 @@
                         <li class="nav-item"><a href="index.html" class="nav-link">首页</a></li>
                         <li class="nav-item"><a href="docs/index.html" class="nav-link">文档</a></li>
                         <li class="nav-item"><a href="qa.html" class="nav-link">问答</a></li>
-                        <li class="nav-item"><a href="search-results.html" class="nav-link active" aria-current="page">搜索</a></li>
+                        <li class="nav-item"><a href="search-results.html" class="nav-link active" aria-current="page">引导查找</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
                                 target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li class="nav-item nav-accent">
@@ -497,18 +679,18 @@
         <div class="container">
             <!-- 搜索页面头部 -->
             <div class="search-page-header">
-                <h1 class="search-page-title">搜索教程</h1>
-                <p class="search-page-description">使用高级搜索功能快速找到您需要的教程内容</p>
+                <h1 class="search-page-title">引导学习与内容查找</h1>
+                <p class="search-page-description">用自然语言提问，系统会基于站内文章给出引用式线索与相关推荐</p>
             </div>
 
             <!-- 高级搜索表单 -->
             <div class="advanced-search-form">
-                <h2 class="search-form-title">高级搜索</h2>
+                <h2 class="search-form-title">查找与筛选</h2>
 
                 <!-- 搜索输入框 -->
                 <div class="search-input-group">
                     <input type="text" class="search-input-large" id="advanced-search-input"
-                        placeholder="输入搜索关键词，支持高级语法..." aria-label="搜索教程" autocomplete="off">
+                        placeholder="用自然语言提问，或输入关键词（支持高级语法）..." aria-label="引导学习与内容查找" autocomplete="off">
                     <button class="search-button-large" id="advanced-search-button" type="button" aria-label="搜索">
                         <i class="icon-search"></i>
                     </button>
@@ -545,7 +727,7 @@
 
                 <!-- 搜索帮助 -->
                 <div class="search-help">
-                    <h3 class="search-help-title">搜索语法帮助</h3>
+                    <h3 class="search-help-title">语法帮助</h3>
                     <ul class="search-help-list">
                         <li><strong>基本搜索：</strong>直接输入关键词，如 "物品创建"</li>
                         <li><strong>AND逻辑：</strong>使用 "+" 连接关键词，如 "物品 + 创建"</li>
@@ -581,6 +763,23 @@
                         <option value="difficulty">难度</option>
                     </select>
                 </div>
+            </div>
+
+            <!-- 引用式解答（段落级线索） -->
+            <div class="guided-answer" id="guided-answer" style="display: none;">
+                <h3 class="guided-answer-title">引用式线索（来自站内文章）</h3>
+                <div class="guided-dialog" id="guided-dialog" style="display: none;">
+                    <div class="guided-dialog-header">
+                        <span class="guided-dialog-title">对话模板</span>
+                        <select class="guided-dialog-mode" id="guided-dialog-mode" aria-label="选择对话模板">
+                            <option value="concise">简洁</option>
+                            <option value="clarify">澄清提问</option>
+                            <option value="path">阅读顺序</option>
+                        </select>
+                    </div>
+                    <div class="guided-dialog-body" id="guided-dialog-body"></div>
+                </div>
+                <div class="guided-answer-list" id="guided-answer-list"></div>
             </div>
 
             <!-- 搜索结果列表 -->
@@ -649,6 +848,7 @@
 	    <script src="assets/js/accent-theme.js"></script>
 	    <script src="assets/js/main.js"></script>
 	    <script src="assets/js/navigation.js"></script>
+        <script src="assets/js/bm25-lookup.js"></script>
 
     <!-- 搜索结果页面专用脚本 -->
     <script>
@@ -659,6 +859,7 @@
                 this.currentQuery = this.getQueryFromURL();
                 this.searchIndex = [];
                 this.searchResults = [];
+                this.guidedEngine = null;
                 this.init();
             }
 
@@ -666,6 +867,7 @@
             async init() {
                 this.bindEvents();
                 await this.loadSearchIndex();
+                await this.loadGuidedEngine();
                 await this.populateFiltersFromConfig();
                 this.displaySearchHistory();
 
@@ -732,6 +934,30 @@
                     if (!e.target.closest('.search-input-group')) {
                         this.hideSearchSuggestions();
                     }
+                });
+
+                this.bindExpandCards();
+            }
+
+            bindExpandCards() {
+                if (document.body.__expandCardsBound) return;
+                document.body.__expandCardsBound = true;
+
+                document.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.expand-toggle');
+                    if (!btn) return;
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const card = btn.closest('.expand-card');
+                    if (!card) return;
+
+                    const expanded = card.getAttribute('data-expanded') === 'true';
+                    const next = expanded ? 'false' : 'true';
+                    card.setAttribute('data-expanded', next);
+                    btn.setAttribute('aria-expanded', next);
+                    btn.textContent = expanded ? '展开' : '收起';
                 });
             }
 
@@ -846,6 +1072,17 @@
                 } catch (error) {
                     console.warn('search-index.json 加载失败，回退到逐文件索引:', error);
                     return false;
+                }
+            }
+
+            async loadGuidedEngine() {
+                try {
+                    if (!window.Bm25LookupEngine) return;
+                    this.guidedEngine = await window.Bm25LookupEngine.load('assets/semantic/bm25-index.v1.json');
+                    console.log('bm25-index 已加载：', this.guidedEngine.chunkCount, 'chunks');
+                } catch (error) {
+                    console.warn('bm25-index 加载失败，将仅显示普通搜索结果:', error);
+                    this.guidedEngine = null;
                 }
             }
 
@@ -1155,6 +1392,9 @@
                 // 执行高级搜索
                 this.searchResults = this.advancedSearch(this.currentQuery);
 
+                // 引导式引用线索（段落级）
+                this.updateGuidedAnswer();
+
                 // 显示搜索结果
                 this.displaySearchResults();
             }
@@ -1371,6 +1611,188 @@
                 return /[\u4e00-\u9fa5]/.test(text);
             }
 
+            updateGuidedAnswer() {
+                const container = document.getElementById('guided-answer');
+                const list = document.getElementById('guided-answer-list');
+                const dialog = document.getElementById('guided-dialog');
+                const dialogMode = document.getElementById('guided-dialog-mode');
+                const dialogBody = document.getElementById('guided-dialog-body');
+                if (!container || !list) return;
+
+                if (!this.guidedEngine || !this.currentQuery) {
+                    container.style.display = 'none';
+                    list.innerHTML = '';
+                    if (dialog) dialog.style.display = 'none';
+                    if (dialogBody) dialogBody.innerHTML = '';
+                    return;
+                }
+
+                const category = (document.getElementById('search-category') || {}).value || '';
+                const difficulty = (document.getElementById('search-difficulty') || {}).value || '';
+
+                let guided = [];
+                try {
+                    guided = this.guidedEngine.search(this.currentQuery, {
+                        limit: 8,
+                        candidateLimit: 500,
+                        category,
+                        difficulty,
+                        semanticWeight: 0.75
+                    });
+                } catch (error) {
+                    console.warn('guided search 失败:', error);
+                    guided = [];
+                }
+
+                if (!guided.length) {
+                    container.style.display = 'none';
+                    list.innerHTML = '';
+                    if (dialog) dialog.style.display = 'none';
+                    if (dialogBody) dialogBody.innerHTML = '';
+                    return;
+                }
+
+                const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
+                    ? window.SiteUtils.escapeHtml
+                    : (v) => String(v).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+
+                const viewerBase = this.getViewerBase();
+
+                // 对话模板（严格基于引用内容，不生成无出处结论）
+                const uniqueDocs = [];
+                const seenDocPath = new Set();
+                for (const item of guided) {
+                    if (!item || !item.path) continue;
+                    if (seenDocPath.has(item.path)) continue;
+                    seenDocPath.add(item.path);
+                    uniqueDocs.push(item);
+                    if (uniqueDocs.length >= 5) break;
+                }
+
+                const renderDialog = (mode) => {
+                    if (!dialog || !dialogBody) return;
+                    const m = mode || 'concise';
+
+                    const docLinks = uniqueDocs.map((d, idx) => {
+                        const u = `${viewerBase}?file=${encodeURIComponent(d.path)}`;
+                        const t = esc(d.title || d.path || `文档 ${idx + 1}`);
+                        return `<a href="${u}">《${t}》</a>`;
+                    });
+
+                    const quoteCards = guided.slice(0, 4).map(item => {
+                        const u = `${viewerBase}?file=${encodeURIComponent(item.path)}`;
+                        const t = esc(item.title || item.path || '来源文章');
+                        const q = this.highlightText(esc(item.text || ''), this.currentQuery);
+                        return `
+                            <div class="expand-card" data-expanded="false">
+                                <div class="expand-card-header">
+                                    <div class="expand-card-title">来自 <a href="${u}">《${t}》</a></div>
+                                    <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
+                                </div>
+                                <div class="expand-card-body">${q}</div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // 推荐文章卡片（每篇取一个最相关段落作为可展开内容）
+                    const firstQuoteByDoc = new Map();
+                    for (const item of guided) {
+                        if (!item || !item.path) continue;
+                        if (firstQuoteByDoc.has(item.path)) continue;
+                        firstQuoteByDoc.set(item.path, item);
+                    }
+
+                    const docCards = uniqueDocs.map((d) => {
+                        const u = `${viewerBase}?file=${encodeURIComponent(d.path)}`;
+                        const t = esc(d.title || d.path || '来源文章');
+                        const q = firstQuoteByDoc.get(d.path);
+                        const metaParts = [];
+                        if (d.category) metaParts.push(esc(this.getCategoryText(d.category)));
+                        if (d.difficulty) metaParts.push(esc(this.getDifficultyText(d.difficulty)));
+                        if (d.last_updated) metaParts.push('更新: ' + esc(d.last_updated));
+                        return `
+                            <div class="expand-card" data-expanded="false">
+                                <div class="expand-card-header">
+                                    <div class="expand-card-title"><a href="${u}">《${t}》</a></div>
+                                    <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
+                                </div>
+                                ${metaParts.length ? `<div class="expand-card-meta">${metaParts.join(' · ')}</div>` : ''}
+                                <div class="expand-card-body">${q ? this.highlightText(esc(q.text || ''), this.currentQuery) : ''}</div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    if (m === 'path') {
+                        dialogBody.innerHTML = `
+                            <div style="margin-bottom: 10px;">你可以先从这些文章开始阅读（按相关度推荐）：${docLinks.slice(0, 3).join(' → ') || '（暂无）'}。</div>
+                            <div class="expand-card-meta" style="margin-bottom: 10px;">点击标题看全文；点击“展开”查看该文最相关的引用段落。</div>
+                            ${docCards}
+                        `;
+                        dialog.style.display = 'block';
+                        return;
+                    }
+
+                    if (m === 'clarify') {
+                        const intent = (guided[0] && guided[0].__intent) ? guided[0].__intent : 'unknown';
+                        const suggest = (intent === 'intro')
+                            ? '你更想看「入门路线」还是「需要先补的基础（C# / tML）」？'
+                            : '你更偏向「具体实现步骤」还是「先看一篇概览/最小示例」？';
+                        dialogBody.innerHTML = `
+                            <div>为了更准确地给你定位“可直接照做的教程段落”，我需要确认一个点：${suggest}</div>
+                            <div class="expand-card-meta" style="margin-top: 8px; margin-bottom: 10px;">我先把站内最相关的引用线索贴出来（点击标题可跳转全文）：</div>
+                            ${quoteCards}
+                        `;
+                        dialog.style.display = 'block';
+                        return;
+                    }
+
+                    dialogBody.innerHTML = `
+                        <div>我在站内文章中找到了这些可能相关的原文线索（点击标题查看上下文）：</div>
+                        <div style="margin-top: 10px;">${quoteCards}</div>
+                    `;
+                    dialog.style.display = 'block';
+                };
+
+                if (dialogMode && !dialogMode.__guidedBound) {
+                    dialogMode.__guidedBound = true;
+                    dialogMode.addEventListener('change', () => {
+                        dialogMode.__userTouched = true;
+                        renderDialog(dialogMode.value);
+                    });
+                }
+
+                // 根据 intent 自动选择模板（用户手动切换后不再覆盖）
+                if (dialogMode && !dialogMode.__userTouched && this.guidedEngine && typeof this.guidedEngine.classifyQuery === 'function') {
+                    const routing = this.guidedEngine.classifyQuery(this.currentQuery);
+                    const prefer = routing && routing.preferredTemplate ? routing.preferredTemplate : 'concise';
+                    if (dialogMode.value !== prefer) dialogMode.value = prefer;
+                }
+
+                renderDialog(dialogMode ? dialogMode.value : 'concise');
+
+                list.innerHTML = guided.map(item => {
+                    const url = `${viewerBase}?file=${encodeURIComponent(item.path)}`;
+                    const safeText = this.highlightText(esc(item.text || ''), this.currentQuery);
+                    const safeTitle = esc(item.title || item.path || '来源文章');
+                    const metaParts = [];
+                    if (item.category) metaParts.push(esc(this.getCategoryText(item.category)));
+                    if (item.difficulty) metaParts.push(esc(this.getDifficultyText(item.difficulty)));
+                    if (item.last_updated) metaParts.push('更新: ' + esc(item.last_updated));
+                    return `
+                        <div class="guided-answer-item expand-card" data-expanded="false">
+                            <div class="guided-answer-meta expand-card-header">
+                                <span class="guided-answer-source expand-card-title"><a href="${url}">${safeTitle}</a></span>
+                                <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
+                            </div>
+                            ${metaParts.length ? `<div class="expand-card-meta">${metaParts.join(' · ')}</div>` : ''}
+                            <div class="guided-answer-snippet expand-card-body">${safeText}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                container.style.display = 'block';
+            }
+
             // 显示搜索结果
             displaySearchResults() {
                 const resultsContainer = document.getElementById('search-results-container');
@@ -1412,10 +1834,15 @@
                 const highlightedDescription = this.highlightText(result.description || '', this.currentQuery);
 
                 return `
-                    <div class="search-result-item-page">
-                        <h3 class="search-result-title-page">${highlightedTitle}</h3>
-                        <p class="search-result-description-page">${highlightedDescription}</p>
-                        ${result.snippet ? `<p class="search-result-snippet">${result.snippet}</p>` : ''}
+                    <div class="search-result-item-page expand-card" data-expanded="false">
+                        <div class="expand-card-header" style="margin-bottom: 8px;">
+                            <h3 class="search-result-title-page expand-card-title" style="margin: 0;">${highlightedTitle}</h3>
+                            <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
+                        </div>
+                        <div class="expand-card-body">
+                            <p class="search-result-description-page" style="margin: 0 0 10px 0;">${highlightedDescription}</p>
+                            ${result.snippet ? `<p class="search-result-snippet" style="margin: 0;">${result.snippet}</p>` : ''}
+                        </div>
                         <div class="search-result-meta-page">
                             <span class="search-result-badge search-result-score">相关性: ${Math.round(result.score || 0)}</span>
                             <span class="search-result-badge">${this.getCategoryText(result.category || '')}</span>
@@ -1468,6 +1895,8 @@
             filterSearchResults() {
                 const category = document.getElementById('search-category').value;
                 const difficulty = document.getElementById('search-difficulty').value;
+
+                this.updateGuidedAnswer();
 
                 let filteredResults = [...this.searchResults];
 
