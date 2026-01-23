@@ -116,6 +116,7 @@ function main() {
     }
 
     runTsc(projectRoot);
+
     writeManifest(projectRoot, sources);
     syncEmbeddedDemo(projectRoot);
 }

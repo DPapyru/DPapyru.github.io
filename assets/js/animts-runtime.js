@@ -696,7 +696,7 @@
 
     function startUpdateRenderModule(ctx, state, module, label) {
         const updateAI = module && module.updateAI;
-        const render = module && module.render;
+        const render = module && (module.render || module.renderFn);
         if (typeof updateAI !== 'function' || typeof render !== 'function') return false;
 
         if (!ctx.ui || typeof ctx.ui.createAiAnalysisScene !== 'function' || typeof ctx.ui.runLoop !== 'function') {
@@ -829,7 +829,7 @@
             return true;
         }
 
-        if (module && typeof module.updateAI === 'function' && typeof module.render === 'function') {
+        if (module && typeof module.updateAI === 'function' && (typeof module.render === 'function' || typeof module.renderFn === 'function')) {
             try {
                 const ok = startUpdateRenderModule(ctx, state, module, label);
                 if (!ok) setError(embed, 'updateAI/render 模式启动失败');

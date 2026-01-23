@@ -65,3 +65,7 @@ min_t: 0
   - `docs/Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-ModItem-Shoot与第一个弹幕.md`
 - tML：ModProjectile 基础字段与 AI
   - `docs/Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md`
+- tML：Player 类与饰品/装备效果实现
+  - `docs/Modder入门/文章使用内容索引/tModLoaderAPI/DPapyru-Player类与饰品效果实现.md`
+- 数学：弹幕 AI 常用数学与运动模式
+  - `docs/Modder入门/文章使用内容索引/数学/DPapyru-弹幕AI数学与运动模式.md`

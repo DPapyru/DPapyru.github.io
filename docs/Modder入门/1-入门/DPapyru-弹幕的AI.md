@@ -2,22 +2,23 @@
 title: 弹幕的 AI：让它按你的规则运动
 author: 小天使
 date: 2026-01-21
-last_updated: 2026-01-21
+last_updated: 2026-01-23
 difficulty: beginner
-time: 28分钟
-description: 在 ModProjectile.AI() 中实现最小且可验证的行为逻辑：旋转、重力、加速与简单状态机
+time: 35分钟
+description: 在 ModProjectile.AI() 中实现最小且可验证的行为逻辑，并学习重力、追踪、回旋镖、曲线运动等常见运动模式
 topic: items
 order: 40
 prev_chapter: DPapyru-武器的Shoot函数与第一个弹幕.md
+next_chapter: DPapyru-第一个饰品.md
 min_c: 0
 min_t: 0
 ---
 
 # 弹幕的 AI：让它按你的规则运动
 
-本节目标：给 `FirstBolt` 写一个最小的 `AI()`，让它出现明确可见的行为变化。
+本节目标：给你的 `FirstBolt` 写一个**最小可验证**的 `AI()`，确认逻辑确实在跑；然后再用同一套思路写出几种常见运动模式。
 
-`AI()` 可以理解成弹幕的心跳回调，每一帧都会被调用一次。验证阶段先做少量、稳定、肉眼可见的变化。
+`AI()` 可以理解成弹幕的“每帧更新回调”。新手最容易踩的坑不是“不会写”，而是“写了但没生效”。所以我们先把验证做扎实。
 
 ## 先决条件
 
@@ -25,49 +26,36 @@ min_t: 0
 
 ## 扩展阅读
 
-{if T == 0}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md#最小示例][tML：弹幕最小模板]}
+{if C == 0}
+{[文章使用内容索引/CSharp/DPapyru-CSharp从零到能看懂Mod代码.md#最小示例][C#：最小示例]}
 {end}
 
-## 目标：可验证的行为清单
+{if T == 0}
+{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md#最小示例][tML：弹幕最小模板]}
+{[文章使用内容索引/数学/DPapyru-弹幕AI数学与运动模式.md#概览][数学：向量与追踪基础]}
+{end}
 
-为了让排错成本最低，本章的 AI 只做三件事：
+## 第一步：写一个“肉眼可见”的最小 AI
 
-1. 让弹幕朝飞行方向旋转，便于肉眼确认方向。
-2. 增加轻微重力，便于确认每帧更新确实生效。
-3. 用一个计时器把“前 20 tick”与“之后”区分开，引入最小状态机。
-
-## 实例：实现最小 AI
-
-在 `Projectiles/FirstBolt.cs` 添加 `AI()`：
+在 `Projectiles/FirstBolt.cs` 里添加 `AI()`：
 
 ```csharp
 using Microsoft.Xna.Framework;
 
 public override void AI()
 {
+    // 速度不为 0 才旋转，避免 NaN
     if (Projectile.velocity.LengthSquared() > 0.001f)
         Projectile.rotation = Projectile.velocity.ToRotation();
 
+    // 简单重力：让轨迹下坠（肉眼可见，便于验证）
     Projectile.velocity.Y += 0.15f;
 }
 ```
 
-{if P_theory}
-`AI()` 会被频繁调用。这里用两个稳定且易观察的变化来确认：你写的逻辑确实在生效，并且不会被其它系统覆盖。
-{end}
+## 第二步：加入计时器（分段逻辑）
 
-{if P_troubleshoot}
-如果你看不到变化：
-
-- 确认 `AI()` 方法写在你的 `ModProjectile` 类里。
-- 确认弹幕不是 1 tick 就消失，检查 `timeLeft`、命中次数、是否立刻碰到地面或墙。
-- 确认你发射的是自定义弹幕，而不是原版弹幕。
-{end}
-
-## 实例：加入计时器与分段逻辑
-
-在 `AI()` 里加入计时器逻辑：
+计时器最常用的存放位置就是 `Projectile.ai[0]`：
 
 ```csharp
 public override void AI()
@@ -77,54 +65,178 @@ public override void AI()
     if (Projectile.velocity.LengthSquared() > 0.001f)
         Projectile.rotation = Projectile.velocity.ToRotation();
 
-    if (Projectile.ai[0] <= 20f)
+    // 前 20 tick：轻微加速
+    if (Projectile.ai[0] < 20f)
         Projectile.velocity *= 1.02f;
     else
         Projectile.velocity.Y += 0.15f;
 }
 ```
 
-行为解释：
-
-- 前 20 tick：轻微加速，让变化更容易观察。
-- 之后：受重力影响，让轨迹出现明确的弧线。
-
-把 `Projectile.ai[0]` 当作绑在弹幕身上的秒表。先用它计时与分段，后续再考虑更复杂的状态。
-
-{if P_best_practice}
-建议约定 `ai[0]` 的意义并保持单一职责，这里只用作计时器。当弹幕行为变复杂时，清晰的约定比花哨的写法更能减少维护成本。
-{end}
-
-{if P_performance}
-避免在 `AI()` 里做高频分配与重运算，例如每帧创建大量对象、生成过多 Dust 粒子。先保证行为正确，再逐步加表现层。
-{end}
-
-## 实例：在游戏里验证
-
 验证时只看三件事：
 
 1. 弹幕会旋转，方向跟随速度。
 2. 轨迹会下坠，说明重力逻辑生效。
-3. 前 20 tick 的变化与之后不同，说明计时器与分段生效。
+3. 前 20 tick 和之后的行为不同，说明计时器与分段生效。
+
+{if P_troubleshoot}
+如果你看不到变化：
+
+- 确认你写的是 `ModProjectile` 的 `AI()`，不是写到了别的类里。
+- 确认你发射的是你的自定义弹幕（不是原版弹幕）。
+- 如果你设置过 `aiStyle`/`AIType`，先确保它不会覆盖你的速度逻辑（初学建议保持自定义 AI）。
+{end}
+
+---
+
+# 常见运动模式（思路 + 最小可用代码）
+
+下面四个模式都遵循同一条规则：先写“能验证的最小行为”，再叠加表现层（Dust/光照/拖尾）。
+
+## 冲刺（Dash）
+
+```animts
+anims/projectile-patterns/2-dash.ts
+```
+
+冲刺常用结构：**蓄力（减速）→ 冲刺（瞬间设定高速度）→ 收尾（减速/结束）**。  
+做这种“分阶段”行为时，`ai[0]` 计时器 + `if/else` 分段基本够用。
+
+## 追踪 NPC（Seek）
+
+```animts
+anims/projectile-patterns/3-seek.ts
+```
+
+追踪的关键点不是“每帧直接指向目标”，而是“**平滑转向**”，这样轨迹更自然。
+
+最小实现：每隔一段时间选一次目标（降低开销），然后用 `Lerp` 慢慢把速度拉向目标方向。
+
+```csharp
+using Microsoft.Xna.Framework;
+using Terraria;
+
+public override void AI()
+{
+    Projectile.ai[0] += 1f;
+
+    // 每 10 tick 更新一次目标
+    if (Projectile.ai[0] % 10f == 0f)
+        Projectile.ai[1] = FindTargetIndex(600f) + 1; // 0 表示无目标
+
+    int targetIndex = (int)Projectile.ai[1] - 1;
+    if (targetIndex >= 0)
+    {
+        NPC target = Main.npc[targetIndex];
+        if (target.active && !target.friendly && !target.dontTakeDamage)
+        {
+            Vector2 desired = Projectile.DirectionTo(target.Center) * 12f;
+            Projectile.velocity = Vector2.Lerp(Projectile.velocity, desired, 0.08f);
+        }
+    }
+
+    if (Projectile.velocity.LengthSquared() > 0.001f)
+        Projectile.rotation = Projectile.velocity.ToRotation();
+}
+
+private int FindTargetIndex(float maxDistance)
+{
+    int result = -1;
+    float best = maxDistance * maxDistance;
+
+    for (int i = 0; i < Main.maxNPCs; i++)
+    {
+        NPC npc = Main.npc[i];
+        if (!npc.active || npc.friendly || npc.dontTakeDamage) continue;
+
+        float d2 = Vector2.DistanceSquared(Projectile.Center, npc.Center);
+        if (d2 < best)
+        {
+            best = d2;
+            result = i;
+        }
+    }
+
+    return result;
+}
+```
+
+{if P_best_practice}
+`ai[]` 的意义建议写成“约定”：比如这个例子里 `ai[0]` 只当计时器、`ai[1]` 只当目标索引（+1），后面扩展状态机时就不容易把自己绕晕。
+{end}
+
+## 回旋镖（Boomerang）
+
+```animts
+anims/projectile-patterns/4-boomerang.ts
+```
+
+回旋镖通常是一个两状态状态机：**飞出** 与 **折返**。最小实现思路：
+
+- 飞出阶段：保持初速度，直到“飞够远”或“飞够久”。
+- 折返阶段：把速度平滑拉向玩家方向；接近玩家时 `Kill()`。
+
+```csharp
+using Microsoft.Xna.Framework;
+using Terraria;
+
+public override void AI()
+{
+    const float maxDistance = 360f;
+    const float returnSpeed = 16f;
+    const float steer = 0.18f;
+
+    Player owner = Main.player[Projectile.owner];
+
+    // ai[0]: 0=飞出, 1=折返
+    if (Projectile.ai[0] == 0f)
+    {
+        Projectile.ai[1] += 1f; // 飞行计时
+        if (Projectile.ai[1] > 35f || Vector2.Distance(Projectile.Center, owner.Center) > maxDistance)
+            Projectile.ai[0] = 1f;
+    }
+    else
+    {
+        Vector2 desired = Projectile.DirectionTo(owner.Center) * returnSpeed;
+        Projectile.velocity = Vector2.Lerp(Projectile.velocity, desired, steer);
+
+        if (Vector2.Distance(Projectile.Center, owner.Center) < 30f)
+            Projectile.Kill();
+    }
+
+    if (Projectile.velocity.LengthSquared() > 0.001f)
+        Projectile.rotation = Projectile.velocity.ToRotation();
+}
+```
+
+## 曲线运动（Curve）
+
+```animts
+anims/projectile-patterns/5-curve.ts
+```
+
+曲线运动的核心就是：**每帧旋转速度向量**（加“角速度”）。
+
+```csharp
+using Microsoft.Xna.Framework;
+
+public override void AI()
+{
+    float turnRate = 0.06f;
+    float speed = 10f;
+
+    Projectile.velocity = Projectile.velocity.RotatedBy(turnRate);
+    Projectile.velocity = Projectile.velocity.SafeNormalize(Vector2.UnitX) * speed;
+
+    if (Projectile.velocity.LengthSquared() > 0.001f)
+        Projectile.rotation = Projectile.velocity.ToRotation();
+}
+```
+
+---
 
 ## 小结
 
-- `AI()` 是每帧更新入口：先写“可预测、可验证”的行为，再叠加复杂逻辑。
-- 用 `Projectile.ai[]` 保存状态很常见；先从“计时器”这种最小状态机开始。
-- 让变化肉眼可见有助于快速验证与排错，旋转、重力、加速都是好工具。
-
-## 下一步
-
-你已经具备了“从物品到弹幕再到 AI”这一条完整链路。接下来建议按偏好选择扩展方向：
-
-{if P_best_practice}
-- 把数值提取成常量或配置项，让调参更可控。
-{end}
-
-{if P_visual}
-- 增加简单表现层，例如粒子、光照、拖尾，但保持“表现层不影响行为层”的结构。
-{end}
-
-{if P_api_reference}
-{[文章使用内容索引/tModLoaderAPI/DPapyru-ModProjectile-基础字段与AI.md#API 速查][弹幕：字段速查]}
-{end}
+- 先写“可预测、可验证”的最小 AI（旋转/重力/计时器），再堆复杂逻辑。
+- `Projectile.ai[]` 用来存计时器/状态很常见；先把“每个槽位的意义”约定清楚。
+- 追踪与回旋镖这类行为，本质都是“目标速度”+“平滑靠近”（`Lerp`）。

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-01-22T08:08:49.798Z",
+  "generatedAt": "2026-01-23T00:38:59.494Z",
   "sources": [
     "anims/_lib/calc.ts",
     "anims/_lib/math2d.ts",
@@ -14,6 +14,12 @@
     "anims/demo-math-calculus.ts",
     "anims/demo-math-matrix.ts",
     "anims/demo-math-vectors.ts",
-    "anims/demo-npc.ts"
+    "anims/demo-npc.ts",
+    "anims/demo-projectile-ai.ts",
+    "anims/projectile-patterns/1-basic.ts",
+    "anims/projectile-patterns/2-dash.ts",
+    "anims/projectile-patterns/3-seek.ts",
+    "anims/projectile-patterns/4-boomerang.ts",
+    "anims/projectile-patterns/5-curve.ts"
   ]
 }
