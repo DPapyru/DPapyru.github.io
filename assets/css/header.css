@@ -63,6 +63,31 @@
     border-bottom-color: var(--primary-color);
 }
 
+.nav-accent {
+    display: flex;
+    align-items: center;
+}
+
+.nav-accent-select {
+    background-color: var(--bg-secondary);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.nav-accent-select:hover {
+    border-color: var(--border-dark);
+}
+
+.nav-accent-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--search-focus);
+}
+
 .mobile-menu-toggle {
     display: none;
     flex-direction: column;
@@ -111,6 +136,14 @@
     .nav-link {
         display: block;
         padding: 12px 0;
+    }
+
+    .nav-accent {
+        padding: 12px 0;
+    }
+
+    .nav-accent-select {
+        width: 100%;
     }
 
     .mobile-menu-toggle {
