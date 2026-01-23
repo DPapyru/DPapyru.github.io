@@ -54,6 +54,17 @@
                         <li class="nav-item"><a href="qa.html" class="nav-link active" aria-current="page">问答</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
                                 target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li class="nav-item nav-accent">
+                            <label class="visually-hidden" for="accent-select">配色</label>
+                            <select class="nav-accent-select" id="accent-select" aria-label="配色">
+                                <option value="forest">森林绿</option>
+                                <option value="ocean">海洋蓝</option>
+                                <option value="grape">葡萄紫</option>
+                                <option value="amber">琥珀橙</option>
+                                <option value="crimson">绯红</option>
+                                <option value="dim">柔和青</option>
+                            </select>
+                        </li>
                     </ul>
                 </nav>
                 <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
@@ -216,6 +227,7 @@
         </div>
     </footer>
 
+    <script src="assets/js/accent-theme.js"></script>
     <script src="assets/js/navigation.js"></script>
     <script src="assets/js/qna.js"></script>
 </body>

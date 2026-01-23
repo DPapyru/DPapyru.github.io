@@ -1,24 +1,71 @@
 {
-	"yaml元数据补全": {
+	"yaml元数据（推荐模板）": {
 		"scope": "markdown",
 		"prefix": "yaml",
 		"body": [
 			"---",
 			"title: ${1:文章标题}",
 			"author: ${2:作者}",
+			"topic: ${3|mod-basics,env,items,npcs,world-gen,ui,networking,advanced,article-contribution|}",
+			"order: ${4:100}",
+			"difficulty: ${5|beginner,intermediate,advanced|}",
+			"time: ${6|5分钟,8分钟,10分钟,12分钟,15分钟,20分钟,25分钟,30分钟|}",
+			"description: ${7:一句话概括文章内容}",
 			"date: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
 			"last_updated: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
-			"difficulty: ${4|beginner,intermediate,advanced,expert|}",
-			"time: ${5:预计阅读时间}",
-			"description: ${6:简短描述}",
-			"prev_chapter: ${7:上一章}",
-			"next_chapter: ${8:下一章}",
-			"topic: ${9:主题}",
 			"---",
 			"",
 			"$0"
 		],
-		"description": "md yaml元数据补全"
+		"description": "md YAML front matter 推荐模板（分类由目录决定，不在这里写 category）"
+	},
+	"yaml元数据（完整模板）": {
+		"scope": "markdown",
+		"prefix": "yamlFull",
+		"body": [
+			"---",
+			"title: ${1:文章标题（必填）}",
+			"author: ${2:作者}",
+			"topic: ${3|mod-basics,env,items,npcs,world-gen,ui,networking,advanced,article-contribution|}",
+			"order: ${4:100}",
+			"difficulty: ${5|beginner,intermediate,advanced|}",
+			"time: ${6|5分钟,8分钟,10分钟,12分钟,15分钟,20分钟,25分钟,30分钟|}",
+			"description: ${7:一句话概括文章内容}",
+			"date: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
+			"last_updated: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
+			"",
+			"# 章节跳转（同目录下真实存在的文件名；没有就不写，或留空）",
+			"prev_chapter:",
+			"next_chapter:",
+			"",
+			"# 建议阅读门槛（软建议，不影响阅读；用于列表页/阅读页提示）",
+			"min_c: ${8:0}",
+			"min_t: ${9:0}",
+			"",
+			"# 标签（可选）",
+			"tags:",
+			"  - ${10:tag-1}",
+			"",
+			"# 隐藏文章（草稿/内部页）",
+			"hide: ${11|false,true|}",
+			"",
+			"# 单色高亮（可选，变量名建议英文/ASCII）",
+			"colors:",
+			"  Tip: \"${12:#88c0d0}\"",
+			"  Mad: \"${13:#f00}\"",
+			"",
+			"# 颜色动画（可选，不建议滥用）",
+			"colorChange:",
+			"  Rainbow:",
+			"    - \"${14:#f00}\"",
+			"    - \"${15:#0f0}\"",
+			"    - \"${16:#00f}\"",
+			"    - \"${17:#f00}\"",
+			"---",
+			"",
+			"$0"
+		],
+		"description": "md YAML front matter 完整模板（含 prev/next、min_c/min_t、tags、colors、colorChange 等）"
 	},
 	"md颜色添加(需要在元数据定义colors变量)": {
 		"scope": "markdown",
@@ -31,5 +78,120 @@
 		"prefix": "colorChange",
 		"body": "{colorChange:${1:颜色变量}}{${2:内容}}",
 		"description": "md颜色添加(本项目独有)"
+	},
+	"引用展开（整篇）": {
+		"scope": "markdown",
+		"prefix": "include",
+		"body": "{[${1:相对路径/文件名.md}][${2:显示标题}]}",
+		"description": "引用展开：插入整篇文档（必须独占一行）"
+	},
+	"引用展开（节选小节）": {
+		"scope": "markdown",
+		"prefix": "includeSection",
+		"body": "{[${1:相对路径/文件名.md}#${2:标题文字}][${3:显示标题}]}",
+		"description": "引用展开：插入某个小节（必须独占一行）"
+	},
+	"引用展开（轻量不入目录）": {
+		"scope": "markdown",
+		"prefix": "includeLite",
+		"body": "{[${1:相对路径/文件名.md}#${2:标题文字}][!${3:显示标题}]}",
+		"description": "引用展开：不生成目录标题（必须独占一行）"
+	},
+	"条件分流（if 块）": {
+		"scope": "markdown",
+		"prefix": "if",
+		"body": [
+			"{if ${1:条件}}",
+			"$0",
+			"{end}"
+		],
+		"description": "条件分流 if/end（每条指令必须独占一行）"
+	},
+	"条件分流（if/else）": {
+		"scope": "markdown",
+		"prefix": "ifelse",
+		"body": [
+			"{if ${1:条件}}",
+			"${2:内容}",
+			"{else}",
+			"$0",
+			"{end}"
+		],
+		"description": "条件分流 if/else/end（每条指令必须独占一行）"
+	},
+	"条件分流（if/else if/else）": {
+		"scope": "markdown",
+		"prefix": "ifelifs",
+		"body": [
+			"{if ${1:C == 0}}",
+			"${2:内容（分支1）}",
+			"{else if ${3:C >= 1 && T == 0}}",
+			"${4:内容（分支2）}",
+			"{else}",
+			"$0",
+			"{end}"
+		],
+		"description": "条件分流 if/else if/else/end（每条指令必须独占一行）"
+	},
+	"偏好分流（P_* 叠加块）": {
+		"scope": "markdown",
+		"prefix": "pref",
+		"body": [
+			"{if P_${1|step,code,theory,minimal,troubleshoot,best_practice,api_reference,visual,performance,rendering|} == 1}",
+			"$0",
+			"{end}"
+		],
+		"description": "偏好分流：P_* 叠加块（推荐写法：多个独立 if/end）"
+	},
+	"索引段落标题（可引用）": {
+		"scope": "markdown",
+		"prefix": "refsec",
+		"body": "## ${1|概览（可引用）,最小示例（可引用）,常见坑（可引用）,进阶与惯用写法（可引用）,API 速查（可引用）|}",
+		"description": "索引层建议使用的稳定标题（用于引用展开 #标题文字 匹配）"
+	},
+	"Quiz 题目组件": {
+		"scope": "markdown",
+		"prefix": "quiz",
+		"body": [
+			"```quiz",
+			"type: ${1|choice,tf|}",
+			"id: ${2:your-unique-id}",
+			"question: |",
+			"  ${3:题面}",
+			"options:",
+			"  - id: A",
+			"    text: |",
+			"      ${4:选项 A}",
+			"  - id: B",
+			"    text: |",
+			"      ${5:选项 B}",
+			"answer: ${6:A}",
+			"explain: |",
+			"  ${0:解释}",
+			"```"
+		],
+		"description": "题目组件：```quiz fenced code block（id 建议全站唯一）"
+	},
+	"AnimTS 动画组件": {
+		"scope": "markdown",
+		"prefix": "animts",
+		"body": [
+			"```animts",
+			"anims/${1:demo.ts}",
+			"```"
+		],
+		"description": "动画组件：```animts 第一行写 TS 路径（相对 docs/ 且位于 docs/anims/ 下）"
+	},
+	"图片（docs/<分类>/）": {
+		"scope": "markdown",
+		"prefix": "img2",
+		"body": "![${1:说明}](../../assets/imgs/${2:xxx}.png)",
+		"description": "图片路径：docs/<分类>/文章.md → ../../assets/imgs/"
+	},
+	"图片（docs/<分类>/<子目录>/）": {
+		"scope": "markdown",
+		"prefix": "img3",
+		"body": "![${1:说明}](../../../assets/imgs/${2:xxx}.png)",
+		"description": "图片路径：docs/<分类>/<子目录>/文章.md → ../../../assets/imgs/"
 	}
 }

@@ -32,7 +32,7 @@
     "阅读时间": {
         "scope": "yaml",
         "prefix": "time",
-        "body": "time: ${1|5分钟,10分钟,15分钟,30分钟|}",
+        "body": "time: ${1|1分钟,5分钟,8分钟,10分钟,12分钟,15分钟,20分钟,25分钟,30分钟|}",
         "description": "添加预计阅读时间"
     },
     "文章描述": {
@@ -45,32 +45,65 @@
         "scope": "yaml",
         "prefix": "topic",
         "body": [
-            "topic: ${1|mod-basics,env,items,npcs,world-gen,ui,networking,advanced|}"
+            "topic: ${1|mod-basics,env,items,npcs,world-gen,ui,networking,advanced,article-contribution|}"
         ],
-        "description": "添加主题颜色配置(注意！exColor这一类变量名不能使用非英文字符,否则无法显示内容！)"
+        "description": "添加 topic（建议写 key；分类由目录决定，不在 YAML 里写 category）"
+    },
+    "章节跳转（prev/next）": {
+        "scope": "yaml",
+        "prefix": "prevnext",
+        "body": [
+            "prev_chapter:",
+            "next_chapter:"
+        ],
+        "description": "章节跳转（没有就不写或留空；不要写 null 字符串）"
+    },
+    "建议门槛（min_c/min_t）": {
+        "scope": "yaml",
+        "prefix": "minct",
+        "body": [
+            "min_c: ${1:0}",
+            "min_t: ${2:0}"
+        ],
+        "description": "建议阅读门槛（软建议，不影响阅读）"
+    },
+    "隐藏文章": {
+        "scope": "yaml",
+        "prefix": "hide",
+        "body": "hide: true",
+        "description": "隐藏文章（不进入导航/索引，适合草稿/内部页）"
+    },
+    "标签": {
+        "scope": "yaml",
+        "prefix": "tags",
+        "body": [
+            "tags:",
+            "  - ${1:tag-1}"
+        ],
+        "description": "标签列表（可选）"
     },
     "颜色": {
         "scope": "yaml",
         "prefix": "colors",
         "body": [
             "colors:",
-            "  exColor: \"${1:#f0f}\"",
-            "  exColorB: \"${2:#f0fff2}\""
+            "  Tip: \"${1:#88c0d0}\"",
+            "  Mad: \"${2:#f00}\""
         ],
-        "description": "添加颜色配置(单色；变量名建议英文/ASCII)"
+        "description": "单色高亮 colors（变量名建议英文/ASCII）"
     },
     "颜色动画": {
         "scope": "yaml",
         "prefix": "colorChange",
         "body": [
             "colorChange:",
-            "   exColor:",
-            "    - ${1:#f0f}",
-            "    - ${2:#0f0}",
-            "    - ${3:#ff0}",
-            "    - ${4:#f0f}"
+            "  Rainbow:",
+            "    - \"${1:#f00}\"",
+            "    - \"${2:#0f0}\"",
+            "    - \"${3:#00f}\"",
+            "    - \"${4:#f00}\""
         ],
-        "description": "添加颜色动画(注意！exColor这一类变量名不能使用非英文字符,否则无法显示内容！)"
+        "description": "颜色动画 colorChange（不建议滥用；变量名建议英文/ASCII）"
     },
     "排序": {
         "scope": "yaml",
