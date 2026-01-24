@@ -1,25 +1,28 @@
 // scripts/generate-section-semantic.js
 // Build-time helper: generate per-section semantic metadata via OpenAI-compatible chat API.
-// Output: docs/search/section-semantic.v1.yml
+// Output: docs/search/section-semantic.ai.v1.json.gz (binary, gzip JSON)
 //
 // Env:
 // - LLM_API_KEY (required)
 // - LLM_BASE_URL (required, OpenAI-compatible base URL, e.g. https://.../v1)
 // - LLM_MODEL (optional, default: glm-4.7-flash)
-// - SECTION_SEMANTIC_PATH (optional, default: docs/search/section-semantic.v1.yml)
+// - SECTION_SEMANTIC_AI_PATH (optional, default: docs/search/section-semantic.ai.v1.json.gz)
+// - (legacy) SECTION_SEMANTIC_PATH: if points to .yml, treated as legacy input only
 // - MAX_SECTIONS (optional, limit generation)
 // - CONCURRENCY (optional, default: 1; 强制上限: 1，避免触发供应商并发限制)
 //
 // Notes:
 // - Only updates new/changed sections (by sha256 hash).
-// - Keeps YAML stable and human-editable.
+// - Legacy YAML (docs/search/section-semantic.v1.yml) is supported as input for migration.
 
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const yaml = require('js-yaml');
+const zlib = require('zlib');
 
-const DEFAULT_OUT = path.join('docs', 'search', 'section-semantic.v1.yml');
+const DEFAULT_AI_OUT = path.join('docs', 'search', 'section-semantic.ai.v1.json.gz');
+const LEGACY_YAML = path.join('docs', 'search', 'section-semantic.v1.yml');
 const STAGES = ['intro', 'basics', 'intermediate', 'advanced', 'concept', 'troubleshoot', 'tooling', 'meta'];
 
 function sha256(text) {
@@ -36,7 +39,7 @@ function ensureDirForFile(filePath) {
 function atomicWriteFileSync(filePath, content) {
     ensureDirForFile(filePath);
     const tmp = `${filePath}.tmp-${process.pid}-${Date.now()}`;
-    fs.writeFileSync(tmp, content, 'utf8');
+    fs.writeFileSync(tmp, content);
     fs.renameSync(tmp, filePath);
 }
 
@@ -149,20 +152,30 @@ function loadYamlOrDefault(filePath) {
     return data;
 }
 
-function stableDumpYaml(doc) {
+function loadGzipJsonOrDefault(filePath) {
+    if (!fs.existsSync(filePath)) {
+        return { version: 1, schema: 'section-semantic.ai.v1', model: null, promptVersion: 1, sections: [] };
+    }
+    const buf = fs.readFileSync(filePath);
+    const jsonText = zlib.gunzipSync(buf).toString('utf8');
+    const data = JSON.parse(jsonText) || {};
+    if (!data.sections || !Array.isArray(data.sections)) data.sections = [];
+    if (!data.version) data.version = 1;
+    if (!data.schema) data.schema = 'section-semantic.ai.v1';
+    if (!data.promptVersion) data.promptVersion = 1;
+    if (!('model' in data)) data.model = null;
+    return data;
+}
+
+function stableStringifyAiDoc(doc) {
     const ordered = {
         version: doc.version,
         schema: doc.schema,
-        generatedAt: doc.generatedAt,
         model: doc.model,
         promptVersion: doc.promptVersion,
         sections: doc.sections
     };
-    return yaml.dump(ordered, {
-        lineWidth: 120,
-        noRefs: true,
-        sortKeys: false
-    });
+    return JSON.stringify(ordered);
 }
 
 function normalizeAliases(rawAliases) {
@@ -305,11 +318,18 @@ async function main() {
     const apiKey = process.env.LLM_API_KEY || '';
     const baseUrl = process.env.LLM_BASE_URL || '';
     const model = process.env.LLM_MODEL || 'glm-4.7-flash';
-    const outPath = process.env.SECTION_SEMANTIC_PATH || DEFAULT_OUT;
+    const aiEnv = process.env.SECTION_SEMANTIC_AI_PATH || process.env.SECTION_SEMANTIC_PATH || '';
+    let outPath = aiEnv || DEFAULT_AI_OUT;
+    const legacyInputPath = (aiEnv && /\.(yml|yaml)$/i.test(aiEnv)) ? aiEnv : LEGACY_YAML;
     const maxSections = process.env.MAX_SECTIONS ? Number(process.env.MAX_SECTIONS) : null;
     const concurrencyRequested = process.env.CONCURRENCY ? Math.max(1, Number(process.env.CONCURRENCY)) : 1;
     const concurrency = 1;
     const flushEvery = process.env.FLUSH_EVERY ? Math.max(1, Number(process.env.FLUSH_EVERY)) : 10;
+
+    if (/\.(yml|yaml)$/i.test(outPath)) {
+        console.warn(`提示：SECTION_SEMANTIC_AI_PATH/SECTION_SEMANTIC_PATH=${outPath} 指向 YAML；AI 表已切换为二进制，将改用默认输出：${DEFAULT_AI_OUT}`);
+        outPath = DEFAULT_AI_OUT;
+    }
 
     if (!apiKey) throw new Error('缺少环境变量 LLM_API_KEY');
     if (!baseUrl) throw new Error('缺少环境变量 LLM_BASE_URL（OpenAI 兼容 base url，如 https://.../v1）');
@@ -325,7 +345,25 @@ async function main() {
         }
     }(docsDir));
 
-    const existing = loadYamlOrDefault(outPath);
+    let existing = null;
+    let existingSource = '';
+    try {
+        if (fs.existsSync(outPath)) {
+            existing = loadGzipJsonOrDefault(outPath);
+            existingSource = outPath;
+        } else if (fs.existsSync(legacyInputPath)) {
+            existing = loadYamlOrDefault(legacyInputPath);
+            existingSource = legacyInputPath;
+        } else {
+            existing = loadGzipJsonOrDefault(outPath);
+            existingSource = '(empty)';
+        }
+    } catch (e) {
+        console.warn('读取历史 section semantic 失败，将从空表开始：', e && e.message ? e.message : String(e));
+        existing = loadGzipJsonOrDefault('__missing__');
+        existingSource = '(empty)';
+    }
+    console.log(`section-semantic: 读取历史数据来源：${existingSource}`);
     const existingById = new Map();
     for (const s of existing.sections) {
         if (!s || !s.id) continue;
@@ -371,6 +409,7 @@ async function main() {
     let cursor = 0;
     let processed = 0;
     let flushChain = Promise.resolve();
+    let lastWrittenHash = null;
 
     const buildSnapshotDoc = () => {
         const sections = Array.from(existingById.values());
@@ -382,21 +421,34 @@ async function main() {
             if (al !== 0) return al;
             return String(a.id || '').localeCompare(String(b.id || ''));
         });
-        return {
-            version: 1,
-            schema: 'section-semantic.v1',
-            generatedAt: new Date().toISOString(),
-            model,
-            promptVersion: 1,
-            sections
-        };
+        const orderedSections = [];
+        for (const s of sections) {
+            orderedSections.push({
+                id: s.id,
+                docPath: s.docPath,
+                heading: s.heading,
+                level: s.level,
+                hash: s.hash,
+                stage: s.stage,
+                phrases: Array.isArray(s.phrases) ? s.phrases : [],
+                aliases: Array.isArray(s.aliases) ? s.aliases : [],
+                avoid: Array.isArray(s.avoid) ? s.avoid : []
+            });
+        }
+        return { version: 1, schema: 'section-semantic.ai.v1', model, promptVersion: 1, sections: orderedSections };
     };
 
     const scheduleFlush = (force) => {
         flushChain = flushChain.then(() => {
             if (!force && processed % flushEvery !== 0) return;
             const snapshot = buildSnapshotDoc();
-            atomicWriteFileSync(outPath, stableDumpYaml(snapshot));
+            const json = stableStringifyAiDoc(snapshot);
+            const hash = 'sha256:' + sha256(json);
+            if (!force && lastWrittenHash === hash) return;
+            lastWrittenHash = hash;
+
+            const gz = zlib.gzipSync(Buffer.from(json, 'utf8'), { level: 9, mtime: 0 });
+            atomicWriteFileSync(outPath, gz);
             console.log(`已写入（中间保存）：${outPath}（已完成 ${processed}/${limited.length}）`);
         }).catch((e) => {
             console.warn('中间保存失败（可继续运行，但可能无法断点续跑）：', e && e.message ? e.message : String(e));

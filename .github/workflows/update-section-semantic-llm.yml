@@ -77,7 +77,7 @@ jobs:
           body: |
             Automated update of per-section semantic metadata and regenerated search indices.
 
-            - Updated: `docs/search/section-semantic.v1.yml`
+            - Updated: `docs/search/section-semantic.ai.v1.json.gz`
             - Regenerated: `assets/semantic/*`, `assets/search-index.json`, `docs/config.json`, `sitemap.xml`
           branch: "chore/update-section-semantic-llm"
           delete-branch: true
