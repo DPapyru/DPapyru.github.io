@@ -1,25 +1,28 @@
 // scripts/generate-section-semantic.js
 // Build-time helper: generate per-section semantic metadata via OpenAI-compatible chat API.
-// Output: docs/search/section-semantic.v1.yml
+// Output: docs/search/section-semantic.ai.v1.json.gz (binary, gzip JSON)
 //
 // Env:
 // - LLM_API_KEY (required)
 // - LLM_BASE_URL (required, OpenAI-compatible base URL, e.g. https://.../v1)
-// - LLM_MODEL (optional, default: glm-4.5-flash)
-// - SECTION_SEMANTIC_PATH (optional, default: docs/search/section-semantic.v1.yml)
+// - LLM_MODEL (optional, default: glm-4.7-flash)
+// - SECTION_SEMANTIC_AI_PATH (optional, default: docs/search/section-semantic.ai.v1.json.gz)
+// - (legacy) SECTION_SEMANTIC_PATH: if points to .yml, treated as legacy input only
 // - MAX_SECTIONS (optional, limit generation)
-// - CONCURRENCY (optional, default: 2)
+// - CONCURRENCY (optional, default: 1; 强制上限: 1，避免触发供应商并发限制)
 //
 // Notes:
 // - Only updates new/changed sections (by sha256 hash).
-// - Keeps YAML stable and human-editable.
+// - Legacy YAML (docs/search/section-semantic.v1.yml) is supported as input for migration.
 
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const yaml = require('js-yaml');
+const zlib = require('zlib');
 
-const DEFAULT_OUT = path.join('docs', 'search', 'section-semantic.v1.yml');
+const DEFAULT_AI_OUT = path.join('docs', 'search', 'section-semantic.ai.v1.json.gz');
+const LEGACY_YAML = path.join('docs', 'search', 'section-semantic.v1.yml');
 const STAGES = ['intro', 'basics', 'intermediate', 'advanced', 'concept', 'troubleshoot', 'tooling', 'meta'];
 
 function sha256(text) {
@@ -31,6 +34,13 @@ function sha256(text) {
 function ensureDirForFile(filePath) {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+}
+
+function atomicWriteFileSync(filePath, content) {
+    ensureDirForFile(filePath);
+    const tmp = `${filePath}.tmp-${process.pid}-${Date.now()}`;
+    fs.writeFileSync(tmp, content);
+    fs.renameSync(tmp, filePath);
 }
 
 function stripFrontMatter(markdownText) {
@@ -142,20 +152,30 @@ function loadYamlOrDefault(filePath) {
     return data;
 }
 
-function stableDumpYaml(doc) {
+function loadGzipJsonOrDefault(filePath) {
+    if (!fs.existsSync(filePath)) {
+        return { version: 1, schema: 'section-semantic.ai.v1', model: null, promptVersion: 1, sections: [] };
+    }
+    const buf = fs.readFileSync(filePath);
+    const jsonText = zlib.gunzipSync(buf).toString('utf8');
+    const data = JSON.parse(jsonText) || {};
+    if (!data.sections || !Array.isArray(data.sections)) data.sections = [];
+    if (!data.version) data.version = 1;
+    if (!data.schema) data.schema = 'section-semantic.ai.v1';
+    if (!data.promptVersion) data.promptVersion = 1;
+    if (!('model' in data)) data.model = null;
+    return data;
+}
+
+function stableStringifyAiDoc(doc) {
     const ordered = {
         version: doc.version,
         schema: doc.schema,
-        generatedAt: doc.generatedAt,
         model: doc.model,
         promptVersion: doc.promptVersion,
         sections: doc.sections
     };
-    return yaml.dump(ordered, {
-        lineWidth: 120,
-        noRefs: true,
-        sortKeys: false
-    });
+    return JSON.stringify(ordered);
 }
 
 function normalizeAliases(rawAliases) {
@@ -214,6 +234,19 @@ function extractJsonObject(text) {
     }
 }
 
+function parseRetryAfterMs(resp) {
+    if (!resp || !resp.headers || typeof resp.headers.get !== 'function') return null;
+    const raw = String(resp.headers.get('retry-after') || '').trim();
+    if (!raw) return null;
+    const seconds = Number(raw);
+    if (Number.isFinite(seconds) && seconds >= 0) return Math.floor(seconds * 1000);
+    const when = Date.parse(raw);
+    if (!Number.isFinite(when)) return null;
+    const ms = when - Date.now();
+    if (!Number.isFinite(ms) || ms <= 0) return null;
+    return Math.floor(ms);
+}
+
 async function callChat({ baseUrl, apiKey, model, prompt }) {
     const url = baseUrl.replace(/\/+$/, '') + '/chat/completions';
     const resp = await fetch(url, {
@@ -243,7 +276,10 @@ async function callChat({ baseUrl, apiKey, model, prompt }) {
     });
     if (!resp.ok) {
         const t = await resp.text().catch(() => '');
-        throw new Error(`LLM 请求失败：${resp.status} ${t}`.slice(0, 800));
+        const err = new Error(`LLM 请求失败：${resp.status} ${t}`.slice(0, 800));
+        err.status = resp.status;
+        err.retryAfterMs = parseRetryAfterMs(resp);
+        throw err;
     }
     const json = await resp.json();
     const content = json && json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content;
@@ -281,10 +317,19 @@ function buildPrompt({ docPath, heading, level, plainText }) {
 async function main() {
     const apiKey = process.env.LLM_API_KEY || '';
     const baseUrl = process.env.LLM_BASE_URL || '';
-    const model = process.env.LLM_MODEL || 'glm-4.5-flash';
-    const outPath = process.env.SECTION_SEMANTIC_PATH || DEFAULT_OUT;
+    const model = process.env.LLM_MODEL || 'glm-4.7-flash';
+    const aiEnv = process.env.SECTION_SEMANTIC_AI_PATH || process.env.SECTION_SEMANTIC_PATH || '';
+    let outPath = aiEnv || DEFAULT_AI_OUT;
+    const legacyInputPath = (aiEnv && /\.(yml|yaml)$/i.test(aiEnv)) ? aiEnv : LEGACY_YAML;
     const maxSections = process.env.MAX_SECTIONS ? Number(process.env.MAX_SECTIONS) : null;
-    const concurrency = process.env.CONCURRENCY ? Math.max(1, Number(process.env.CONCURRENCY)) : 2;
+    const concurrencyRequested = process.env.CONCURRENCY ? Math.max(1, Number(process.env.CONCURRENCY)) : 1;
+    const concurrency = 1;
+    const flushEvery = process.env.FLUSH_EVERY ? Math.max(1, Number(process.env.FLUSH_EVERY)) : 10;
+
+    if (/\.(yml|yaml)$/i.test(outPath)) {
+        console.warn(`提示：SECTION_SEMANTIC_AI_PATH/SECTION_SEMANTIC_PATH=${outPath} 指向 YAML；AI 表已切换为二进制，将改用默认输出：${DEFAULT_AI_OUT}`);
+        outPath = DEFAULT_AI_OUT;
+    }
 
     if (!apiKey) throw new Error('缺少环境变量 LLM_API_KEY');
     if (!baseUrl) throw new Error('缺少环境变量 LLM_BASE_URL（OpenAI 兼容 base url，如 https://.../v1）');
@@ -300,7 +345,25 @@ async function main() {
         }
     }(docsDir));
 
-    const existing = loadYamlOrDefault(outPath);
+    let existing = null;
+    let existingSource = '';
+    try {
+        if (fs.existsSync(outPath)) {
+            existing = loadGzipJsonOrDefault(outPath);
+            existingSource = outPath;
+        } else if (fs.existsSync(legacyInputPath)) {
+            existing = loadYamlOrDefault(legacyInputPath);
+            existingSource = legacyInputPath;
+        } else {
+            existing = loadGzipJsonOrDefault(outPath);
+            existingSource = '(empty)';
+        }
+    } catch (e) {
+        console.warn('读取历史 section semantic 失败，将从空表开始：', e && e.message ? e.message : String(e));
+        existing = loadGzipJsonOrDefault('__missing__');
+        existingSource = '(empty)';
+    }
+    console.log(`section-semantic: 读取历史数据来源：${existingSource}`);
     const existingById = new Map();
     for (const s of existing.sections) {
         if (!s || !s.id) continue;
@@ -344,6 +407,54 @@ async function main() {
     if (limited.length === 0) return;
 
     let cursor = 0;
+    let processed = 0;
+    let flushChain = Promise.resolve();
+    let lastWrittenHash = null;
+
+    const buildSnapshotDoc = () => {
+        const sections = Array.from(existingById.values());
+        sections.sort((a, b) => {
+            const ap = String(a.docPath || '');
+            const bp = String(b.docPath || '');
+            if (ap !== bp) return ap.localeCompare(bp);
+            const al = (a.level || 0) - (b.level || 0);
+            if (al !== 0) return al;
+            return String(a.id || '').localeCompare(String(b.id || ''));
+        });
+        const orderedSections = [];
+        for (const s of sections) {
+            orderedSections.push({
+                id: s.id,
+                docPath: s.docPath,
+                heading: s.heading,
+                level: s.level,
+                hash: s.hash,
+                stage: s.stage,
+                phrases: Array.isArray(s.phrases) ? s.phrases : [],
+                aliases: Array.isArray(s.aliases) ? s.aliases : [],
+                avoid: Array.isArray(s.avoid) ? s.avoid : []
+            });
+        }
+        return { version: 1, schema: 'section-semantic.ai.v1', model, promptVersion: 1, sections: orderedSections };
+    };
+
+    const scheduleFlush = (force) => {
+        flushChain = flushChain.then(() => {
+            if (!force && processed % flushEvery !== 0) return;
+            const snapshot = buildSnapshotDoc();
+            const json = stableStringifyAiDoc(snapshot);
+            const hash = 'sha256:' + sha256(json);
+            if (!force && lastWrittenHash === hash) return;
+            lastWrittenHash = hash;
+
+            const gz = zlib.gzipSync(Buffer.from(json, 'utf8'), { level: 9, mtime: 0 });
+            atomicWriteFileSync(outPath, gz);
+            console.log(`已写入（中间保存）：${outPath}（已完成 ${processed}/${limited.length}）`);
+        }).catch((e) => {
+            console.warn('中间保存失败（可继续运行，但可能无法断点续跑）：', e && e.message ? e.message : String(e));
+        });
+    };
+
     async function worker() {
         while (cursor < limited.length) {
             const idx = cursor++;
@@ -353,13 +464,23 @@ async function main() {
             console.log(`LLM 标注: ${idx + 1}/${limited.length} ${sec.docPath} # ${sec.heading}`);
 
             let content = '';
-            for (let attempt = 1; attempt <= 3; attempt++) {
+            for (let attempt = 1; attempt <= 8; attempt++) {
                 try {
                     content = await callChat({ baseUrl, apiKey, model, prompt });
                     break;
                 } catch (e) {
-                    if (attempt === 3) throw e;
-                    await new Promise(r => setTimeout(r, 800 * attempt));
+                    const status = e && typeof e.status === 'number' ? e.status : null;
+                    const retryAfterMs = e && typeof e.retryAfterMs === 'number' ? e.retryAfterMs : null;
+                    const retryable = status === 429 || status === 408 || (typeof status === 'number' && status >= 500 && status <= 599);
+                    if (attempt === 8 || !retryable) throw e;
+
+                    const base = status === 429 ? 2500 : 800;
+                    const cap = status === 429 ? 60000 : 15000;
+                    const backoff = Math.min(cap, base * Math.pow(2, attempt - 1));
+                    const jitter = Math.floor(Math.random() * 250);
+                    const waitMs = Math.max(300, retryAfterMs != null ? retryAfterMs : backoff) + jitter;
+                    console.warn(`LLM 重试：${sec.docPath} # ${sec.heading}（attempt ${attempt}/8, status=${status || 'unknown'}, wait=${waitMs}ms）`);
+                    await new Promise(r => setTimeout(r, waitMs));
                 }
             }
 
@@ -386,42 +507,30 @@ async function main() {
                 avoid
             };
             existingById.set(sec.id, next);
+
+            processed++;
+            if (processed % flushEvery === 0) scheduleFlush(false);
         }
+    }
+
+    if (concurrencyRequested !== concurrency) {
+        console.warn(`提示：CONCURRENCY=${concurrencyRequested} 已被忽略；当前仅支持并发=${concurrency}（避免 429 并发限制）。`);
     }
 
     const workers = [];
     for (let i = 0; i < concurrency; i++) workers.push(worker());
-    await Promise.all(workers);
-
-    const merged = [];
-    for (const sec of discovered) {
-        const s = existingById.get(sec.id);
-        if (!s) continue;
-        merged.push(s);
+    try {
+        await Promise.all(workers);
+    } catch (e) {
+        scheduleFlush(true);
+        await flushChain;
+        console.error(`已尝试写入断点文件：${outPath}（已完成 ${processed}/${limited.length}）`);
+        throw e;
     }
 
-    merged.sort((a, b) => {
-        const ap = String(a.docPath || '');
-        const bp = String(b.docPath || '');
-        if (ap !== bp) return ap.localeCompare(bp);
-        const al = (a.level || 0) - (b.level || 0);
-        if (al !== 0) return al;
-        return String(a.id || '').localeCompare(String(b.id || ''));
-    });
-
-    const now = new Date().toISOString();
-    const outDoc = {
-        version: 1,
-        schema: 'section-semantic.v1',
-        generatedAt: now,
-        model,
-        promptVersion: 1,
-        sections: merged
-    };
-
-    ensureDirForFile(outPath);
-    fs.writeFileSync(outPath, stableDumpYaml(outDoc), 'utf8');
-    console.log(`已写入：${outPath}（${merged.length} 个小节）`);
+    scheduleFlush(true);
+    await flushChain;
+    console.log(`已写入：${outPath}（已完成 ${processed}/${limited.length}，累计 ${existingById.size} 个小节）`);
 }
 
 main().catch((e) => {

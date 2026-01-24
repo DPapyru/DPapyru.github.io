@@ -1,0 +1,35 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{C4AD9936-F0DF-1090-6077-3D4A6324E662}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "knowledge", "knowledge", "{1940C13E-29CE-E520-D463-91699FA99846}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tmodloader-api-indexer", "tmodloader-api-indexer", "{9F06D03B-201C-E070-5598-DB6702133C13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TmodLoaderApiIndexer", "scripts\knowledge\tmodloader-api-indexer\TmodLoaderApiIndexer.csproj", "{15AF3031-F159-2916-9A45-7555AA652B32}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{15AF3031-F159-2916-9A45-7555AA652B32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15AF3031-F159-2916-9A45-7555AA652B32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15AF3031-F159-2916-9A45-7555AA652B32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15AF3031-F159-2916-9A45-7555AA652B32}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1940C13E-29CE-E520-D463-91699FA99846} = {C4AD9936-F0DF-1090-6077-3D4A6324E662}
+		{9F06D03B-201C-E070-5598-DB6702133C13} = {1940C13E-29CE-E520-D463-91699FA99846}
+		{15AF3031-F159-2916-9A45-7555AA652B32} = {9F06D03B-201C-E070-5598-DB6702133C13}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C8E97530-C139-41FA-97FC-C5898A68C40A}
+	EndGlobalSection
+EndGlobal
