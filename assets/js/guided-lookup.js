@@ -214,6 +214,11 @@
         const candidateLimit = typeof opts.candidateLimit === 'number' ? opts.candidateLimit : 400;
         const categoryFilter = opts.category || '';
         const difficultyFilter = opts.difficulty || '';
+        const blockedDocs = opts.blockedDocs || null;
+        const blockedSet = blockedDocs
+            ? (blockedDocs instanceof Set ? blockedDocs : new Set(blockedDocs))
+            : null;
+        const routing = opts.routing || null;
 
         const qVec = this.buildQueryVector(query);
         if (!qVec) return [];
@@ -227,6 +232,7 @@
             const heap = createMinHeap(Math.max(candidateLimit, 800));
             for (let i = 0; i < this.chunks.length; i++) {
                 const chunk = this.chunks[i];
+                if (blockedSet && blockedSet.has(chunk.path)) continue;
                 if (categoryFilter && chunk.category !== categoryFilter) continue;
                 if (difficultyFilter && chunk.difficulty !== difficultyFilter) continue;
                 const s = this.lexicalScore(chunk, qLower, lexTokens);
@@ -237,6 +243,7 @@
             const heap = createMinHeap(candidateLimit);
             for (let i = 0; i < this.chunks.length; i++) {
                 const chunk = this.chunks[i];
+                if (blockedSet && blockedSet.has(chunk.path)) continue;
                 if (categoryFilter && chunk.category !== categoryFilter) continue;
                 if (difficultyFilter && chunk.difficulty !== difficultyFilter) continue;
                 const score = dot(this.chunkVec, i * this.latentDim, qVec, 0, this.latentDim);
@@ -262,22 +269,61 @@
         const lexWeight = 1 - semWeight;
         for (const s of scored) {
             const lexNorm = maxLex > 0 ? (s.lex / maxLex) : 0;
-            s.score = (s.sem * semWeight) + (lexNorm * lexWeight);
+            let score = (s.sem * semWeight) + (lexNorm * lexWeight);
+
+            if (routing) {
+                const chunk = this.chunks[s.index];
+                if (routing.categoryMultiplier && chunk && routing.categoryMultiplier[chunk.category]) {
+                    score *= routing.categoryMultiplier[chunk.category];
+                }
+                if (routing.pathMultiplier && routing.pathMultiplier.length && chunk) {
+                    const pathHay = (chunk.path || '') + ' ' + (chunk.title || '');
+                    for (const rule of routing.pathMultiplier) {
+                        if (rule && rule.pattern && rule.pattern.test(pathHay)) score *= (rule.mult || 1);
+                    }
+                }
+            }
+
+            s.score = score;
         }
         scored.sort((a, b) => b.score - a.score);
 
+        const docLimit = typeof opts.docLimit === 'number' ? Math.max(3, opts.docLimit) : 12;
+        const maxPerDoc = typeof opts.maxPerDoc === 'number' ? Math.max(1, opts.maxPerDoc) : 3;
+
+        const docScore = new Map();
+        for (const s of scored.slice(0, Math.max(200, limit * 40))) {
+            const chunk = this.chunks[s.index];
+            if (!chunk) continue;
+            const p = chunk.path || '';
+            if (!p) continue;
+            const prev = docScore.get(p) || 0;
+            docScore.set(p, Math.max(prev, s.score));
+        }
+
+        const topDocs = Array.from(docScore.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, docLimit)
+            .map(([p]) => p);
+
+        const allowedDocs = new Set(topDocs);
+        const perDocCount = new Map();
+        const seenKey = new Set();
         const out = [];
-        const seenDoc = new Set();
+
         for (const s of scored) {
             const chunk = this.chunks[s.index];
-            const key = chunk.path + '|' + chunk.text;
-            if (out.length < Math.max(3, Math.floor(limit / 2))) {
-                // 初期阶段尽量多样化（不同文章）
-                if (seenDoc.has(chunk.path)) continue;
-            }
-            if (seenDoc.has(key)) continue;
-            seenDoc.add(key);
-            seenDoc.add(chunk.path);
+            if (!chunk) continue;
+            const p = chunk.path || '';
+            if (!allowedDocs.has(p)) continue;
+            const c = perDocCount.get(p) || 0;
+            if (c >= maxPerDoc) continue;
+
+            const key = p + '|' + (chunk.text || '');
+            if (seenKey.has(key)) continue;
+            seenKey.add(key);
+
+            perDocCount.set(p, c + 1);
             out.push({
                 ...chunk,
                 score: s.score,
@@ -292,4 +338,3 @@
 
     window.GuidedLookupEngine = GuidedLookupEngine;
 })();
-

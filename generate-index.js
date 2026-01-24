@@ -3,11 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { resolveCategory, mapToExistingCategory } = require('./lib/category-utils');
+const yaml = require('js-yaml');
 
 const SITE_BASE_URL = 'https://dpapyru.github.io';
 const SEARCH_INDEX_PATH = './assets/search-index.json';
 const GUIDED_INDEX_PATH = './assets/semantic/guided-index.v1.json';
 const BM25_INDEX_PATH = './assets/semantic/bm25-index.v1.json';
+const SECTION_SEMANTIC_PATH = './docs/search/section-semantic.v1.yml';
 
 // 项目配置
 const projectConfig = {
@@ -646,6 +648,61 @@ function stripFrontMatter(markdownText) {
     return text;
 }
 
+function normalizeHeadingText(text) {
+    return String(text || '').replace(/\s+/g, ' ').trim();
+}
+
+function slugifyHeading(heading) {
+    const raw = normalizeHeadingText(heading);
+    const lower = raw.toLowerCase();
+    let s = lower.normalize('NFKC');
+    s = s.replace(/[\t\r\n]+/g, ' ');
+    s = s.replace(/\s+/g, '-');
+    // keep: CJK + latin/number/_ + dash
+    s = s.replace(/[^\u4e00-\u9fff\w\-]+/g, '');
+    s = s.replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return s || 'section';
+}
+
+function loadSectionSemanticMap() {
+    try {
+        if (!fs.existsSync(SECTION_SEMANTIC_PATH)) return new Map();
+        const raw = fs.readFileSync(SECTION_SEMANTIC_PATH, 'utf8');
+        const doc = yaml.load(raw) || {};
+        const sections = Array.isArray(doc.sections) ? doc.sections : [];
+        const map = new Map();
+        for (const s of sections) {
+            if (!s || !s.id) continue;
+            map.set(String(s.id), s);
+        }
+        return map;
+    } catch (e) {
+        console.warn('读取 section semantic YAML 失败，将忽略：', e && e.message ? e.message : String(e));
+        return new Map();
+    }
+}
+
+function buildSectionAugmentText(sectionMeta) {
+    if (!sectionMeta) return '';
+    const parts = [];
+    if (Array.isArray(sectionMeta.phrases)) {
+        for (const p of sectionMeta.phrases) {
+            const s = String(p || '').trim();
+            if (s) parts.push(s);
+        }
+    }
+    if (Array.isArray(sectionMeta.aliases)) {
+        for (const a of sectionMeta.aliases) {
+            if (!a) continue;
+            const from = String(a.from || '').trim();
+            const to = String(a.to || '').trim();
+            if (from) parts.push(from);
+            if (to) parts.push(to);
+        }
+    }
+    return parts.join('\n');
+}
+
 function stripMarkdown(markdownText) {
     let text = stripFrontMatter(markdownText);
 
@@ -666,18 +723,12 @@ function generateSearchIndex(config) {
         return;
     }
 
+    // 为加载速度与体积考虑：search-index.json 以二进制格式写入（仍保留原路径，前端使用 arrayBuffer 解析）
+    // 内容仅包含文档级元数据（不包含全文 content），全文检索由段落 BM25 索引负责。
     const docs = [];
     for (const doc of config.all_files) {
         if (!doc || !doc.path) continue;
         const filePath = String(doc.path);
-        const repoPath = path.join('docs', filePath);
-        let markdown = '';
-        try {
-            markdown = fs.readFileSync(repoPath, 'utf8');
-        } catch {
-            markdown = '';
-        }
-
         docs.push({
             path: filePath,
             filename: doc.filename || path.basename(filePath),
@@ -688,23 +739,89 @@ function generateSearchIndex(config) {
             author: doc.author || '',
             difficulty: doc.difficulty || '',
             time: doc.time || '',
-            min_c: (typeof doc.min_c === 'number' ? doc.min_c : null),
-            min_t: (typeof doc.min_t === 'number' ? doc.min_t : null),
-            last_updated: doc.last_updated || '',
-            content: stripMarkdown(markdown)
+            last_updated: doc.last_updated || ''
         });
     }
 
-    const payload = {
-        version: 1,
-        // 使用可复现的时间戳，避免每次构建都产生无意义的 diff
-        generatedAt: getLastModForPath('docs/config.json'),
-        count: docs.length,
-        docs
+    const fieldNames = [
+        'path',
+        'filename',
+        'title',
+        'description',
+        'category',
+        'topic',
+        'author',
+        'difficulty',
+        'time',
+        'last_updated'
+    ];
+
+    const stringToIndex = new Map();
+    const strings = [];
+    const addString = (value) => {
+        const s = String(value == null ? '' : value);
+        if (!s) return 0;
+        const existing = stringToIndex.get(s);
+        if (existing != null) return existing;
+        const idx = strings.length + 1; // 0 reserved for empty
+        strings.push(s);
+        stringToIndex.set(s, idx);
+        return idx;
     };
 
-    fs.writeFileSync(SEARCH_INDEX_PATH, JSON.stringify(payload), 'utf8');
-    console.log(`search-index 已生成：${SEARCH_INDEX_PATH}（${docs.length} 条）`);
+    const record = new Uint32Array(docs.length * fieldNames.length);
+    for (let i = 0; i < docs.length; i++) {
+        const base = i * fieldNames.length;
+        const d = docs[i];
+        for (let f = 0; f < fieldNames.length; f++) {
+            record[base + f] = addString(d[fieldNames[f]]);
+        }
+    }
+
+    const offsets = new Uint32Array(strings.length + 1);
+    const utf8Chunks = new Array(strings.length);
+    let totalBytes = 0;
+    for (let i = 0; i < strings.length; i++) {
+        offsets[i] = totalBytes;
+        const buf = Buffer.from(strings[i], 'utf8');
+        utf8Chunks[i] = buf;
+        totalBytes += buf.length;
+    }
+    offsets[strings.length] = totalBytes;
+
+    const headerBytes = 24;
+    const offsetsBytes = offsets.byteLength;
+    const recordBytes = record.byteLength;
+    const paddingBytes = (4 - ((headerBytes + offsetsBytes + totalBytes) % 4)) % 4;
+    const totalSize = headerBytes + offsetsBytes + totalBytes + paddingBytes + recordBytes;
+
+    const out = Buffer.allocUnsafe(totalSize);
+    let cursor = 0;
+    out.write('TSI2', cursor, 'ascii'); cursor += 4;
+    out.writeUInt32LE(2, cursor); cursor += 4; // version
+    out.writeUInt32LE(docs.length, cursor); cursor += 4; // docCount
+    out.writeUInt32LE(fieldNames.length, cursor); cursor += 4; // fieldCount
+    out.writeUInt32LE(strings.length, cursor); cursor += 4; // stringCount
+    out.writeUInt32LE(strings.length + 1, cursor); cursor += 4; // offsetsCount
+
+    Buffer.from(offsets.buffer, offsets.byteOffset, offsets.byteLength).copy(out, cursor);
+    cursor += offsetsBytes;
+
+    for (let i = 0; i < utf8Chunks.length; i++) {
+        utf8Chunks[i].copy(out, cursor);
+        cursor += utf8Chunks[i].length;
+    }
+
+    if (paddingBytes) {
+        out.fill(0, cursor, cursor + paddingBytes);
+        cursor += paddingBytes;
+    }
+
+    Buffer.from(record.buffer, record.byteOffset, record.byteLength).copy(out, cursor);
+    cursor += recordBytes;
+
+    fs.writeFileSync(SEARCH_INDEX_PATH, out);
+    console.log(`search-index 已生成：${SEARCH_INDEX_PATH}（binary，${docs.length} 条）`);
 }
 
 function ensureDirForFile(filePath) {
@@ -947,6 +1064,8 @@ function generateGuidedSemanticIndex(config) {
         return;
     }
 
+    const sectionMetaById = loadSectionSemanticMap();
+
     const featureDim = 2048;
     const latentDim = 64;
     const oversample = 16;
@@ -971,32 +1090,92 @@ function generateGuidedSemanticIndex(config) {
 
         const body = stripFrontMatter(markdown);
 
-        // 先移除 fenced code block（避免段落切分被大量代码干扰）
-        const withoutFences = body.replace(/```[\s\S]*?```/g, '\n\n');
-        const blocks = withoutFences.split(/\n{2,}/g);
+        // 与 bm25-index 对齐：保留代码块，但避免被大量空行切碎（先替换为占位符）
+        const codeBlocks = [];
+        const bodyWithPlaceholders = body.replace(/```[\s\S]*?```/g, (m) => {
+            const content = m.replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '');
+            const compact = content.replace(/\n{2,}/g, '\n').trim();
+            const id = codeBlocks.length;
+            codeBlocks.push(compact);
+            return `\n\n[[[CODE_BLOCK_${id}]]]\n\n`;
+        });
+        const bodyWithHeadings = bodyWithPlaceholders.replace(/^#{1,6}\s+.+$/gm, '\n\n$&\n\n');
+        const blocks = bodyWithHeadings.split(/\n{2,}/g);
+
+        let currentSectionSlug = 'root';
+        let currentHeading = '_root';
+        const slugCount = new Map();
 
         for (const block of blocks) {
-            const cleaned = stripMarkdownForGuidedBlock(block);
+            const trimmed = String(block || '').trim();
+            if (!trimmed) continue;
+
+            const headingMatch = /^(#{1,6})\s+(.+?)\s*$/.exec(trimmed);
+            if (headingMatch) {
+                const headingText = normalizeHeadingText(headingMatch[2]);
+                const base = slugifyHeading(headingText);
+                const prev = slugCount.get(base) || 0;
+                const next = prev + 1;
+                slugCount.set(base, next);
+                currentSectionSlug = next > 1 ? `${base}-${next}` : base;
+                currentHeading = headingText || '_root';
+                continue;
+            }
+
+            let blockText = trimmed;
+            const codeMatch = /^\[\[\[CODE_BLOCK_(\d+)\]\]\]$/.exec(trimmed);
+            if (codeMatch) {
+                const code = codeBlocks[Number(codeMatch[1])] || '';
+                blockText = code ? code : '';
+            }
+
+            const cleaned = stripMarkdownForGuidedBlock(blockText);
             if (!cleaned || cleaned.length < minChunkChars) continue;
 
             const text = cleaned.length > maxChunkChars ? (cleaned.slice(0, maxChunkChars) + '…') : cleaned;
-            const tokens = extractGuidedTokens(text);
-            if (!tokens || tokens.length === 0) continue;
 
             const tfByFeature = new Map();
-            for (const token of tokens) {
-                const idx = fnv1a32(token) % featureDim;
-                tfByFeature.set(idx, (tfByFeature.get(idx) || 0) + 1);
-            }
+            const title = doc.title || inferTitleFromFilename(filePath);
+            const category = doc.category || '';
+            const topic = doc.topic || '';
+            const sectionId = `${filePath}#${currentSectionSlug}`;
+            const sectionMeta = sectionMetaById.get(sectionId) || null;
+            const sectionAugment = buildSectionAugmentText(sectionMeta);
+            const stage = sectionMeta && sectionMeta.stage ? String(sectionMeta.stage) : '';
+
+            const addTokens = (sourceText, weight) => {
+                if (!sourceText) return;
+                const tokens = extractGuidedTokens(sourceText);
+                for (const token of tokens) {
+                    const idx = fnv1a32(token) % featureDim;
+                    tfByFeature.set(idx, (tfByFeature.get(idx) || 0) + weight);
+                }
+            };
+
+            // 主文本
+            addTokens(text, 1);
+            // 字段增强：标题更重要
+            addTokens(title, 2);
+            addTokens(category, 1);
+            addTokens(topic, 1);
+            // 小节语义增强（构建期生成，不影响引用显示）
+            addTokens(currentHeading, 2);
+            addTokens(sectionAugment, 1);
+
+            if (tfByFeature.size === 0) continue;
 
             chunkMeta.push({
                 path: filePath,
-                title: doc.title || inferTitleFromFilename(filePath),
-                category: doc.category || '',
-                topic: doc.topic || '',
+                title,
+                category,
+                topic,
                 author: doc.author || '',
                 difficulty: doc.difficulty || '',
+                time: doc.time || '',
                 last_updated: doc.last_updated || '',
+                sectionId,
+                heading: currentHeading,
+                stage,
                 text
             });
 
@@ -1182,6 +1361,8 @@ function generateBm25Index(config) {
         return;
     }
 
+    const sectionMetaById = loadSectionSemanticMap();
+
     const bucketCount = 131072;
     const minChunkChars = 30;
     const maxChunkChars = 800;
@@ -1236,10 +1417,27 @@ function generateBm25Index(config) {
             return `\n\n[[[CODE_BLOCK_${id}]]]\n\n`;
         });
 
-        const blocks = bodyWithPlaceholders.split(/\n{2,}/g);
+        const bodyWithHeadings = bodyWithPlaceholders.replace(/^#{1,6}\s+.+$/gm, '\n\n$&\n\n');
+        const blocks = bodyWithHeadings.split(/\n{2,}/g);
+
+        let currentSectionSlug = 'root';
+        let currentHeading = '_root';
+        const slugCount = new Map();
         for (const rawBlock of blocks) {
             const trimmed = String(rawBlock || '').trim();
             if (!trimmed) continue;
+
+            const headingMatch = /^(#{1,6})\s+(.+?)\s*$/.exec(trimmed);
+            if (headingMatch) {
+                const headingText = normalizeHeadingText(headingMatch[2]);
+                const base = slugifyHeading(headingText);
+                const prev = slugCount.get(base) || 0;
+                const next = prev + 1;
+                slugCount.set(base, next);
+                currentSectionSlug = next > 1 ? `${base}-${next}` : base;
+                currentHeading = headingText || '_root';
+                continue;
+            }
 
             let blockText = trimmed;
             const codeMatch = /^\[\[\[CODE_BLOCK_(\d+)\]\]\]$/.exec(trimmed);
@@ -1256,6 +1454,10 @@ function generateBm25Index(config) {
             const title = doc.title || inferTitleFromFilename(filePath);
             const category = doc.category || '';
             const topic = doc.topic || '';
+            const sectionId = `${filePath}#${currentSectionSlug}`;
+            const sectionMeta = sectionMetaById.get(sectionId) || null;
+            const sectionAugment = buildSectionAugmentText(sectionMeta);
+            const stage = sectionMeta && sectionMeta.stage ? String(sectionMeta.stage) : '';
 
             const tfByBucket = new Map();
             let dlValue = 0;
@@ -1278,6 +1480,9 @@ function generateBm25Index(config) {
             addTokens(title, 2);
             addTokens(category, 1);
             addTokens(topic, 1);
+            // 小节语义增强（构建期生成，不影响引用显示）
+            addTokens(currentHeading, 2);
+            addTokens(sectionAugment, 1);
 
             if (tfByBucket.size === 0) continue;
 
@@ -1290,6 +1495,9 @@ function generateBm25Index(config) {
                 author: doc.author || '',
                 difficulty: doc.difficulty || '',
                 last_updated: doc.last_updated || '',
+                sectionId,
+                heading: currentHeading,
+                stage,
                 text
             });
 

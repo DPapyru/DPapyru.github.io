@@ -21,21 +21,43 @@
     <link rel="stylesheet" href="assets/css/vs2022-theme.css">
     <link rel="icon" type="image/png" href="assets/imgs/Green_tModLoader.png">
     
-    <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
-    <script src="assets/js/onboarding-gate.js"></script>
-    <script src="assets/js/theme-init.js"></script>
+	    <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
+	    <script src="assets/js/onboarding-gate.js"></script>
+	    <script src="assets/js/theme-init.js"></script>
 
-    <!-- 搜索结果页面专用样式 -->
-    <style>
-        /* 搜索页面容器 */
-        .search-page {
-            padding: 80px 0;
-            min-height: calc(100vh - 200px);
-        }
+	    <!-- 搜索结果页面专用样式 -->
+	    <style>
+	        html, body {
+	            height: 100%;
+	        }
 
-        /* 搜索页面头部 */
-	        .search-page-header {
-	            background-color: var(--bg-content);
+	        body {
+	            overflow: hidden;
+	            display: flex;
+	            flex-direction: column;
+	            min-height: 100vh;
+	        }
+
+	        .site-header {
+	            flex: 0 0 auto;
+	        }
+
+	        /* 搜索页以“应用”形式呈现：隐藏 footer，避免页面整体滚动 */
+	        .site-footer {
+	            display: none;
+	        }
+
+	        /* 搜索页面容器 */
+	        .search-page {
+	            padding: 18px 0;
+	            flex: 1 1 auto;
+	            min-height: 0;
+	            overflow: hidden;
+	        }
+
+	        /* 搜索页面头部 */
+		        .search-page-header {
+		            background-color: var(--bg-content);
 	            padding: 30px 0;
 	            border-bottom: 1px solid var(--border-color);
 	            margin-bottom: 30px;
@@ -350,6 +372,13 @@
             text-decoration: underline;
         }
 
+        .guided-divider {
+            height: 2px;
+            background-color: var(--text-secondary);
+            opacity: 0.9;
+            margin: 12px 0;
+        }
+
         /* 可展开卡片（通用） */
         .expand-card {
             background-color: var(--bg-secondary);
@@ -421,6 +450,78 @@
         .expand-toggle:hover {
             border-color: var(--primary-color);
             background-color: var(--bg-content);
+        }
+
+        .mismatch-toggle {
+            flex: 0 0 auto;
+            padding: 6px 10px;
+            border: 1px solid var(--danger-color, #dc3545);
+            border-radius: 999px;
+            background-color: transparent;
+            color: var(--danger-color, #dc3545);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .mismatch-toggle:hover {
+            background-color: var(--danger-bg);
+        }
+
+        .session-filters {
+            margin-top: 12px;
+            padding: 12px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background-color: var(--bg-secondary);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .session-filters-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .session-filters-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .session-chip {
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 6px 10px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            max-width: 380px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .session-chip:hover {
+            border-color: var(--primary-color);
+        }
+
+        .session-clear {
+            border: 1px solid var(--border-color);
+            background-color: transparent;
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .session-clear:hover {
+            border-color: var(--primary-color);
+            color: var(--text-color);
         }
 
         .guided-answer-list {
@@ -598,11 +699,11 @@
             margin-top: 8px;
         }
 
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .search-page {
-                padding: 60px 0;
-            }
+	        /* 响应式设计 */
+	        @media (max-width: 768px) {
+	            .search-page {
+	                padding: 12px 0;
+	            }
 
             .search-page-title {
                 font-size: 1.8rem;
@@ -622,9 +723,281 @@
                 width: 100%;
                 justify-content: space-between;
             }
-        }
-    </style>
-</head>
+	        }
+
+	        /* 新布局：聊天式工作台（左：对话式引用，右：默认搜索） */
+	        .search-shell-container {
+	            width: 100%;
+	            max-width: 1600px;
+	            margin: 0 auto;
+	            padding: 0 16px;
+	            height: 100%;
+	            min-height: 0;
+	        }
+
+	        .search-shell {
+	            display: grid;
+	            grid-template-columns: 320px 1fr;
+	            gap: 16px;
+	            align-items: stretch;
+	            height: 100%;
+	            min-height: 0;
+	        }
+
+	        .search-sidebar {
+	            display: flex;
+	            flex-direction: column;
+	            gap: 14px;
+	            min-height: 0;
+	            overflow: auto;
+	        }
+
+	        .search-workbench {
+	            display: flex;
+	            flex-direction: column;
+	            gap: 12px;
+	            min-width: 0;
+	            height: 100%;
+	            min-height: 0;
+	        }
+
+	        .search-page-header.compact {
+	            background-color: transparent;
+	            border: none;
+	            padding: 0;
+	            margin: 0;
+	        }
+
+	        .search-page-title.compact {
+	            font-size: 1.2rem;
+	            margin: 0 0 8px 0;
+	        }
+
+	        .search-page-description.compact {
+	            margin: 0;
+	            color: var(--text-secondary);
+	            font-size: 0.95rem;
+	            line-height: 1.6;
+	        }
+
+	        .workbench-split {
+	            flex: 1 1 auto;
+	            display: grid;
+	            grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+	            border: 1px solid var(--border-color);
+	            border-radius: 14px;
+	            background-color: var(--bg-content);
+	            min-height: 460px;
+	            min-width: 0;
+	            min-height: 0;
+	        }
+
+	        .split-divider {
+	            background-color: var(--border-color);
+	        }
+
+	        .workbench-pane {
+	            padding: 16px;
+	            overflow: auto;
+	            min-width: 0;
+	            min-height: 0;
+	        }
+
+		        .pane-title {
+		            display: flex;
+		            align-items: center;
+		            justify-content: space-between;
+		            gap: 10px;
+		            margin: 0 0 12px 0;
+		            color: var(--text-secondary);
+		            font-size: 0.95rem;
+		        }
+
+		        .pane-title-left {
+		            display: flex;
+		            align-items: center;
+		            gap: 8px;
+		            min-width: 0;
+		        }
+
+		        .pane-title-left span {
+		            white-space: nowrap;
+		            overflow: hidden;
+		            text-overflow: ellipsis;
+		        }
+
+		        .pane-title-right {
+		            display: flex;
+		            align-items: center;
+		            gap: 10px;
+		            flex-shrink: 0;
+		        }
+
+	        .pane-title strong {
+	            color: var(--text-color);
+	            font-weight: 600;
+	        }
+
+	        .workbench-pane .guided-answer,
+	        .workbench-pane .search-results-page,
+	        .workbench-pane .no-search-results {
+	            margin-bottom: 0;
+	        }
+
+	        .workbench-composer {
+	            height: 200px;
+	            display: grid;
+	            grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+	            border: 1px solid var(--border-color);
+	            border-radius: 14px;
+	            background-color: var(--bg-content);
+	        }
+
+	        .composer-left {
+	            padding: 16px;
+	            overflow: auto;
+	            color: var(--text-secondary);
+	            line-height: 1.7;
+	        }
+
+	        .composer-right {
+	            padding: 16px;
+	            display: flex;
+	            align-items: center;
+	            justify-content: center;
+	            min-width: 0;
+	        }
+
+	        .advanced-search-form.advanced-search-form-composer {
+	            width: min(760px, 100%);
+	            background-color: transparent;
+	            box-shadow: none;
+	            border-radius: 0;
+	            padding: 0;
+	            margin: 0;
+	        }
+
+	        .advanced-search-form-composer .search-form-title,
+	        .advanced-search-form-composer .search-help {
+	            display: none;
+	        }
+
+	        .composer-input-group {
+	            position: relative;
+	            margin-bottom: 12px;
+	        }
+
+	        .composer-input-group .search-input-large {
+	            border-radius: 14px;
+	            padding: 14px 16px 62px 16px;
+	            height: 120px;
+	            resize: none;
+	            line-height: 1.7;
+	        }
+
+	        .composer-input-group .search-button-large {
+	            position: absolute;
+	            right: 12px;
+	            bottom: 12px;
+	            top: auto;
+	            transform: none;
+	            width: auto;
+	            height: 44px;
+	            padding: 0 16px;
+	            border-radius: 12px;
+	            z-index: 5;
+	        }
+
+	        .search-button-label {
+	            margin-left: 6px;
+	        }
+
+	        .workbench-composer .search-suggestions-page {
+	            top: auto;
+	            bottom: 100%;
+	            margin-top: 0;
+	            margin-bottom: 10px;
+	        }
+
+		        .semantic-controls {
+		            display: flex;
+		            flex-direction: column;
+		            gap: 6px;
+		        }
+
+		        .workbench-pane-guided .semantic-controls {
+		            margin: -2px 0 12px 0;
+		        }
+
+		        .semantic-checkbox {
+		            display: inline-flex;
+		            align-items: center;
+		            gap: 10px;
+		            font-size: 0.95rem;
+		            color: var(--text-secondary);
+		            user-select: none;
+		        }
+
+		        .semantic-checkbox input[type="checkbox"] {
+		            width: 18px;
+		            height: 18px;
+		            accent-color: var(--primary-color);
+		        }
+
+		        .semantic-hint {
+		            font-size: 0.9rem;
+		            color: var(--text-secondary);
+		            line-height: 1.45;
+		        }
+
+		        .semantic-status {
+		            font-size: 0.9rem;
+		            line-height: 1.45;
+		            color: var(--text-secondary);
+		            min-height: 1.2em;
+		        }
+
+		        .semantic-status[data-state="loading"] {
+		            color: var(--text-color);
+		        }
+
+		        .semantic-status[data-state="error"] {
+		            color: var(--danger-color, #ff6b6b);
+		        }
+
+	        /* 搜索页 footer：保持但不喧宾夺主（需要时可滚动到页面底部） */
+	        .search-page ~ .site-footer {
+	            margin-top: 18px;
+	        }
+
+	        @media (max-width: 1100px) {
+	            .search-shell {
+	                grid-template-columns: 1fr;
+	            }
+
+	            .workbench-split,
+	            .workbench-composer {
+	                grid-template-columns: 1fr;
+	            }
+
+	            .split-divider {
+	                display: none;
+	            }
+
+	            .workbench-composer {
+	                height: 200px;
+	            }
+
+	            .composer-left {
+	                display: none;
+	            }
+
+		            .semantic-controls {
+		                gap: 8px;
+		            }
+		        }
+	    </style>
+	</head>
 
 <body>
     <a class="skip-link" href="#main-content">跳到主要内容</a>
@@ -646,7 +1019,7 @@
                         <li class="nav-item"><a href="index.html" class="nav-link">首页</a></li>
                         <li class="nav-item"><a href="docs/index.html" class="nav-link">文档</a></li>
                         <li class="nav-item"><a href="qa.html" class="nav-link">问答</a></li>
-                        <li class="nav-item"><a href="search-results.html" class="nav-link active" aria-current="page">引导查找</a></li>
+	                        <li class="nav-item"><a href="search-results.html" class="nav-link active" aria-current="page">引导学习与内容查找</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
                                 target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li class="nav-item nav-accent">
@@ -674,136 +1047,153 @@
         </div>
     </header>
 
-    <!-- 搜索页面主要内容区域 -->
-    <main class="search-page" id="main-content" tabindex="-1">
-        <div class="container">
-            <!-- 搜索页面头部 -->
-            <div class="search-page-header">
-                <h1 class="search-page-title">引导学习与内容查找</h1>
-                <p class="search-page-description">用自然语言提问，系统会基于站内文章给出引用式线索与相关推荐</p>
-            </div>
+	    <!-- 搜索页面主要内容区域 -->
+	    <main class="search-page" id="main-content" tabindex="-1">
+	        <div class="search-shell-container">
+	            <div class="search-shell">
+	                <aside class="search-sidebar">
+	                    <div class="search-page-header compact">
+	                        <h1 class="search-page-title compact">引导学习与内容查找</h1>
+	                        <p class="search-page-description compact">用自然语言提问；左侧给“对话式引用”，右侧给“默认搜索”结果。</p>
+	                    </div>
 
-            <!-- 高级搜索表单 -->
-            <div class="advanced-search-form">
-                <h2 class="search-form-title">查找与筛选</h2>
+	                    <!-- 搜索历史 -->
+	                    <div class="search-history" id="search-history-container">
+	                        <div class="search-history-title">
+	                            <span>搜索历史</span>
+	                            <button class="clear-history-btn" id="clear-history-btn">清除历史</button>
+	                        </div>
+	                        <div class="search-history-list" id="search-history-list">
+	                            <!-- 搜索历史项将通过JavaScript动态添加 -->
+	                        </div>
+	                    </div>
 
-                <!-- 搜索输入框 -->
-                <div class="search-input-group">
-                    <input type="text" class="search-input-large" id="advanced-search-input"
-                        placeholder="用自然语言提问，或输入关键词（支持高级语法）..." aria-label="引导学习与内容查找" autocomplete="off">
-                    <button class="search-button-large" id="advanced-search-button" type="button" aria-label="搜索">
-                        <i class="icon-search"></i>
-                    </button>
-                    <div class="search-suggestions-page" id="advanced-search-suggestions"></div>
-                </div>
+	                    <!-- 搜索帮助 -->
+	                    <div class="search-help">
+	                        <h3 class="search-help-title">语法帮助</h3>
+	                        <ul class="search-help-list">
+	                            <li><strong>基本搜索：</strong>直接输入关键词，如 "物品创建"</li>
+	                            <li><strong>AND逻辑：</strong>使用 "+" 连接关键词，如 "物品 + 创建"</li>
+	                            <li><strong>OR逻辑：</strong>使用空格分隔关键词，如 "物品 创建"</li>
+	                            <li><strong>匹配组：</strong>使用括号组合关键词，如 "(物品 + 武器) 创建"</li>
+	                            <li><strong>精确匹配：</strong>使用引号包围关键词，如 "Mod制作"</li>
+	                        </ul>
+	                    </div>
+	                </aside>
 
-                <!-- 搜索选项 -->
-                <div class="search-options">
-                    <div class="search-option-group">
-                        <label class="search-option-label" for="search-category">分类</label>
-                        <select class="search-option-select" id="search-category">
-                            <option value="">全部分类</option>
-                        </select>
-                    </div>
-                    <div class="search-option-group">
-                        <label class="search-option-label" for="search-difficulty">难度</label>
-                        <select class="search-option-select" id="search-difficulty">
-                            <option value="">全部难度</option>
-                            <option value="beginner">初级</option>
-                            <option value="intermediate">中级</option>
-                            <option value="advanced">高级</option>
-                        </select>
-                    </div>
-                    <div class="search-option-group">
-                        <label class="search-option-label" for="search-sort">排序方式</label>
-                        <select class="search-option-select" id="search-sort">
-                            <option value="relevance">相关性</option>
-                            <option value="title">标题</option>
-                            <option value="date">日期</option>
-                            <option value="difficulty">难度</option>
-                        </select>
-                    </div>
-                </div>
+	                <section class="search-workbench" aria-label="检索工作台">
+	                    <div class="workbench-split" aria-label="结果区">
+		                        <div class="workbench-pane workbench-pane-guided">
+		                            <div class="pane-title">
+		                                <div class="pane-title-left">
+		                                    <strong>对话式引用</strong><span>（段落级引用线索）</span>
+		                                </div>
+		                                <div class="pane-title-right">
+		                                    <label class="semantic-checkbox" for="semantic-toggle" title="适合自然语言提问；首次会下载语义模型。失败时会自动回退到轻量语义。">
+		                                        <input type="checkbox" id="semantic-toggle">
+		                                        <span>语义增强</span>
+		                                    </label>
+		                                </div>
+		                            </div>
 
-                <!-- 搜索帮助 -->
-                <div class="search-help">
-                    <h3 class="search-help-title">语法帮助</h3>
-                    <ul class="search-help-list">
-                        <li><strong>基本搜索：</strong>直接输入关键词，如 "物品创建"</li>
-                        <li><strong>AND逻辑：</strong>使用 "+" 连接关键词，如 "物品 + 创建"</li>
-                        <li><strong>OR逻辑：</strong>使用空格分隔关键词，如 "物品 创建"</li>
-                        <li><strong>匹配组：</strong>使用括号组合关键词，如 "(物品 + 武器) 创建"</li>
-                        <li><strong>精确匹配：</strong>使用引号包围关键词，如 "Mod制作"</li>
-                    </ul>
-                </div>
-            </div>
+		                            <div class="semantic-controls" aria-label="语义增强">
+		                                <div class="semantic-hint" id="semantic-hint">只在你用自然语言描述问题时开启。开启后仅用于提升检索排序，仍只输出来自文章的引用段落。</div>
+		                                <div class="semantic-status" id="semantic-status" data-state="idle" aria-live="polite"></div>
+		                            </div>
 
-            <!-- 搜索历史 -->
-            <div class="search-history" id="search-history-container">
-                <div class="search-history-title">
-                    <span>搜索历史</span>
-                    <button class="clear-history-btn" id="clear-history-btn">清除历史</button>
-                </div>
-                <div class="search-history-list" id="search-history-list">
-                    <!-- 搜索历史项将通过JavaScript动态添加 -->
-                </div>
-            </div>
+	                            <!-- 引用式解答（段落级线索） -->
+	                            <div class="guided-answer" id="guided-answer" style="display: none;">
+	                                <h3 class="guided-answer-title">引用式线索（来自站内文章）</h3>
+	                                <div class="session-filters" id="session-filters" style="display: none;">
+	                                    <span class="session-filters-label">本次会话已屏蔽的文章（点击可撤销）：</span>
+	                                    <div class="session-filters-chips" id="session-filters-chips"></div>
+	                                    <button type="button" class="session-clear" id="session-filters-clear">清除</button>
+	                                </div>
+		                                <div class="guided-dialog" id="guided-dialog" style="display: none;">
+		                                    <div class="guided-dialog-header">
+		                                        <span class="guided-dialog-title">对话模板</span>
+		                                        <select class="guided-dialog-mode" id="guided-dialog-mode" aria-label="选择对话模板">
+		                                            <option value="concise">简洁</option>
+		                                            <option value="clarify">澄清提问</option>
+		                                            <option value="path">阅读顺序</option>
+		                                        </select>
+		                                    </div>
+		                                    <div class="guided-dialog-body" id="guided-dialog-body"></div>
+		                                </div>
+		                                <div class="guided-divider" aria-hidden="true"></div>
+		                                <div class="guided-answer-list" id="guided-answer-list"></div>
+		                            </div>
+		                        </div>
 
-            <!-- 搜索结果统计 -->
-            <div class="search-results-stats" id="search-results-stats" style="display: none;">
-                <div class="search-results-count">
-                    找到 <strong id="results-count">0</strong> 个相关结果
-                </div>
-                <div class="search-sort">
-                    <label class="search-sort-label" for="results-sort">排序：</label>
-                    <select class="search-sort-select" id="results-sort">
-                        <option value="relevance">相关性</option>
-                        <option value="title">标题</option>
-                        <option value="date">日期</option>
-                        <option value="difficulty">难度</option>
-                    </select>
-                </div>
-            </div>
+	                        <div class="split-divider" aria-hidden="true"></div>
 
-            <!-- 引用式解答（段落级线索） -->
-            <div class="guided-answer" id="guided-answer" style="display: none;">
-                <h3 class="guided-answer-title">引用式线索（来自站内文章）</h3>
-                <div class="guided-dialog" id="guided-dialog" style="display: none;">
-                    <div class="guided-dialog-header">
-                        <span class="guided-dialog-title">对话模板</span>
-                        <select class="guided-dialog-mode" id="guided-dialog-mode" aria-label="选择对话模板">
-                            <option value="concise">简洁</option>
-                            <option value="clarify">澄清提问</option>
-                            <option value="path">阅读顺序</option>
-                        </select>
-                    </div>
-                    <div class="guided-dialog-body" id="guided-dialog-body"></div>
-                </div>
-                <div class="guided-answer-list" id="guided-answer-list"></div>
-            </div>
+	                        <div class="workbench-pane workbench-pane-default">
+	                            <div class="pane-title"><strong>默认搜索</strong><span>（文档级结果）</span></div>
 
-            <!-- 搜索结果列表 -->
-            <div class="search-results-page" id="search-results-container" style="display: none;">
-                <!-- 搜索结果项将通过JavaScript动态添加 -->
-            </div>
+	                            <!-- 搜索结果统计 -->
+	                            <div class="search-results-stats" id="search-results-stats" style="display: none;">
+	                                <div class="search-results-count">
+	                                    找到 <strong id="results-count">0</strong> 个相关结果
+	                                </div>
+	                                <div class="search-sort">
+	                                    <label class="search-sort-label" for="results-sort">排序：</label>
+	                                    <select class="search-sort-select" id="results-sort">
+	                                        <option value="relevance">相关性</option>
+	                                        <option value="title">标题</option>
+	                                        <option value="date">日期</option>
+	                                        <option value="difficulty">难度</option>
+	                                    </select>
+	                                </div>
+	                            </div>
 
-            <!-- 无搜索结果提示 -->
-            <div class="no-search-results" id="no-search-results" style="display: none;">
-                <div class="no-results-icon">🔍</div>
-                <h2 class="no-results-title">未找到相关结果</h2>
-                <p class="no-results-description">我们找不到与您的搜索词匹配的教程内容</p>
-                <div class="no-results-suggestions">
-                    <h4>搜索建议：</h4>
-                    <ul>
-                        <li>检查拼写是否正确</li>
-                        <li>尝试使用不同的关键词</li>
-                        <li>使用更通用的搜索词</li>
-                        <li>使用高级搜索语法，如 "物品 + 创建"</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </main>
+	                            <!-- 搜索结果列表 -->
+	                            <div class="search-results-page" id="search-results-container" style="display: none;">
+	                                <!-- 搜索结果项将通过JavaScript动态添加 -->
+	                            </div>
+
+	                            <!-- 无搜索结果提示 -->
+	                            <div class="no-search-results" id="no-search-results" style="display: none;">
+	                                <div class="no-results-icon">🔍</div>
+	                                <h2 class="no-results-title">未找到相关结果</h2>
+	                                <p class="no-results-description">我们找不到与您的搜索词匹配的教程内容</p>
+	                                <div class="no-results-suggestions">
+	                                    <h4>搜索建议：</h4>
+	                                    <ul>
+	                                        <li>检查拼写是否正确</li>
+	                                        <li>尝试使用不同的关键词</li>
+	                                        <li>使用更通用的搜索词</li>
+	                                        <li>使用高级搜索语法，如 "物品 + 创建"</li>
+	                                    </ul>
+	                                </div>
+	                            </div>
+	                        </div>
+	                    </div>
+
+	                    <div class="workbench-composer" aria-label="输入区">
+	                        <div class="composer-left">
+	                            <p>左侧是“引用式线索”：每条线索都来自站内文章的具体段落。</p>
+	                            <p>如果发现无关内容，点卡片上的“与预期不符”即可在本次会话里屏蔽该文章。</p>
+	                        </div>
+
+	                        <div class="split-divider" aria-hidden="true"></div>
+
+		                        <div class="composer-right">
+		                            <div class="advanced-search-form advanced-search-form-composer">
+			                                <div class="search-input-group composer-input-group">
+			                                    <textarea class="search-input-large" id="advanced-search-input"
+			                                        placeholder="在这里用自然语言提问…（Enter 发送，Shift+Enter 换行）" aria-label="引导学习与内容查找" autocomplete="off"></textarea>
+			                                    <button class="search-button-large" id="advanced-search-button" type="button" aria-label="搜索">
+			                                        查找
+			                                    </button>
+			                                    <div class="search-suggestions-page" id="advanced-search-suggestions"></div>
+			                                </div>
+			                            </div>
+			                        </div>
+			                    </div>
+	                </section>
+	            </div>
+	        </div>
+	    </main>
 
     <!-- 网站底部区域 -->
     <footer class="site-footer">
@@ -843,50 +1233,55 @@
         </div>
     </footer>
 
-	    <!-- 加载JavaScript文件 -->
-	    <script src="assets/js/site-config.js"></script>
-	    <script src="assets/js/accent-theme.js"></script>
-	    <script src="assets/js/main.js"></script>
-	    <script src="assets/js/navigation.js"></script>
-        <script src="assets/js/bm25-lookup.js"></script>
-
-    <!-- 搜索结果页面专用脚本 -->
-    <script>
+		    <!-- 加载JavaScript文件 -->
+		    <script src="assets/js/site-config.js"></script>
+		    <script src="assets/js/accent-theme.js"></script>
+            <script src="assets/js/marked.min.js"></script>
+		    <script src="assets/js/main.js"></script>
+		    <script src="assets/js/navigation.js"></script>
+		        <script src="assets/js/search-index-loader.js"></script>
+		        <script src="assets/js/bm25-lookup.js"></script>
+		        <script src="assets/js/guided-lookup.js"></script>
+	
+	    <!-- 搜索结果页面专用脚本 -->
+	    <script>
         // 搜索结果页面功能
         class SearchResultsPage {
-            constructor() {
-                this.searchHistory = this.loadSearchHistory();
-                this.currentQuery = this.getQueryFromURL();
-                this.searchIndex = [];
-                this.searchResults = [];
-                this.guidedEngine = null;
-                this.init();
-            }
+		            constructor() {
+		                this.searchHistory = this.loadSearchHistory();
+		                this.currentQuery = this.getQueryFromURL();
+		                this.searchIndex = [];
+			                this.searchResults = [];
+			                this.guidedEngine = null;
+			                this.guidedSemanticEngine = null;
+			                this.blockedDocs = new Set();
+			                this.semanticEnabled = false;
+			                this.semanticRuntime = 'off'; // off | dl | light
+			                this.guidedUpdateToken = 0;
+			                this.init();
+			            }
 
             // 初始化
             async init() {
-                this.bindEvents();
-                await this.loadSearchIndex();
-                await this.loadGuidedEngine();
-                await this.populateFiltersFromConfig();
-                this.displaySearchHistory();
+	                this.bindEvents();
+	                await this.loadSearchIndex();
+	                await this.loadGuidedEngine();
+	                this.displaySearchHistory();
+	                this.initSemanticControls();
 
                 // 如果URL中有查询参数，执行搜索
-                if (this.currentQuery) {
-                    document.getElementById('advanced-search-input').value = this.currentQuery;
-                    this.performSearch();
-                }
-            }
+	                if (this.currentQuery) {
+	                    document.getElementById('advanced-search-input').value = this.currentQuery;
+	                    await this.performSearch();
+	                }
+	            }
 
             // 绑定事件
             bindEvents() {
                 const searchInput = document.getElementById('advanced-search-input');
-                const searchButton = document.getElementById('advanced-search-button');
-                const clearHistoryBtn = document.getElementById('clear-history-btn');
-                const resultsSort = document.getElementById('results-sort');
-                const searchCategory = document.getElementById('search-category');
-                const searchDifficulty = document.getElementById('search-difficulty');
-                const searchSort = document.getElementById('search-sort');
+	                const searchButton = document.getElementById('advanced-search-button');
+	                const clearHistoryBtn = document.getElementById('clear-history-btn');
+	                const resultsSort = document.getElementById('results-sort');
 
                 // 搜索输入事件
                 searchInput.addEventListener('input', debounce((e) => {
@@ -901,10 +1296,10 @@
                     this.handleKeydown(e);
                 });
 
-                // 搜索按钮点击事件
-                searchButton.addEventListener('click', () => {
-                    this.performSearch();
-                });
+	                // 搜索按钮点击事件
+	                searchButton.addEventListener('click', () => {
+	                    void this.performSearch();
+	                });
 
                 // 清除历史按钮点击事件
                 clearHistoryBtn.addEventListener('click', () => {
@@ -916,34 +1311,96 @@
                     this.sortSearchResults(resultsSort.value);
                 });
 
-                // 筛选选项变化事件
-                searchCategory.addEventListener('change', () => {
-                    this.filterSearchResults();
-                });
-
-                searchDifficulty.addEventListener('change', () => {
-                    this.filterSearchResults();
-                });
-
-                searchSort.addEventListener('change', () => {
-                    this.performSearch();
-                });
-
-                // 点击页面其他地方隐藏搜索建议
-                document.addEventListener('click', (e) => {
-                    if (!e.target.closest('.search-input-group')) {
-                        this.hideSearchSuggestions();
+	                // 点击页面其他地方隐藏搜索建议
+	                document.addEventListener('click', (e) => {
+	                    if (!e.target.closest('.search-input-group')) {
+	                        this.hideSearchSuggestions();
                     }
                 });
 
                 this.bindExpandCards();
-            }
 
-            bindExpandCards() {
-                if (document.body.__expandCardsBound) return;
-                document.body.__expandCardsBound = true;
+                const clearSessionFilters = document.getElementById('session-filters-clear');
+	                if (clearSessionFilters) {
+	                    clearSessionFilters.addEventListener('click', () => {
+	                        this.blockedDocs.clear();
+	                        this.renderSessionFilters();
+	                        void this.refreshCurrentResults();
+	                    });
+	                }
+	            }
+
+		            initSemanticControls() {
+		                const toggle = document.getElementById('semantic-toggle');
+		                const status = document.getElementById('semantic-status');
+		                if (!toggle || !status) return;
+
+		                // 默认一直开启（不依赖推理后端；使用构建期 guided-index 轻量语义）
+		                this.semanticEnabled = true;
+		                this.semanticRuntime = 'light';
+		                toggle.checked = true;
+		                toggle.disabled = true;
+
+		                status.dataset.state = 'idle';
+		                status.textContent = '';
+		                status.title = '';
+		                status.style.display = 'none';
+
+		                void this.loadGuidedSemanticEngine();
+		            }
+
+	            bindExpandCards() {
+	                if (document.body.__expandCardsBound) return;
+	                document.body.__expandCardsBound = true;
+	                document.body.__expandCardsOwner = this;
 
                 document.addEventListener('click', (e) => {
+                    const chip = e.target.closest('.session-chip');
+                    if (chip) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const encoded = chip.getAttribute('data-doc-path') || '';
+                        let docPath = '';
+                        try {
+                            docPath = decodeURIComponent(encoded);
+                        } catch {
+                            docPath = encoded;
+                        }
+
+                        const owner = document.body.__expandCardsOwner;
+                        if (!owner || !docPath) return;
+
+                        owner.blockedDocs.delete(docPath);
+                        owner.renderSessionFilters();
+                        owner.refreshCurrentResults();
+                        return;
+                    }
+
+                    const mismatch = e.target.closest('.mismatch-toggle');
+                    if (mismatch) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        const card = mismatch.closest('[data-doc-path]');
+                        if (!card) return;
+                        const encoded = card.getAttribute('data-doc-path') || '';
+                        let docPath = '';
+                        try {
+                            docPath = decodeURIComponent(encoded);
+                        } catch {
+                            docPath = encoded;
+                        }
+
+                        const owner = document.body.__expandCardsOwner;
+                        if (!owner || !docPath) return;
+
+                        owner.blockedDocs.add(docPath);
+                        owner.renderSessionFilters();
+                        owner.refreshCurrentResults();
+                        return;
+                    }
+
                     const btn = e.target.closest('.expand-toggle');
                     if (!btn) return;
 
@@ -959,6 +1416,50 @@
                     btn.setAttribute('aria-expanded', next);
                     btn.textContent = expanded ? '展开' : '收起';
                 });
+            }
+
+            renderSessionFilters() {
+                const box = document.getElementById('session-filters');
+                const chips = document.getElementById('session-filters-chips');
+                if (!box || !chips) return;
+
+                const items = Array.from(this.blockedDocs);
+                if (items.length === 0) {
+                    box.style.display = 'none';
+                    chips.innerHTML = '';
+                    return;
+                }
+
+                const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
+                    ? window.SiteUtils.escapeHtml
+                    : (v) => String(v).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+
+                const labelForPath = (p) => {
+                    const hit = (this.searchIndex || []).find(d => d && d.path === p);
+                    if (hit && hit.title) return hit.title;
+                    const base = p.split('/').pop();
+                    return base || p;
+                };
+
+                chips.innerHTML = items.map(p => {
+                    const t = esc(labelForPath(p));
+                    const encoded = encodeURIComponent(p);
+                    return `<button type="button" class="session-chip" data-doc-path="${encoded}" title="点击撤销">已屏蔽：《${t}》</button>`;
+                }).join('');
+                box.style.display = 'flex';
+            }
+
+	            refreshCurrentResults() {
+	                // 不更新 URL / 历史，仅刷新展示
+	                if (!this.currentQuery) return;
+	                void this.updateGuidedAnswer();
+	                this.applyBlockedDocsToSearchResults();
+	                this.displaySearchResults();
+	            }
+
+            applyBlockedDocsToSearchResults() {
+                if (!this.blockedDocs || this.blockedDocs.size === 0) return;
+                this.searchResults = (this.searchResults || []).filter(r => !this.blockedDocs.has(r.path || ''));
             }
 
             // 从URL获取查询参数
@@ -1046,9 +1547,14 @@
 
             async loadSearchIndexFromJson() {
                 try {
-                    const response = await fetch('assets/search-index.json');
-                    if (!response.ok) return false;
-                    const payload = await response.json();
+                    let payload = null;
+                    if (window.SearchIndexLoader && typeof window.SearchIndexLoader.load === 'function') {
+                        payload = await window.SearchIndexLoader.load('assets/search-index.json');
+                    } else {
+                        const response = await fetch('assets/search-index.json');
+                        if (!response.ok) return false;
+                        payload = await response.json();
+                    }
                     if (!payload || !Array.isArray(payload.docs)) return false;
 
                     const viewerBase = this.getViewerBase();
@@ -1075,20 +1581,34 @@
                 }
             }
 
-            async loadGuidedEngine() {
-                try {
-                    if (!window.Bm25LookupEngine) return;
-                    this.guidedEngine = await window.Bm25LookupEngine.load('assets/semantic/bm25-index.v1.json');
-                    console.log('bm25-index 已加载：', this.guidedEngine.chunkCount, 'chunks');
-                } catch (error) {
-                    console.warn('bm25-index 加载失败，将仅显示普通搜索结果:', error);
-                    this.guidedEngine = null;
-                }
-            }
+	            async loadGuidedEngine() {
+	                try {
+	                    if (!window.Bm25LookupEngine) return;
+	                    this.guidedEngine = await window.Bm25LookupEngine.load('assets/semantic/bm25-index.v1.json');
+	                    console.log('bm25-index 已加载：', this.guidedEngine.chunkCount, 'chunks');
+	                } catch (error) {
+	                    console.warn('bm25-index 加载失败，将仅显示普通搜索结果:', error);
+	                    this.guidedEngine = null;
+	                }
+	            }
 
-            // 从config.json获取所有教程文件
-            async getTutorialFilesFromConfig() {
-                try {
+	            async loadGuidedSemanticEngine() {
+	                if (this.guidedSemanticEngine) return this.guidedSemanticEngine;
+	                try {
+	                    if (!window.GuidedLookupEngine) return null;
+	                    this.guidedSemanticEngine = await window.GuidedLookupEngine.load('assets/semantic/guided-index.v1.json');
+	                    console.log('guided-index 已加载：', this.guidedSemanticEngine.chunkCount, 'chunks');
+	                    return this.guidedSemanticEngine;
+	                } catch (error) {
+	                    console.warn('guided-index 加载失败：', error);
+	                    this.guidedSemanticEngine = null;
+	                    return null;
+	                }
+	            }
+	
+	            // 从config.json获取所有教程文件
+	            async getTutorialFilesFromConfig() {
+	                try {
                     const config = await (window.SiteConfig ? window.SiteConfig.load() : fetch('docs/config.json').then(r => {
                         if (!r.ok) throw new Error(`无法加载config.json: ${r.status}`);
                         return r.json();
@@ -1131,43 +1651,9 @@
                 ];
             }
 
-            async populateFiltersFromConfig() {
-                const searchCategory = document.getElementById('search-category');
-                if (!searchCategory) return;
-
-                try {
-                    const config = await (window.SiteConfig
-                        ? (window.SiteConfig.get() || window.SiteConfig.load())
-                        : fetch('docs/config.json').then(r => {
-                              if (!r.ok) throw new Error(`无法加载config.json: ${r.status}`);
-                              return r.json();
-                          }));
-
-                    if (!config || !config.categories) return;
-
-                    const entries = Object.entries(config.categories);
-                    entries.sort((a, b) => {
-                        const ao = (a[1] && a[1].order != null) ? a[1].order : 999;
-                        const bo = (b[1] && b[1].order != null) ? b[1].order : 999;
-                        if (ao !== bo) return ao - bo;
-                        return String(a[0]).localeCompare(String(b[0]), 'zh-CN');
-                    });
-
-                    searchCategory.innerHTML = '<option value="">全部分类</option>';
-                    entries.forEach(([key, info]) => {
-                        const option = document.createElement('option');
-                        option.value = key;
-                        option.textContent = (info && info.title) ? info.title : key;
-                        searchCategory.appendChild(option);
-                    });
-                } catch (error) {
-                    console.warn('搜索页面：加载分类筛选失败，将使用默认选项', error);
-                }
-            }
-
-            // 解析文件元数据 - 增强版，支持从config.json获取元数据
-            async parseMetadataWithConfig(content, fileName) {
-                let metadata = this.parseMetadata(content);
+	            // 解析文件元数据 - 增强版，支持从config.json获取元数据
+	            async parseMetadataWithConfig(content, fileName) {
+	                let metadata = this.parseMetadata(content);
 
                 // 尝试从config.json获取更完整的元数据
                 try {
@@ -1331,11 +1817,11 @@
                     item.className = 'suggestion-item';
                     item.innerHTML = this.highlightText(suggestion.title, this.currentQuery);
 
-                    item.addEventListener('click', () => {
-                        document.getElementById('advanced-search-input').value = suggestion.title;
-                        this.currentQuery = suggestion.title;
-                        this.performSearch();
-                    });
+	                    item.addEventListener('click', () => {
+	                        document.getElementById('advanced-search-input').value = suggestion.title;
+	                        this.currentQuery = suggestion.title;
+	                        void this.performSearch();
+	                    });
 
                     suggestionsContainer.appendChild(item);
                 });
@@ -1362,19 +1848,19 @@
             }
 
             // 处理键盘事件
-            handleKeydown(e) {
-                const suggestionsContainer = document.getElementById('advanced-search-suggestions');
-                if (!suggestionsContainer) return;
+	            handleKeydown(e) {
+	                const suggestionsContainer = document.getElementById('advanced-search-suggestions');
+	                if (!suggestionsContainer) return;
 
-                const suggestions = suggestionsContainer.querySelectorAll('.suggestion-item');
+	                const suggestions = suggestionsContainer.querySelectorAll('.suggestion-item');
 
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    this.performSearch();
-                } else if (e.key === 'Escape') {
-                    this.hideSearchSuggestions();
-                }
-            }
+		                if (e.key === 'Enter' && !e.shiftKey) {
+		                    e.preventDefault();
+		                    void this.performSearch();
+		                } else if (e.key === 'Escape') {
+		                    this.hideSearchSuggestions();
+		                }
+		            }
 
             // 执行搜索
             async performSearch() {
@@ -1392,8 +1878,10 @@
                 // 执行高级搜索
                 this.searchResults = this.advancedSearch(this.currentQuery);
 
-                // 引导式引用线索（段落级）
-                this.updateGuidedAnswer();
+	                // 引导式引用线索（段落级）
+	                await this.updateGuidedAnswer();
+	                this.applyBlockedDocsToSearchResults();
+	                this.renderSessionFilters();
 
                 // 显示搜索结果
                 this.displaySearchResults();
@@ -1611,187 +2099,422 @@
                 return /[\u4e00-\u9fa5]/.test(text);
             }
 
-            updateGuidedAnswer() {
-                const container = document.getElementById('guided-answer');
-                const list = document.getElementById('guided-answer-list');
-                const dialog = document.getElementById('guided-dialog');
-                const dialogMode = document.getElementById('guided-dialog-mode');
-                const dialogBody = document.getElementById('guided-dialog-body');
-                if (!container || !list) return;
+	            async updateGuidedAnswer() {
+	                const token = ++this.guidedUpdateToken;
+	                const container = document.getElementById('guided-answer');
+	                const list = document.getElementById('guided-answer-list');
+	                const dialog = document.getElementById('guided-dialog');
+	                const dialogMode = document.getElementById('guided-dialog-mode');
+	                const dialogBody = document.getElementById('guided-dialog-body');
+	                if (!container || !list) return;
+	
+		                if (!this.currentQuery) {
+		                    container.style.display = 'none';
+		                    list.innerHTML = '';
+		                    if (dialog) dialog.style.display = 'none';
+		                    if (dialogBody) dialogBody.innerHTML = '';
+		                    return;
+		                }
 
-                if (!this.guidedEngine || !this.currentQuery) {
-                    container.style.display = 'none';
-                    list.innerHTML = '';
-                    if (dialog) dialog.style.display = 'none';
-                    if (dialogBody) dialogBody.innerHTML = '';
-                    return;
-                }
+		                const hasBm25 = !!this.guidedEngine;
+		                const semanticOn = !!this.semanticEnabled;
 
-                const category = (document.getElementById('search-category') || {}).value || '';
-                const difficulty = (document.getElementById('search-difficulty') || {}).value || '';
+		                let candidates = [];
+		                if (hasBm25) {
+		                    try {
+		                        candidates = this.guidedEngine.search(this.currentQuery, {
+		                            limit: semanticOn ? 24 : 8,
+		                            docLimit: semanticOn ? 18 : 12,
+		                            maxPerDoc: 3,
+		                            blockedDocs: this.blockedDocs
+		                        });
+		                    } catch (error) {
+		                        console.warn('guided search 失败:', error);
+		                        candidates = [];
+		                    }
+		                }
 
-                let guided = [];
-                try {
-                    guided = this.guidedEngine.search(this.currentQuery, {
-                        limit: 8,
-                        candidateLimit: 500,
-                        category,
-                        difficulty,
-                        semanticWeight: 0.75
-                    });
-                } catch (error) {
-                    console.warn('guided search 失败:', error);
-                    guided = [];
-                }
+		                if (!hasBm25 && !semanticOn) {
+		                    container.style.display = 'none';
+		                    list.innerHTML = '';
+		                    if (dialog) dialog.style.display = 'none';
+		                    if (dialogBody) dialogBody.innerHTML = '';
+		                    return;
+		                }
+		
+		                if (token !== this.guidedUpdateToken) return;
 
-                if (!guided.length) {
-                    container.style.display = 'none';
-                    list.innerHTML = '';
-                    if (dialog) dialog.style.display = 'none';
-                    if (dialogBody) dialogBody.innerHTML = '';
-                    return;
-                }
+			                const routing = (this.guidedEngine && typeof this.guidedEngine.classifyQuery === 'function')
+			                    ? this.guidedEngine.classifyQuery(this.currentQuery)
+			                    : null;
+			                const intent = routing && routing.intent ? routing.intent : 'unknown';
+			                const conceptMode = !!(routing && routing.flags && routing.flags.hasConcept);
+			                const weightSemantic = (intent === 'intro' || intent === 'concept' || conceptMode)
+			                    ? 0.7
+			                    : (intent === 'howto' ? 0.35 : 0.5);
+			                const weightLexical = 1 - weightSemantic;
 
-                const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
-                    ? window.SiteUtils.escapeHtml
-                    : (v) => String(v).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+			                const expandSyn = (term) => {
+			                    const t = String(term || '').toLowerCase();
+			                    if (!t) return [t];
+			                    const table = {
+			                        '物品': ['物品', 'item', 'moditem', 'setdefaults'],
+			                        '武器': ['武器', 'weapon', 'shoot', 'useitem', 'melee'],
+			                        '弹幕': ['弹幕', 'projectile', 'modprojectile'],
+			                        'npc': ['npc', '敌怪', '怪', '商人', '售卖', '商店'],
+			                        'c#': ['c#', 'csharp', '.net', '语言', '语法', '基础'],
+			                        '入门': ['入门', '从零', '学习路线', '前言', 'modder入门'],
+			                        '原理': ['原理', '机制', '概念', '流程', '生命周期', '本质', '区别']
+			                    };
+			                    for (const k of Object.keys(table)) {
+			                        if (t.includes(k)) return table[k].map(x => x.toLowerCase());
+			                    }
+			                    return [t];
+			                };
 
-                const viewerBase = this.getViewerBase();
+			                const hardHints = [];
+			                if (routing && Array.isArray(routing.entities)) {
+			                    const ents = new Set(routing.entities);
+			                    if (ents.has('item')) hardHints.push('物品');
+			                    if (ents.has('weapon')) hardHints.push('武器');
+			                    if (ents.has('projectile')) hardHints.push('弹幕');
+			                    if (ents.has('npc')) hardHints.push('npc');
+			                    if (ents.has('csharp')) hardHints.push('c#');
+			                }
+			                if (intent === 'intro') hardHints.push('入门');
+			                if (conceptMode) hardHints.push('原理');
 
-                // 对话模板（严格基于引用内容，不生成无出处结论）
-                const uniqueDocs = [];
-                const seenDocPath = new Set();
-                for (const item of guided) {
-                    if (!item || !item.path) continue;
-                    if (seenDocPath.has(item.path)) continue;
-                    seenDocPath.add(item.path);
-                    uniqueDocs.push(item);
-                    if (uniqueDocs.length >= 5) break;
-                }
+			                const expandedHard = [];
+			                for (const h of hardHints) for (const s of expandSyn(h)) expandedHard.push(s);
 
-                const renderDialog = (mode) => {
-                    if (!dialog || !dialogBody) return;
-                    const m = mode || 'concise';
+			                const applyRoutingMultipliers = (item, baseScore) => {
+			                    let s = baseScore;
+			                    if (!routing) return s;
+			                    const cat = item.category || '';
+			                    if (routing.categoryMultiplier && routing.categoryMultiplier[cat]) {
+			                        s *= routing.categoryMultiplier[cat];
+			                    }
+			                    if (routing.pathMultiplier && routing.pathMultiplier.length) {
+			                        const pathHay = `${item.path || ''} ${(item.title || '')}`;
+			                        for (const rule of routing.pathMultiplier) {
+			                            if (rule && rule.pattern && rule.pattern.test(pathHay)) s *= (rule.mult || 1);
+			                        }
+			                    }
+			                    return s;
+			                };
 
-                    const docLinks = uniqueDocs.map((d, idx) => {
-                        const u = `${viewerBase}?file=${encodeURIComponent(d.path)}`;
-                        const t = esc(d.title || d.path || `文档 ${idx + 1}`);
-                        return `<a href="${u}">《${t}》</a>`;
-                    });
+			                const normalizeByMax = (arr, key) => {
+			                    let m = 0;
+			                    for (const x of arr) m = Math.max(m, Number(x && x[key] ? x[key] : 0) || 0);
+			                    if (!m) m = 1;
+			                    return m;
+			                };
 
-                    const quoteCards = guided.slice(0, 4).map(item => {
-                        const u = `${viewerBase}?file=${encodeURIComponent(item.path)}`;
-                        const t = esc(item.title || item.path || '来源文章');
-                        const q = this.highlightText(esc(item.text || ''), this.currentQuery);
-                        return `
-                            <div class="expand-card" data-expanded="false">
-                                <div class="expand-card-header">
-                                    <div class="expand-card-title">来自 <a href="${u}">《${t}》</a></div>
-                                    <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
-                                </div>
-                                <div class="expand-card-body">${q}</div>
-                            </div>
-                        `;
-                    }).join('');
+			                const buildKey = (it) => `${it.path || ''}\n${it.text || ''}`;
 
-                    // 推荐文章卡片（每篇取一个最相关段落作为可展开内容）
-                    const firstQuoteByDoc = new Map();
-                    for (const item of guided) {
-                        if (!item || !item.path) continue;
-                        if (firstQuoteByDoc.has(item.path)) continue;
-                        firstQuoteByDoc.set(item.path, item);
-                    }
+			                const bm25Max = normalizeByMax(candidates, 'score');
 
-                    const docCards = uniqueDocs.map((d) => {
-                        const u = `${viewerBase}?file=${encodeURIComponent(d.path)}`;
-                        const t = esc(d.title || d.path || '来源文章');
-                        const q = firstQuoteByDoc.get(d.path);
-                        const metaParts = [];
-                        if (d.category) metaParts.push(esc(this.getCategoryText(d.category)));
-                        if (d.difficulty) metaParts.push(esc(this.getDifficultyText(d.difficulty)));
-                        if (d.last_updated) metaParts.push('更新: ' + esc(d.last_updated));
-                        return `
-                            <div class="expand-card" data-expanded="false">
-                                <div class="expand-card-header">
-                                    <div class="expand-card-title"><a href="${u}">《${t}》</a></div>
-                                    <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
-                                </div>
-                                ${metaParts.length ? `<div class="expand-card-meta">${metaParts.join(' · ')}</div>` : ''}
-                                <div class="expand-card-body">${q ? this.highlightText(esc(q.text || ''), this.currentQuery) : ''}</div>
-                            </div>
-                        `;
-                    }).join('');
+			                let semHits = [];
+			                if (semanticOn) {
+			                    const sem = await this.loadGuidedSemanticEngine();
+			                    if (token !== this.guidedUpdateToken) return;
+			                    if (sem && typeof sem.search === 'function') {
+			                        try {
+			                            semHits = sem.search(this.currentQuery, {
+			                                limit: 24,
+			                                candidateLimit: 900,
+			                                semanticWeight: 0.82,
+			                                blockedDocs: this.blockedDocs
+			                            });
+			                        } catch (error) {
+			                            console.warn('轻量语义检索失败:', error);
+			                            semHits = [];
+			                        }
+			                    }
+			                }
 
-                    if (m === 'path') {
-                        dialogBody.innerHTML = `
-                            <div style="margin-bottom: 10px;">你可以先从这些文章开始阅读（按相关度推荐）：${docLinks.slice(0, 3).join(' → ') || '（暂无）'}。</div>
-                            <div class="expand-card-meta" style="margin-bottom: 10px;">点击标题看全文；点击“展开”查看该文最相关的引用段落。</div>
-                            ${docCards}
-                        `;
-                        dialog.style.display = 'block';
-                        return;
-                    }
+			                const semMax = normalizeByMax(semHits, 'score');
 
-                    if (m === 'clarify') {
-                        const intent = (guided[0] && guided[0].__intent) ? guided[0].__intent : 'unknown';
-                        const suggest = (intent === 'intro')
-                            ? '你更想看「入门路线」还是「需要先补的基础（C# / tML）」？'
-                            : '你更偏向「具体实现步骤」还是「先看一篇概览/最小示例」？';
-                        dialogBody.innerHTML = `
-                            <div>为了更准确地给你定位“可直接照做的教程段落”，我需要确认一个点：${suggest}</div>
-                            <div class="expand-card-meta" style="margin-top: 8px; margin-bottom: 10px;">我先把站内最相关的引用线索贴出来（点击标题可跳转全文）：</div>
-                            ${quoteCards}
-                        `;
-                        dialog.style.display = 'block';
-                        return;
-                    }
+			                const merged = new Map();
+			                for (const it of candidates) {
+			                    if (!it) continue;
+			                    const k = buildKey(it);
+			                    merged.set(k, { item: it, bm25: (Number(it.score) || 0) / bm25Max, sem: 0 });
+			                }
+			                for (const it of semHits) {
+			                    if (!it) continue;
+			                    const k = buildKey(it);
+			                    const semScore = (Number(it.score) || 0) / semMax;
+			                    if (merged.has(k)) {
+			                        merged.get(k).sem = Math.max(merged.get(k).sem, semScore);
+			                        continue;
+			                    }
+			                    merged.set(k, { item: it, bm25: 0, sem: semScore });
+			                }
 
-                    dialogBody.innerHTML = `
-                        <div>我在站内文章中找到了这些可能相关的原文线索（点击标题查看上下文）：</div>
-                        <div style="margin-top: 10px;">${quoteCards}</div>
-                    `;
-                    dialog.style.display = 'block';
-                };
+			                let guided = Array.from(merged.values()).map(({ item, bm25, sem }) => {
+			                    const combined = applyRoutingMultipliers(item, (weightLexical * bm25) + (weightSemantic * sem));
+			                    const titleLower = String(item.title || '').toLowerCase();
+			                    const textLower = String(item.text || '').toLowerCase();
+			                    const hay = titleLower + '\n' + textLower;
 
-                if (dialogMode && !dialogMode.__guidedBound) {
-                    dialogMode.__guidedBound = true;
-                    dialogMode.addEventListener('change', () => {
-                        dialogMode.__userTouched = true;
-                        renderDialog(dialogMode.value);
-                    });
-                }
+			                    let hardHit = 0;
+			                    if (expandedHard.length) {
+			                        for (const t of expandedHard) {
+			                            if (!t || t.length < 2) continue;
+			                            if (hay.includes(t)) {
+			                                hardHit = 1;
+			                                break;
+			                            }
+			                        }
+			                    }
 
-                // 根据 intent 自动选择模板（用户手动切换后不再覆盖）
-                if (dialogMode && !dialogMode.__userTouched && this.guidedEngine && typeof this.guidedEngine.classifyQuery === 'function') {
-                    const routing = this.guidedEngine.classifyQuery(this.currentQuery);
-                    const prefer = routing && routing.preferredTemplate ? routing.preferredTemplate : 'concise';
-                    if (dialogMode.value !== prefer) dialogMode.value = prefer;
-                }
+			                    const hardRequired = expandedHard.length > 0;
+			                    const gated = hardRequired && hardHit === 0 ? combined * 0.08 : combined;
+			                    return { ...item, score: gated, __bm25: bm25, __sem: sem, __hardHit: hardHit, __intent: intent };
+			                });
+			                guided.sort((a, b) => (b.score || 0) - (a.score || 0));
 
-                renderDialog(dialogMode ? dialogMode.value : 'concise');
+			                // 文档多样性：先选 top 文档，再取段落
+			                const docLimit = 12;
+			                const maxPerDoc = 3;
+			                const docScore = new Map();
+			                for (const g of guided.slice(0, 200)) {
+			                    const p = g.path || '';
+			                    if (!p) continue;
+			                    const prev = docScore.get(p) || 0;
+			                    docScore.set(p, Math.max(prev, Number(g.score) || 0));
+			                }
+			                const topDocs = Array.from(docScore.entries()).sort((a, b) => b[1] - a[1]).slice(0, docLimit).map(([p]) => p);
+			                const allowed = new Set(topDocs);
+			                const perDoc = new Map();
+			                const diversified = [];
+			                for (const g of guided) {
+			                    const p = g.path || '';
+			                    if (!allowed.has(p)) continue;
+			                    const c = perDoc.get(p) || 0;
+			                    if (c >= maxPerDoc) continue;
+			                    perDoc.set(p, c + 1);
+			                    diversified.push(g);
+			                    if (diversified.length >= 12) break;
+			                }
+			                guided = diversified;
 
-                list.innerHTML = guided.map(item => {
-                    const url = `${viewerBase}?file=${encodeURIComponent(item.path)}`;
-                    const safeText = this.highlightText(esc(item.text || ''), this.currentQuery);
-                    const safeTitle = esc(item.title || item.path || '来源文章');
-                    const metaParts = [];
-                    if (item.category) metaParts.push(esc(this.getCategoryText(item.category)));
-                    if (item.difficulty) metaParts.push(esc(this.getDifficultyText(item.difficulty)));
-                    if (item.last_updated) metaParts.push('更新: ' + esc(item.last_updated));
-                    return `
-                        <div class="guided-answer-item expand-card" data-expanded="false">
-                            <div class="guided-answer-meta expand-card-header">
-                                <span class="guided-answer-source expand-card-title"><a href="${url}">${safeTitle}</a></span>
-                                <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
-                            </div>
-                            ${metaParts.length ? `<div class="expand-card-meta">${metaParts.join(' · ')}</div>` : ''}
-                            <div class="guided-answer-snippet expand-card-body">${safeText}</div>
-                        </div>
-                    `;
-                }).join('');
+		                if (token !== this.guidedUpdateToken) return;
 
-                container.style.display = 'block';
-            }
+		                if (this.blockedDocs && this.blockedDocs.size > 0) {
+		                    guided = (guided || []).filter(x => x && x.path && !this.blockedDocs.has(x.path));
+		                }
+
+		                if (!guided.length) {
+		                    container.style.display = 'none';
+		                    list.innerHTML = '';
+		                    if (dialog) dialog.style.display = 'none';
+		                    if (dialogBody) dialogBody.innerHTML = '';
+		                    return;
+		                }
+
+		                const guidedForDialog = guided.slice(0, 12);
+		                const guidedForList = guided.slice(0, 8);
+	
+	                const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
+	                    ? window.SiteUtils.escapeHtml
+	                    : (v) => String(v).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+	
+	                const viewerBase = this.getViewerBase();
+	
+	                // 对话模板（严格基于引用内容，不生成无出处结论）
+	                const uniqueDocs = [];
+	                const seenDocPath = new Set();
+	                for (const item of guidedForDialog) {
+	                    if (!item || !item.path) continue;
+	                    if (seenDocPath.has(item.path)) continue;
+	                    seenDocPath.add(item.path);
+	                    uniqueDocs.push(item);
+	                    if (uniqueDocs.length >= 5) break;
+	                }
+	
+	                const renderDialog = (mode) => {
+	                    if (!dialog || !dialogBody) return;
+	                    const m = mode || 'concise';
+	
+	                    const hash32 = (str) => {
+	                        let h = 0x811c9dc5;
+	                        const s = String(str || '');
+	                        for (let i = 0; i < s.length; i++) {
+	                            h ^= s.charCodeAt(i);
+	                            h = Math.imul(h, 0x01000193);
+	                        }
+	                        return h >>> 0;
+	                    };
+	                    const pick = (arr, key) => {
+	                        if (!arr || arr.length === 0) return '';
+	                        return arr[hash32(key) % arr.length];
+	                    };
+	
+	                    const routing = (this.guidedEngine && typeof this.guidedEngine.classifyQuery === 'function')
+	                        ? this.guidedEngine.classifyQuery(this.currentQuery)
+	                        : null;
+	                    const intent = (routing && routing.intent)
+	                        ? routing.intent
+	                        : ((guidedForDialog[0] && guidedForDialog[0].__intent) ? guidedForDialog[0].__intent : 'unknown');
+	
+	                    const introLeads = [
+	                        '慢慢来完全没关系。我们先把“从哪里开始、先学什么”这件事理顺。',
+	                        '你已经在做最关键的一步了：把问题说出来。我们先用站内文章把路线跑通。',
+	                        '入门阶段最怕信息太散。先按一条主线走，后面再补细节。'
+	                    ];
+	                    const howtoLeads = [
+	                        '我们尽量走最短路径：先找一个“能照着做”的最小示例。',
+	                        '我先把站内最相关的可操作段落给你挑出来，你点开就能看上下文。',
+	                        '别急着一次做很复杂的版本，我们先把核心步骤落地。'
+	                    ];
+	                    const troubleLeads = [
+	                        '这种问题通常能定位到一个具体环节。我们先用站内线索把范围缩小。',
+	                        '先稳住：从现象入手，按顺序排查。下面这些引用段落可能会对上你的症状。',
+	                        '排错时最重要的是复现路径和关键条件。先看这些线索能不能对上。'
+	                    ];
+	
+	                    const lead = (intent === 'intro')
+	                        ? pick(introLeads, this.currentQuery + '|intro|' + m)
+	                        : (intent === 'troubleshoot')
+	                            ? pick(troubleLeads, this.currentQuery + '|trouble|' + m)
+	                            : pick(howtoLeads, this.currentQuery + '|howto|' + m);
+	
+	                    const docLinks = uniqueDocs.map((d, idx) => {
+	                        const u = `${viewerBase}?file=${encodeURIComponent(d.path)}`;
+	                        const t = esc(d.title || d.path || `文档 ${idx + 1}`);
+	                        return `<a href="${u}">《${t}》</a>`;
+	                    });
+	
+	                    const quoteCards = guidedForDialog.slice(0, 4).map(item => {
+	                        const u = `${viewerBase}?file=${encodeURIComponent(item.path)}`;
+	                        const t = esc(item.title || item.path || '来源文章');
+	                        const q = this.highlightText(esc(item.text || ''), this.currentQuery);
+	                        const docPathAttr = encodeURIComponent(item.path || '');
+	                        return `
+	                            <div class="expand-card" data-expanded="false" data-doc-path="${docPathAttr}">
+	                                <div class="expand-card-header">
+	                                    <div class="expand-card-title">来自 <a href="${u}">《${t}》</a></div>
+	                                    <div style="display: flex; gap: 8px; align-items: center;">
+	                                        <button type="button" class="mismatch-toggle" title="屏蔽这篇文章（本次会话）">与预期不符</button>
+	                                        <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
+	                                    </div>
+	                                </div>
+	                                <div class="expand-card-body">${q}</div>
+	                            </div>
+	                        `;
+	                    }).join('');
+	
+	                    // 推荐文章卡片（每篇取一个最相关段落作为可展开内容）
+	                    const firstQuoteByDoc = new Map();
+	                    for (const item of guidedForDialog) {
+	                        if (!item || !item.path) continue;
+	                        if (firstQuoteByDoc.has(item.path)) continue;
+	                        firstQuoteByDoc.set(item.path, item);
+	                    }
+	
+	                    const docCards = uniqueDocs.map((d) => {
+	                        const u = `${viewerBase}?file=${encodeURIComponent(d.path)}`;
+	                        const t = esc(d.title || d.path || '来源文章');
+	                        const q = firstQuoteByDoc.get(d.path);
+	                        const metaParts = [];
+	                        if (d.category) metaParts.push(esc(this.getCategoryText(d.category)));
+	                        if (d.difficulty) metaParts.push(esc(this.getDifficultyText(d.difficulty)));
+	                        if (d.last_updated) metaParts.push('更新: ' + esc(d.last_updated));
+	                        const docPathAttr = encodeURIComponent(d.path || '');
+	                        return `
+	                            <div class="expand-card" data-expanded="false" data-doc-path="${docPathAttr}">
+	                                <div class="expand-card-header">
+	                                    <div class="expand-card-title"><a href="${u}">《${t}》</a></div>
+	                                    <div style="display: flex; gap: 8px; align-items: center;">
+	                                        <button type="button" class="mismatch-toggle" title="屏蔽这篇文章（本次会话）">与预期不符</button>
+	                                        <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
+	                                    </div>
+	                                </div>
+	                                ${metaParts.length ? `<div class="expand-card-meta">${metaParts.join(' · ')}</div>` : ''}
+	                                <div class="expand-card-body">${q ? this.highlightText(esc(q.text || ''), this.currentQuery) : ''}</div>
+	                            </div>
+	                        `;
+	                    }).join('');
+	
+	                    if (m === 'path') {
+	                        dialogBody.innerHTML = `
+	                            <div style="margin-bottom: 10px;">${lead}</div>
+	                            <div style="margin-bottom: 10px;">你可以先从这些文章开始阅读（按相关度推荐）：${docLinks.slice(0, 3).join(' → ') || '（暂无）'}。</div>
+	                            <div class="expand-card-meta" style="margin-bottom: 10px;">点击标题看全文；点击“展开”查看该文最相关的引用段落。</div>
+	                            ${docCards}
+	                        `;
+	                        dialog.style.display = 'block';
+	                        return;
+	                    }
+	
+	                    if (m === 'clarify') {
+	                        const intent = (guidedForDialog[0] && guidedForDialog[0].__intent) ? guidedForDialog[0].__intent : 'unknown';
+	                        const suggest = (intent === 'intro')
+	                            ? '你更想看「入门路线」还是「需要先补的基础（C# / tML）」？'
+	                            : '你更偏向「具体实现步骤」还是「先看一篇概览/最小示例」？';
+	                        dialogBody.innerHTML = `
+	                            <div style="margin-bottom: 8px;">${lead}</div>
+	                            <div>为了更准确地给你定位“可直接照做的教程段落”，我需要确认一个点：${suggest}</div>
+	                            <div class="expand-card-meta" style="margin-top: 8px; margin-bottom: 10px;">我先把站内最相关的引用线索贴出来（点击标题可跳转全文）：</div>
+	                            ${quoteCards}
+	                        `;
+	                        dialog.style.display = 'block';
+	                        return;
+	                    }
+	
+	                    dialogBody.innerHTML = `
+	                        <div style="margin-bottom: 10px;">${lead}</div>
+	                        <div>我在站内文章中找到了这些可能相关的原文线索（点击标题查看上下文）：</div>
+	                        <div style="margin-top: 10px;">${quoteCards}</div>
+	                    `;
+	                    dialog.style.display = 'block';
+	                };
+	
+	                if (dialogMode && !dialogMode.__guidedBound) {
+	                    dialogMode.__guidedBound = true;
+	                    dialogMode.addEventListener('change', () => {
+	                        dialogMode.__userTouched = true;
+	                        renderDialog(dialogMode.value);
+	                    });
+	                }
+	
+	                // 根据 intent 自动选择模板（用户手动切换后不再覆盖）
+	                if (dialogMode && !dialogMode.__userTouched && this.guidedEngine && typeof this.guidedEngine.classifyQuery === 'function') {
+	                    const routing = this.guidedEngine.classifyQuery(this.currentQuery);
+	                    const prefer = routing && routing.preferredTemplate ? routing.preferredTemplate : 'concise';
+	                    if (dialogMode.value !== prefer) dialogMode.value = prefer;
+	                }
+	
+	                renderDialog(dialogMode ? dialogMode.value : 'concise');
+	
+	                list.innerHTML = guidedForList.map(item => {
+	                    const url = `${viewerBase}?file=${encodeURIComponent(item.path)}`;
+	                    const safeText = this.highlightText(esc(item.text || ''), this.currentQuery);
+	                    const safeTitle = esc(item.title || item.path || '来源文章');
+	                    const metaParts = [];
+	                    if (item.category) metaParts.push(esc(this.getCategoryText(item.category)));
+	                    if (item.difficulty) metaParts.push(esc(this.getDifficultyText(item.difficulty)));
+	                    if (item.last_updated) metaParts.push('更新: ' + esc(item.last_updated));
+	                    const docPathAttr = encodeURIComponent(item.path || '');
+	                    return `
+	                        <div class="guided-answer-item expand-card" data-expanded="false" data-doc-path="${docPathAttr}">
+	                            <div class="guided-answer-meta expand-card-header">
+	                                <span class="guided-answer-source expand-card-title"><a href="${url}">${safeTitle}</a></span>
+	                                <div style="display: flex; gap: 8px; align-items: center;">
+	                                    <button type="button" class="mismatch-toggle" title="屏蔽这篇文章（本次会话）">与预期不符</button>
+	                                    <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
+	                                </div>
+	                            </div>
+	                            ${metaParts.length ? `<div class="expand-card-meta">${metaParts.join(' · ')}</div>` : ''}
+	                            <div class="guided-answer-snippet expand-card-body">${safeText}</div>
+	                        </div>
+	                    `;
+	                }).join('');
+	
+	                container.style.display = 'block';
+	            }
 
             // 显示搜索结果
             displaySearchResults() {
@@ -1832,12 +2555,16 @@
             createResultItem(result) {
                 const highlightedTitle = this.highlightText(result.title || '', this.currentQuery);
                 const highlightedDescription = this.highlightText(result.description || '', this.currentQuery);
+                const docPathAttr = encodeURIComponent(result.path || '');
 
                 return `
-                    <div class="search-result-item-page expand-card" data-expanded="false">
+                    <div class="search-result-item-page expand-card" data-expanded="false" data-doc-path="${docPathAttr}">
                         <div class="expand-card-header" style="margin-bottom: 8px;">
                             <h3 class="search-result-title-page expand-card-title" style="margin: 0;">${highlightedTitle}</h3>
-                            <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button type="button" class="mismatch-toggle" title="屏蔽这篇文章（本次会话）">与预期不符</button>
+                                <button type="button" class="expand-toggle" aria-expanded="false">展开</button>
+                            </div>
                         </div>
                         <div class="expand-card-body">
                             <p class="search-result-description-page" style="margin: 0 0 10px 0;">${highlightedDescription}</p>
@@ -1891,56 +2618,10 @@
                 this.displaySearchResults();
             }
 
-            // 筛选搜索结果
-            filterSearchResults() {
-                const category = document.getElementById('search-category').value;
-                const difficulty = document.getElementById('search-difficulty').value;
-
-                this.updateGuidedAnswer();
-
-                let filteredResults = [...this.searchResults];
-
-                if (category) {
-                    filteredResults = filteredResults.filter(result =>
-                        result.category.includes(category)
-                    );
-                }
-
-                if (difficulty) {
-                    filteredResults = filteredResults.filter(result =>
-                        result.difficulty === difficulty
-                    );
-                }
-
-                // 临时显示筛选结果
-                const resultsContainer = document.getElementById('search-results-container');
-                const resultsCount = document.getElementById('results-count');
-
-                if (filteredResults.length === 0) {
-                    resultsContainer.innerHTML = `
-                        <div style="text-align: center; padding: 40px;">
-                            <p>没有符合筛选条件的搜索结果</p>
-                        </div>
-                    `;
-                } else {
-                    resultsCount.textContent = filteredResults.length;
-                    resultsContainer.innerHTML = filteredResults.map(result =>
-                        this.createResultItem(result)
-                    ).join('');
-
-                    // 重新绑定点击事件
-                    resultsContainer.querySelectorAll('.search-result-item-page').forEach((item, index) => {
-                        item.addEventListener('click', () => {
-                            window.location.href = filteredResults[index].url;
-                        });
-                    });
-                }
-            }
-
-            // 加载搜索历史
-            loadSearchHistory() {
-                const history = localStorage.getItem('searchHistory');
-                return history ? JSON.parse(history) : [];
+	            // 加载搜索历史
+	            loadSearchHistory() {
+	                const history = localStorage.getItem('searchHistory');
+	                return history ? JSON.parse(history) : [];
             }
 
             // 保存搜索历史
