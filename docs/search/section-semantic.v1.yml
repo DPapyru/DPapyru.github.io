@@ -1,6 +1,301 @@
 version: 1
 schema: section-semantic.v1
-generatedAt: null
-model: null
+generatedAt: '2026-01-24T05:29:08.135Z'
+model: glm-4.7-Flash
 promptVersion: 1
-sections: []
+sections:
+  - id: 风凌的模组制作大观/0-原版游戏运行原理/对象池思想.md#内容
+    docPath: 风凌的模组制作大观/0-原版游戏运行原理/对象池思想.md
+    heading: 内容
+    level: 1
+    hash: sha256:3954d21234e80dbe480655b2a37f7b9536d186adfef5fe84a766543e3d93ae18
+    stage: basics
+    phrases:
+      - 泰拉瑞亚对象池是什么
+      - Main.projectile 数组原理
+      - NewProjectile 方法实现
+      - 对象池复用机制
+      - 减少GC性能开销
+      - 原版实体管理方式
+    aliases:
+      - from: 对象池思想
+        to: 对象池
+      - from: Main.projectile
+        to: 弹幕数组
+      - from: NewProjectile
+        to: 生成弹幕
+      - from: 标记为空闲
+        to: 复用对象
+      - from: FindOldestProjectile
+        to: 获取旧弹幕
+    avoid:
+      - 代码
+      - 方法
+      - 数组
+      - 性能
+      - 原理
+      - 内容
+  - id: 风凌的模组制作大观/0-原版游戏运行原理/世界观.md#内容
+    docPath: 风凌的模组制作大观/0-原版游戏运行原理/世界观.md
+    heading: 内容
+    level: 1
+    hash: sha256:dd42618d23dfdf4a7b3925d9bdd43bdff11c1b78db18bbd6c867bfa3284f15cc
+    stage: basics
+    phrases:
+      - 为什么泰拉瑞亚不能调整FPS
+      - 泰拉瑞亚的tick是什么
+      - 游戏逻辑和渲染有什么区别
+      - 泰拉瑞亚是单线程的吗
+      - 一秒60tick是什么意思
+      - 泰拉瑞亚的绘制顺序是怎样的
+    aliases:
+      - from: 60tick
+        to: 逻辑帧
+      - from: 掉帧
+        to: 渲染帧率
+      - from: 渲染
+        to: 绘制
+      - from: 单线程
+        to: 顺序执行
+      - from: 帧
+        to: tick
+    avoid:
+      - 游戏
+      - 运行
+      - 原理
+      - 机制
+      - 系统
+      - 泰拉瑞亚
+  - id: 风凌的模组制作大观/0-原版游戏运行原理/物品原理.md#内容
+    docPath: 风凌的模组制作大观/0-原版游戏运行原理/物品原理.md
+    heading: 内容
+    level: 1
+    hash: sha256:54d38909a2a6916c4333f1ea0039f1a665cd96bff229db35765ca40114e4e798
+    stage: basics
+    phrases:
+      - 泰拉瑞亚 Item 是什么
+      - 物品在背包里和掉落物有什么区别
+      - Item 的两种存在形态
+      - 丢弃物品时发生了什么
+      - Item 是逻辑实体吗
+      - Player.inventory 和 Main.item 的区别
+    aliases:
+      - from: 弱实体
+        to: 掉落物
+      - from: 强实体
+        to: 背包物品
+      - from: 复制
+        to: 物品丢弃
+      - from: 隐去
+        to: 删除
+      - from: 状态对象
+        to: Item类
+    avoid:
+      - 目录
+      - 索引
+      - 搜索
+      - 引用
+      - 概念
+      - 定义
+  - id: 风凌的模组制作大观/前言.md#内容
+    docPath: 风凌的模组制作大观/前言.md
+    heading: 内容
+    level: 1
+    hash: sha256:25a66cf2de0b6dd106ac6f9adfc20f13b7068a9511e67095bef9459edb9e01f9
+    stage: intro
+    phrases:
+      - 模组制作入门知识
+      - 原版游戏运行原理
+      - TML 运行原理
+      - 如何理解代码运行
+      - 初学者模组制作
+      - 模组制作辅助知识
+    aliases:
+      - from: 代码究竟是如何跑起来的
+        to: 代码运行原理
+      - from: 实现自己的需求
+        to: 需求实现
+      - from: 物品，弹幕，NPC
+        to: 基础实体
+      - from: 模组制作辅助知识
+        to: 模组制作
+      - from: 初学者
+        to: 入门
+      - from: tml
+        to: TModLoader
+    avoid:
+      - 前言
+      - 目录
+      - 索引
+      - 搜索
+      - 风凌
+      - 世界观
+  - id: 螺线翻译tml教程/0-开始/0-Home 主页.md#advanced-guides
+    docPath: 螺线翻译tml教程/0-开始/0-Home 主页.md
+    heading: Advanced guides
+    level: 2
+    hash: sha256:bbd991969dd608c80ebd63fe880b2d87ea30c6fce513e2bd2b3d3bee3efd3d2e
+    stage: advanced
+    phrases:
+      - tModLoader 高级指南有哪些
+      - 如何修改 tModLoader 私有成员
+      - 修改模组内部成员的方法
+      - tModLoader 高级教程
+      - 什么时候可以看高级指南
+      - 访问和修改私有变量
+    aliases:
+      - from: 修改私有
+        to: 修改私有成员
+      - from: tML
+        to: tModLoader
+      - from: 内部变量
+        to: 内部成员
+    avoid:
+      - 目录
+      - 索引
+      - 列表
+      - 搜索
+      - 教程
+      - 导航
+  - id: 螺线翻译tml教程/0-开始/0-Home 主页.md#development
+    docPath: 螺线翻译tml教程/0-开始/0-Home 主页.md
+    heading: Development
+    level: 2
+    hash: sha256:c024f431d69405c0af8922070a6c34ff0738a434b3b2051a33a013e41c5873c2
+    stage: basics
+    phrases:
+      - 如何设置开发环境
+      - tModLoader 开发教程
+      - 如何调试代码
+      - 如何更新模组
+      - Visual Studio 怎么用
+      - IDE 辅助开发
+    aliases:
+      - from: 移植
+        to: 更新模组
+      - from: IDE
+        to: 开发环境
+      - from: 调试
+        to: Debug
+      - from: Debug
+        to: 调试
+      - from: 环境
+        to: 开发环境
+    avoid:
+      - 目录
+      - 索引
+      - 搜索
+      - 链接
+      - 列表
+      - 项目符号
+  - id: 螺线翻译tml教程/0-开始/0-Home 主页.md#easy-guides
+    docPath: 螺线翻译tml教程/0-开始/0-Home 主页.md
+    heading: Easy guides
+    level: 2
+    hash: sha256:e2b924ef6141aa56de4bd250ea56367257764ebe6572e04675afe8acfda43ec3
+    stage: intro
+    phrases:
+      - tModLoader 入门指南
+      - 新手 tModLoader 教程
+      - tModLoader API 学习
+      - tModLoader 制作内容指南
+      - tModLoader 基础教程
+    aliases:
+      - from: tML
+        to: tModLoader
+      - from: tModLoader 教程
+        to: tModLoader 入门
+      - from: tModLoader API
+        to: tModLoader
+      - from: tML 教程
+        to: tModLoader 教程
+    avoid:
+      - 目录
+      - 索引
+      - 列表
+      - 指南
+      - 教程
+      - 开始
+  - id: 螺线翻译tml教程/0-开始/0-Home 主页.md#expert-guides
+    docPath: 螺线翻译tml教程/0-开始/0-Home 主页.md
+    heading: Expert guides
+    level: 2
+    hash: sha256:9caa04d6cc8081676a3888d6a2a22abdf3221e3a7f73a78819b6f004566eb016
+    stage: advanced
+    phrases:
+      - 如何提高模组质量
+      - tModLoader 专家指南是什么
+      - 如何使用 MonoMod 打补丁
+      - tModLoader 代码分析器怎么配置
+      - 如何实现新的代码修复
+      - Armor dyes 和 screen shaders 是什么
+    aliases:
+      - from: MonoMod 打补丁
+        to: MonoMod
+      - from: 代码分析器
+        to: Code Analyzer
+      - from: 屏幕着色器
+        to: Screen Shaders
+      - from: 代码修复
+        to: Code Fixes
+    avoid:
+      - 指南
+      - 教程
+      - 模组
+      - tModLoader
+      - 游戏
+      - 学习
+  - id: 螺线翻译tml教程/0-开始/0-Home 主页.md#getting-started
+    docPath: 螺线翻译tml教程/0-开始/0-Home 主页.md
+    heading: Getting started
+    level: 2
+    hash: sha256:b5b2984e5f07058502c74b033ed22b14bf6a58ab0c54441af6805ce5030ccf76
+    stage: intro
+    phrases:
+      - tModLoader 怎么学
+      - 怎么开始做模组
+      - tModLoader 入门教程
+      - 怎么开模组服
+      - tModLoader 出错怎么办
+      - tModLoader 是什么
+    aliases:
+      - from: tML
+        to: tModLoader
+      - from: 模组服
+        to: 模组服务器
+      - from: 做模组
+        to: 制作模组
+      - from: tModLoader 教程
+        to: tML 教程
+    avoid:
+      - 开始
+      - 主页
+      - 目录
+      - 索引
+      - 导航
+      - 链接
+  - id: 螺线翻译tml教程/0-开始/0-Home 主页.md#class-documentation
+    docPath: 螺线翻译tml教程/0-开始/0-Home 主页.md
+    heading: Class Documentation
+    level: 4
+    hash: sha256:c111536323fa290e450bb5d8685cf41dddf3a91108f826c00c2b2a75afe52e81
+    stage: basics
+    phrases:
+      - 什么是类文档
+      - 如何阅读类文档
+      - 类文档格式
+      - 类文档结构
+      - 类文档说明
+    aliases:
+      - from: Class doc
+        to: 类文档
+      - from: Class docs
+        to: 类文档
+      - from: 类文档说明
+        to: 类文档
+    avoid:
+      - 文档
+      - 类
+      - 目录
+      - 索引
+      - 搜索

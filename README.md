@@ -60,7 +60,8 @@
 1. 在仓库 Settings → Secrets and variables → Actions 中添加：
    - `LLM_API_KEY`：大模型 API Key
    - `LLM_BASE_URL`：OpenAI 兼容 base url（以 `/v1` 结尾）
-   - （可选）`LLM_MODEL`：默认 `glm-4.5-flash`
+   - （可选）`LLM_MODEL`：默认 `glm-4.7-flash`
+   - （可选）`MAX_SECTIONS`：本次最多处理多少个小节（用于分批更新/控成本）
 2. 在 Actions 中手动运行：`Update Section Semantic (LLM)`（会自动创建/更新一个 PR）
 3. 合并 PR 后，再由 Pages 部署流程发布
 

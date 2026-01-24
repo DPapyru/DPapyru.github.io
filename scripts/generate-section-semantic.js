@@ -5,10 +5,10 @@
 // Env:
 // - LLM_API_KEY (required)
 // - LLM_BASE_URL (required, OpenAI-compatible base URL, e.g. https://.../v1)
-// - LLM_MODEL (optional, default: glm-4.5-flash)
+// - LLM_MODEL (optional, default: glm-4.7-flash)
 // - SECTION_SEMANTIC_PATH (optional, default: docs/search/section-semantic.v1.yml)
 // - MAX_SECTIONS (optional, limit generation)
-// - CONCURRENCY (optional, default: 2)
+// - CONCURRENCY (optional, default: 1; 强制上限: 1，避免触发供应商并发限制)
 //
 // Notes:
 // - Only updates new/changed sections (by sha256 hash).
@@ -31,6 +31,13 @@ function sha256(text) {
 function ensureDirForFile(filePath) {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+}
+
+function atomicWriteFileSync(filePath, content) {
+    ensureDirForFile(filePath);
+    const tmp = `${filePath}.tmp-${process.pid}-${Date.now()}`;
+    fs.writeFileSync(tmp, content, 'utf8');
+    fs.renameSync(tmp, filePath);
 }
 
 function stripFrontMatter(markdownText) {
@@ -214,6 +221,19 @@ function extractJsonObject(text) {
     }
 }
 
+function parseRetryAfterMs(resp) {
+    if (!resp || !resp.headers || typeof resp.headers.get !== 'function') return null;
+    const raw = String(resp.headers.get('retry-after') || '').trim();
+    if (!raw) return null;
+    const seconds = Number(raw);
+    if (Number.isFinite(seconds) && seconds >= 0) return Math.floor(seconds * 1000);
+    const when = Date.parse(raw);
+    if (!Number.isFinite(when)) return null;
+    const ms = when - Date.now();
+    if (!Number.isFinite(ms) || ms <= 0) return null;
+    return Math.floor(ms);
+}
+
 async function callChat({ baseUrl, apiKey, model, prompt }) {
     const url = baseUrl.replace(/\/+$/, '') + '/chat/completions';
     const resp = await fetch(url, {
@@ -243,7 +263,10 @@ async function callChat({ baseUrl, apiKey, model, prompt }) {
     });
     if (!resp.ok) {
         const t = await resp.text().catch(() => '');
-        throw new Error(`LLM 请求失败：${resp.status} ${t}`.slice(0, 800));
+        const err = new Error(`LLM 请求失败：${resp.status} ${t}`.slice(0, 800));
+        err.status = resp.status;
+        err.retryAfterMs = parseRetryAfterMs(resp);
+        throw err;
     }
     const json = await resp.json();
     const content = json && json.choices && json.choices[0] && json.choices[0].message && json.choices[0].message.content;
@@ -281,10 +304,12 @@ function buildPrompt({ docPath, heading, level, plainText }) {
 async function main() {
     const apiKey = process.env.LLM_API_KEY || '';
     const baseUrl = process.env.LLM_BASE_URL || '';
-    const model = process.env.LLM_MODEL || 'glm-4.5-flash';
+    const model = process.env.LLM_MODEL || 'glm-4.7-flash';
     const outPath = process.env.SECTION_SEMANTIC_PATH || DEFAULT_OUT;
     const maxSections = process.env.MAX_SECTIONS ? Number(process.env.MAX_SECTIONS) : null;
-    const concurrency = process.env.CONCURRENCY ? Math.max(1, Number(process.env.CONCURRENCY)) : 2;
+    const concurrencyRequested = process.env.CONCURRENCY ? Math.max(1, Number(process.env.CONCURRENCY)) : 1;
+    const concurrency = 1;
+    const flushEvery = process.env.FLUSH_EVERY ? Math.max(1, Number(process.env.FLUSH_EVERY)) : 10;
 
     if (!apiKey) throw new Error('缺少环境变量 LLM_API_KEY');
     if (!baseUrl) throw new Error('缺少环境变量 LLM_BASE_URL（OpenAI 兼容 base url，如 https://.../v1）');
@@ -344,6 +369,40 @@ async function main() {
     if (limited.length === 0) return;
 
     let cursor = 0;
+    let processed = 0;
+    let flushChain = Promise.resolve();
+
+    const buildSnapshotDoc = () => {
+        const sections = Array.from(existingById.values());
+        sections.sort((a, b) => {
+            const ap = String(a.docPath || '');
+            const bp = String(b.docPath || '');
+            if (ap !== bp) return ap.localeCompare(bp);
+            const al = (a.level || 0) - (b.level || 0);
+            if (al !== 0) return al;
+            return String(a.id || '').localeCompare(String(b.id || ''));
+        });
+        return {
+            version: 1,
+            schema: 'section-semantic.v1',
+            generatedAt: new Date().toISOString(),
+            model,
+            promptVersion: 1,
+            sections
+        };
+    };
+
+    const scheduleFlush = (force) => {
+        flushChain = flushChain.then(() => {
+            if (!force && processed % flushEvery !== 0) return;
+            const snapshot = buildSnapshotDoc();
+            atomicWriteFileSync(outPath, stableDumpYaml(snapshot));
+            console.log(`已写入（中间保存）：${outPath}（已完成 ${processed}/${limited.length}）`);
+        }).catch((e) => {
+            console.warn('中间保存失败（可继续运行，但可能无法断点续跑）：', e && e.message ? e.message : String(e));
+        });
+    };
+
     async function worker() {
         while (cursor < limited.length) {
             const idx = cursor++;
@@ -353,13 +412,23 @@ async function main() {
             console.log(`LLM 标注: ${idx + 1}/${limited.length} ${sec.docPath} # ${sec.heading}`);
 
             let content = '';
-            for (let attempt = 1; attempt <= 3; attempt++) {
+            for (let attempt = 1; attempt <= 8; attempt++) {
                 try {
                     content = await callChat({ baseUrl, apiKey, model, prompt });
                     break;
                 } catch (e) {
-                    if (attempt === 3) throw e;
-                    await new Promise(r => setTimeout(r, 800 * attempt));
+                    const status = e && typeof e.status === 'number' ? e.status : null;
+                    const retryAfterMs = e && typeof e.retryAfterMs === 'number' ? e.retryAfterMs : null;
+                    const retryable = status === 429 || status === 408 || (typeof status === 'number' && status >= 500 && status <= 599);
+                    if (attempt === 8 || !retryable) throw e;
+
+                    const base = status === 429 ? 2500 : 800;
+                    const cap = status === 429 ? 60000 : 15000;
+                    const backoff = Math.min(cap, base * Math.pow(2, attempt - 1));
+                    const jitter = Math.floor(Math.random() * 250);
+                    const waitMs = Math.max(300, retryAfterMs != null ? retryAfterMs : backoff) + jitter;
+                    console.warn(`LLM 重试：${sec.docPath} # ${sec.heading}（attempt ${attempt}/8, status=${status || 'unknown'}, wait=${waitMs}ms）`);
+                    await new Promise(r => setTimeout(r, waitMs));
                 }
             }
 
@@ -386,42 +455,30 @@ async function main() {
                 avoid
             };
             existingById.set(sec.id, next);
+
+            processed++;
+            if (processed % flushEvery === 0) scheduleFlush(false);
         }
+    }
+
+    if (concurrencyRequested !== concurrency) {
+        console.warn(`提示：CONCURRENCY=${concurrencyRequested} 已被忽略；当前仅支持并发=${concurrency}（避免 429 并发限制）。`);
     }
 
     const workers = [];
     for (let i = 0; i < concurrency; i++) workers.push(worker());
-    await Promise.all(workers);
-
-    const merged = [];
-    for (const sec of discovered) {
-        const s = existingById.get(sec.id);
-        if (!s) continue;
-        merged.push(s);
+    try {
+        await Promise.all(workers);
+    } catch (e) {
+        scheduleFlush(true);
+        await flushChain;
+        console.error(`已尝试写入断点文件：${outPath}（已完成 ${processed}/${limited.length}）`);
+        throw e;
     }
 
-    merged.sort((a, b) => {
-        const ap = String(a.docPath || '');
-        const bp = String(b.docPath || '');
-        if (ap !== bp) return ap.localeCompare(bp);
-        const al = (a.level || 0) - (b.level || 0);
-        if (al !== 0) return al;
-        return String(a.id || '').localeCompare(String(b.id || ''));
-    });
-
-    const now = new Date().toISOString();
-    const outDoc = {
-        version: 1,
-        schema: 'section-semantic.v1',
-        generatedAt: now,
-        model,
-        promptVersion: 1,
-        sections: merged
-    };
-
-    ensureDirForFile(outPath);
-    fs.writeFileSync(outPath, stableDumpYaml(outDoc), 'utf8');
-    console.log(`已写入：${outPath}（${merged.length} 个小节）`);
+    scheduleFlush(true);
+    await flushChain;
+    console.log(`已写入：${outPath}（已完成 ${processed}/${limited.length}，累计 ${existingById.size} 个小节）`);
 }
 
 main().catch((e) => {
