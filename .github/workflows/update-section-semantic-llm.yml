@@ -53,6 +53,8 @@ jobs:
           fi
 
       - name: Generate section semantic YAML
+        id: generate_semantic
+        continue-on-error: true
         env:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
@@ -66,10 +68,13 @@ jobs:
           node scripts/generate-section-semantic.js
 
       - name: Build indices
+        if: always()
+        continue-on-error: true
         run: |
           npm run build
 
       - name: Create Pull Request
+        if: always()
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "chore: update section semantic (LLM)"
