@@ -52,6 +52,24 @@ jobs:
             exit 1
           fi
 
+      - name: Restore checkpoint from PR branch (if exists)
+        run: |
+          set -euo pipefail
+          BRANCH="chore/update-section-semantic-llm"
+          FILE="docs/search/section-semantic.ai.v1.json.gz"
+
+          if git fetch --no-tags --depth=1 origin "${BRANCH}"; then
+            if git cat-file -e "FETCH_HEAD:${FILE}" 2>/dev/null; then
+              mkdir -p "$(dirname "${FILE}")"
+              git show "FETCH_HEAD:${FILE}" > "${FILE}"
+              echo "Restored checkpoint: ${FILE} (from ${BRANCH})"
+            else
+              echo "No checkpoint file found on ${BRANCH}; start fresh."
+            fi
+          else
+            echo "No existing branch ${BRANCH}; start fresh."
+          fi
+
       - name: Generate section semantic YAML
         id: generate_semantic
         continue-on-error: true
@@ -61,6 +79,7 @@ jobs:
           LLM_MODEL: ${{ secrets.LLM_MODEL }}
           MAX_SECTIONS: ${{ github.event.inputs.max_sections }}
           CONCURRENCY: "1"
+          FLUSH_EVERY: "1"
         run: |
           if [ -z "${LLM_MODEL}" ]; then
             export LLM_MODEL="glm-4.7-flash"
