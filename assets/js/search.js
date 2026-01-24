@@ -103,7 +103,7 @@ class TutorialSearch {
         const searchInput = document.createElement('input');
         searchInput.type = 'text';
         searchInput.className = 'search-input';
-        searchInput.placeholder = '搜索教程...';
+        searchInput.placeholder = '引导学习与内容查找...';
         searchInput.id = 'search-input';
         
         const searchButton = document.createElement('button');
@@ -324,9 +324,16 @@ class TutorialSearch {
     async loadSearchIndexFromJson() {
         try {
             const indexPath = this.getSearchIndexPath();
-            const response = await fetch(indexPath);
-            if (!response.ok) return false;
-            const payload = await response.json();
+
+            let payload = null;
+            if (window.SearchIndexLoader && typeof window.SearchIndexLoader.load === 'function') {
+                payload = await window.SearchIndexLoader.load(indexPath);
+            } else {
+                const response = await fetch(indexPath);
+                if (!response.ok) return false;
+                payload = await response.json();
+            }
+
             if (!payload || !Array.isArray(payload.docs)) return false;
 
             const viewerBase = (window.SiteUtils && typeof window.SiteUtils.getViewerBase === 'function')
@@ -338,8 +345,9 @@ class TutorialSearch {
                 const viewerUrl = `${viewerBase}?file=${encodeURIComponent(relativePath)}`;
 
                 return {
-                    title: doc.title || this.extractTitle(doc.content || ''),
+                    title: doc.title || '',
                     url: viewerUrl,
+                    // binary index 默认不包含全文；对首页/导航建议足够
                     content: doc.content || '',
                     description: doc.description || '',
                     category: doc.category || '未分类',
@@ -1179,7 +1187,7 @@ class TutorialSearch {
     hideLoadingState() {
         const searchInput = document.getElementById('search-input');
         if (searchInput) {
-            searchInput.placeholder = '搜索教程...';
+            searchInput.placeholder = '引导学习与内容查找...';
             searchInput.disabled = false;
         }
     }

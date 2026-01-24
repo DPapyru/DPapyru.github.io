@@ -3,9 +3,13 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { resolveCategory, mapToExistingCategory } = require('./lib/category-utils');
+const yaml = require('js-yaml');
 
 const SITE_BASE_URL = 'https://dpapyru.github.io';
 const SEARCH_INDEX_PATH = './assets/search-index.json';
+const GUIDED_INDEX_PATH = './assets/semantic/guided-index.v1.json';
+const BM25_INDEX_PATH = './assets/semantic/bm25-index.v1.json';
+const SECTION_SEMANTIC_PATH = './docs/search/section-semantic.v1.yml';
 
 // 项目配置
 const projectConfig = {
@@ -644,6 +648,61 @@ function stripFrontMatter(markdownText) {
     return text;
 }
 
+function normalizeHeadingText(text) {
+    return String(text || '').replace(/\s+/g, ' ').trim();
+}
+
+function slugifyHeading(heading) {
+    const raw = normalizeHeadingText(heading);
+    const lower = raw.toLowerCase();
+    let s = lower.normalize('NFKC');
+    s = s.replace(/[\t\r\n]+/g, ' ');
+    s = s.replace(/\s+/g, '-');
+    // keep: CJK + latin/number/_ + dash
+    s = s.replace(/[^\u4e00-\u9fff\w\-]+/g, '');
+    s = s.replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return s || 'section';
+}
+
+function loadSectionSemanticMap() {
+    try {
+        if (!fs.existsSync(SECTION_SEMANTIC_PATH)) return new Map();
+        const raw = fs.readFileSync(SECTION_SEMANTIC_PATH, 'utf8');
+        const doc = yaml.load(raw) || {};
+        const sections = Array.isArray(doc.sections) ? doc.sections : [];
+        const map = new Map();
+        for (const s of sections) {
+            if (!s || !s.id) continue;
+            map.set(String(s.id), s);
+        }
+        return map;
+    } catch (e) {
+        console.warn('读取 section semantic YAML 失败，将忽略：', e && e.message ? e.message : String(e));
+        return new Map();
+    }
+}
+
+function buildSectionAugmentText(sectionMeta) {
+    if (!sectionMeta) return '';
+    const parts = [];
+    if (Array.isArray(sectionMeta.phrases)) {
+        for (const p of sectionMeta.phrases) {
+            const s = String(p || '').trim();
+            if (s) parts.push(s);
+        }
+    }
+    if (Array.isArray(sectionMeta.aliases)) {
+        for (const a of sectionMeta.aliases) {
+            if (!a) continue;
+            const from = String(a.from || '').trim();
+            const to = String(a.to || '').trim();
+            if (from) parts.push(from);
+            if (to) parts.push(to);
+        }
+    }
+    return parts.join('\n');
+}
+
 function stripMarkdown(markdownText) {
     let text = stripFrontMatter(markdownText);
 
@@ -664,18 +723,12 @@ function generateSearchIndex(config) {
         return;
     }
 
+    // 为加载速度与体积考虑：search-index.json 以二进制格式写入（仍保留原路径，前端使用 arrayBuffer 解析）
+    // 内容仅包含文档级元数据（不包含全文 content），全文检索由段落 BM25 索引负责。
     const docs = [];
     for (const doc of config.all_files) {
         if (!doc || !doc.path) continue;
         const filePath = String(doc.path);
-        const repoPath = path.join('docs', filePath);
-        let markdown = '';
-        try {
-            markdown = fs.readFileSync(repoPath, 'utf8');
-        } catch {
-            markdown = '';
-        }
-
         docs.push({
             path: filePath,
             filename: doc.filename || path.basename(filePath),
@@ -686,23 +739,839 @@ function generateSearchIndex(config) {
             author: doc.author || '',
             difficulty: doc.difficulty || '',
             time: doc.time || '',
-            min_c: (typeof doc.min_c === 'number' ? doc.min_c : null),
-            min_t: (typeof doc.min_t === 'number' ? doc.min_t : null),
-            last_updated: doc.last_updated || '',
-            content: stripMarkdown(markdown)
+            last_updated: doc.last_updated || ''
         });
     }
 
-    const payload = {
-        version: 1,
-        // 使用可复现的时间戳，避免每次构建都产生无意义的 diff
-        generatedAt: getLastModForPath('docs/config.json'),
-        count: docs.length,
-        docs
+    const fieldNames = [
+        'path',
+        'filename',
+        'title',
+        'description',
+        'category',
+        'topic',
+        'author',
+        'difficulty',
+        'time',
+        'last_updated'
+    ];
+
+    const stringToIndex = new Map();
+    const strings = [];
+    const addString = (value) => {
+        const s = String(value == null ? '' : value);
+        if (!s) return 0;
+        const existing = stringToIndex.get(s);
+        if (existing != null) return existing;
+        const idx = strings.length + 1; // 0 reserved for empty
+        strings.push(s);
+        stringToIndex.set(s, idx);
+        return idx;
     };
 
-    fs.writeFileSync(SEARCH_INDEX_PATH, JSON.stringify(payload), 'utf8');
-    console.log(`search-index 已生成：${SEARCH_INDEX_PATH}（${docs.length} 条）`);
+    const record = new Uint32Array(docs.length * fieldNames.length);
+    for (let i = 0; i < docs.length; i++) {
+        const base = i * fieldNames.length;
+        const d = docs[i];
+        for (let f = 0; f < fieldNames.length; f++) {
+            record[base + f] = addString(d[fieldNames[f]]);
+        }
+    }
+
+    const offsets = new Uint32Array(strings.length + 1);
+    const utf8Chunks = new Array(strings.length);
+    let totalBytes = 0;
+    for (let i = 0; i < strings.length; i++) {
+        offsets[i] = totalBytes;
+        const buf = Buffer.from(strings[i], 'utf8');
+        utf8Chunks[i] = buf;
+        totalBytes += buf.length;
+    }
+    offsets[strings.length] = totalBytes;
+
+    const headerBytes = 24;
+    const offsetsBytes = offsets.byteLength;
+    const recordBytes = record.byteLength;
+    const paddingBytes = (4 - ((headerBytes + offsetsBytes + totalBytes) % 4)) % 4;
+    const totalSize = headerBytes + offsetsBytes + totalBytes + paddingBytes + recordBytes;
+
+    const out = Buffer.allocUnsafe(totalSize);
+    let cursor = 0;
+    out.write('TSI2', cursor, 'ascii'); cursor += 4;
+    out.writeUInt32LE(2, cursor); cursor += 4; // version
+    out.writeUInt32LE(docs.length, cursor); cursor += 4; // docCount
+    out.writeUInt32LE(fieldNames.length, cursor); cursor += 4; // fieldCount
+    out.writeUInt32LE(strings.length, cursor); cursor += 4; // stringCount
+    out.writeUInt32LE(strings.length + 1, cursor); cursor += 4; // offsetsCount
+
+    Buffer.from(offsets.buffer, offsets.byteOffset, offsets.byteLength).copy(out, cursor);
+    cursor += offsetsBytes;
+
+    for (let i = 0; i < utf8Chunks.length; i++) {
+        utf8Chunks[i].copy(out, cursor);
+        cursor += utf8Chunks[i].length;
+    }
+
+    if (paddingBytes) {
+        out.fill(0, cursor, cursor + paddingBytes);
+        cursor += paddingBytes;
+    }
+
+    Buffer.from(record.buffer, record.byteOffset, record.byteLength).copy(out, cursor);
+    cursor += recordBytes;
+
+    fs.writeFileSync(SEARCH_INDEX_PATH, out);
+    console.log(`search-index 已生成：${SEARCH_INDEX_PATH}（binary，${docs.length} 条）`);
+}
+
+function ensureDirForFile(filePath) {
+    try {
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    } catch {
+        // ignore
+    }
+}
+
+function float32ToFloat16Bits(value) {
+    const floatView = new Float32Array(1);
+    const intView = new Uint32Array(floatView.buffer);
+
+    floatView[0] = value;
+    const x = intView[0];
+
+    const sign = (x >> 16) & 0x8000;
+    let mantissa = x & 0x007fffff;
+    let exp = (x >> 23) & 0xff;
+
+    if (exp === 0xff) {
+        if (mantissa) return sign | 0x7e00; // NaN
+        return sign | 0x7c00; // Infinity
+    }
+
+    exp = exp - 127 + 15;
+    if (exp >= 0x1f) return sign | 0x7c00; // overflow -> inf
+    if (exp <= 0) {
+        if (exp < -10) return sign; // underflow -> 0
+        mantissa = (mantissa | 0x00800000) >> (1 - exp);
+        return sign | ((mantissa + 0x00001000) >> 13);
+    }
+
+    return sign | (exp << 10) | ((mantissa + 0x00001000) >> 13);
+}
+
+function encodeFloat32ArrayToBase64Float16(float32Array) {
+    const out = new Uint8Array(float32Array.length * 2);
+    for (let i = 0; i < float32Array.length; i++) {
+        const bits = float32ToFloat16Bits(float32Array[i]);
+        out[i * 2] = bits & 0xff;
+        out[i * 2 + 1] = (bits >> 8) & 0xff;
+    }
+    return Buffer.from(out.buffer).toString('base64');
+}
+
+function encodeUint32ArrayToBase64(uint32Array) {
+    return Buffer.from(uint32Array.buffer).toString('base64');
+}
+
+function encodeUint16ArrayToBase64(uint16Array) {
+    return Buffer.from(uint16Array.buffer).toString('base64');
+}
+
+function fnv1a32(str) {
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+        hash ^= str.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193);
+    }
+    return hash >>> 0;
+}
+
+function mulberry32(seed) {
+    let t = seed >>> 0;
+    return function () {
+        t += 0x6d2b79f5;
+        let r = t;
+        r = Math.imul(r ^ (r >>> 15), r | 1);
+        r ^= r + Math.imul(r ^ (r >>> 7), r | 61);
+        return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function createGaussianRng(seed) {
+    const rand = mulberry32(seed);
+    let hasSpare = false;
+    let spare = 0;
+    return function () {
+        if (hasSpare) {
+            hasSpare = false;
+            return spare;
+        }
+        let u = 0;
+        let v = 0;
+        while (u === 0) u = rand();
+        while (v === 0) v = rand();
+        const mag = Math.sqrt(-2.0 * Math.log(u));
+        const z0 = mag * Math.cos(2.0 * Math.PI * v);
+        const z1 = mag * Math.sin(2.0 * Math.PI * v);
+        spare = z1;
+        hasSpare = true;
+        return z0;
+    };
+}
+
+function stripMarkdownForGuidedBlock(markdownBlock) {
+    let text = String(markdownBlock || '');
+
+    text = text.replace(/!\[([^\]]*)\]\([^\)]*\)/g, ' $1 ');
+    text = text.replace(/\[([^\]]+)\]\([^\)]*\)/g, ' $1 ');
+
+    // 保留行内代码内容
+    text = text.replace(/`([^`]*)`/g, '$1');
+
+    // 移除剩余 markdown 标记与 html 标签
+    text = text.replace(/<[^>]+>/g, ' ');
+    text = text.replace(/^[ \t]*#{1,6}\s+/gm, '');
+    text = text.replace(/[*_~>]+/g, ' ');
+
+    text = text.replace(/\s+/g, ' ').trim();
+    return text;
+}
+
+function extractGuidedTokens(text) {
+    const lower = String(text || '').toLowerCase();
+    const tokens = [];
+
+    const latin = lower.match(/[a-z0-9_\.#+-]+/g) || [];
+    for (const t of latin) {
+        if (t.length >= 2) tokens.push(t);
+    }
+
+    const cjk = lower.match(/[\u4e00-\u9fff]/g) || [];
+    if (cjk.length > 0) {
+        for (let i = 0; i < cjk.length; i++) tokens.push(cjk[i]);
+        for (let i = 0; i + 1 < cjk.length; i++) tokens.push(cjk[i] + cjk[i + 1]);
+        for (let i = 0; i + 2 < cjk.length; i++) tokens.push(cjk[i] + cjk[i + 1] + cjk[i + 2]);
+    }
+
+    return tokens;
+}
+
+function extractBm25Tokens(text) {
+    const lower = String(text || '').toLowerCase();
+    const tokens = [];
+
+    const latin = lower.match(/[a-z0-9_\.#+-]+/g) || [];
+    for (const t of latin) {
+        if (t.length >= 2) tokens.push(t);
+    }
+
+    const cjk = lower.match(/[\u4e00-\u9fff]/g) || [];
+    if (cjk.length >= 2) {
+        for (let i = 0; i + 1 < cjk.length; i++) tokens.push(cjk[i] + cjk[i + 1]); // bigram
+    }
+    if (cjk.length >= 3) {
+        for (let i = 0; i + 2 < cjk.length; i++) tokens.push(cjk[i] + cjk[i + 1] + cjk[i + 2]); // trigram
+    }
+
+    return tokens;
+}
+
+function dotColumnMajor(a, aOffset, b, bOffset, n) {
+    let sum = 0;
+    for (let i = 0; i < n; i++) sum += a[aOffset + i] * b[bOffset + i];
+    return sum;
+}
+
+function axpyColumnMajor(dst, dstOffset, src, srcOffset, n, scale) {
+    for (let i = 0; i < n; i++) dst[dstOffset + i] -= scale * src[srcOffset + i];
+}
+
+function norm2ColumnMajor(a, offset, n) {
+    let sum = 0;
+    for (let i = 0; i < n; i++) {
+        const v = a[offset + i];
+        sum += v * v;
+    }
+    return Math.sqrt(sum);
+}
+
+function jacobiEigenSymmetric(matrix, n, maxIter, eps) {
+    const a = new Float64Array(matrix);
+    const v = new Float64Array(n * n);
+    for (let i = 0; i < n; i++) v[i * n + i] = 1;
+
+    const maxIterations = typeof maxIter === 'number' ? maxIter : (n * n * 20);
+    const threshold = typeof eps === 'number' ? eps : 1e-10;
+
+    for (let iter = 0; iter < maxIterations; iter++) {
+        let p = 0;
+        let q = 1;
+        let max = 0;
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                const val = Math.abs(a[i * n + j]);
+                if (val > max) {
+                    max = val;
+                    p = i;
+                    q = j;
+                }
+            }
+        }
+        if (max < threshold) break;
+
+        const app = a[p * n + p];
+        const aqq = a[q * n + q];
+        const apq = a[p * n + q];
+
+        const phi = 0.5 * Math.atan2(2 * apq, (aqq - app));
+        const c = Math.cos(phi);
+        const s = Math.sin(phi);
+
+        for (let k = 0; k < n; k++) {
+            if (k === p || k === q) continue;
+            const aik = a[p * n + k];
+            const aqk = a[q * n + k];
+            a[p * n + k] = c * aik - s * aqk;
+            a[k * n + p] = a[p * n + k];
+            a[q * n + k] = s * aik + c * aqk;
+            a[k * n + q] = a[q * n + k];
+        }
+
+        const appNew = c * c * app - 2 * s * c * apq + s * s * aqq;
+        const aqqNew = s * s * app + 2 * s * c * apq + c * c * aqq;
+        a[p * n + p] = appNew;
+        a[q * n + q] = aqqNew;
+        a[p * n + q] = 0;
+        a[q * n + p] = 0;
+
+        for (let k = 0; k < n; k++) {
+            const vip = v[k * n + p];
+            const viq = v[k * n + q];
+            v[k * n + p] = c * vip - s * viq;
+            v[k * n + q] = s * vip + c * viq;
+        }
+    }
+
+    const eigenvalues = new Float64Array(n);
+    for (let i = 0; i < n; i++) eigenvalues[i] = a[i * n + i];
+
+    return { eigenvalues, eigenvectors: v };
+}
+
+function generateGuidedSemanticIndex(config) {
+    if (!config || !Array.isArray(config.all_files)) {
+        console.warn('跳过 guided-index.v1.json 生成：配置文件缺少 all_files');
+        return;
+    }
+
+    const sectionMetaById = loadSectionSemanticMap();
+
+    const featureDim = 2048;
+    const latentDim = 64;
+    const oversample = 16;
+    const m = latentDim + oversample;
+    const minChunkChars = 30;
+    const maxChunkChars = 800;
+
+    const chunkMeta = [];
+    const sparseRows = [];
+
+    for (const doc of config.all_files) {
+        if (!doc || !doc.path) continue;
+        const filePath = String(doc.path);
+        const repoPath = path.join('docs', filePath);
+
+        let markdown = '';
+        try {
+            markdown = fs.readFileSync(repoPath, 'utf8');
+        } catch {
+            markdown = '';
+        }
+
+        const body = stripFrontMatter(markdown);
+
+        // 与 bm25-index 对齐：保留代码块，但避免被大量空行切碎（先替换为占位符）
+        const codeBlocks = [];
+        const bodyWithPlaceholders = body.replace(/```[\s\S]*?```/g, (m) => {
+            const content = m.replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '');
+            const compact = content.replace(/\n{2,}/g, '\n').trim();
+            const id = codeBlocks.length;
+            codeBlocks.push(compact);
+            return `\n\n[[[CODE_BLOCK_${id}]]]\n\n`;
+        });
+        const bodyWithHeadings = bodyWithPlaceholders.replace(/^#{1,6}\s+.+$/gm, '\n\n$&\n\n');
+        const blocks = bodyWithHeadings.split(/\n{2,}/g);
+
+        let currentSectionSlug = 'root';
+        let currentHeading = '_root';
+        const slugCount = new Map();
+
+        for (const block of blocks) {
+            const trimmed = String(block || '').trim();
+            if (!trimmed) continue;
+
+            const headingMatch = /^(#{1,6})\s+(.+?)\s*$/.exec(trimmed);
+            if (headingMatch) {
+                const headingText = normalizeHeadingText(headingMatch[2]);
+                const base = slugifyHeading(headingText);
+                const prev = slugCount.get(base) || 0;
+                const next = prev + 1;
+                slugCount.set(base, next);
+                currentSectionSlug = next > 1 ? `${base}-${next}` : base;
+                currentHeading = headingText || '_root';
+                continue;
+            }
+
+            let blockText = trimmed;
+            const codeMatch = /^\[\[\[CODE_BLOCK_(\d+)\]\]\]$/.exec(trimmed);
+            if (codeMatch) {
+                const code = codeBlocks[Number(codeMatch[1])] || '';
+                blockText = code ? code : '';
+            }
+
+            const cleaned = stripMarkdownForGuidedBlock(blockText);
+            if (!cleaned || cleaned.length < minChunkChars) continue;
+
+            const text = cleaned.length > maxChunkChars ? (cleaned.slice(0, maxChunkChars) + '…') : cleaned;
+
+            const tfByFeature = new Map();
+            const title = doc.title || inferTitleFromFilename(filePath);
+            const category = doc.category || '';
+            const topic = doc.topic || '';
+            const sectionId = `${filePath}#${currentSectionSlug}`;
+            const sectionMeta = sectionMetaById.get(sectionId) || null;
+            const sectionAugment = buildSectionAugmentText(sectionMeta);
+            const stage = sectionMeta && sectionMeta.stage ? String(sectionMeta.stage) : '';
+
+            const addTokens = (sourceText, weight) => {
+                if (!sourceText) return;
+                const tokens = extractGuidedTokens(sourceText);
+                for (const token of tokens) {
+                    const idx = fnv1a32(token) % featureDim;
+                    tfByFeature.set(idx, (tfByFeature.get(idx) || 0) + weight);
+                }
+            };
+
+            // 主文本
+            addTokens(text, 1);
+            // 字段增强：标题更重要
+            addTokens(title, 2);
+            addTokens(category, 1);
+            addTokens(topic, 1);
+            // 小节语义增强（构建期生成，不影响引用显示）
+            addTokens(currentHeading, 2);
+            addTokens(sectionAugment, 1);
+
+            if (tfByFeature.size === 0) continue;
+
+            chunkMeta.push({
+                path: filePath,
+                title,
+                category,
+                topic,
+                author: doc.author || '',
+                difficulty: doc.difficulty || '',
+                time: doc.time || '',
+                last_updated: doc.last_updated || '',
+                sectionId,
+                heading: currentHeading,
+                stage,
+                text
+            });
+
+            sparseRows.push(tfByFeature);
+        }
+    }
+
+    const n = chunkMeta.length;
+    if (n < 20) {
+        console.warn(`跳过 guided-index.v1.json 生成：chunk 数量太少（${n}）`);
+        return;
+    }
+
+    console.log(`开始生成 guided-index（段落 chunks：${n}，featureDim：${featureDim}，latentDim：${latentDim}）...`);
+
+    const df = new Uint32Array(featureDim);
+    for (const tfMap of sparseRows) {
+        for (const idx of tfMap.keys()) df[idx]++;
+    }
+
+    const idf = new Float32Array(featureDim);
+    for (let i = 0; i < featureDim; i++) {
+        idf[i] = Math.log((n + 1) / (df[i] + 1)) + 1;
+    }
+
+    // 将 sparseRows 转换为可用于线性代数的稀疏行（并在 TF-IDF 空间归一化）
+    const rows = new Array(n);
+    for (let i = 0; i < n; i++) {
+        const tfMap = sparseRows[i];
+        const indices = [];
+        const values = [];
+        let norm2 = 0;
+        for (const [idx, tf] of tfMap.entries()) {
+            const w = (1 + Math.log(tf)) * idf[idx];
+            indices.push(idx);
+            values.push(w);
+            norm2 += w * w;
+        }
+        const norm = Math.sqrt(norm2) || 1;
+        for (let j = 0; j < values.length; j++) values[j] /= norm;
+        rows[i] = { indices, values };
+    }
+
+    // Randomized SVD: A (n x featureDim) -> V_k (featureDim x latentDim)
+    const randn = createGaussianRng(0x5eedc0de);
+    const omega = new Float32Array(featureDim * m);
+    for (let i = 0; i < omega.length; i++) omega[i] = randn();
+
+    // Y = A * Omega  (column-major: m columns, each length n)
+    const y = new Float32Array(n * m);
+    for (let rowIndex = 0; rowIndex < n; rowIndex++) {
+        const row = rows[rowIndex];
+        for (let t = 0; t < row.indices.length; t++) {
+            const idx = row.indices[t];
+            const val = row.values[t];
+            const omegaOffset = idx * m;
+            for (let j = 0; j < m; j++) {
+                y[j * n + rowIndex] += val * omega[omegaOffset + j];
+            }
+        }
+    }
+
+    // Q = orth(Y) via modified Gram-Schmidt (column-major)
+    const q = new Float32Array(n * m);
+    const tmp = new Float32Array(n);
+    for (let j = 0; j < m; j++) {
+        const yColOffset = j * n;
+        const qColOffset = j * n;
+
+        // tmp = y[:,j]
+        tmp.set(y.subarray(yColOffset, yColOffset + n));
+
+        for (let i = 0; i < j; i++) {
+            const qiOffset = i * n;
+            const r = dotColumnMajor(q, qiOffset, tmp, 0, n);
+            axpyColumnMajor(tmp, 0, q, qiOffset, n, r);
+        }
+
+        // re-orth for stability
+        for (let i = 0; i < j; i++) {
+            const qiOffset = i * n;
+            const r = dotColumnMajor(q, qiOffset, tmp, 0, n);
+            axpyColumnMajor(tmp, 0, q, qiOffset, n, r);
+        }
+
+        const colNorm = norm2ColumnMajor(tmp, 0, n) || 1;
+        for (let k = 0; k < n; k++) q[qColOffset + k] = tmp[k] / colNorm;
+    }
+
+    // B = Q^T A  (m x featureDim), row-major
+    const b = new Float32Array(m * featureDim);
+    for (let rowIndex = 0; rowIndex < n; rowIndex++) {
+        const row = rows[rowIndex];
+        for (let t = 0; t < row.indices.length; t++) {
+            const idx = row.indices[t];
+            const val = row.values[t];
+            for (let j = 0; j < m; j++) {
+                b[j * featureDim + idx] += q[j * n + rowIndex] * val;
+            }
+        }
+    }
+
+    // C = B B^T (m x m), symmetric
+    const c = new Float64Array(m * m);
+    for (let i = 0; i < m; i++) {
+        const bi = b.subarray(i * featureDim, (i + 1) * featureDim);
+        for (let j = i; j < m; j++) {
+            const bj = b.subarray(j * featureDim, (j + 1) * featureDim);
+            let sum = 0;
+            for (let k = 0; k < featureDim; k++) sum += bi[k] * bj[k];
+            c[i * m + j] = sum;
+            c[j * m + i] = sum;
+        }
+    }
+
+    const { eigenvalues, eigenvectors } = jacobiEigenSymmetric(c, m, m * m * 30, 1e-12);
+    const order = Array.from({ length: m }, (_, i) => i).sort((i, j) => eigenvalues[j] - eigenvalues[i]);
+
+    const vMat = new Float32Array(featureDim * latentDim);
+    for (let dim = 0; dim < latentDim; dim++) {
+        const eigIndex = order[dim];
+        const lambda = Math.max(0, eigenvalues[eigIndex]);
+        const sVal = Math.sqrt(lambda);
+        const invS = sVal > 1e-6 ? (1 / sVal) : 0;
+
+        for (let feat = 0; feat < featureDim; feat++) {
+            let sum = 0;
+            for (let r = 0; r < m; r++) {
+                sum += b[r * featureDim + feat] * eigenvectors[r * m + eigIndex];
+            }
+            vMat[feat * latentDim + dim] = sum * invS;
+        }
+    }
+
+    // chunkVec = A_row * V_k，并在 latent 空间归一化
+    const chunkVec = new Float32Array(n * latentDim);
+    for (let rowIndex = 0; rowIndex < n; rowIndex++) {
+        const row = rows[rowIndex];
+        const outOffset = rowIndex * latentDim;
+        for (let t = 0; t < row.indices.length; t++) {
+            const idx = row.indices[t];
+            const val = row.values[t];
+            const vOffset = idx * latentDim;
+            for (let d = 0; d < latentDim; d++) {
+                chunkVec[outOffset + d] += val * vMat[vOffset + d];
+            }
+        }
+
+        let norm = 0;
+        for (let d = 0; d < latentDim; d++) {
+            const x = chunkVec[outOffset + d];
+            norm += x * x;
+        }
+        norm = Math.sqrt(norm) || 1;
+        for (let d = 0; d < latentDim; d++) chunkVec[outOffset + d] /= norm;
+    }
+
+    ensureDirForFile(GUIDED_INDEX_PATH);
+    const payload = {
+        version: 1,
+        generatedAt: getLastModForPath('docs/config.json'),
+        featureDim,
+        latentDim,
+        chunkCount: n,
+        tokenization: {
+            cjk: ['1-gram', '2-gram', '3-gram'],
+            latin: true,
+            featureHash: 'fnv1a32'
+        },
+        idfF16: encodeFloat32ArrayToBase64Float16(idf),
+        vF16: encodeFloat32ArrayToBase64Float16(vMat),
+        chunkVecF16: encodeFloat32ArrayToBase64Float16(chunkVec),
+        chunks: chunkMeta
+    };
+
+    fs.writeFileSync(GUIDED_INDEX_PATH, JSON.stringify(payload), 'utf8');
+    console.log(`guided-index 已生成：${GUIDED_INDEX_PATH}（${n} 个段落）`);
+}
+
+function generateBm25Index(config) {
+    if (!config || !Array.isArray(config.all_files)) {
+        console.warn('跳过 bm25-index.v1.json 生成：配置文件缺少 all_files');
+        return;
+    }
+
+    const sectionMetaById = loadSectionSemanticMap();
+
+    const bucketCount = 131072;
+    const minChunkChars = 30;
+    const maxChunkChars = 800;
+
+    const chunks = [];
+    const dl = [];
+
+    // bucket -> array of [chunkId, tf]
+    const bucketToPostings = new Map();
+    const df = new Uint32Array(bucketCount);
+    const k1 = 1.2;
+    const b = 0.75;
+
+    let totalDl = 0;
+
+    const pushTfMap = (chunkId, tfMap, dlValue) => {
+        dl.push(dlValue);
+        totalDl += dlValue;
+
+        for (const [bucket, tf] of tfMap.entries()) {
+            df[bucket]++;
+            let postings = bucketToPostings.get(bucket);
+            if (!postings) {
+                postings = [];
+                bucketToPostings.set(bucket, postings);
+            }
+            postings.push(chunkId, tf);
+        }
+    };
+
+    for (const doc of config.all_files) {
+        if (!doc || !doc.path) continue;
+        const filePath = String(doc.path);
+        const repoPath = path.join('docs', filePath);
+
+        let markdown = '';
+        try {
+            markdown = fs.readFileSync(repoPath, 'utf8');
+        } catch {
+            markdown = '';
+        }
+
+        const body = stripFrontMatter(markdown);
+
+        // 保留代码块但按段落切分时避免被大量空行切碎：先把 fenced code block 替换为单段文本块
+        const codeBlocks = [];
+        const bodyWithPlaceholders = body.replace(/```[\s\S]*?```/g, (m) => {
+            const content = m.replace(/^```[^\n]*\n?/, '').replace(/\n?```$/, '');
+            const compact = content.replace(/\n{2,}/g, '\n').trim();
+            const id = codeBlocks.length;
+            codeBlocks.push(compact);
+            return `\n\n[[[CODE_BLOCK_${id}]]]\n\n`;
+        });
+
+        const bodyWithHeadings = bodyWithPlaceholders.replace(/^#{1,6}\s+.+$/gm, '\n\n$&\n\n');
+        const blocks = bodyWithHeadings.split(/\n{2,}/g);
+
+        let currentSectionSlug = 'root';
+        let currentHeading = '_root';
+        const slugCount = new Map();
+        for (const rawBlock of blocks) {
+            const trimmed = String(rawBlock || '').trim();
+            if (!trimmed) continue;
+
+            const headingMatch = /^(#{1,6})\s+(.+?)\s*$/.exec(trimmed);
+            if (headingMatch) {
+                const headingText = normalizeHeadingText(headingMatch[2]);
+                const base = slugifyHeading(headingText);
+                const prev = slugCount.get(base) || 0;
+                const next = prev + 1;
+                slugCount.set(base, next);
+                currentSectionSlug = next > 1 ? `${base}-${next}` : base;
+                currentHeading = headingText || '_root';
+                continue;
+            }
+
+            let blockText = trimmed;
+            const codeMatch = /^\[\[\[CODE_BLOCK_(\d+)\]\]\]$/.exec(trimmed);
+            if (codeMatch) {
+                const code = codeBlocks[Number(codeMatch[1])] || '';
+                blockText = code ? code : '';
+            }
+
+            const cleaned = stripMarkdownForGuidedBlock(blockText);
+            if (!cleaned || cleaned.length < minChunkChars) continue;
+
+            const text = cleaned.length > maxChunkChars ? (cleaned.slice(0, maxChunkChars) + '…') : cleaned;
+
+            const title = doc.title || inferTitleFromFilename(filePath);
+            const category = doc.category || '';
+            const topic = doc.topic || '';
+            const sectionId = `${filePath}#${currentSectionSlug}`;
+            const sectionMeta = sectionMetaById.get(sectionId) || null;
+            const sectionAugment = buildSectionAugmentText(sectionMeta);
+            const stage = sectionMeta && sectionMeta.stage ? String(sectionMeta.stage) : '';
+
+            const tfByBucket = new Map();
+            let dlValue = 0;
+
+            const addTokens = (sourceText, weight) => {
+                if (!sourceText) return;
+                const tokens = extractBm25Tokens(sourceText);
+                for (const t of tokens) {
+                    const bucket = fnv1a32(t) % bucketCount;
+                    const prev = tfByBucket.get(bucket) || 0;
+                    const next = prev + weight;
+                    tfByBucket.set(bucket, next > 65535 ? 65535 : next);
+                    dlValue += weight;
+                }
+            };
+
+            // 主文本
+            addTokens(text, 1);
+            // 字段增强：标题更重要
+            addTokens(title, 2);
+            addTokens(category, 1);
+            addTokens(topic, 1);
+            // 小节语义增强（构建期生成，不影响引用显示）
+            addTokens(currentHeading, 2);
+            addTokens(sectionAugment, 1);
+
+            if (tfByBucket.size === 0) continue;
+
+            const chunkId = chunks.length;
+            chunks.push({
+                path: filePath,
+                title,
+                category,
+                topic,
+                author: doc.author || '',
+                difficulty: doc.difficulty || '',
+                last_updated: doc.last_updated || '',
+                sectionId,
+                heading: currentHeading,
+                stage,
+                text
+            });
+
+            pushTfMap(chunkId, tfByBucket, dlValue > 65535 ? 65535 : dlValue);
+        }
+    }
+
+    const chunkCount = chunks.length;
+    if (chunkCount < 20) {
+        console.warn(`跳过 bm25-index.v1.json 生成：chunk 数量太少（${chunkCount}）`);
+        return;
+    }
+
+    const avgdl = totalDl / chunkCount;
+    console.log(`开始生成 bm25-index（段落 chunks：${chunkCount}，bucketCount：${bucketCount}）...`);
+
+    // Flatten postings
+    const bucketOffsets = new Uint32Array(bucketCount + 1);
+
+    let totalPairs = 0;
+    for (const postings of bucketToPostings.values()) totalPairs += postings.length / 2;
+
+    const postingsChunkId = new Uint32Array(totalPairs);
+    const postingsTf = new Uint16Array(totalPairs);
+
+    let cursor = 0;
+    for (let bucket = 0; bucket < bucketCount; bucket++) {
+        bucketOffsets[bucket] = cursor;
+        const postings = bucketToPostings.get(bucket);
+        if (!postings || postings.length === 0) continue;
+
+        // postings is [chunkId, tf, chunkId, tf ...]
+        const pairCount = postings.length / 2;
+        const pairs = new Array(pairCount);
+        for (let i = 0; i < pairCount; i++) {
+            pairs[i] = { id: postings[i * 2], tf: postings[i * 2 + 1] };
+        }
+        pairs.sort((a, b) => a.id - b.id);
+
+        for (let i = 0; i < pairs.length; i++) {
+            postingsChunkId[cursor] = pairs[i].id;
+            postingsTf[cursor] = pairs[i].tf > 65535 ? 65535 : pairs[i].tf;
+            cursor++;
+        }
+    }
+    bucketOffsets[bucketCount] = cursor;
+
+    const dlArr = new Uint16Array(chunkCount);
+    for (let i = 0; i < chunkCount; i++) dlArr[i] = dl[i] > 65535 ? 65535 : dl[i];
+
+    ensureDirForFile(BM25_INDEX_PATH);
+    const payload = {
+        version: 1,
+        generatedAt: getLastModForPath('docs/config.json'),
+        bucketCount,
+        chunkCount,
+        avgdl,
+        k1,
+        b,
+        tokenization: {
+            cjk: ['2-gram', '3-gram'],
+            latin: 'word',
+            featureHash: 'fnv1a32'
+        },
+        dlU16: encodeUint16ArrayToBase64(dlArr),
+        dfU32: encodeUint32ArrayToBase64(df),
+        bucketOffsetsU32: encodeUint32ArrayToBase64(bucketOffsets),
+        postingsChunkIdU32: encodeUint32ArrayToBase64(postingsChunkId),
+        postingsTfU16: encodeUint16ArrayToBase64(postingsTf),
+        chunks
+    };
+
+    fs.writeFileSync(BM25_INDEX_PATH, JSON.stringify(payload), 'utf8');
+    console.log(`bm25-index 已生成：${BM25_INDEX_PATH}（${chunkCount} 个段落）`);
 }
 
 
@@ -1215,4 +2084,6 @@ console.log('开始生成教程索引和配置文件...');
 const mainConfig = processMainProject();
 generateSitemap(mainConfig);
 generateSearchIndex(mainConfig);
+generateGuidedSemanticIndex(mainConfig);
+generateBm25Index(mainConfig);
 console.log('\n主项目处理完成！');

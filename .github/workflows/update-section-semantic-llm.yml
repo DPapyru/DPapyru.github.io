@@ -1,0 +1,83 @@
+name: Update Section Semantic (LLM)
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_sections:
+        description: "Limit number of sections to update (optional)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: "update-section-semantic-llm"
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Verify secrets
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+        run: |
+          if [ -z "${LLM_API_KEY}" ]; then
+            echo "Missing secrets.LLM_API_KEY"
+            exit 1
+          fi
+          if [ -z "${LLM_BASE_URL}" ]; then
+            echo "Missing secrets.LLM_BASE_URL"
+            exit 1
+          fi
+
+      - name: Generate section semantic YAML
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          MAX_SECTIONS: ${{ github.event.inputs.max_sections }}
+          CONCURRENCY: "2"
+        run: |
+          if [ -z "${LLM_MODEL}" ]; then
+            export LLM_MODEL="glm-4.5-flash"
+          fi
+          node scripts/generate-section-semantic.js
+
+      - name: Build indices
+        run: |
+          npm run build
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: update section semantic (LLM)"
+          title: "chore: update section semantic (LLM)"
+          body: |
+            Automated update of per-section semantic metadata and regenerated search indices.
+
+            - Updated: `docs/search/section-semantic.v1.yml`
+            - Regenerated: `assets/semantic/*`, `assets/search-index.json`, `docs/config.json`, `sitemap.xml`
+          branch: "chore/update-section-semantic-llm"
+          delete-branch: true

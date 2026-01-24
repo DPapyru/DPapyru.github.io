@@ -12,6 +12,45 @@
 </head>
 <body>
     <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
+                        <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
+                    </a>
+                </div>
+                <nav class="main-nav" id="main-nav">
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="docs/index.html" class="nav-link">文档</a></li>
+                        <li class="nav-item"><a href="qa.html" class="nav-link">问答</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
+                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li class="nav-item nav-accent">
+                            <label class="visually-hidden" for="accent-select">配色</label>
+                            <select class="nav-accent-select" id="accent-select" aria-label="配色">
+                                <option value="green">绿色</option>
+                                <option value="blue">蓝色</option>
+                                <option value="purple">紫色</option>
+                                <option value="orange">橙色</option>
+                                <option value="red">红色</option>
+                                <option value="cyan">青色</option>
+                                <option value="black">黑色</option>
+                                <option value="white">白色</option>
+                            </select>
+                        </li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
     <main id="main-content" class="container" style="padding: 60px 20px;" tabindex="-1">
         <h1 style="margin-bottom: 12px;">页面未找到</h1>
         <p style="margin-bottom: 18px;">如果这是一个教程文档链接，系统会尝试为你跳转到文档查看器。</p>
@@ -23,6 +62,8 @@
     </main>
 
     <script src="assets/js/site-config.js"></script>
+    <script src="assets/js/accent-theme.js"></script>
+    <script src="assets/js/navigation.js"></script>
     <script>
         (function () {
             var path = window.location.pathname || '';

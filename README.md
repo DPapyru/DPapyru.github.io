@@ -46,8 +46,25 @@
 会更新/生成这些文件，请一起提交（不要手改它们当最终结果）：
 
 - `docs/config.json`
-- `assets/search-index.json`
+- `assets/search-index.json`（二进制索引，非文本 JSON）
 - `sitemap.xml`
+
+## （可选）LLM：按小节生成“抽象语义”检索线索
+
+站内搜索会使用“按 Markdown 小节（section）”的语义元数据来增强对抽象问法/新造词的匹配（仍然只输出来自文章的引用段落）。该元数据存放在：
+
+- `docs/search/section-semantic.v1.yml`
+
+维护方式建议走 GitHub Actions 自动开 PR（避免把 API Key 暴露在前端，也避免每次构建都不稳定）：
+
+1. 在仓库 Settings → Secrets and variables → Actions 中添加：
+   - `LLM_API_KEY`：大模型 API Key
+   - `LLM_BASE_URL`：OpenAI 兼容 base url（以 `/v1` 结尾）
+   - （可选）`LLM_MODEL`：默认 `glm-4.5-flash`
+2. 在 Actions 中手动运行：`Update Section Semantic (LLM)`（会自动创建/更新一个 PR）
+3. 合并 PR 后，再由 Pages 部署流程发布
+
+普通贡献者不需要运行该 workflow：你只要按上面的方式写文章并 `npm run build` 即可；如遇到“抽象问法搜不到/跑偏”，可以在 PR 里直接手动补充 `docs/search/section-semantic.v1.yml` 的相关小节条目。
 
 ## 贡献文章（简版）
 

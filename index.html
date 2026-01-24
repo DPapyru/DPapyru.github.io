@@ -66,6 +66,19 @@
                         <li class="nav-item"><a href="qa.html" class="nav-link">问答</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
                                 target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li class="nav-item nav-accent">
+                            <label class="visually-hidden" for="accent-select">配色</label>
+                            <select class="nav-accent-select" id="accent-select" aria-label="配色">
+                                <option value="green">绿色</option>
+                                <option value="blue">蓝色</option>
+                                <option value="purple">紫色</option>
+                                <option value="orange">橙色</option>
+                                <option value="red">红色</option>
+                                <option value="cyan">青色</option>
+                                <option value="black">黑色</option>
+                                <option value="white">白色</option>
+                            </select>
+                        </li>
                     </ul>
                 </nav>
                 <!-- 移动端菜单切换按钮 -->
@@ -87,7 +100,7 @@
                 <div class="hero-search">
                     <div class="search-container">
                         <div class="search-box">
-                            <input type="text" class="search-input" id="hero-search-input" placeholder="搜索教程内容..." aria-label="搜索教程内容">
+                            <input type="text" class="search-input" id="hero-search-input" placeholder="引导学习与内容查找..." aria-label="引导学习与内容查找">
                             <button class="search-button" id="hero-search-button" aria-label="搜索">
                                 <i class="icon-search"></i>
                             </button>
@@ -179,7 +192,9 @@
 
 	    <!-- 加载JavaScript文件 -->
 	    <script src="assets/js/site-config.js"></script>
+	    <script src="assets/js/accent-theme.js"></script>
 	    <script src="assets/js/main.js"></script> <!-- 主要功能脚本 -->
+        <script src="assets/js/search-index-loader.js"></script>
 	    <script src="assets/js/search.js"></script> <!-- 搜索功能脚本 -->
 	    <script src="assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
 	    <script src="assets/js/latest-updates.js"></script> <!-- 最新更新功能脚本 -->
