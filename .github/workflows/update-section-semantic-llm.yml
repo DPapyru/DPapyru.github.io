@@ -77,6 +77,8 @@ jobs:
         if: always()
         uses: peter-evans/create-pull-request@v6
         with:
+          # If your repo/org disables PR creation for GITHUB_TOKEN, set a PAT in secrets.CREATE_PR_TOKEN.
+          token: ${{ secrets.CREATE_PR_TOKEN || github.token }}
           commit-message: "chore: update section semantic (LLM)"
           title: "chore: update section semantic (LLM)"
           body: |
