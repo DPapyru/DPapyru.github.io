@@ -1,6 +1,6 @@
 name: Update Section Semantic (LLM)
 
-on:
+"on":
   workflow_dispatch:
     inputs:
       max_sections:
