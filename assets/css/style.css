@@ -2713,6 +2713,21 @@ div.flowchart > svg {
     border-bottom: 1px solid #e9ecef;
 }
 
+.markdown-content th[align="left"],
+.markdown-content td[align="left"] {
+    text-align: left;
+}
+
+.markdown-content th[align="center"],
+.markdown-content td[align="center"] {
+    text-align: center;
+}
+
+.markdown-content th[align="right"],
+.markdown-content td[align="right"] {
+    text-align: right;
+}
+
 .markdown-content th {
     font-weight: 600;
     background-color: #f8f9fa;

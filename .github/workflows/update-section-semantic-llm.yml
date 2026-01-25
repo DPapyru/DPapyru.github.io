@@ -7,14 +7,14 @@ on:
         description: "Limit number of sections to update (optional)"
         required: false
         default: ""
+      concurrency:
+        description: "LLM request concurrency (optional, empty = script default)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
   pull-requests: write
-
-concurrency:
-  group: "update-section-semantic-llm"
-  cancel-in-progress: false
 
 jobs:
   update:
@@ -24,6 +24,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Warning (no concurrency limit)
+        run: |
+          echo "::warning::This workflow no longer limits concurrent runs. Make sure you understand the cost/quotas of your LLM provider. Use workflow inputs (max_sections / concurrency) to control spend and load."
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -58,7 +62,7 @@ jobs:
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
           LLM_MODEL: ${{ secrets.LLM_MODEL }}
           MAX_SECTIONS: ${{ github.event.inputs.max_sections }}
-          CONCURRENCY: "2"
+          CONCURRENCY: ${{ github.event.inputs.concurrency }}
         run: |
           if [ -z "${LLM_MODEL}" ]; then
             export LLM_MODEL="glm-4.5-flash"
