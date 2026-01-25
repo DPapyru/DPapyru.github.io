@@ -56,6 +56,12 @@
 - 人工维护表（优先级更高）：`docs/search/section-semantic.manual.v1.yml`
 - AI 生成表（二进制，gzip JSON）：`docs/search/section-semantic.ai.v1.json.gz`
 
+如需查看/调试 AI 表的内容，可以用仓库内置的“翻译器”（解码/编码工具）：
+
+- 解码为 JSON：`node scripts/section-semantic-ai-translator.js dump --input docs/search/section-semantic.ai.v1.json.gz --output /tmp/section-semantic.ai.v1.json`
+- 解码为 YAML：`node scripts/section-semantic-ai-translator.js dump --input docs/search/section-semantic.ai.v1.json.gz --output /tmp/section-semantic.ai.v1.yml`
+- 重新打包：`node scripts/section-semantic-ai-translator.js pack --input /tmp/section-semantic.ai.v1.json --output /tmp/section-semantic.ai.v1.json.gz`
+
 维护方式建议走 GitHub Actions 自动开 PR（避免把 API Key 暴露在前端，也避免每次构建都不稳定）：
 
 1. 在仓库 Settings → Secrets and variables → Actions 中添加：
