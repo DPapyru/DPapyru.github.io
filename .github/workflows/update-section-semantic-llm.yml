@@ -8,7 +8,6 @@ name: Update Section Semantic (LLM)
         required: false
         default: ""
       concurrency:
-<<<<<<< HEAD
         description: "LLM request concurrency (higher = faster, may trigger 429)"
         required: false
         default: "1"
@@ -16,11 +15,6 @@ name: Update Section Semantic (LLM)
         description: "Stop LLM generation after N minutes (checkpoint will be committed to PR)"
         required: false
         default: "120"
-=======
-        description: "LLM request concurrency (optional, empty = script default)"
-        required: false
-        default: ""
->>>>>>> add-new-text
 
 permissions:
   contents: write
@@ -93,11 +87,8 @@ jobs:
           LLM_MODEL: ${{ secrets.LLM_MODEL }}
           MAX_SECTIONS: ${{ github.event.inputs.max_sections }}
           CONCURRENCY: ${{ github.event.inputs.concurrency }}
-<<<<<<< HEAD
           MAX_RUNTIME_MINUTES: ${{ github.event.inputs.max_runtime_minutes }}
           FLUSH_EVERY: "1"
-=======
->>>>>>> add-new-text
         run: |
           if [ -z "${LLM_MODEL}" ]; then
             export LLM_MODEL="glm-4.7-flash"
