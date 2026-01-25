@@ -7,6 +7,14 @@ on:
         description: "Limit number of sections to update (optional)"
         required: false
         default: ""
+      concurrency:
+        description: "LLM request concurrency (higher = faster, may trigger 429)"
+        required: false
+        default: "1"
+      max_runtime_minutes:
+        description: "Stop LLM generation after N minutes (checkpoint will be committed to PR)"
+        required: false
+        default: "120"
 
 permissions:
   contents: write
@@ -78,7 +86,8 @@ jobs:
           LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
           LLM_MODEL: ${{ secrets.LLM_MODEL }}
           MAX_SECTIONS: ${{ github.event.inputs.max_sections }}
-          CONCURRENCY: "1"
+          CONCURRENCY: ${{ github.event.inputs.concurrency }}
+          MAX_RUNTIME_MINUTES: ${{ github.event.inputs.max_runtime_minutes }}
           FLUSH_EVERY: "1"
         run: |
           if [ -z "${LLM_MODEL}" ]; then

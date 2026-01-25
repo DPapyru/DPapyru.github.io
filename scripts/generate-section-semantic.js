@@ -9,7 +9,9 @@
 // - SECTION_SEMANTIC_AI_PATH (optional, default: docs/search/section-semantic.ai.v1.json.gz)
 // - (legacy) SECTION_SEMANTIC_PATH: if points to .yml, treated as legacy input only
 // - MAX_SECTIONS (optional, limit generation)
-// - CONCURRENCY (optional, default: 1; 强制上限: 1，避免触发供应商并发限制)
+// - CONCURRENCY (optional, default: 1; 可配并发；过高可能触发 429)
+// - MAX_CONCURRENCY (optional, upper bound for CONCURRENCY; default: 8)
+// - MAX_RUNTIME_MINUTES (optional, stop after N minutes; will save checkpoint and exit 0)
 //
 // Notes:
 // - Only updates new/changed sections (by sha256 hash).
@@ -323,8 +325,14 @@ async function main() {
     const legacyInputPath = (aiEnv && /\.(yml|yaml)$/i.test(aiEnv)) ? aiEnv : LEGACY_YAML;
     const maxSections = process.env.MAX_SECTIONS ? Number(process.env.MAX_SECTIONS) : null;
     const concurrencyRequested = process.env.CONCURRENCY ? Math.max(1, Number(process.env.CONCURRENCY)) : 1;
-    const concurrency = 1;
+    const maxConcurrency = process.env.MAX_CONCURRENCY ? Math.max(1, Number(process.env.MAX_CONCURRENCY)) : 8;
+    const concurrency = Math.max(1, Math.min(maxConcurrency, concurrencyRequested));
     const flushEvery = process.env.FLUSH_EVERY ? Math.max(1, Number(process.env.FLUSH_EVERY)) : 10;
+    const maxRuntimeMinutes = process.env.MAX_RUNTIME_MINUTES ? Number(process.env.MAX_RUNTIME_MINUTES) : null;
+    const startMs = Date.now();
+    const deadlineMs = (typeof maxRuntimeMinutes === 'number' && Number.isFinite(maxRuntimeMinutes) && maxRuntimeMinutes > 0)
+        ? (startMs + Math.floor(maxRuntimeMinutes * 60 * 1000))
+        : null;
 
     if (/\.(yml|yaml)$/i.test(outPath)) {
         console.warn(`提示：SECTION_SEMANTIC_AI_PATH/SECTION_SEMANTIC_PATH=${outPath} 指向 YAML；AI 表已切换为二进制，将改用默认输出：${DEFAULT_AI_OUT}`);
@@ -410,6 +418,7 @@ async function main() {
     let processed = 0;
     let flushChain = Promise.resolve();
     let lastWrittenHash = null;
+    let stopRequested = false;
 
     const buildSnapshotDoc = () => {
         const sections = Array.from(existingById.values());
@@ -456,7 +465,11 @@ async function main() {
     };
 
     async function worker() {
-        while (cursor < limited.length) {
+        while (cursor < limited.length && !stopRequested) {
+            if (deadlineMs != null && Date.now() >= deadlineMs) {
+                stopRequested = true;
+                break;
+            }
             const idx = cursor++;
             const sec = limited[idx];
 
@@ -514,7 +527,10 @@ async function main() {
     }
 
     if (concurrencyRequested !== concurrency) {
-        console.warn(`提示：CONCURRENCY=${concurrencyRequested} 已被忽略；当前仅支持并发=${concurrency}（避免 429 并发限制）。`);
+        console.warn(`提示：CONCURRENCY=${concurrencyRequested} 超过上限，将使用并发=${concurrency}（MAX_CONCURRENCY=${maxConcurrency}）。`);
+    }
+    if (deadlineMs != null) {
+        console.log(`section-semantic: 将在 ${maxRuntimeMinutes} 分钟后停止生成并保存断点（MAX_RUNTIME_MINUTES=${maxRuntimeMinutes}）。`);
     }
 
     const workers = [];
@@ -530,6 +546,10 @@ async function main() {
 
     scheduleFlush(true);
     await flushChain;
+    if (stopRequested && processed < limited.length) {
+        console.log(`section-semantic: 已到达运行时长上限，保存断点并提前退出（已完成 ${processed}/${limited.length}）。`);
+        return;
+    }
     console.log(`已写入：${outPath}（已完成 ${processed}/${limited.length}，累计 ${existingById.size} 个小节）`);
 }
 
