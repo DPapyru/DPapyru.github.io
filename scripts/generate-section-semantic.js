@@ -330,7 +330,7 @@ async function main() {
     const legacyInputPath = (aiEnv && /\.(yml|yaml)$/i.test(aiEnv)) ? aiEnv : LEGACY_YAML;
     const maxSections = process.env.MAX_SECTIONS ? Number(process.env.MAX_SECTIONS) : null;
     const concurrencyRequested = process.env.CONCURRENCY ? Math.max(1, Number(process.env.CONCURRENCY)) : 1;
-    const maxConcurrency = process.env.MAX_CONCURRENCY ? Math.max(1, Number(process.env.MAX_CONCURRENCY)) : 8;
+    const maxConcurrency = process.env.MAX_CONCURRENCY ? Math.max(1, Number(process.env.MAX_CONCURRENCY)) : 200;
     const concurrency = Math.max(1, Math.min(maxConcurrency, concurrencyRequested));
     const flushEvery = process.env.FLUSH_EVERY ? Math.max(1, Number(process.env.FLUSH_EVERY)) : 10;
     const maxRuntimeMinutes = process.env.MAX_RUNTIME_MINUTES ? Number(process.env.MAX_RUNTIME_MINUTES) : null;
