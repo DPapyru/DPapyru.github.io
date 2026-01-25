@@ -1622,33 +1622,8 @@ function initImageZoom() {
 
         console.log(`为图片 ${index + 1} 添加放大功能:`, img.src);
     });
-}
 
-function initImageZoom() {
-    // 使用更广泛的选择器，确保能捕获所有图片
-    const images = document.querySelectorAll('#markdown-content img, .markdown-content img, .tutorial-content img, main img');
-
-    console.log(`找到 ${images.length} 个图片元素用于放大功能`);
-
-    images.forEach((img, index) => {
-        // 跳过已经处理过的图片
-        if (img.hasAttribute('data-zoom-enabled')) {
-            return;
-        }
-
-        // 标记为已处理
-        img.setAttribute('data-zoom-enabled', 'true');
-
-        // 添加点击事件
-        img.addEventListener('click', function () {
-            createImageOverlay(this.src, this.alt || '');
-        });
-
-        // 添加鼠标样式提示
-        img.style.cursor = 'zoom-in';
-
-        console.log(`为图片 ${index + 1} 添加放大功能:`, img.src);
-    });
+    initMermaidZoom();
 }
 
 
@@ -1658,7 +1633,7 @@ function initImageZoom() {
  * @param {string} imageSrc - 图片源地址
  * @param {string} imageAlt - 图片描述
  */
-function createImageOverlay(imageSrc, imageAlt) {
+function createImageOverlay(imageSrc, imageAlt, options) {
     // 检查是否已存在遮罩层
     if (document.getElementById('image-zoom-overlay')) {
         return;
@@ -1918,26 +1893,45 @@ function createImageOverlay(imageSrc, imageAlt) {
     overlay.appendChild(imageContainer);
     overlay.appendChild(controls);
 
+    const onClose = options && typeof options.onClose === 'function' ? options.onClose : null;
+    let isClosed = false;
+
+    // 添加ESC键关闭功能
+    const handleKeyPress = function (e) {
+        if (e.key === 'Escape') {
+            closeOverlay();
+        }
+    };
+    document.addEventListener('keydown', handleKeyPress);
+
+    function closeOverlay() {
+        if (isClosed) return;
+        isClosed = true;
+
+        const currentOverlay = document.getElementById('image-zoom-overlay');
+        if (currentOverlay && currentOverlay.parentNode) {
+            currentOverlay.parentNode.removeChild(currentOverlay);
+        }
+
+        document.removeEventListener('keydown', handleKeyPress);
+
+        if (onClose) {
+            try {
+                onClose();
+            } catch (e) {
+                console.warn('image overlay onClose failed:', e);
+            }
+        }
+    }
+
     // 添加关闭事件
     overlay.addEventListener('click', function (e) {
         // 如果点击的是控制按钮，不关闭
         if (e.target === zoomInBtn || e.target === zoomOutBtn || e.target === resetBtn) {
             return;
         }
-        document.body.removeChild(overlay);
+        closeOverlay();
     });
-
-    // 添加ESC键关闭功能
-    const handleKeyPress = function (e) {
-        if (e.key === 'Escape') {
-            const overlay = document.getElementById('image-zoom-overlay');
-            if (overlay) {
-                document.body.removeChild(overlay);
-                document.removeEventListener('keydown', handleKeyPress);
-            }
-        }
-    };
-    document.addEventListener('keydown', handleKeyPress);
 
     // 添加到页面
     document.body.appendChild(overlay);
@@ -1961,4 +1955,434 @@ function createImageOverlay(imageSrc, imageAlt) {
             }
         }
     });
+}
+
+function ensureMediaZoomUtils() {
+    if (window.MediaZoomUtils && typeof window.MediaZoomUtils.svgMarkupToDataUrl === 'function') {
+        return window.MediaZoomUtils;
+    }
+
+    window.MediaZoomUtils = {
+        normalizeSvgMarkup(svgMarkup) {
+            const raw = String(svgMarkup == null ? '' : svgMarkup).trim();
+            if (!raw || !raw.startsWith('<svg')) return '';
+
+            let normalized = raw;
+            if (!/\sxmlns=/.test(normalized.slice(0, 200))) {
+                normalized = normalized.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+            if (normalized.includes('xlink:') && !/\sxmlns:xlink=/.test(normalized.slice(0, 240))) {
+                normalized = normalized.replace('<svg', '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+            }
+
+            return normalized;
+        },
+        svgMarkupToObjectUrl(svgMarkup) {
+            const normalized = this.normalizeSvgMarkup(svgMarkup);
+            if (!normalized) return '';
+
+            if (typeof Blob === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+                return '';
+            }
+
+            const blob = new Blob([normalized], { type: 'image/svg+xml;charset=utf-8' });
+            return URL.createObjectURL(blob);
+        },
+        revokeObjectUrl(url) {
+            const raw = String(url == null ? '' : url).trim();
+            if (!raw) return;
+            if (typeof URL === 'undefined' || typeof URL.revokeObjectURL !== 'function') return;
+            URL.revokeObjectURL(raw);
+        },
+        svgMarkupToDataUrl(svgMarkup) {
+            const normalized = this.normalizeSvgMarkup(svgMarkup);
+            if (!normalized) return '';
+
+            let base64 = '';
+            try {
+                base64 = btoa(unescape(encodeURIComponent(normalized)));
+            } catch (e) {
+                return '';
+            }
+
+            return `data:image/svg+xml;base64,${base64}`;
+        }
+    };
+
+    return window.MediaZoomUtils;
+}
+
+/**
+ * 初始化 Mermaid 流程图放大功能
+ * 将渲染后的 SVG 当作图片处理，复用 createImageOverlay 的交互（缩放/拖拽）。
+ */
+function initMermaidZoom() {
+    if (typeof document === 'undefined') return;
+
+    const svgs = document.querySelectorAll('#markdown-content .mermaid svg, .markdown-content .mermaid svg, .tutorial-content .mermaid svg, main .mermaid svg');
+    if (!svgs || !svgs.length) return;
+
+    svgs.forEach((svg) => {
+        if (!svg || svg.hasAttribute('data-zoom-enabled')) return;
+
+        svg.setAttribute('data-zoom-enabled', 'true');
+        svg.setAttribute('tabindex', '0');
+        svg.setAttribute('role', 'button');
+        svg.style.cursor = 'zoom-in';
+
+        const getAltText = () => {
+            const aria = svg.getAttribute('aria-label');
+            if (aria) return aria;
+            const titleEl = svg.querySelector('title');
+            if (titleEl && titleEl.textContent) return titleEl.textContent.trim();
+            return '流程图';
+        };
+
+        const open = () => {
+            createSvgOverlay(svg, getAltText());
+        };
+
+        svg.addEventListener('click', (e) => {
+            const target = e && e.target ? e.target : null;
+            if (target && typeof target.closest === 'function' && target.closest('a')) return;
+            open();
+        });
+
+        svg.addEventListener('keydown', (e) => {
+            if (!e) return;
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                open();
+            }
+        });
+    });
+}
+
+function createSvgOverlay(svgElement, svgAlt, options) {
+    if (!svgElement) return;
+
+    // 检查是否已存在遮罩层
+    if (document.getElementById('image-zoom-overlay')) {
+        return;
+    }
+
+    const originalParent = svgElement.parentNode;
+    if (!originalParent) return;
+
+    const originalNextSibling = svgElement.nextSibling;
+    const originalStyle = svgElement.getAttribute('style');
+    const originalWidth = svgElement.getAttribute('width');
+    const originalHeight = svgElement.getAttribute('height');
+
+    const placeholder = document.createElement('div');
+    const rect = svgElement.getBoundingClientRect();
+    placeholder.style.width = `${Math.max(1, rect.width)}px`;
+    placeholder.style.height = `${Math.max(1, rect.height)}px`;
+    placeholder.style.display = 'block';
+    placeholder.style.margin = '0';
+    originalParent.insertBefore(placeholder, svgElement);
+
+    // 创建遮罩层
+    const overlay = document.createElement('div');
+    overlay.id = 'image-zoom-overlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        cursor: zoom-out;
+        touch-action: none;
+        user-select: none;
+    `;
+
+    // 创建内容容器（SVG 常带 foreignObject，不能用 <img> 外链渲染，这里直接移动 DOM 节点）
+    const imageContainer = document.createElement('div');
+    imageContainer.style.cssText = `
+        position: relative;
+        width: 90vw;
+        height: 90vh;
+        overflow: hidden;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        transform-origin: center center;
+        transition: transform 0.3s ease;
+        background: transparent;
+    `;
+
+    svgElement.style.width = '100%';
+    svgElement.style.height = '100%';
+    svgElement.style.maxWidth = '100%';
+    svgElement.style.maxHeight = '100%';
+    svgElement.style.display = 'block';
+
+    // 组装元素
+    imageContainer.appendChild(svgElement);
+    overlay.appendChild(imageContainer);
+
+    // 缩放状态
+    let scale = 1;
+    let minScale = 0.5;
+    let maxScale = 5;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let translateX = 0;
+    let translateY = 0;
+
+    function updateTransform() {
+        imageContainer.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    }
+
+    function handleWheel(e) {
+        e.preventDefault();
+
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = scale * delta;
+
+        if (newScale >= minScale && newScale <= maxScale) {
+            scale = newScale;
+            updateTransform();
+        }
+    }
+
+    let lastTouchDistance = 0;
+    let lastTouchScale = 1;
+
+    function getTouchDistance(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function handleTouchStart(e) {
+        if (e.touches.length === 1) {
+            isDragging = true;
+            startX = e.touches[0].clientX - translateX;
+            startY = e.touches[0].clientY - translateY;
+        } else if (e.touches.length === 2) {
+            lastTouchDistance = getTouchDistance(e.touches);
+            lastTouchScale = scale;
+            isDragging = false;
+        }
+    }
+
+    function handleTouchMove(e) {
+        e.preventDefault();
+
+        if (e.touches.length === 1 && isDragging) {
+            translateX = e.touches[0].clientX - startX;
+            translateY = e.touches[0].clientY - startY;
+            updateTransform();
+        } else if (e.touches.length === 2) {
+            const currentDistance = getTouchDistance(e.touches);
+            const scaleRatio = currentDistance / lastTouchDistance;
+            const newScale = lastTouchScale * scaleRatio;
+
+            if (newScale >= minScale && newScale <= maxScale) {
+                scale = newScale;
+                updateTransform();
+            }
+        }
+    }
+
+    function handleTouchEnd(e) {
+        if (e.touches.length === 0) {
+            isDragging = false;
+        }
+    }
+
+    overlay.addEventListener('wheel', handleWheel, { passive: false });
+    overlay.addEventListener('touchstart', handleTouchStart, { passive: false });
+    overlay.addEventListener('touchmove', handleTouchMove, { passive: false });
+    overlay.addEventListener('touchend', handleTouchEnd);
+
+    const controls = document.createElement('div');
+    controls.style.cssText = `
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 10;
+    `;
+
+    const zoomInBtn = document.createElement('button');
+    zoomInBtn.innerHTML = '+';
+    zoomInBtn.style.cssText = `
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: none;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+    `;
+    zoomInBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        scale = Math.min(scale * 1.2, maxScale);
+        updateTransform();
+    });
+
+    const zoomOutBtn = document.createElement('button');
+    zoomOutBtn.innerHTML = '-';
+    zoomOutBtn.style.cssText = `
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: none;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+    `;
+    zoomOutBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        scale = Math.max(scale / 1.2, minScale);
+        updateTransform();
+    });
+
+    const resetBtn = document.createElement('button');
+    resetBtn.innerHTML = '⟲';
+    resetBtn.style.cssText = `
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: none;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s;
+    `;
+    resetBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        updateTransform();
+    });
+
+    [zoomInBtn, zoomOutBtn, resetBtn].forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+            btn.style.backgroundColor = 'rgba(255, 255, 255, 1)';
+        });
+        btn.addEventListener('mouseleave', () => {
+            btn.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+        });
+    });
+
+    controls.appendChild(zoomInBtn);
+    controls.appendChild(zoomOutBtn);
+    controls.appendChild(resetBtn);
+    overlay.appendChild(controls);
+
+    if (svgAlt) {
+        const caption = document.createElement('div');
+        caption.textContent = svgAlt;
+        caption.style.cssText = `
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            max-width: calc(100% - 200px);
+            word-wrap: break-word;
+        `;
+        overlay.appendChild(caption);
+    }
+
+    const onClose = options && typeof options.onClose === 'function' ? options.onClose : null;
+    let isClosed = false;
+
+    const handleKeyPress = function (e) {
+        if (e.key === 'Escape') {
+            closeOverlay();
+        }
+    };
+    document.addEventListener('keydown', handleKeyPress);
+
+    function restoreSvg() {
+        if (originalStyle == null) {
+            svgElement.removeAttribute('style');
+        } else {
+            svgElement.setAttribute('style', originalStyle);
+        }
+
+        if (originalWidth == null) {
+            svgElement.removeAttribute('width');
+        } else {
+            svgElement.setAttribute('width', originalWidth);
+        }
+
+        if (originalHeight == null) {
+            svgElement.removeAttribute('height');
+        } else {
+            svgElement.setAttribute('height', originalHeight);
+        }
+
+        if (placeholder.parentNode) {
+            placeholder.parentNode.removeChild(placeholder);
+        }
+
+        if (originalParent) {
+            if (originalNextSibling && originalNextSibling.parentNode === originalParent) {
+                originalParent.insertBefore(svgElement, originalNextSibling);
+            } else {
+                originalParent.appendChild(svgElement);
+            }
+        }
+    }
+
+    function closeOverlay() {
+        if (isClosed) return;
+        isClosed = true;
+
+        restoreSvg();
+
+        const currentOverlay = document.getElementById('image-zoom-overlay');
+        if (currentOverlay && currentOverlay.parentNode) {
+            currentOverlay.parentNode.removeChild(currentOverlay);
+        }
+
+        document.removeEventListener('keydown', handleKeyPress);
+
+        if (onClose) {
+            try {
+                onClose();
+            } catch (e) {
+                console.warn('svg overlay onClose failed:', e);
+            }
+        }
+    }
+
+    overlay.addEventListener('click', function (e) {
+        if (e.target === zoomInBtn || e.target === zoomOutBtn || e.target === resetBtn) {
+            return;
+        }
+        closeOverlay();
+    });
+
+    document.body.appendChild(overlay);
 }

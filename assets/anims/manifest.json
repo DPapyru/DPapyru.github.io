@@ -1,6 +1,10 @@
 {
   "schemaVersion": 1,
+<<<<<<< HEAD
   "generatedAt": "2026-01-25T08:45:37.893Z",
+=======
+  "generatedAt": "2026-01-25T16:01:53.703Z",
+>>>>>>> add-new-text
   "sources": [
     "anims/_lib/calc.ts",
     "anims/_lib/math2d.ts",

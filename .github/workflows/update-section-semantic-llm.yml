@@ -8,6 +8,7 @@ on:
         required: false
         default: ""
       concurrency:
+<<<<<<< HEAD
         description: "LLM request concurrency (higher = faster, may trigger 429)"
         required: false
         default: "1"
@@ -15,14 +16,15 @@ on:
         description: "Stop LLM generation after N minutes (checkpoint will be committed to PR)"
         required: false
         default: "120"
+=======
+        description: "LLM request concurrency (optional, empty = script default)"
+        required: false
+        default: ""
+>>>>>>> add-new-text
 
 permissions:
   contents: write
   pull-requests: write
-
-concurrency:
-  group: "update-section-semantic-llm"
-  cancel-in-progress: false
 
 jobs:
   update:
@@ -32,6 +34,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Warning (no concurrency limit)
+        run: |
+          echo "::warning::This workflow no longer limits concurrent runs. Make sure you understand the cost/quotas of your LLM provider. Use workflow inputs (max_sections / concurrency) to control spend and load."
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -87,8 +93,11 @@ jobs:
           LLM_MODEL: ${{ secrets.LLM_MODEL }}
           MAX_SECTIONS: ${{ github.event.inputs.max_sections }}
           CONCURRENCY: ${{ github.event.inputs.concurrency }}
+<<<<<<< HEAD
           MAX_RUNTIME_MINUTES: ${{ github.event.inputs.max_runtime_minutes }}
           FLUSH_EVERY: "1"
+=======
+>>>>>>> add-new-text
         run: |
           if [ -z "${LLM_MODEL}" ]; then
             export LLM_MODEL="glm-4.7-flash"
