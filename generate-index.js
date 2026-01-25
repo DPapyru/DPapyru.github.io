@@ -714,6 +714,8 @@ function loadSectionSemanticMap() {
 
             // list-like fields: union (manual first), keep deterministic order
             const phrases = [];
+            const questions = [];
+            const beginnerQuestions = [];
             const avoid = [];
             const aliases = [];
 
@@ -727,6 +729,9 @@ function loadSectionSemanticMap() {
             for (const src of [manual, ai]) {
                 if (!src) continue;
                 if (Array.isArray(src.phrases)) for (const p of src.phrases) pushUnique(phrases, p);
+                if (Array.isArray(src.questions)) for (const q of src.questions) pushUnique(questions, q);
+                if (Array.isArray(src.beginnerQuestions)) for (const q of src.beginnerQuestions) pushUnique(beginnerQuestions, q);
+                if (Array.isArray(src.beginner_questions)) for (const q of src.beginner_questions) pushUnique(beginnerQuestions, q);
                 if (Array.isArray(src.avoid)) for (const v of src.avoid) pushUnique(avoid, v);
                 if (Array.isArray(src.aliases)) {
                     for (const a of src.aliases) {
@@ -741,6 +746,8 @@ function loadSectionSemanticMap() {
             }
 
             merged.phrases = phrases;
+            merged.questions = questions;
+            merged.beginnerQuestions = beginnerQuestions;
             merged.avoid = avoid;
             merged.aliases = aliases;
 
@@ -760,6 +767,18 @@ function buildSectionAugmentText(sectionMeta) {
     if (Array.isArray(sectionMeta.phrases)) {
         for (const p of sectionMeta.phrases) {
             const s = String(p || '').trim();
+            if (s) parts.push(s);
+        }
+    }
+    if (Array.isArray(sectionMeta.questions)) {
+        for (const q of sectionMeta.questions) {
+            const s = String(q || '').trim();
+            if (s) parts.push(s);
+        }
+    }
+    if (Array.isArray(sectionMeta.beginnerQuestions)) {
+        for (const q of sectionMeta.beginnerQuestions) {
+            const s = String(q || '').trim();
             if (s) parts.push(s);
         }
     }

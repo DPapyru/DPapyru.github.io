@@ -26,6 +26,7 @@ const zlib = require('zlib');
 const DEFAULT_AI_OUT = path.join('docs', 'search', 'section-semantic.ai.v1.json.gz');
 const LEGACY_YAML = path.join('docs', 'search', 'section-semantic.v1.yml');
 const STAGES = ['intro', 'basics', 'intermediate', 'advanced', 'concept', 'troubleshoot', 'tooling', 'meta'];
+const PROMPT_VERSION = 2;
 
 function sha256(text) {
     const h = crypto.createHash('sha256');
@@ -302,7 +303,9 @@ function buildPrompt({ docPath, heading, level, plainText }) {
         '',
         '要求：',
         `- stage 必须是以下之一：${STAGES.join(', ')}`,
-        '- phrases: 3~8 条，尽量贴近用户会问的自然语言问题（中文为主），短句即可。',
+        '- phrases: 严格 5 条，短句/关键词式，尽量贴近用户会输入的搜索词（中文为主）。',
+        '- questions: 严格 5 条，围绕本小节“能回答的具体问题”，用问句表达。',
+        '- beginnerQuestions: 严格 5 条，假设提问者刚入门、目标导向（例如“我要怎么做一个类似灾厄 Mod 的武器？”），但仍需能从本小节找到线索/起点。',
         '- aliases: 0~6 条，表示“新造词/黑话/别名 -> 站内常用术语/关键词”。',
         '- avoid: 0~6 条，容易造成跑偏的泛词/元词（例如“目录/索引/引用/搜索”等），用于检索时降权。',
         '',
@@ -310,6 +313,8 @@ function buildPrompt({ docPath, heading, level, plainText }) {
         '{',
         '  "stage": "intro|basics|intermediate|advanced|concept|troubleshoot|tooling|meta",',
         '  "phrases": ["..."],',
+        '  "questions": ["..."],',
+        '  "beginnerQuestions": ["..."],',
         '  "aliases": [{"from": "...", "to": "..."}],',
         '  "avoid": ["..."]',
         '}'
@@ -402,7 +407,8 @@ async function main() {
     const toUpdate = [];
     for (const sec of discovered) {
         const prev = existingById.get(sec.id);
-        if (!prev || String(prev.hash || '') !== sec.hash) {
+        const pv = prev && typeof prev.promptVersion === 'number' ? prev.promptVersion : null;
+        if (!prev || String(prev.hash || '') !== sec.hash || pv !== PROMPT_VERSION) {
             toUpdate.push(sec);
         }
     }
@@ -438,13 +444,16 @@ async function main() {
                 heading: s.heading,
                 level: s.level,
                 hash: s.hash,
+                promptVersion: s.promptVersion,
                 stage: s.stage,
                 phrases: Array.isArray(s.phrases) ? s.phrases : [],
+                questions: Array.isArray(s.questions) ? s.questions : [],
+                beginnerQuestions: Array.isArray(s.beginnerQuestions) ? s.beginnerQuestions : [],
                 aliases: Array.isArray(s.aliases) ? s.aliases : [],
                 avoid: Array.isArray(s.avoid) ? s.avoid : []
             });
         }
-        return { version: 1, schema: 'section-semantic.ai.v1', model, promptVersion: 1, sections: orderedSections };
+        return { version: 1, schema: 'section-semantic.ai.v1', model, promptVersion: PROMPT_VERSION, sections: orderedSections };
     };
 
     const scheduleFlush = (force) => {
@@ -504,7 +513,9 @@ async function main() {
 
             const stageRaw = String(obj.stage || '').trim();
             const stage = STAGES.includes(stageRaw) ? stageRaw : 'basics';
-            const phrases = normalizeStringList(obj.phrases, 8);
+            const phrases = normalizeStringList(obj.phrases, 5);
+            const questions = normalizeStringList(obj.questions, 5);
+            const beginnerQuestions = normalizeStringList(obj.beginnerQuestions || obj.beginner_questions, 5);
             const avoid = normalizeStringList(obj.avoid, 6);
             const aliases = normalizeAliases(obj.aliases).slice(0, 6);
 
@@ -514,8 +525,11 @@ async function main() {
                 heading: sec.heading,
                 level: sec.level,
                 hash: sec.hash,
+                promptVersion: PROMPT_VERSION,
                 stage,
                 phrases,
+                questions,
+                beginnerQuestions,
                 aliases,
                 avoid
             };

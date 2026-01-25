@@ -67,19 +67,31 @@ function normalizeAiDoc(doc) {
         return String(a.id || '').localeCompare(String(b.id || ''));
     });
 
+    const includeSectionPromptVersion = sections.some(s => s && typeof s.promptVersion === 'number');
+    const includeQuestions = sections.some(s => s && Array.isArray(s.questions));
+    const includeBeginnerQuestions = sections.some(s => s && (Array.isArray(s.beginnerQuestions) || Array.isArray(s.beginner_questions)));
+
     const orderedSections = [];
     for (const s of sections) {
-        orderedSections.push({
+        const out = {
             id: s.id,
             docPath: s.docPath,
             heading: s.heading,
             level: s.level,
             hash: s.hash,
             stage: s.stage,
-            phrases: Array.isArray(s.phrases) ? s.phrases : [],
-            aliases: Array.isArray(s.aliases) ? s.aliases : [],
-            avoid: Array.isArray(s.avoid) ? s.avoid : []
-        });
+            phrases: Array.isArray(s.phrases) ? s.phrases : []
+        };
+        if (includeSectionPromptVersion) out.promptVersion = s.promptVersion;
+        if (includeQuestions) out.questions = Array.isArray(s.questions) ? s.questions : [];
+        if (includeBeginnerQuestions) {
+            out.beginnerQuestions = Array.isArray(s.beginnerQuestions)
+                ? s.beginnerQuestions
+                : (Array.isArray(s.beginner_questions) ? s.beginner_questions : []);
+        }
+        out.aliases = Array.isArray(s.aliases) ? s.aliases : [];
+        out.avoid = Array.isArray(s.avoid) ? s.avoid : [];
+        orderedSections.push(out);
     }
 
     return {
