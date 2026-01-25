@@ -29,6 +29,24 @@ jobs:
         run: |
           echo "::warning::This workflow no longer limits concurrent runs. Make sure you understand the cost/quotas of your LLM provider. Use workflow inputs (max_sections / concurrency) to control spend and load."
 
+      - name: Validate inputs
+        env:
+          MAX_SECTIONS_INPUT: ${{ github.event.inputs.max_sections }}
+          CONCURRENCY_INPUT: ${{ github.event.inputs.concurrency }}
+        run: |
+          if [ -n "${MAX_SECTIONS_INPUT}" ]; then
+            if ! echo "${MAX_SECTIONS_INPUT}" | grep -Eq '^[0-9]+$'; then
+              echo "::error::Invalid max_sections: '${MAX_SECTIONS_INPUT}' (must be a non-negative integer)"
+              exit 1
+            fi
+          fi
+          if [ -n "${CONCURRENCY_INPUT}" ]; then
+            if ! echo "${CONCURRENCY_INPUT}" | grep -Eq '^[1-9][0-9]*$'; then
+              echo "::error::Invalid concurrency: '${CONCURRENCY_INPUT}' (must be a positive integer)"
+              exit 1
+            fi
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

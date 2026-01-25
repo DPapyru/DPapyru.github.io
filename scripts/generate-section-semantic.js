@@ -284,7 +284,17 @@ async function main() {
     const model = process.env.LLM_MODEL || 'glm-4.5-flash';
     const outPath = process.env.SECTION_SEMANTIC_PATH || DEFAULT_OUT;
     const maxSections = process.env.MAX_SECTIONS ? Number(process.env.MAX_SECTIONS) : null;
-    const concurrency = process.env.CONCURRENCY ? Math.max(1, Number(process.env.CONCURRENCY)) : 2;
+
+    let concurrency = 2;
+    if (Object.prototype.hasOwnProperty.call(process.env, 'CONCURRENCY')) {
+        const raw = String(process.env.CONCURRENCY || '').trim();
+        if (raw) {
+            const n = Number(raw);
+            if (Number.isFinite(n) && n >= 1) {
+                concurrency = Math.max(1, Math.floor(n));
+            }
+        }
+    }
 
     if (!apiKey) throw new Error('缺少环境变量 LLM_API_KEY');
     if (!baseUrl) throw new Error('缺少环境变量 LLM_BASE_URL（OpenAI 兼容 base url，如 https://.../v1）');
