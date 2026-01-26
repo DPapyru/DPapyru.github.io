@@ -5,7 +5,7 @@ date: 2026-01-25
 last_updated: 2026-01-25
 difficulty: beginner
 time: 10分钟
-description: 介绍C#的变量和表达式
+description: 介绍 C# 的作用域与注释写法
 prev_chapter: CSharp快速入门.md
 next_chapter: CSharp变量表达式.md
 topic: know-csharp
@@ -15,9 +15,9 @@ topic: know-csharp
 
 # 作用域
 
-C#的作用域一般使用 { } 进行包裹，这继承了C系列的语言的一贯作风。
+C# 的作用域一般用 `{ }` 包裹，这是 C 系语言的常见约定。
 
-与那司马的Python缩进决定作用域不同，C系列语言都只因为 { } 决定作用域，下面是两段代码的演示
+与 Python 的缩进决定作用域不同，C 系语言通常通过 `{ }` 决定作用域，下面是两段代码的演示：
 
 ```python
 # 同一作用域内的变量访问
@@ -32,14 +32,14 @@ if False:
 print(x)  # NameError: name 'x' is not defined
 ```
 
-而我们C#是这样
+C# 示例如下：
 ```csharp
 // 不会报错的代码
 {
     int x = 0;
     int y = 0;
-    // 偷懒拿tModLoader的API了
-    Main.newText(x+y);
+    // 使用 tModLoader 的 API 作为示例输出
+    Main.NewText(x + y);
 }
 
 // 报错的代码
@@ -48,23 +48,23 @@ print(x)  # NameError: name 'x' is not defined
     {
         int y = 0;
     }
-    Main.newText(x+y); // 未定义y！
+    Main.NewText(x + y); // y 不在当前作用域
 }
 ```
 
 # 注释
 
-注释有三种方法，下面一一介绍
+注释常见有三类，下面分别介绍。
 
 ## 单行注释
 
 ```csharp
-// 这样子写注释！
+// 单行注释写法
 ```
 
 ### 单行注释的规范
 
-下面是一些我个人认为的规范写法，可以不参考，但是我觉得对提高阅读性有帮助
+下面给出几种常见写法，重点是让意图清晰，便于维护。
 
 #### TODO注释
 
@@ -80,7 +80,7 @@ print(x)  # NameError: name 'x' is not defined
 Main.newText("发消息"); // 调用newText发送消息
 ```
 
-这样子写注释，一行简短的代码内容可以快速知道它干了什么
+适用于解释单行代码的目的，避免读者反复推断。
 
 #### 说明下面功能注释
 
@@ -96,14 +96,14 @@ else
 // 功能3...
 ```
 
-这种注释写法如下:
+建议写法：
 
 1. 使用回车分离每块代码处理的内容
 2. 在这一块内容的顶部添加注释，说明被回车隔离开的这一段内容执行了什么操作
 
-这种写法的好处就是->直观
+优点：分段清晰，便于快速定位和修改。
 
-> 我不知道其他人怎么想的，但是我觉得这样很好，区分数量级大的代码是很好的
+当代码块较长时，按功能分段并在段首写注释，有助于维护。
 
 ## 多行注释
 

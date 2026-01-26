@@ -871,6 +871,48 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=Modder%E5%85%A5%E9%97%A8%2F%E8%AF%A6%E7%BB%86%E6%96%87%E6%A1%A3%2FCSharp%E7%9F%A5%E8%AF%86%2FCSharp%E6%8E%A7%E5%88%B6%E6%B5%81.md</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=Modder%E5%85%A5%E9%97%A8%2F%E8%AF%A6%E7%BB%86%E6%96%87%E6%A1%A3%2FCSharp%E7%9F%A5%E8%AF%86%2FCSharp%E6%95%B0%E7%BB%84%E4%B8%8E%E9%9B%86%E5%90%88.md</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=Modder%E5%85%A5%E9%97%A8%2F%E8%AF%A6%E7%BB%86%E6%96%87%E6%A1%A3%2FCSharp%E7%9F%A5%E8%AF%86%2FCSharp%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E5%9F%BA%E7%A1%80.md</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=Modder%E5%85%A5%E9%97%A8%2F%E8%AF%A6%E7%BB%86%E6%96%87%E6%A1%A3%2FCSharp%E7%9F%A5%E8%AF%86%2FCSharp%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7.md</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=Modder%E5%85%A5%E9%97%A8%2F%E8%AF%A6%E7%BB%86%E6%96%87%E6%A1%A3%2FMod%E5%BC%80%E5%8F%91%E5%AE%9E%E8%B7%B5%2F%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA.md</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=Modder%E5%85%A5%E9%97%A8%2F%E8%AF%A6%E7%BB%86%E6%96%87%E6%A1%A3%2FMod%E5%BC%80%E5%8F%91%E5%AE%9E%E8%B7%B5%2F%E7%AC%AC%E4%B8%80%E4%B8%AA%E6%A8%A1%E7%BB%84.md</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/docs/viewer.html?file=Modder%E5%85%A5%E9%97%A8%2F%E8%AF%A6%E7%BB%86%E6%96%87%E6%A1%A3%2FMod%E5%BC%80%E5%8F%91%E5%AE%9E%E8%B7%B5%2F%E7%AC%AC%E4%B8%80%E4%B8%AA%E7%89%A9%E5%93%81.md</loc>
+    <lastmod>2026-01-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://dpapyru.github.io/qa.html</loc>
     <lastmod>2026-01-23</lastmod>
     <changefreq>daily</changefreq>

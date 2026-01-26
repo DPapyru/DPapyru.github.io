@@ -5,25 +5,25 @@ date: 2026-01-23
 last_updated: 2026-01-23
 difficulty: beginner
 time: 15分钟
-description: 快速入门C#，面对一些很急的人
+description: 快速建立 C# 语法概念，便于阅读后续教程
 prev_chapter: null
 next_chapter: CSharp基本语法.md
 topic: know-csharp
 ---
 
-本文介绍C#的语法基础和一些关键字介绍，先给出代码:
+本文介绍 C# 的语法基础和常见关键字，先给出一段示例代码：
 
-> 这篇文章是为了快速入门C#而准备的，如果要深入学习不建议阅读
+> 本文侧重快速建立概念；深入内容请结合后续章节与官方文档。
 
 # 代码部分
 
 ```csharp
 public class HelloWorldClass
 {
-    public static void main(string[] args)
+    public static void Main(string[] args)
     {
-        // 这里应该放个Hello World,但是我不会放的！
-        // 这里是tModLoader教程,所以我没必要使用控制台输出
+        // 这里只演示类与方法的基本结构
+        // 在 tModLoader Mod 开发中通常不使用控制台输出
     }
 }
 ```
@@ -32,7 +32,7 @@ public class HelloWorldClass
 
 ## 访问权限-public
 
-我们最常用的访问权限就是:public，除此之外还有以下访问权限关键字：
+我们最常用的访问权限是：public，除此之外还有以下访问权限关键字：
 
 - public：任何程序集、任何类均可访问。常用于 API 接口、公共工具类。
 - private：仅限定义它的类内部访问，默认成员访问级别。
@@ -41,9 +41,9 @@ public class HelloWorldClass
 - protected internal：同一程序集或其他程序集的派生类可访问。
 - private protected：仅限同一程序集内的派生类访问，限制更严格。
 
-我们最常用的是: `public` `private` `protected`
+常用的是：`public` `private` `protected`
 
-`internal` 一般是为了给不想给外界访问，只能自己的程序集里面访问才使用，做Mod一般不需要考虑这个。
+`internal` 用于限制同一程序集访问，Mod 开发中通常用不到。
 
 ## 类的定义-class
 
@@ -59,7 +59,7 @@ C#作为和Java对标的语言，它主要还是以**面向对象**作为主要�
 - 结构体-struct
 - 函数-function
 
-嗯对，我们C#的函数也是一等公民，这个和C#的一些特性有关，之后会说，这里先提出来
+补充：方法同样是 C# 中的重要组成部分，后续会结合委托等特性再说明。
 
 #### 一等公民是什么？
 
