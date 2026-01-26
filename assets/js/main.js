@@ -1688,10 +1688,17 @@ function createImageOverlay(imageSrc, imageAlt, options) {
     let minScale = 0.5;
     let maxScale = 5;
     let isDragging = false;
+    let dragMoved = false;
+    let suppressCloseClick = false;
     let startX = 0;
     let startY = 0;
+    let dragStartX = 0;
+    let dragStartY = 0;
     let translateX = 0;
     let translateY = 0;
+    const baseTransition = imageContainer.style.transition;
+
+    imageContainer.style.cursor = 'grab';
 
     // 更新图片变换
     function updateTransform() {
@@ -1725,8 +1732,12 @@ function createImageOverlay(imageSrc, imageAlt, options) {
         if (e.touches.length === 1) {
             // 单指触摸，准备拖拽
             isDragging = true;
+            dragMoved = false;
             startX = e.touches[0].clientX - translateX;
             startY = e.touches[0].clientY - translateY;
+            dragStartX = e.touches[0].clientX;
+            dragStartY = e.touches[0].clientY;
+            imageContainer.style.transition = 'none';
         } else if (e.touches.length === 2) {
             // 双指触摸，准备缩放
             lastTouchDistance = getTouchDistance(e.touches);
@@ -1740,6 +1751,11 @@ function createImageOverlay(imageSrc, imageAlt, options) {
 
         if (e.touches.length === 1 && isDragging) {
             // 单指拖拽
+            if (!dragMoved) {
+                const dx = e.touches[0].clientX - dragStartX;
+                const dy = e.touches[0].clientY - dragStartY;
+                dragMoved = Math.abs(dx) > 3 || Math.abs(dy) > 3;
+            }
             translateX = e.touches[0].clientX - startX;
             translateY = e.touches[0].clientY - startY;
             updateTransform();
@@ -1759,6 +1775,7 @@ function createImageOverlay(imageSrc, imageAlt, options) {
     function handleTouchEnd(e) {
         if (e.touches.length === 0) {
             isDragging = false;
+            imageContainer.style.transition = baseTransition;
         }
     }
 
@@ -1767,6 +1784,62 @@ function createImageOverlay(imageSrc, imageAlt, options) {
     overlay.addEventListener('touchstart', handleTouchStart, { passive: false });
     overlay.addEventListener('touchmove', handleTouchMove, { passive: false });
     overlay.addEventListener('touchend', handleTouchEnd);
+
+    function isControlTarget(target) {
+        if (!target) return false;
+        if (target === zoomInBtn || target === zoomOutBtn || target === resetBtn) return true;
+        if (typeof target.closest === 'function' && target.closest('button')) return true;
+        return false;
+    }
+
+    function handleMouseDown(e) {
+        if (!e || e.button !== 0) return;
+        if (isControlTarget(e.target)) return;
+
+        e.preventDefault();
+        isDragging = true;
+        dragMoved = false;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        imageContainer.style.transition = 'none';
+        imageContainer.style.cursor = 'grabbing';
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    function handleMouseMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        if (!dragMoved) {
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            dragMoved = Math.abs(dx) > 3 || Math.abs(dy) > 3;
+        }
+
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        updateTransform();
+    }
+
+    function handleMouseUp() {
+        if (!isDragging) return;
+        isDragging = false;
+        if (dragMoved) {
+            suppressCloseClick = true;
+            setTimeout(() => { suppressCloseClick = false; }, 0);
+        }
+        imageContainer.style.transition = baseTransition;
+        imageContainer.style.cursor = 'grab';
+
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    overlay.addEventListener('mousedown', handleMouseDown);
 
     // 添加缩放控制按钮
     const controls = document.createElement('div');
@@ -1914,6 +1987,8 @@ function createImageOverlay(imageSrc, imageAlt, options) {
         }
 
         document.removeEventListener('keydown', handleKeyPress);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
 
         if (onClose) {
             try {
@@ -1926,6 +2001,10 @@ function createImageOverlay(imageSrc, imageAlt, options) {
 
     // 添加关闭事件
     overlay.addEventListener('click', function (e) {
+        if (suppressCloseClick) {
+            suppressCloseClick = false;
+            return;
+        }
         // 如果点击的是控制按钮，不关闭
         if (e.target === zoomInBtn || e.target === zoomOutBtn || e.target === resetBtn) {
             return;
@@ -2130,10 +2209,17 @@ function createSvgOverlay(svgElement, svgAlt, options) {
     let minScale = 0.5;
     let maxScale = 5;
     let isDragging = false;
+    let dragMoved = false;
+    let suppressCloseClick = false;
     let startX = 0;
     let startY = 0;
+    let dragStartX = 0;
+    let dragStartY = 0;
     let translateX = 0;
     let translateY = 0;
+    const baseTransition = imageContainer.style.transition;
+
+    imageContainer.style.cursor = 'grab';
 
     function updateTransform() {
         imageContainer.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
@@ -2163,8 +2249,12 @@ function createSvgOverlay(svgElement, svgAlt, options) {
     function handleTouchStart(e) {
         if (e.touches.length === 1) {
             isDragging = true;
+            dragMoved = false;
             startX = e.touches[0].clientX - translateX;
             startY = e.touches[0].clientY - translateY;
+            dragStartX = e.touches[0].clientX;
+            dragStartY = e.touches[0].clientY;
+            imageContainer.style.transition = 'none';
         } else if (e.touches.length === 2) {
             lastTouchDistance = getTouchDistance(e.touches);
             lastTouchScale = scale;
@@ -2176,6 +2266,11 @@ function createSvgOverlay(svgElement, svgAlt, options) {
         e.preventDefault();
 
         if (e.touches.length === 1 && isDragging) {
+            if (!dragMoved) {
+                const dx = e.touches[0].clientX - dragStartX;
+                const dy = e.touches[0].clientY - dragStartY;
+                dragMoved = Math.abs(dx) > 3 || Math.abs(dy) > 3;
+            }
             translateX = e.touches[0].clientX - startX;
             translateY = e.touches[0].clientY - startY;
             updateTransform();
@@ -2194,6 +2289,7 @@ function createSvgOverlay(svgElement, svgAlt, options) {
     function handleTouchEnd(e) {
         if (e.touches.length === 0) {
             isDragging = false;
+            imageContainer.style.transition = baseTransition;
         }
     }
 
@@ -2201,6 +2297,62 @@ function createSvgOverlay(svgElement, svgAlt, options) {
     overlay.addEventListener('touchstart', handleTouchStart, { passive: false });
     overlay.addEventListener('touchmove', handleTouchMove, { passive: false });
     overlay.addEventListener('touchend', handleTouchEnd);
+
+    function isControlTarget(target) {
+        if (!target) return false;
+        if (target === zoomInBtn || target === zoomOutBtn || target === resetBtn) return true;
+        if (typeof target.closest === 'function' && target.closest('button')) return true;
+        return false;
+    }
+
+    function handleMouseDown(e) {
+        if (!e || e.button !== 0) return;
+        if (isControlTarget(e.target)) return;
+
+        e.preventDefault();
+        isDragging = true;
+        dragMoved = false;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        imageContainer.style.transition = 'none';
+        imageContainer.style.cursor = 'grabbing';
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    function handleMouseMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        if (!dragMoved) {
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            dragMoved = Math.abs(dx) > 3 || Math.abs(dy) > 3;
+        }
+
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        updateTransform();
+    }
+
+    function handleMouseUp() {
+        if (!isDragging) return;
+        isDragging = false;
+        if (dragMoved) {
+            suppressCloseClick = true;
+            setTimeout(() => { suppressCloseClick = false; }, 0);
+        }
+        imageContainer.style.transition = baseTransition;
+        imageContainer.style.cursor = 'grab';
+
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    }
+
+    overlay.addEventListener('mousedown', handleMouseDown);
 
     const controls = document.createElement('div');
     controls.style.cssText = `
@@ -2367,6 +2519,8 @@ function createSvgOverlay(svgElement, svgAlt, options) {
         }
 
         document.removeEventListener('keydown', handleKeyPress);
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
 
         if (onClose) {
             try {
@@ -2378,6 +2532,10 @@ function createSvgOverlay(svgElement, svgAlt, options) {
     }
 
     overlay.addEventListener('click', function (e) {
+        if (suppressCloseClick) {
+            suppressCloseClick = false;
+            return;
+        }
         if (e.target === zoomInBtn || e.target === zoomOutBtn || e.target === resetBtn) {
             return;
         }

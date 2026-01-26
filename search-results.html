@@ -1242,6 +1242,7 @@
 		        <script src="assets/js/search-index-loader.js"></script>
 		        <script src="assets/js/bm25-lookup.js"></script>
 		        <script src="assets/js/guided-lookup.js"></script>
+		        <script src="assets/js/section-semantic-loader.js"></script>
 	
 	    <!-- 搜索结果页面专用脚本 -->
 	    <script>
@@ -1258,11 +1259,14 @@
 			                this.semanticEnabled = false;
 			                this.semanticRuntime = 'off'; // off | dl | light
 			                this.guidedUpdateToken = 0;
+			                this.sectionSemanticById = null;
+			                this.sectionSemanticLoadPromise = null;
 			                this.init();
 			            }
 
             // 初始化
             async init() {
+	                this.preloadSectionSemantic();
 	                this.bindEvents();
 	                await this.loadSearchIndex();
 	                await this.loadGuidedEngine();
@@ -1275,6 +1279,41 @@
 	                    await this.performSearch();
 	                }
 	            }
+
+		            getSectionSemanticUrl() {
+		                return window.location.pathname.includes('/docs/')
+		                    ? '../docs/search/section-semantic.ai.v1.json.gz'
+		                    : 'docs/search/section-semantic.ai.v1.json.gz';
+		            }
+
+		            preloadSectionSemantic() {
+		                if (this.sectionSemanticLoadPromise) return this.sectionSemanticLoadPromise;
+		                if (!window.SectionSemanticLoader || typeof window.SectionSemanticLoader.load !== 'function') return null;
+
+		                const url = this.getSectionSemanticUrl();
+		                this.sectionSemanticLoadPromise = window.SectionSemanticLoader.load(url)
+		                    .then((payload) => {
+		                        this.sectionSemanticById = window.SectionSemanticLoader.createSectionMap(payload);
+		                        this.refreshCurrentResults();
+		                        return this.sectionSemanticById;
+		                    })
+		                    .catch((error) => {
+		                        console.warn('section semantic 加载失败，将跳过 avoid 降权：', error);
+		                        this.sectionSemanticById = null;
+		                        return null;
+		                    });
+
+		                return this.sectionSemanticLoadPromise;
+		            }
+
+		            applySectionAvoidPenalty(item, score) {
+		                if (!this.sectionSemanticById) return score;
+		                if (!item || !item.sectionId) return score;
+		                const meta = this.sectionSemanticById.get(String(item.sectionId));
+		                if (!meta || !Array.isArray(meta.avoid) || meta.avoid.length === 0) return score;
+		                if (!window.SectionSemanticLoader || typeof window.SectionSemanticLoader.applyAvoidPenalty !== 'function') return score;
+		                return window.SectionSemanticLoader.applyAvoidPenalty(score, this.currentQuery, meta.avoid);
+		            }
 
             // 绑定事件
             bindEvents() {
@@ -2271,7 +2310,8 @@
 
 			                    const hardRequired = expandedHard.length > 0;
 			                    const gated = hardRequired && hardHit === 0 ? combined * 0.08 : combined;
-			                    return { ...item, score: gated, __bm25: bm25, __sem: sem, __hardHit: hardHit, __intent: intent };
+			                    const avoided = this.applySectionAvoidPenalty(item, gated);
+			                    return { ...item, score: avoided, __bm25: bm25, __sem: sem, __hardHit: hardHit, __intent: intent };
 			                });
 			                guided.sort((a, b) => (b.score || 0) - (a.score || 0));
 
