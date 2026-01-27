@@ -13,3 +13,8 @@ test('resolveOutputPath maps anims/demo.cs -> assets/anims/demo.dll', () => {
     const { resolveOutputPath } = require('../scripts/build-animcs.js');
     assert.equal(resolveOutputPath('docs/anims/demo.cs'), 'assets/anims/demo.dll');
 });
+
+test('resolveRuntimeOutputDir targets assets/anims/runtime', () => {
+    const { resolveRuntimeOutputDir } = require('../scripts/build-animcs.js');
+    assert.equal(resolveRuntimeOutputDir('.'), 'assets/anims/runtime');
+});
