@@ -2,6 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 const childProcess = require('node:child_process');
 
 function toPosixPath(filePath) {
@@ -119,18 +120,25 @@ function buildAnimDlls(projectRoot, items) {
     const project = path.join(projectRoot, 'tools', 'animcs', 'AnimScript', 'AnimScript.csproj');
     items.forEach((item) => {
         const sourceAbs = path.join(projectRoot, 'docs', item.source);
+        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'animcs-'));
         runDotnet([
             'build',
             project,
             '-c',
             'Release',
             `-p:AnimScript=${sourceAbs}`,
-            `-p:AssemblyName=${item.entry}`,
-            `-p:OutputPath=${outDir}${path.sep}`,
+            `-p:OutputPath=${tempDir}${path.sep}`,
             '-p:DebugType=none',
             '-p:DebugSymbols=false',
             '-p:GenerateRuntimeConfigurationFiles=false'
         ]);
+        const builtDll = path.join(tempDir, 'AnimScript.dll');
+        const targetDll = path.join(outDir, `${item.entry}.dll`);
+        if (!fs.existsSync(builtDll)) {
+            throw new Error(`build output missing: ${builtDll}`);
+        }
+        fs.copyFileSync(builtDll, targetDll);
+        fs.rmSync(tempDir, { recursive: true, force: true });
     });
 }
 

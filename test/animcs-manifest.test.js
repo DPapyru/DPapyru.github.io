@@ -18,3 +18,9 @@ test('resolveRuntimeOutputDir targets assets/anims/runtime', () => {
     const { resolveRuntimeOutputDir } = require('../scripts/build-animcs.js');
     assert.equal(resolveRuntimeOutputDir('.'), 'assets/anims/runtime');
 });
+
+test('manifest includes demo-basic.cs', () => {
+    const fs = require('node:fs');
+    const manifest = JSON.parse(fs.readFileSync('assets/anims/manifest.json', 'utf8'));
+    assert.ok(manifest.entries['anims/demo-basic.cs']);
+});
