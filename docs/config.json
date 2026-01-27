@@ -71,8 +71,8 @@
               "title": "使用网页特殊动画模块",
               "author": "DPapyru",
               "order": 999,
-              "description": "用 TypeScript 编写可视化动画，并在 docs/viewer.html 中嵌入（含：AI 状态机分析、数学渲染、可复用 UI 组件）",
-              "last_updated": "2026-01-22",
+              "description": "用 C# 编写可视化动画，并在 docs/viewer.html 中嵌入（WASM 运行时）",
+              "last_updated": "2026-01-27",
               "time": "10分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -5790,7 +5790,7 @@
       "min_t": null,
       "colors": null,
       "colorChange": null,
-      "last_updated": "2026-01-22"
+      "last_updated": "2026-01-27"
     }
   ],
   "settings": {
