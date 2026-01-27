@@ -70,6 +70,34 @@
 
     const STOPWORDS = buildStopwordSet();
 
+    const MOD_NAME_RULES = [
+        { name: 'calamity', pattern: /灾厄|calamity|calamitymod/i }
+    ];
+
+    function detectModInfo(lower) {
+        const names = [];
+        const patterns = [];
+        for (const rule of MOD_NAME_RULES) {
+            if (!rule || !rule.pattern) continue;
+            if (rule.pattern.test(lower)) {
+                names.push(rule.name);
+                patterns.push(rule.pattern);
+            }
+        }
+        return { names, patterns };
+    }
+
+    function stripByPatterns(text, patterns) {
+        let out = String(text || '');
+        for (const p of patterns || []) {
+            if (!p) continue;
+            const flags = p.flags.includes('g') ? p.flags : `${p.flags}g`;
+            const re = new RegExp(p.source, flags);
+            out = out.replace(re, ' ');
+        }
+        return out.replace(/\s+/g, ' ').trim();
+    }
+
     function stripQuestionWords(query) {
         let q = String(query || '').toLowerCase();
         q = q.replace(/[?？!！。，、,:：;；"“”'‘’（）()\[\]{}<>]/g, ' ');
@@ -121,6 +149,11 @@
         if (!t) return [t];
 
         const table = {
+            '联动': ['联动', '兼容', '跨模组', 'cross mod', 'cross-mod', 'compat', 'compatibility', 'interop', 'interoperability', 'mod call', 'modcall', 'weak references', 'weakreferences'],
+            '兼容': ['兼容', '联动', '跨模组', 'cross mod', 'cross-mod', 'compat', 'compatibility', 'interop', 'interoperability', 'mod call', 'modcall', 'weak references', 'weakreferences'],
+            '跨模组': ['跨模组', '联动', '兼容', 'cross mod', 'cross-mod', 'compat', 'compatibility', 'interop', 'interoperability', 'mod call', 'modcall', 'weak references', 'weakreferences'],
+            '补丁': ['补丁', 'patch', 'patching', 'monomod', 'patching other mods'],
+            '灾厄': ['灾厄', 'calamity', 'calamitymod'],
             '物品': ['物品', 'item', 'moditem', 'setdefaults'],
             '武器': ['武器', 'weapon', 'shoot'],
             '弹幕': ['弹幕', 'projectile', 'modprojectile'],
@@ -139,6 +172,7 @@
     function classifyQuery(query) {
         const raw = String(query || '').trim();
         const lower = raw.toLowerCase();
+        const modInfo = detectModInfo(lower);
         const cleaned = stripQuestionWords(lower);
 
         const flags = {
@@ -156,13 +190,19 @@
             hasIntro: /入门|从零|新手|开始|路线|先学|学什么|不会|玩家|好奇/.test(lower),
             hasConcept: /原理|机制|概念|本质|为什么|为何|区别|差别|流程|生命周期|怎么运作|如何运作|底层/.test(lower),
             hasHowTo: /怎么|如何|实现|做|写|添加|让|制作|创建/.test(lower),
-            hasMeta: /引用|索引|目录|搜索|查找|阅读|文章使用内容索引/.test(lower)
+            hasMeta: /引用|索引|目录|搜索|查找|阅读|文章使用内容索引/.test(lower),
+            hasCrossMod: /联动|兼容|兼容性|跨模组|跨mod|cross[- ]?mod|crossmod|compat|compatibility|interop|interoperability|mod call|modcall|modreferences|weak references|weakreferences|补丁|patching|patch/.test(lower),
+            hasAdvanced: /源码|源代码|il\b|il编辑|il edit|detour|detouring|hook|hookendpointmanager|monomod|反编译|补丁|patching|patch/.test(lower),
+            hasModName: modInfo.names.length > 0
         };
 
-	        // Intent priority: troubleshooting > meta > intro > concept > howto > unknown
+        if (flags.hasModName) flags.hasMod = true;
+
+	        // Intent priority: troubleshooting > meta > crossmod > intro > concept > howto > unknown
 	        let intent = 'unknown';
 	        if (flags.hasTrouble) intent = 'troubleshoot';
 	        else if (flags.hasMeta) intent = 'meta';
+            else if (flags.hasCrossMod) intent = 'crossmod';
 	        else if (flags.hasIntro) intent = 'intro';
 	        else if (flags.hasConcept) intent = 'concept';
 	        else if (flags.hasHowTo) intent = 'howto';
@@ -178,6 +218,7 @@
         // Category-level multipliers (tunable, keep simple)
         const categoryMultiplier = {};
         const pathMultiplier = [];
+        const tokenHints = [];
 
 	        const penalizeContrib = 0.22;
 	        const penalizeMeta = 0.55;
@@ -208,15 +249,36 @@
 	            pathMultiplier.push({ pattern: /概念了解|原理|机制|生命周期|流程|本质|区别|世界观|坐标系|geometry|assets|reflection|polymorphism|logging/i, mult: 1.55 });
 	            pathMultiplier.push({ pattern: /提问|写作指南|教学文章写作指南/i, mult: penalizeMeta });
 	            pathMultiplier.push({ pattern: /怎么贡献/i, mult: penalizeContrib });
-	        } else if (intent === 'howto') {
-	            categoryMultiplier['怎么贡献'] = penalizeContrib;
-	            pathMultiplier.push({ pattern: /提问|写作指南|教学文章写作指南/i, mult: penalizeMeta });
-	            pathMultiplier.push({ pattern: /怎么贡献/i, mult: penalizeContrib });
-	        } else if (intent === 'troubleshoot') {
+        } else if (intent === 'howto') {
+            categoryMultiplier['怎么贡献'] = penalizeContrib;
+            pathMultiplier.push({ pattern: /提问|写作指南|教学文章写作指南/i, mult: penalizeMeta });
+            pathMultiplier.push({ pattern: /怎么贡献/i, mult: penalizeContrib });
+            if (flags.hasWeapon || flags.hasItem) {
+                pathMultiplier.push({ pattern: /螺线翻译tml教程\/1-基础\/(1-Basic-Item|4-Basic-Ammo|5-Basic-Projectile)/i, mult: 1.6 });
+                if (!flags.hasAdvanced) {
+                    pathMultiplier.push({ pattern: /螺线翻译tml教程\/3-高阶|螺线翻译tml教程\/4-专家/i, mult: 0.55 });
+                }
+                if (!flags.hasCsharp) {
+                    pathMultiplier.push({ pattern: /Modder入门\/详细文档\/CSharp知识/i, mult: 0.35 });
+                }
+            }
+        } else if (intent === 'troubleshoot') {
             // 排错时不强行惩罚“提问”，但仍然轻微压制写作类
             categoryMultiplier['怎么贡献'] = 0.35;
 	            pathMultiplier.push({ pattern: /教学文章写作指南/i, mult: 0.35 });
 	        }
+
+        if (flags.hasCrossMod) {
+            pathMultiplier.push({ pattern: /expert-cross-mod-content|patching-other-mods|detouring-and-il-editing|advanced-detouring|expert-il-editing|weak references|weakreferences|cross[- ]?mod/i, mult: 1.7 });
+            pathMultiplier.push({ pattern: /螺线翻译tml教程\/4-专家|螺线翻译tml教程\/3-高阶|螺线翻译tml教程\/杂项\/(detouring|patching)/i, mult: 1.2 });
+            tokenHints.push('cross mod');
+            tokenHints.push('cross-mod');
+            tokenHints.push('mod call');
+            tokenHints.push('weak references');
+            tokenHints.push('patching other mods');
+            tokenHints.push('detouring');
+            tokenHints.push('il editing');
+        }
 
 	        // 非“索引/引用/目录/搜索”意图时，避免“文章使用内容索引：导读”在各类问题上霸榜
 	        if (intent !== 'meta' && intent !== 'intro') {
@@ -230,6 +292,11 @@
         if (entities.has('otherlang')) {
             pathMultiplier.push({ pattern: /csharp|c#|\.net|从零/i, mult: 1.15 });
         }
+
+        if (entities.has('item')) tokenHints.push('item moditem');
+        if (entities.has('weapon')) tokenHints.push('weapon');
+        if (entities.has('projectile')) tokenHints.push('projectile');
+        if (entities.has('npc')) tokenHints.push('npc');
 
         // 实作实体：压制明显无关“网页动画模块”
         if (entities.has('item') || entities.has('weapon') || entities.has('projectile') || entities.has('npc')) {
@@ -251,7 +318,13 @@
         if (intent === 'concept') keyHints.push('原理');
 
         // Combine with extracted key terms (from raw query)
-        const extracted = extractKeyTerms(raw);
+        let tokenQuery = lower;
+        if (flags.hasModName && !flags.hasCrossMod) {
+            tokenQuery = stripByPatterns(tokenQuery, modInfo.patterns);
+        }
+        if (!tokenQuery.trim()) tokenQuery = lower;
+
+        const extracted = extractKeyTerms(tokenQuery);
         for (const t of extracted) keyHints.push(t);
 
         const uniqueHints = [];
@@ -272,7 +345,9 @@
             preferredTemplate,
             keyHints: uniqueHints.slice(0, 10),
             cleaned,
-            flags
+            flags,
+            tokenQuery,
+            tokenHints
         };
     }
 
@@ -352,10 +427,17 @@
             return matches.slice(0, limit).map(x => ({ ...this.chunks[x.index], score: x.score }));
         }
 
-        const tokens = extractBm25Tokens(q).filter(t => !STOPWORDS.has(t));
+        const tokenQuery = routing && routing.tokenQuery ? routing.tokenQuery : q;
+        let tokens = extractBm25Tokens(tokenQuery).filter(t => !STOPWORDS.has(t));
+        if (routing && Array.isArray(routing.tokenHints)) {
+            for (const hint of routing.tokenHints) {
+                for (const t of extractBm25Tokens(hint)) tokens.push(t);
+            }
+        }
+        tokens = Array.from(new Set(tokens));
         if (!tokens.length) return [];
 
-        const keyTerms = extractKeyTerms(q);
+        const keyTerms = extractKeyTerms(tokenQuery);
 
         // Hard vs soft key terms:
         // - Hard: entity-derived hints (物品/弹幕/NPC...) must match at least one when present.
@@ -421,7 +503,7 @@
             }
         }
 
-        const qLower = q.toLowerCase();
+        const qLower = String(tokenQuery || '').toLowerCase();
         const results = [];
         for (const [chunkId, score] of scores.entries()) {
             const chunk = this.chunks[chunkId];
@@ -464,12 +546,15 @@
         for (const item of pre) {
             const textLower = (item.text || '').toLowerCase();
             const titleLower = (item.title || '').toLowerCase();
+            const hintLower = (item.hint || '').toLowerCase();
             const hay = titleLower + '\n' + textLower;
 
             let hit = 0;
+            let hintHit = 0;
             for (const t of qTokensUnique) {
                 if (!t) continue;
                 if (hay.includes(t)) hit++;
+                else if (hintLower && hintLower.includes(t)) hintHit++;
             }
 
             let hardHit = 0;
@@ -484,11 +569,15 @@
             }
 
             let softHit = 0;
+            let softHintHit = 0;
             if (requireSoftTerm) {
                 for (const kt of expandedSoftTerms) {
                     if (!kt || kt.length < 2) continue;
                     if (hay.includes(kt)) {
                         softHit++;
+                        break;
+                    } else if (hintLower && hintLower.includes(kt)) {
+                        softHintHit++;
                         break;
                     }
                 }
@@ -501,9 +590,10 @@
             let multiplier = 1;
             if (hit < minTokenHit) multiplier *= 0.35;
             if (requireHardTerm && hardHit === 0) multiplier *= 0.08;
-            else if (!requireHardTerm && requireSoftTerm && softHit === 0) multiplier *= 0.22;
+            else if (!requireHardTerm && requireSoftTerm && softHit === 0) multiplier *= (softHintHit > 0 ? 0.6 : 0.22);
 
-            const boosted = item.score * multiplier * (1 + Math.min(0.25, hit * 0.04));
+            const hintBoost = Math.min(0.12, hintHit * 0.03);
+            const boosted = item.score * multiplier * (1 + Math.min(0.25, hit * 0.04) + hintBoost);
             rescored.push({ item, score: boosted, hit, hardHit, softHit });
         }
 

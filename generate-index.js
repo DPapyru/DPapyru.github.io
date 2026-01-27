@@ -1251,7 +1251,6 @@ function generateGuidedSemanticIndex(config) {
             addTokens(topic, 1);
             // 小节语义增强（构建期生成，不影响引用显示）
             addTokens(currentHeading, 2);
-            addTokens(sectionAugment, 1);
 
             if (tfByFeature.size === 0) continue;
 
@@ -1267,6 +1266,7 @@ function generateGuidedSemanticIndex(config) {
                 sectionId,
                 heading: currentHeading,
                 stage,
+                hint: sectionAugment,
                 text
             });
 
@@ -1573,7 +1573,6 @@ function generateBm25Index(config) {
             addTokens(topic, 1);
             // 小节语义增强（构建期生成，不影响引用显示）
             addTokens(currentHeading, 2);
-            addTokens(sectionAugment, 1);
 
             if (tfByBucket.size === 0) continue;
 
@@ -1589,6 +1588,7 @@ function generateBm25Index(config) {
                 sectionId,
                 heading: currentHeading,
                 stage,
+                hint: sectionAugment,
                 text
             });
 
