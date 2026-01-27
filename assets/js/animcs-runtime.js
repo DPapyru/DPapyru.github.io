@@ -6,6 +6,13 @@ function normalizeAnimPath(input) {
     return match ? match[1] : '';
 }
 
+async function createRuntime(opts) {
+    if (!opts || !opts.runtimeRoot) {
+        throw new Error('runtimeRoot required');
+    }
+}
+
 module.exports = {
-    normalizeAnimPath
+    normalizeAnimPath,
+    createRuntime
 };
