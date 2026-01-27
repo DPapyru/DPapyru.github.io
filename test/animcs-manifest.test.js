@@ -1,0 +1,10 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const { buildManifest } = require('../scripts/build-animcs.js');
+
+test('buildManifest emits dll mapping', () => {
+    const manifest = buildManifest([
+        { source: 'docs/anims/demo.cs', entry: 'demo' }
+    ]);
+    assert.equal(manifest.entries['anims/demo.cs'].assembly, 'demo.dll');
+});
