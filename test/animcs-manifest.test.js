@@ -8,3 +8,8 @@ test('buildManifest emits dll mapping', () => {
     ]);
     assert.equal(manifest.entries['anims/demo.cs'].assembly, 'demo.dll');
 });
+
+test('resolveOutputPath maps anims/demo.cs -> assets/anims/demo.dll', () => {
+    const { resolveOutputPath } = require('../scripts/build-animcs.js');
+    assert.equal(resolveOutputPath('docs/anims/demo.cs'), 'assets/anims/demo.dll');
+});

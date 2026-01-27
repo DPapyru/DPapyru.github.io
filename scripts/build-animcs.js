@@ -10,6 +10,11 @@ function buildManifest(items) {
     return { schemaVersion: 1, entries };
 }
 
+function resolveOutputPath(sourcePath) {
+    return String(sourcePath || '').replace(/.*?(anims\/)([^\/]+)\.cs$/i, 'assets/$1$2.dll');
+}
+
 module.exports = {
-    buildManifest
+    buildManifest,
+    resolveOutputPath
 };
