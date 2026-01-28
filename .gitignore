@@ -72,7 +72,6 @@ coverage/
 
 # 文档生成文件
 docs/_build/
-site/
 
 # 备份文件
 *.orig

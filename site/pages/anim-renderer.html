@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C# 动画渲染器（开发用）</title>
+    <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/animts-runtime.css">
+    <script src="/site/assets/js/theme-init.js"></script>
+
+</head>
+<body class="viewer-page">
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        <img src="/site/assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
+                        <h1 class="site-title">C# 动画渲染器（开发用）</h1>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content" style="padding-top: 16px;">
+        <div class="container">
+            <div class="content-wrapper">
+	                <div class="tutorial-header">
+	                    <h1 class="tutorial-title">动画渲染器</h1>
+	                    <div class="tutorial-meta">
+	                        <span class="author">用途: <span>开发预览（支持 file:// 直开）</span></span>
+	                    </div>
+	                </div>
+
+                <section style="margin-top: 12px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <label for="anim-file" style="color: var(--text-secondary);">选择 C# 文件：</label>
+                        <input id="anim-file" type="file" accept=".cs" class="btn btn-small btn-outline">
+                        <button id="anim-run" class="btn btn-small" type="button" disabled>播放所选（需先构建）</button>
+                        <button id="anim-demo-basic" class="btn btn-small btn-outline" type="button">播放示例：基础动画</button>
+                        <button id="anim-demo-math" class="btn btn-small btn-outline" type="button">播放示例：数学变换</button>
+                        <button id="anim-demo-eoc" class="btn btn-small btn-outline" type="button">播放示例：EOC 行为</button>
+                        <span id="anim-status" style="color: var(--text-secondary); font-size: 12px;"></span>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top: 10px;">
+                        <label for="anim-dir" style="color: var(--text-secondary);">选择仓库目录（可选）：</label>
+                        <input id="anim-dir" type="file" webkitdirectory directory multiple class="btn btn-small btn-outline">
+                        <select id="anim-path-select" class="btn btn-small btn-outline" style="min-width: 340px;" disabled>
+                            <option value="">（从目录中选择 anims/*.cs）</option>
+                        </select>
+                        <button id="anim-run-selected" class="btn btn-small" type="button" disabled>播放所选</button>
+                        <button id="anim-copy-snippet" class="btn btn-small btn-outline" type="button" disabled>复制 animts 代码块</button>
+                    </div>
+                </section>
+
+                <section style="margin-top: 14px;">
+                    <div id="anim-embed" class="animts-embed animcs-embed" data-animcs-src=""></div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    
+
+    <script src="/shared/assets/js/site-core.js"></script>
+    <script>
+        if (window.SITE) window.SITE.bootstrapPage('anim-renderer');
+    </script>
+    <script src="/site/assets/js/animcs-js-runtime.js"></script>
+    <script>
+        (function () {
+            const fileInput = document.getElementById('anim-file');
+            const runBtn = document.getElementById('anim-run');
+            const demoBasicBtn = document.getElementById('anim-demo-basic');
+            const demoMathBtn = document.getElementById('anim-demo-math');
+            const demoEocBtn = document.getElementById('anim-demo-eoc');
+            const dirInput = document.getElementById('anim-dir');
+            const pathSelect = document.getElementById('anim-path-select');
+            const runSelectedBtn = document.getElementById('anim-run-selected');
+            const copySnippetBtn = document.getElementById('anim-copy-snippet');
+            const status = document.getElementById('anim-status');
+            const embed = document.getElementById('anim-embed');
+            let currentFile = null;
+            let currentPath = '';
+            let pathToFile = new Map();
+
+            function setStatus(text) {
+                status.textContent = text || '';
+            }
+
+            function mountPath(path, label) {
+                currentPath = path || '';
+                copySnippetBtn.disabled = !currentPath;
+                runSelectedBtn.disabled = !currentPath;
+
+                if (currentPath) {
+                    embed.setAttribute('data-animcs-src', currentPath);
+                    embed.classList.add('animcs-embed');
+                    if (window.AnimCsJsRuntime && typeof window.AnimCsJsRuntime.initEmbeds === 'function') {
+                        window.AnimCsJsRuntime.initEmbeds();
+                    }
+                }
+                if (label) setStatus(label);
+            }
+
+            fileInput.addEventListener('change', function () {
+                const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+                currentFile = file;
+                currentPath = '';
+                copySnippetBtn.disabled = true;
+                runBtn.disabled = !file;
+                if (!file) {
+                    setStatus('请选择一个 .cs 文件');
+                    return;
+                }
+                setStatus(`已选择：${file.name}（请先执行 npm run build 再通过路径预览）`);
+            });
+
+            runBtn.addEventListener('click', function () {
+                if (!currentFile) {
+                    setStatus('请选择一个 .cs 文件');
+                    return;
+                }
+                setStatus('浏览器内不支持编译 C# 动画，请先执行 npm run build 后通过路径预览。');
+            });
+
+            demoBasicBtn.addEventListener('click', function () {
+                try {
+                    fileInput.value = '';
+                } catch (_) { }
+                currentFile = null;
+                runBtn.disabled = true;
+                currentPath = '';
+                copySnippetBtn.disabled = true;
+                mountPath('anims/demo-basic.cs', '预览：anims/demo-basic.cs');
+            });
+
+            demoMathBtn.addEventListener('click', function () {
+                try {
+                    fileInput.value = '';
+                } catch (_) { }
+                currentFile = null;
+                runBtn.disabled = true;
+                currentPath = '';
+                copySnippetBtn.disabled = true;
+                mountPath('anims/demo-math-transform.cs', '预览：anims/demo-math-transform.cs');
+            });
+
+            demoEocBtn.addEventListener('click', function () {
+                try {
+                    fileInput.value = '';
+                } catch (_) { }
+                currentFile = null;
+                runBtn.disabled = true;
+                currentPath = '';
+                copySnippetBtn.disabled = true;
+                mountPath('anims/demo-eoc-ai.cs', '预览：anims/demo-eoc-ai.cs');
+            });
+
+            dirInput.addEventListener('change', function () {
+                pathToFile = new Map();
+                currentPath = '';
+                copySnippetBtn.disabled = true;
+
+                const files = Array.from(dirInput.files || []);
+                if (!files.length) {
+                    pathSelect.disabled = true;
+                    runSelectedBtn.disabled = true;
+                    copySnippetBtn.disabled = true;
+                    setStatus('未选择目录');
+                    return;
+                }
+
+                // Expect selecting repo root or site/content directory. We keep paths like anims/xxx.cs (same as viewer).
+	                files.forEach((file) => {
+	                    const rel = String(file.webkitRelativePath || file.name).replace(/\\/g, '/');
+	                    // Match site/content/anims/*.cs or content/anims/*.cs or anims/*.cs
+	                    const m = rel.match(/(?:^|\/)site\/content\/(anims\/.+\.cs)$/i)
+	                        || rel.match(/(?:^|\/)content\/(anims\/.+\.cs)$/i)
+	                        || rel.match(/(?:^|\/)(anims\/.+\.cs)$/i);
+	                    if (!m) return;
+	                    const key = m[1].replace(/^\.?\//, '').replace(/\\\\/g, '/');
+                    if (key.startsWith('anims/_lib/')) return;
+                    pathToFile.set(key, file);
+                });
+
+                const paths = Array.from(pathToFile.keys()).sort((a, b) => a.localeCompare(b, 'en'));
+                pathSelect.replaceChildren();
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = paths.length ? '（选择 anims/*.cs）' : '（目录中未找到 site/content/anims/*.cs）';
+                pathSelect.appendChild(placeholder);
+
+                paths.forEach((p) => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = p;
+                    pathSelect.appendChild(opt);
+                });
+
+                pathSelect.disabled = paths.length === 0;
+                runSelectedBtn.disabled = paths.length === 0;
+                setStatus(paths.length ? `已发现 ${paths.length} 个动画脚本` : '目录中未找到 site/content/anims/*.cs');
+            });
+
+            runSelectedBtn.addEventListener('click', function () {
+                const p = String(pathSelect.value || '').trim();
+                if (!p) return;
+                mountPath(p, `预览：${p}`);
+            });
+
+            copySnippetBtn.addEventListener('click', async function () {
+                const p = String(currentPath || pathSelect.value || '').trim();
+                if (!p) return;
+                const snippet = '```animts\\n' + p + '\\n```\\n';
+                try {
+                    await navigator.clipboard.writeText(snippet);
+                    setStatus('已复制 animts 代码块到剪贴板');
+                } catch (_) {
+                    // Fallback for file:// where clipboard API may be blocked
+                    const ta = document.createElement('textarea');
+                    ta.value = snippet;
+                    ta.style.position = 'fixed';
+                    ta.style.left = '-9999px';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); } catch (_) { }
+                    ta.remove();
+                    setStatus('已复制（fallback）');
+                }
+            });
+
+            (function init() {
+                try {
+                    setStatus('就绪：请选择一个 site/content/anims/*.cs 文件');
+                } catch (e) {
+                    setStatus(`初始化失败：${e && e.message ? e.message : String(e)}`);
+                }
+            })();
+        })();
+    </script>
+</body>
+</html>

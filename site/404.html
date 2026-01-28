@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>页面未找到 - 泰拉瑞亚Mod制作教程</title>
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
+    <link rel="stylesheet" href="/site/assets/css/style.css">
+    <script src="/site/assets/js/onboarding-gate.js"></script>
+    <script src="/site/assets/js/theme-init.js"></script>
+</head>
+<body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="/site/assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
+                        <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
+                    </a>
+                </div>
+                <nav class="main-nav" id="main-nav">
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="/site/pages/folder.html" class="nav-link">文档</a></li>
+                        <li class="nav-item"><a href="qa.html" class="nav-link">问答</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
+                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li class="nav-item nav-accent">
+                            <label class="visually-hidden" for="accent-select">配色</label>
+                            <select class="nav-accent-select" id="accent-select" aria-label="配色">
+                                <option value="green">绿色</option>
+                                <option value="blue">蓝色</option>
+                                <option value="purple">紫色</option>
+                                <option value="orange">橙色</option>
+                                <option value="red">红色</option>
+                                <option value="cyan">青色</option>
+                                <option value="black">黑色</option>
+                                <option value="white">白色</option>
+                            </select>
+                        </li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main id="main-content" class="container" style="padding: 60px 20px;" tabindex="-1">
+        <h1 style="margin-bottom: 12px;">页面未找到</h1>
+        <p style="margin-bottom: 18px;">如果这是一个教程文档链接，系统会尝试为你跳转到文档查看器。</p>
+        <p style="margin-bottom: 18px;">
+            <a class="btn btn-primary" href="/site/pages/folder.html">前往文档</a>
+            <a class="btn btn-outline" href="index.html" style="margin-left: 8px;">返回首页</a>
+        </p>
+        <p id="redirect-hint" style="color: var(--text-secondary);"></p>
+    </main>
+
+    <script src="/shared/assets/js/site-core.js"></script>
+    <script>
+        if (window.SITE) window.SITE.bootstrapPage('not-found');
+    </script>
+    <script src="/site/assets/js/site-config.js"></script>
+    <script src="/site/assets/js/accent-theme.js"></script>
+    <script src="/site/assets/js/navigation.js"></script>
+    <script>
+        (function () {
+            var path = window.location.pathname || '';
+            var hash = window.location.hash || '';
+            var hint = document.getElementById('redirect-hint');
+
+            function showHint(text) {
+                if (hint) hint.textContent = text;
+            }
+
+            function slugFromFilename(filename) {
+                var base = String(filename || '').replace(/\.md$/i, '');
+                if (!base) return '';
+                var firstToken = base.split(' ')[0];
+                return firstToken.replace(/^\d+-/, '');
+            }
+
+            function buildLookup(config) {
+                var map = new Map();
+                function addKey(key, value) {
+                    if (!key || !value) return;
+                    var k = String(key);
+                    map.set(k, value);
+                    var lower = k.toLowerCase();
+                    if (!map.has(lower)) map.set(lower, value);
+                }
+
+                var pm = (config && config.pathMappings) ? config.pathMappings : {};
+                Object.keys(pm || {}).forEach(function (k) {
+                    addKey(k, pm[k]);
+                    addKey(k.replace(/\.md$/i, ''), pm[k]);
+                });
+
+                var all = (config && Array.isArray(config.all_files)) ? config.all_files : [];
+                all.forEach(function (doc) {
+                    var resolvedPath = doc && (doc.path || doc.filename);
+                    if (!resolvedPath) return;
+                    addKey(resolvedPath, resolvedPath);
+                    addKey(String(resolvedPath).replace(/\.md$/i, ''), resolvedPath);
+                    if (doc.filename) {
+                        addKey(doc.filename, resolvedPath);
+                        addKey(String(doc.filename).replace(/\.md$/i, ''), resolvedPath);
+                        var slug = slugFromFilename(doc.filename);
+                        addKey(slug, resolvedPath);
+                        addKey(slug + '.md', resolvedPath);
+                    }
+                });
+
+                return map;
+            }
+
+            function normalizeCandidate(candidate) {
+                var c = String(candidate || '');
+                c = c.replace(/^\/+/, '');
+                c = c.replace(/^site\/content\//, '');
+                return c;
+            }
+
+            function attemptRedirect(config) {
+                var lookup = buildLookup(config);
+                var candidate = '';
+
+                if (path.indexOf('/site/content/') === 0) {
+                    candidate = decodeURIComponent(path.slice('/site/content/'.length));
+                } else if (path.indexOf('/site/') === 0) {
+                    candidate = decodeURIComponent(path.slice('/site/'.length));
+                } else {
+                    candidate = decodeURIComponent(path.replace(/^\//, ''));
+                }
+
+                candidate = normalizeCandidate(candidate);
+                candidate = candidate.replace(/\/$/, '');
+
+                var candidates = [];
+                if (candidate) {
+                    candidates.push(candidate);
+                    candidates.push(candidate.replace(/\.md$/i, ''));
+                    if (!candidate.endsWith('.md') && candidate.indexOf('.') === -1) {
+                        candidates.push(candidate + '.md');
+                    }
+                    var last = candidate.split('/').pop();
+                    candidates.push(last);
+                    candidates.push(last.replace(/\.md$/i, ''));
+                }
+
+                var resolved = null;
+                for (var i = 0; i < candidates.length; i++) {
+                    var key = candidates[i];
+                    if (!key) continue;
+                    resolved = lookup.get(key) || lookup.get(String(key).toLowerCase());
+                    if (resolved) break;
+                }
+
+                if (resolved) {
+                    var target = '/site/pages/viewer.html?file=' + encodeURIComponent(resolved) + hash;
+                    showHint('正在跳转到文档查看器…');
+                    window.location.replace(target);
+                    return true;
+                }
+
+                showHint('未能识别为站内文档链接。');
+                return false;
+            }
+
+            showHint('正在尝试解析链接…');
+
+            if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
+                window.SiteConfig.load()
+                    .then(function (config) { attemptRedirect(config); })
+                    .catch(function () { attemptRedirect(null); });
+            } else {
+                fetch('/site/content/config.json')
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (config) { attemptRedirect(config); })
+                    .catch(function () { attemptRedirect(null); });
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\tooling\tools\animcs\AnimRuntime\**\*.cs">
+      <Link>__refs\AnimRuntime\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Compile>
+  </ItemGroup>
+</Project>

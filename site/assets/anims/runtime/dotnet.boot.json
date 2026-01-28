@@ -1,0 +1,40 @@
+{
+  "cacheBootResources": true,
+  "debugBuild": false,
+  "linkerEnabled": true,
+  "mainAssemblyName": "AnimHost.dll",
+  "entryAssembly": "AnimHost.dll",
+  "resources": {
+    "assembly": {
+      "AnimHost.dll": "",
+      "AnimRuntime.dll": "",
+      "System.Linq.dll": "",
+      "System.Private.CoreLib.dll": "",
+      "System.Runtime.InteropServices.JavaScript.dll": ""
+    },
+    "jsModuleNative": {
+      "dotnet.native.js": ""
+    },
+    "jsModuleRuntime": {
+      "dotnet.runtime.js": ""
+    },
+    "wasmNative": {
+      "dotnet.native.wasm": ""
+    }
+  },
+  "configProperties": {
+    "Microsoft.Extensions.DependencyInjection.VerifyOpenGenericServiceTrimmability": true,
+    "System.ComponentModel.TypeConverter.EnableUnsafeBinaryFormatterInDesigntimeLicenseContextSerialization": false,
+    "System.Reflection.Metadata.MetadataUpdater.IsSupported": false,
+    "System.Resources.ResourceManager.AllowCustomResourceTypes": false,
+    "System.Runtime.InteropServices.BuiltInComInterop.IsSupported": false,
+    "System.Runtime.InteropServices.EnableConsumingManagedCodeFromNativeHosting": false,
+    "System.Runtime.InteropServices.EnableCppCLIHostActivation": false,
+    "System.Runtime.InteropServices.Marshalling.EnableGeneratedComInterfaceComImportInterop": false,
+    "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization": false,
+    "System.StartupHookProvider.IsSupported": false,
+    "System.Text.Encoding.EnableUnsafeUTF7Encoding": false,
+    "System.Text.Json.JsonSerializer.IsReflectionEnabledByDefault": false,
+    "System.Threading.Thread.EnableAutoreleasePool": false
+  }
+}

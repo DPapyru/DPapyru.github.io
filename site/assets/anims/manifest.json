@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-01-28T05:04:25.500Z",
+  "sources": [
+    "anims/demo-basic.cs",
+    "anims/demo-eoc-ai.cs",
+    "anims/demo-math-transform.cs"
+  ],
+  "entries": {
+    "anims/demo-basic.cs": {
+      "js": "demo-basic.js",
+      "entry": "demo-basic"
+    },
+    "anims/demo-eoc-ai.cs": {
+      "js": "demo-eoc-ai.js",
+      "entry": "demo-eoc-ai"
+    },
+    "anims/demo-math-transform.cs": {
+      "js": "demo-math-transform.js",
+      "entry": "demo-math-transform"
+    }
+  }
+}

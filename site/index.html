@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<!-- 泰拉瑞亚Mod制作教程网站首页 -->
+<html lang="zh-CN" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>泰拉瑞亚Mod制作教程 - 首页</title>
+
+    <!-- SEO优化标签 - 提高搜索引擎可见性 -->
+    <meta name="description" content="泰拉瑞亚Mod制作教程是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛，让更多人能够参与到泰拉瑞亚Mod的开发中来。">
+    <meta name="keywords" content="泰拉瑞亚,Mod,教程,开发,tModLoader,C#,游戏开发">
+    <meta name="author" content="泰拉瑞亚Mod社区">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph标签 - 用于社交媒体分享时显示的预览信息 -->
+    <meta property="og:title" content="泰拉瑞亚Mod制作教程">
+    <meta property="og:description" content="面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://dpapyru.github.io/site/">
+    <meta property="og:image" content="https://dpapyru.github.io/site/assets/imgs/Green_tModLoader.png">
+    <meta property="og:site_name" content="泰拉瑞亚Mod制作教程">
+    <meta property="og:locale" content="zh_CN">
+
+    <!-- Twitter Card标签 - 用于在Twitter上分享时显示的卡片信息 -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="泰拉瑞亚Mod制作教程">
+    <meta name="twitter:description" content="面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛">
+    <meta name="twitter:image" content="https://dpapyru.github.io/site/assets/imgs/Green_tModLoader.png">
+
+    <!-- 其他SEO标签 - 规范URL -->
+    <link rel="canonical" href="https://dpapyru.github.io/site/">
+
+    <!-- 入站测评跳转（首次进入可跳过） -->
+    <script src="/site/assets/js/onboarding-gate.js"></script>
+
+    <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
+    <script src="/site/assets/js/theme-init.js"></script>
+
+    <!-- 样式和图标 - 加载CSS样式表和网站图标 -->
+    <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/prism.min.css">
+    <link rel="stylesheet" href="/site/assets/css/vs2022-theme.css">
+    <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
+</head>
+
+<body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <!-- 网站头部导航区域 -->
+    <header class="site-header">
+        <div class="container">
+            <!-- 头部内容容器：包含网站logo、导航菜单和移动端菜单按钮 -->
+            <div class="header-content">
+                <!-- 网站logo和标题 -->
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="/site/assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
+                        <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
+                    </a>
+                </div>
+                <!-- 主导航菜单 -->
+                <nav class="main-nav" id="main-nav">
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="index.html" class="nav-link active" aria-current="page">首页</a></li>
+                        <li class="nav-item"><a href="/site/pages/folder.html" class="nav-link">文档</a></li>
+                        <li class="nav-item"><a href="qa.html" class="nav-link">问答</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
+                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li class="nav-item nav-accent">
+                            <label class="visually-hidden" for="accent-select">配色</label>
+                            <select class="nav-accent-select" id="accent-select" aria-label="配色">
+                                <option value="green">绿色</option>
+                                <option value="blue">蓝色</option>
+                                <option value="purple">紫色</option>
+                                <option value="orange">橙色</option>
+                                <option value="red">红色</option>
+                                <option value="cyan">青色</option>
+                                <option value="black">黑色</option>
+                                <option value="white">白色</option>
+                            </select>
+                        </li>
+                    </ul>
+                </nav>
+                <!-- 移动端菜单切换按钮 -->
+                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 网站主要内容区域 -->
+    <main class="homepage" id="main-content" tabindex="-1">
+        <!-- 首页英雄区域：展示网站主要介绍和CTA按钮 -->
+        <section class="hero">
+            <div class="container">
+                <!-- 搜索框区域 -->
+                <div class="hero-search">
+                    <div class="search-container">
+                        <div class="search-box">
+                            <input type="text" class="search-input" id="hero-search-input" placeholder="引导学习与内容查找..." aria-label="引导学习与内容查找">
+                            <button class="search-button" id="hero-search-button" aria-label="搜索">
+                                <i class="icon-search"></i>
+                            </button>
+                            <button class="search-clear" id="hero-search-clear" style="display: none;" aria-label="清除搜索">
+                                <i class="icon-clear"></i>
+                            </button>
+                        </div>
+                        <div class="search-suggestions" id="hero-search-suggestions"></div>
+                    </div>
+                </div>
+
+                <!-- 英雄区域内容包装器 -->
+                <div class="hero-content-wrapper">
+                    <!-- 英雄区域左侧文字内容 -->
+                    <div class="hero-content">
+                        <h2 class="hero-title">欢迎来到泰拉瑞亚Mod制作教程</h2>
+                        <div class="hero-description">
+                            <p>这个站最初是为新人少走弯路搭的，当年我也在折腾 Mod，踩过不少绕路的坑，所以想把路径整理得更清楚。</p>
+                            <p>如今不再深度制作，资料难免有疏漏或与新版不完全一致；如果你发现不准确的地方，欢迎补充或修正。</p>
+                            <p>学习建议从最基础的小改动入手，先观察变化，再追溯原因，逐步拓展到更复杂的内容。提问时请把背景、目标和已尝试的过程说明清楚，这样交流更顺畅，也更容易得到有效的帮助。</p>
+                        </div>
+                        <div class="hero-buttons">
+                            <a href="/site/pages/folder.html" class="btn btn-primary">开始学习</a>
+                            <a href="/site/pages/viewer.html?file=怎么贡献/教学文章写作指南.md"
+                                class="btn btn-secondary">如何贡献教程</a>
+                        </div>
+                    </div>
+                    <!-- 英雄区域右侧图片 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 最新更新区域：展示网站的最新动态和更新内容 -->
+        <section class="latest-updates">
+            <div class="container">
+                <h2 class="section-title">最新更新</h2>
+                <!-- 更新卡片网格布局 -->
+                <div class="updates-grid">
+                    <!-- 默认内容，将由JavaScript自动替换 -->
+                    <div class="update-card">
+                        <div class="update-date">加载中...</div>
+                        <h3 class="update-title">正在获取最新更新</h3>
+                        <p class="update-description">请稍候，系统正在自动获取最新的文档更新信息。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 网站底部区域 -->
+    <footer class="site-footer">
+        <div class="container">
+            <!-- 底部内容容器 -->
+            <div class="footer-content">
+                <!-- 底部第一栏：关于项目 -->
+                <div class="footer-section">
+                    <h4>关于项目</h4>
+                    <p>这是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛。</p>
+                </div>
+                <!-- 底部第二栏：快速链接 -->
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="index.html">首页</a></li>
+                        <li><a href="/site/pages/folder.html">教程索引</a></li>
+                        <li><a href="qa.html">问答</a></li>
+                        <li><a href="/site/pages/viewer.html?file=Modder入门/DPapyru-给新人的前言.md">入门指南</a></li>
+                        <li><a href="/site/pages/folder.html">基础概念</a></li>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                    </ul>
+                </div>
+                <!-- 底部第三栏：联系我们 -->
+                <div class="footer-section">
+                    <h4>联系我们</h4>
+                    <ul>
+                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li><a href="mailto:contact@example.com">邮箱</a></li>
+                    </ul>
+                </div>
+            </div>
+            <!-- 底部版权信息 -->
+            <div class="footer-bottom">
+                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC
+                        BY 4.0</a> 许可协议。</p>
+            </div>
+        </div>
+    </footer>
+
+	    <!-- 加载JavaScript文件 -->
+	    <script src="/shared/assets/js/site-core.js"></script>
+        <script>
+            if (window.SITE) window.SITE.bootstrapPage('home');
+        </script>
+	    <script src="/site/assets/js/site-config.js"></script>
+	    <script src="/site/assets/js/accent-theme.js"></script>
+	    <script src="/site/assets/js/main.js"></script> <!-- 主要功能脚本 -->
+        <script src="/site/assets/js/search-index-loader.js"></script>
+	    <script src="/site/assets/js/search.js"></script> <!-- 搜索功能脚本 -->
+	    <script src="/site/assets/js/navigation.js"></script> <!-- 导航功能脚本 -->
+	    <script src="/site/assets/js/latest-updates.js"></script> <!-- 最新更新功能脚本 -->
+
+</body>
+
+</html>
