@@ -198,7 +198,7 @@
 
         if (flags.hasModName) flags.hasMod = true;
 
-	        // Intent priority: troubleshooting > meta > intro > concept > howto > unknown
+	        // Intent priority: troubleshooting > meta > crossmod > intro > concept > howto > unknown
 	        let intent = 'unknown';
 	        if (flags.hasTrouble) intent = 'troubleshoot';
 	        else if (flags.hasMeta) intent = 'meta';
@@ -258,8 +258,11 @@
                 if (!flags.hasAdvanced) {
                     pathMultiplier.push({ pattern: /螺线翻译tml教程\/3-高阶|螺线翻译tml教程\/4-专家/i, mult: 0.55 });
                 }
+                if (!flags.hasCsharp) {
+                    pathMultiplier.push({ pattern: /Modder入门\/详细文档\/CSharp知识/i, mult: 0.35 });
+                }
             }
-	        } else if (intent === 'troubleshoot') {
+        } else if (intent === 'troubleshoot') {
             // 排错时不强行惩罚“提问”，但仍然轻微压制写作类
             categoryMultiplier['怎么贡献'] = 0.35;
 	            pathMultiplier.push({ pattern: /教学文章写作指南/i, mult: 0.35 });
@@ -289,6 +292,11 @@
         if (entities.has('otherlang')) {
             pathMultiplier.push({ pattern: /csharp|c#|\.net|从零/i, mult: 1.15 });
         }
+
+        if (entities.has('item')) tokenHints.push('item moditem');
+        if (entities.has('weapon')) tokenHints.push('weapon');
+        if (entities.has('projectile')) tokenHints.push('projectile');
+        if (entities.has('npc')) tokenHints.push('npc');
 
         // 实作实体：压制明显无关“网页动画模块”
         if (entities.has('item') || entities.has('weapon') || entities.has('projectile') || entities.has('npc')) {

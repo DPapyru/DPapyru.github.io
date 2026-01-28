@@ -1,25 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-01-26T00:26:51.654Z",
+  "generatedAt": "2026-01-27T12:18:17.592Z",
   "sources": [
-    "anims/_lib/calc.ts",
-    "anims/_lib/math2d.ts",
-    "anims/_lib/math3d.ts",
-    "anims/_lib/types.ts",
-    "anims/_lib/ui.ts",
-    "anims/demo-danmaku.ts",
-    "anims/demo-eoc-ai.ts",
-    "anims/demo-eow-ai.ts",
-    "anims/demo-math-axes-3d.ts",
-    "anims/demo-math-calculus.ts",
-    "anims/demo-math-matrix.ts",
-    "anims/demo-math-vectors.ts",
-    "anims/demo-npc.ts",
-    "anims/demo-projectile-ai.ts",
-    "anims/projectile-patterns/1-basic.ts",
-    "anims/projectile-patterns/2-dash.ts",
-    "anims/projectile-patterns/3-seek.ts",
-    "anims/projectile-patterns/4-boomerang.ts",
-    "anims/projectile-patterns/5-curve.ts"
-  ]
+    "anims/demo-basic.cs"
+  ],
+  "entries": {
+    "anims/demo-basic.cs": {
+      "assembly": "demo-basic.dll",
+      "entry": "demo-basic"
+    }
+  }
 }

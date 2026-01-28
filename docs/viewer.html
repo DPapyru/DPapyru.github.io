@@ -36,7 +36,7 @@
     <link rel="stylesheet" href="../assets/css/prism.min.css"> <!-- 代码高亮样式 -->
     <link rel="stylesheet" href="../assets/css/rider-dark-theme.css"> <!-- Rider Dark代码高亮主题 -->
     <link rel="stylesheet" href="../assets/css/knowledge-cards.css"> <!-- 浮动知识卡牌 -->
-    <link rel="stylesheet" href="../assets/css/animts-runtime.css"> <!-- TS 动画系统（开发/演示） -->
+    <link rel="stylesheet" href="../assets/css/animts-runtime.css"> <!-- 动画运行时样式 -->
     <link rel="icon" type="image/png" href="../assets/imgs/Green_tModLoader.png"> <!-- 网站图标 -->
 
     <!-- 入站测评跳转（首次进入可跳过） -->
@@ -45,18 +45,6 @@
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
     <script src="../assets/js/theme-init.js"></script>
 
-    <!-- AnimTS import map（让 TS 动画可 import 共享库；同时兼容 file:// 本地渲染器） -->
-    <script type="importmap">
-    {
-        "imports": {
-            "@animts/math2d": "../assets/anims/_lib/math2d.js",
-            "@animts/math3d": "../assets/anims/_lib/math3d.js",
-            "@animts/calc": "../assets/anims/_lib/calc.js",
-            "@animts/ui": "../assets/anims/_lib/ui.js",
-            "@animts/types": "../assets/anims/_lib/types.js"
-        }
-    }
-    </script>
 </head>
 
 <body class="viewer-page">
@@ -338,7 +326,7 @@
 			    <script src="../assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
                 <script src="../assets/js/knowledge-core.js"></script> <!-- 知识卡牌：核心逻辑 -->
                 <script src="../assets/js/knowledge-cards.js"></script> <!-- 知识卡牌：UI -->
-                <script src="../assets/js/animts-runtime.js"></script> <!-- TS 动画运行时 -->
+                <script src="../assets/js/animcs-runtime.js"></script> <!-- C# 动画运行时 -->
     <script>
         // Mermaid 兜底加载：如果本地资源缺失/加载失败，则尝试从 CDN 加载（不影响已有本地加载）
         (function ensureMermaidLoaded() {
@@ -820,19 +808,19 @@
 		                        }
 		                        const safeCode = escapeHtml(code || '');
 
-		                        if (language === 'animts') {
-		                            const raw = String(code || '').split('\n').map(line => String(line || '').trim()).find(line => line) || '';
-		                            let src = raw;
-		                            try { src = decodeURIComponent(raw); } catch (_) { src = raw; }
-		                            src = String(src).trim().replace(/^\.?\//, '').replace(/^docs\//, '');
-		                            const normalized = normalizePath(src);
+                        if (language === 'animts') {
+                            const raw = String(code || '').split('\n').map(line => String(line || '').trim()).find(line => line) || '';
+                            let src = raw;
+                            try { src = decodeURIComponent(raw); } catch (_) { src = raw; }
+                            src = String(src).trim().replace(/^\.?\//, '').replace(/^docs\//, '');
+                            const normalized = normalizePath(src);
 
-		                            if (!normalized.startsWith('anims/') || !/\.ts$/i.test(normalized)) {
-		                                return `<pre><code class="language-plaintext">${escapeHtml('animts 代码块第一行必须是 anims/*.ts 路径')}</code></pre>`;
-		                            }
+                            if (!normalized.startsWith('anims/') || !/\.cs$/i.test(normalized)) {
+                                return `<pre><code class="language-plaintext">${escapeHtml('animts 代码块第一行必须是 anims/*.cs 路径')}</code></pre>`;
+                            }
 
-		                            return `<div class="animts-embed" data-animts-src="${escapeHtml(normalized)}"></div>`;
-		                        }
+                            return `<div class="animts-embed animcs-embed" data-animcs-src="${escapeHtml(normalized)}"></div>`;
+                        }
 
 		                        if (language === 'mermaid') {
 		                            return `<div class="flowchart mermaid">${safeCode}</div>`;
