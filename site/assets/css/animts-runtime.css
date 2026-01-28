@@ -35,6 +35,36 @@
     align-items: center;
 }
 
+.animts-control-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.animts-control-label {
+    font-size: 11px;
+    color: var(--animts-text-muted);
+    letter-spacing: 0.2px;
+}
+
+.animts-select {
+    background: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 12px;
+    outline: none;
+}
+
+.animts-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--search-focus);
+}
+
 .animts-stage {
     position: relative;
     height: 240px;

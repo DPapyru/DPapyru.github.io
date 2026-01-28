@@ -10,4 +10,6 @@ public sealed class InputState
     public bool WasPressed { get; set; }
     public bool WasReleased { get; set; }
     public bool IsInside { get; set; }
+    public int Mode { get; set; }
+    public bool ModeLocked { get; set; }
 }

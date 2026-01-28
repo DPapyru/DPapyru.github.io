@@ -34,7 +34,7 @@ function parseFields(source) {
         if (parenIndex !== -1 && (eqIndex === -1 || parenIndex < eqIndex)) {
             return;
         }
-        const match = trimmed.match(/^(public|private|protected)\s+(static\s+)?([A-Za-z_][\w<>?]*)\s+([^;]+);/);
+        const match = trimmed.match(/^(public|private|protected)\s+(static\s+)?([A-Za-z_][\w<>?\[\]]*)\s+([^;]+);/);
         if (!match) return;
         const typeName = match[3];
         const names = match[4].split(',').map(s => s.trim()).filter(Boolean);
@@ -109,6 +109,7 @@ function normalizeParameters(paramText) {
 
 function getDefaultValue(typeName) {
     const clean = String(typeName || '').replace(/\?$/, '');
+    if (clean.endsWith('[]')) return 'null';
     if (clean === 'bool') return 'false';
     if (clean === 'float' || clean === 'double' || clean === 'int') return '0';
     if (clean === 'Vec2') return 'new Vec2(0, 0)';

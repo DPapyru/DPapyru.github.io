@@ -25,6 +25,18 @@
         return match ? match[1] : '';
     }
 
+    function applyEmbedDefaults(embed, normalized) {
+        if (!embed || !normalized) return;
+        if (normalized === 'anims/demo-eoc-ai.cs') {
+            if (!embed.getAttribute('data-animcs-height-scale')) {
+                embed.setAttribute('data-animcs-height-scale', '2.3');
+            }
+            if (!embed.getAttribute('data-animcs-controls')) {
+                embed.setAttribute('data-animcs-controls', 'eoc');
+            }
+        }
+    }
+
     function resolveManifestUrl() {
         return `${getAssetsRoot()}/anims/manifest.json`;
     }
@@ -55,6 +67,8 @@
         if (embed.__ANIMCS_SHELL_READY) {
             const title = embed.querySelector('.animts-title');
             if (title && label) title.textContent = label;
+            applyStageHeight(embed);
+            ensureControls(embed);
             return;
         }
         embed.__ANIMCS_SHELL_READY = true;
@@ -91,6 +105,72 @@
         embed.__ANIMCS_STAGE = stage;
         embed.__ANIMCS_ERROR = error;
         embed.__ANIMCS_BTN_RESTART = btnRestart;
+        applyStageHeight(embed);
+        ensureControls(embed);
+    }
+
+    function applyStageHeight(embed) {
+        if (!embed || !embed.__ANIMCS_STAGE) return;
+        const stage = embed.__ANIMCS_STAGE;
+        const rawHeight = embed.getAttribute('data-animcs-height');
+        const rawScale = embed.getAttribute('data-animcs-height-scale');
+        let height = 0;
+        if (rawHeight) {
+            const parsed = Number(rawHeight);
+            if (Number.isFinite(parsed) && parsed > 0) height = parsed;
+        }
+        if (!height && rawScale) {
+            const parsed = Number(rawScale);
+            if (Number.isFinite(parsed) && parsed > 0) height = DEFAULT_STAGE_HEIGHT * parsed;
+        }
+        if (height) {
+            stage.style.height = `${Math.round(height)}px`;
+        }
+    }
+
+    function ensureControls(embed) {
+        if (!embed || embed.__ANIMCS_CONTROL_STATE) return embed && embed.__ANIMCS_CONTROL_STATE;
+        const controlType = embed.getAttribute('data-animcs-controls');
+        if (controlType !== 'eoc') return null;
+        const header = embed.querySelector('.animts-controls');
+        if (!header) return null;
+
+        const label = document.createElement('span');
+        label.className = 'animts-control-label';
+        label.textContent = 'AI';
+
+        const select = document.createElement('select');
+        select.className = 'animts-select';
+        const options = [
+            { value: '0', text: '自动' },
+            { value: '1', text: '一阶-徘徊' },
+            { value: '2', text: '一阶-冲刺' },
+            { value: '3', text: '二阶-变形' },
+            { value: '4', text: '二阶-徘徊' },
+            { value: '5', text: '二阶-冲刺' }
+        ];
+        options.forEach((opt) => {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.text;
+            select.appendChild(option);
+        });
+
+        const state = { mode: 0, locked: false };
+        select.addEventListener('change', () => {
+            const value = Number(select.value);
+            state.mode = Number.isFinite(value) ? value : 0;
+            state.locked = state.mode !== 0;
+        });
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'animts-control-group';
+        wrapper.appendChild(label);
+        wrapper.appendChild(select);
+        header.insertBefore(wrapper, header.firstChild);
+
+        embed.__ANIMCS_CONTROL_STATE = state;
+        return state;
     }
 
     function setError(embed, message) {
@@ -153,7 +233,9 @@
             IsDown: false,
             WasPressed: false,
             WasReleased: false,
-            IsInside: false
+            IsInside: false,
+            Mode: 0,
+            ModeLocked: false
         };
     }
 
@@ -163,6 +245,12 @@
         input.WasReleased = false;
         input.DeltaX = 0;
         input.DeltaY = 0;
+    }
+
+    function applyControlState(input, controlState) {
+        if (!input || !controlState) return;
+        input.Mode = typeof controlState.mode === 'number' ? controlState.mode : 0;
+        input.ModeLocked = Boolean(controlState.locked);
     }
 
     function updatePointer(input, state, x, y) {
@@ -314,6 +402,7 @@
         const context = new AnimContext(width, height);
         const runtimeApi = { Vec2, Color, MathF };
         const canvasApi = createCanvasApi(canvas, ctx);
+        const controlState = opts.controlState || null;
         let detachPointer = null;
         if (canvas && context.Input) {
             detachPointer = attachPointerEvents(canvas, context.Input);
@@ -345,6 +434,7 @@
                 context.Width = size.width;
                 context.Height = size.height;
             }
+            applyControlState(context.Input, controlState);
             if (onUpdate) onUpdate.call(instance, dt);
             if (onRender) onRender.call(instance, canvasApi);
             resetInputEdges(context.Input);
@@ -412,6 +502,7 @@
 
         const rawSource = srcOverride || embed.getAttribute('data-animcs-src') || '';
         const normalized = normalizeAnimPath(rawSource);
+        applyEmbedDefaults(embed, normalized);
         ensureEmbedShell(embed, normalized || rawSource || 'C# 动画');
         clearError(embed);
         disposeEmbed(embed);
@@ -437,11 +528,13 @@
             const size = updateCanvasSize(canvas, stage);
 
             const mod = await import(moduleUrl);
+            const controlState = embed.__ANIMCS_CONTROL_STATE || null;
             const player = await runModule(mod, {
                 canvas,
                 stage,
                 width: size.width,
                 height: size.height,
+                controlState,
                 autoStart: true
             });
 
