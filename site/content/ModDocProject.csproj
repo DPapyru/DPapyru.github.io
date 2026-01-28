@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="F:\steam\steamapps\common\tModLoader\tMLMod.targets" />
+  <PropertyGroup>
+    <BuildMod>false</BuildMod>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DefineConstants>$(DefineConstants);DOCS</DefineConstants>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="**/*.cs" Exclude="anims/**;**/obj/**;**/bin/**" />
+  </ItemGroup>
+</Project>

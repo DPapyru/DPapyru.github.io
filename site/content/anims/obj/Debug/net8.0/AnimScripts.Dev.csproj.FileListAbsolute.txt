@@ -1,0 +1,5 @@
+F:\DPapyru.github.io.worktrees\add-new-test-content\site\content\anims\obj\Debug\net8.0\AnimScripts.Dev.GeneratedMSBuildEditorConfig.editorconfig
+F:\DPapyru.github.io.worktrees\add-new-test-content\site\content\anims\obj\Debug\net8.0\AnimScripts.Dev.AssemblyInfoInputs.cache
+F:\DPapyru.github.io.worktrees\add-new-test-content\site\content\anims\obj\Debug\net8.0\AnimScripts.Dev.AssemblyInfo.cs
+F:\DPapyru.github.io.worktrees\add-new-test-content\site\content\anims\obj\Debug\net8.0\AnimScripts.Dev.csproj.CoreCompileInputs.cache
+F:\DPapyru.github.io.worktrees\add-new-test-content\site\content\anims\obj\Debug\net8.0\AnimScripts.Dev.sourcelink.json

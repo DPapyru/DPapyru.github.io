@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AnimScripts.Dev")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+243c863b6951bb0a43886744c2387fd4bf624b5f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a33d28bb673f5d3ce3587229cf80c52376757aed")]
 [assembly: System.Reflection.AssemblyProductAttribute("AnimScripts.Dev")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AnimScripts.Dev")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
