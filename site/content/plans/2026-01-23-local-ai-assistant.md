@@ -66,7 +66,7 @@
 - Create: `site/assets/js/ai.worker.js`
 
 **Step 1: Implement worker message protocol**
-- `ask` → emits:
+- `ask` -> emits:
   - `trace` events (step updates)
   - `answer_delta` events (streaming text)
   - `result` event (final structured payload: links, diagnostics, raw text)

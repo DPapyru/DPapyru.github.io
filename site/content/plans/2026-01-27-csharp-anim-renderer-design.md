@@ -1,6 +1,6 @@
 # CSharp Animation Renderer (Browser WASM) Design
 
-> 2026-01-28 更新：当前方案已改为“构建期 C# → JS 编译”，浏览器不再加载 WASM 运行时。详见 `docs/plans/2026-01-28-csharp-to-js-anim-compiler.md`。
+> 2026-01-28 更新：当前方案已改为“构建期 C# -> JS 编译”，浏览器不再加载 WASM 运行时。详见 `docs/plans/2026-01-28-csharp-to-js-anim-compiler.md`。
 
 **Goal:** Replace the current TypeScript-based anims pipeline with C# scripts that run in the browser via .NET WASM, while remaining fully static for GitHub Pages. Keep the `animts` markdown block but change the first line to `anims/*.cs`.
 

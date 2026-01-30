@@ -36,24 +36,105 @@ function unescapeCSharpString(text) {
         .replace(/\\t/g, '\t');
 }
 
+function extractParenArg(text, openParenIndex) {
+    const s = String(text || '');
+    let i = openParenIndex;
+    if (i < 0 || i >= s.length || s[i] !== '(') return null;
+
+    let depth = 0;
+    let start = -1;
+
+    for (; i < s.length; i++) {
+        const ch = s[i];
+        if (ch === '(') {
+            if (depth === 0) start = i + 1;
+            depth += 1;
+            continue;
+        }
+        if (ch === ')') {
+            depth -= 1;
+            if (depth === 0 && start >= 0) {
+                return s.slice(start, i);
+            }
+        }
+    }
+
+    return null;
+}
+
+function getTypeSimpleName(typeExpression) {
+    let s = String(typeExpression || '').trim();
+    if (!s) return s;
+
+    if (s.startsWith('global::')) s = s.slice('global::'.length);
+
+    let lastStart = 0;
+    let angleDepth = 0;
+    let parenDepth = 0;
+    let bracketDepth = 0;
+
+    for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+
+        if (ch === '<') angleDepth += 1;
+        else if (ch === '>') angleDepth = Math.max(0, angleDepth - 1);
+        else if (ch === '(') parenDepth += 1;
+        else if (ch === ')') parenDepth = Math.max(0, parenDepth - 1);
+        else if (ch === '[') bracketDepth += 1;
+        else if (ch === ']') bracketDepth = Math.max(0, bracketDepth - 1);
+
+        if (angleDepth === 0 && parenDepth === 0 && bracketDepth === 0) {
+            if (ch === '.' || ch === '+') {
+                lastStart = i + 1;
+                continue;
+            }
+            if (ch === ':' && s[i + 1] === ':') {
+                lastStart = i + 2;
+                i += 1;
+            }
+        }
+    }
+
+    let seg = s.slice(lastStart).trim();
+    if (seg.startsWith('@')) seg = seg.slice(1);
+
+    // Strip generic/array/nullable suffixes on this segment.
+    for (let i = 0; i < seg.length; i++) {
+        const ch = seg[i];
+        if (ch === '<' || ch === '[' || ch === '?') {
+            seg = seg.slice(0, i).trim();
+            break;
+        }
+    }
+
+    if (seg.startsWith('@')) seg = seg.slice(1);
+    return seg;
+}
+
 function parseAttributeValue(rawArgs) {
     const text = String(rawArgs || '').trim();
     if (!text) return null;
 
     // Support passing chapter targets as typeof(ClassName) or nameof(ClassName)
     // in attributes like [PrevChapter(typeof(Foo))].
-    const typeofMatch = text.match(/\btypeof\s*\(\s*([A-Za-z_][\w\.]*)\s*\)/);
-    if (typeofMatch) {
-        const full = typeofMatch[1];
-        const name = full.split('.').pop();
-        return name || full;
+    if (/^typeof\b/.test(text)) {
+        const open = text.indexOf('(');
+        const arg = extractParenArg(text, open);
+        if (arg != null) {
+            const full = arg.trim();
+            const name = getTypeSimpleName(full);
+            return name || full;
+        }
     }
 
-    const nameofMatch = text.match(/\bnameof\s*\(\s*([A-Za-z_][\w\.]*)\s*\)/);
-    if (nameofMatch) {
-        const full = nameofMatch[1];
-        const name = full.split('.').pop();
-        return name || full;
+    if (/^nameof\b/.test(text)) {
+        const open = text.indexOf('(');
+        const arg = extractParenArg(text, open);
+        if (arg != null) {
+            const full = arg.trim();
+            const name = getTypeSimpleName(full);
+            return name || full;
+        }
     }
 
     const stringMatch = text.match(/@?"([\s\S]*?)"/);

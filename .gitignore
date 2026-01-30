@@ -97,3 +97,4 @@ scripts/knowledge/tmodloader-api-indexer/bin/
 site/content/bin/
 site/content/obj/
 site/content/*.pp.csproj
+.sisyphus

@@ -37,19 +37,19 @@ Below are the current diagnostics and code fixes provided by tModCodeAssist. You
 ![](https://github.com/user-attachments/assets/0b23bd60-a5f6-4b38-a741-a24c26f42744)
 
 ## ChangeMagicNumberToID
-Severity: ⚠️ Warning
+Severity: Warning
 
 This diagnostic will warn of ["magic numbers"](https://en.wikipedia.org/wiki/Magic_number_(programming)) and suggest changing them to their appropriate value from their corresponding ID class. For example, `Item.useStyle = 1;` will be changed to `Item.useStyle = ItemUseStyleID.Swing;`. Since modders deal with decompiled Terraria, we usually end up with raw numbers when [adapting vanilla code](https://github.com/tModLoader/tModLoader/wiki/Advanced-Vanilla-Code-Adaption). This diagnostic and code fix will restore the original meaning of those values for the modder and leave the code much more readable. [PR](https://github.com/tModLoader/tModLoader/pull/4727).
 
 ## BadIDType
-Severity: ⛔ Error
+Severity: Error
 
 This diagnostic will error if an incorrect ID class is used in a place where another ID class is expected. For example, `recipe.AddTile(ItemID.WorkBench)` will error because the modder has mistakenly used an `ItemID` value for a method that expects a `TileID`. Since ID values are just numbers, without the error this code would result in the Presents tile being the crafting station instead of the Workbenches tile because `ItemID.WorkBench` has a value of 36 and that is the same as `TileID.Presents`. 
 
 To fix this issue, change the ID class and let [Autocomplete / Intellisense](https://github.com/tModLoader/tModLoader/wiki/Why-Use-an-IDE#autocomplete--intellisense) help you find the correct entry. If you can't find the entry in the correct ID class, consulting the [Vanilla Content IDs](https://github.com/tModLoader/tModLoader/wiki/Vanilla-Content-IDs) might help. There are several ID class entries that don't match the English name, so you might need to look them up. Also note that tiles can have multiple styles in the same TileID, such as how `TileID.MythrilAnvil` corresponds to both the Mythril Anvil and the Orichalcum Anvil. [PR](https://github.com/tModLoader/tModLoader/pull/4742).
 
 ## CommonCollisionName
-Severity: ⛔ Error
+Severity: Error
 
 This diagnostic will error if a namespace or classname matches one of several frequently used Terraria classes. For example, attempting to make a namespace named `MyMod.Item` will error. The reserved names currently include: "Main", "Mod", "Player", "Item", "NPC", "Projectile", "Gore", "Dust", "Entity", "Liquid", "Mount", "Tile", "Recipe", "ModPlayer", "ModItem", "ModNPC", "ModProjectile", "ModGore", "ModDust", "ModType", "ModMount", "ModTile", and "ModWall". New modders frequently make an `Item` namespace, which in turn leads to situations where the compiler can't rectify the name collision and will throw errors with lines of code like `Item.value = Item.buyPrice(gold: 12);`. 
 

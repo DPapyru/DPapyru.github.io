@@ -35,7 +35,7 @@ If you've never worked with HTML or XML this might look intimidating, so here's 
 # Snippet Parameters
 Parameters are a great way to add flexibility to your snippets, allowing you to customise the boilerplate code that the snippet provides. Parameters can be used in place of variable names, function parameters, and other areas of your code wherein you want to include customisability. For example, you could add a parameter in place of a class name to allow the user to use his / her own.
 
-To create a parameter, in place of a value of your choice, add any name, and surround the name with `$` characters (example: `private void FindSqrt(16)` → `private void FindSqrt($Value$)`).
+To create a parameter, in place of a value of your choice, add any name, and surround the name with `$` characters (example: `private void FindSqrt(16)` -> `private void FindSqrt($Value$)`).
 
 Here's one of the parameters in the Mod Item snippet that I use. Notice how the content of the string is removed and replaced with a `Literal`:
 

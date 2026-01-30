@@ -202,7 +202,7 @@ if (item.ModItem is ExampleItem exampleItem) {
 }
 ```
 
-❌ Avoid
+Avoid
 ```cs
 var exampleItem = item.ModItem as ExampleItem;
 if (exampleItem != null) {
@@ -243,7 +243,7 @@ if (true) {
 }
 ```
 
-❌ Unnecessary comment
+Unnecessary comment
 ```cs
 //if (Main.mouseItem.IsTheSameAs(inv[slot])) {
 if (Main.mouseItem.IsTheSameAs(inv[slot]) && ItemLoader.CanStack(inv[slot], Main.mouseItem)) {

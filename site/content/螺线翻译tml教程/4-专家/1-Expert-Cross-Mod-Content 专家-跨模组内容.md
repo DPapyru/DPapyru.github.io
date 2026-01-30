@@ -124,7 +124,7 @@ The file should look like this in the end. Be sure to save this file, then verif
 
 ![image](https://github.com/user-attachments/assets/abab2ca8-f44b-41c7-b030-f914866cd58f)
 
-You can also expand the `Dependencies->Assemblies` section and look for the mod name. It should be there, but if it has a ⚠️ icon, you made a typo that needs fixing. If it is there without that icon it should be working.
+You can also expand the `Dependencies->Assemblies` section and look for the mod name. It should be there, but if it has a warning icon, you made a typo that needs fixing. If it is there without that icon it should be working.
 
 ![image](https://github.com/user-attachments/assets/39978c2c-c664-485b-9085-c61eac3ec735)
 

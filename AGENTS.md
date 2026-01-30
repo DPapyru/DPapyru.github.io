@@ -2,27 +2,35 @@
 
 ## Project Structure & Module Organization
 
-- `docs/`：教程内容与站内页面。Markdown 位于 `docs/**/**/*.md`；`docs/config.json` 由目录结构 + YAML 元数据自动生成。`docs/.nojekyll` 用于在 GitHub Pages 上禁用 Jekyll。
-- `assets/`：静态资源（`assets/js/`、`assets/css/`、`assets/imgs/`）。`assets/search-index.json` 为搜索索引（自动生成）。
-- 根目录页面：`index.html`、`search-results.html`、`404.html`，以及 `sitemap.xml`、`robots.txt`。
-- 构建脚本：`generate-index.js`（使用 Node 生成索引/搜索/站点地图）。
+- `site/content/`：教程内容与站内页面。Markdown 位于 `site/content/**/**/*.md`；`site/content/config.json` 由目录结构 + YAML 元数据自动生成。
+- `site/assets/`：静态资源（`site/assets/js/`、`site/assets/css/`、`site/assets/imgs/`）。`site/assets/search-index.json` 为搜索索引（自动生成）。
+- `site/`：站点页面（`site/index.html`、`site/search-results.html`、`site/404.html` 等）。根目录的 `index.html` 仅做跳转到 `/site/`。
+- 构建脚本：`site/tooling/generate-structure.js`（生成 `site/content/config.json`）、`site/tooling/generate-search.js`（生成 `site/assets/search-index.json`）；`site/tooling/generate-index.js` 为历史脚本，尽量优先按 `package.json` 的 scripts 使用。
 
 ## Build, Test, and Development Commands
 
 - `npm ci`：安装依赖（需要 Node `>=18`）。
-- `npm run build`（或 `node generate-index.js`）：重新生成 `docs/config.json`、`assets/search-index.json`、`sitemap.xml`。
-- `npm run generate-index`：与 `npm run build` 等价（便于脚本调用）。
-- `npm run check-generated`：先构建，再检查生成文件是否已提交（与 CI 行为一致）。
+- `npm run generate-structure`：重新生成 `site/content/config.json`。
+- `npm run generate-search`：重新生成 `site/assets/search-index.json`。
+- `npm run generate-index`：等价于先 `generate-structure` 再 `generate-search`。
+- `npm run build`：当前只生成结构与动画资源（不会更新搜索索引）。
+- `npm run check-generated`：CI 行为一致（会运行构建并检查生成文件是否已提交）。
 - 本地预览（任意静态服务器均可）：
   - `python -m http.server 8000`
   - `npx http-server -p 8080`
 
 ## Coding Style & Naming Conventions
 
-- JavaScript：保持 `generate-index.js` 与 `assets/js/*` 现有风格（CommonJS、分号、4 空格缩进），避免“顺手重排版”导致 diff 过大。
+- JavaScript：保持 `site/tooling/*` 与 `site/assets/js/*` 现有风格（CommonJS、分号、4 空格缩进），避免“顺手重排版”导致 diff 过大。
 - Markdown：必须包含 YAML front matter（`---`），至少提供 `title`；其它字段建议与站点约定一致（如 `author`、`category`、`topic`、`order`、`tags`、`last_updated`、`prev_chapter`、`next_chapter`）。
-- 命名：建议使用 `docs/<分类>/<作者>-<标题>.md`（作者名优先用英文/ASCII），并保持 UTF-8 与相对链接可用。
+- 命名：建议使用 `site/content/<分类>/<作者>-<标题>.md`（作者名优先用英文/ASCII），并保持 UTF-8 与相对链接可用。
 - 内容：鼓励人类作者撰写；避免直接发布大量 AI 生成内容。
+
+## 内容细则（额外约定）
+
+- 不要使用 Markdown 任务清单（例如 `- [ ] ...` / `- [x] ...`）。如需列举，请改为普通列表或编号步骤。
+- C# 编写的文章（`*.cs` -> `*.generated.md`）需要保持可编译：避免残留重复定义、未闭合的 `#if/#endregion`、以及字符串字面量中的未转义引号。
+- 编辑或新增代码块时，避免引入不可见/特殊 Unicode 字符（如零宽空格、智能引号、表情符号、箭头符号）；优先使用 ASCII 标点。
 
 ## 主题（固定深色）
 
@@ -32,7 +40,7 @@
 
 ## 内容贡献（Markdown）
 
-- 新文章建议放在 `docs/<分类>/` 下，并在首部写元数据。例如：
+- 新文章建议放在 `site/content/<分类>/` 下，并在首部写元数据。例如：
   ```yaml
   ---
   title: 标题
@@ -42,7 +50,7 @@
   ---
   ```
 - `prev_chapter` / `next_chapter` 用于章节跳转，通常填写同目录下的 `*.md` 文件名。
-- 如需新增分类/Topic：优先复用既有值；确需新增时，请同时更新 `generate-index.js` 的默认配置并重新运行 `npm run build`。
+- 如需新增分类/Topic：优先复用既有值；确需新增时，请同时更新 `site/tooling/generate-structure.js` 的默认配置并重新运行对应生成命令。
 
 ## Testing Guidelines
 

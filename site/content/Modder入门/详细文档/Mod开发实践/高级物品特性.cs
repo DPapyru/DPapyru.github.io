@@ -1,0 +1,97 @@
+using ModDocProject;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+
+namespace ModDocProject.Modder入门.详细文档.Mod开发实践 {
+    #region 元数据
+    [Title("高级物品特性 - 饰品和套装效果")]
+    [Tooltip("学习创建饰品、套装效果和复杂物品")]
+    [UpdateTime("2026-01-30")]
+    [Author("Papyru")]
+    [Category("Modder入门")]
+    [Topic("mod-dev")]
+    #endregion
+    public class 高级物品特性 : ModItem {
+#if DOCS
+        public const string DocMarkdown_0 = """
+> WARNING: 版本说明：本教程适用于 **tModLoader 1.4.4+**
+
+## 饰品基础
+
+饰品提供被动效果，需要继承 `ModAccessory`。
+
+```csharp
+public class MyAccessory : ModAccessory {
+    public override void SetDefaults() {
+        Item.width = 24;
+        Item.height = 28;
+        Item.accessory = true;
+        Item.rare = ItemRarityID.Blue;
+    }
+    
+    public override void UpdateAccessory(Player player, bool hideVisual) {
+        player.moveSpeed += 0.1f;
+        player.statDefense += 5;
+    }
+}
+```
+
+## 套装效果
+
+### 定义套装
+
+```csharp
+public override void SetStaticDefaults() {
+    ArmorIDs.Head.Sets.DrawFullHair[Item.headSlot] = true;
+}
+```
+
+### 套装加成
+
+```csharp
+public override bool IsArmorSet(Item head, Item body, Item legs) {
+    return head.type == ModContent.ItemType<MyHead>() &&
+           body.type == ModContent.ItemType<MyBody>() &&
+           legs.type == ModContent.ItemType<MyLegs>();
+}
+
+public override void UpdateArmorSet(Player player) {
+    player.setBonus = "套装效果：增加 20% 伤害";
+    player.GetDamage(DamageClass.Generic) += 0.2f;
+}
+```
+
+## 特殊物品类型
+
+### 连击武器
+
+```csharp
+public class ComboWeapon : ModItem {
+    private int comboCount = 0;
+    
+    public override void OnHitNPC(...) {
+        comboCount++;
+        if (comboCount >= 3) {
+            // 触发连击效果
+            comboCount = 0;
+        }
+    }
+}
+```
+
+### 多用途物品
+
+```csharp
+public override bool CanRightClick() {
+    return true;
+}
+
+public override void RightClick(Player player) {
+    // 右键功能
+}
+```
+""";
+#endif
+    }
+}

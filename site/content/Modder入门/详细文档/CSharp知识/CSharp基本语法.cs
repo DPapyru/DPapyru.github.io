@@ -7,7 +7,7 @@ namespace ModDocProject.Modder入门.详细文档.CSharp知识 {
     /// <summary>用最少的语法点，解释你在教程里频繁遇到的写法</summary>
     [Title("C#基本语法")]
     [Tooltip("用最少的语法点，解释你在教程里频繁遇到的写法")]
-    [UpdateTime("2026-01-28")]
+    [UpdateTime("2026-01-30")]
     [Author("小天使")]
     [Category("Modder入门")]
     [Topic("know-csharp")]
@@ -19,6 +19,72 @@ namespace ModDocProject.Modder入门.详细文档.CSharp知识 {
     #endregion
     public class CSharp基本语法 {
 #if DOCS
+        #region 跨平台路径说明
+        public const string DocMarkdown_0 = """
+        ### Mod 开发中的跨平台路径
+        
+        tModLoader 在不同操作系统下使用不同的路径来读取 Mod 和日志文件。
+        
+        ### Windows 路径
+        
+        ModSources 目录：
+        ```
+        C:\\Users\\[用户名]\\Documents\\My Games\\Terraria\\tModLoader\\ModSources
+        ```
+        
+        日志目录：
+        ```
+        C:\\Users\\[用户名]\\Documents\\My Games\\Terraria\\tModLoader\\Logs
+        ```
+        
+        路径分隔符：反斜杠 `\\`
+        
+        ### macOS 路径
+        
+        ModSources 目录：
+        ```
+        ~/Library/Application Support/Terraria/ModSources
+        ```
+        
+        日志目录：
+        ```
+        ~/Library/Application Support/Terraria/ModLoader/Logs
+        ```
+        
+        路径分隔符：正斜杠 `/`，`~` 表示用户主目录
+        
+        ### Linux 路径
+        
+        ModSources 目录：
+        ```
+        ~/.local/share/Terraria/ModSources
+        ```
+        
+        日志目录：
+        ```
+        ~/.local/share/Terraria/ModLoader/Logs
+        ```
+        
+        路径分隔符：正斜杠 `/`，`~` 表示用户主目录
+        
+        ### 在代码中处理跨平台路径
+        
+        C# 的 `Path` 类会自动处理跨平台路径差异：
+        
+        ```csharp
+        // 自动使用正确的路径分隔符
+        string modSourcesPath = Path.Combine("MyMods", "MyFirstMod");
+        
+        // 获取正确的应用程序数据目录
+        string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        
+        // 组合路径（自动处理分隔符）
+        string fullPath = Path.Combine(appDataPath, "Terraria", "ModSources");
+        ```
+        
+        > NOTE: 提示：使用 `Path.Combine()` 而不是字符串拼接 `+`，可以避免跨平台问题。
+        """;
+        #endregion
         #region 作用域：你最常见的报错来源
         public const string DocMarkdown_1 = """
         C# 用 `{ }` 表示作用域：变量在声明的作用域之外不可见。

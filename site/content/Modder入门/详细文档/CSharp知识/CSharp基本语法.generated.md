@@ -7,10 +7,75 @@ topic: know-csharp
 date: 2026-01-25
 difficulty: beginner
 time: 10分钟
-last_updated: 2026-01-28
+last_updated: 2026-01-30
 prev_chapter: CSharp快速入门
 next_chapter: CSharp变量表达式
 ---
+
+## 跨平台路径说明
+
+### Mod 开发中的跨平台路径
+
+tModLoader 在不同操作系统下使用不同的路径来读取 Mod 和日志文件。
+
+### Windows 路径
+
+ModSources 目录：
+```
+C:\\Users\\[用户名]\\Documents\\My Games\\Terraria\\tModLoader\\ModSources
+```
+
+日志目录：
+```
+C:\\Users\\[用户名]\\Documents\\My Games\\Terraria\\tModLoader\\Logs
+```
+
+路径分隔符：反斜杠 `\\`
+
+### macOS 路径
+
+ModSources 目录：
+```
+~/Library/Application Support/Terraria/ModSources
+```
+
+日志目录：
+```
+~/Library/Application Support/Terraria/ModLoader/Logs
+```
+
+路径分隔符：正斜杠 `/`，`~` 表示用户主目录
+
+### Linux 路径
+
+ModSources 目录：
+```
+~/.local/share/Terraria/ModSources
+```
+
+日志目录：
+```
+~/.local/share/Terraria/ModLoader/Logs
+```
+
+路径分隔符：正斜杠 `/`，`~` 表示用户主目录
+
+### 在代码中处理跨平台路径
+
+C# 的 `Path` 类会自动处理跨平台路径差异：
+
+```csharp
+// 自动使用正确的路径分隔符
+string modSourcesPath = Path.Combine("MyMods", "MyFirstMod");
+
+// 获取正确的应用程序数据目录
+string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+// 组合路径（自动处理分隔符）
+string fullPath = Path.Combine(appDataPath, "Terraria", "ModSources");
+```
+
+> NOTE: 提示：使用 `Path.Combine()` 而不是字符串拼接 `+`，可以避免跨平台问题。
 
 ## 作用域：你最常见的报错来源
 
