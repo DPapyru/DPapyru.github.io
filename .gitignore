@@ -98,3 +98,5 @@ site/content/bin/
 site/content/obj/
 site/content/*.pp.csproj
 .sisyphus
+site/content/anims/bin/
+site/content/anims/obj/
