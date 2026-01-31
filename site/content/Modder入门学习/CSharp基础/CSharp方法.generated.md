@@ -7,7 +7,7 @@ difficulty: intermediate
 time: 30分钟
 order: 60
 last_updated: 2026-01-30
-prev_chapter: CSharp变量更多内容
+prev_chapter: CSharp变量更多内容.generated.md
 ---
 
 ## 简介

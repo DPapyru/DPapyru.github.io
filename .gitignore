@@ -94,6 +94,12 @@ scripts/knowledge/tmodloader-api-indexer/obj/
 scripts/knowledge/tmodloader-api-indexer/bin/
 
 # site/content 编译/预处理副产物
+**/bin/
+**/obj/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 site/content/bin/
 site/content/obj/
 site/content/*.pp.csproj

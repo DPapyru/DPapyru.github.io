@@ -481,6 +481,7 @@ function processMainProject() {
 
         // 使用配置管理器处理分类
         const targetCategory = resolveCategory({
+            metadataCategory: metadata.category,
             filePath: file,
             categories: configManager.getCategories(),
             categoryMappings: configManager.categoryMappings,

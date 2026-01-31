@@ -27,11 +27,20 @@ function mapToExistingCategory(categoryName, categories, categoryMappings, rever
 }
 
 function resolveCategory(options) {
+    const metadataCategory = options ? options.metadataCategory : null;
     const filePath = options ? options.filePath : '';
     const categories = options ? options.categories : null;
     const categoryMappings = options ? options.categoryMappings : null;
     const reverseCategoryMappings = options ? options.reverseCategoryMappings : null;
     const defaultCategory = options ? options.defaultCategory : '';
+
+    const mappedFromMetadata = mapToExistingCategory(
+        metadataCategory,
+        categories,
+        categoryMappings,
+        reverseCategoryMappings
+    );
+    if (mappedFromMetadata) return mappedFromMetadata;
 
     const categoryFromPath = getCategoryFromPath(filePath, defaultCategory);
     const mapped = mapToExistingCategory(

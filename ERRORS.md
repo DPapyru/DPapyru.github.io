@@ -138,12 +138,12 @@ namespace ModDocProject.Modder入门学习.CSharp基础 {
 - **双向连接**：确保 A→B 的同时，B 也要指向 A 和 C
 - **定期验证**：运行 `npm run generate-structure` 后检查导航是否正常
 
-**检查清单**：
-- [ ] 系列中的每篇文章都有 `order` 值
-- [ ] 第一篇文章有 `next_chapter` 无 `prev_chapter`
-- [ ] 中间文章同时有 `prev_chapter` 和 `next_chapter`
-- [ ] 最后一篇文章有 `prev_chapter` 无 `next_chapter`
-- [ ] 所有路径指向真实存在的文件
+**检查要点**：
+- 系列中的每篇文章都有 `order` 值
+- 第一篇文章有 `next_chapter`，不写 `prev_chapter`
+- 中间文章同时有 `prev_chapter` 和 `next_chapter`
+- 最后一篇文章有 `prev_chapter`，不写 `next_chapter`
+- 所有路径指向真实存在的文件
 
 ---
 

@@ -7,8 +7,8 @@ difficulty: beginner
 time: 25分钟
 order: 20
 last_updated: 2026-01-30
-prev_chapter: CSharp语法基础
-next_chapter: CSharp变量与表达式
+prev_chapter: CSharp语法基础.generated.md
+next_chapter: CSharp变量与表达式.generated.md
 ---
 
 ## 简介

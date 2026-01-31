@@ -7,8 +7,8 @@ difficulty: beginner
 time: 20分钟
 order: 30
 last_updated: 2026-01-30
-prev_chapter: CSharp基础数据类型
-next_chapter: CSharp控制流
+prev_chapter: CSharp基础数据类型.generated.md
+next_chapter: CSharp控制流.generated.md
 ---
 
 ## 简介

@@ -111,7 +111,7 @@ function getTypeSimpleName(typeExpression) {
     return seg;
 }
 
-function parseAttributeValue(rawArgs) {
+function parseAttributeValue(attributeName, rawArgs) {
     const text = String(rawArgs || '').trim();
     if (!text) return null;
 
@@ -123,7 +123,11 @@ function parseAttributeValue(rawArgs) {
         if (arg != null) {
             const full = arg.trim();
             const name = getTypeSimpleName(full);
-            return name || full;
+            const resolved = name || full;
+            if ((attributeName === 'PrevChapter' || attributeName === 'NextChapter') && resolved && !String(resolved).endsWith('.md')) {
+                return `${resolved}.generated.md`;
+            }
+            return resolved;
         }
     }
 
@@ -133,7 +137,11 @@ function parseAttributeValue(rawArgs) {
         if (arg != null) {
             const full = arg.trim();
             const name = getTypeSimpleName(full);
-            return name || full;
+            const resolved = name || full;
+            if ((attributeName === 'PrevChapter' || attributeName === 'NextChapter') && resolved && !String(resolved).endsWith('.md')) {
+                return `${resolved}.generated.md`;
+            }
+            return resolved;
         }
     }
 
@@ -289,7 +297,7 @@ function extractAttributes(text) {
         if (s[i] === ']') i += 1;
 
         if (!ATTRIBUTE_MAP[name]) continue;
-        const value = parseAttributeValue(args);
+        const value = parseAttributeValue(name, args);
         attributes[name] = value;
     }
 

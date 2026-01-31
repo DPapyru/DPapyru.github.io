@@ -7,7 +7,7 @@ difficulty: beginner
 time: 20分钟
 order: 10
 last_updated: 2026-01-30
-next_chapter: CSharp基础数据类型
+next_chapter: CSharp基础数据类型.generated.md
 ---
 
 ## 简介

@@ -7,8 +7,8 @@ difficulty: intermediate
 time: 25分钟
 order: 50
 last_updated: 2026-01-30
-prev_chapter: CSharp控制流
-next_chapter: CSharp方法
+prev_chapter: CSharp控制流.generated.md
+next_chapter: CSharp方法.generated.md
 ---
 
 ## 简介

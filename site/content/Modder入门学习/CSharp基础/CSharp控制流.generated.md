@@ -7,8 +7,8 @@ difficulty: beginner
 time: 25分钟
 order: 40
 last_updated: 2026-01-30
-prev_chapter: CSharp变量与表达式
-next_chapter: CSharp变量更多内容
+prev_chapter: CSharp变量与表达式.generated.md
+next_chapter: CSharp变量更多内容.generated.md
 ---
 
 ## 简介
