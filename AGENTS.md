@@ -60,6 +60,7 @@
 
 - 禁止修改仓库根目录的 `.git` 文件（worktree 指针文件）。该文件用于 Git 工作树定位，误改会导致 `git` 与脚本行为异常。
 - 如遇到跨平台（Windows/WSL）导致的 `git` 不可用问题：不要通过改 `.git` 解决；请改在对应平台的 Git 环境中运行 `npm run check-generated` / `git diff`，或仅运行 `npm run build` 做内容生成校验。
+- 如在 `git status` 中发现不重要/临时/构建产物等文件（例如 `bin/`、`obj/`、编辑器缓存、各类本地工具输出），应优先补充到 `.gitignore` 并将其从 Git 索引移除，避免污染提交历史。
 
 ## CI 与部署
 

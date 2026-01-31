@@ -145,8 +145,10 @@ time: 10分钟
 description: 文章描述
 date: 2026-01-18
 last_updated: 2026-01-18
-prev_chapter: 
-next_chapter: 
+# 章节导航：不要写 `prev_chapter:` / `next_chapter:` 的“空值”形式（会被脚本误解析为对象）。
+# 没有上一章/下一章时：省略字段，或写成空字符串 ""。
+# prev_chapter: ""
+# next_chapter: ""
 min_c: 0
 min_t: 0
 tags:
@@ -161,7 +163,7 @@ hide: false
 
 #### 关键规则
 
-- 分类由文件所在目录决定，不在 YAML 中声明 `category`
+- 分类默认由文件所在目录决定；一般不在 YAML 中声明 `category`（除非你明确要覆盖目录分类）
 - `topic` 建议使用标识符而非描述性文本
 - `order` 为数值类型，未指定时排在最后
 - `prev_chapter` 与 `next_chapter` 应指向同目录下真实存在的 `.md` 文件
@@ -230,6 +232,11 @@ namespace YourNamespace {
 | `[PrevChapter]` | `prev_chapter` | 否   | 上一章节（**系列文章必填**）。C#文章用`typeof(类名)`，非C#文章用字符串路径 |
 | `[NextChapter]` | `next_chapter` | 否   | 下一章节（**系列文章必填**）。C#文章用`typeof(类名)`，非C#文章用字符串路径 |
 | `[Hide]`        | `hide`         | 否   | 是否隐藏                          |
+
+**章节跳转文件名约定（非常重要）**：
+
+- 在 C# 文章里用 `typeof(类名)` / `nameof(类名)` 指向另一篇 C# 文章时，最终会解析到同目录下的 `<类名>.generated.md`。
+- 指向普通 Markdown 文章时，用字符串写明确切相对路径（例如 `"../指南/xxx.md"`）。
 
 #### 正文书写规则
 
@@ -483,8 +490,9 @@ time: 15分钟
 description: 章节目标描述
 topic: mod-basics
 order: 10
-prev_chapter: ../上一章节.md
-next_chapter: ../下一章节.md
+# 章节导航：没有上一章/下一章时，请省略字段（推荐）或写成空字符串 ""，不要写成裸空值。
+# prev_chapter: "../上一章节.md"
+# next_chapter: "../下一章节.md"
 ---
 ```
 
@@ -526,9 +534,9 @@ public class CSharp方法 { }
 
 **必需小节**：
 
-- `## 本章要点（可引用）`
-- `## 常见坑（可引用）`
-- `## 下一步（可引用）`
+- `## 本章要点`
+- `## 常见坑`
+- `## 下一步`
 
 #### 内容组织建议（Modder入门）
 
@@ -580,13 +588,46 @@ public class CSharp方法 { }
 
 6. **提交前检查清单**
 
-   - [ ] YAML Front Matter 包含 `title`
-   - [ ] 文章位于正确的分类目录
-   - [ ] 链接与图片使用相对路径
-   - [ ] Quiz 正常显示且可判题
-   - [ ] **系列文章**：已配置 `order`、`prev_chapter`、`next_chapter`
-   - [ ] 运行 `npm run build` 并提交生成文件
-   - [ ] 运行 `npm run check-generated` 确保 CI 通过
+   - YAML Front Matter 包含 `title`
+   - 文章位于正确的分类目录
+   - 链接与图片使用相对路径
+   - Quiz 正常显示且可判题
+   - **系列文章**：已配置 `order`、`prev_chapter`、`next_chapter`（不要使用 `null`，没有就省略或用 `""`）
+   - 运行 `npm run generate-index` 更新结构与搜索索引，并提交生成文件
+   - 运行 `npm run check-generated` 确保 CI 通过
+
+### 文章风格检查流程（LLM 输出前必做）
+
+目标：让文章符合本仓库的“教程风格 + 元数据规范 + 可维护性约束”，并避免生成脚本/导航/搜索索引常见坑。
+
+1. **元数据与导航**
+   - 必须有 YAML Front Matter，且包含 `title`
+   - `docs/Modder入门/**` 的文章必须包含 `description`
+   - 章节文章必须设置 `order`；`prev_chapter` / `next_chapter` 不要写 `null`，没有就省略或写成 `""`
+   - C# 文章用 `typeof(...)` / `nameof(...)` 指向另一篇 C# 文章时，会落到 `<类名>.generated.md`
+
+2. **结构与段落（“菜鸟教程”风格）**
+   - 先写“目标/前置条件”，再给“最小可运行示例”，然后给“验证步骤/常见问题/小结/下一步”
+   - 短段落、小标题、示例先行，解释紧随其后
+   - 需要列清单时用普通列表或编号步骤；不要使用 Markdown 任务清单语法
+
+3. **语气与措辞**
+   - 保持严肃语气，避免段子化表达
+   - 减少括号说明：能用一句话讲清就不要塞括号
+   - 不要在正文或标题里写“可引用”这类提示字样
+
+4. **格式与字符安全**
+   - 避免不可见/特殊 Unicode 字符（零宽空格、智能引号、箭头符号等）；优先使用 ASCII 标点
+   - 编辑/新增 C# 文档时确保可编译：避免重复定义、未闭合的 `#if/#endregion`、字符串字面量中未转义引号
+
+5. **链接与图片**
+   - 站内链接优先用相对路径（同目录章节互链可直接写文件名）
+   - 图片放到 `site/assets/imgs/`，并用相对路径引用；根据文章所在层级选择正确的 `../` 深度
+
+6. **生成与自动化校验（改完必跑）**
+   - 运行 `npm run generate-index`（必要时再运行 `npm run build` 生成动画资源）
+   - 运行 `npm run check-content`（检查导航字段等内容健康）
+   - 运行 `npm run check-generated`（模拟 CI，确保生成文件已提交）
 
 #### 图片使用规范
 
@@ -603,6 +644,11 @@ site/assets/imgs/<分类>/<文章名>/<图片名>.png
 ```md
 ![图片描述](../../assets/imgs/分类/文章名/图片名.png)
 ```
+
+**相对路径深度示例**（按文章所在层级选择）：
+
+- `site/content/<分类>/文章.md`：`![说明](../../assets/imgs/xxx.png)`
+- `site/content/<分类>/<子目录>/文章.md`：`![说明](../../../assets/imgs/xxx.png)`
 
 **图片规范**：
 
@@ -649,7 +695,7 @@ site/assets/imgs/<分类>/<文章名>/<图片名>.png
 | 检查项       | 解决方式                        |
 | ------------ | ------------------------------- |
 | 文件路径错误 | 确保指向真实存在的文件          |
-| 使用 `null`  | 留空或省略字段，不使用 `null`   |
+| 使用 `null`  | 省略字段或写成空字符串 `""`；不要使用 `null`，也不要使用“裸空值”写法（`prev_chapter:`） |
 | 路径格式     | 使用相对路径，如 `../上一章.md` |
 
 ### C# 生成内容错误
@@ -699,7 +745,7 @@ site/assets/imgs/<分类>/<文章名>/<图片名>.png
 3. **善用引用展开**：避免复制粘贴，一处编写多处复用
 4. **合理使用条件分流**：避免整篇文章被条件块切碎
 5. **系列文章配置导航**：使用 `order`、`prev_chapter`、`next_chapter` 建立章节连接
-6. **运行构建并提交**：提交生成文件
+6. **生成并提交**：运行 `npm run generate-index`（必要时再运行 `npm run build` 生成动画资源），并提交生成文件
 7. **本地预览验证**：重点检查 Quiz 与动画组件、章节跳转按钮
 8. **保持严肃风格**：说明书式表达，服务于理解
 
