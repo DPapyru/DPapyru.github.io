@@ -10,12 +10,12 @@
 using System;
 using System.Reflection;
 
-[assembly: System.Reflection.AssemblyCompanyAttribute("AnimScripts.Dev")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("TestProject")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
 [assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+067848b738fda7d5908a5a9a2d792c19c3a5be3b")]
-[assembly: System.Reflection.AssemblyProductAttribute("AnimScripts.Dev")]
-[assembly: System.Reflection.AssemblyTitleAttribute("AnimScripts.Dev")]
+[assembly: System.Reflection.AssemblyProductAttribute("TestProject")]
+[assembly: System.Reflection.AssemblyTitleAttribute("TestProject")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 
 // 由 MSBuild WriteCodeFragment 类生成。

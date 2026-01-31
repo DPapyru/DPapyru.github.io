@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "F:\\DPapyru.github.io\\site\\content\\anims\\AnimScripts.Dev.csproj",
-      "projectName": "AnimScripts.Dev",
-      "projectPath": "F:\\DPapyru.github.io\\site\\content\\anims\\AnimScripts.Dev.csproj",
+      "projectUniqueName": "F:\\DPapyru.github.io\\TestProject.csproj",
+      "projectName": "TestProject",
+      "projectPath": "F:\\DPapyru.github.io\\TestProject.csproj",
       "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-      "outputPath": "F:\\DPapyru.github.io\\site\\content\\anims\\obj\\",
+      "outputPath": "F:\\DPapyru.github.io\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config"

@@ -1,0 +1,5 @@
+F:\DPapyru.github.io\obj\Debug\net8.0\TestProject.GeneratedMSBuildEditorConfig.editorconfig
+F:\DPapyru.github.io\obj\Debug\net8.0\TestProject.AssemblyInfoInputs.cache
+F:\DPapyru.github.io\obj\Debug\net8.0\TestProject.AssemblyInfo.cs
+F:\DPapyru.github.io\obj\Debug\net8.0\TestProject.csproj.CoreCompileInputs.cache
+F:\DPapyru.github.io\obj\Debug\net8.0\TestProject.sourcelink.json
