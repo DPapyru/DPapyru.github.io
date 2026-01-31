@@ -44,7 +44,6 @@ out/
 
 # Node.js相关文件
 node_modules/
-package-lock.json
 yarn.lock
 
 # Python相关文件

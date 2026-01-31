@@ -51,7 +51,6 @@ function writeManifest(projectRoot, items) {
     const sources = items.map(item => item.source);
     const payload = {
         schemaVersion: 1,
-        generatedAt: new Date().toISOString(),
         sources,
         entries: buildManifest(items).entries
     };
