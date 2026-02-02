@@ -35,7 +35,6 @@
     <link rel="stylesheet" href="/site/assets/css/style.css"> <!-- 主样式文件 -->
     <link rel="stylesheet" href="/site/assets/css/prism.min.css"> <!-- 代码高亮样式 -->
     <link rel="stylesheet" href="/site/assets/css/rider-dark-theme.css"> <!-- Rider Dark代码高亮主题 -->
-    <link rel="stylesheet" href="/site/assets/css/knowledge-cards.css"> <!-- 浮动知识卡牌 -->
     <link rel="stylesheet" href="/site/assets/css/animts-runtime.css"> <!-- 动画运行时样式 -->
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png"> <!-- 网站图标 -->
 
@@ -325,11 +324,9 @@
 			    <script src="/site/assets/js/site-config.js"></script>
 			    <script src="/site/assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
 			    <script src="/site/assets/js/mermaid.min.js"></script> <!-- Mermaid流程图渲染 -->
-			    <script src="/site/assets/js/site-quiz.js"></script> <!-- Quiz 题目渲染 -->
-			    <script src="/site/assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
-			    <script src="/site/assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
-                <script src="/site/assets/js/knowledge-core.js"></script> <!-- 知识卡牌：核心逻辑 -->
-                <script src="/site/assets/js/knowledge-cards.js"></script> <!-- 知识卡牌：UI -->
+		    <script src="/site/assets/js/site-quiz.js"></script> <!-- Quiz 题目渲染 -->
+		    <script src="/site/assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
+		    <script src="/site/assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
                 <script src="/site/assets/js/animcs-js-runtime.js"></script> <!-- C# 动画运行时（JS 输出） -->
     <script>
         // Mermaid 兜底加载：如果本地资源缺失/加载失败，则尝试从 CDN 加载（不影响已有本地加载）
@@ -3199,10 +3196,6 @@
 	            const loadingIndicator = document.getElementById('loading-indicator');
 	            const errorMessage = document.getElementById('error-message');
 	            const markdownContent = document.getElementById('markdown-content');
-
-                if (window.KnowledgeCards && typeof window.KnowledgeCards.reset === 'function') {
-                    window.KnowledgeCards.reset();
-                }
 
                 if (loadingIndicator) {
                     loadingIndicator.style.display = 'block';

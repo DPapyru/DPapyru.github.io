@@ -51,31 +51,6 @@
 - `site/assets/anims/`（动画编译产物）
 - `site/assets/search-index.json`（搜索索引）
 
-## （可选）LLM：按小节生成“抽象语义”检索线索
-
-站内搜索会使用“按 Markdown 小节（section）”的语义元数据来增强对抽象问法/新造词的匹配（仍然只输出来自文章的引用段落）。该元数据分为两份：
-
-- 人工维护表（优先级更高）：`site/content/search/section-semantic.manual.v1.yml`
-- AI 生成表（二进制，gzip JSON）：`site/content/search/section-semantic.ai.v1.json.gz`
-
-如需查看/调试 AI 表的内容，可以用仓库内置的“翻译器”（解码/编码工具）：
-
-- 解码为 JSON：`node site/tooling/scripts/section-semantic-ai-translator.js dump --input site/content/search/section-semantic.ai.v1.json.gz --output /tmp/section-semantic.ai.v1.json`
-- 解码为 YAML：`node site/tooling/scripts/section-semantic-ai-translator.js dump --input site/content/search/section-semantic.ai.v1.json.gz --output /tmp/section-semantic.ai.v1.yml`
-- 重新打包：`node site/tooling/scripts/section-semantic-ai-translator.js pack --input /tmp/section-semantic.ai.v1.json --output /tmp/section-semantic.ai.v1.json.gz`
-
-维护方式建议走 GitHub Actions 自动开 PR（避免把 API Key 暴露在前端，也避免每次构建都不稳定）：
-
-1. 在仓库 Settings → Secrets and variables → Actions 中添加：
-   - `LLM_API_KEY`：大模型 API Key
-   - `LLM_BASE_URL`：OpenAI 兼容 base url（以 `/v1` 结尾）
-   - （可选）`LLM_MODEL`：默认 `glm-4.7-flash`
-   - （可选）`MAX_SECTIONS`：本次最多处理多少个小节（用于分批更新/控成本）
-2. 在 Actions 中手动运行：`Update Section Semantic (LLM)`（会自动创建/更新一个 PR）
-3. 合并 PR 后，再由 Pages 部署流程发布
-
-普通贡献者不需要运行该 workflow：你只要按上面的方式写文章并 `npm run build` 即可；如遇到“抽象问法搜不到/跑偏”，可以在 PR 里直接手动补充 `site/content/search/section-semantic.manual.v1.yml` 的相关小节条目。
-
 ## 贡献文章（简版）
 
 - 放到 `site/content/` 下面，并带 YAML Front Matter（至少要有 `title`）

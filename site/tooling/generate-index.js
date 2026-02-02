@@ -4,15 +4,11 @@ const path = require('path');
 const { execSync } = require('child_process');
 const { resolveCategory, mapToExistingCategory } = require('./lib/category-utils');
 const yaml = require('js-yaml');
-const zlib = require('zlib');
 
 const SITE_BASE_URL = 'https://dpapyru.github.io';
 const SEARCH_INDEX_PATH = './site/assets/search-index.json';
 const GUIDED_INDEX_PATH = './site/assets/semantic/guided-index.v1.json';
 const BM25_INDEX_PATH = './site/assets/semantic/bm25-index.v1.json';
-const SECTION_SEMANTIC_MANUAL_PATH = './site/content/search/section-semantic.manual.v1.yml';
-const SECTION_SEMANTIC_AI_PATH = './site/content/search/section-semantic.ai.v1.json.gz';
-const SECTION_SEMANTIC_LEGACY_PATH = './site/content/search/section-semantic.v1.yml';
 
 // 项目配置
 const projectConfig = {
@@ -602,7 +598,7 @@ function generateSitemap(config) {
     for (const doc of config.all_files) {
         if (!doc || !doc.path) continue;
         const filePath = String(doc.path);
-        const repoPath = path.join('docs', filePath).replace(/\\/g, '/');
+        const repoPath = path.join(projectConfig.docsDir, filePath).replace(/\\/g, '/');
         const lastmod = getLastModForPath(repoPath);
 
         urls.push({
@@ -669,130 +665,11 @@ function slugifyHeading(heading) {
 }
 
 function loadSectionSemanticMap() {
-    try {
-        const aiById = new Map();
-        const manualById = new Map();
-
-        // AI table (binary gzip JSON)
-        if (fs.existsSync(SECTION_SEMANTIC_AI_PATH)) {
-            const buf = fs.readFileSync(SECTION_SEMANTIC_AI_PATH);
-            const jsonText = zlib.gunzipSync(buf).toString('utf8');
-            const doc = JSON.parse(jsonText) || {};
-            const sections = Array.isArray(doc.sections) ? doc.sections : [];
-            for (const s of sections) {
-                if (!s || !s.id) continue;
-                aiById.set(String(s.id), s);
-            }
-        } else if (fs.existsSync(SECTION_SEMANTIC_LEGACY_PATH)) {
-            // legacy fallback (YAML)
-            const raw = fs.readFileSync(SECTION_SEMANTIC_LEGACY_PATH, 'utf8');
-            const doc = yaml.load(raw) || {};
-            const sections = Array.isArray(doc.sections) ? doc.sections : [];
-            for (const s of sections) {
-                if (!s || !s.id) continue;
-                aiById.set(String(s.id), s);
-            }
-        }
-
-        // Manual table (YAML)
-        if (fs.existsSync(SECTION_SEMANTIC_MANUAL_PATH)) {
-            const raw = fs.readFileSync(SECTION_SEMANTIC_MANUAL_PATH, 'utf8');
-            const doc = yaml.load(raw) || {};
-            const sections = Array.isArray(doc.sections) ? doc.sections : [];
-            for (const s of sections) {
-                if (!s || !s.id) continue;
-                manualById.set(String(s.id), s);
-            }
-        }
-
-        const out = new Map();
-        const allIds = new Set([...aiById.keys(), ...manualById.keys()]);
-        for (const id of allIds) {
-            const ai = aiById.get(id) || null;
-            const manual = manualById.get(id) || null;
-
-            const merged = Object.assign({}, ai || {}, manual || {});
-
-            // list-like fields: union (manual first), keep deterministic order
-            const phrases = [];
-            const questions = [];
-            const beginnerQuestions = [];
-            const avoid = [];
-            const aliases = [];
-
-            const pushUnique = (arr, value) => {
-                const s = String(value || '').trim();
-                if (!s) return;
-                if (arr.some(x => x.toLowerCase() === s.toLowerCase())) return;
-                arr.push(s);
-            };
-
-            for (const src of [manual, ai]) {
-                if (!src) continue;
-                if (Array.isArray(src.phrases)) for (const p of src.phrases) pushUnique(phrases, p);
-                if (Array.isArray(src.questions)) for (const q of src.questions) pushUnique(questions, q);
-                if (Array.isArray(src.beginnerQuestions)) for (const q of src.beginnerQuestions) pushUnique(beginnerQuestions, q);
-                if (Array.isArray(src.beginner_questions)) for (const q of src.beginner_questions) pushUnique(beginnerQuestions, q);
-                if (Array.isArray(src.avoid)) for (const v of src.avoid) pushUnique(avoid, v);
-                if (Array.isArray(src.aliases)) {
-                    for (const a of src.aliases) {
-                        if (!a) continue;
-                        const from = String(a.from || '').trim();
-                        const to = String(a.to || '').trim();
-                        if (!from || !to) continue;
-                        if (aliases.some(x => String(x.from || '').trim() === from)) continue;
-                        aliases.push({ from, to });
-                    }
-                }
-            }
-
-            merged.phrases = phrases;
-            merged.questions = questions;
-            merged.beginnerQuestions = beginnerQuestions;
-            merged.avoid = avoid;
-            merged.aliases = aliases;
-
-            out.set(id, merged);
-        }
-
-        return out;
-    } catch (e) {
-        console.warn('读取 section semantic 失败，将忽略：', e && e.message ? e.message : String(e));
-        return new Map();
-    }
+    return new Map();
 }
 
 function buildSectionAugmentText(sectionMeta) {
-    if (!sectionMeta) return '';
-    const parts = [];
-    if (Array.isArray(sectionMeta.phrases)) {
-        for (const p of sectionMeta.phrases) {
-            const s = String(p || '').trim();
-            if (s) parts.push(s);
-        }
-    }
-    if (Array.isArray(sectionMeta.questions)) {
-        for (const q of sectionMeta.questions) {
-            const s = String(q || '').trim();
-            if (s) parts.push(s);
-        }
-    }
-    if (Array.isArray(sectionMeta.beginnerQuestions)) {
-        for (const q of sectionMeta.beginnerQuestions) {
-            const s = String(q || '').trim();
-            if (s) parts.push(s);
-        }
-    }
-    if (Array.isArray(sectionMeta.aliases)) {
-        for (const a of sectionMeta.aliases) {
-            if (!a) continue;
-            const from = String(a.from || '').trim();
-            const to = String(a.to || '').trim();
-            if (from) parts.push(from);
-            if (to) parts.push(to);
-        }
-    }
-    return parts.join('\n');
+    return '';
 }
 
 function stripMarkdown(markdownText) {
@@ -1171,7 +1048,7 @@ function generateGuidedSemanticIndex(config) {
     for (const doc of config.all_files) {
         if (!doc || !doc.path) continue;
         const filePath = String(doc.path);
-        const repoPath = path.join('docs', filePath);
+        const repoPath = path.join(projectConfig.docsDir, filePath);
 
         let markdown = '';
         try {
@@ -1488,7 +1365,7 @@ function generateBm25Index(config) {
     for (const doc of config.all_files) {
         if (!doc || !doc.path) continue;
         const filePath = String(doc.path);
-        const repoPath = path.join('docs', filePath);
+        const repoPath = path.join(projectConfig.docsDir, filePath);
 
         let markdown = '';
         try {
