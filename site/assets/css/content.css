@@ -442,6 +442,41 @@
     line-height: 1.5;
 }
 
+/* Front Matter 源代码展示 */
+.source-code-section {
+    margin-top: 24px;
+}
+
+.source-code-section details {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--bg-secondary);
+    padding: 10px 12px;
+}
+
+.source-code-section summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.source-code-toolbar {
+    margin: 10px 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.source-code-error {
+    margin: 8px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-content);
+    color: var(--text-secondary);
+}
+
 .markdown-content hr {
     border: none;
     height: 2px;

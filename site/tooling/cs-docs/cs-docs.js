@@ -4,11 +4,9 @@ const path = require('path');
 const ATTRIBUTE_MAP = {
     Title: 'title',
     Tooltip: 'description',
-    UpdateTime: 'last_updated',
     Author: 'author',
     Category: 'category',
     Topic: 'topic',
-    Date: 'date',
     Difficulty: 'difficulty',
     Time: 'time',
     Order: 'order',
@@ -161,16 +159,6 @@ function parseAttributeValue(attributeName, rawArgs) {
     }
 
     return text;
-}
-
-function normalizeDate(value) {
-    if (!value) return value;
-    const match = String(value).match(/(\d{4})\D(\d{1,2})\D(\d{1,2})/);
-    if (!match) return value;
-    const yyyy = match[1];
-    const mm = String(match[2]).padStart(2, '0');
-    const dd = String(match[3]).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
 }
 
 function extractAttributes(text) {
@@ -855,9 +843,6 @@ function parseCsDoc(sourceText, filePath = '') {
     Object.keys(attributes).forEach(key => {
         const mapped = ATTRIBUTE_MAP[key];
         let value = attributes[key];
-        if (mapped === 'last_updated') {
-            value = normalizeDate(value);
-        }
         metadata[mapped] = value;
     });
 
@@ -920,12 +905,10 @@ function generateMarkdown(parsed, sourcePath) {
         'author',
         'category',
         'topic',
-        'date',
         'difficulty',
         'time',
         'order',
         'tags',
-        'last_updated',
         'prev_chapter',
         'next_chapter',
         'hide'

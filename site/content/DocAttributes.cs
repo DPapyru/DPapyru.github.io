@@ -18,14 +18,6 @@ namespace ModDocProject {
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public sealed class UpdateTimeAttribute : Attribute {
-        public UpdateTimeAttribute(string value) {
-            Value = value;
-        }
-        public string Value { get; }
-    }
-
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public sealed class AuthorAttribute : Attribute {
         public AuthorAttribute(string value) {
             Value = value;
@@ -44,14 +36,6 @@ namespace ModDocProject {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public sealed class TopicAttribute : Attribute {
         public TopicAttribute(string value) {
-            Value = value;
-        }
-        public string Value { get; }
-    }
-
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public sealed class DateAttribute : Attribute {
-        public DateAttribute(string value) {
             Value = value;
         }
         public string Value { get; }

@@ -19,8 +19,7 @@
         'topic',
         'author',
         'difficulty',
-        'time',
-        'last_updated'
+        'time'
     ];
 
     function readU32(dv, offset) {

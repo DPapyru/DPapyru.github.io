@@ -3,7 +3,6 @@ title: 第一个物品
 description: 这是介绍
 category: 入门
 topic: mod-basics
-last_updated: 2026-01-28
 hide: true
 ---
 

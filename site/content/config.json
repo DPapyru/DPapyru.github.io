@@ -36,7 +36,6 @@
               "author": "小天使",
               "order": 1,
               "description": "写教程文章的统一规范（结构、站点特殊语法、发布流程）",
-              "last_updated": "2026-01-18",
               "time": "30分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -54,7 +53,6 @@
               "author": "小天使",
               "order": 2,
               "description": "本站 /site/pages/viewer.html 渲染器支持的 Markdown 扩展语法：引用展开、条件分流、题目与颜色标记",
-              "last_updated": "2026-01-20",
               "time": "12分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -72,7 +70,6 @@
               "author": "DPapyru",
               "order": 999,
               "description": "说明 ContentProjects.sln 的用途、包含项目与常见配置方式。",
-              "last_updated": "2026-01-28",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -90,7 +87,6 @@
               "author": "DPapyru",
               "order": 999,
               "description": "用 C# 编写可视化动画，并在构建时编译为 JS 以供浏览器运行",
-              "last_updated": "2026-01-27",
               "time": "10分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -141,7 +137,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -159,7 +154,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -177,7 +171,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -195,7 +188,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -213,7 +205,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -231,7 +222,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -249,7 +239,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -267,7 +256,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -285,7 +273,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -303,7 +290,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -321,7 +307,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -339,7 +324,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -357,7 +341,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -375,7 +358,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -393,7 +375,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -411,7 +392,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -429,7 +409,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -447,7 +426,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -465,7 +443,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -483,7 +460,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -501,7 +477,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -519,7 +494,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -537,7 +511,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -555,7 +528,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -573,7 +545,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -591,7 +562,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -609,7 +579,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -627,7 +596,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -645,7 +613,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -663,7 +630,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -681,7 +647,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -699,7 +664,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -717,7 +681,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -735,7 +698,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -753,7 +715,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -771,7 +732,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -789,7 +749,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -807,7 +766,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -825,7 +783,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -843,7 +800,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -861,7 +817,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -879,7 +834,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -897,7 +851,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -915,7 +868,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -933,7 +885,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -951,7 +902,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -969,7 +919,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -987,7 +936,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1005,7 +953,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1023,7 +970,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1041,7 +987,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1059,7 +1004,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1077,7 +1021,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1095,7 +1038,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1113,7 +1055,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1131,7 +1072,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1149,7 +1089,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1167,7 +1106,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1185,7 +1123,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1203,7 +1140,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1221,7 +1157,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1239,7 +1174,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1257,7 +1191,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1275,7 +1208,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1293,7 +1225,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1311,7 +1242,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1329,7 +1259,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1347,7 +1276,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1365,7 +1293,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1383,7 +1310,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1401,7 +1327,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1419,7 +1344,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1437,7 +1361,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1455,7 +1378,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1473,7 +1395,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1491,7 +1412,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1509,7 +1429,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1527,7 +1446,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1545,7 +1463,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1563,7 +1480,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1581,7 +1497,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1599,7 +1514,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1617,7 +1531,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1635,7 +1548,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1653,7 +1565,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1671,7 +1582,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1689,7 +1599,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1707,7 +1616,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1725,7 +1633,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1743,7 +1650,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1761,7 +1667,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1779,7 +1684,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1797,7 +1701,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1815,7 +1718,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1833,7 +1735,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1851,7 +1752,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1869,7 +1769,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1887,7 +1786,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1905,7 +1803,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1923,7 +1820,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1941,7 +1837,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1959,7 +1854,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1977,7 +1871,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -1995,7 +1888,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2013,7 +1905,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2031,7 +1922,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2049,7 +1939,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2067,7 +1956,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2085,7 +1973,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2103,7 +1990,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2121,7 +2007,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2139,7 +2024,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2157,7 +2041,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2175,7 +2058,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2193,7 +2075,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2211,7 +2092,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2229,7 +2109,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2247,7 +2126,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2265,7 +2143,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2283,7 +2160,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2301,7 +2177,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2319,7 +2194,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2337,7 +2211,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2355,7 +2228,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2373,7 +2245,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2391,7 +2262,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2409,7 +2279,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2427,7 +2296,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2445,7 +2313,6 @@
               "author": "错数螺线",
               "order": 1,
               "description": "错数螺线翻译",
-              "last_updated": "2017-9-18",
               "time": "不具体",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2486,7 +2353,6 @@
               "author": "风凌",
               "order": 5,
               "description": "观前须知",
-              "last_updated": "2026-1-17",
               "time": "1分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2506,7 +2372,6 @@
               "author": "风凌",
               "order": 10,
               "description": "介绍游戏逻辑与绘制更新",
-              "last_updated": "2026-1-16",
               "time": "5分钟",
               "difficulty": "beginner",
               "prev_chapter": "../前言.md",
@@ -2526,7 +2391,6 @@
               "author": "风凌",
               "order": 20,
               "description": "介绍泰拉瑞亚以及模组制作中的对象池思想",
-              "last_updated": "2026-1-16",
               "time": "5分钟",
               "difficulty": "beginner",
               "prev_chapter": "世界观.md",
@@ -2546,7 +2410,6 @@
               "author": "风凌",
               "order": 30,
               "description": "介绍泰拉瑞亚中的物品运作机理",
-              "last_updated": "2026-1-16",
               "time": "5分钟",
               "difficulty": "beginner",
               "prev_chapter": "对象池思想.md",
@@ -2578,7 +2441,6 @@
               "author": "DPapyru",
               "order": 999,
               "description": "理解 AI Agent 的能力、适用场景、前提条件、最佳实践",
-              "last_updated": "2026-01-30",
               "time": "25分钟",
               "difficulty": "advanced",
               "prev_chapter": "DPapyru-如何用好AI.md",
@@ -2596,7 +2458,6 @@
               "author": "DPapyru",
               "order": 999,
               "description": "写出清晰完整的问题描述，提高获得有效回复的概率",
-              "last_updated": "2026-01-30",
               "time": "15分钟",
               "difficulty": "beginner",
               "prev_chapter": "DPapyru-学会搜索自己需要的内容.md",
@@ -2614,7 +2475,6 @@
               "author": "DPapyru",
               "order": 999,
               "description": "理解 AI 的能力边界，写好 Prompt，验证输出正确性",
-              "last_updated": "2026-01-30",
               "time": "20分钟",
               "difficulty": "intermediate",
               "prev_chapter": "DPapyru-如何提问.md",
@@ -2632,7 +2492,6 @@
               "author": "DPapyru",
               "order": 999,
               "description": "提炼关键词、找可靠信息源、快速找到解决方案",
-              "last_updated": "2026-01-30",
               "time": "15分钟",
               "difficulty": "beginner",
               "prev_chapter": "DPapyru-掌握编程的逻辑和思想.md",
@@ -2650,7 +2509,6 @@
               "author": "DPapyru",
               "order": 999,
               "description": "理解编程思维的核心：分解问题、抽象模式、模块化组织",
-              "last_updated": "2026-01-30",
               "time": "20分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -2673,16 +2531,15 @@
           "description": "Mod开发的基础概念和核心API",
           "files": [
             {
-              "filename": "CSharp_Frist.generated.md",
-              "path": "Modder入门学习/CSharp基础/CSharp_Frist.generated.md",
-              "originalPath": "Modder入门学习/CSharp基础/CSharp_Frist.generated.md",
-              "title": "C#基础教程-第一课-C#语法基础",
+              "filename": "CSharp入门.md",
+              "path": "Modder入门学习/CSharp基础/CSharp入门.md",
+              "originalPath": "Modder入门学习/CSharp基础/CSharp入门.md",
+              "title": "CSharp入门",
               "author": "小天使",
-              "order": 1,
-              "description": "C#基础第一课，用于学习C#的基础语法知识",
-              "last_updated": "2026-02-02",
-              "time": "30分钟",
-              "difficulty": "Beginner",
+              "order": 999,
+              "description": "面向 tModLoader 新人的 C# 最小入门：语法、类型、控制流与常用写法",
+              "time": "60分钟",
+              "difficulty": "简单",
               "prev_chapter": null,
               "next_chapter": null,
               "min_c": null,
@@ -2809,7 +2666,7 @@
     "小天使": {
       "name": "小天使",
       "files": [
-        "CSharp_Frist.generated.md",
+        "CSharp入门.md",
         "教学文章写作指南.md",
         "站点Markdown扩展语法说明.md"
       ]
@@ -3006,8 +2863,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2026-01-18"
+      "colorChange": null
     },
     {
       "filename": "0-Home 主页.md",
@@ -3025,8 +2881,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "1-tModLoader-guide-for-players tModLoader玩家指引.md",
@@ -3044,8 +2899,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "10-Developing-on-Mac-or-Linux 在Mac或Linux上开发模组.md",
@@ -3063,8 +2917,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "11-Useful-Resources 实用资源.md",
@@ -3082,8 +2935,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "2-tModLoader-guide-for-developers tModLoader开发者指引.md",
@@ -3101,8 +2953,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "3-tModLoader-guide-for-contributors tModLoader贡献者指引.md",
@@ -3120,8 +2971,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "4-Why-Use-an-IDE 为什么使用IDE开发.md",
@@ -3139,8 +2989,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "5-Learn-How-To-Debug 学习如何调试.md",
@@ -3158,8 +3007,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "6-Developing-with-Visual-Studio 使用VisualStudio开发.md",
@@ -3177,8 +3025,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "7-Developing-with-Visual-Studio-Code 使用VisualStudioCode开发.md",
@@ -3196,8 +3043,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "8-Developing-with-Rider 使用Rider开发.md",
@@ -3215,8 +3061,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "9-Developing-with-Notepad-Plus-Plus 使用Notepad++开发.md",
@@ -3234,8 +3079,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Developing-on-Mac-or-Linux 在Mac或Linux上开发模组.md",
@@ -3253,8 +3097,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Developing-with-Notepad-Plus-Plus 使用Notepad++开发.md",
@@ -3272,8 +3115,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Developing-with-Rider 使用Rider开发.md",
@@ -3291,8 +3133,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Developing-with-Visual-Studio 使用VisualStudio开发.md",
@@ -3310,8 +3151,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Developing-with-Visual-Studio-Code 使用VisualStudioCode开发.md",
@@ -3329,8 +3169,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Home 主页.md",
@@ -3348,8 +3187,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Learn-How-To-Debug 学习如何调试.md",
@@ -3367,8 +3205,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "tModLoader-guide-for-contributors tModLoader贡献者指引.md",
@@ -3386,8 +3223,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "tModLoader-guide-for-developers tModLoader开发者指引.md",
@@ -3405,8 +3241,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "tModLoader-guide-for-players tModLoader玩家指引.md",
@@ -3424,8 +3259,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Useful-Resources 实用资源.md",
@@ -3443,8 +3277,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Why-Use-an-IDE 为什么使用IDE开发.md",
@@ -3462,8 +3295,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "0-Basic-Prerequisites 基础-先决条件.md",
@@ -3481,8 +3313,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "1-Basic-Item 基础-物品.md",
@@ -3500,8 +3331,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "10-Basic-NPC-Spawning 基础-NPC生成.md",
@@ -3519,8 +3349,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "11-Basic-Tile 基础-物块.md",
@@ -3538,8 +3367,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "12-Basic-Tile-Entity 基础-物块实体.md",
@@ -3557,8 +3385,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "13-Basic-Sounds 基础-音效.md",
@@ -3576,8 +3403,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "14-Basic-UI-Element 基础-UI元素.md",
@@ -3595,8 +3421,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "15-Basic-glowmask-guide 基础-高亮层指引.md",
@@ -3614,8 +3439,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "16-Basic-JSON-&-ModConfigs 基础-JSON文件和模组配置.md",
@@ -3633,8 +3457,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "17-Basic-Netcode 基础-联机同步.md",
@@ -3652,8 +3475,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "2-Basic-Recipes 基础-合成表.md",
@@ -3671,8 +3493,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "3-Basic-Autoload 基础-自动加载.md",
@@ -3690,8 +3511,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "4-Basic-Ammo 基础-弹药.md",
@@ -3709,8 +3529,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "5-Basic-Projectile 基础-弹幕.md",
@@ -3728,8 +3547,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "6-Basic-Minion-Guide 基础-召唤物指引.md",
@@ -3747,8 +3565,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "7-Basic-Dust 基础-粒子效果.md",
@@ -3766,8 +3583,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "8-Basic-NPC 基础-NPC.md",
@@ -3785,8 +3601,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "9-Basic-NPC-Drops-and-Loot 基础-NPC掉落与掉落物.md",
@@ -3804,8 +3619,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "9-Basic-NPC-Drops-and-Loot-1.4 基础-NPC掉落与掉落物-1.4.md",
@@ -3823,8 +3637,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "EX0-Basic-tModLoader-Usage-Guide 基础-tModLoader用法指引.md",
@@ -3842,8 +3655,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "EX1-Basic-tModLoader-Usage-FAQ 基础-tModLoader用法常见问题.md",
@@ -3861,8 +3673,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "EX2-Basic-tModLoader-Modding-Guide 基础-模组开发指引.md",
@@ -3880,8 +3691,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "EX3-Basic-tModLoader-Modding-FAQ 基础-模组开发常见问题.md",
@@ -3899,8 +3709,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "0-Intermediate-Prerequisites 中阶-先决条件.md",
@@ -3918,8 +3727,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "1-Intermediate-Recipes 中阶-合成表.md",
@@ -3937,8 +3745,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "2-Intermediate-Guide-to-AI 中阶-AI编写指引.md",
@@ -3956,8 +3763,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "3-Intermediate-netcode 中阶-联机同步.md",
@@ -3975,8 +3781,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "4-Intermediate-Git-&-mod-management 中阶-Git&模组管理.md",
@@ -3994,8 +3799,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "5-Intermediate-modding-with-C#6 中阶-使用C#6开发模组.md",
@@ -4013,8 +3817,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "6-Intermediate-modding-with-C#7 中阶-使用C#7开发模组.md",
@@ -4032,8 +3835,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "0-Advanced-Prerequisites 高阶-先决条件.md",
@@ -4051,8 +3853,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "1-Advanced-Vanilla-Code-Adaption 高阶-源码参考.md",
@@ -4070,8 +3871,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "2-Advanced-Angular-velocity-and-Linear-velocity 高阶-角速度和速度.md",
@@ -4089,8 +3889,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "3-Advanced-guide-to-custom-UI 高阶-自定义UI.md",
@@ -4108,8 +3907,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "4-Advanced-Detouring-Guide 高阶-函数重定向指引.md",
@@ -4127,8 +3925,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "0-Expert-Prerequisites 专家-先决条件.md",
@@ -4146,8 +3943,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "1-Expert-Cross-Mod-Content 专家-跨模组内容.md",
@@ -4165,8 +3961,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "2-Expert-Shader-Guide 专家-着色器指引.md",
@@ -4184,8 +3979,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "3-Expert-IL-Editing 专家-IL编辑.md",
@@ -4203,8 +3997,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": ".tmod-File-format .tmod文件格式.md",
@@ -4222,8 +4015,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "build.txt build.txt文件.md",
@@ -4241,8 +4033,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "description.txt description.txt文件.md",
@@ -4260,8 +4051,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Mod-Loading-Steps 模组加载顺序.md",
@@ -4279,8 +4069,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Terraria.Player.Update()-Execution-Order Player更新函数执行顺序.md",
@@ -4298,8 +4087,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Useful-Vanilla-Fields 实用原版字段.md",
@@ -4317,8 +4105,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Useful-Vanilla-Methods 实用原版函数.md",
@@ -4336,8 +4123,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-Ammo-IDs 原版-弹药ID表.md",
@@ -4355,8 +4141,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-Class-Changes 原版-类改动.md",
@@ -4374,8 +4159,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-Content-IDs 原版-内容ID表.md",
@@ -4393,8 +4177,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-Interface-layers-values 原版-UI界面层.md",
@@ -4412,8 +4195,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-Item-Field-Values 原版-物品字段值.md",
@@ -4431,8 +4213,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-Item-Sorting-Priorities 原版-物品排序优先级.md",
@@ -4450,8 +4231,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-NPC-Field-Values 原版-NPC字段值.md",
@@ -4469,8 +4249,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-Projectile-AIs 原版-弹幕AI.md",
@@ -4488,8 +4267,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-Projectile-Field-Values 原版-弹幕字段值.md",
@@ -4507,8 +4285,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-Tile-IDs 原版-物块ID表.md",
@@ -4526,8 +4303,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Vanilla-World-Generation-Steps 原版-世界生成顺序.md",
@@ -4545,8 +4321,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Item-Class-Documentation Item类 文档.md",
@@ -4564,8 +4339,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "NetMessage-Class-Documentation NetMessage类 文档.md",
@@ -4583,8 +4357,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "NPC-Class-Documentation NPC类 文档.md",
@@ -4602,8 +4375,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Projectile-Class-Documentation 弹幕类 文档.md",
@@ -4621,8 +4393,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Tile-Class-Documentation Tile类 文档.md",
@@ -4640,8 +4411,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Wall 墙.md",
@@ -4659,8 +4429,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Workshop 创意工坊.md",
@@ -4678,8 +4447,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "World-Generation 世界生成.md",
@@ -4697,8 +4465,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "BannerToNPC-Conversions 旗帜ID转NPCID.md",
@@ -4716,8 +4483,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Bestiary-Stars 图鉴-星标.md",
@@ -4735,8 +4501,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Command-Line 命令行.md",
@@ -4754,8 +4519,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Contributing-Localization 贡献-本地化.md",
@@ -4773,8 +4537,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Contributing-to-tModPorter 向tModPorter贡献代码.md",
@@ -4792,8 +4555,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Debugging-Multiplayer-Usage-Issues 多人模式常见问题.md",
@@ -4811,8 +4573,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Detouring-and-IL-Editing-using-HookEndpointManager 函数重定向与IL编辑-使用HookEndpointManager.md",
@@ -4830,8 +4591,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Fixing-Mod-Not-Fully-Unloaded 修复模组未完全卸载问题.md",
@@ -4849,8 +4609,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "JIT-Exception JIT异常.md",
@@ -4868,8 +4627,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Localization 本地化.md",
@@ -4887,8 +4645,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Mod-Browser 模组浏览器.md",
@@ -4906,8 +4663,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "ModPlayer ModPlayer类.md",
@@ -4925,8 +4681,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "MountDataParameters 坐骑信息参数.md",
@@ -4944,8 +4699,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Named-ID-Sets ID设置信息.md",
@@ -4963,8 +4717,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Open-Source-Mods 开源模组.md",
@@ -4982,8 +4735,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Patching-Other-Mods-Using-MonoMod 使用MonoMod给其它模组制作补丁.md",
@@ -5001,8 +4753,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Player-Item-Animation 玩家物品动画.md",
@@ -5020,8 +4771,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Saving-and-loading-using-TagCompound 使用TagCompound保存和加载.md",
@@ -5039,8 +4789,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Starting-a-modded-server 启动一个模组服务器.md",
@@ -5058,8 +4807,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "The-tModLoader-development-pipeline tModLoader开发管线.md",
@@ -5077,8 +4825,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Time-and-Timers 时间和计时器.md",
@@ -5096,8 +4843,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "tModCodeAssist tMod代码分析器.md",
@@ -5115,8 +4861,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "tModLoader-Release-Cycle tModLoader发布循环.md",
@@ -5134,8 +4879,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "tModLoader-Save-Data-Migration-Tracker tModLoader存档数据迁移.md",
@@ -5153,8 +4897,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "tModLoader-Style-Guide tModLoader代码风格指引.md",
@@ -5172,8 +4915,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Update-Migration-Guide 更新迁移指引.md",
@@ -5191,8 +4933,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Update-Migration-Guide-Previous-Versions 更新迁移指引 先前版本.md",
@@ -5210,8 +4951,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Visual-Studio-Snippets VisualStudio代码片段.md",
@@ -5229,8 +4969,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "zh‐Localization‐本地化.md",
@@ -5248,8 +4987,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Armor-Texture-Migration-Guide 盔甲贴图迁移指南.md",
@@ -5267,8 +5005,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Assets 资源文件.md",
@@ -5286,8 +5023,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Conditions 条件.md",
@@ -5305,8 +5041,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Coordinates 坐标系.md",
@@ -5324,8 +5059,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Geometry 几何.md",
@@ -5343,8 +5077,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "IEntitySource 生成源信息.md",
@@ -5362,8 +5095,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Licensing-information 许可证信息.md",
@@ -5381,8 +5113,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Logging 日志信息.md",
@@ -5400,8 +5131,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Polymorphism 多态.md",
@@ -5419,8 +5149,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Reflection 反射.md",
@@ -5438,8 +5167,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "Spriting 精灵图.md",
@@ -5457,8 +5185,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2017-9-18"
+      "colorChange": null
     },
     {
       "filename": "站点Markdown扩展语法说明.md",
@@ -5476,8 +5203,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2026-01-20"
+      "colorChange": null
     },
     {
       "filename": "前言.md",
@@ -5497,8 +5223,7 @@
       "colors": {
         "Mad": "#f00"
       },
-      "colorChange": null,
-      "last_updated": "2026-1-17"
+      "colorChange": null
     },
     {
       "filename": "世界观.md",
@@ -5518,8 +5243,7 @@
       "colors": {
         "Mad": "#f00"
       },
-      "colorChange": null,
-      "last_updated": "2026-1-16"
+      "colorChange": null
     },
     {
       "filename": "对象池思想.md",
@@ -5539,8 +5263,7 @@
       "colors": {
         "Mad": "#f00"
       },
-      "colorChange": null,
-      "last_updated": "2026-1-16"
+      "colorChange": null
     },
     {
       "filename": "物品原理.md",
@@ -5560,8 +5283,25 @@
       "colors": {
         "Mad": "#f00"
       },
-      "colorChange": null,
-      "last_updated": "2026-1-16"
+      "colorChange": null
+    },
+    {
+      "filename": "CSharp入门.md",
+      "path": "Modder入门学习/CSharp基础/CSharp入门.md",
+      "originalPath": "Modder入门学习/CSharp基础/CSharp入门.md",
+      "title": "CSharp入门",
+      "author": "小天使",
+      "category": "Modder入门学习",
+      "topic": "mod-basics",
+      "order": 999,
+      "time": "60分钟",
+      "difficulty": "简单",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null
     },
     {
       "filename": "ContentProjects解决方案说明.md",
@@ -5579,8 +5319,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2026-01-28"
+      "colorChange": null
     },
     {
       "filename": "使用网页特殊动画模块.md",
@@ -5598,8 +5337,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2026-01-27"
+      "colorChange": null
     },
     {
       "filename": "DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md",
@@ -5617,8 +5355,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2026-01-30"
+      "colorChange": null
     },
     {
       "filename": "DPapyru-如何提问.md",
@@ -5636,8 +5373,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2026-01-30"
+      "colorChange": null
     },
     {
       "filename": "DPapyru-如何用好AI.md",
@@ -5655,8 +5391,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2026-01-30"
+      "colorChange": null
     },
     {
       "filename": "DPapyru-学会搜索自己需要的内容.md",
@@ -5674,8 +5409,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2026-01-30"
+      "colorChange": null
     },
     {
       "filename": "DPapyru-掌握编程的逻辑和思想.md",
@@ -5693,8 +5427,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2026-01-30"
+      "colorChange": null
     }
   ],
   "settings": {
@@ -5702,7 +5435,6 @@
     "defaultTopic": "mod-basics",
     "pathMappings": {},
     "customFields": [
-      "last_updated",
       "time",
       "prev_chapter",
       "next_chapter",
@@ -5715,19 +5447,18 @@
       "optionalFields": [
         "author",
         "description",
-        "date",
         "difficulty",
         "order",
         "category",
         "topic",
-        "last_updated",
         "time",
         "prev_chapter",
         "next_chapter",
         "colorChange",
         "colors",
         "min_c",
-        "min_t"
+        "min_t",
+        "source_cs"
       ]
     }
   }

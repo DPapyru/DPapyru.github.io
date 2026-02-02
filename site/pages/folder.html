@@ -2016,17 +2016,16 @@
             });
         }
 
-        function renderDocItem(doc, depth) {
-            const item = document.createElement('div');
-            item.className = 'doc-tree-file';
-            item.style.paddingLeft = `${TREE_BASE_PADDING + depth * TREE_INDENT}px`;
+	    function renderDocItem(doc, depth) {
+	        const item = document.createElement('div');
+	        item.className = 'doc-tree-file';
+	        item.style.paddingLeft = `${TREE_BASE_PADDING + depth * TREE_INDENT}px`;
 
-            const difficultyText = getDifficultyText(doc.difficulty);
-            const meta = [
-                `作者: ${escapeHtml(doc.author || '未知')}`,
-                `更新: ${escapeHtml(doc.last_updated || '未知')}`,
-                `难度: ${escapeHtml(difficultyText)}`
-            ].join(' · ');
+	        const difficultyText = getDifficultyText(doc.difficulty);
+	        const meta = [
+	            `作者: ${escapeHtml(doc.author || '未知')}`,
+	            `难度: ${escapeHtml(difficultyText)}`
+	        ].join(' · ');
 
             item.innerHTML = `
                 <a class="doc-tree-file-link" href="/site/pages/viewer.html?file=${encodeURIComponent(doc.path)}">${escapeHtml(doc.title || doc.filename || '未命名')}</a>

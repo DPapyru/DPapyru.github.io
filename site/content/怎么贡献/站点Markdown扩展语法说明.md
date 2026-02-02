@@ -225,7 +225,48 @@ anims/demo-basic.cs
 
 更多示例与写法请看：`site/content/怎么贡献/使用网页特殊动画模块.md`。
 
-## 4）颜色标记（color）
+---
+
+## 5）Front Matter：显示 C# 源码（source_cs）
+
+用途：在 `viewer.html` 的正文末尾追加一个“源代码”折叠区，展示指定的 `*.cs` 文件内容并进行 C# 高亮。
+
+写法：在 YAML front matter 里添加 `source_cs`（也兼容 `source_code` / `cs_source`）：
+
+```yaml
+---
+title: 示例：显示源码
+source_cs: Modder入门学习/CSharp基础/CSharp变量与表达式.cs
+---
+```
+
+说明：
+
+- 路径相对 `site/content/`；也可以写相对当前文章的相对路径（例如 `./Foo.cs`）。
+- 仅允许 `*.cs`，且会拒绝包含 `..`、反斜杠、协议链接等不安全写法。
+
+### 5.1）正文引用：抽取 C# 片段（#cs:...）
+
+用途：在正文中引用某个 `*.cs` 文件的“部分内容”，并渲染为 C# 代码块。
+
+写法：沿用引用语法 `{[path][title]}`，但在 `path` 后追加 `#cs:...` 选择器。
+
+示例：
+
+```text
+{[./CSharp入门.cs#cs:m:Tutorial.CSharpIntro.CSharpIntroExamples.Add(int,int)][Add 方法]}
+{[./CSharp入门.cs#cs:t:Tutorial.CSharpIntro.PlayerData][PlayerData 类]}
+```
+
+说明：
+
+- `#cs:m:` 方法，格式：`<FullType>.<Method>(<sig>)`。
+- `#cs:t:` 类型（class/struct/enum/interface/record），格式：`<FullType>`。
+- `#cs:p/#cs:f/#cs:c/#cs:e` 分别对应属性/字段/常量/枚举成员。
+- 方法必须写全限定类型名，并携带签名；签名匹配时会忽略空格。
+- 如果不写 `#cs:...`，则会把整个 `*.cs` 文件作为代码块插入。
+
+## 6）颜色标记（color）
 
 如果你在 Front Matter 里配置了：
 
@@ -245,7 +286,7 @@ colors:
 
 ---
 
-## 5）Front Matter：建议门槛（min_c / min_t）
+## 7）Front Matter：建议门槛（min_c / min_t）
 
 你可以在 YAML front matter 里为文章标注“建议阅读门槛”（软建议，不影响阅读）：
 
@@ -258,7 +299,7 @@ min_t: 1
 
 ---
 
-## 6）作者模式（author）
+## 8）作者模式（author）
 
 作者模式用于贡献者自查，不影响读者。
 

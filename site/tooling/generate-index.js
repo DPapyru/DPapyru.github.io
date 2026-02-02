@@ -175,10 +175,10 @@ class ConfigManager {
                 defaultCategory: '资源参考',
                 defaultTopic: 'mod-basics',
                 pathMappings: {},
-                customFields: ['last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange', 'min_c', 'min_t'],
+                customFields: ['time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange', 'min_c', 'min_t'],
                 validationRules: {
                     requiredFields: ['title'],
-                    optionalFields: ['author', 'description', 'date', 'difficulty', 'order', 'topic', 'last_updated', 'time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange', 'min_c', 'min_t']
+                    optionalFields: ['author', 'description', 'difficulty', 'order', 'topic', 'time', 'prev_chapter', 'next_chapter', 'source_cs', 'colors', 'colorChange', 'min_c', 'min_t']
                 }
             }
         };
@@ -268,6 +268,7 @@ class ConfigManager {
         if (Array.isArray(this.config.settings.customFields)) {
             this.config.settings.customFields = this.config.settings.customFields.filter(f => f !== 'tags');
             this.config.settings.customFields = this.config.settings.customFields.filter(f => f !== 'colorLD');
+            this.config.settings.customFields = this.config.settings.customFields.filter(f => f !== 'date');
         }
         if (this.config.settings.validationRules &&
             Array.isArray(this.config.settings.validationRules.optionalFields)) {
@@ -275,6 +276,8 @@ class ConfigManager {
                 this.config.settings.validationRules.optionalFields.filter(f => f !== 'tags');
             this.config.settings.validationRules.optionalFields =
                 this.config.settings.validationRules.optionalFields.filter(f => f !== 'colorLD');
+            this.config.settings.validationRules.optionalFields =
+                this.config.settings.validationRules.optionalFields.filter(f => f !== 'date');
         }
 
         // 合并默认分类
@@ -707,8 +710,7 @@ function generateSearchIndex(config) {
             topic: doc.topic || '',
             author: doc.author || '',
             difficulty: doc.difficulty || '',
-            time: doc.time || '',
-            last_updated: doc.last_updated || ''
+            time: doc.time || ''
         });
     }
 
@@ -721,8 +723,7 @@ function generateSearchIndex(config) {
         'topic',
         'author',
         'difficulty',
-        'time',
-        'last_updated'
+        'time'
     ];
 
     const stringToIndex = new Map();
@@ -1140,7 +1141,6 @@ function generateGuidedSemanticIndex(config) {
                 author: doc.author || '',
                 difficulty: doc.difficulty || '',
                 time: doc.time || '',
-                last_updated: doc.last_updated || '',
                 sectionId,
                 heading: currentHeading,
                 stage,
@@ -1462,7 +1462,6 @@ function generateBm25Index(config) {
                 topic,
                 author: doc.author || '',
                 difficulty: doc.difficulty || '',
-                last_updated: doc.last_updated || '',
                 sectionId,
                 heading: currentHeading,
                 stage,
@@ -1715,7 +1714,6 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
             author: metadata.author || '未知',
             order: parseOrder(metadata.order),
             description: metadata.description || '无描述',
-            last_updated: metadata.last_updated || metadata.date || '2017-9-18',
             // 添加新的自定义字段
             time: metadata.time || '不具体',
             difficulty: metadata.difficulty || 'beginner',
@@ -1761,8 +1759,7 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
             min_c: (typeof metadata.min_c === 'number' ? metadata.min_c : null),
             min_t: (typeof metadata.min_t === 'number' ? metadata.min_t : null),
             colors: metadata.colors || metadata.colorLD || null,
-            colorChange: metadata.colorChange || null,
-            last_updated: metadata.last_updated || metadata.date || '2017-9-18'
+            colorChange: metadata.colorChange || null
         });
 
         // 更新作者信息
