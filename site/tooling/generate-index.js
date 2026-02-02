@@ -2132,25 +2132,6 @@ function validateMetadata(metadata, configManager) {
         });
     }
 
-    // 检查可选字段
-    if (validationRules && validationRules.optionalFields) {
-        Object.keys(metadata).forEach(field => {
-            if (!validationRules.requiredFields.includes(field) &&
-                !validationRules.optionalFields.includes(field) &&
-                !settings.customFields.includes(field)) {
-                warnings.push(`未知字段: ${field}`);
-            }
-        });
-    }
-
-    // 验证主题
-    if (metadata.topic) {
-        const topicKey = configManager.findTopicByAlias(metadata.topic) || metadata.topic;
-        if (!configManager.getTopics()[topicKey]) {
-            warnings.push(`未知主题: ${metadata.topic}，将使用默认主题`);
-        }
-    }
-
     return { errors, warnings };
 }
 
