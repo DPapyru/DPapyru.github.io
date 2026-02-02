@@ -4,7 +4,6 @@ author: DPapyru
 category: 怎么贡献
 topic: article-contribution
 description: 说明 ContentProjects.sln 的用途、包含项目与常见配置方式。
-last_updated: 2026-01-28
 ---
 
 ## 目的

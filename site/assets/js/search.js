@@ -355,7 +355,6 @@ class TutorialSearch {
                     difficulty: doc.difficulty || '未知',
                     time: doc.time || '未知',
                     author: doc.author || '未知',
-                    date: doc.last_updated || '未知',
                     filePath: `site/content/${relativePath}`
                 };
             });

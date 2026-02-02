@@ -163,12 +163,11 @@
 	                    </div>
                     <!-- 文档标题 -->
                     <h1 class="tutorial-title" id="doc-title">文档</h1>
-                    <!-- 文档元信息：难度、时间、作者、更新日期 -->
+                    <!-- 文档元信息：难度、时间、作者 -->
                     <div class="tutorial-meta" id="doc-meta">
                         <span class="difficulty">难度: <span class="difficulty-badge" id="doc-difficulty">未知</span></span>
                         <span class="time">预计时间: <span id="doc-time">未知</span></span>
                         <span class="author">作者: <span id="doc-author">未知</span></span>
-                        <span class="date">更新日期: <span id="doc-date">未知</span></span>
                     </div>
                     <!-- 学习偏好/门槛提示（不拦截阅读） -->
                     <div class="learning-hints" id="learning-hints" aria-live="polite">
@@ -198,11 +197,16 @@
                         <ul id="toc-list"></ul>
                     </nav>
 
-		                    <!-- Markdown内容容器：渲染后的HTML内容将插入这里 -->
-		                    <div id="markdown-content" class="markdown-content" style="display: none;">
-		                        <!-- 文档内容将通过Markdown渲染后插入这里 -->
-		                    </div>
-		                </div>
+	                    <!-- Markdown内容容器：渲染后的HTML内容将插入这里 -->
+	                    <div id="markdown-content" class="markdown-content" style="display: none;">
+	                        <!-- 文档内容将通过Markdown渲染后插入这里 -->
+	                    </div>
+
+	                    <!-- 源代码展示（可选：由 Markdown Front Matter 指定，可多文件） -->
+	                    <section id="source-code-section" class="source-code-section" style="display: none;" aria-label="源代码" aria-hidden="true">
+	                        <div id="source-code-list"></div>
+	                    </section>
+	                </div>
 
 		                <!-- 作者模式诊断（仅作者/贡献者可用，不影响读者） -->
 		                <section class="learning-author-diagnostics" id="learning-author-diagnostics" aria-label="作者模式诊断" style="display:none;">
@@ -577,7 +581,7 @@
 		                    window.mermaid.init(undefined, nodes);
 		                }
 
-		                nodes.forEach((node) => postProcessMermaidSvg(node));
+	                nodes.forEach((node) => { postProcessMermaidSvg(node); });
 		            } catch (error) {
 		                console.warn('流程图渲染失败:', error);
 		            }
@@ -704,40 +708,40 @@
 			            }
 			        }
 
-		        async function initializeMarkedRender() {
-		            console.log('初始化MD渲染器...');
+	        async function initializeMarkedRender() {
+	            console.log('初始化MD渲染器...');
+
+	            const escapeHtml = function (text) {
+	                return String(text)
+	                    .replace(/&/g, '&amp;')
+	                    .replace(/</g, '&lt;')
+	                    .replace(/>/g, '&gt;')
+	                    .replace(/"/g, '&quot;')
+	                    .replace(/'/g, '&#39;');
+	            };
+
+	            const normalizeMarkedArgs = function (href, title, text) {
+	                if (href && typeof href === 'object') {
+	                    return {
+	                        href: href.href,
+	                        title: href.title,
+	                        text: href.text || href.raw || ''
+	                    };
+	                }
+	                return { href, title, text };
+	            };
+
+	            const isSafeUrl = function (href) {
+	                if (!href) return true;
+	                const trimmed = String(href).trim().toLowerCase();
+	                return !(
+	                    trimmed.startsWith('javascript:') ||
+	                    trimmed.startsWith('data:') ||
+	                    trimmed.startsWith('vbscript:')
+	                );
+	            };
 
 	            try {
-	                function escapeHtml(text) {
-	                    return String(text)
-	                        .replace(/&/g, '&amp;')
-	                        .replace(/</g, '&lt;')
-	                        .replace(/>/g, '&gt;')
-	                        .replace(/"/g, '&quot;')
-	                        .replace(/'/g, '&#39;');
-	                }
-
-	                function normalizeMarkedArgs(href, title, text) {
-	                    if (href && typeof href === 'object') {
-	                        return {
-	                            href: href.href,
-	                            title: href.title,
-	                            text: href.text || href.raw || ''
-	                        };
-	                    }
-	                    return { href, title, text };
-	                }
-
-	                function isSafeUrl(href) {
-	                    if (!href) return true;
-	                    const trimmed = String(href).trim().toLowerCase();
-	                    return !(
-	                        trimmed.startsWith('javascript:') ||
-	                        trimmed.startsWith('data:') ||
-	                        trimmed.startsWith('vbscript:')
-	                    );
-	                }
-
 	                const renderer = (marked.Renderer && typeof marked.Renderer === 'function')
 	                    ? new marked.Renderer()
 	                    : null;
@@ -1212,16 +1216,15 @@
                                 console.log(`文档 ${filename} 的分类从 ${oldCategory} 映射到 ${category}`);
                             }
 
-		                            const docInfo = {
-		                                filename: filename,
-		                                title: metadata.title || filename.replace('.md', ''),
-		                                author: metadata.author || '未知',
-		                                category: category,
-		                                topic: metadata.topic || 'mod-basics',
-		                                order: parseOrder(metadata.order),
-		                                description: metadata.description || '',
-		                                last_updated: metadata.last_updated || '未知'
-		                            };
+	                            const docInfo = {
+	                                filename: filename,
+	                                title: metadata.title || filename.replace('.md', ''),
+	                                author: metadata.author || '未知',
+	                                category: category,
+	                                topic: metadata.topic || 'mod-basics',
+	                                order: parseOrder(metadata.order),
+	                                description: metadata.description || ''
+	                            };
 
                             ALL_DOCS.push(docInfo);
                             console.log('成功添加文档:', docInfo.title);
@@ -2948,7 +2951,714 @@
 	                });
 	                TRANSCLUSION_CACHE.set(key, p);
 	            }
-	            return await TRANSCLUSION_CACHE.get(key);
+	        	    return await TRANSCLUSION_CACHE.get(key);
+	        }
+
+	        function buildFencedCodeBlock(language, code) {
+	            const text = String(code || '');
+	            const lang = String(language || '').trim();
+	            const matches = text.match(/`+/g) || [];
+	            let longest = 0;
+	            matches.forEach(m => { if (m.length > longest) longest = m.length; });
+	            const fenceLen = Math.max(3, longest + 1);
+	            const fence = '`'.repeat(fenceLen);
+	            return `${fence}${lang ? lang : ''}\n${text.replace(/\r\n?/g, '\n')}\n${fence}`;
+	        }
+
+	        function dedentCodeBlockText(code) {
+	            const raw = String(code || '').replace(/\r\n?/g, '\n');
+	            const lines = raw.split('\n');
+	
+	            function countIndentCols(line) {
+	                let cols = 0;
+	                for (let i = 0; i < line.length; i++) {
+	                    const ch = line[i];
+	                    if (ch === ' ') cols += 1;
+	                    else if (ch === '\t') cols += 4;
+	                    else break;
+	                }
+	                return cols;
+	            }
+
+	            function removeIndentCols(line, colsToRemove) {
+	                let cols = colsToRemove;
+	                let i = 0;
+	                while (i < line.length && cols > 0) {
+	                    const ch = line[i];
+	                    if (ch === ' ') {
+	                        cols -= 1;
+	                        i += 1;
+	                        continue;
+	                    }
+	                    if (ch === '\t') {
+	                        cols -= 4;
+	                        i += 1;
+	                        continue;
+	                    }
+	                    break;
+	                }
+	                return line.slice(i);
+	            }
+
+	            let minIndent = Infinity;
+	            for (let i = 0; i < lines.length; i++) {
+	                const line = lines[i];
+	                if (!line || !line.trim()) continue;
+	                const indent = countIndentCols(line);
+	                if (indent < minIndent) minIndent = indent;
+	            }
+	
+	            if (!Number.isFinite(minIndent) || minIndent <= 0) return raw;
+	            for (let i = 0; i < lines.length; i++) {
+	                if (!lines[i] || !lines[i].trim()) continue;
+	                lines[i] = removeIndentCols(lines[i], minIndent);
+	            }
+	            return lines.join('\n');
+	        }
+
+	        function parseCSharpSnippetSelector(hashText) {
+	            const raw = String(hashText || '').trim();
+	            if (!raw || raw === '#') return null;
+	            const text = raw.startsWith('#') ? raw.slice(1) : raw;
+	            if (!text.startsWith('cs:')) return null;
+	            const rest = text.slice(3);
+	            const firstColon = rest.indexOf(':');
+	            if (firstColon < 0) return null;
+	            const kind = rest.slice(0, firstColon).trim();
+	            const selector = rest.slice(firstColon + 1).trim();
+	            if (!kind || !selector) return null;
+	            if (!/^[mtpfce]$/.test(kind)) return null;
+	            return { kind, selector };
+	        }
+
+	        function getCSharpFullTypeNameFromSelector(kind, selector) {
+	            const k = String(kind || '').trim();
+	            const s = String(selector || '').trim();
+	            if (!k || !s) return '';
+	            if (k === 't') return s;
+	            if (k === 'm') {
+	                const parenIndex = s.indexOf('(');
+	                if (parenIndex < 0) return '';
+	                const head = s.slice(0, parenIndex).trim();
+	                const dotIndex = head.lastIndexOf('.');
+	                if (dotIndex < 0) return '';
+	                return head.slice(0, dotIndex).trim();
+	            }
+	            const dotIndex = s.lastIndexOf('.');
+	            if (dotIndex < 0) return '';
+	            return s.slice(0, dotIndex).trim();
+	        }
+
+	        function normalizeSignatureTypesText(text) {
+	            return String(text || '').replace(/\s+/g, '');
+	        }
+
+	        function splitCSharpCommaList(text) {
+	            const s = String(text || '');
+	            const parts = [];
+	            let buf = '';
+	            let angle = 0;
+	            let bracket = 0;
+	            let paren = 0;
+	            for (let i = 0; i < s.length; i++) {
+	                const ch = s[i];
+	                if (ch === '<') angle += 1;
+	                else if (ch === '>') angle = Math.max(0, angle - 1);
+	                else if (ch === '[') bracket += 1;
+	                else if (ch === ']') bracket = Math.max(0, bracket - 1);
+	                else if (ch === '(') paren += 1;
+	                else if (ch === ')') paren = Math.max(0, paren - 1);
+	
+	                if (ch === ',' && angle === 0 && bracket === 0 && paren === 0) {
+	                    parts.push(buf);
+	                    buf = '';
+	                    continue;
+	                }
+	                buf += ch;
+	            }
+	            parts.push(buf);
+	            return parts;
+	        }
+
+	        function stripCSharpAttributes(text) {
+	            const s = String(text || '');
+	            let out = '';
+	            let depth = 0;
+	            for (let i = 0; i < s.length; i++) {
+	                const ch = s[i];
+	                if (ch === '[') {
+	                    depth += 1;
+	                } else if (ch === ']') {
+	                    depth = Math.max(0, depth - 1);
+	                } else if (depth === 0) {
+	                    out += ch;
+	                }
+	            }
+	            return out;
+	        }
+
+	        function normalizeCSharpParamTypeForSig(paramText) {
+	            let s = String(paramText || '');
+	            s = stripCSharpAttributes(s);
+	
+	            // drop default value
+	            const eqIndex = s.indexOf('=');
+	            if (eqIndex >= 0) s = s.slice(0, eqIndex);
+	
+	            s = s.trim();
+	            if (!s) return '';
+
+	            // drop common modifiers
+	            s = s.replace(/^\s*(this|ref|out|in|params|scoped)\b\s*/g, '');
+	            s = s.trim();
+	            if (!s) return '';
+
+	            // remove trailing parameter name (keep type only)
+	            // heuristic: if there's whitespace, last token is parameter name
+	            const m = s.match(/^(.*\S)\s+([A-Za-z_][A-Za-z0-9_]*)\s*$/);
+	            if (m) s = m[1];
+
+	            return normalizeSignatureTypesText(s);
+	        }
+
+	        function normalizeCSharpSignatureTypes(sigText) {
+	            const raw = String(sigText || '').trim();
+	            if (!raw) return [];
+	            return splitCSharpCommaList(raw)
+	                .map(p => normalizeCSharpParamTypeForSig(p))
+	                .filter(Boolean);
+	        }
+
+	        function buildCSharpCodeMask(sourceText) {
+	            const src = String(sourceText || '');
+	            const out = src.split('');
+	            let i = 0;
+	            let state = 'code';
+	            while (i < src.length) {
+	                const ch = src[i];
+	                const next = i + 1 < src.length ? src[i + 1] : '';
+	
+	                if (state === 'code') {
+	                    if (ch === '/' && next === '/') {
+	                        out[i] = ' ';
+	                        out[i + 1] = ' ';
+	                        i += 2;
+	                        state = 'line';
+	                        continue;
+	                    }
+	                    if (ch === '/' && next === '*') {
+	                        out[i] = ' ';
+	                        out[i + 1] = ' ';
+	                        i += 2;
+	                        state = 'block';
+	                        continue;
+	                    }
+	                    if (ch === '\'' ) {
+	                        out[i] = ' ';
+	                        i += 1;
+	                        state = 'char';
+	                        continue;
+	                    }
+	                    if (ch === '"') {
+	                        out[i] = ' ';
+	                        i += 1;
+	                        state = 'string';
+	                        continue;
+	                    }
+	                    if (ch === '@' && next === '"') {
+	                        out[i] = ' ';
+	                        out[i + 1] = ' ';
+	                        i += 2;
+	                        state = 'verbatim';
+	                        continue;
+	                    }
+	                    if (ch === '$' && next === '"') {
+	                        out[i] = ' ';
+	                        out[i + 1] = ' ';
+	                        i += 2;
+	                        state = 'string';
+	                        continue;
+	                    }
+	                    if (ch === '$' && next === '@' && (i + 2 < src.length) && src[i + 2] === '"') {
+	                        out[i] = ' ';
+	                        out[i + 1] = ' ';
+	                        out[i + 2] = ' ';
+	                        i += 3;
+	                        state = 'verbatim';
+	                        continue;
+	                    }
+	                    if (ch === '@' && next === '$' && (i + 2 < src.length) && src[i + 2] === '"') {
+	                        out[i] = ' ';
+	                        out[i + 1] = ' ';
+	                        out[i + 2] = ' ';
+	                        i += 3;
+	                        state = 'verbatim';
+	                        continue;
+	                    }
+	                    i += 1;
+	                    continue;
+	                }
+
+	                if (state === 'line') {
+	                    if (ch === '\n') {
+	                        i += 1;
+	                        state = 'code';
+	                        continue;
+	                    }
+	                    out[i] = ' ';
+	                    i += 1;
+	                    continue;
+	                }
+
+	                if (state === 'block') {
+	                    if (ch === '*' && next === '/') {
+	                        out[i] = ' ';
+	                        out[i + 1] = ' ';
+	                        i += 2;
+	                        state = 'code';
+	                        continue;
+	                    }
+	                    out[i] = ' ';
+	                    i += 1;
+	                    continue;
+	                }
+
+	                if (state === 'string') {
+	                    if (ch === '\\') {
+	                        out[i] = ' ';
+	                        if (i + 1 < src.length) out[i + 1] = ' ';
+	                        i += 2;
+	                        continue;
+	                    }
+	                    out[i] = ' ';
+	                    if (ch === '"') {
+	                        i += 1;
+	                        state = 'code';
+	                        continue;
+	                    }
+	                    i += 1;
+	                    continue;
+	                }
+
+	                if (state === 'verbatim') {
+	                    out[i] = ' ';
+	                    if (ch === '"') {
+	                        if (next === '"') {
+	                            out[i + 1] = ' ';
+	                            i += 2;
+	                            continue;
+	                        }
+	                        i += 1;
+	                        state = 'code';
+	                        continue;
+	                    }
+	                    i += 1;
+	                    continue;
+	                }
+
+	                if (state === 'char') {
+	                    if (ch === '\\') {
+	                        out[i] = ' ';
+	                        if (i + 1 < src.length) out[i + 1] = ' ';
+	                        i += 2;
+	                        continue;
+	                    }
+	                    out[i] = ' ';
+	                    if (ch === '\'') {
+	                        i += 1;
+	                        state = 'code';
+	                        continue;
+	                    }
+	                    i += 1;
+	                    continue;
+	                }
+
+	                i += 1;
+	            }
+
+	            return out.join('');
+	        }
+
+	        function findMatchingBraceInMask(mask, openIndex, endIndex) {
+	            if (openIndex < 0) return -1;
+	            const limit = Number.isFinite(endIndex) ? Math.min(endIndex, mask.length) : mask.length;
+	            let depth = 0;
+	            for (let i = openIndex; i < limit; i++) {
+	                const ch = mask[i];
+	                if (ch === '{') depth += 1;
+	                else if (ch === '}') {
+	                    depth -= 1;
+	                    if (depth === 0) return i;
+	                }
+	            }
+	            return -1;
+	        }
+
+	        function findMatchingParenInMask(mask, openIndex, endIndex) {
+	            if (openIndex < 0) return -1;
+	            const limit = Number.isFinite(endIndex) ? Math.min(endIndex, mask.length) : mask.length;
+	            let depth = 0;
+	            for (let i = openIndex; i < limit; i++) {
+	                const ch = mask[i];
+	                if (ch === '(') depth += 1;
+	                else if (ch === ')') {
+	                    depth -= 1;
+	                    if (depth === 0) return i;
+	                }
+	            }
+	            return -1;
+	        }
+
+	        function findLineStart(text, index) {
+	            const i = Math.max(0, Math.min(text.length, index));
+	            const p = text.lastIndexOf('\n', i);
+	            return p < 0 ? 0 : p + 1;
+	        }
+
+	        function skipWs(mask, i, end) {
+	            let p = i;
+	            const limit = Number.isFinite(end) ? end : mask.length;
+	            while (p < limit && /\s/.test(mask[p])) p += 1;
+	            return p;
+	        }
+
+	        function readIdentifierAt(mask, i) {
+	            if (i < 0 || i >= mask.length) return null;
+	            const ch = mask[i];
+	            if (!/[A-Za-z_]/.test(ch)) return null;
+	            let j = i + 1;
+	            while (j < mask.length && /[A-Za-z0-9_]/.test(mask[j])) j += 1;
+	            return { text: mask.slice(i, j), end: j };
+	        }
+
+	        function findNamespaceRangesInMask(mask) {
+	            const text = String(mask || '');
+	            const ranges = [];
+	            const nsRe = /\bnamespace\s+([A-Za-z0-9_.]+)\s*([;{])/g;
+	            let m = null;
+	            while (true) {
+	                m = nsRe.exec(text);
+	                if (!m) break;
+	                const name = String(m[1] || '').trim();
+	                const terminator = String(m[2] || '');
+	                if (!name) continue;
+	                if (terminator === ';') {
+	                    ranges.push({ name, start: 0, end: text.length });
+	                    continue;
+	                }
+	                const braceIndex = text.indexOf('{', nsRe.lastIndex - 1);
+	                if (braceIndex < 0) continue;
+	                const closeBrace = findMatchingBraceInMask(text, braceIndex, text.length);
+	                if (closeBrace < 0) continue;
+	                ranges.push({ name, start: braceIndex + 1, end: closeBrace });
+	            }
+	            return ranges;
+	        }
+
+	        function findTypeRangeByFullName(sourceText, codeMask, fullTypeName) {
+	            const source = String(sourceText || '');
+	            const mask = String(codeMask || '');
+	            const full = String(fullTypeName || '').trim();
+	            if (!full) return null;
+
+	            const nsRanges = findNamespaceRangesInMask(mask);
+	            let typePath = [];
+	            let searchStart = 0;
+	            let searchEnd = mask.length;
+
+	            if (nsRanges.length > 0) {
+	                let matched = null;
+	                for (let i = 0; i < nsRanges.length; i++) {
+	                    const nsName = String(nsRanges[i].name || '').trim();
+	                    if (!nsName) continue;
+	                    if (full === nsName) continue;
+	                    if (full.startsWith(nsName + '.')) {
+	                        if (!matched || nsName.length > matched.name.length) matched = nsRanges[i];
+	                    }
+	                }
+	                if (matched) {
+	                    const rest = full.slice(matched.name.length + 1);
+	                    typePath = rest.split('.').filter(Boolean);
+	                    searchStart = matched.start;
+	                    searchEnd = matched.end;
+	                } else {
+	                    // No namespace prefix match; treat as global namespace type name
+	                    typePath = full.split('.').filter(Boolean);
+	                }
+	            } else {
+	                typePath = full.split('.').filter(Boolean);
+	            }
+
+	            if (!typePath.length) return null;
+
+	            function findTypeInRange(rangeStart, rangeEnd, typeName) {
+	                const name = String(typeName || '').trim();
+	                if (!name) return null;
+	
+	                const keywordRes = [
+	                    'class',
+	                    'struct',
+	                    'interface',
+	                    'enum',
+	                    'record'
+	                ];
+	
+	                let i = rangeStart;
+	                while (i < rangeEnd) {
+	                    const id = readIdentifierAt(mask, i);
+	                    if (!id) {
+	                        i += 1;
+	                        continue;
+	                    }
+	                    const word = id.text;
+	                    const isTypeKw = keywordRes.includes(word);
+	                    if (!isTypeKw) {
+	                        i = id.end;
+	                        continue;
+	                    }
+	
+	                    let p = skipWs(mask, id.end, rangeEnd);
+	                    if (word === 'record') {
+	                        const nextId = readIdentifierAt(mask, p);
+	                        if (nextId && (nextId.text === 'class' || nextId.text === 'struct')) {
+	                            p = skipWs(mask, nextId.end, rangeEnd);
+	                        }
+	                    }
+	
+	                    const nameId = readIdentifierAt(mask, p);
+	                    if (!nameId) {
+	                        i = id.end;
+	                        continue;
+	                    }
+	                    if (nameId.text !== name) {
+	                        i = id.end;
+	                        continue;
+	                    }
+
+	                    let openBrace = mask.indexOf('{', nameId.end);
+	                    if (openBrace < 0 || openBrace >= rangeEnd) {
+	                        i = id.end;
+	                        continue;
+	                    }
+	                    const closeBrace = findMatchingBraceInMask(mask, openBrace, rangeEnd);
+	                    if (closeBrace < 0) {
+	                        i = id.end;
+	                        continue;
+	                    }
+	
+	                    return {
+	                        declStart: i,
+	                        openBrace,
+	                        closeBrace
+	                    };
+	                }
+	
+	                return null;
+	            }
+
+	            let current = { start: searchStart, end: searchEnd };
+	            for (let idx = 0; idx < typePath.length; idx++) {
+	                const seg = typePath[idx];
+	                const found = findTypeInRange(current.start, current.end, seg);
+	                if (!found) return null;
+	                current = { start: found.openBrace + 1, end: found.closeBrace };
+	                if (idx === typePath.length - 1) return found;
+	            }
+	
+	            return null;
+	        }
+
+	        function extractMemberSnippet(sourceText, codeMask, fullTypeName, kind, selector) {
+	            const source = String(sourceText || '');
+	            const mask = String(codeMask || '');
+	
+	            const typeInfo = findTypeRangeByFullName(source, mask, fullTypeName);
+	            if (!typeInfo) return { ok: false, message: '找不到类型：' + String(fullTypeName || '') };
+
+	            const bodyStart = typeInfo.openBrace + 1;
+	            const bodyEnd = typeInfo.closeBrace;
+	
+	            function scanAtTopLevel(findFn) {
+	                let localDepth = 0;
+	                for (let i = bodyStart; i < bodyEnd; i++) {
+	                    const ch = mask[i];
+	                    if (ch === '{') {
+	                        localDepth += 1;
+	                        continue;
+	                    }
+	                    if (ch === '}') {
+	                        localDepth = Math.max(0, localDepth - 1);
+	                        continue;
+	                    }
+	                    if (localDepth !== 0) continue;
+	                    const res = findFn(i);
+	                    if (res) return res;
+	                }
+	                return null;
+	            }
+
+	            function parseMethodSelector(text) {
+	                const raw = String(text || '').trim();
+	                const parenIndex = raw.indexOf('(');
+	                const closeIndex = raw.lastIndexOf(')');
+	                if (parenIndex < 0 || closeIndex < parenIndex) return null;
+	                const head = raw.slice(0, parenIndex).trim();
+	                const sig = raw.slice(parenIndex + 1, closeIndex);
+	                const dotIndex = head.lastIndexOf('.');
+	                if (dotIndex < 0) return null;
+	                const typeName = head.slice(0, dotIndex).trim();
+	                const methodName = head.slice(dotIndex + 1).trim();
+	                if (!typeName || !methodName) return null;
+	                return { typeName, methodName, sigTypes: normalizeCSharpSignatureTypes(sig) };
+	            }
+
+	            function parseMemberSelector(text) {
+	                const raw = String(text || '').trim();
+	                const dotIndex = raw.lastIndexOf('.');
+	                if (dotIndex < 0) return null;
+	                const typeName = raw.slice(0, dotIndex).trim();
+	                const memberName = raw.slice(dotIndex + 1).trim();
+	                if (!typeName || !memberName) return null;
+	                return { typeName, memberName };
+	            }
+
+	            if (kind === 't') {
+	                const declStart = findLineStart(source, typeInfo.declStart);
+	                return { ok: true, snippet: source.slice(declStart, typeInfo.closeBrace + 1) };
+	            }
+
+	            if (kind === 'm') {
+	                const parsed = parseMethodSelector(selector);
+	                if (!parsed) return { ok: false, message: '方法选择器格式错误：' + String(selector || '') };
+	                if (parsed.typeName !== fullTypeName) return { ok: false, message: '方法选择器类型不匹配：' + parsed.typeName };
+
+	                    const methodName = parsed.methodName;
+	                    const wantSig = Array.isArray(parsed.sigTypes) ? parsed.sigTypes : [];
+	                    const found = scanAtTopLevel(function (i) {
+	                    if (mask[i] !== methodName[0]) return null;
+	                    if (mask.slice(i, i + methodName.length) !== methodName) return null;
+	                    const before = i > 0 ? mask[i - 1] : '';
+	                    const after = i + methodName.length < mask.length ? mask[i + methodName.length] : '';
+	                    if (/[A-Za-z0-9_]/.test(before)) return null;
+	                    if (/[A-Za-z0-9_]/.test(after)) return null;
+	                    if (before === '.') return null;
+	
+	                    let p = skipWs(mask, i + methodName.length, bodyEnd);
+	                    if (mask[p] !== '(') return null;
+	                    const closeParen = findMatchingParenInMask(mask, p, bodyEnd);
+	                    if (closeParen < 0) return null;
+	                    const rawParamText = source.slice(p + 1, closeParen);
+	                    const gotSig = normalizeCSharpSignatureTypes(rawParamText);
+	                    if (gotSig.join(',') !== wantSig.join(',')) return null;
+	
+	                    let q = skipWs(mask, closeParen + 1, bodyEnd);
+	                    if (mask[q] === '{') {
+	                        const closeBrace = findMatchingBraceInMask(mask, q, bodyEnd);
+	                        if (closeBrace < 0) return null;
+	                        const start = findLineStart(source, i);
+	                        return { start, end: closeBrace + 1 };
+	                    }
+	                    if (mask[q] === '=' && mask[q + 1] === '>') {
+	                        const semi = mask.indexOf(';', q + 2);
+	                        if (semi < 0 || semi >= bodyEnd) return null;
+	                        const start = findLineStart(source, i);
+	                        return { start, end: semi + 1 };
+	                    }
+	                    return null;
+	                });
+	
+	                if (!found) return { ok: false, message: '找不到方法：' + selector };
+	                return { ok: true, snippet: source.slice(found.start, found.end) };
+	            }
+
+	            if (kind === 'p') {
+	                const parsed = parseMemberSelector(selector);
+	                if (!parsed) return { ok: false, message: '属性选择器格式错误：' + String(selector || '') };
+	                if (parsed.typeName !== fullTypeName) return { ok: false, message: '属性选择器类型不匹配：' + parsed.typeName };
+	                const propName = parsed.memberName;
+	
+	                const found = scanAtTopLevel(function (i) {
+	                    if (mask[i] !== propName[0]) return null;
+	                    if (mask.slice(i, i + propName.length) !== propName) return null;
+	                    const before = i > 0 ? mask[i - 1] : '';
+	                    const after = i + propName.length < mask.length ? mask[i + propName.length] : '';
+	                    if (/[A-Za-z0-9_]/.test(before)) return null;
+	                    if (/[A-Za-z0-9_]/.test(after)) return null;
+	                    if (before === '.') return null;
+	
+	                    let p = skipWs(mask, i + propName.length, bodyEnd);
+	                    if (mask[p] === '(') return null;
+	
+	                    const start = findLineStart(source, i);
+	                    if (mask[p] === '{') {
+	                        const closeBrace = findMatchingBraceInMask(mask, p, bodyEnd);
+	                        if (closeBrace < 0) return null;
+	                        return { start, end: closeBrace + 1 };
+	                    }
+	                    if (mask[p] === '=' && mask[p + 1] === '>') {
+	                        const semi = mask.indexOf(';', p + 2);
+	                        if (semi < 0 || semi >= bodyEnd) return null;
+	                        return { start, end: semi + 1 };
+	                    }
+	                    return null;
+	                });
+
+	                if (!found) return { ok: false, message: '找不到属性：' + selector };
+	                return { ok: true, snippet: source.slice(found.start, found.end) };
+	            }
+
+	            if (kind === 'f' || kind === 'c') {
+	                const parsed = parseMemberSelector(selector);
+	                if (!parsed) return { ok: false, message: '字段选择器格式错误：' + String(selector || '') };
+	                if (parsed.typeName !== fullTypeName) return { ok: false, message: '字段选择器类型不匹配：' + parsed.typeName };
+	                const fieldName = parsed.memberName;
+	
+	                const found = scanAtTopLevel(function (i) {
+	                    if (mask[i] !== fieldName[0]) return null;
+	                    if (mask.slice(i, i + fieldName.length) !== fieldName) return null;
+	                    const before = i > 0 ? mask[i - 1] : '';
+	                    const after = i + fieldName.length < mask.length ? mask[i + fieldName.length] : '';
+	                    if (/[A-Za-z0-9_]/.test(before)) return null;
+	                    if (/[A-Za-z0-9_]/.test(after)) return null;
+	                    if (before === '.') return null;
+	
+	                    const start = findLineStart(source, i);
+	                    const semi = mask.indexOf(';', i);
+	                    if (semi < 0 || semi >= bodyEnd) return null;
+	                    return { start, end: semi + 1 };
+	                });
+
+	                if (!found) return { ok: false, message: '找不到字段：' + selector };
+	                return { ok: true, snippet: source.slice(found.start, found.end) };
+	            }
+
+	            if (kind === 'e') {
+	                const parsed = parseMemberSelector(selector);
+	                if (!parsed) return { ok: false, message: '枚举成员选择器格式错误：' + String(selector || '') };
+	                if (parsed.typeName !== fullTypeName) return { ok: false, message: '枚举成员选择器类型不匹配：' + parsed.typeName };
+	                const memberName = parsed.memberName;
+	
+	                const found = scanAtTopLevel(function (i) {
+	                    if (mask[i] !== memberName[0]) return null;
+	                    if (mask.slice(i, i + memberName.length) !== memberName) return null;
+	                    const before = i > 0 ? mask[i - 1] : '';
+	                    const after = i + memberName.length < mask.length ? mask[i + memberName.length] : '';
+	                    if (/[A-Za-z0-9_]/.test(before)) return null;
+	                    if (/[A-Za-z0-9_]/.test(after)) return null;
+	
+	                    const start = findLineStart(source, i);
+	                    for (let j = i; j < bodyEnd; j++) {
+	                        if (mask[j] === ',') return { start, end: j + 1 };
+	                        if (mask[j] === '}') return { start, end: j };
+	                    }
+	                    return null;
+	                });
+
+	                if (!found) return { ok: false, message: '找不到枚举成员：' + selector };
+	                return { ok: true, snippet: source.slice(found.start, found.end) };
+	            }
+
+	            return { ok: false, message: '不支持的选择器：' + String(kind || '') };
 	        }
 
 		        async function expandMarkdownTransclusions(markdown, currentDocPath, depth = 0, stack = [], ctx) {
@@ -3044,7 +3754,44 @@
 		                    return `\n\n> 无法载入引用：非法路径 \`${m.target}\`\n\n`;
 		                }
 
-		                const { base, hash } = splitHash(m.target);
+	                const { base, hash } = splitHash(m.target);
+	                if (/\.cs$/i.test(String(base || '').trim())) {
+	                    const normalized = normalizeSourceCodePath(base, currentDocPath);
+	                    if (!normalized) {
+	                        return `\n\n> 无法载入代码：非法路径 \`${m.target}\`\n\n`;
+	                    }
+	                    const fetchUrl = `/site/content/${normalized.replace(/^\/+/, '')}`;
+	                    let selector = null;
+	                    if (hash && hash.startsWith('#')) {
+	                        let decoded = hash;
+	                        try {
+	                            decoded = '#' + decodeURIComponent(hash.slice(1));
+	                        } catch (_) {
+	                            decoded = hash;
+	                        }
+	                        selector = parseCSharpSnippetSelector(decoded);
+	                    }
+	                    try {
+	                        const resp = await fetch(encodeURI(fetchUrl), { cache: 'no-store' });
+	                        if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+	                        const sourceText = await resp.text();
+	                        if (selector) {
+	                            const mask = buildCSharpCodeMask(sourceText);
+	                            const fullTypeName = getCSharpFullTypeNameFromSelector(selector.kind, selector.selector);
+	                            if (!fullTypeName) {
+	                                return `\n\n> 无法载入代码：\`${normalized}${hash}\`（选择器格式错误）\n\n`;
+	                            }
+	                            const result = extractMemberSnippet(sourceText, mask, fullTypeName, selector.kind, selector.selector);
+	                            if (!result.ok) {
+	                                return `\n\n> 无法载入代码：\`${normalized}${hash}\`（${String(result.message || '未知错误')}）\n\n`;
+	                            }
+	                            return `\n\n${buildFencedCodeBlock('csharp', dedentCodeBlockText(result.snippet))}\n\n`;
+	                        }
+	                        return `\n\n${buildFencedCodeBlock('csharp', sourceText)}\n\n`;
+	                    } catch (err) {
+	                        return `\n\n> 无法载入代码：\`${normalized}\`（${String(err && err.message ? err.message : err)}）\n\n`;
+	                    }
+	                }
 		                let sectionSelector = '';
 	                if (hash && hash.startsWith('#')) {
 	                    sectionSelector = hash.slice(1);
@@ -3413,7 +4160,6 @@
 	                            if (!metadata.topic && docFromConfig.topic) metadata.topic = docFromConfig.topic;
 	                            if (!metadata.difficulty && docFromConfig.difficulty) metadata.difficulty = docFromConfig.difficulty;
 	                            if (!metadata.time && docFromConfig.time) metadata.time = docFromConfig.time;
-	                            if (!metadata.last_updated && docFromConfig.last_updated) metadata.last_updated = docFromConfig.last_updated;
 	                            if (!metadata.prev_chapter && docFromConfig.prev_chapter) metadata.prev_chapter = docFromConfig.prev_chapter;
 	                            if (!metadata.next_chapter && docFromConfig.next_chapter) metadata.next_chapter = docFromConfig.next_chapter;
 	                            if (!metadata.colors && docFromConfig.colors) metadata.colors = docFromConfig.colors;
@@ -3427,6 +4173,9 @@
 
 	                        // 更新当前分类的文档列表
 	                        updateCurrentCategoryDocs(fetchPath);
+
+	                        // 如果 Front Matter 指定了 source_cs/source_code 等字段，则显示对应 C# 源码（允许多个）
+	                        renderSourceCodesFromFrontMatter(metadata, fetchPath);
 
 	                        // 清理上一次的作者模式诊断状态（避免跨文档串联）
 	                        setCurrentLearningDiagnostics(null);
@@ -3617,7 +4366,7 @@
         }
 
         // 简单的YAML解析器，支持嵌套对象和数组
-        function parseYaml(yamlText) {
+	        function parseYaml(yamlText) {
             // 移除开头和结尾的空白行
             const lines = yamlText.trim().split('\n');
             const result = {};
@@ -3742,22 +4491,210 @@
                 }
             }
 
-            return result;
-        }
+	            return result;
+	        }
 
-	        // 更新页面元数据（标题、难度、时间、作者、日期）
+	        // Front Matter 源代码展示：从元数据读取并加载 *.cs 源码（允许多个）
+	        function getSourceCodeMetaPaths(metadata) {
+	            if (!metadata) return [];
+	            const candidates = [
+	                metadata.source_cs,
+	                metadata.sourceCs,
+	                metadata.source_code,
+	                metadata.sourceCode,
+	                metadata.cs_source,
+	                metadata.csSource
+	            ];
+	
+	            for (let i = 0; i < candidates.length; i++) {
+	                const v = candidates[i];
+	                if (!v) continue;
+	                if (Array.isArray(v)) return v;
+	                if (typeof v === 'string' || typeof v === 'number') return [String(v)];
+	            }
+	
+	            return [];
+	        }
+
+	        function normalizeSourceCodePath(raw, currentDocPath) {
+	            let text = String(raw || '').trim();
+	            if (!text) return '';
+
+	            // URL 解码（容错）
+	            try { text = decodeURIComponent(text); } catch (_) { /* ignore */ }
+	
+	            // 基础安全校验：禁止协议/绝对路径/路径穿越/反斜杠/空字节
+	            if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(text)) return '';
+	            if (text.startsWith('/') || text.startsWith('#')) return '';
+	            if (/(^|\/|\\)\.\.(\/|\\|$)/.test(text) || text.includes('\\') || text.includes('\u0000')) return '';
+	
+	            // 兼容写法：允许带 site/content 或 content 前缀
+	            text = text.replace(/^\.\/?/, '');
+	            text = text.replace(/^site\/content\//, '');
+	            text = text.replace(/^content\//, '');
+	
+	            // 相对路径解析（相对当前 Markdown 目录）
+	            const resolved = resolveRelativeHref(text, currentDocPath || CURRENT_DOC_PATH || '');
+	            const noHash = String(resolved || '').split('#')[0];
+	            const normalized = normalizePath(noHash);
+	
+	            if (!normalized || !/\.cs$/i.test(normalized)) return '';
+	            if (/(^|\/|\\)\.\.(\/|\\|$)/.test(normalized) || normalized.includes('\\') || normalized.includes('\u0000')) return '';
+	
+	            return normalized;
+	        }
+
+	        function resetSourceCodeSection() {
+	            const section = document.getElementById('source-code-section');
+	            const list = document.getElementById('source-code-list');
+	
+	            if (list) list.innerHTML = '';
+	            if (section) {
+	                section.style.display = 'none';
+	                section.setAttribute('aria-hidden', 'true');
+	            }
+	        }
+
+	        function createSourceCodeDetailsItem(normalizedPath) {
+	            const details = document.createElement('details');
+	            details.className = 'source-code-details';
+	
+	            const summary = document.createElement('summary');
+	            const fileName = String(normalizedPath || '').split('/').pop() || '源代码';
+	            summary.textContent = `源代码: ${fileName}`;
+	
+	            const toolbar = document.createElement('div');
+	            toolbar.className = 'source-code-toolbar';
+	            toolbar.setAttribute('aria-label', '源代码工具');
+	
+	            const openEl = document.createElement('a');
+	            openEl.className = 'btn btn-small btn-outline';
+	            openEl.textContent = '打开源文件';
+	            openEl.target = '_blank';
+	            openEl.rel = 'noopener noreferrer';
+	
+	            const copyBtn = document.createElement('button');
+	            copyBtn.className = 'btn btn-small btn-secondary';
+	            copyBtn.type = 'button';
+	            copyBtn.textContent = '复制';
+	
+	            toolbar.appendChild(openEl);
+	            toolbar.appendChild(copyBtn);
+	
+	            const errorEl = document.createElement('div');
+	            errorEl.className = 'source-code-error';
+	            errorEl.style.display = 'none';
+	            errorEl.setAttribute('role', 'status');
+	            errorEl.setAttribute('aria-live', 'polite');
+	
+	            const pre = document.createElement('pre');
+	            const codeEl = document.createElement('code');
+	            codeEl.className = 'language-csharp';
+	            pre.appendChild(codeEl);
+	
+	            details.appendChild(summary);
+	            details.appendChild(toolbar);
+	            details.appendChild(errorEl);
+	            details.appendChild(pre);
+	
+	            return { details, openEl, copyBtn, errorEl, codeEl };
+	        }
+
+	        async function copyTextToClipboard(text) {
+	            const value = String(text || '');
+	            if (!value) return false;
+	            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+	                await navigator.clipboard.writeText(value);
+	                return true;
+	            }
+	            const ta = document.createElement('textarea');
+	            ta.value = value;
+	            ta.setAttribute('readonly', '');
+	            ta.style.position = 'fixed';
+	            ta.style.left = '-9999px';
+	            document.body.appendChild(ta);
+	            ta.select();
+	            document.execCommand('copy');
+	            document.body.removeChild(ta);
+	            return true;
+	        }
+
+	        async function renderSourceCodesFromFrontMatter(metadata, currentDocPath) {
+	            resetSourceCodeSection();
+
+	            const rawList = getSourceCodeMetaPaths(metadata);
+	            if (!rawList || rawList.length === 0) return;
+
+	            const normalizedList = [];
+	            for (let i = 0; i < rawList.length; i++) {
+	                const normalized = normalizeSourceCodePath(rawList[i], currentDocPath || CURRENT_DOC_PATH);
+	                if (!normalized) continue;
+	                if (normalizedList.includes(normalized)) continue;
+	                normalizedList.push(normalized);
+	            }
+	
+	            if (normalizedList.length === 0) return;
+	
+	            const section = document.getElementById('source-code-section');
+	            const list = document.getElementById('source-code-list');
+	            if (!section || !list) return;
+	
+	            section.style.display = 'block';
+	            section.setAttribute('aria-hidden', 'false');
+
+	            for (let i = 0; i < normalizedList.length; i++) {
+	                const normalizedPath = normalizedList[i];
+	                const item = createSourceCodeDetailsItem(normalizedPath);
+	                list.appendChild(item.details);
+
+	                const fetchUrl = `/site/content/${normalizedPath.replace(/^\/+/, '')}`;
+	                item.openEl.setAttribute('href', fetchUrl);
+
+	                item.copyBtn.addEventListener('click', async function () {
+	                    const text = item.codeEl ? String(item.codeEl.textContent || '') : '';
+	                    if (!text) return;
+	                    item.copyBtn.disabled = true;
+	                    const original = item.copyBtn.textContent;
+	                    item.copyBtn.textContent = '复制中...';
+	                    try {
+	                        await copyTextToClipboard(text);
+	                        item.copyBtn.textContent = '已复制';
+	                    } catch (_) {
+	                        item.copyBtn.textContent = '复制失败';
+	                    }
+	                    setTimeout(function () {
+	                        item.copyBtn.textContent = original;
+	                        item.copyBtn.disabled = false;
+	                    }, 900);
+	                });
+
+	                try {
+	                    const resp = await fetch(encodeURI(fetchUrl), { cache: 'no-store' });
+	                    if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+	                    const sourceText = await resp.text();
+	                    item.codeEl.textContent = sourceText;
+	                    if (typeof Prism !== 'undefined' && Prism && typeof Prism.highlightElement === 'function') {
+	                        Prism.highlightElement(item.codeEl);
+	                    }
+	                } catch (err) {
+	                    item.errorEl.style.display = 'block';
+	                    item.errorEl.textContent = '源码加载失败：' + (err && err.message ? err.message : String(err));
+	                }
+	            }
+	        }
+
+	        // 更新页面元数据（标题、难度、时间、作者）
 	        function updatePageMetadata(metadata, filePath) {
 	            const title = metadata.title || filePath.replace('.md', '');
-	            const difficulty = metadata.difficulty || 'beginner';
-	            const time = metadata.time || '未知';
+	            const difficulty = metadata.difficulty;
+	            const time = metadata.time;
 	            const author = metadata.author || '未知';
-	            const last_updated = metadata.last_updated || '未知';
 	            const prevChapter = metadata.prev_chapter || null;
 	            const nextChapter = metadata.next_chapter || null;
 		            const colors = metadata.colors || metadata.colorLD || null;
 		            const colorChange = metadata.colorChange || null;
 		
-		            console.log('更新页面元数据:', { title, difficulty, time, author, last_updated, prevChapter, nextChapter, colors, colorChange });
+	            console.log('更新页面元数据:', { title, difficulty, time, author, prevChapter, nextChapter, colors, colorChange });
 
 	            document.title = `${title} - 泰拉瑞亚Mod制作教程`;
 
@@ -3767,20 +4704,32 @@
 	            const titleEl = document.getElementById('doc-title');
 	            if (titleEl) titleEl.textContent = title;
 
+	            function normalizeDifficultyForUi(value) {
+	                const raw = String(value || '').trim();
+	                if (raw === '简单' || raw.toLowerCase() === 'easy' || raw.toLowerCase() === 'beginner') return { key: 'easy', label: '简单' };
+	                if (raw === '普通' || raw.toLowerCase() === 'normal' || raw.toLowerCase() === 'intermediate') return { key: 'normal', label: '普通' };
+	                if (raw === '困难' || raw.toLowerCase() === 'hard' || raw.toLowerCase() === 'advanced') return { key: 'hard', label: '困难' };
+	                return { key: 'unknown', label: raw || '未知' };
+	            }
+
+	            function formatTimeForUi(value) {
+	                if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+	                const text = String(value || '').trim();
+	                return text || '未知';
+	            }
+
 	            const difficultyEl = document.getElementById('doc-difficulty');
 	            if (difficultyEl) {
-	                difficultyEl.textContent = getDifficultyText(difficulty);
-	                difficultyEl.className = `difficulty-badge ${difficulty}`;
+	                const d = normalizeDifficultyForUi(difficulty);
+	                difficultyEl.textContent = d.label;
+	                difficultyEl.className = `difficulty-badge difficulty-${d.key}`;
 	            }
 
 	            const timeEl = document.getElementById('doc-time');
-	            if (timeEl) timeEl.textContent = time;
+	            if (timeEl) timeEl.textContent = formatTimeForUi(time);
 
 	            const authorEl = document.getElementById('doc-author');
 	            if (authorEl) authorEl.textContent = author;
-
-	            const dateEl = document.getElementById('doc-date');
-	            if (dateEl) dateEl.textContent = last_updated;
 
 	            // 更新特殊颜色
 		            updateColorStyle(colors, colorChange);
@@ -4378,28 +5327,28 @@
 
 	            function appendTreeGuides(container, ancestorLast, isLast, depth) {
 	                if (!container || !depth) return;
-	                var ancestor = Array.isArray(ancestorLast) ? ancestorLast : [];
-	                var ancestorCols = Math.max(depth - 1, 0);
+	                const ancestor = Array.isArray(ancestorLast) ? ancestorLast : [];
+	                const ancestorCols = Math.max(depth - 1, 0);
 
-	                for (var i = 0; i < ancestorCols; i++) {
-	                    var col = document.createElement('span');
+	                for (let i = 0; i < ancestorCols; i++) {
+	                    const col = document.createElement('span');
 	                    col.className = 'learn-tree-guide' + (ancestor[i] ? '' : ' has-vertical');
 	                    container.appendChild(col);
 	                }
 
-	                var current = document.createElement('span');
+	                const current = document.createElement('span');
 	                current.className = 'learn-tree-guide current has-vertical' + (isLast ? ' is-last' : '');
 	                container.appendChild(current);
 	            }
 
 	            function renderTree(parentUl, treeNode, parentPath, depth, ancestorLast) {
-	                var ancestor = Array.isArray(ancestorLast) ? ancestorLast : [];
+	                const ancestor = Array.isArray(ancestorLast) ? ancestorLast : [];
 	                const names = Object.keys(treeNode.children || {}).sort(compareName);
 	                const folderNames = names.filter(function (n) { return treeNode.children[n].type === 'folder'; });
 	                const fileNames = names.filter(function (n) { return treeNode.children[n].type === 'file'; });
 
 	                folderNames.forEach(function (folderName) {
-	                    var isLast = (folderName === folderNames[folderNames.length - 1]) && fileNames.length === 0;
+	                    const isLast = (folderName === folderNames[folderNames.length - 1]) && fileNames.length === 0;
 	                    const folderNode = treeNode.children[folderName];
 	                    const folderPath = parentPath ? (parentPath + '/' + folderName) : folderName;
 	                    const folderKey = encodeURIComponent(folderPath);
@@ -4551,9 +5500,10 @@
 	                return;
 	            }
 
-		            // Learn 风格：按 site/content/ 文件夹结构生成树形导航
-		            renderLearnFolderTreeNavigation(categorySidebar, { docs: ALL_DOCS, defaultCollapseDepth: 1 });
-		            return;
+	            // Learn 风格：按 site/content/ 文件夹结构生成树形导航
+	            if (window.__FORCE_LEARN_TREE_NAV !== false) {
+	                renderLearnFolderTreeNavigation(categorySidebar, { docs: ALL_DOCS, defaultCollapseDepth: 1 });
+	            } else {
 
             console.log('DOC_CONFIG已加载，开始生成分类导航');
             console.log('ALL_DOCS数量:', ALL_DOCS.length);
@@ -4781,15 +5731,16 @@
             });
 
             // 恢复"所有文档"的展开/收起状态
-            const isAllDocsCollapsed = getCollapsedState('all-docs', 'all-docs');
-            if (isAllDocsCollapsed) {
-                allDocsList.classList.add('collapsed');
-                allDocsToggleBtn.classList.add('collapsed');
-                // allDocsToggleBtn.innerHTML = '▶';
-            } else {
-                allDocsToggleBtn.innerHTML = '▼';
-            }
-        }
+	            const isAllDocsCollapsed = getCollapsedState('all-docs', 'all-docs');
+	            if (isAllDocsCollapsed) {
+	                allDocsList.classList.add('collapsed');
+	                allDocsToggleBtn.classList.add('collapsed');
+	                // allDocsToggleBtn.innerHTML = '▶';
+	            } else {
+	                allDocsToggleBtn.innerHTML = '▼';
+	            }
+	            }
+	        }
 
         // 展开/收起分类
         function toggleCategory(categoryKey, categoryHeader, topicList) {

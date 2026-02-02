@@ -10,7 +10,6 @@ namespace ModDocProject.Items
     /// </remarks>
     [Title("第一个物品")]
     [Tooltip("这是介绍")]
-    [UpdateTime("2026/1/28")]
     [Category("入门")]
     [Topic("mod-basics")]
     [Hide(true)]
