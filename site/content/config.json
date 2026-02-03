@@ -2531,15 +2531,15 @@
           "description": "Mod开发的基础概念和核心API",
           "files": [
             {
-              "filename": "CSharp入门.md",
-              "path": "Modder入门学习/CSharp基础/CSharp入门.md",
-              "originalPath": "Modder入门学习/CSharp基础/CSharp入门.md",
-              "title": "CSharp入门",
+              "filename": "CSharp_Frist.md",
+              "path": "Modder入门学习/CSharp基础/CSharp_Frist.md",
+              "originalPath": "Modder入门学习/CSharp基础/CSharp_Frist.md",
+              "title": "C#基础教程-第一课-C#语法基础",
               "author": "小天使",
-              "order": 999,
-              "description": "面向 tModLoader 新人的 C# 最小入门：语法、类型、控制流与常用写法",
-              "time": "60分钟",
-              "difficulty": "简单",
+              "order": 1,
+              "description": "C#基础第一课，用于学习C#的基础语法知识",
+              "time": "30分钟",
+              "difficulty": "Beginner",
               "prev_chapter": null,
               "next_chapter": null,
               "min_c": null,
@@ -2666,7 +2666,7 @@
     "小天使": {
       "name": "小天使",
       "files": [
-        "CSharp入门.md",
+        "CSharp_Frist.md",
         "教学文章写作指南.md",
         "站点Markdown扩展语法说明.md"
       ]
@@ -2829,9 +2829,9 @@
   },
   "all_files": [
     {
-      "filename": "CSharp_Frist.generated.md",
-      "path": "Modder入门学习/CSharp基础/CSharp_Frist.generated.md",
-      "originalPath": "Modder入门学习/CSharp基础/CSharp_Frist.generated.md",
+      "filename": "CSharp_Frist.md",
+      "path": "Modder入门学习/CSharp基础/CSharp_Frist.md",
+      "originalPath": "Modder入门学习/CSharp基础/CSharp_Frist.md",
       "title": "C#基础教程-第一课-C#语法基础",
       "author": "小天使",
       "category": "Modder入门学习",
@@ -2844,8 +2844,7 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
-      "colorChange": null,
-      "last_updated": "2026-02-02"
+      "colorChange": null
     },
     {
       "filename": "教学文章写作指南.md",
@@ -5283,24 +5282,6 @@
       "colors": {
         "Mad": "#f00"
       },
-      "colorChange": null
-    },
-    {
-      "filename": "CSharp入门.md",
-      "path": "Modder入门学习/CSharp基础/CSharp入门.md",
-      "originalPath": "Modder入门学习/CSharp基础/CSharp入门.md",
-      "title": "CSharp入门",
-      "author": "小天使",
-      "category": "Modder入门学习",
-      "topic": "mod-basics",
-      "order": 999,
-      "time": "60分钟",
-      "difficulty": "简单",
-      "prev_chapter": null,
-      "next_chapter": null,
-      "min_c": null,
-      "min_t": null,
-      "colors": null,
       "colorChange": null
     },
     {
