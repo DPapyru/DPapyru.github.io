@@ -14,6 +14,4 @@ source_cs: ./CSharp_Frist.cs
 
 这里是整个绿群教程的C#教程的开始，这边我希望大家能够好好学习C#基础语法，可以通过此教程网页的功能来查看C#源代码（如果它有的话）
 
-### 经典代码段
-
-{[./CSharp_Frist.cs#cs:m:ModDocProject.Modder入门学习.CSharp基础.CSharp_Frst.Main(string[])][主方法示例]}
+{[./CSharp_Frist.cs#cs:m:ExMod.CSharpLearn.CSharp_Frist.Main(string)][主方法示例]}
