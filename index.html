@@ -1,16 +1,79 @@
 <!DOCTYPE html>
 <html lang="zh-CN" data-theme="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>进入教程</title>
-    <meta http-equiv="refresh" content="0; url=/site/">
-    <script>
-        window.location.replace('/site/');
-    </script>
+    <title>导航</title>
+    <meta name="robots" content="index, follow">
+    <script src="/site/assets/js/theme-init.js"></script>
+    <link rel="stylesheet" href="/site/assets/css/style.css">
+    <style>
+        .home {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 48px 20px;
+        }
+
+        .home h1 {
+            margin: 0 0 12px;
+            font-size: 2rem;
+        }
+
+        .home p {
+            margin: 0 0 18px;
+            color: var(--text-secondary);
+        }
+
+        .home-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        @media (min-width: 760px) {
+            .home-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .home-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+        }
+
+        .home-card h2 {
+            margin: 0 0 10px;
+            font-size: 1.15rem;
+        }
+
+        .home-card p {
+            margin: 0 0 14px;
+        }
+    </style>
 </head>
+
 <body>
-    <p>正在前往教程首页… <a href="/site/">点击进入</a></p>
-    <noscript>如果未自动跳转，请点击链接。</noscript>
+    <main class="home">
+        <h1>导航</h1>
+        <p>选择要进入的页面。</p>
+
+        <div class="home-grid">
+            <section class="home-card">
+                <h2>tModLoader 教程</h2>
+                <p>泰拉瑞亚 Mod 制作教程与文档索引。</p>
+                <a class="btn btn-primary" href="/site/">进入教程</a>
+            </section>
+
+            <section class="home-card">
+                <h2>Limbus 理论伤害计算器</h2>
+                <p>可自定义 Buff / 被动 / 技能参数，计算理论伤害区间。</p>
+                <a class="btn btn-primary" href="/limbus/">进入计算器</a>
+            </section>
+        </div>
+    </main>
 </body>
+
 </html>

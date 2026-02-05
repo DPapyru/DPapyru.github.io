@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limbus 理论伤害计算器</title>
+    <meta name="robots" content="index, follow">
+
+    <script src="/site/assets/js/theme-init.js"></script>
+
+    <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/limbus/style.css">
+</head>
+
+<body class="limbus-body">
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <header class="limbus-topnav" role="banner">
+        <div class="limbus-topnav-inner">
+            <div class="limbus-brand">
+                <div class="limbus-logo hexagon">LC</div>
+                <div>
+                    <div class="limbus-brand-title">LIMBUS COMPANY</div>
+                    <div class="limbus-brand-subtitle">理论伤害计算器</div>
+                </div>
+            </div>
+            <nav class="limbus-nav" aria-label="快速链接">
+                <a class="limbus-nav-link" href="/site/">tModLoader 教程</a>
+                <a class="limbus-nav-link limbus-nav-link-active" href="/limbus/">伤害计算器</a>
+                <button id="open-global-settings" type="button" class="limbus-nav-link">全局设置</button>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main-content" class="limbus-page" tabindex="-1">
+        <div id="limbus-root" class="limbus-shell">
+            <section class="limbus-hero">
+                <h1 class="limbus-title">理论伤害区间</h1>
+                <p class="limbus-subtitle">只计算：<span class="mono">[min,max] * mult1 * mult2 + add1 + add2</span></p>
+                <p class="limbus-note">不计算：理智/SP、正反面概率、暴击、拼点胜利、技能间状态联动。若某效果是“每枚硬币命中时触发一次”，请用 <span class="mono">次数</span> 近似。</p>
+            </section>
+
+            <section class="limbus-panel limbus-panel-accent" style="--accent: #eab308;">
+                <div class="limbus-panel-head">
+                    <div>
+                        <div class="limbus-panel-kicker">SKILLS</div>
+                        <h2 class="limbus-panel-title">技能</h2>
+                    </div>
+                    <div class="limbus-panel-actions limbus-toolbar">
+                        <div class="limbus-tabs" role="tablist" aria-label="技能类型">
+                            <button type="button" class="limbus-tab" data-skill-tab="skill1" role="tab">一技能</button>
+                            <button type="button" class="limbus-tab" data-skill-tab="skill2" role="tab">二技能</button>
+                            <button type="button" class="limbus-tab" data-skill-tab="skill3" role="tab">三技能</button>
+                            <button type="button" class="limbus-tab" data-skill-tab="defense" role="tab">防御</button>
+                        </div>
+                        <button id="add-skill-instance" type="button" class="btn btn-outline btn-small limbus-toolbar-primary">添加该类型技能</button>
+                    </div>
+                </div>
+                <div id="skill-groups" class="limbus-skill-groups">
+                    <div class="limbus-skill-group" data-skill-group="skill1">
+                        <div class="limbus-skill-split">
+                            <div class="limbus-skill-list" data-role="instance-list"></div>
+                            <div class="limbus-skill-detail" data-role="instance-detail"></div>
+                        </div>
+                    </div>
+                    <div class="limbus-skill-group limbus-hidden" data-skill-group="skill2">
+                        <div class="limbus-skill-split">
+                            <div class="limbus-skill-list" data-role="instance-list"></div>
+                            <div class="limbus-skill-detail" data-role="instance-detail"></div>
+                        </div>
+                    </div>
+                    <div class="limbus-skill-group limbus-hidden" data-skill-group="skill3">
+                        <div class="limbus-skill-split">
+                            <div class="limbus-skill-list" data-role="instance-list"></div>
+                            <div class="limbus-skill-detail" data-role="instance-detail"></div>
+                        </div>
+                    </div>
+                    <div class="limbus-skill-group limbus-hidden" data-skill-group="defense">
+                        <div class="limbus-skill-split">
+                            <div class="limbus-skill-list" data-role="instance-list"></div>
+                            <div class="limbus-skill-detail" data-role="instance-detail"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="limbus-footer">
+                <p>该页面独立于 <span class="mono">/site/</span>；仅复用其深色主题与基础样式。</p>
+            </footer>
+
+            <dialog id="global-settings-dialog" class="limbus-dialog" aria-label="全局设置">
+                <div class="limbus-dialog-inner">
+                    <div class="limbus-dialog-head">
+                        <div>
+                            <div class="limbus-panel-kicker">GLOBAL</div>
+                            <div class="limbus-panel-title">全局设置</div>
+                        </div>
+                        <button type="button" class="btn btn-outline btn-small" data-action="close-global-settings">关闭</button>
+                    </div>
+                    <div class="limbus-dialog-body">
+                    <section class="limbus-panel limbus-panel-accent" style="--accent: #eab308;">
+                        <div class="limbus-panel-head">
+                            <div>
+                                <div class="limbus-panel-kicker">GLOBAL</div>
+                                <h2 class="limbus-panel-title">第一类乘算增伤（基础项）</h2>
+                            </div>
+                        </div>
+                        <div class="limbus-row">
+                            <div class="limbus-field">
+                                <label for="defense-bonus">防御增伤</label>
+                                <input id="defense-bonus" type="number" step="any" value="0" />
+                            </div>
+                            <div class="limbus-field">
+                                <label for="observation-bonus">异想体观察等级增伤</label>
+                                <input id="observation-bonus" type="number" step="any" value="0" />
+                            </div>
+                            <div class="limbus-field">
+                                <label for="physical-resist-bonus">物理抗性增伤</label>
+                                <input id="physical-resist-bonus" type="number" step="any" value="0" />
+                            </div>
+                            <div class="limbus-field">
+                                <label for="sin-resist-bonus">罪孽抗性增伤</label>
+                                <input id="sin-resist-bonus" type="number" step="any" value="0" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="limbus-panel limbus-panel-accent" style="--accent: #60a5fa;">
+                <div class="limbus-panel-head">
+                    <div>
+                        <div class="limbus-panel-kicker">STATE</div>
+                        <h2 class="limbus-panel-title">当前状态（可复用到所有技能）</h2>
+                    </div>
+                </div>
+
+                <div class="limbus-effect-block">
+                    <div class="limbus-effect-head">
+                        <h3 class="limbus-effect-title">进攻方：状态 / Buff</h3>
+                        <div class="limbus-effect-tools">
+                            <label class="limbus-inline" for="preset-attacker-current">基础Buff</label>
+                            <select id="preset-attacker-current"></select>
+                            <button id="add-attacker-current" type="button" class="btn btn-outline btn-small">添加</button>
+                        </div>
+                    </div>
+                    <div class="effect-table-wrap">
+                        <table id="attacker-current" class="effect-table">
+                        <thead>
+                            <tr>
+                                <th>触发</th>
+                                <th>来源</th>
+                                <th>名称</th>
+                                <th>次数</th>
+                                <th>power+</th>
+                                <th>伤害% (mult2)</th>
+                                <th>抗性加算 (add1)</th>
+                                <th>固定加算 (add2)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        </table>
+                    </div>
+                    <p class="limbus-hint">规则：常驻/战斗开始/回合开始/回合结束/战斗结束计入“当前已有”；使用时/命中时等计入“本技能内触发”。<span class="mono">power+</span> 表示技能最终威力加成（例如基础威力提升/威力提升等）；<span class="mono">次数</span> 用来近似“按硬币触发”的效果（例如命中时每枚硬币都加算伤害）。</p>
+                </div>
+
+                <div class="limbus-effect-block">
+                    <div class="limbus-effect-head">
+                        <h3 class="limbus-effect-title">目标：当前已有（可选）</h3>
+                        <div class="limbus-effect-tools">
+                            <label class="limbus-inline" for="preset-defender-current">基础Buff</label>
+                            <select id="preset-defender-current"></select>
+                            <button id="add-defender-current" type="button" class="btn btn-outline btn-small">添加</button>
+                        </div>
+                    </div>
+                    <div class="effect-table-wrap">
+                        <table id="defender-current" class="effect-table">
+                        <thead>
+                            <tr>
+                                <th>触发</th>
+                                <th>来源</th>
+                                <th>名称</th>
+                                <th>次数</th>
+                                <th>power+</th>
+                                <th>伤害% (mult2)</th>
+                                <th>抗性加算 (add1)</th>
+                                <th>固定加算 (add2)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        </table>
+                    </div>
+                    <p class="limbus-hint">数值写法：<span class="mono">mult2</span> 填 0.3 代表 +30%，填 -0.3 代表 -30%。</p>
+                </div>
+                    </section>
+
+                    <section class="limbus-panel limbus-panel-accent" style="--accent: #a855f7;">
+                <div class="limbus-panel-head">
+                    <div>
+                        <div class="limbus-panel-kicker">PASSIVE</div>
+                        <h2 class="limbus-panel-title">被动 / 特殊Buff（进攻方）</h2>
+                    </div>
+                </div>
+
+                <div class="limbus-effect-block">
+                    <div class="limbus-effect-head">
+                        <h3 class="limbus-effect-title">进攻方：被动 / 特殊Buff</h3>
+                        <div class="limbus-effect-tools">
+                            <label class="limbus-inline" for="preset-attacker-passive">基础Buff</label>
+                            <select id="preset-attacker-passive"></select>
+                            <button id="add-attacker-passive" type="button" class="btn btn-outline btn-small">添加</button>
+                        </div>
+                    </div>
+                    <div class="effect-table-wrap">
+                        <table id="attacker-passive" class="effect-table">
+                        <thead>
+                            <tr>
+                                <th>触发</th>
+                                <th>来源</th>
+                                <th>名称</th>
+                                <th>次数</th>
+                                <th>power+</th>
+                                <th>伤害% (mult2)</th>
+                                <th>抗性加算 (add1)</th>
+                                <th>固定加算 (add2)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        </table>
+                    </div>
+                    <p class="limbus-hint">说明：理论计算不会分段；只要属于“本技能内触发”（例如命中时/攻击结束时），就会被并入本次技能的增伤。易损/守护/伤害强化/弱化通常写在 <span class="mono">mult2</span>；Burn/Bleed/Rupture 等“固定伤害”可近似写在 <span class="mono">add2</span>。若是“每枚硬币命中时触发一次”，可把 <span class="mono">次数</span> 填成硬币数。</p>
+                </div>
+                    </section>
+                    </div>
+                </div>
+            </dialog>
+        </div>
+    </main>
+
+    <script src="/limbus/damage-core.js"></script>
+    <script src="/limbus/buff-presets.js"></script>
+    <script src="/limbus/app.js"></script>
+</body>
+
+</html>

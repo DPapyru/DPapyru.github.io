@@ -1,0 +1,943 @@
+/* Standalone page styles for /limbus/ calculator. */
+
+.limbus-body {
+    background: #000;
+    color: #e5e7eb;
+    --lc-gold: #eab308;
+    --lc-gold-line: rgba(234, 179, 8, 0.42);
+    --lc-ink: rgba(0, 0, 0, 0.86);
+    --lc-cut: 12px;
+    --lc-cut-sm: 9px;
+    --lc-corner: 42px;
+}
+
+.limbus-body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.06'/%3E%3C/svg%3E");
+    opacity: 1;
+    z-index: 0;
+}
+
+.limbus-topnav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.82);
+    border-bottom: 1px solid rgba(234, 179, 8, 0.25);
+}
+
+.limbus-topnav-inner {
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.limbus-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.limbus-logo {
+    width: 34px;
+    height: 34px;
+    background: #eab308;
+    color: #000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    flex: 0 0 auto;
+}
+
+.hexagon {
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+.limbus-brand-title {
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #eab308;
+    line-height: 1.1;
+    font-size: 0.95rem;
+}
+
+.limbus-brand-subtitle {
+    color: rgba(229, 231, 235, 0.65);
+    font-size: 0.85rem;
+}
+
+.limbus-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.limbus-nav-link {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(234, 179, 8, 0.18);
+    background: rgba(234, 179, 8, 0.06);
+    color: #e5e7eb;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.limbus-nav-link:hover {
+    border-color: rgba(234, 179, 8, 0.38);
+    background: rgba(234, 179, 8, 0.12);
+}
+
+.limbus-nav-link-active {
+    border-color: rgba(234, 179, 8, 0.55);
+}
+
+.limbus-page {
+    position: relative;
+    z-index: 1;
+    max-width: 1480px;
+    margin: 0 auto;
+    padding: 22px 20px 42px;
+}
+
+.limbus-dialog {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    width: min(1040px, 96vw);
+    max-width: 96vw;
+}
+
+.limbus-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(6px);
+}
+
+.limbus-dialog-inner {
+    border-radius: 12px;
+    border: 1px solid rgba(234, 179, 8, 0.22);
+    background:
+        radial-gradient(1000px 360px at 50% -20%, rgba(234, 179, 8, 0.10), transparent 65%),
+        linear-gradient(135deg, rgba(0, 0, 0, 0.94) 0%, rgba(16, 16, 16, 0.985) 100%);
+    box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.60),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px var(--lc-ink);
+    clip-path: polygon(
+        var(--lc-cut) 0,
+        calc(100% - var(--lc-cut)) 0,
+        100% var(--lc-cut),
+        100% calc(100% - var(--lc-cut)),
+        calc(100% - var(--lc-cut)) 100%,
+        var(--lc-cut) 100%,
+        0 calc(100% - var(--lc-cut)),
+        0 var(--lc-cut)
+    );
+    overflow: hidden;
+}
+
+.limbus-dialog-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(234, 179, 8, 0.12);
+    background:
+        linear-gradient(90deg, rgba(234, 179, 8, 0.10), transparent 60%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 55%);
+}
+
+.limbus-dialog-body {
+    padding: 16px;
+    max-height: min(78vh, 860px);
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.limbus-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.limbus-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+@media (min-width: 1100px) {
+    .limbus-layout {
+        grid-template-columns: minmax(0, 1fr) 420px;
+        align-items: start;
+    }
+
+    .limbus-layout-side {
+        position: sticky;
+        top: 74px;
+        align-self: start;
+        padding-left: 12px;
+        border-left: 1px solid rgba(234, 179, 8, 0.10);
+    }
+}
+
+.limbus-disclosure {
+    border: 0;
+    padding: 0;
+}
+
+.limbus-disclosure[open] .limbus-disclosure-summary {
+    border-color: rgba(234, 179, 8, 0.55);
+    box-shadow:
+        0 0 0 1px rgba(234, 179, 8, 0.16) inset,
+        0 10px 22px rgba(0, 0, 0, 0.35);
+}
+
+.limbus-disclosure-summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    margin: 0;
+    border-radius: 12px;
+    border: 1px solid rgba(234, 179, 8, 0.30);
+    clip-path: polygon(
+        var(--lc-cut) 0,
+        calc(100% - var(--lc-cut)) 0,
+        100% var(--lc-cut),
+        100% calc(100% - var(--lc-cut)),
+        calc(100% - var(--lc-cut)) 100%,
+        var(--lc-cut) 100%,
+        0 calc(100% - var(--lc-cut)),
+        0 var(--lc-cut)
+    );
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 45%),
+        rgba(0, 0, 0, 0.55);
+    color: rgba(255, 244, 214, 0.85);
+    font-weight: 900;
+    letter-spacing: 0.06em;
+}
+
+.limbus-disclosure-summary::-webkit-details-marker {
+    display: none;
+}
+
+.limbus-disclosure-body {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.limbus-mini-disclosure {
+    margin-top: 10px;
+    border: 1px solid rgba(234, 179, 8, 0.14);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+}
+
+.limbus-mini-summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    padding: 10px 12px;
+    color: rgba(255, 244, 214, 0.78);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    background:
+        linear-gradient(90deg, rgba(234, 179, 8, 0.10), transparent 65%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 55%);
+    border-bottom: 1px solid rgba(234, 179, 8, 0.10);
+}
+
+.limbus-mini-summary::-webkit-details-marker {
+    display: none;
+}
+
+.limbus-mini-body {
+    padding: 10px 12px 2px;
+}
+
+.limbus-hero {
+    padding: 6px 0 10px;
+}
+
+.limbus-title {
+    font-size: 2rem;
+    font-weight: 900;
+    margin: 0 0 8px;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
+}
+
+.limbus-subtitle {
+    margin: 0 0 8px;
+    color: rgba(229, 231, 235, 0.7);
+}
+
+.limbus-note {
+    margin: 0;
+    color: rgba(229, 231, 235, 0.55);
+    font-size: 0.95rem;
+}
+
+.limbus-panel {
+    border-radius: 12px;
+    border: 1px solid rgba(234, 179, 8, 0.18);
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    clip-path: polygon(
+        var(--lc-cut) 0,
+        calc(100% - var(--lc-cut)) 0,
+        100% var(--lc-cut),
+        100% calc(100% - var(--lc-cut)),
+        calc(100% - var(--lc-cut)) 100%,
+        var(--lc-cut) 100%,
+        0 calc(100% - var(--lc-cut)),
+        0 var(--lc-cut)
+    );
+    background:
+        linear-gradient(90deg, var(--lc-gold-line), transparent) left 12px top 12px / var(--lc-corner) 1px no-repeat,
+        linear-gradient(180deg, var(--lc-gold-line), transparent) left 12px top 12px / 1px var(--lc-corner) no-repeat,
+        linear-gradient(270deg, var(--lc-gold-line), transparent) right 12px top 12px / var(--lc-corner) 1px no-repeat,
+        linear-gradient(180deg, var(--lc-gold-line), transparent) right 12px top 12px / 1px var(--lc-corner) no-repeat,
+        linear-gradient(90deg, var(--lc-gold-line), transparent) left 12px bottom 12px / var(--lc-corner) 1px no-repeat,
+        linear-gradient(0deg, var(--lc-gold-line), transparent) left 12px bottom 12px / 1px var(--lc-corner) no-repeat,
+        linear-gradient(270deg, var(--lc-gold-line), transparent) right 12px bottom 12px / var(--lc-corner) 1px no-repeat,
+        linear-gradient(0deg, var(--lc-gold-line), transparent) right 12px bottom 12px / 1px var(--lc-corner) no-repeat,
+        radial-gradient(1200px 420px at 50% -20%, rgba(234, 179, 8, 0.10), transparent 60%),
+        linear-gradient(135deg, rgba(0, 0, 0, 0.94) 0%, rgba(16, 16, 16, 0.985) 100%);
+    box-shadow:
+        0 18px 44px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px var(--lc-ink),
+        inset 0 0 0 2px rgba(234, 179, 8, 0.06);
+}
+
+.limbus-panel-accent::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent, #eab308), transparent);
+    opacity: 0.9;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.limbus-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.12;
+    background:
+        radial-gradient(700px 260px at 50% 0%, rgba(255, 255, 255, 0.06), transparent 70%),
+        repeating-linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.035) 0px,
+            rgba(255, 255, 255, 0.035) 1px,
+            transparent 1px,
+            transparent 5px
+        );
+}
+
+.limbus-panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.limbus-panel-kicker {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: rgba(229, 231, 235, 0.55);
+}
+
+.limbus-panel-title {
+    margin: 2px 0 0;
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: #fff;
+}
+
+.limbus-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.limbus-toolbar {
+    gap: 6px;
+}
+
+.limbus-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.limbus-toolbar-primary {
+    border-color: rgba(234, 179, 8, 0.40);
+    background: rgba(234, 179, 8, 0.10);
+}
+
+.limbus-tab {
+    appearance: none;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(229, 231, 235, 0.8);
+    padding: 5px 9px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    font-size: 0.72rem;
+    clip-path: polygon(
+        var(--lc-cut-sm) 0,
+        calc(100% - var(--lc-cut-sm)) 0,
+        100% var(--lc-cut-sm),
+        100% calc(100% - var(--lc-cut-sm)),
+        calc(100% - var(--lc-cut-sm)) 100%,
+        var(--lc-cut-sm) 100%,
+        0 calc(100% - var(--lc-cut-sm)),
+        0 var(--lc-cut-sm)
+    );
+    border-color: rgba(234, 179, 8, 0.18);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 40%),
+        rgba(0, 0, 0, 0.55);
+}
+
+.effect-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.limbus-tab:hover {
+    border-color: rgba(234, 179, 8, 0.4);
+}
+
+.limbus-tab.limbus-tab-active {
+    border-color: rgba(234, 179, 8, 0.7);
+    box-shadow:
+        0 0 0 1px rgba(234, 179, 8, 0.18) inset,
+        0 0 0 3px rgba(234, 179, 8, 0.12);
+}
+
+.limbus-hidden {
+    display: none !important;
+}
+
+.limbus-skill-groups {
+    margin-top: 10px;
+}
+
+.limbus-skill-group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.limbus-skill-split {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+}
+
+@media (min-width: 980px) {
+    .limbus-skill-split {
+        grid-template-columns: 320px minmax(0, 1fr);
+        align-items: start;
+    }
+}
+
+.limbus-skill-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.limbus-skill-card {
+    border: 1px solid rgba(234, 179, 8, 0.18);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 45%),
+        rgba(0, 0, 0, 0.55);
+    clip-path: polygon(
+        var(--lc-cut) 0,
+        calc(100% - var(--lc-cut)) 0,
+        100% var(--lc-cut),
+        100% calc(100% - var(--lc-cut)),
+        calc(100% - var(--lc-cut)) 100%,
+        var(--lc-cut) 100%,
+        0 calc(100% - var(--lc-cut)),
+        0 var(--lc-cut)
+    );
+    cursor: pointer;
+    text-align: left;
+}
+
+.limbus-skill-card:hover {
+    border-color: rgba(234, 179, 8, 0.55);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+}
+
+.limbus-skill-card.limbus-skill-card-active {
+    border-color: rgba(234, 179, 8, 0.70);
+    box-shadow:
+        0 0 0 1px rgba(234, 179, 8, 0.18) inset,
+        0 0 0 3px rgba(234, 179, 8, 0.10);
+}
+
+.limbus-skill-card .k {
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    font-weight: 900;
+    color: rgba(255, 244, 214, 0.72);
+}
+
+.limbus-skill-card .t {
+    margin-top: 4px;
+    font-size: 0.98rem;
+    font-weight: 900;
+    color: rgba(229, 231, 235, 0.92);
+}
+
+.limbus-skill-card .s {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: rgba(229, 231, 235, 0.70);
+}
+
+.limbus-skill-detail {
+    position: relative;
+}
+
+.limbus-skill-detail::before {
+    content: "IDENTITY INFO";
+    position: absolute;
+    top: 10px;
+    right: 16px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    font-size: 2.8rem;
+    color: rgba(234, 179, 8, 0.08);
+    pointer-events: none;
+}
+
+.limbus-skill-instance {
+    --accent: #eab308;
+}
+
+.limbus-instance-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.limbus-instance-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.limbus-instance-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.55);
+    color: rgba(229, 231, 235, 0.85);
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    font-size: 0.75rem;
+}
+
+.limbus-instance-name {
+    min-width: 260px;
+}
+
+.limbus-instance-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+}
+
+@media (min-width: 980px) {
+    .limbus-instance-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.limbus-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+@media (min-width: 640px) {
+    .limbus-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+}
+
+.limbus-field label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.limbus-field input,
+.limbus-effect-tools select,
+.effect-table select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-color: rgba(234, 179, 8, 0.14);
+    clip-path: polygon(
+        var(--lc-cut-sm) 0,
+        calc(100% - var(--lc-cut-sm)) 0,
+        100% var(--lc-cut-sm),
+        100% calc(100% - var(--lc-cut-sm)),
+        calc(100% - var(--lc-cut-sm)) 100%,
+        var(--lc-cut-sm) 100%,
+        0 calc(100% - var(--lc-cut-sm)),
+        0 var(--lc-cut-sm)
+    );
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 38%),
+        rgba(0, 0, 0, 0.62);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.55);
+    color: #e5e7eb;
+    caret-color: rgba(234, 179, 8, 0.95);
+}
+
+.limbus-field input:focus,
+.limbus-effect-tools select:focus,
+.effect-table select:focus {
+    outline: none;
+    border-color: rgba(234, 179, 8, 0.55);
+    box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.18);
+}
+
+.limbus-effect-block {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(234, 179, 8, 0.10);
+    position: relative;
+}
+
+.limbus-effect-block::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.22), transparent);
+}
+
+.limbus-effect-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.limbus-effect-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: rgba(229, 231, 235, 0.9);
+}
+
+.limbus-effect-tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.limbus-inline {
+    font-size: 0.85rem;
+    color: rgba(229, 231, 235, 0.65);
+}
+
+.limbus-hint {
+    margin: 8px 0 0;
+    color: rgba(229, 231, 235, 0.55);
+    font-size: 0.85rem;
+}
+
+.limbus-skill {
+    --accent: #eab308;
+}
+
+.limbus-skill-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.limbus-skill-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.55);
+    color: rgba(229, 231, 235, 0.85);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    font-size: 0.75rem;
+}
+
+.limbus-skill-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+}
+
+.limbus-skill-grid {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+}
+
+@media (min-width: 980px) {
+    .limbus-skill-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.limbus-skill .limbus-panel-accent {
+    --accent: inherit;
+}
+
+.limbus-skill[data-skill] {
+    --accent: var(--accent);
+}
+
+.limbus-skill .limbus-panel {
+    --accent: var(--accent);
+}
+
+.effect-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    border: 1px solid rgba(234, 179, 8, 0.14);
+    background: rgba(0, 0, 0, 0.28);
+    clip-path: polygon(
+        var(--lc-cut-sm) 0,
+        calc(100% - var(--lc-cut-sm)) 0,
+        100% var(--lc-cut-sm),
+        100% calc(100% - var(--lc-cut-sm)),
+        calc(100% - var(--lc-cut-sm)) 100%,
+        var(--lc-cut-sm) 100%,
+        0 calc(100% - var(--lc-cut-sm)),
+        0 var(--lc-cut-sm)
+    );
+}
+
+.effect-table th,
+.effect-table td {
+    border-bottom: 1px solid rgba(234, 179, 8, 0.08);
+    padding: 8px 6px;
+    vertical-align: top;
+}
+
+.effect-table th {
+    text-align: left;
+    font-size: 0.85rem;
+    background:
+        linear-gradient(90deg, rgba(234, 179, 8, 0.10), transparent 65%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 55%);
+    color: rgba(255, 244, 214, 0.78);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid rgba(234, 179, 8, 0.18);
+    white-space: nowrap;
+}
+
+.effect-table tbody tr:hover {
+    background: rgba(234, 179, 8, 0.04);
+}
+
+.effect-table tbody tr:focus-within {
+    background: rgba(234, 179, 8, 0.06);
+    box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.10) inset;
+}
+
+.effect-table input {
+    width: 100%;
+    min-width: 64px;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-color: rgba(234, 179, 8, 0.14);
+    clip-path: polygon(
+        var(--lc-cut-sm) 0,
+        calc(100% - var(--lc-cut-sm)) 0,
+        100% var(--lc-cut-sm),
+        100% calc(100% - var(--lc-cut-sm)),
+        calc(100% - var(--lc-cut-sm)) 100%,
+        var(--lc-cut-sm) 100%,
+        0 calc(100% - var(--lc-cut-sm)),
+        0 var(--lc-cut-sm)
+    );
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 38%),
+        rgba(0, 0, 0, 0.62);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.55);
+    color: #e5e7eb;
+    caret-color: rgba(234, 179, 8, 0.95);
+}
+
+.effect-table input:focus {
+    outline: none;
+    border-color: rgba(234, 179, 8, 0.55);
+    box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.18);
+}
+
+.effect-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.effect-remove {
+    border-radius: 10px;
+    clip-path: polygon(
+        var(--lc-cut-sm) 0,
+        calc(100% - var(--lc-cut-sm)) 0,
+        100% var(--lc-cut-sm),
+        100% calc(100% - var(--lc-cut-sm)),
+        calc(100% - var(--lc-cut-sm)) 100%,
+        var(--lc-cut-sm) 100%,
+        0 calc(100% - var(--lc-cut-sm)),
+        0 var(--lc-cut-sm)
+    );
+    border: 1px solid rgba(239, 68, 68, 0.38);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 45%),
+        rgba(0, 0, 0, 0.55);
+    color: rgba(255, 210, 210, 0.88);
+    padding: 6px 10px;
+    cursor: pointer;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        inset 0 0 0 1px rgba(0, 0, 0, 0.55);
+}
+
+.effect-remove:hover {
+    border-color: rgba(239, 68, 68, 0.75);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 10px 22px rgba(0, 0, 0, 0.35);
+}
+
+.effect-remove:active {
+    transform: translateY(1px);
+}
+
+.result-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+@media (min-width: 640px) {
+    .result-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.result-item {
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+}
+
+.result-item .k {
+    color: rgba(229, 231, 235, 0.65);
+    font-size: 0.85rem;
+}
+
+.result-item .v {
+    margin-top: 4px;
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.limbus-error {
+    margin-top: 10px;
+    color: rgba(239, 68, 68, 0.95);
+}
+
+.limbus-footer {
+    margin-top: 14px;
+    color: rgba(229, 231, 235, 0.55);
+    font-size: 0.9rem;
+}
+
+.mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
