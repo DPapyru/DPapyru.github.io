@@ -19,7 +19,7 @@ description: 说明 ContentProjects.sln 的用途、包含项目与常见配置�
 - `site/content/anims/AnimScripts.Dev.csproj`
   - 动画脚本渲染相关工程。
 - `site/content/ModDocProject.csproj`
-  - 文档示例工程，配合属性与 XML 注释生成文章。
+  - 文档示例工程，用于在 IDE 中获得稳定的 C# 补全与检查体验。
 
 ## ModDocProject.csproj 设计要点
 
@@ -36,9 +36,7 @@ description: 说明 ContentProjects.sln 的用途、包含项目与常见配置�
    ```xml
    <Import Project="F:\steam\steamapps\common\tModLoader\tMLMod.targets" />
    ```
-3. 需要编写文档类时，使用 `site/content/ModDocProject/` 内的示例和特性：
-   - `DocAttributes.cs` 定义了 `[Title]`、`[Tooltip]` 等属性。
-   - `Items/TestItem.cs` 展示了 XML doc + `#if DOCS` 的写法。
+3. 需要编写文档类时，可参考 `site/content/ModDocProject/Items/TestItem.cs` 的结构与注释写法。
 
 ## 常见问题
 

@@ -323,7 +323,7 @@
 
         try {
             if (!normalized) {
-                throw new Error('animts 代码块第一行必须是 anims/*.cs 路径');
+                throw new Error('animcs 代码块第一行必须是 anims/*.cs 路径');
             }
 
             const runtimeRoot = normalizeRuntimeRoot(

@@ -462,4 +462,4 @@ AI 给了代码 -> 阅读并理解 -> 验证（编译、测试）-> 根据需要
 
 熟练使用 AI 后，你可以尝试使用 AI Agent 进行更复杂的开发任务。但注意：AI Agent 有更高的使用门槛，需要你先掌握基础的 Mod 开发能力。
 
-{[DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md][AI Agent 的使用——在拥有水平后使用Agent提高开发速度]}
+{{ref:DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md|AI Agent 的使用——在拥有水平后使用Agent提高开发速度}}

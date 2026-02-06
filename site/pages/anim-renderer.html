@@ -10,7 +10,7 @@
 
 </head>
 <body class="viewer-page">
-    <header class="site-header">
+        <header class="site-header">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
@@ -19,6 +19,34 @@
                         <h1 class="site-title">C# 动画渲染器（开发用）</h1>
                     </a>
                 </div>
+                <nav class="main-nav" id="main-nav">
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="folder.html" class="nav-link active" aria-current="page">文档</a></li>
+                        <li class="nav-item"><a href="article-studio.html" class="nav-link">在线写作IDE</a></li>
+                        <li class="nav-item"><a href="shader-playground.html" class="nav-link">Shader</a></li>
+                        <li class="nav-item"><a href="../qa.html" class="nav-link">问答</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li class="nav-item nav-accent">
+                            <label class="visually-hidden" for="accent-select">配色</label>
+                            <select class="nav-accent-select" id="accent-select" aria-label="配色">
+                                <option value="green">绿色</option>
+                                <option value="blue">蓝色</option>
+                                <option value="purple">紫色</option>
+                                <option value="orange">橙色</option>
+                                <option value="red">红色</option>
+                                <option value="cyan">青色</option>
+                                <option value="black">黑色</option>
+                                <option value="white">白色</option>
+                            </select>
+                        </li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
             </div>
         </div>
     </header>
@@ -50,7 +78,7 @@
                             <option value="">（从目录中选择 anims/*.cs）</option>
                         </select>
                         <button id="anim-run-selected" class="btn btn-small" type="button" disabled>播放所选</button>
-                        <button id="anim-copy-snippet" class="btn btn-small btn-outline" type="button" disabled>复制 animts 代码块</button>
+                        <button id="anim-copy-snippet" class="btn btn-small btn-outline" type="button" disabled>复制 anim 指令</button>
                     </div>
                 </section>
 
@@ -64,6 +92,7 @@
     
 
     <script src="/shared/assets/js/site-core.js"></script>
+    <script src="/site/assets/js/navigation.js"></script>
     <script>
         if (window.SITE) window.SITE.bootstrapPage('anim-renderer');
     </script>
@@ -213,10 +242,10 @@
             copySnippetBtn.addEventListener('click', async function () {
                 const p = String(currentPath || pathSelect.value || '').trim();
                 if (!p) return;
-                const snippet = '```animts\\n' + p + '\\n```\\n';
+                const snippet = '{{anim:' + p + '}}\n';
                 try {
                     await navigator.clipboard.writeText(snippet);
-                    setStatus('已复制 animts 代码块到剪贴板');
+                    setStatus('已复制 anim 指令到剪贴板');
                 } catch (_) {
                     // Fallback for file:// where clipboard API may be blocked
                     const ta = document.createElement('textarea');

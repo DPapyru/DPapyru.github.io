@@ -1,5 +1,4 @@
 using Terraria.ModLoader;
-using ModDocProject;
 
 namespace ModDocProject.Items
 {
@@ -8,11 +7,6 @@ namespace ModDocProject.Items
     /// ## 写法示例
     /// 这里是正文 Markdown，构建时会被提取为文章内容。
     /// </remarks>
-    [Title("第一个物品")]
-    [Tooltip("这是介绍")]
-    [Category("入门")]
-    [Topic("mod-basics")]
-    [Hide(true)]
     public class TestItem : ModItem
     {
 #if DOCS

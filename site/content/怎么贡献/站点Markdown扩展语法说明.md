@@ -1,181 +1,106 @@
 ---
-title: 站点 Markdown 扩展语法说明（引用/条件/组件）
+title: 站点 Markdown 扩展语法说明
 author: 小天使
-date: 2026-01-20
-last_updated: 2026-01-20
+date: 2026-02-06
+last_updated: 2026-02-06
 difficulty: beginner
-time: 12分钟
-description: 本站 /site/pages/viewer.html 渲染器支持的 Markdown 扩展语法：引用展开、条件分流、题目与颜色标记
+time: 10分钟
+description: 本站 viewer 渲染器支持的 Markdown 扩展语法：引用、条件分流、题目、动画、source_cs、颜色标记
 topic: article-contribution
 order: 2
 ---
 
-# 站点 Markdown 扩展语法说明（引用/条件/组件）
+# 站点 Markdown 扩展语法说明
 
-本仓库的 Markdown 主要由 `/site/pages/viewer.html` 渲染（静态站点），因此我们支持一些“渲染器专用”的扩展语法，用于：
+为了降低维护成本，站点语法已做简化。
 
-- **复用内容**：一处写好，多处引用（避免复制粘贴导致版本漂移）
-- **因材施教**：按新手测评结果（C# 等级 / tModLoader 等级）展示不同深度
-- **交互组件**：内嵌小测验、强调色等
+请直接使用极简指令，不再使用旧的 `{[...][...]}` 写法。
 
-这篇只讲“扩展语法本身”。文章结构/Front Matter/发布流程请看 `site/content/怎么贡献/教学文章写作指南.md`。
+## 一、引用与代码（极简指令）
 
----
+所有指令都必须独占一行。
 
-## 1）引用展开（Transclusion）
+### 1.1 引用 Markdown
 
-语法（必须独占一行）：
-
+```text
+{{ref:相对路径/文件名.md|显示标题}}
 ```
-{[相对路径/文件名.md][显示在目录里的标题]}
-```
-
-### 1.1 节选文章中的某个小节（推荐用于路线页/索引页）
-
-语法（必须独占一行）：
-
-```
-{[相对路径/文件名.md#标题文字][显示在目录里的标题]}
-```
-
-说明：
-
-- `#标题文字` 用于匹配目标文章中“能出现在右侧目录里的标题”（例如 `## 本章要点（可引用）`）。
-- 会插入该标题之下的内容，直到下一个同级或更高等级标题为止。
-- 标题匹配按“文字内容”而不是 slug；请避免同一篇文章中出现多个同名标题。
 
 示例：
 
-```
-{[./_分流/第一个武器-C0-CSharp读代码.md][C# 补课：看懂本章语法（C0）]}
-```
-
-行为：
-
-- 渲染时会读取并插入目标 Markdown 的内容（不需要新增索引 JSON）。
-- 会在插入位置自动加一个标题，确保它能出现在右侧目录里：
-  - 默认是 `## 你写的标题`
-  - 如果这条引用位于某个小节（例如 `## 前置`）内部，会自动使用更深一级（例如变成 `### 你写的标题`），避免目录里出现大量同级标题
-- 被引用的文档内容会先去掉 YAML front matter（如果有）。
-
-### 1.2 不进入目录的“轻量引用”（适合前置/补充，不想让目录太长）
-
-语法（必须独占一行）：
-
-```
-{[相对路径/文件名.md#标题文字][!显示标题]}
+```text
+{{ref:./基础语法.md|先看这节基础语法}}
 ```
 
-行为：
+### 1.2 引用完整 C# 文件
 
-- 会插入内容，但不会额外生成 `##` 标题，因此**不会出现在右侧目录**。
-- 会用加粗文本显示你写的标题（`**显示标题**`），适合“前置补课/速查/补充材料”这类小块内容。
+```text
+{{cs:./CSharp_Frist.cs}}
+```
 
-限制与建议：
+### 1.3 抽取 C# 片段
 
-- **必须独占一行**（前后可有空格/缩进，但不要和其它文字写在同一行）。
-- **不会在代码块（```/~~~）里展开**。
-- 站点有递归与数量上限（防止循环引用/爆栈/加载过慢），请避免“引用链太深/太多”。
-- 被引用文档中的相对图片/链接会按“被引用文档所在目录”做适配，尽量避免资源路径错乱；但仍建议你优先使用稳定的相对路径，并在本地预览验证。
+```text
+{{cs:./CSharp_Frist.cs#cs:m:ExMod.CSharpLearn.CSharp_Frist.Main(string[])|主方法示例}}
+{{cs:./CSharp_Frist.cs#cs:t:ExMod.CSharpLearn.CSharp_Frist|CSharp_Frist 类型}}
+```
+
+支持选择器：
+
+- `#cs:m:` 方法
+- `#cs:t:` 类型
+- `#cs:p/#cs:f/#cs:c/#cs:e` 属性/字段/常量/枚举成员
+
+### 1.4 引用动画脚本
+
+```text
+{{anim:anims/demo-basic.cs}}
+```
+
+规则：
+
+- `{{ref:...}}` 用于文档引用（`*.md`）。
+- `{{cs:...}}` 用于代码引用（`*.cs`，支持 `#cs:*` 片段选择）。
+- `{{anim:...}}` 用于动画脚本（必须是 `anims/*.cs`）。
 
 ---
 
-## 2）条件分流（if / else if / else）
-
-用途：按用户测评结果展示不同内容，典型用法是“同一章节里，给 C0/T0 读者显示补课块，给熟练者显示进阶块”。
+## 二、条件分流（仅保留 if/end）
 
 语法（每条指令必须独占一行）：
 
-```
+```text
 {if <条件>}
-  ...内容...
-{else if <条件>}
-  ...内容...
-{else}
   ...内容...
 {end}
 ```
 
-### 2.1 条件里可用的变量
+可用变量：
 
 - `C`：C# 等级（`0/1/2`）
 - `T`：tModLoader 等级（`0/1/2`）
-- `P_*`：学习偏好标签（`0/1`，可叠加）
-  - `P_step`：更细步骤
-  - `P_code`：更多代码
-  - `P_theory`：原理解释
-  - `P_minimal`：最小示例
-  - `P_troubleshoot`：排错清单
-  - `P_best_practice`：规范写法
-  - `P_api_reference`：API 说明
-  - `P_visual`：图示类比
-  - `P_performance`：性能敏感
-  - `P_rendering`：渲染方向
 - `AUTHOR`：作者模式（`0/1`）
+- `P_*`：学习偏好标签（`0/1`）
 
-如果用户未做测评/跳过测评：按 `C=0,T=0` 处理。
-
-`P_*` 的来源：
-
-- 入站测评会保存一组“偏好答案”（不影响 `C/T` 分档），渲染器会据此推导 `P_*`。
-- 用户也可以在 `/site/pages/viewer.html` 右侧侧栏的“分流设置”里对每个 `P_*` 做三态覆盖：`自动 / 强制开 / 强制关`。
-
-### 2.2 支持的运算符
+可用运算符：
 
 - 比较：`> < >= <= == !=`
 - 逻辑：`&& || !`
 - 括号：`( ... )`
 
-示例：
+说明：
 
-```
-{if C == 0}
-这里是给完全没接触过 C# 的补课。
-{else if C >= 1 && T == 0}
-你会 C#，但 tML 不熟：这里讲 API 定位。
-{else}
-你已经比较熟练：这里给更贴近实战的写法。
-{end}
-```
-
-### 2.3 和“引用展开”搭配（推荐）
-
-推荐把“分流内容”写到单独文件里，再用 `{if}` + `{[...]}` 引用：
-
-```
-{if C == 0}
-{[./_分流/xxx.md][C# 补课]}
-{else}
-{[./_分流/yyy.md][进阶建议]}
-{end}
-```
-
-好处：
-
-- 没命中的分支不会触发引用展开（不会去加载那份文件）
-- 分流内容可以独立维护、复用到别的章节
-
-### 2.4 `P_*` 的推荐写法：用多个独立 `{if}{end}`（可叠加）
-
-因为 `P_*` 允许同时为真，推荐用“叠加块”写法：
-
-```
-{if P_code == 1}
-这里放更多可运行代码/完整片段。
-{end}
-
-{if P_troubleshoot == 1}
-这里放排错清单/常见坑。
-{end}
-```
+- 推荐只用 `{if ...}` 与 `{end}`，写起来最稳定。
+- `else if` / `else` 目前仍可用，但不建议新增依赖。
+- 推荐使用多个独立 `{if}{end}` 块组合内容。
 
 ---
 
-## 3）题目组件（quiz 代码块）
+## 三、题目组件（quiz）
 
-语法：用 fenced code block，语言标记为 `quiz`：
+使用 fenced code block，语言标记为 `quiz`：
 
-````
+````md
 ```quiz
 type: choice
 id: your-unique-id
@@ -191,126 +116,82 @@ explain: |
 ```
 ````
 
-建议：
+`tf` 题型请写：
 
-- `id` 必须全站唯一（建议加 topic/文章名作为前缀）
-- 题面与选项尽量具体，避免“笼统概括”
-
----
-
-## 4）C# 动画组件（animts 代码块）
-
-用途：在文章中嵌入一个由 C# 脚本驱动的动画/可视化（例如：弹幕演示、NPC 对话演示、Boss AI 状态机分析）。
-
-语法：用 fenced code block，语言标记为 `animts`，**第一行写 C# 文件路径**（相对 `site/content/`，且必须位于 `site/content/anims/` 下）：
-
-````
-```animts
-anims/demo-basic.cs
-```
-````
-
-工作流：
-
-- C# 源文件：`site/content/anims/**/*.cs`
-- 构建产物：`site/assets/anims/**/*.js`（由 `npm run build` 生成）
-- 运行时：`site/assets/js/animcs-js-runtime.js`
-- 使用前请先构建，否则页面会提示“动画未构建/路径无效”
-
-示例脚本：
-
-- 基础动画：`anims/demo-basic.cs`
-- 数学可视化：`anims/demo-math-transform.cs`
-- NPC/Boss AI：`anims/demo-eoc-ai.cs`
-
-更多示例与写法请看：`site/content/怎么贡献/使用网页特殊动画模块.md`。
+- `answer: true` 或 `answer: false`
+- 不要写成字符串（例如 `"false"`）
 
 ---
 
-## 5）Front Matter：显示 C# 源码（source_cs）
+## 四、C# 动画组件（anim）
 
-用途：在 `viewer.html` 的正文末尾追加一个“源代码”折叠区，展示指定的 `*.cs` 文件内容并进行 C# 高亮。
-
-写法：在 YAML front matter 里添加 `source_cs`（也兼容 `source_code` / `cs_source`）：
-
-```yaml
----
-title: 示例：显示源码
-source_cs: Modder入门学习/CSharp基础/CSharp变量与表达式.cs
----
-```
-
-说明：
-
-- 路径相对 `site/content/`；也可以写相对当前文章的相对路径（例如 `./Foo.cs`）。
-- 仅允许 `*.cs`，且会拒绝包含 `..`、反斜杠、协议链接等不安全写法。
-
-### 5.1）正文引用：抽取 C# 片段（#cs:...）
-
-用途：在正文中引用某个 `*.cs` 文件的“部分内容”，并渲染为 C# 代码块。
-
-写法：沿用引用语法 `{[path][title]}`，但在 `path` 后追加 `#cs:...` 选择器。
-
-示例：
+推荐直接写：
 
 ```text
-{[./CSharp入门.cs#cs:m:Tutorial.CSharpIntro.CSharpIntroExamples.Add(int,int)][Add 方法]}
-{[./CSharp入门.cs#cs:t:Tutorial.CSharpIntro.PlayerData][PlayerData 类]}
+{{anim:anims/demo-basic.cs}}
 ```
 
-说明：
+使用前先运行 `npm run build`，确保动画产物与清单已生成。
 
-- `#cs:m:` 方法，格式：`<FullType>.<Method>(<sig>)`。
-- `#cs:t:` 类型（class/struct/enum/interface/record），格式：`<FullType>`。
-- `#cs:p/#cs:f/#cs:c/#cs:e` 分别对应属性/字段/常量/枚举成员。
-- 方法必须写全限定类型名，并携带签名；签名匹配时会忽略空格。
-- 如果不写 `#cs:...`，则会把整个 `*.cs` 文件作为代码块插入。
+---
 
-## 6）颜色标记（color）
+## 五、Front Matter 显示 C# 源码（source_cs）
 
-如果你在 Front Matter 里配置了：
+在 YAML front matter 里添加：
+
+```yaml
+source_cs: Modder入门学习/CSharp基础/CSharp_Frist.cs
+```
+
+规则：
+
+- 路径相对 `site/content/`。
+- 仅允许 `*.cs`。
+- 支持写数组（展示多个源码文件）。
+
+---
+
+## 六、颜色标记（color / colorChange）
+
+在 Front Matter 里可配置：
 
 ```yaml
 colors:
   Tip: "#88c0d0"
-  Mad: "#f00"
+
+colorChange:
+  Rainbow:
+    - "#f00"
+    - "#0f0"
+    - "#00f"
+    - "#f00"
 ```
 
-那么你可以在正文里写：
+正文里可写：
 
+```text
+{color:Tip}{这是一段提示文本}
+{colorChange:Rainbow}{彩色闪烁文本}
 ```
-{color:Tip}{这段文字会用 Tip 颜色显示}
-```
-
-提示：颜色标记适合“短句/警告”，不要把整段文章都染色（可读性会变差）。
 
 ---
 
-## 7）Front Matter：建议门槛（min_c / min_t）
+## 七、建议门槛（min_c / min_t）
 
-你可以在 YAML front matter 里为文章标注“建议阅读门槛”（软建议，不影响阅读）：
+可在 front matter 标注建议阅读门槛（软建议，不阻止阅读）：
 
 ```yaml
 min_c: 1
 min_t: 1
 ```
 
-渲染器会在列表页与阅读页给出提示（例如“建议 C≥1 且 T≥1”）。
-
 ---
 
-## 8）作者模式（author）
+## 八、作者模式（author）
 
-作者模式用于贡献者自查，不影响读者。
+开启方式：
 
-开启方式（二选一）：
+- URL：`/site/pages/viewer.html?...&author=1`
+- 侧栏：`分流设置 -> 作者模式`
 
-- URL：`/site/pages/viewer.html?...&author=1`（关闭：`author=0`）
-- 侧栏：`分流设置 -> 作者模式` 按钮（持久化保存）
-
-作者模式提供：
-
-- 元数据检查（例如缺少 `title`、缺少 `min_c/min_t`、`prev/next` 无法解析）
-- 引用展开诊断（文件不存在、标题找不到、循环引用、数量/深度限制）
-- 条件分流统计（指令数量、过滤行数、表达式错误）
-- 链接/资源检查（手动触发扫描）
+作者模式用于检查元数据、引用和条件分流是否写错。

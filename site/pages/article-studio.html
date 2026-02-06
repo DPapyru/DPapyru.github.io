@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线写作IDE（Markdown）</title>
+    <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/prism.min.css">
+    <link rel="stylesheet" href="/site/assets/css/vs2022-theme.css">
+    <link rel="stylesheet" href="/site/assets/css/article-studio.css">
+    <script src="/site/assets/js/theme-init.js"></script>
+</head>
+<body class="viewer-page">
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="../index.html">
+                        <img src="/site/assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
+                        <h1 class="site-title">在线写作IDE</h1>
+                    </a>
+                </div>
+                <nav class="main-nav" id="main-nav">
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="folder.html" class="nav-link">文档</a></li>
+                        <li class="nav-item"><a href="article-studio.html" class="nav-link active" aria-current="page">在线写作IDE</a></li>
+                        <li class="nav-item"><a href="shader-playground.html" class="nav-link">Shader</a></li>
+                        <li class="nav-item"><a href="../qa.html" class="nav-link">问答</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li class="nav-item nav-accent">
+                            <label class="visually-hidden" for="accent-select">配色</label>
+                            <select class="nav-accent-select" id="accent-select" aria-label="配色">
+                                <option value="green">绿色</option>
+                                <option value="blue">蓝色</option>
+                                <option value="purple">紫色</option>
+                                <option value="orange">橙色</option>
+                                <option value="red">红色</option>
+                                <option value="cyan">青色</option>
+                                <option value="black">黑色</option>
+                                <option value="white">白色</option>
+                            </select>
+                        </li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content article-studio-main">
+        <div class="container">
+            <div class="content-wrapper article-studio-wrapper">
+                <div class="tutorial-header">
+                    <h1 class="tutorial-title">Markdown 写作工作区</h1>
+                    <div class="tutorial-meta">
+                        <span class="author">定位: <span>仅 Markdown 编辑 + 预览（C# 代码基础高亮）</span></span>
+                    </div>
+                </div>
+
+                <section class="studio-notice" role="status" aria-live="polite">
+                    <strong>重要提示：</strong>本页不支持编辑或编译 `*.cs`/`anims/*.cs` 文件。需要真实 tModLoader C# API 开发时，请先 Clone 仓库并在本地 IDE（VSCode / Rider / VS）中进行。
+                </section>
+
+                <section class="studio-toolbar">
+                    <button id="studio-insert-template" class="btn btn-small" type="button">插入教程模板</button>
+                    <button id="studio-submit-pr" class="btn btn-small" type="button">提交 PR</button>
+                    <button id="studio-toggle-fullscreen" class="btn btn-small btn-outline" type="button">全屏编辑</button>
+                    <button id="studio-copy-markdown" class="btn btn-small btn-outline" type="button">复制 Markdown</button>
+                    <button id="studio-export" class="btn btn-small btn-outline" type="button">导出草稿 JSON</button>
+                    <button id="studio-reset" class="btn btn-small btn-outline" type="button">清空草稿</button>
+                    <a id="studio-last-pr-link" class="btn btn-small btn-outline" href="#" target="_blank" rel="noopener noreferrer" hidden>打开最新 PR</a>
+                </section>
+
+                <section class="studio-filebar" aria-label="文章文件控制">
+                    <div class="studio-filebar-group">
+                        <label for="studio-existing-select">已有文章</label>
+                        <select id="studio-existing-select" class="studio-select">
+                            <option value="">从站点目录选择文章...</option>
+                        </select>
+                        <button id="studio-load-existing" class="btn btn-small btn-outline" type="button">载入文章</button>
+                    </div>
+                    <div class="studio-filebar-group">
+                        <label for="studio-target-path">目标路径</label>
+                        <input id="studio-target-path" class="studio-input" type="text" value="怎么贡献/新文章.md" placeholder="例如：怎么贡献/新文章.md">
+                        <button id="studio-load-path" class="btn btn-small btn-outline" type="button">按路径载入</button>
+                    </div>
+                    <div class="studio-filebar-group studio-filebar-group--name">
+                        <label for="studio-filename">Markdown 文件名</label>
+                        <input id="studio-filename" class="studio-input" type="text" value="新文章.md" placeholder="例如：新文章.md">
+                    </div>
+                </section>
+
+                <section class="studio-prbar" aria-label="PR 提交配置">
+                    <div class="studio-prbar-group">
+                        <label for="studio-pr-worker-url">Worker API 地址</label>
+                        <input id="studio-pr-worker-url" class="studio-input" type="text" placeholder="https://xxx.workers.dev/api/create-pr">
+                    </div>
+                    <div class="studio-prbar-group">
+                        <label>GitHub 账号</label>
+                        <div class="studio-auth-actions">
+                            <button id="studio-auth-login" class="btn btn-small" type="button">GitHub 登录</button>
+                            <button id="studio-auth-logout" class="btn btn-small btn-outline" type="button">退出</button>
+                            <span id="studio-auth-status" class="studio-auth-status">未登录</span>
+                        </div>
+                    </div>
+                    <div class="studio-prbar-group">
+                        <label for="studio-pr-title">PR 标题（可选）</label>
+                        <input id="studio-pr-title" class="studio-input" type="text" placeholder="例如：docs: 更新 某章节">
+                    </div>
+                    <div class="studio-prbar-group studio-prbar-group--shared-key">
+                        <label for="studio-pr-shared-key">兼容密钥（可选）</label>
+                        <input id="studio-pr-shared-key" class="studio-input" type="password" placeholder="仅兼容旧版 Worker 的 STUDIO_SHARED_KEY" autocomplete="off">
+                        <span class="studio-help">优先使用 GitHub 登录；仅在 Worker 仍启用密钥模式时填写。</span>
+                    </div>
+                </section>
+
+                <section class="studio-shell" aria-label="在线写作IDE">
+                    <div class="studio-titlebar">article-studio · markdown-only mode</div>
+                    <div class="studio-workbench">
+                        <section class="studio-editor-area">
+                            <div class="studio-tabs">
+                                <button id="studio-active-tab" class="studio-tab studio-tab--active" type="button" aria-current="page">新文章.md</button>
+                            </div>
+
+                            <div class="studio-panes">
+                                <div class="studio-pane">
+                                    <div class="studio-pane-title">Markdown Editor</div>
+                                    <textarea id="studio-markdown" class="studio-editor" spellcheck="false" placeholder="在这里编写 Markdown 教程内容...
+
+```csharp
+// C# 代码会在右侧预览中高亮
+```"></textarea>
+                                </div>
+                                <div class="studio-pane">
+                                    <div class="studio-pane-title">Preview（含 C# 基础高亮）</div>
+                                    <div id="studio-preview" class="studio-preview"></div>
+                                </div>
+                            </div>
+
+                            <div class="studio-statusbar">
+                                <span id="studio-status">就绪</span>
+                                <span id="studio-current-path">目标: 怎么贡献/新文章.md</span>
+                                <span id="studio-stats">0 行 · 0 字</span>
+                            </div>
+                        </section>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="/shared/assets/js/site-core.js"></script>
+    <script src="/site/assets/js/navigation.js"></script>
+    <script src="/site/assets/js/marked.min.js"></script>
+    <script src="/site/assets/js/prism.min.js"></script>
+    <script>
+        if (window.SITE) window.SITE.bootstrapPage('article-studio');
+    </script>
+    <script src="/site/assets/js/article-studio.js"></script>
+</body>
+</html>

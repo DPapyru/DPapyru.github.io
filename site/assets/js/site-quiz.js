@@ -171,6 +171,14 @@
         return [value];
     }
 
+    function normalizeTfAnswer(value) {
+        if (typeof value === 'boolean') return String(value);
+        const text = String(value == null ? '' : value).trim().toLowerCase();
+        if (text === 'true') return 'true';
+        if (text === 'false') return 'false';
+        return '';
+    }
+
     function setEquals(a, b) {
         const setA = new Set(a);
         const setB = new Set(b);
@@ -242,7 +250,8 @@
 
         let expectedAnswers = [];
         if (quizType === 'tf') {
-            expectedAnswers = [String(Boolean(quiz.answer))];
+            const tfAnswer = normalizeTfAnswer(quiz.answer);
+            expectedAnswers = [tfAnswer || 'false'];
             const name = 'tf-' + quizId;
             const tfOptions = [
                 { id: 'true', text: '对' },

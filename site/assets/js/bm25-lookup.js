@@ -300,7 +300,7 @@
 
         // 实作实体：压制明显无关“网页动画模块”
         if (entities.has('item') || entities.has('weapon') || entities.has('projectile') || entities.has('npc')) {
-            pathMultiplier.push({ pattern: /网页|动画模块|animts/i, mult: 0.15 });
+            pathMultiplier.push({ pattern: /网页|动画模块|animcs|anim/i, mult: 0.15 });
             // 实作问题优先指向“做法/最小示例”，避免“提问/写作”类元内容抢占
             pathMultiplier.push({ pattern: /提问|写作指南|教学文章写作指南/i, mult: 0.22 });
         }

@@ -557,7 +557,6 @@ Agent 的代码可以，但我想调整掉落率和掉落数量，自己改。
 现在你已经掌握了编程思维、搜索、提问、AI 工具、Agent 的使用，可以开始实际的 Mod 开发了！
 
 推荐继续学习 `Modder入门` 下的具体教程：
-- {../Modder入门/详细文档/Mod开发实践/第一个模组.generated.md}[第一个模组]
-- {../Modder入门/详细文档/Mod开发实践/第一个物品.generated.md}[第一个物品]
+- {{ref:../Modder入门学习/CSharp基础/CSharp_Frist.md|C#基础教程-第一课-C#语法基础}}
 
 从最小可运行的项目开始，逐步学习 tModLoader 的 API 和开发流程。

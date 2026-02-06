@@ -64,11 +64,11 @@
                 <nav class="main-nav" id="main-nav">
                     <ul class="nav-list">
                         <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
-                        <li class="nav-item"><a href="index.html" class="nav-link active" aria-current="page">文档</a></li>
+                        <li class="nav-item"><a href="folder.html" class="nav-link active" aria-current="page">文档</a></li>
+                        <li class="nav-item"><a href="article-studio.html" class="nav-link">在线写作IDE</a></li>
                         <li class="nav-item"><a href="shader-playground.html" class="nav-link">Shader</a></li>
                         <li class="nav-item"><a href="../qa.html" class="nav-link">问答</a></li>
-                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
-                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li class="nav-item nav-accent">
                             <label class="visually-hidden" for="accent-select">配色</label>
                             <select class="nav-accent-select" id="accent-select" aria-label="配色">
@@ -814,7 +814,7 @@
 		                        }
 		                        const safeCode = escapeHtml(code || '');
 
-                        if (language === 'animts') {
+                        if (language === 'animcs') {
                             const raw = String(code || '').split('\n').map(line => String(line || '').trim()).find(line => line) || '';
                             let src = raw;
                             try { src = decodeURIComponent(raw); } catch (_) { src = raw; }
@@ -822,7 +822,7 @@
                             const normalized = normalizePath(src);
 
                             if (!normalized.startsWith('anims/') || !/\.cs$/i.test(normalized)) {
-                                return `<pre><code class="language-plaintext">${escapeHtml('animts 代码块第一行必须是 anims/*.cs 路径')}</code></pre>`;
+                                return `<pre><code class="language-plaintext">${escapeHtml('animcs 代码块第一行必须是 anims/*.cs 路径')}</code></pre>`;
                             }
 
                             return `<div class="animts-embed animcs-embed" data-animcs-src="${escapeHtml(normalized)}"></div>`;
@@ -1422,7 +1422,7 @@
 	            return null;
 	        }
 
-	        const TRANSCLUSION_LINE_RE = /^\s*\{\[([^\]\n\r]+)\]\[([^\]\n\r]+)\]\}\s*$/;
+	        const TRANSCLUSION_DIRECTIVE_RE = /^\s*\{\{([a-zA-Z]+)\s*:\s*([^}\n\r]+)\}\}\s*$/;
 	        const TRANSCLUSION_MAX_DEPTH = 4;
 	        const TRANSCLUSION_MAX_FILES = 30;
 	        const TRANSCLUSION_CACHE = new Map();
@@ -2680,23 +2680,41 @@
 	            return { base: raw.slice(0, hashIndex), hash: raw.slice(hashIndex) };
 	        }
 
-	        function normalizeHeadingForMatch(text) {
-	            let t = String(text || '').trim();
-	            if (!t) return '';
-	            t = t
+	        function parseTransclusionDirective(line) {
+	            const match = String(line || '').match(TRANSCLUSION_DIRECTIVE_RE);
+	            if (!match) return null;
+
+	            const kind = String(match[1] || '').trim().toLowerCase();
+	            const rawPayload = String(match[2] || '').trim();
+	            if (!rawPayload) return null;
+
+	            if (kind === 'anim') {
+	                return { kind, target: rawPayload, title: '' };
+	            }
+
+	            if (kind !== 'ref' && kind !== 'cs') return null;
+
+	            const pipeIndex = rawPayload.indexOf('|');
+	            if (pipeIndex < 0) {
+	                return { kind, target: rawPayload, title: '' };
+	            }
+
+	            const target = rawPayload.slice(0, pipeIndex).trim();
+	            const title = rawPayload.slice(pipeIndex + 1).trim();
+	            if (!target) return null;
+	            return { kind, target, title };
+	        }
+
+	        function extractMarkdownSectionByHeading(markdown, selector) {
+	            const selRaw = String(selector || '').trim();
+	            if (!selRaw) return null;
+	            const sel = String(selRaw)
 	                .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
 	                .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
 	                .replace(/[`*_~]/g, '')
 	                .replace(/\s+/g, ' ')
 	                .trim()
 	                .toLowerCase();
-	            return t;
-	        }
-
-	        function extractMarkdownSectionByHeading(markdown, selector) {
-	            const selRaw = String(selector || '').trim();
-	            if (!selRaw) return null;
-	            const sel = normalizeHeadingForMatch(selRaw);
 	            if (!sel) return null;
 
 	            const lines = String(markdown || '').split(/\r?\n/);
@@ -2727,7 +2745,13 @@
 
 	                const level = headingMatch[1].length;
 	                const rawText = String(headingMatch[2] || '').trim().replace(/\s+#*$/, '').trim();
-	                const normalized = normalizeHeadingForMatch(rawText);
+	                const normalized = String(rawText)
+	                    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+	                    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+	                    .replace(/[`*_~]/g, '')
+	                    .replace(/\s+/g, ' ')
+	                    .trim()
+	                    .toLowerCase();
 	                if (!normalized) continue;
 
 	                if (startIndex < 0) {
@@ -3662,245 +3686,285 @@
 	            return { ok: false, message: '不支持的选择器：' + String(kind || '') };
 	        }
 
-		        async function expandMarkdownTransclusions(markdown, currentDocPath, depth = 0, stack = [], ctx) {
-	            const diag = getCurrentLearningDiagnostics();
-	            if (!markdown) return markdown;
-	            if (depth > TRANSCLUSION_MAX_DEPTH) return markdown;
+        async function expandMarkdownTransclusions(markdown, currentDocPath, depth = 0, stack = [], ctx) {
+            const diag = getCurrentLearningDiagnostics();
+            if (!markdown) return markdown;
+            if (depth > TRANSCLUSION_MAX_DEPTH) return markdown;
 
-	            const lines = String(markdown).split(/\r?\n/);
-	            const matches = [];
-	            let inFence = false;
-	            let fenceChar = '';
-	            let currentHeadingLevel = 1;
+            const lines = String(markdown).split(/\r?\n/);
+            const matches = [];
+            let inFence = false;
+            let fenceChar = '';
+            let currentHeadingLevel = 1;
 
-	            for (let i = 0; i < lines.length; i++) {
-	                const line = lines[i];
-	                const fenceMatch = line.match(/^\s*(```+|~~~+)\s*/);
-	                if (fenceMatch) {
-	                    const currentFence = fenceMatch[1][0];
-	                    if (!inFence) {
-	                        inFence = true;
-	                        fenceChar = currentFence;
-	                    } else if (fenceChar === currentFence) {
-	                        inFence = false;
-	                        fenceChar = '';
-	                    }
-	                    continue;
-	                }
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const fenceMatch = line.match(/^\s*(```+|~~~+)\s*/);
+                if (fenceMatch) {
+                    const currentFence = fenceMatch[1][0];
+                    if (!inFence) {
+                        inFence = true;
+                        fenceChar = currentFence;
+                    } else if (fenceChar === currentFence) {
+                        inFence = false;
+                        fenceChar = '';
+                    }
+                    continue;
+                }
 
-	                if (inFence) continue;
-	                const headingMatch = line.match(/^(#{1,6})\s+.*$/);
-	                if (headingMatch) {
-	                    currentHeadingLevel = headingMatch[1].length;
-	                    continue;
-	                }
-	                const m = line.match(TRANSCLUSION_LINE_RE);
-	                if (!m) continue;
-	                matches.push({
-	                    lineIndex: i,
-	                    target: String(m[1] || '').trim(),
-	                    title: String(m[2] || '').trim(),
-	                    wrapperLevel: Math.min(6, currentHeadingLevel + 1)
-	                });
-	                if (matches.length >= TRANSCLUSION_MAX_FILES) break;
-	            }
+                if (inFence) continue;
+                const headingMatch = line.match(/^(#{1,6})\s+.*$/);
+                if (headingMatch) {
+                    currentHeadingLevel = headingMatch[1].length;
+                    continue;
+                }
 
-	            if (diag && diag.transclusion) {
-	                diag.transclusion.matchedLines += matches.length;
-	                if (matches.length >= TRANSCLUSION_MAX_FILES) {
-	                    diag.transclusion.errors.push({
-	                        from: String(currentDocPath || ''),
-	                        target: '',
-	                        message: '引用行数超过上限（仅处理前 ' + TRANSCLUSION_MAX_FILES + ' 个）'
-	                    });
-	                }
-	            }
+                const directive = parseTransclusionDirective(line);
+                if (!directive) continue;
 
-		            if (!matches.length) return markdown;
+                matches.push({
+                    lineIndex: i,
+                    kind: directive.kind,
+                    target: directive.target,
+                    title: directive.title,
+                    wrapperLevel: Math.min(6, currentHeadingLevel + 1)
+                });
 
-		            function resolveTransclusionDocPath(rawBase) {
-		                if (!rawBase) return null;
-		                let resolved = resolveDocLinkPath(rawBase, currentDocPath);
-		                if (!resolved) {
-		                    const rel = resolveRelativeHref(rawBase, currentDocPath);
-		                    resolved = String(rel || '');
-		                }
+                if (matches.length >= TRANSCLUSION_MAX_FILES) break;
+            }
 
-		                resolved = normalizePath(String(resolved || '').replace(/^\.?\//, '').replace(/^docs\//, ''));
-		                if (!resolved) return null;
+            if (diag && diag.transclusion) {
+                diag.transclusion.matchedLines += matches.length;
+                if (matches.length >= TRANSCLUSION_MAX_FILES) {
+                    diag.transclusion.errors.push({
+                        from: String(currentDocPath || ''),
+                        target: '',
+                        message: '引用行数超过上限（仅处理前 ' + TRANSCLUSION_MAX_FILES + ' 个）'
+                    });
+                }
+            }
 
-		                if (!resolved.endsWith('.md')) resolved += '.md';
+            if (!matches.length) return markdown;
 
-		                if (
-		                    resolved.includes('\0') ||
-		                    resolved.includes('\\') ||
-		                    /(^|\/)\.\.(\/|$)/.test(resolved)
-		                ) {
-		                    return null;
-		                }
+            function resolveTransclusionDocPath(rawBase) {
+                if (!rawBase) return null;
+                let resolved = resolveDocLinkPath(rawBase, currentDocPath);
+                if (!resolved) {
+                    const rel = resolveRelativeHref(rawBase, currentDocPath);
+                    resolved = String(rel || '');
+                }
 
-		                if (!isIndexedDocPath(resolved, currentDocPath)) return null;
-		                return resolved;
-		            }
+                resolved = normalizePath(String(resolved || '').replace(/^\.?\//, '').replace(/^docs\//, ''));
+                if (!resolved) return null;
 
-		            const replacements = await Promise.all(matches.map(async (m) => {
-		                if (isUnsafeTransclusionTarget(m.target)) {
-		                    if (diag && diag.transclusion) {
-		                        diag.transclusion.errors.push({
-	                            from: String(currentDocPath || ''),
-	                            target: String(m.target || ''),
-		                            message: '非法路径'
-		                        });
-		                    }
-		                    return `\n\n> 无法载入引用：非法路径 \`${m.target}\`\n\n`;
-		                }
+                if (!resolved.endsWith('.md')) resolved += '.md';
 
-	                const { base, hash } = splitHash(m.target);
-	                if (/\.cs$/i.test(String(base || '').trim())) {
-	                    const normalized = normalizeSourceCodePath(base, currentDocPath);
-	                    if (!normalized) {
-	                        return `\n\n> 无法载入代码：非法路径 \`${m.target}\`\n\n`;
-	                    }
-	                    const fetchUrl = `/site/content/${normalized.replace(/^\/+/, '')}`;
-	                    let selector = null;
-	                    if (hash && hash.startsWith('#')) {
-	                        let decoded = hash;
-	                        try {
-	                            decoded = '#' + decodeURIComponent(hash.slice(1));
-	                        } catch (_) {
-	                            decoded = hash;
-	                        }
-	                        selector = parseCSharpSnippetSelector(decoded);
-	                    }
-	                    try {
-	                        const resp = await fetch(encodeURI(fetchUrl), { cache: 'no-store' });
-	                        if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
-	                        const sourceText = await resp.text();
-	                        if (selector) {
-	                            const mask = buildCSharpCodeMask(sourceText);
-	                            const fullTypeName = getCSharpFullTypeNameFromSelector(selector.kind, selector.selector);
-	                            if (!fullTypeName) {
-	                                return `\n\n> 无法载入代码：\`${normalized}${hash}\`（选择器格式错误）\n\n`;
-	                            }
-	                            const result = extractMemberSnippet(sourceText, mask, fullTypeName, selector.kind, selector.selector);
-	                            if (!result.ok) {
-	                                return `\n\n> 无法载入代码：\`${normalized}${hash}\`（${String(result.message || '未知错误')}）\n\n`;
-	                            }
-	                            return `\n\n${buildFencedCodeBlock('csharp', dedentCodeBlockText(result.snippet))}\n\n`;
-	                        }
-	                        return `\n\n${buildFencedCodeBlock('csharp', sourceText)}\n\n`;
-	                    } catch (err) {
-	                        return `\n\n> 无法载入代码：\`${normalized}\`（${String(err && err.message ? err.message : err)}）\n\n`;
-	                    }
-	                }
-		                let sectionSelector = '';
-	                if (hash && hash.startsWith('#')) {
-	                    sectionSelector = hash.slice(1);
-	                    try {
-	                        sectionSelector = decodeURIComponent(sectionSelector);
-	                    } catch (e) {
-	                        sectionSelector = hash.slice(1);
-		                    }
-		                    sectionSelector = String(sectionSelector || '').trim();
-		                }
-		                const resolvedDoc = resolveTransclusionDocPath(base);
-		                if (!resolvedDoc) {
-		                    if (diag && diag.transclusion) {
-		                        diag.transclusion.errors.push({
-		                            from: String(currentDocPath || ''),
-		                            target: String(m.target || ''),
-		                            message: '找不到文档'
-		                        });
-		                    }
-		                    return `\n\n> 无法载入引用：找不到文档 \`${m.target}\`\n\n`;
-		                }
+                if (
+                    resolved.includes('\0') ||
+                    resolved.includes('\\\\') ||
+                    /(^|\/)\.\.(\/|$)/.test(resolved)
+                ) {
+                    return null;
+                }
 
-		                if (stack.includes(resolvedDoc)) {
-		                    if (diag && diag.transclusion) {
-		                        diag.transclusion.errors.push({
-	                            from: String(currentDocPath || ''),
-	                            target: String(resolvedDoc || ''),
-	                            message: '检测到循环引用'
-	                        });
-	                    }
-	                    return `\n\n> 无法载入引用：检测到循环引用 \`${resolvedDoc}\`\n\n`;
-	                }
+                if (!isIndexedDocPath(resolved, currentDocPath)) return null;
+                return resolved;
+            }
 
-	                try {
-	                    const rawText = await fetchMarkdownDocText(resolvedDoc);
-	                    if (diag && diag.transclusion) {
-	                        diag.transclusion.expandedCount += 1;
-	                        diag.transclusion.includedDocs.push({
-	                            from: String(currentDocPath || ''),
-	                            doc: String(resolvedDoc || ''),
-	                            selector: sectionSelector || ''
-	                        });
-	                    }
-	                    const fm = parseFrontMatter(rawText);
-	                    let body = fm.content || '';
-	                    body = stripLeadingTitleHeading(body, [m.title, fm.metadata && fm.metadata.title]);
-	                    body = applyLearningConditionBlocks(body, ctx);
-	                    if (sectionSelector) {
-	                        const extracted = extractMarkdownSectionByHeading(body, sectionSelector);
-	                        if (extracted == null) {
-	                            if (diag && diag.transclusion) {
-	                                diag.transclusion.errors.push({
-	                                    from: String(currentDocPath || ''),
-	                                    target: String(resolvedDoc || ''),
-	                                    message: '找不到标题：' + String(sectionSelector || '')
-	                                });
-	                            }
-	                            return `\n\n> 无法载入引用：在 \`${resolvedDoc}\` 中找不到标题 \`${sectionSelector}\`\n\n`;
-	                        }
-	                        body = extracted;
-	                    }
-	                    body = rewriteTranscludedLinksAndImages(body, resolvedDoc);
-	                    body = await expandMarkdownTransclusions(body, resolvedDoc, depth + 1, stack.concat(resolvedDoc), ctx);
-	                    const rawTitle = String(m.title || '').trim();
-	                    if (rawTitle.startsWith('!')) {
-	                        const inlineTitle = rawTitle.slice(1).trim() || '引用内容';
-	                        if (!sectionSelector) {
-	                            body = demoteMarkdownHeadingsToBold(body);
-	                        }
-	                        return `\n\n**${inlineTitle}**\n\n${body}\n\n`;
-	                    }
+            const replacements = await Promise.all(matches.map(async (m) => {
+                if (m.kind === 'anim') {
+                    const normalizedAnimPath = normalizePath(String(m.target || '').trim().replace(/^\.?\//, '').replace(/^docs\//, ''));
+                    if (
+                        !normalizedAnimPath ||
+                        normalizedAnimPath.includes('\0') ||
+                        normalizedAnimPath.includes('\\\\') ||
+                        /(^|\/)\.\.(\/|$)/.test(normalizedAnimPath) ||
+                        !normalizedAnimPath.startsWith('anims/') ||
+                        !/\.cs$/i.test(normalizedAnimPath)
+                    ) {
+                        return `\n\n> 无法载入动画：非法路径 \`${m.target}\`\n\n`;
+                    }
+                    return `\n\n${buildFencedCodeBlock('animcs', normalizedAnimPath)}\n\n`;
+                }
 
-	                    const wrapperLevel = Math.max(2, Math.min(6, Number(m.wrapperLevel) || 2));
-	                    const wrapperHash = '#'.repeat(wrapperLevel);
-	                    const minLevel = getMarkdownMinHeadingLevel(body);
-	                    if (minLevel) {
-	                        const desiredMin = Math.min(6, wrapperLevel + 1);
-	                        const shift = Math.max(0, desiredMin - minLevel);
-	                        body = shiftMarkdownHeadings(body, shift);
-	                    }
-	                    return `\n\n${wrapperHash} ${rawTitle}\n\n${body}\n\n`;
-	                } catch (err) {
-	                    if (diag && diag.transclusion) {
-	                        diag.transclusion.errors.push({
-	                            from: String(currentDocPath || ''),
-	                            target: String(resolvedDoc || ''),
-	                            message: String(err && err.message ? err.message : err)
-	                        });
-	                    }
-	                    return `\n\n> 无法载入引用：\`${resolvedDoc}${hash || ''}\`（${String(err && err.message ? err.message : err)}）\n\n`;
-	                }
-	            }));
+                if (isUnsafeTransclusionTarget(m.target)) {
+                    if (diag && diag.transclusion) {
+                        diag.transclusion.errors.push({
+                            from: String(currentDocPath || ''),
+                            target: String(m.target || ''),
+                            message: '非法路径'
+                        });
+                    }
+                    return `\n\n> 无法载入引用：非法路径 \`${m.target}\`\n\n`;
+                }
 
-	            const byLine = new Map();
-	            for (let i = 0; i < matches.length; i++) {
-	                byLine.set(matches[i].lineIndex, replacements[i]);
-	            }
+                const { base, hash } = splitHash(m.target);
+                let codeBase = String(base || '').trim();
+                if (m.kind === 'cs' && codeBase && !/\.cs$/i.test(codeBase)) {
+                    codeBase += '.cs';
+                }
 
-	            const out = [];
-	            for (let i = 0; i < lines.length; i++) {
-	                if (byLine.has(i)) {
-	                    out.push(byLine.get(i));
-	                } else {
-	                    out.push(lines[i]);
-	                }
-	            }
-	            return out.join('\n');
-	        }
+                const isCSharpInclude = m.kind === 'cs' || /\.cs$/i.test(codeBase);
+                if (isCSharpInclude) {
+                    const normalized = normalizeSourceCodePath(codeBase, currentDocPath);
+                    if (!normalized) {
+                        return `\n\n> 无法载入代码：非法路径 \`${m.target}\`\n\n`;
+                    }
+
+                    const fetchUrl = `/site/content/${normalized.replace(/^\/+/, '')}`;
+                    let selector = null;
+                    if (hash && hash.startsWith('#')) {
+                        let decoded = hash;
+                        try {
+                            decoded = '#' + decodeURIComponent(hash.slice(1));
+                        } catch (_) {
+                            decoded = hash;
+                        }
+                        selector = parseCSharpSnippetSelector(decoded);
+                    }
+
+                    try {
+                        const resp = await fetch(encodeURI(fetchUrl), { cache: 'no-store' });
+                        if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+                        const sourceText = await resp.text();
+
+                        if (selector) {
+                            const mask = buildCSharpCodeMask(sourceText);
+                            const fullTypeName = getCSharpFullTypeNameFromSelector(selector.kind, selector.selector);
+                            if (!fullTypeName) {
+                                return `\n\n> 无法载入代码：\`${normalized}${hash}\`（选择器格式错误）\n\n`;
+                            }
+                            const result = extractMemberSnippet(sourceText, mask, fullTypeName, selector.kind, selector.selector);
+                            if (!result.ok) {
+                                return `\n\n> 无法载入代码：\`${normalized}${hash}\`（${String(result.message || '未知错误')}）\n\n`;
+                            }
+                            return `\n\n${buildFencedCodeBlock('csharp', dedentCodeBlockText(result.snippet))}\n\n`;
+                        }
+
+                        return `\n\n${buildFencedCodeBlock('csharp', sourceText)}\n\n`;
+                    } catch (err) {
+                        return `\n\n> 无法载入代码：\`${normalized}\`（${String(err && err.message ? err.message : err)}）\n\n`;
+                    }
+                }
+
+                const resolvedDoc = resolveTransclusionDocPath(base);
+                if (!resolvedDoc) {
+                    if (diag && diag.transclusion) {
+                        diag.transclusion.errors.push({
+                            from: String(currentDocPath || ''),
+                            target: String(m.target || ''),
+                            message: '找不到文档'
+                        });
+                    }
+                    return `\n\n> 无法载入引用：找不到文档 \`${m.target}\`\n\n`;
+                }
+
+                if (stack.includes(resolvedDoc)) {
+                    if (diag && diag.transclusion) {
+                        diag.transclusion.errors.push({
+                            from: String(currentDocPath || ''),
+                            target: String(resolvedDoc || ''),
+                            message: '检测到循环引用'
+                        });
+                    }
+                    return `\n\n> 无法载入引用：检测到循环引用 \`${resolvedDoc}\`\n\n`;
+                }
+
+                try {
+                    const rawText = await fetchMarkdownDocText(resolvedDoc);
+                    if (diag && diag.transclusion) {
+                        diag.transclusion.expandedCount += 1;
+                        diag.transclusion.includedDocs.push({
+                            from: String(currentDocPath || ''),
+                            doc: String(resolvedDoc || ''),
+                            selector: hash || ''
+                        });
+                    }
+
+                    const fm = parseFrontMatter(rawText);
+                    let body = fm.content || '';
+                    const rawTitle = String(m.title || '').trim();
+                    const effectiveTitle = rawTitle || (fm.metadata && fm.metadata.title) || '引用内容';
+                    body = stripLeadingTitleHeading(body, [effectiveTitle, fm.metadata && fm.metadata.title]);
+                    body = applyLearningConditionBlocks(body, ctx);
+
+                    let sectionSelector = '';
+                    if (hash && hash.startsWith('#')) {
+                        sectionSelector = hash.slice(1);
+                        try {
+                            sectionSelector = decodeURIComponent(sectionSelector);
+                        } catch (e) {
+                            sectionSelector = hash.slice(1);
+                        }
+                        sectionSelector = String(sectionSelector || '').trim();
+                    }
+
+                    if (sectionSelector) {
+                        const extracted = extractMarkdownSectionByHeading(body, sectionSelector);
+                        if (extracted == null) {
+                            if (diag && diag.transclusion) {
+                                diag.transclusion.errors.push({
+                                    from: String(currentDocPath || ''),
+                                    target: String(resolvedDoc || ''),
+                                    message: '找不到标题：' + String(sectionSelector || '')
+                                });
+                            }
+                            return `\n\n> 无法载入引用：在 \`${resolvedDoc}\` 中找不到标题 \`${sectionSelector}\`\n\n`;
+                        }
+                        body = extracted;
+                    }
+
+                    body = rewriteTranscludedLinksAndImages(body, resolvedDoc);
+                    body = await expandMarkdownTransclusions(body, resolvedDoc, depth + 1, stack.concat(resolvedDoc), ctx);
+
+                    if (rawTitle.startsWith('!')) {
+                        const inlineTitle = rawTitle.slice(1).trim() || '引用内容';
+                        if (!sectionSelector) {
+                            body = demoteMarkdownHeadingsToBold(body);
+                        }
+                        return `\n\n**${inlineTitle}**\n\n${body}\n\n`;
+                    }
+
+                    const wrapperLevel = Math.max(2, Math.min(6, Number(m.wrapperLevel) || 2));
+                    const wrapperHash = '#'.repeat(wrapperLevel);
+                    const minLevel = getMarkdownMinHeadingLevel(body);
+                    if (minLevel) {
+                        const desiredMin = Math.min(6, wrapperLevel + 1);
+                        const shift = Math.max(0, desiredMin - minLevel);
+                        body = shiftMarkdownHeadings(body, shift);
+                    }
+
+                    const headingTitle = rawTitle || effectiveTitle;
+                    return `\n\n${wrapperHash} ${headingTitle}\n\n${body}\n\n`;
+                } catch (err) {
+                    if (diag && diag.transclusion) {
+                        diag.transclusion.errors.push({
+                            from: String(currentDocPath || ''),
+                            target: String(resolvedDoc || ''),
+                            message: String(err && err.message ? err.message : err)
+                        });
+                    }
+                    return `\n\n> 无法载入引用：\`${resolvedDoc}${hash || ''}\`（${String(err && err.message ? err.message : err)}）\n\n`;
+                }
+            }));
+
+            const byLine = new Map();
+            for (let i = 0; i < matches.length; i++) {
+                byLine.set(matches[i].lineIndex, replacements[i]);
+            }
+
+            const out = [];
+            for (let i = 0; i < lines.length; i++) {
+                if (byLine.has(i)) {
+                    out.push(byLine.get(i));
+                } else {
+                    out.push(lines[i]);
+                }
+            }
+
+            return out.join('\n');
+        }
+
 
         // 使用文档信息更新配置
         function updateConfigWithDocument(docInfo) {
@@ -4175,7 +4239,7 @@
 	                        // 更新当前分类的文档列表
 	                        updateCurrentCategoryDocs(fetchPath);
 
-	                        // 如果 Front Matter 指定了 source_cs/source_code 等字段，则显示对应 C# 源码（允许多个）
+	                        // 如果 Front Matter 指定了 source_cs 字段，则显示对应 C# 源码（允许多个）
 	                        renderSourceCodesFromFrontMatter(metadata, fetchPath);
 
 	                        // 清理上一次的作者模式诊断状态（避免跨文档串联）
