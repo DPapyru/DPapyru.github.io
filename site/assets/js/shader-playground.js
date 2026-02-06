@@ -1,0 +1,2058 @@
+// Shader playground for site/pages/shader-playground.html
+// Style: semicolons, 4-space indent, IIFE.
+
+(function () {
+    'use strict';
+
+    const STORAGE_KEY = 'shader-playground.v1';
+    const ITIME_OFFSET_STORAGE_KEY = 'shader-playground.iTimeOffset';
+    const COMMON_TAB_ID = '__common__';
+    const hlslAdapter = (typeof window !== 'undefined' && window.ShaderHlslAdapter) ? window.ShaderHlslAdapter : null;
+    const editorAssist = (typeof window !== 'undefined' && window.ShaderEditorAssist) ? window.ShaderEditorAssist : null;
+
+    function $(id) {
+        return document.getElementById(id);
+    }
+
+    function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+    }
+
+    function nowMs() {
+        return (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    }
+
+    function createId(prefix) {
+        return String(prefix || 'id') + '-' + Math.random().toString(16).slice(2);
+    }
+
+    function sanitizeName(name) {
+        const raw = String(name || '').trim();
+        if (!raw) return 'Pass';
+        return raw.replace(/[\r\n\t]/g, ' ').slice(0, 32);
+    }
+
+    function setText(el, text) {
+        if (!el) return;
+        el.textContent = String(text || '');
+    }
+
+    function isIdentifierChar(ch) {
+        return /[A-Za-z0-9_]/.test(String(ch || ''));
+    }
+
+    function insertTextAtCursor(textarea, text) {
+        const el = textarea;
+        const start = Number(el.selectionStart || 0);
+        const end = Number(el.selectionEnd || 0);
+        const raw = String(el.value || '');
+        el.value = raw.slice(0, start) + text + raw.slice(end);
+        const next = start + String(text).length;
+        el.selectionStart = next;
+        el.selectionEnd = next;
+    }
+
+    function createEl(tag, className) {
+        const el = document.createElement(tag);
+        if (className) el.className = className;
+        return el;
+    }
+
+    function safeJsonParse(text) {
+        try {
+            return JSON.parse(text);
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function indentSelection(textarea, useShift) {
+        const el = textarea;
+        const assist = editorAssist && typeof editorAssist.indentTextBlock === 'function'
+            ? editorAssist
+            : null;
+        const raw = String(el.value || '');
+        const start = Number(el.selectionStart || 0);
+        const end = Number(el.selectionEnd || 0);
+        if (!assist) return;
+
+        const res = assist.indentTextBlock(raw, start, end, !!useShift);
+        el.value = res.text;
+        el.selectionStart = res.start;
+        el.selectionEnd = res.end;
+    }
+
+    function saveState(state) {
+        try {
+            const payload = {
+                v: 1,
+                common: state.common,
+                passes: state.passes.map((p) => ({
+                    id: p.id,
+                    name: p.name,
+                    type: p.type,
+                    scale: p.scale,
+                    code: p.code,
+                    channels: p.channels
+                })),
+                selected: state.selected,
+                editorTarget: state.editorTarget,
+                globalScale: state.globalScale,
+                addressMode: state.addressMode
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        } catch (_) { }
+    }
+
+    function loadState() {
+        const raw = (function () {
+            try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
+        })();
+        if (!raw) return null;
+        const parsed = safeJsonParse(raw);
+        if (!parsed || parsed.v !== 1) return null;
+        return parsed;
+    }
+
+    function createDefaultState() {
+        const pass1 = {
+            id: createId('pass'),
+            name: 'Pass 1',
+            type: 'image',
+            scale: 1,
+            code: DEFAULT_SIMPLE_PASS,
+            channels: [
+                { kind: 'none' },
+                { kind: 'none' },
+                { kind: 'none' },
+                { kind: 'none' }
+            ]
+        };
+
+        return {
+            common: DEFAULT_COMMON,
+            passes: [pass1],
+            selected: pass1.id,
+            editorTarget: pass1.id,
+            globalScale: 1,
+            addressMode: "clamp",
+            isRunning: true
+        };
+    }
+
+    // --- Toy-HLSL -> GLSL ES 3.00
+    function buildFragmentSource(common, passCode) {
+        if (!hlslAdapter || typeof hlslAdapter.buildFragmentSource !== 'function') {
+            return {
+                ok: false,
+                error: 'HLSL 适配器未加载，请刷新页面重试。'
+            };
+        }
+        return hlslAdapter.buildFragmentSource(common, passCode);
+    }
+
+    function buildVertexSource() {
+        return [
+            '#version 300 es',
+            'precision highp float;',
+            '',
+            'layout(location = 0) in vec2 aPos;',
+            'layout(location = 1) in vec2 aUv;',
+            'out vec2 vUv;',
+            'void main() {',
+            '    vUv = aUv;',
+            '    gl_Position = vec4(aPos, 0.0, 1.0);',
+            '}'
+        ].join('\n');
+    }
+
+    function createProgram(gl, vsSource, fsSource) {
+        const vs = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vs, vsSource);
+        gl.compileShader(vs);
+        if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS)) {
+            const log = gl.getShaderInfoLog(vs) || 'Vertex shader compile failed';
+            gl.deleteShader(vs);
+            return { ok: false, error: log };
+        }
+
+        const fs = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fs, fsSource);
+        gl.compileShader(fs);
+        if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) {
+            const log = gl.getShaderInfoLog(fs) || 'Fragment shader compile failed';
+            gl.deleteShader(vs);
+            gl.deleteShader(fs);
+            return { ok: false, error: log };
+        }
+
+        const prog = gl.createProgram();
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        gl.linkProgram(prog);
+        gl.deleteShader(vs);
+        gl.deleteShader(fs);
+
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+            const log = gl.getProgramInfoLog(prog) || 'Program link failed';
+            gl.deleteProgram(prog);
+            return { ok: false, error: log };
+        }
+
+        return { ok: true, program: prog };
+    }
+
+    function normalizeTextureAddressMode(mode) {
+        return String(mode || '').toLowerCase() === 'wrap' ? 'wrap' : 'clamp';
+    }
+
+    function setBoundTextureAddressMode(gl, mode) {
+        const resolved = normalizeTextureAddressMode(mode);
+        const wrap = resolved === 'wrap' ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrap);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrap);
+    }
+
+    function createTextureFromImage(gl, img, flipY) {
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY ? 1 : 0);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return tex;
+    }
+
+    function createEmptyTexture(gl, w, h) {
+        const tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return tex;
+    }
+
+    function createFramebuffer(gl, tex) {
+        const fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        return fbo;
+    }
+
+    function createBuiltinTextureCanvas(name) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        if (name === 'builtin:checker') {
+            for (let y = 0; y < 16; y += 1) {
+                for (let x = 0; x < 16; x += 1) {
+                    const v = ((x + y) % 2) ? 36 : 220;
+                    ctx.fillStyle = 'rgb(' + v + ',' + v + ',' + v + ')';
+                    ctx.fillRect(x * 16, y * 16, 16, 16);
+                }
+            }
+            return canvas;
+        }
+
+        if (name === 'builtin:noise') {
+            const img = ctx.createImageData(256, 256);
+            for (let i = 0; i < img.data.length; i += 4) {
+                const v = (Math.random() * 255) | 0;
+                img.data[i] = v;
+                img.data[i + 1] = v;
+                img.data[i + 2] = v;
+                img.data[i + 3] = 255;
+            }
+            ctx.putImageData(img, 0, 0);
+            return canvas;
+        }
+
+        return null;
+    }
+
+    function createBuiltinTextureEntry(gl, id, label) {
+        const canvas = createBuiltinTextureCanvas(id);
+        if (!canvas) return null;
+        const tex = createTextureFromImage(gl, canvas, false);
+        return {
+            id: id,
+            label: label,
+            width: canvas.width,
+            height: canvas.height,
+            texture: tex
+        };
+    }
+
+    function createRuntime(gl, canvas) {
+        const posUv = new Float32Array([
+            -1, -1, 0, 0,
+            3, -1, 2, 0,
+            -1, 3, 0, 2
+        ]);
+
+        const vao = gl.createVertexArray();
+        const vbo = gl.createBuffer();
+        gl.bindVertexArray(vao);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bufferData(gl.ARRAY_BUFFER, posUv, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+        gl.enableVertexAttribArray(1);
+        gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+        gl.bindVertexArray(null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+        const runtime = {
+            gl: gl,
+            canvas: canvas,
+            vao: vao,
+            vbo: vbo,
+            vsSource: buildVertexSource(),
+            startMs: nowMs(),
+            lastMs: nowMs(),
+            frame: 0,
+            mouse: { x: 0, y: 0, down: false, downX: 0, downY: 0 },
+            builtins: new Map(),
+            uploads: new Map(),
+            compiled: new Map(),
+            buffers: new Map(),
+            errors: []
+        };
+
+        const checker = createBuiltinTextureEntry(gl, 'builtin:checker', 'builtin: checker');
+        const noise = createBuiltinTextureEntry(gl, 'builtin:noise', 'builtin: noise');
+        if (checker) runtime.builtins.set(checker.id, checker);
+        if (noise) runtime.builtins.set(noise.id, noise);
+
+        return runtime;
+    }
+
+    function ensureBuffer(runtime, passId, w, h) {
+        const gl = runtime.gl;
+        const key = String(passId);
+        const existing = runtime.buffers.get(key);
+        if (existing && existing.w === w && existing.h === h) return existing;
+
+        if (existing) {
+            try {
+                gl.deleteFramebuffer(existing.fboRead);
+                gl.deleteFramebuffer(existing.fboWrite);
+                gl.deleteTexture(existing.texRead);
+                gl.deleteTexture(existing.texWrite);
+            } catch (_) { }
+        }
+
+        const texRead = createEmptyTexture(gl, w, h);
+        const texWrite = createEmptyTexture(gl, w, h);
+        const fboRead = createFramebuffer(gl, texRead);
+        const fboWrite = createFramebuffer(gl, texWrite);
+        const buf = { w: w, h: h, texRead: texRead, texWrite: texWrite, fboRead: fboRead, fboWrite: fboWrite };
+        runtime.buffers.set(key, buf);
+        return buf;
+    }
+
+    function swapBuffers(runtime) {
+        runtime.buffers.forEach((buf) => {
+            const tr = buf.texRead;
+            buf.texRead = buf.texWrite;
+            buf.texWrite = tr;
+            const fr = buf.fboRead;
+            buf.fboRead = buf.fboWrite;
+            buf.fboWrite = fr;
+        });
+    }
+
+    function getChannelTexture(runtime, pass, channel, phase, passIndexMap) {
+        const kind = channel && channel.kind ? channel.kind : 'none';
+        if (kind === 'none') return null;
+
+        if (kind === 'builtin') {
+            return runtime.builtins.get(channel.id) || null;
+        }
+
+        if (kind === 'upload') {
+            return runtime.uploads.get(channel.id) || null;
+        }
+
+        if (kind === 'buffer') {
+            const targetPassId = channel.passId;
+            if (!targetPassId) return null;
+            const idx = passIndexMap.get(String(targetPassId));
+            if (typeof idx !== 'number') return null;
+            const selfIdx = passIndexMap.get(String(pass.id));
+            const isSelf = String(targetPassId) === String(pass.id);
+            if (!isSelf && typeof selfIdx === 'number' && idx > selfIdx) {
+                return null;
+            }
+            const buf = runtime.buffers.get(String(targetPassId));
+            if (!buf) return null;
+            if (channel.frame === 'current') {
+                return { id: 'buffer:' + targetPassId + ':current', label: 'buffer current', width: buf.w, height: buf.h, texture: buf.texRead };
+            }
+            return { id: 'buffer:' + targetPassId + ':prev', label: 'buffer prev', width: buf.w, height: buf.h, texture: buf.texRead };
+        }
+
+        return null;
+    }
+
+    function compilePass(runtime, common, pass) {
+        const gl = runtime.gl;
+        const built = buildFragmentSource(common, pass.code);
+        if (!built.ok) return { ok: false, error: built.error };
+        const res = createProgram(gl, runtime.vsSource, built.source);
+        if (!res.ok) return res;
+
+        const program = res.program;
+        const u = {
+            iResolution: gl.getUniformLocation(program, 'iResolution'),
+            iTime: gl.getUniformLocation(program, 'iTime'),
+            iTimeDelta: gl.getUniformLocation(program, 'iTimeDelta'),
+            iFrame: gl.getUniformLocation(program, 'iFrame'),
+            iMouse: gl.getUniformLocation(program, 'iMouse'),
+            iDate: gl.getUniformLocation(program, 'iDate'),
+            iChannelTime: gl.getUniformLocation(program, 'iChannelTime'),
+            iChannelResolution: gl.getUniformLocation(program, 'iChannelResolution'),
+            iChannel0: gl.getUniformLocation(program, 'iChannel0'),
+            iChannel1: gl.getUniformLocation(program, 'iChannel1'),
+            iChannel2: gl.getUniformLocation(program, 'iChannel2'),
+            iChannel3: gl.getUniformLocation(program, 'iChannel3')
+        };
+
+        return { ok: true, program: program, uniforms: u };
+    }
+
+    function renderFrame(runtime, state) {
+        const gl = runtime.gl;
+        const canvas = runtime.canvas;
+        const passIndexMap = new Map();
+        state.passes.forEach((p, idx) => {
+            passIndexMap.set(String(p.id), idx);
+        });
+
+        const tMs = nowMs();
+        const baseTime = (tMs - runtime.startMs) / 1000;
+        const time = baseTime + Number(runtime.iTimeOffset || 0);
+        const dt = clamp((tMs - runtime.lastMs) / 1000, 0, 0.2);
+        const addressMode = normalizeTextureAddressMode(state.addressMode);
+        runtime.lastMs = tMs;
+
+        const canvasW = Math.max(1, Math.floor(canvas.clientWidth * state.globalScale));
+        const canvasH = Math.max(1, Math.floor(canvas.clientHeight * state.globalScale));
+        if (canvas.width !== canvasW) canvas.width = canvasW;
+        if (canvas.height !== canvasH) canvas.height = canvasH;
+
+        const resVec3 = [canvasW, canvasH, 1];
+        const mouse = runtime.mouse;
+        const mx = mouse.x;
+        const my = mouse.y;
+        const m0 = mouse.down ? mx : -Math.abs(mx);
+        const m1 = mouse.down ? my : -Math.abs(my);
+        const m2 = mouse.downX;
+        const m3 = mouse.downY;
+        const date = new Date();
+        const iDate = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()];
+
+        // Ensure buffers are allocated for buffer passes.
+        state.passes.forEach((p) => {
+            if (p.type !== 'buffer') return;
+            const scale = clamp(Number(p.scale || 1), 0.1, 1);
+            const w = Math.max(1, Math.floor(canvasW * scale));
+            const h = Math.max(1, Math.floor(canvasH * scale));
+            ensureBuffer(runtime, p.id, w, h);
+        });
+
+        gl.disable(gl.DEPTH_TEST);
+        gl.disable(gl.CULL_FACE);
+        gl.bindVertexArray(runtime.vao);
+
+        for (const pass of state.passes) {
+            const compiled = runtime.compiled.get(String(pass.id));
+            if (!compiled || !compiled.program) continue;
+
+            const isBuffer = pass.type === 'buffer';
+            let viewportW = canvasW;
+            let viewportH = canvasH;
+            if (isBuffer) {
+                const buf = runtime.buffers.get(String(pass.id));
+                if (!buf) continue;
+                viewportW = buf.w;
+                viewportH = buf.h;
+                gl.bindFramebuffer(gl.FRAMEBUFFER, buf.fboWrite);
+            } else {
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            }
+
+            gl.viewport(0, 0, viewportW, viewportH);
+            gl.useProgram(compiled.program);
+
+            if (compiled.uniforms.iResolution) gl.uniform3fv(compiled.uniforms.iResolution, resVec3);
+            if (compiled.uniforms.iTime) gl.uniform1f(compiled.uniforms.iTime, time);
+            if (compiled.uniforms.iTimeDelta) gl.uniform1f(compiled.uniforms.iTimeDelta, dt);
+            if (compiled.uniforms.iFrame) gl.uniform1i(compiled.uniforms.iFrame, runtime.frame);
+            if (compiled.uniforms.iMouse) gl.uniform4fv(compiled.uniforms.iMouse, [m0, m1, m2, m3]);
+            if (compiled.uniforms.iDate) gl.uniform4fv(compiled.uniforms.iDate, iDate);
+
+            const chTimes = [0, 0, 0, 0];
+            const chRes = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            for (let i = 0; i < 4; i += 1) {
+                const ch = pass.channels && pass.channels[i] ? pass.channels[i] : { kind: 'none' };
+                const entry = getChannelTexture(runtime, pass, ch, 'render', passIndexMap);
+                if (entry && entry.texture) {
+                    gl.activeTexture(gl.TEXTURE0 + i);
+                    gl.bindTexture(gl.TEXTURE_2D, entry.texture);
+                    setBoundTextureAddressMode(gl, addressMode);
+                    chRes[i * 3] = entry.width;
+                    chRes[i * 3 + 1] = entry.height;
+                    chRes[i * 3 + 2] = 1;
+                } else {
+                    gl.activeTexture(gl.TEXTURE0 + i);
+                    gl.bindTexture(gl.TEXTURE_2D, null);
+                }
+                chTimes[i] = time;
+            }
+
+            if (compiled.uniforms.iChannelTime) gl.uniform1fv(compiled.uniforms.iChannelTime, chTimes);
+            if (compiled.uniforms.iChannelResolution) gl.uniform3fv(compiled.uniforms.iChannelResolution, chRes);
+            if (compiled.uniforms.iChannel0) gl.uniform1i(compiled.uniforms.iChannel0, 0);
+            if (compiled.uniforms.iChannel1) gl.uniform1i(compiled.uniforms.iChannel1, 1);
+            if (compiled.uniforms.iChannel2) gl.uniform1i(compiled.uniforms.iChannel2, 2);
+            if (compiled.uniforms.iChannel3) gl.uniform1i(compiled.uniforms.iChannel3, 3);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+        }
+
+        gl.bindVertexArray(null);
+        gl.useProgram(null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        runtime.frame += 1;
+        swapBuffers(runtime);
+    }
+
+    // --- Export .fx (single technique, multiple passes for tModLoader)
+    function sanitizeFxIdent(name) {
+        const raw = String(name || '').trim();
+        if (!raw) return 'Pass';
+        const s = raw.replace(/[^A-Za-z0-9_]+/g, '_');
+        return (/^[A-Za-z_]/.test(s)) ? s : ('P_' + s);
+    }
+
+    function renameMainImage(code, suffix) {
+        const re = /\bmainImage\b/g;
+        return String(code || '').replace(re, 'mainImage_' + suffix);
+    }
+
+    function escapeRegExpLocal(s) {
+        if (hlslAdapter && typeof hlslAdapter.escapeRegExp === 'function') {
+            return hlslAdapter.escapeRegExp(s);
+        }
+        return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function detectPassEntry(code) {
+        if (!hlslAdapter || typeof hlslAdapter.detectEntryFunction !== 'function') return null;
+        return hlslAdapter.detectEntryFunction(code);
+    }
+
+    function buildFxPassEntryMetadata(code, passSuffix) {
+        const entry = detectPassEntry(code);
+        if (!entry) {
+            return {
+                entry: null,
+                renamedName: '',
+                codeRenamed: String(code || '')
+            };
+        }
+
+        const entryName = String(entry.name || 'mainImage');
+        const renamedName = entryName === 'mainImage'
+            ? ('mainImage_' + passSuffix)
+            : (entryName + '_' + passSuffix);
+        const re = new RegExp('\\b' + escapeRegExpLocal(entryName) + '\\b', 'g');
+
+        return {
+            entry: entry,
+            renamedName: renamedName,
+            codeRenamed: String(code || '').replace(re, renamedName)
+        };
+    }
+
+    function buildFxPassReturnLine(entryMeta) {
+        if (!entryMeta || !entryMeta.entry) {
+            return {
+                ok: false,
+                line: '    return float4(1, 0, 1, 1);'
+            };
+        }
+
+        const entry = entryMeta.entry;
+        const renamedName = String(entryMeta.renamedName || 'mainImage');
+        const coordMode = (hlslAdapter && typeof hlslAdapter.coordModeForEntry === 'function')
+            ? hlslAdapter.coordModeForEntry(entry)
+            : 'fragCoord';
+        const coordArg = coordMode === 'uv' ? 'uv' : 'fragCoord';
+
+        if (entry.kind === 'out') {
+            return {
+                ok: true,
+                line: [
+                    '    float4 result = float4(0, 0, 0, 0);',
+                    '    ' + renamedName + '(result, ' + coordArg + ');',
+                    '    return result * vertexColor;'
+                ].join('\n')
+            };
+        }
+
+        return {
+            ok: true,
+            line: '    return ' + renamedName + '(' + coordArg + ') * vertexColor;'
+        };
+    }
+
+    function buildFx(state) {
+        const common = String(state.common || '');
+        const lines = [];
+        lines.push('// Generated by HLSL Shader Playground');
+        lines.push('// For tModLoader - Single technique with multiple passes');
+        lines.push('');
+        lines.push('// ============================================');
+        lines.push('// tModLoader 常用变量（根据需要取消注释）');
+        lines.push('// ============================================');
+        lines.push('// sampler2D uImage0;           // 主纹理（精灵/NPC/弹幕等）');
+        lines.push('// sampler2D uImage1;           // 额外纹理');
+        lines.push('// sampler2D uImage2;           // 额外纹理');
+        lines.push('// float3 uColor;               // 颜色参数');
+        lines.push('// float3 uSecondaryColor;      // 次要颜色');
+        lines.push('// float uOpacity;              // 不透明度');
+        lines.push('// float uSaturation;           // 饱和度');
+        lines.push('// float uRotation;             // 旋转角度');
+        lines.push('// float uTime;                 // 时间（秒）');
+        lines.push('// float uDirection;            // 方向（-1 或 1）');
+        lines.push('// float2 uTargetPosition;      // 目标位置');
+        lines.push('// float2 uWorldPosition;       // 世界位置');
+        lines.push('// float2 uImageSize0;          // 纹理尺寸');
+        lines.push('// float2 uImageSize1;');
+        lines.push('// float4 uSourceRect;          // 源矩形（用于精灵表）');
+        lines.push('// float4 uLegacyArmorSourceRect;');
+        lines.push('// float2 uOffset;              // 偏移');
+        lines.push('// float uProgress;             // 进度（0-1）');
+        lines.push('// float2x2 uRotationMat;       // 旋转矩阵');
+        lines.push('');
+        lines.push('// ============================================');
+        lines.push('// Playground 预览变量（可删除或替换）');
+        lines.push('// ============================================');
+        lines.push('float iTime;');
+        lines.push('float iTimeDelta;');
+        lines.push('int iFrame;');
+        lines.push('float3 iResolution;');
+        lines.push('float4 iMouse;');
+        lines.push('float4 iDate;');
+        lines.push('sampler2D iChannel0;');
+        lines.push('sampler2D iChannel1;');
+        lines.push('sampler2D iChannel2;');
+        lines.push('sampler2D iChannel3;');
+        lines.push('');
+
+        // Common code
+        if (common.trim()) {
+            lines.push('// ============================================');
+            lines.push('// Common（公共代码）');
+            lines.push('// ============================================');
+            lines.push(common.trimEnd());
+            lines.push('');
+        }
+
+        // Vertex shader
+        lines.push('// ============================================');
+        lines.push('// Vertex Shader');
+        lines.push('// ============================================');
+        lines.push('struct VSInput {');
+        lines.push('    float4 Position : POSITION0;');
+        lines.push('    float2 TexCoord : TEXCOORD0;');
+        lines.push('    float4 Color    : COLOR0;');
+        lines.push('};');
+        lines.push('');
+        lines.push('struct VSOutput {');
+        lines.push('    float4 Position : SV_POSITION;');
+        lines.push('    float2 TexCoord : TEXCOORD0;');
+        lines.push('    float4 Color    : COLOR0;');
+        lines.push('};');
+        lines.push('');
+        lines.push('VSOutput MainVS(VSInput input) {');
+        lines.push('    VSOutput output;');
+        lines.push('    output.Position = input.Position;');
+        lines.push('    output.TexCoord = input.TexCoord;');
+        lines.push('    output.Color = input.Color;');
+        lines.push('    return output;');
+        lines.push('}');
+        lines.push('');
+
+        // Pixel shaders
+        lines.push('// ============================================');
+        lines.push('// Pixel Shaders');
+        lines.push('// ============================================');
+
+        const passes = [];
+        for (const pass of state.passes) {
+            const ident = sanitizeFxIdent(pass.name);
+            const passSuffix = sanitizeFxIdent(pass.id);
+            const codeRaw = String(pass.code || '');
+            const entryMeta = buildFxPassEntryMetadata(codeRaw, passSuffix);
+            const codeRenamed = entryMeta.codeRenamed;
+            const fxReturn = buildFxPassReturnLine(entryMeta);
+
+            lines.push('');
+            lines.push('// --- ' + pass.name + ' ---');
+            lines.push(codeRenamed.trimEnd());
+            lines.push('');
+            lines.push('float4 PS_' + ident + '(VSOutput input) : SV_TARGET {');
+            lines.push('    float2 uv = input.TexCoord;');
+            lines.push('    float2 fragCoord = uv * iResolution.xy;');
+            lines.push('    float4 vertexColor = input.Color;');
+            if (!fxReturn.ok) {
+                lines.push('    // mainImage not found');
+                lines.push('    return float4(1, 0, 1, 1);');
+            } else {
+                lines.push(fxReturn.line);
+            }
+            lines.push('}');
+
+            passes.push({ name: ident, ps: 'PS_' + ident });
+        }
+
+        // Single technique with multiple passes
+        lines.push('');
+        lines.push('// ============================================');
+        lines.push('// Technique（单个 technique，多个 pass）');
+        lines.push('// ============================================');
+        lines.push('technique Technique1 {');
+
+        for (let i = 0; i < passes.length; i++) {
+            const p = passes[i];
+            lines.push('    pass ' + p.name + ' {');
+            lines.push('        VertexShader = compile vs_3_0 MainVS();');
+            lines.push('        PixelShader  = compile ps_3_0 ' + p.ps + '();');
+            lines.push('    }');
+        }
+
+        lines.push('}');
+        lines.push('');
+
+        // Also generate separate techniques for convenience
+        if (passes.length > 1) {
+            lines.push('// ============================================');
+            lines.push('// 单独的 Techniques（方便单独使用某个 pass）');
+            lines.push('// ============================================');
+            for (const p of passes) {
+                lines.push('technique T_' + p.name + ' {');
+                lines.push('    pass P0 {');
+                lines.push('        VertexShader = compile vs_3_0 MainVS();');
+                lines.push('        PixelShader  = compile ps_3_0 ' + p.ps + '();');
+                lines.push('    }');
+                lines.push('}');
+                lines.push('');
+            }
+        }
+
+        return lines.join('\n').replace(/\n{3,}/g, '\n\n');
+    }
+
+    // --- UI / App
+    const DEFAULT_COMMON = [
+        '// 公共函数区（所有 Pass 自动注入）',
+        '// 这里适合写通用函数、常量、噪声工具等。',
+        '',
+        'float Hash21(float2 p)',
+        '{',
+        '    p = frac(p * float2(123.34, 456.21));',
+        '    p += dot(p, p + 45.32);',
+        '    return frac(p.x * p.y);',
+        '}',
+        ''
+    ].join('\n');
+
+    // tModLoader 风格默认代码
+    const DEFAULT_SIMPLE_PASS = [
+        '// tModLoader 风格像素着色器示例',
+        '// 支持 mainImage(...) 与 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
+        '// 可用纹理: iChannel0-3（也兼容 uImage0-3）',
+        '',
+        'float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
+        '{',
+        '    float2 uv = texCoord;',
+        '    float2 p = uv * 2.0 - 1.0;',
+        '    float vignette = saturate(1.0 - dot(p, p) * 0.45);',
+        '    float wave = 0.5 + 0.5 * sin(iTime + uv.x * 6.0);',
+        '    float3 col = float3(uv.x, uv.y, wave) * vignette;',
+        '    return float4(col, 1.0);',
+        '}',
+        ''
+    ].join('\n');
+
+    function init() {
+        const canvas = $('shaderpg-canvas');
+        const passTabs = $('shaderpg-pass-tabs');
+        const addPassBtn = $('shaderpg-add-pass');
+        const moveLeftBtn = $('shaderpg-pass-move-left');
+        const moveRightBtn = $('shaderpg-pass-move-right');
+        const renameBtn = $('shaderpg-pass-rename');
+        const deleteBtn = $('shaderpg-pass-delete');
+        const compileBtn = $('shaderpg-compile');
+        const resetBtn = $('shaderpg-reset');
+        const editorTa = $('shaderpg-editor');
+        const errorEl = $('shaderpg-error');
+        const statusEl = $('shaderpg-status');
+        const runBtn = $('shaderpg-toggle-run');
+        const resetPlaybackBtn = $('shaderpg-reset-playback');
+        const scaleSelect = $('shaderpg-scale');
+        const addressModeSelect = $('shaderpg-address-mode');
+        const iTimeInput = $('shaderpg-itime');
+        const iTimeMinusBtn = $('shaderpg-itime-minus');
+        const iTimePlusBtn = $('shaderpg-itime-plus');
+        const iTimeResetBtn = $('shaderpg-itime-reset');
+        const statsEl = $('shaderpg-stats');
+        const channelsEl = $('shaderpg-channels');
+        const uploadInput = $('shaderpg-upload');
+        const texturesEl = $('shaderpg-textures');
+        const exportBtn = $('shaderpg-export-fx');
+        const copyBtn = $('shaderpg-copy-fx');
+        const fxTa = $('shaderpg-fx');
+
+        // 新增 UI 元素
+        const passMenuBtn = $('shaderpg-pass-menu');
+        const passDropdown = $('shaderpg-pass-dropdown');
+        const layoutToggleBtn = $('shaderpg-layout-toggle');
+        const helpToggleBtn = $('shaderpg-help-toggle');
+        const helpDrawer = $('shaderpg-help-drawer');
+        const helpCloseBtn = $('shaderpg-help-close');
+        const drawerOverlay = $('shaderpg-drawer-overlay');
+        const mainEl = $('shaderpg-main');
+        const editorSurface = $('shaderpg-editor-surface');
+        const editorHighlightCode = $('shaderpg-editor-highlight-code');
+        const editorHighlightWrap = $('shaderpg-editor-highlight');
+        const editorAutocomplete = $('shaderpg-autocomplete');
+
+        const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+        const mainNav = $('main-nav') || document.querySelector('.main-nav');
+
+        function setMobileMenuState(isOpen) {
+            if (!mobileMenuToggle || !mainNav) return;
+            mainNav.classList.toggle('active', !!isOpen);
+            mobileMenuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+            const bars = mobileMenuToggle.querySelectorAll('.bar');
+            bars.forEach((bar, idx) => {
+                if (!isOpen) {
+                    bar.style.transform = 'none';
+                    bar.style.opacity = '1';
+                    return;
+                }
+                if (idx === 0) bar.style.transform = 'rotate(-45deg) translate(-5px, 6px)';
+                if (idx === 1) bar.style.opacity = '0';
+                if (idx === 2) bar.style.transform = 'rotate(45deg) translate(-5px, -6px)';
+            });
+        }
+
+        if (mobileMenuToggle && mainNav) {
+            if (!mobileMenuToggle.hasAttribute('aria-expanded')) {
+                mobileMenuToggle.setAttribute('aria-expanded', 'false');
+            }
+            if (mainNav.id) {
+                mobileMenuToggle.setAttribute('aria-controls', mainNav.id);
+            }
+
+            mobileMenuToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                const willOpen = !mainNav.classList.contains('active');
+                setMobileMenuState(willOpen);
+            });
+
+            document.addEventListener('click', function (e) {
+                if (mobileMenuToggle.contains(e.target) || mainNav.contains(e.target)) return;
+                if (!mainNav.classList.contains('active')) return;
+                setMobileMenuState(false);
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (String(e.key || '') !== 'Escape') return;
+                if (!mainNav.classList.contains('active')) return;
+                setMobileMenuState(false);
+            });
+        }
+
+        if (!canvas) return;
+        const gl = canvas.getContext('webgl2', { alpha: false, antialias: true, premultipliedAlpha: false });
+        if (!gl) {
+            setText(errorEl, '无法创建 WebGL2 上下文。请使用支持 WebGL2 的桌面浏览器。');
+            return;
+        }
+
+        const runtime = createRuntime(gl, canvas);
+
+        function setITimeOffset(value, persist) {
+            const next = clamp(Number(value || 0), -120, 120);
+            runtime.iTimeOffset = next;
+            if (iTimeInput) iTimeInput.value = next.toFixed(1);
+            if (persist) {
+                try {
+                    localStorage.setItem(ITIME_OFFSET_STORAGE_KEY, String(next));
+                } catch (_) { }
+            }
+        }
+
+        let savedITimeOffset = 0;
+        try {
+            savedITimeOffset = Number(localStorage.getItem(ITIME_OFFSET_STORAGE_KEY) || 0);
+        } catch (_) {
+            savedITimeOffset = 0;
+        }
+        setITimeOffset(savedITimeOffset, false);
+
+        // WebGL 上下文丢失/恢复处理
+        let contextLost = false;
+
+        canvas.addEventListener('webglcontextlost', function (e) {
+            e.preventDefault();
+            contextLost = true;
+            state.isRunning = false;
+            runBtn.textContent = '继续';
+            runBtn.disabled = true;
+            setText(errorEl, 'WebGL 上下文丢失。正在尝试恢复...');
+            setText(statusEl, 'Context Lost');
+        }, false);
+
+        canvas.addEventListener('webglcontextrestored', function (e) {
+            setText(errorEl, '');
+            setText(statusEl, '正在重建资源...');
+
+            try {
+                recreateRuntimeResources();
+                compileAll('上下文恢复');
+
+                contextLost = false;
+                runBtn.disabled = false;
+                state.isRunning = true;
+                runBtn.textContent = '暂停';
+                setText(statusEl, '上下文已恢复');
+            } catch (err) {
+                setText(errorEl, '恢复失败: ' + (err.message || err));
+            }
+        }, false);
+
+        function recreateRuntimeResources() {
+            // 清除旧引用
+            runtime.buffers.clear();
+            runtime.compiled.clear();
+            runtime.uploads.clear();
+            runtime.builtins.clear();
+
+            // 重建 VAO/VBO
+            const posUv = new Float32Array([-1, -1, 0, 0, 3, -1, 2, 0, -1, 3, 0, 2]);
+            runtime.vao = gl.createVertexArray();
+            runtime.vbo = gl.createBuffer();
+            gl.bindVertexArray(runtime.vao);
+            gl.bindBuffer(gl.ARRAY_BUFFER, runtime.vbo);
+            gl.bufferData(gl.ARRAY_BUFFER, posUv, gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(0);
+            gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+            gl.enableVertexAttribArray(1);
+            gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+            gl.bindVertexArray(null);
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+            // 重建内置纹理
+            const checker = createBuiltinTextureEntry(gl, 'builtin:checker', 'builtin: checker');
+            const noise = createBuiltinTextureEntry(gl, 'builtin:noise', 'builtin: noise');
+            if (checker) runtime.builtins.set(checker.id, checker);
+            if (noise) runtime.builtins.set(noise.id, noise);
+
+            // 注意：用户上传的纹理会丢失，需要重新上传
+            renderTextures();
+        }
+
+        let state = (function () {
+            const saved = loadState();
+            if (!saved) return createDefaultState();
+            const base = createDefaultState();
+            base.common = typeof saved.common === 'string' ? saved.common : DEFAULT_COMMON;
+            if (Array.isArray(saved.passes) && saved.passes.length) {
+                base.passes = saved.passes.map((p) => {
+                    return {
+                        id: p.id || createId('pass'),
+                        name: sanitizeName(p.name || 'Pass'),
+                        type: (p.type === 'buffer' || p.type === 'image') ? p.type : 'image',
+                        scale: Number(p.scale || 1),
+                        code: String(p.code || ''),
+                        channels: Array.isArray(p.channels) ? p.channels : [{ kind: 'none' }, { kind: 'none' }, { kind: 'none' }, { kind: 'none' }]
+                    };
+                });
+            }
+            base.selected = saved.selected || base.passes[0].id;
+            base.editorTarget = saved.editorTarget || base.selected;
+            base.globalScale = Number(saved.globalScale || 1);
+            base.addressMode = normalizeTextureAddressMode(saved.addressMode);
+            return base;
+        })();
+
+        // Editor shows either Common or selected pass.
+        editorTa.value = '';
+        scaleSelect.value = String(state.globalScale || 1);
+        if (addressModeSelect) addressModeSelect.value = normalizeTextureAddressMode(state.addressMode);
+
+        const completionState = {
+            items: [],
+            selected: 0,
+            start: 0,
+            end: 0,
+            visible: false
+        };
+
+        function getCaretVisualPosition(textarea, cursorPos) {
+            const el = textarea;
+            const raw = String(el.value || '');
+            const pos = clamp(Number(cursorPos || 0), 0, raw.length);
+            const cs = window.getComputedStyle(el);
+
+            const mirror = createEl('div');
+            const marker = createEl('span');
+            const props = [
+                'boxSizing', 'width', 'height',
+                'overflowX', 'overflowY',
+                'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth',
+                'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+                'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize',
+                'lineHeight', 'fontFamily', 'letterSpacing', 'textTransform',
+                'textIndent', 'textDecoration', 'wordSpacing', 'tabSize'
+            ];
+
+            props.forEach((name) => {
+                mirror.style[name] = cs[name];
+            });
+
+            mirror.style.position = 'absolute';
+            mirror.style.visibility = 'hidden';
+            mirror.style.left = '-99999px';
+            mirror.style.top = '0';
+            mirror.style.pointerEvents = 'none';
+            mirror.style.whiteSpace = 'pre';
+            mirror.style.wordBreak = 'normal';
+            mirror.style.overflow = 'hidden';
+
+            mirror.textContent = raw.slice(0, pos);
+            marker.textContent = '\u200b';
+            mirror.appendChild(marker);
+            document.body.appendChild(mirror);
+
+            const left = marker.offsetLeft - el.scrollLeft;
+            const top = marker.offsetTop - el.scrollTop;
+            const lineHeight = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 12) * 1.55;
+
+            document.body.removeChild(mirror);
+            return { left: left, top: top, lineHeight: lineHeight };
+        }
+
+        function positionAutocompleteAtCursor() {
+            if (!editorAutocomplete || !editorSurface || !completionState.visible) return;
+
+            const caret = getCaretVisualPosition(editorTa, editorTa.selectionStart || 0);
+            const taRect = editorTa.getBoundingClientRect();
+            const surfaceRect = editorSurface.getBoundingClientRect();
+
+            let left = (taRect.left - surfaceRect.left) + caret.left + 6;
+            let top = (taRect.top - surfaceRect.top) + caret.top + caret.lineHeight + 6;
+
+            const panelWidth = editorAutocomplete.offsetWidth || 260;
+            const panelHeight = editorAutocomplete.offsetHeight || 180;
+            const surfaceWidth = editorSurface.clientWidth || 0;
+            const surfaceHeight = editorSurface.clientHeight || 0;
+            const edgePadding = 8;
+
+            const maxLeft = Math.max(edgePadding, surfaceWidth - panelWidth - edgePadding);
+            left = clamp(left, edgePadding, maxLeft);
+
+            const maxTop = Math.max(edgePadding, surfaceHeight - panelHeight - edgePadding);
+            if (top > maxTop) {
+                top = (taRect.top - surfaceRect.top) + caret.top - panelHeight - 6;
+            }
+            top = clamp(top, edgePadding, maxTop);
+
+            editorAutocomplete.style.left = Math.round(left) + 'px';
+            editorAutocomplete.style.top = Math.round(top) + 'px';
+        }
+
+        function syncEditorScroll() {
+            if (!completionState.visible) return;
+            positionAutocompleteAtCursor();
+        }
+
+        function refreshEditorHighlight() {
+            if (!editorHighlightCode) return;
+            if (!editorAssist || typeof editorAssist.highlightHlslToHtml !== 'function') {
+                editorHighlightCode.textContent = String(editorTa.value || '');
+                return;
+            }
+            editorHighlightCode.innerHTML = editorAssist.highlightHlslToHtml(editorTa.value || '');
+            syncEditorScroll();
+        }
+
+        function syncEditorSizing() {
+            if (!completionState.visible) return;
+            positionAutocompleteAtCursor();
+        }
+
+        function hideAutocomplete() {
+            completionState.items = [];
+            completionState.selected = 0;
+            completionState.start = 0;
+            completionState.end = 0;
+            completionState.visible = false;
+            if (editorAutocomplete) {
+                editorAutocomplete.classList.remove('show');
+                editorAutocomplete.replaceChildren();
+                editorAutocomplete.style.left = '';
+                editorAutocomplete.style.top = '';
+            }
+        }
+
+        function applyCompletionAtSelected() {
+            if (!editorAssist || completionState.items.length === 0) return false;
+            const current = completionState.items[completionState.selected];
+            if (!current) return false;
+
+            const res = editorAssist.applyCompletion(editorTa.value, editorTa.selectionStart, current);
+            editorTa.value = res.text;
+            editorTa.selectionStart = res.cursor;
+            editorTa.selectionEnd = res.cursor;
+            refreshEditorHighlight();
+            hideAutocomplete();
+            return true;
+        }
+
+        function renderAutocomplete() {
+            if (!editorAutocomplete || !completionState.visible || completionState.items.length === 0) {
+                hideAutocomplete();
+                return;
+            }
+
+            editorAutocomplete.replaceChildren();
+            completionState.items.forEach((word, idx) => {
+                const btn = createEl('button', 'shaderpg-autocomplete-item');
+                btn.type = 'button';
+                btn.textContent = word;
+                btn.setAttribute('data-selected', idx === completionState.selected ? 'true' : 'false');
+                btn.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    completionState.selected = idx;
+                    applyCompletionAtSelected();
+                    commitEditorToState();
+                    saveState(state);
+                    const pass = getSelectedPass();
+                    if (getEditorTarget() === COMMON_TAB_ID) {
+                        scheduleCompile('Common', null);
+                    } else if (pass) {
+                        scheduleCompile(pass.name, pass.id);
+                    }
+                });
+                editorAutocomplete.appendChild(btn);
+            });
+            editorAutocomplete.classList.add('show');
+            positionAutocompleteAtCursor();
+        }
+
+        function showAutocompleteForCurrentCursor() {
+            if (!editorAssist || !editorAutocomplete) return;
+            const range = editorAssist.getCompletionRange(editorTa.value, editorTa.selectionStart);
+            if (!range || !range.prefix) {
+                hideAutocomplete();
+                return;
+            }
+            const items = editorAssist.collectCompletionItems(range.prefix, editorTa.value, editorTa.selectionStart);
+            if (!items.length) {
+                hideAutocomplete();
+                return;
+            }
+
+            completionState.items = items;
+            completionState.selected = 0;
+            completionState.start = range.start;
+            completionState.end = range.end;
+            completionState.visible = true;
+            renderAutocomplete();
+        }
+
+        function afterEditorChanged() {
+            refreshEditorHighlight();
+            syncEditorSizing();
+            showAutocompleteForCurrentCursor();
+        }
+
+        function setError(text) {
+            setText(errorEl, text);
+        }
+
+        function setStatus(text) {
+            setText(statusEl, text);
+        }
+
+        function getSelectedPass() {
+            return state.passes.find((p) => String(p.id) === String(state.selected)) || state.passes[0] || null;
+        }
+
+        function getEditorTarget() {
+            const t = String(state.editorTarget || '');
+            if (t === COMMON_TAB_ID) return COMMON_TAB_ID;
+            if (state.passes.some((p) => String(p.id) === t)) return t;
+            return state.selected;
+        }
+
+        function getPassIndexById(id) {
+            return state.passes.findIndex((p) => String(p.id) === String(id));
+        }
+
+        function ensureSelected() {
+            if (state.passes.some((p) => String(p.id) === String(state.selected))) return;
+            state.selected = state.passes.length ? state.passes[0].id : '';
+        }
+
+        function renderPassTabs() {
+            ensureSelected();
+            passTabs.replaceChildren();
+
+            const commonTab = createEl('button', 'shaderpg-pass-tab');
+            commonTab.type = 'button';
+            commonTab.setAttribute('role', 'tab');
+            commonTab.setAttribute('aria-selected', getEditorTarget() === COMMON_TAB_ID ? 'true' : 'false');
+            commonTab.setAttribute('data-pass-id', COMMON_TAB_ID);
+
+            const commonName = createEl('span');
+            commonName.textContent = 'Common';
+            const commonChip = createEl('span', 'shaderpg-pass-chip');
+            commonChip.textContent = 'Global';
+            commonTab.appendChild(commonName);
+            commonTab.appendChild(commonChip);
+            commonTab.addEventListener('click', function () {
+                state.editorTarget = COMMON_TAB_ID;
+                syncEditor();
+                renderPassTabs();
+                saveState(state);
+            });
+            passTabs.appendChild(commonTab);
+
+            state.passes.forEach((p, idx) => {
+                const tab = createEl('button', 'shaderpg-pass-tab');
+                tab.type = 'button';
+                tab.setAttribute('role', 'tab');
+                tab.setAttribute('aria-selected', getEditorTarget() === String(p.id) ? 'true' : 'false');
+                tab.setAttribute('data-pass-id', String(p.id));
+
+                const name = createEl('span');
+                name.textContent = p.name;
+                const chip = createEl('span', 'shaderpg-pass-chip');
+                chip.textContent = p.type === 'buffer' ? 'Buffer' : 'Image';
+                tab.appendChild(name);
+                tab.appendChild(chip);
+
+                tab.addEventListener('click', function () {
+                    state.selected = p.id;
+                    state.editorTarget = p.id;
+                    syncEditor();
+                    renderAll();
+                    saveState(state);
+                });
+
+                tab.addEventListener('dblclick', function () {
+                    const next = prompt('Pass 名称：', p.name);
+                    if (next === null) return;
+                    p.name = sanitizeName(next);
+                    renderAll();
+                    saveState(state);
+                });
+
+                passTabs.appendChild(tab);
+            });
+
+            updatePassActionButtons();
+        }
+
+        function updatePassActionButtons() {
+            const idx = getPassIndexById(state.selected);
+            const len = state.passes.length;
+            if (moveLeftBtn) moveLeftBtn.disabled = idx <= 0;
+            if (moveRightBtn) moveRightBtn.disabled = idx < 0 || idx >= len - 1;
+            if (deleteBtn) deleteBtn.disabled = len <= 1;
+        }
+
+        function renderChannels() {
+            const pass = getSelectedPass();
+            channelsEl.replaceChildren();
+            if (!pass) return;
+            for (let i = 0; i < 4; i += 1) {
+                const row = createEl('div', 'shaderpg-channel-row');
+                const label = document.createElement('label');
+                label.className = 'shaderpg-channel-label';
+                label.textContent = 'iChannel' + i;
+                const select = document.createElement('select');
+                select.className = 'btn btn-small btn-outline';
+                select.id = 'shaderpg-channel-' + i;
+                select.name = 'shaderpg-channel-' + i;
+                label.setAttribute('for', select.id);
+
+                if (pass.type === 'image') {
+                    const imageOnly = document.createElement('option');
+                    imageOnly.value = '__image_pass_note__';
+                    imageOnly.textContent = 'Image Pass：建议只连接上游 Buffer';
+                    imageOnly.disabled = true;
+                    select.appendChild(imageOnly);
+                }
+
+                const opts = [];
+                opts.push({ value: 'none', label: 'None' });
+                opts.push({ value: 'builtin:checker', label: 'builtin: checker' });
+                opts.push({ value: 'builtin:noise', label: 'builtin: noise' });
+                // Uploads
+                runtime.uploads.forEach((t) => {
+                    opts.push({ value: 'upload:' + t.id, label: 'upload: ' + t.label });
+                });
+                // Buffers
+                const selectedIndex = state.passes.findIndex((p) => String(p.id) === String(pass.id));
+                state.passes.forEach((p, idx) => {
+                    if (p.type !== 'buffer') return;
+                    if (idx > selectedIndex && String(p.id) !== String(pass.id)) return;
+                    opts.push({ value: 'buffer:' + p.id + ':prev', label: 'buffer: ' + p.name + ' (prev)' });
+                    opts.push({ value: 'buffer:' + p.id + ':current', label: 'buffer: ' + p.name + ' (current)' });
+                });
+
+                opts.forEach((o) => {
+                    const opt = document.createElement('option');
+                    opt.value = o.value;
+                    opt.textContent = o.label;
+                    select.appendChild(opt);
+                });
+
+                const current = pass.channels && pass.channels[i] ? pass.channels[i] : { kind: 'none' };
+                select.value = encodeChannelValue(current);
+                select.addEventListener('change', function () {
+                    pass.channels[i] = decodeChannelValue(select.value);
+                    saveState(state);
+                });
+
+                row.appendChild(label);
+                row.appendChild(select);
+                channelsEl.appendChild(row);
+            }
+        }
+
+        function encodeChannelValue(ch) {
+            if (!ch || !ch.kind || ch.kind === 'none') return 'none';
+            if (ch.kind === 'builtin') return String(ch.id);
+            if (ch.kind === 'upload') return 'upload:' + String(ch.id);
+            if (ch.kind === 'buffer') return 'buffer:' + String(ch.passId) + ':' + String(ch.frame || 'prev');
+            return 'none';
+        }
+
+        function decodeChannelValue(v) {
+            const s = String(v || 'none');
+            if (s === 'none') return { kind: 'none' };
+            if (s === 'builtin:checker' || s === 'builtin:noise') return { kind: 'builtin', id: s };
+            if (s.startsWith('upload:')) return { kind: 'upload', id: s.slice('upload:'.length) };
+            if (s.startsWith('buffer:')) {
+                const parts = s.split(':');
+                return { kind: 'buffer', passId: parts[1] || '', frame: parts[2] || 'prev' };
+            }
+            return { kind: 'none' };
+        }
+
+        function renderTextures() {
+            texturesEl.replaceChildren();
+            if (runtime.uploads.size === 0) {
+                const empty = createEl('div');
+                empty.textContent = '未上传图片。可用右上角“选择文件”。';
+                texturesEl.appendChild(empty);
+                return;
+            }
+            runtime.uploads.forEach((t) => {
+                const item = createEl('div', 'shaderpg-texture-item');
+                const name = createEl('div', 'shaderpg-texture-name');
+                name.textContent = t.label + ' (' + t.width + 'x' + t.height + ')';
+                const del = createEl('button', 'btn btn-small btn-outline');
+                del.type = 'button';
+                del.textContent = '移除';
+                del.addEventListener('click', function () {
+                    runtime.uploads.delete(t.id);
+                    // Remove references
+                    state.passes.forEach((p) => {
+                        (p.channels || []).forEach((ch) => {
+                            if (ch && ch.kind === 'upload' && String(ch.id) === String(t.id)) {
+                                ch.kind = 'none';
+                                delete ch.id;
+                            }
+                        });
+                    });
+                    renderChannels();
+                    renderTextures();
+                    saveState(state);
+                });
+                item.appendChild(name);
+                item.appendChild(del);
+                texturesEl.appendChild(item);
+            });
+        }
+
+        function syncEditor() {
+            const target = getEditorTarget();
+            if (target === COMMON_TAB_ID) {
+                editorTa.value = String(state.common || '');
+                afterEditorChanged();
+                hideAutocomplete();
+                return;
+            }
+            const pass = state.passes.find((p) => String(p.id) === String(state.editorTarget)) || getSelectedPass();
+            editorTa.value = pass ? pass.code : '';
+            afterEditorChanged();
+            hideAutocomplete();
+        }
+
+        function compileAll(reason) {
+            setError('');
+            const passIndexMap = new Map();
+            state.passes.forEach((p, idx) => {
+                passIndexMap.set(String(p.id), idx);
+            });
+
+            const compileStart = nowMs();
+            for (const pass of state.passes) {
+                const res = compilePass(runtime, state.common, pass);
+                if (!res.ok) {
+                    setError('[' + pass.name + ']\n' + res.error);
+                    continue;
+                }
+                // Replace old program
+                const old = runtime.compiled.get(String(pass.id));
+                if (old && old.program) {
+                    try { gl.deleteProgram(old.program); } catch (_) { }
+                }
+                runtime.compiled.set(String(pass.id), { program: res.program, uniforms: res.uniforms });
+            }
+
+            const ms = Math.max(0, Math.round(nowMs() - compileStart));
+            setStatus('Compiled in ' + ms + ' ms' + (reason ? ' (' + reason + ')' : ''));
+            updateTabErrorBadges();
+        }
+
+        function compileSinglePass(passId) {
+            const pass = state.passes.find((p) => String(p.id) === String(passId));
+            if (!pass) return { ok: false, error: 'Pass not found' };
+
+            const res = compilePass(runtime, state.common, pass);
+            if (!res.ok) {
+                return { ok: false, error: '[' + pass.name + ']\n' + res.error, passName: pass.name };
+            }
+
+            // 替换旧程序
+            const old = runtime.compiled.get(String(pass.id));
+            if (old && old.program) {
+                try { gl.deleteProgram(old.program); } catch (_) { }
+            }
+            runtime.compiled.set(String(pass.id), { program: res.program, uniforms: res.uniforms });
+
+            return { ok: true, passName: pass.name };
+        }
+
+        function commitEditorToState() {
+            const target = getEditorTarget();
+            if (target === COMMON_TAB_ID) {
+                state.common = editorTa.value;
+                return;
+            }
+            const pass = getSelectedPass();
+            if (pass) {
+                pass.code = editorTa.value;
+            }
+        }
+
+        function updateTabErrorBadges() {
+            const errText = String(errorEl.textContent || '').trim();
+            const m = errText.match(/^\[([^\]]+)\]/);
+            const errPassName = m ? m[1] : '';
+            const tabs = passTabs.querySelectorAll('button.shaderpg-pass-tab');
+            tabs.forEach((tab) => {
+                const pid = tab.getAttribute('data-pass-id');
+                const pass = state.passes.find((p) => String(p.id) === String(pid));
+                const hasError = errPassName && pass && pass.name === errPassName;
+                tab.setAttribute('data-error', hasError ? 'true' : 'false');
+            });
+        }
+
+        function renderAll() {
+            renderPassTabs();
+            renderChannels();
+            renderTextures();
+        }
+
+        addPassBtn.addEventListener('click', function () {
+            const nextNum = state.passes.length + 1;
+            const defaultName = 'Pass ' + nextNum;
+            const name = prompt('Pass 名称：', defaultName);
+            if (name === null) return;
+
+            const makeBuffer = confirm('将此 Pass 作为 Buffer Pass 创建？\n选择“取消”会创建为 Image Pass。');
+
+            const pass = {
+                id: createId('pass'),
+                name: sanitizeName(name),
+                type: makeBuffer ? 'buffer' : 'image',
+                scale: 1,
+                code: [
+                    '// ' + sanitizeName(name),
+                    makeBuffer
+                        ? 'float4 mainImage(float2 fragCoord)'
+                        : 'float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
+                    '{',
+                    makeBuffer
+                        ? '    float2 uv = fragCoord / iResolution.xy;'
+                        : '    float2 uv = texCoord;',
+                    '    return float4(uv, 0.0, 1.0);',
+                    '}',
+                    ''
+                ].join('\n'),
+                channels: [{ kind: 'none' }, { kind: 'none' }, { kind: 'none' }, { kind: 'none' }]
+            };
+            state.passes.push(pass);
+            state.selected = pass.id;
+            state.editorTarget = pass.id;
+            syncEditor();
+            renderAll();
+            saveState(state);
+        });
+
+        if (moveLeftBtn) {
+            moveLeftBtn.addEventListener('click', function () {
+                const idx = getPassIndexById(state.selected);
+                if (idx <= 0) return;
+                const tmp = state.passes[idx - 1];
+                state.passes[idx - 1] = state.passes[idx];
+                state.passes[idx] = tmp;
+                renderAll();
+                saveState(state);
+            });
+        }
+
+        if (moveRightBtn) {
+            moveRightBtn.addEventListener('click', function () {
+                const idx = getPassIndexById(state.selected);
+                if (idx < 0 || idx >= state.passes.length - 1) return;
+                const tmp = state.passes[idx + 1];
+                state.passes[idx + 1] = state.passes[idx];
+                state.passes[idx] = tmp;
+                renderAll();
+                saveState(state);
+            });
+        }
+
+        if (renameBtn) {
+            renameBtn.addEventListener('click', function () {
+                const pass = getSelectedPass();
+                if (!pass) return;
+                const next = prompt('Pass 名称：', pass.name);
+                if (next === null) return;
+                pass.name = sanitizeName(next);
+                renderAll();
+                saveState(state);
+            });
+        }
+
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function () {
+                const pass = getSelectedPass();
+                if (!pass) return;
+                if (state.passes.length <= 1) return;
+                if (!confirm('删除 pass: ' + pass.name + ' ?')) return;
+
+                // 清理 buffer 资源
+                if (pass.type === 'buffer') {
+                    const buf = runtime.buffers.get(String(pass.id));
+                    if (buf) {
+                        try {
+                            gl.deleteFramebuffer(buf.fboRead);
+                            gl.deleteFramebuffer(buf.fboWrite);
+                            gl.deleteTexture(buf.texRead);
+                            gl.deleteTexture(buf.texWrite);
+                        } catch (e) {
+                            console.warn('Failed to clean up buffer:', e);
+                        }
+                        runtime.buffers.delete(String(pass.id));
+                    }
+                }
+
+                // 清理编译的程序
+                const compiled = runtime.compiled.get(String(pass.id));
+                if (compiled && compiled.program) {
+                    try {
+                        gl.deleteProgram(compiled.program);
+                    } catch (e) {
+                        console.warn('Failed to clean up program:', e);
+                    }
+                    runtime.compiled.delete(String(pass.id));
+                }
+
+                state.passes = state.passes.filter((x) => String(x.id) !== String(pass.id));
+                state.passes.forEach((pp) => {
+                    (pp.channels || []).forEach((ch) => {
+                        if (ch && ch.kind === 'buffer' && String(ch.passId) === String(pass.id)) {
+                            ch.kind = 'none';
+                            delete ch.passId;
+                            delete ch.frame;
+                        }
+                    });
+                });
+
+                ensureSelected();
+                syncEditor();
+                renderAll();
+                saveState(state);
+            });
+        }
+
+        compileBtn.addEventListener('click', function () {
+            commitEditorToState();
+            saveState(state);
+            compileAll('手动');
+        });
+
+        resetBtn.addEventListener('click', function () {
+            if (!confirm('重置为示例内容？（会覆盖当前代码与 pass 列表）')) return;
+            state = createDefaultState();
+            scaleSelect.value = String(state.globalScale);
+            if (addressModeSelect) addressModeSelect.value = normalizeTextureAddressMode(state.addressMode);
+            syncEditor();
+            renderAll();
+            saveState(state);
+            compileAll('重置示例');
+        });
+
+        editorTa.addEventListener('input', function () {
+            commitEditorToState();
+            saveState(state);
+            afterEditorChanged();
+
+            const target = getEditorTarget();
+            if (target === COMMON_TAB_ID) {
+                scheduleCompile('Common', null);
+                return;
+            }
+
+            const pass = getSelectedPass();
+            if (!pass) return;
+            scheduleCompile(pass.name, pass.id);
+        });
+
+        editorTa.addEventListener('scroll', syncEditorScroll);
+        window.addEventListener('resize', syncEditorSizing);
+        editorTa.addEventListener('click', showAutocompleteForCurrentCursor);
+        editorTa.addEventListener('keyup', function (e) {
+            const key = String(e.key || '');
+            if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter' || key === 'Escape' || key === 'Tab') {
+                return;
+            }
+            showAutocompleteForCurrentCursor();
+        });
+
+        editorTa.addEventListener('keydown', function (e) {
+            if (e.key === 'Tab' && (e.shiftKey || !completionState.visible || completionState.items.length === 0)) {
+                e.preventDefault();
+                indentSelection(editorTa, e.shiftKey);
+                commitEditorToState();
+                saveState(state);
+                afterEditorChanged();
+
+                const target = getEditorTarget();
+                if (target === COMMON_TAB_ID) {
+                    scheduleCompile('Common', null);
+                } else {
+                    const pass = getSelectedPass();
+                    if (pass) scheduleCompile(pass.name, pass.id);
+                }
+                return;
+            }
+
+            if (!completionState.visible || completionState.items.length === 0) {
+                if ((e.ctrlKey || e.metaKey) && e.key === ' ') {
+                    e.preventDefault();
+                    showAutocompleteForCurrentCursor();
+                }
+                return;
+            }
+
+            const key = String(e.key || '');
+            if (key === 'ArrowDown') {
+                e.preventDefault();
+                completionState.selected = (completionState.selected + 1) % completionState.items.length;
+                renderAutocomplete();
+                return;
+            }
+            if (key === 'ArrowUp') {
+                e.preventDefault();
+                completionState.selected = (completionState.selected - 1 + completionState.items.length) % completionState.items.length;
+                renderAutocomplete();
+                return;
+            }
+            if (key === 'Enter' || key === 'Tab') {
+                e.preventDefault();
+                if (applyCompletionAtSelected()) {
+                    commitEditorToState();
+                    saveState(state);
+                    const target = getEditorTarget();
+                    if (target === COMMON_TAB_ID) {
+                        scheduleCompile('Common', null);
+                    } else {
+                        const pass = getSelectedPass();
+                        if (pass) scheduleCompile(pass.name, pass.id);
+                    }
+                }
+                return;
+            }
+            if (key === 'Escape') {
+                e.preventDefault();
+                hideAutocomplete();
+                return;
+            }
+            if (!isIdentifierChar(key) && key !== 'Backspace' && key !== 'Delete') {
+                hideAutocomplete();
+            }
+        });
+
+        scaleSelect.addEventListener('change', function () {
+            state.globalScale = Number(scaleSelect.value || 1);
+            saveState(state);
+        });
+
+        if (addressModeSelect) {
+            addressModeSelect.addEventListener('change', function () {
+                state.addressMode = normalizeTextureAddressMode(addressModeSelect.value);
+                addressModeSelect.value = state.addressMode;
+                saveState(state);
+                if (!state.isRunning && !contextLost) {
+                    try {
+                        renderFrame(runtime, state);
+                    } catch (_) { }
+                }
+            });
+        }
+
+        function rerenderWithCurrentITime() {
+            if (state.isRunning || contextLost) return;
+            try {
+                renderFrame(runtime, state);
+            } catch (_) { }
+        }
+
+        function resetPlaybackClock() {
+            const current = nowMs();
+            runtime.startMs = current;
+            runtime.lastMs = current;
+            runtime.frame = 0;
+            if (!contextLost) {
+                try {
+                    renderFrame(runtime, state);
+                } catch (_) { }
+            }
+            setStatus('播放时间已重置');
+        }
+
+        function applyITimeFromInput(persist) {
+            if (!iTimeInput) return;
+            const raw = Number(iTimeInput.value);
+            if (!isFinite(raw)) return;
+            setITimeOffset(raw, persist);
+            rerenderWithCurrentITime();
+        }
+
+        if (iTimeInput) {
+            iTimeInput.addEventListener('change', function () {
+                applyITimeFromInput(true);
+            });
+            iTimeInput.addEventListener('blur', function () {
+                applyITimeFromInput(true);
+            });
+        }
+
+        if (iTimeMinusBtn) {
+            iTimeMinusBtn.addEventListener('click', function () {
+                setITimeOffset(Number(runtime.iTimeOffset || 0) - 1, true);
+                rerenderWithCurrentITime();
+            });
+        }
+
+        if (iTimePlusBtn) {
+            iTimePlusBtn.addEventListener('click', function () {
+                setITimeOffset(Number(runtime.iTimeOffset || 0) + 1, true);
+                rerenderWithCurrentITime();
+            });
+        }
+
+        if (iTimeResetBtn) {
+            iTimeResetBtn.addEventListener('click', function () {
+                setITimeOffset(0, true);
+                rerenderWithCurrentITime();
+            });
+        }
+
+        if (resetPlaybackBtn) {
+            resetPlaybackBtn.addEventListener('click', function () {
+                resetPlaybackClock();
+            });
+        }
+
+        runBtn.addEventListener('click', function () {
+            state.isRunning = !state.isRunning;
+            runBtn.textContent = state.isRunning ? '暂停' : '继续';
+            runBtn.setAttribute('aria-pressed', state.isRunning ? 'true' : 'false');
+            saveState(state);
+        });
+
+        uploadInput.addEventListener('change', function () {
+            const files = Array.from(uploadInput.files || []);
+            if (!files.length) return;
+            files.forEach((file) => {
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = function () {
+                    const tex = createTextureFromImage(gl, img, true);
+                    const id = createId('upload');
+                    runtime.uploads.set(id, {
+                        id: id,
+                        label: file.name,
+                        width: img.naturalWidth || img.width,
+                        height: img.naturalHeight || img.height,
+                        texture: tex
+                    });
+                    URL.revokeObjectURL(url);
+                    renderChannels();
+                    renderTextures();
+                };
+                img.onerror = function () {
+                    URL.revokeObjectURL(url);
+                };
+                img.src = url;
+            });
+            try { uploadInput.value = ''; } catch (_) { }
+        });
+
+        exportBtn.addEventListener('click', function () {
+            commitEditorToState();
+            const fx = buildFx(state);
+            fxTa.value = fx;
+            copyBtn.disabled = !fx;
+        });
+
+        window.addEventListener('keydown', function (e) {
+            if (e.target === editorTa && completionState.visible && completionState.items.length > 0) {
+                return;
+            }
+            const key = String(e.key || '');
+            const isEnter = key === 'Enter';
+            const isSave = key.toLowerCase() === 's';
+            const isCompileCombo = (e.ctrlKey || e.metaKey) && isEnter;
+            const isExportCombo = (e.ctrlKey || e.metaKey) && isSave;
+            if (isCompileCombo) {
+                e.preventDefault();
+                commitEditorToState();
+                saveState(state);
+                compileAll('快捷键');
+                return;
+            }
+            if (isExportCombo) {
+                e.preventDefault();
+                commitEditorToState();
+                const fx = buildFx(state);
+                fxTa.value = fx;
+                copyBtn.disabled = !fx;
+            }
+        });
+
+        copyBtn.addEventListener('click', async function () {
+            const text = String(fxTa.value || '');
+            if (!text) return;
+            try {
+                await navigator.clipboard.writeText(text);
+                setStatus('已复制到剪贴板');
+            } catch (_) {
+                fxTa.focus();
+                fxTa.select();
+                try { document.execCommand('copy'); } catch (_) { }
+                setStatus('已复制（fallback）');
+            }
+        });
+
+        // Pass 下拉菜单
+        if (passMenuBtn && passDropdown) {
+            passMenuBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                passDropdown.classList.toggle('show');
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!passDropdown.contains(e.target) && e.target !== passMenuBtn) {
+                    passDropdown.classList.remove('show');
+                }
+            });
+        }
+
+        // 布局切换
+        if (layoutToggleBtn && mainEl) {
+            layoutToggleBtn.addEventListener('click', function () {
+                const current = mainEl.getAttribute('data-layout') || 'horizontal';
+                const next = current === 'horizontal' ? 'vertical' : 'horizontal';
+                mainEl.setAttribute('data-layout', next);
+                layoutToggleBtn.textContent = next === 'horizontal' ? '⇄' : '⇅';
+                try {
+                    localStorage.setItem('shader-playground.layout', next);
+                } catch (_) { }
+            });
+
+            // 恢复保存的布局
+            try {
+                const savedLayout = localStorage.getItem('shader-playground.layout');
+                if (savedLayout === 'vertical') {
+                    mainEl.setAttribute('data-layout', 'vertical');
+                    layoutToggleBtn.textContent = '⇅';
+                }
+            } catch (_) { }
+        }
+
+        // 教程大窗口
+        function openHelpDrawer() {
+            if (helpDrawer) helpDrawer.classList.add('open');
+            if (drawerOverlay) drawerOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeHelpDrawer() {
+            if (helpDrawer) helpDrawer.classList.remove('open');
+            if (drawerOverlay) drawerOverlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        if (helpToggleBtn) {
+            helpToggleBtn.addEventListener('click', openHelpDrawer);
+        }
+
+        if (helpCloseBtn) {
+            helpCloseBtn.addEventListener('click', closeHelpDrawer);
+        }
+
+        if (drawerOverlay) {
+            drawerOverlay.addEventListener('click', closeHelpDrawer);
+        }
+
+        // ESC 关闭教程窗口
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && helpDrawer && helpDrawer.classList.contains('open')) {
+                closeHelpDrawer();
+            }
+        });
+
+        // Mouse handling (pixel coords)
+        function updateMouseFromEvent(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = clamp((e.clientX - rect.left) * (canvas.width / rect.width), 0, canvas.width);
+            const y = clamp((rect.bottom - e.clientY) * (canvas.height / rect.height), 0, canvas.height);
+            runtime.mouse.x = x;
+            runtime.mouse.y = y;
+        }
+
+        canvas.addEventListener('pointermove', function (e) {
+            updateMouseFromEvent(e);
+        });
+        canvas.addEventListener('pointerdown', function (e) {
+            canvas.setPointerCapture(e.pointerId);
+            updateMouseFromEvent(e);
+            runtime.mouse.down = true;
+            runtime.mouse.downX = runtime.mouse.x;
+            runtime.mouse.downY = runtime.mouse.y;
+        });
+        canvas.addEventListener('pointerup', function (e) {
+            updateMouseFromEvent(e);
+            runtime.mouse.down = false;
+        });
+
+        // Debounced compile
+        let compileTimer = 0;
+        let pendingCompilePassId = null;
+
+        function scheduleCompile(reason, passId) {
+            if (compileTimer) window.clearTimeout(compileTimer);
+            pendingCompilePassId = passId;  // null = 编译全部
+            compileTimer = window.setTimeout(function () {
+                compileTimer = 0;
+                const pid = pendingCompilePassId;
+                pendingCompilePassId = null;
+
+                if (pid === null) {
+                    compileAll('自动：' + reason);
+                } else {
+                    setError('');
+                    const compileStart = nowMs();
+                    const res = compileSinglePass(pid);
+                    if (!res.ok) setError(res.error);
+                    const ms = Math.max(0, Math.round(nowMs() - compileStart));
+                    setStatus('Compiled in ' + ms + ' ms (自动：' + reason + ')');
+                    updateTabErrorBadges();
+                }
+            }, 250);
+        }
+
+        function updateStats(fps, w, h) {
+            if (!statsEl) return;
+            const f = (typeof fps === 'number' && isFinite(fps)) ? fps.toFixed(1) : '--';
+            statsEl.textContent = 'fps: ' + f + ' | ' + w + 'x' + h;
+        }
+
+        // Initial UI
+        syncEditor();
+        afterEditorChanged();
+        hideAutocomplete();
+        renderAll();
+        compileAll('初始化');
+
+        function rafLoop() {
+            try {
+                if (state.isRunning && !contextLost) {
+                    renderFrame(runtime, state);
+                }
+            } catch (e) {
+                setError(String(e && e.message ? e.message : e));
+            }
+            updateStats(estimateFps(), canvas.width, canvas.height);
+            requestAnimationFrame(rafLoop);
+        }
+
+        let fpsSamples = [];
+        function estimateFps() {
+            const t = nowMs();
+            fpsSamples.push(t);
+            while (fpsSamples.length && t - fpsSamples[0] > 1000) fpsSamples.shift();
+            if (fpsSamples.length < 2) return NaN;
+            const span = fpsSamples[fpsSamples.length - 1] - fpsSamples[0];
+            if (span <= 0) return NaN;
+            return (fpsSamples.length - 1) * 1000 / span;
+        }
+        requestAnimationFrame(rafLoop);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();

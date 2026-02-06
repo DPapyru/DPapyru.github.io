@@ -557,10 +557,72 @@
             margin-bottom: 5px;
         }
 
-	        .search-result-meta {
-	            font-size: 0.85rem;
-	            color: var(--text-secondary);
-	        }
+        .search-result-meta {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* 工具入口 */
+        .folder-tools {
+            margin: 18px 0 8px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+        }
+
+        .folder-tools-header {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 12px;
+        }
+
+        .folder-tools-title {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-color);
+        }
+
+        .folder-tools-meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .folder-tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .folder-tool-card {
+            display: block;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            text-decoration: none;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .folder-tool-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        .folder-tool-name {
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .folder-tool-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
 
         /* 响应式设计 */
         @media (max-width: 768px) {
@@ -578,6 +640,10 @@
 
             .folder-title {
                 font-size: 1.5rem;
+            }
+
+            .folder-tools-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -606,6 +672,7 @@
 	                        <li class="nav-item"><a href="../qa.html" class="nav-link">问答</a></li>
 	                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
 	                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
+	                        <li class="nav-item"><a href="shader-playground.html" class="nav-link">Shader</a></li>
                             <li class="nav-item nav-accent">
                                 <label class="visually-hidden" for="accent-select">配色</label>
                                 <select class="nav-accent-select" id="accent-select" aria-label="配色">
@@ -659,6 +726,24 @@
                 </div>
 
                 <div id="learning-path-bar"></div>
+
+                <!-- 工具入口（静态） -->
+                <section class="folder-tools" aria-label="工具">
+                    <div class="folder-tools-header">
+                        <h2 class="folder-tools-title">工具</h2>
+                        <div class="folder-tools-meta">一些辅助页面不属于 Markdown 文档，但可直接使用。</div>
+                    </div>
+                    <div class="folder-tools-grid">
+                        <a class="folder-tool-card" href="/site/pages/shader-playground.html">
+                            <div class="folder-tool-name">HLSL Shader Playground</div>
+                            <div class="folder-tool-desc">实时 Toy-HLSL（HLSL3 子集）多 pass + ping-pong 预览</div>
+                        </a>
+                        <a class="folder-tool-card" href="/site/pages/anim-renderer.html">
+                            <div class="folder-tool-name">C# 动画渲染器</div>
+                            <div class="folder-tool-desc">开发预览 anims/*.cs（需先 npm run build）</div>
+                        </a>
+                    </div>
+                </section>
 
                 <!-- 过滤器和搜索区域 -->
                 <div class="search-section">
