@@ -485,6 +485,7 @@
 	                        <li class="nav-item"><a href="../qa.html" class="nav-link">问答</a></li>
 	                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link"
 	                                target="_blank" rel="noopener noreferrer">GitHub</a></li>
+	                        <li class="nav-item"><a href="../pages/shader-playground.html" class="nav-link">Shader</a></li>
                             <li class="nav-item nav-accent">
                                 <label class="visually-hidden" for="accent-select">配色</label>
                                 <select class="nav-accent-select" id="accent-select" aria-label="配色">
@@ -1749,6 +1750,12 @@
                     description: '获取帮助和参与社区讨论',
                     action: 'community',
                     buttonClass: 'btn-outline'
+                },
+                {
+                    title: 'HLSL Shader Playground',
+                    description: '实时 HLSL 着色器编辑器，支持导出 tModLoader .fx 文件',
+                    action: 'shader-playground',
+                    buttonClass: 'btn-outline'
                 }
             ];
             
@@ -1770,22 +1777,29 @@
                         break;
                     case 'get-started':
                         // 查找入门分类的第一个文档
-                        const beginnerDoc = VISIBLE_DOCS.find(doc => doc.category === '入门');
-                        if (beginnerDoc) {
-                            buttonLink = `viewer.html?file=${encodeURIComponent(beginnerDoc.path || beginnerDoc.filename)}`;
+                        {
+                            const beginnerDoc = VISIBLE_DOCS.find(doc => doc.category === '入门');
+                            if (beginnerDoc) {
+                                buttonLink = `viewer.html?file=${encodeURIComponent(beginnerDoc.path || beginnerDoc.filename)}`;
+                            }
                         }
                         break;
                     case 'api-reference':
                         // 查找高级或进阶分类的文档
-                        const apiDoc = VISIBLE_DOCS.find(doc =>
-                            doc.category === '高级' || doc.category === '进阶'
-                        );
-                        if (apiDoc) {
-                            buttonLink = `viewer.html?file=${encodeURIComponent(apiDoc.path || apiDoc.filename)}`;
+                        {
+                            const apiDoc = VISIBLE_DOCS.find(doc =>
+                                doc.category === '高级' || doc.category === '进阶'
+                            );
+                            if (apiDoc) {
+                                buttonLink = `viewer.html?file=${encodeURIComponent(apiDoc.path || apiDoc.filename)}`;
+                            }
                         }
                         break;
                     case 'community':
                         buttonLink = 'https://github.com/DPapyru/DPapyru.github.io';
+                        break;
+                    case 'shader-playground':
+                        buttonLink = '../pages/shader-playground.html';
                         break;
                 }
                 
@@ -1798,7 +1812,8 @@
                        ${linkConfig.action === 'community' ? 'target="_blank" rel="noopener noreferrer"' : ''}>
                         ${linkConfig.action === 'view-all' ? '查看索引' :
                           linkConfig.action === 'get-started' ? '开始学习' :
-                          linkConfig.action === 'api-reference' ? '查看API' : 'GitHub'}
+                          linkConfig.action === 'api-reference' ? '查看API' :
+                          linkConfig.action === 'shader-playground' ? '打开工具' : 'GitHub'}
                     </a>
                 `;
                 

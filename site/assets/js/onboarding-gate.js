@@ -13,7 +13,7 @@
 
     function isDocsContentPage() {
         var path = String(window.location.pathname || '');
-        return /\/site\/pages\/(viewer|folder|anim-renderer)\.html$/i.test(path);
+        return /\/site\/pages\/(viewer|folder|anim-renderer|shader-playground)\.html$/i.test(path);
     }
 
     function getOnboardingUrl() {
@@ -21,10 +21,12 @@
     }
 
     function shouldRedirect() {
+        var profile;
+        var dismissed;
         try {
-            var profile = window.localStorage.getItem(PROFILE_KEY);
+            profile = window.localStorage.getItem(PROFILE_KEY);
             if (profile) return false;
-            var dismissed = window.localStorage.getItem(DISMISSED_KEY);
+            dismissed = window.localStorage.getItem(DISMISSED_KEY);
             return dismissed !== 'true';
         } catch (e) {
             return false;
