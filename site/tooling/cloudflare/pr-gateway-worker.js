@@ -83,10 +83,10 @@ export default {
       const prBody =
         prBodyInput ||
         [
-          "由在线写作IDE自动创建。",
+          "Created by Article Studio.",
           "",
-          `- 文件: \`${repoPath}\``,
-          `- 分支: \`${branch}\``
+          `- File: \`${repoPath}\``,
+          `- Branch: \`${branch}\``
         ].join("\n");
 
       const pr = await ghFetch(

@@ -102,11 +102,11 @@ export default {
       if (prBodyInput) {
         bodyLines.push(prBodyInput);
       } else {
-        bodyLines.push("由在线写作IDE自动创建。", "", `- 文件: \`${repoPath}\``, `- 分支: \`${branch}\``);
+        bodyLines.push("Created by Article Studio.", "", `- File: \`${repoPath}\``, `- Branch: \`${branch}\``);
       }
 
       if (submitter) {
-        bodyLines.push("", `- 提交者: @${submitter}`);
+        bodyLines.push("", `- Submitter: @${submitter}`);
       }
 
       const pr = await ghFetch(
