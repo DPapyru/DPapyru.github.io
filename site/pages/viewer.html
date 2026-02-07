@@ -160,17 +160,17 @@
         }
 
         .viewer-ai-panel {
-            width: min(420px, calc(100vw - 20px));
-            max-height: min(70vh, 560px);
+            width: clamp(420px, 50vw, 860px);
+            max-height: min(82vh, 860px);
             overflow: auto;
             border: 1px solid var(--border-color);
             border-radius: 12px;
             background: var(--bg-secondary);
             color: var(--text-color);
             box-shadow: var(--shadow-lg);
-            padding: 12px;
+            padding: 16px;
             display: grid;
-            gap: 8px;
+            gap: 10px;
         }
 
         .viewer-ai-panel[hidden] {
@@ -240,19 +240,68 @@
         }
 
         .viewer-ai-input {
-            min-height: 84px;
+            min-height: clamp(120px, 20vh, 220px);
             resize: vertical;
             padding: 8px 10px;
         }
 
         .viewer-ai-output {
             margin: 0;
-            min-height: 80px;
-            max-height: 220px;
+            min-height: clamp(180px, 32vh, 420px);
+            max-height: min(56vh, 520px);
             overflow: auto;
             padding: 10px;
             white-space: pre-wrap;
             word-break: break-word;
+        }
+
+        .viewer-ai-output.viewer-ai-output--markdown {
+            white-space: normal;
+            line-height: 1.65;
+        }
+
+        .viewer-ai-output.viewer-ai-output--markdown h1,
+        .viewer-ai-output.viewer-ai-output--markdown h2,
+        .viewer-ai-output.viewer-ai-output--markdown h3,
+        .viewer-ai-output.viewer-ai-output--markdown h4,
+        .viewer-ai-output.viewer-ai-output--markdown h5,
+        .viewer-ai-output.viewer-ai-output--markdown h6 {
+            margin: 0.6em 0 0.45em;
+            line-height: 1.35;
+        }
+
+        .viewer-ai-output.viewer-ai-output--markdown p,
+        .viewer-ai-output.viewer-ai-output--markdown ul,
+        .viewer-ai-output.viewer-ai-output--markdown ol,
+        .viewer-ai-output.viewer-ai-output--markdown blockquote,
+        .viewer-ai-output.viewer-ai-output--markdown pre,
+        .viewer-ai-output.viewer-ai-output--markdown table {
+            margin: 0.55em 0;
+        }
+
+        .viewer-ai-output.viewer-ai-output--markdown blockquote {
+            margin-left: 0;
+            padding-left: 0.8em;
+            border-left: 3px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .viewer-ai-output.viewer-ai-output--markdown pre {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            padding: 10px;
+            overflow: auto;
+        }
+
+        .viewer-ai-output.viewer-ai-output--markdown code {
+            font-family: "Fira Code", "Consolas", monospace;
+            font-size: 12px;
+        }
+
+        .viewer-ai-output.viewer-ai-output--markdown a {
+            color: var(--primary-color);
+            text-decoration: underline;
         }
 
         .viewer-ai-input:focus,
@@ -279,7 +328,13 @@
 
             .viewer-ai-panel {
                 width: min(100vw - 12px, 100vw - 12px);
-                max-height: 72vh;
+                max-height: 86vh;
+                padding: 12px;
+            }
+
+            .viewer-ai-output {
+                min-height: 34vh;
+                max-height: 58vh;
             }
         }
     </style>
@@ -582,7 +637,7 @@
 	            <label for="viewer-ai-input">提问内容</label>
 	            <textarea class="viewer-ai-input" id="viewer-ai-input" rows="4" placeholder="输入你的问题，然后发送给 AI。"></textarea>
 	            <label for="viewer-ai-output">AI 回复</label>
-	            <pre class="viewer-ai-output" id="viewer-ai-output">等待提问...</pre>
+	            <div class="viewer-ai-output" id="viewer-ai-output" role="status" aria-live="polite">等待提问...</div>
 	        </section>
 	    </div>
 
@@ -7343,8 +7398,41 @@
                 return value.replace(/\/+$/, '');
             }
 
-            function setAiOutput(text) {
+            function renderAiMarkdown(markdownText) {
+                const source = String(markdownText || '').trim();
+                if (!source) return '等待提问...';
+
+                if (!window.marked || typeof window.marked.parse !== 'function') {
+                    return source
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/\n/g, '<br>');
+                }
+
+                try {
+                    return window.marked.parse(source);
+                } catch (_) {
+                    return source
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/\n/g, '<br>');
+                }
+            }
+
+            function setAiOutput(text, options) {
                 if (!dom.output) return;
+                const opts = options && typeof options === 'object' ? options : {};
+                const useMarkdown = !!opts.markdown;
+
+                if (useMarkdown) {
+                    dom.output.classList.add('viewer-ai-output--markdown');
+                    dom.output.innerHTML = renderAiMarkdown(text);
+                    return;
+                }
+
+                dom.output.classList.remove('viewer-ai-output--markdown');
                 dom.output.textContent = String(text || '') || '等待提问...';
             }
 
@@ -7758,7 +7846,7 @@
                         throw new Error('AI 返回为空，请稍后重试');
                     }
 
-                    setAiOutput(outputText);
+                    setAiOutput(outputText, { markdown: true });
                     startAiCooldown(VIEWER_AI_COOLDOWN_SECONDS);
                 } catch (err) {
                     setAiOutput(`请求失败：${err && err.message ? err.message : String(err)}`);

@@ -78,3 +78,21 @@ test('viewer ai chat re-checks token before clearing on 401', () => {
     assert.match(submitBody, /checkAuthTokenAgainstWorker\(authToken\)/);
     assert.match(submitBody, /AI 服务认证配置不一致/);
 });
+
+test('viewer ai panel uses near half-screen layout', () => {
+    const htmlPath = path.resolve('site/pages/viewer.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+
+    assert.match(html, /width:\s*clamp\(420px,\s*50vw,\s*860px\)/);
+    assert.match(html, /max-height:\s*min\(82vh,\s*860px\)/);
+    assert.match(html, /min-height:\s*clamp\(180px,\s*32vh,\s*420px\)/);
+});
+
+test('viewer ai response supports markdown rendering', () => {
+    const htmlPath = path.resolve('site/pages/viewer.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+
+    assert.match(html, /function\s+renderAiMarkdown\s*\(/);
+    assert.match(html, /setAiOutput\(outputText,\s*\{\s*markdown:\s*true\s*\}\)/);
+    assert.match(html, /viewer-ai-output--markdown/);
+});
