@@ -1,197 +1,239 @@
 ---
-title: 站点 Markdown 扩展语法说明
+title: 站点Markdown扩展语法说明
 author: 小天使
-date: 2026-02-06
-last_updated: 2026-02-06
+date: 2026-02-07
+last_updated: 2026-02-07
 difficulty: beginner
-time: 10分钟
-description: 本站 viewer 渲染器支持的 Markdown 扩展语法：引用、条件分流、题目、动画、source_cs、颜色标记
+time: 20分钟
+description: 当前 viewer 渲染器支持的扩展语法与分流变量，含实用示例与排错建议
 topic: article-contribution
 order: 2
+prev_chapter: 教学文章写作指南.md
+next_chapter: 在线写作IDE使用教程.md
 ---
 
-# 站点 Markdown 扩展语法说明
+# 站点Markdown扩展语法说明
 
-为了降低维护成本，站点语法已做简化。
+本文是“当前项目版本”的语法说明，重点覆盖贡献者最常用的扩展。
 
-请直接使用极简指令，不再使用旧的 `{[...][...]}` 写法。
+## 使用前请先记住
 
-## 一、引用与代码（极简指令）
+1. 指令行必须独占一行
+2. 尽量使用相对路径
+3. 先在 viewer 预览，再决定提交
 
-所有指令都必须独占一行。
+## 文档引用指令
 
-### 1.1 引用 Markdown
+语法：
 
 ```text
-{{ref:相对路径/文件名.md|显示标题}}
+{{ref:相对路径/目标文档.md|显示标题}}
 ```
 
 示例：
 
 ```text
-{{ref:./基础语法.md|先看这节基础语法}}
+{{ref:./基础篇.md|先看基础篇}}
 ```
 
-### 1.2 引用完整 C# 文件
+适用：把公共段落拆到单独文档后，再在主文中复用。
+
+## C# 引用指令
+
+### 引用整份 C# 文件
 
 ```text
-{{cs:./CSharp_Frist.cs}}
+{{cs:./Demo.cs}}
 ```
 
-### 1.3 抽取 C# 片段
+### 引用 C# 片段
 
 ```text
-{{cs:./CSharp_Frist.cs#cs:m:ExMod.CSharpLearn.CSharp_Frist.Main(string[])|主方法示例}}
-{{cs:./CSharp_Frist.cs#cs:t:ExMod.CSharpLearn.CSharp_Frist|CSharp_Frist 类型}}
+{{cs:./Demo.cs#cs:t:命名空间.类型名|类型示例}}
+{{cs:./Demo.cs#cs:m:命名空间.类型名.方法名(参数类型)|方法示例}}
 ```
 
-支持选择器：
+常见选择器：
 
-- `#cs:m:` 方法
 - `#cs:t:` 类型
-- `#cs:p/#cs:f/#cs:c/#cs:e` 属性/字段/常量/枚举成员
+- `#cs:m:` 方法
+- `#cs:p:` 属性
+- `#cs:f:` 字段
+- `#cs:c:` 常量
+- `#cs:e:` 枚举成员
 
-### 1.4 引用动画脚本
+## 动画引用指令
+
+语法：
 
 ```text
 {{anim:anims/demo-basic.cs}}
 ```
 
-规则：
+要求：
 
-- `{{ref:...}}` 用于文档引用（`*.md`）。
-- `{{cs:...}}` 用于代码引用（`*.cs`，支持 `#cs:*` 片段选择）。
-- `{{anim:...}}` 用于动画脚本（必须是 `anims/*.cs`）。
+1. 路径以 `anims/` 开头
+2. 扩展名为 `.cs`
+3. 在使用前执行 `npm run build`
 
----
+## 条件分流语法
 
-## 二、条件分流（仅保留 if/end）
-
-语法（每条指令必须独占一行）：
+基础结构：
 
 ```text
-{if <条件>}
-  ...内容...
+{if 条件}
+内容A
+{else if 条件}
+内容B
+{else}
+内容C
 {end}
 ```
 
-可用变量：
+虽然支持 `else if` 和 `else`，但建议保持结构简洁，优先可读性。
 
-- `C`：C# 等级（`0/1/2`）
-- `T`：tModLoader 等级（`0/1/2`）
-- `AUTHOR`：作者模式（`0/1`）
-- `P_*`：学习偏好标签（`0/1`）
+### 常用变量
 
-可用运算符：
+1. `C`：C# 档位，范围 `0/1/2`
+2. `T`：tModLoader 档位，范围 `0/1/2`
+3. `AUTHOR`：作者模式，`0/1`
+4. `P_*`：偏好标签开关，`0/1`
+5. `R_REMEDIAL`、`R_STANDARD`、`R_FAST`、`R_DEEP`：路由路径标记，`0/1`
 
-- 比较：`> < >= <= == !=`
-- 逻辑：`&& || !`
-- 括号：`( ... )`
+### 常用写法
 
-说明：
+按 C/T 分流：
 
-- 推荐只用 `{if ...}` 与 `{end}`，写起来最稳定。
-- `else if` / `else` 目前仍可用，但不建议新增依赖。
-- 推荐使用多个独立 `{if}{end}` 块组合内容。
+```text
+{if C == 0 || T == 0}
+这里是补课内容。
+{else}
+这里是标准主线。
+{end}
+```
 
----
+按 route 路径分流：
 
-## 三、题目组件（quiz）
+```text
+{if R_REMEDIAL == 1}
+这里是补救路径内容。
+{else if R_STANDARD == 1}
+这里是标准路径内容。
+{else if R_FAST == 1}
+这里是速通路径内容。
+{else if R_DEEP == 1}
+这里是深挖路径内容。
+{end}
+```
 
-使用 fenced code block，语言标记为 `quiz`：
+## Quiz 题目语法
+
+### 选择题
 
 ````md
 ```quiz
 type: choice
-id: your-unique-id
+id: demo-choice
 question: |
-  题面
+  2 + 2 等于几？
 options:
   - id: A
     text: |
-      选项 A
-answer: A
+      3
+  - id: B
+    text: |
+      4
+answer: B
 explain: |
-  解释
+  正确答案是 4。
 ```
 ````
 
-`tf` 题型请写：
+### 判断题
 
-- `answer: true` 或 `answer: false`
-- 不要写成字符串（例如 `"false"`）
-
----
-
-## 四、C# 动画组件（anim）
-
-推荐直接写：
-
-```text
-{{anim:anims/demo-basic.cs}}
+````md
+```quiz
+type: tf
+id: demo-tf
+question: |
+  Item.damage 可以设置武器伤害。
+answer: true
+explain: |
+  在 SetDefaults 中设置 Item.damage。
 ```
+````
 
-使用前先运行 `npm run build`，确保动画产物与清单已生成。
+注意：`tf` 的 `answer` 必须是布尔值，不要写字符串。
 
----
+## 常用 Front Matter 字段
 
-## 五、Front Matter 显示 C# 源码（source_cs）
+### `source_cs`
 
-在 YAML front matter 里添加：
+用于在文章底部展示 C# 源码。
 
 ```yaml
 source_cs: Modder入门学习/CSharp基础/CSharp_Frist.cs
 ```
 
-规则：
-
-- 路径相对 `site/content/`。
-- 仅允许 `*.cs`。
-- 支持写数组（展示多个源码文件）。
-
----
-
-## 六、颜色标记（color / colorChange）
-
-在 Front Matter 里可配置：
+也可写数组：
 
 ```yaml
-colors:
-  Tip: "#88c0d0"
-
-colorChange:
-  Rainbow:
-    - "#f00"
-    - "#0f0"
-    - "#00f"
-    - "#f00"
+source_cs:
+  - path/first.cs
+  - path/second.cs
 ```
 
-正文里可写：
+### `min_c` 与 `min_t`
 
-```text
-{color:Tip}{这是一段提示文本}
-{colorChange:Rainbow}{彩色闪烁文本}
-```
-
----
-
-## 七、建议门槛（min_c / min_t）
-
-可在 front matter 标注建议阅读门槛（软建议，不阻止阅读）：
+用于建议阅读门槛，不会阻止阅读。
 
 ```yaml
 min_c: 1
 min_t: 1
 ```
 
----
+### `routing_manual`
 
-## 八、作者模式（author）
+当你手动写分流断言时建议开启：
 
-开启方式：
+```yaml
+routing_manual: true
+```
 
-- URL：`/site/pages/viewer.html?...&author=1`
-- 侧栏：`分流设置 -> 作者模式`
+同时正文建议含 3 条断言：
 
-作者模式用于检查元数据、引用和条件分流是否写错。
+1. `C0/T0` 应看到什么
+2. `C1/T1` 应看到什么
+3. `C2/T2` 应看到什么
+
+## 作者模式调试
+
+在 viewer 中开启“作者模式”后，可以看到：
+
+1. 元数据缺失提示
+2. 分流断言缺失提示
+3. 结构建议与条件解析诊断
+
+这一步非常适合在提交前做快速自检。
+
+## 常见错误
+
+### 错误1：条件不生效
+
+排查顺序：
+
+1. 指令是否独占一行
+2. 条件变量是否拼写正确
+3. 括号与逻辑运算符是否闭合
+
+### 错误2：引用失败
+
+检查目标路径是否相对当前文档，且文件真实存在。
+
+### 错误3：动画不显示
+
+确认已执行 `npm run build`，且 `{{anim:...}}` 路径合法。
+
+## 下一步
+
+继续阅读：`在线写作IDE使用教程.md`。

@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "article": "demo.md",
+  "entry": "entry",
+  "nodes": [
+    {
+      "id": "entry",
+      "type": "decision",
+      "dimension": "C",
+      "fallback": "standard",
+      "map": {
+        "0": "remedial",
+        "1": "standard",
+        "2": "deep"
+      }
+    },
+    {
+      "id": "remedial",
+      "type": "path",
+      "path": "remedial"
+    },
+    {
+      "id": "standard",
+      "type": "path",
+      "path": "standard"
+    },
+    {
+      "id": "deep",
+      "type": "path",
+      "path": "deep"
+    }
+  ]
+}

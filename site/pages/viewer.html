@@ -441,6 +441,7 @@
         let ALL_DOCS = [];
 	        let CURRENT_DOC_PATH = null;
 	        let DOC_LOOKUP_MAP = null;
+	        let ROUTE_MANIFEST = null;
 	        const STUDIO_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
 	        let STUDIO_PREVIEW_MODE = false;
 	        let STUDIO_EMBED_MODE = false;
@@ -622,6 +623,22 @@
 
 	            window.__STUDIO_PREVIEW_MESSAGE_PATCHED = true;
 	        }
+
+        async function loadRouteManifest() {
+            try {
+                const response = await fetch('/site/assets/route-manifest.json', { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const parsed = await response.json();
+                if (!parsed || typeof parsed !== 'object' || !parsed.routes || typeof parsed.routes !== 'object') {
+                    ROUTE_MANIFEST = { version: 2, routes: {} };
+                    return;
+                }
+                ROUTE_MANIFEST = parsed;
+            } catch (e) {
+                console.warn('加载 route-manifest 失败，使用空分流清单:', e);
+                ROUTE_MANIFEST = { version: 2, routes: {} };
+            }
+        }
 	        
 	        function initializeMermaidOnce() {
 	            if (window.__MERMAID_INITIALIZED) return;
@@ -867,7 +884,7 @@
             installStudioPreviewMessageBridge();
 
             // 初始化文档配置
-            initializeDocumentConfig().then(() => {
+            Promise.all([initializeDocumentConfig(), loadRouteManifest()]).then(() => {
                 // 初始化分类导航
                 initializeCategoryNavigation();
 
@@ -1946,11 +1963,93 @@
 	            return flags;
 	        }
 
-	        function clampLearningLevel(value) {
-	            const n = Number.parseInt(value, 10);
-	            if (!Number.isFinite(n)) return 0;
-	            return Math.max(0, Math.min(2, n));
-	        }
+        function clampLearningLevel(value) {
+            const n = Number.parseInt(value, 10);
+            if (!Number.isFinite(n)) return 0;
+            return Math.max(0, Math.min(2, n));
+        }
+
+        function routeDimensionLevel(ctx, dimension) {
+            const d = String(dimension || '').toUpperCase();
+            if (d === 'C') return clampLearningLevel(ctx && ctx.C);
+            if (d === 'T') return clampLearningLevel(ctx && ctx.T);
+            if (d === 'G') {
+                try {
+                    const prefs = readLearningQuizPreferences();
+                    const goalValue = prefs && prefs['pref-goal'] && prefs['pref-goal'].value
+                        ? String(prefs['pref-goal'].value)
+                        : '';
+                    if (goalValue === 'first-mod') return 0;
+                    if (goalValue === 'problem-driven') return 1;
+                    if (goalValue === 'systematic') return 2;
+                } catch (_) {
+                    // ignore
+                }
+                return 1;
+            }
+            return 1;
+        }
+
+        function resolveRoutePathForCurrentDoc(docPath, ctx) {
+            const normalizedDocPath = String(docPath || '').trim();
+            const routes = ROUTE_MANIFEST && ROUTE_MANIFEST.routes && typeof ROUTE_MANIFEST.routes === 'object'
+                ? ROUTE_MANIFEST.routes
+                : null;
+            if (!normalizedDocPath || !routes || !routes[normalizedDocPath]) {
+                return {
+                    path: 'standard',
+                    entry: null,
+                    visited: []
+                };
+            }
+
+            const routeDef = routes[normalizedDocPath];
+            const nodes = routeDef && routeDef.nodes && typeof routeDef.nodes === 'object' ? routeDef.nodes : {};
+            let nodeId = routeDef.entry || null;
+            const visited = [];
+
+            for (let i = 0; i < 16; i += 1) {
+                if (!nodeId || typeof nodeId !== 'string') break;
+                const node = nodes[nodeId];
+                if (!node || typeof node !== 'object') break;
+
+                visited.push(nodeId);
+
+                if (node.type === 'path') {
+                    const currentPath = String(node.path || 'standard');
+                    if (node.next && typeof node.next === 'string') {
+                        nodeId = node.next;
+                        continue;
+                    }
+                    return {
+                        path: currentPath,
+                        entry: routeDef.entry || null,
+                        visited: visited
+                    };
+                }
+
+                if (node.type === 'decision') {
+                    const level = routeDimensionLevel(ctx, node.dimension);
+                    const mapped = node.map && Object.prototype.hasOwnProperty.call(node.map, String(level))
+                        ? node.map[String(level)]
+                        : null;
+                    const nextNode = mapped || node.fallback;
+                    if (!nextNode || typeof nextNode !== 'string') {
+                        break;
+                    }
+                    nodeId = nextNode;
+                    continue;
+                }
+
+                break;
+            }
+
+            return {
+                path: 'standard',
+                entry: routeDef.entry || null,
+                visited: visited
+            };
+        }
 
 	        function getLearningConditionContext() {
 	            if (STUDIO_PREVIEW_MODE) {
@@ -2016,12 +2115,21 @@
 	                ctx[key.toUpperCase()] = final;
 	            });
 
+            const routeInfo = resolveRoutePathForCurrentDoc(CURRENT_DOC_PATH, ctx);
+            const routePath = String(routeInfo && routeInfo.path ? routeInfo.path : 'standard');
+            ctx.ROUTE_PATH = routePath;
+            ctx.R_REMEDIAL = routePath === 'remedial' ? 1 : 0;
+            ctx.R_STANDARD = routePath === 'standard' ? 1 : 0;
+            ctx.R_FAST = routePath === 'fast' ? 1 : 0;
+            ctx.R_DEEP = routePath === 'deep' ? 1 : 0;
+
 	            return {
 	                ctx: ctx,
 	                quizPrefs: quizPrefs,
 	                overrides: overrides,
 	                autoFlags: autoFlags,
-	                authorMode: authorMode
+	                authorMode: authorMode,
+	                routeInfo: routeInfo
 	            };
 	        }
 
@@ -2790,6 +2898,14 @@
 	                            (ctx && ctx[id] != null ? ctx[id] : undefined) ??
 	                            (ctx && ctx[rawId] != null ? ctx[rawId] : undefined);
 	                        stack.push(Number(v || 0));
+	                    } else if (id.startsWith('R_')) {
+	                        const v =
+	                            (ctx && ctx[id] != null ? ctx[id] : undefined) ??
+	                            (ctx && ctx[rawId] != null ? ctx[rawId] : undefined);
+	                        stack.push(Number(v || 0));
+	                    } else if (id === 'ROUTE_PATH') {
+	                        const routePath = String(ctx && ctx.ROUTE_PATH != null ? ctx.ROUTE_PATH : '');
+	                        stack.push(routePath === rawId ? 1 : 0);
 	                    } else {
 	                        throw new Error('未知变量: ' + t.value);
 	                    }

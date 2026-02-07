@@ -51,6 +51,7 @@ export default {
       const markdown = String(body.markdown || "");
       const prTitleInput = String(body.prTitle || "");
       const prBodyInput = String(body.prBody || "");
+      const extraFiles = normalizeExtraFiles(body.extraFiles || []);
 
       if (!markdown.trim()) {
         return json({ ok: false, error: "markdown 不能为空" }, 400, origin, env);
@@ -97,12 +98,31 @@ export default {
         }
       );
 
+      for (const file of extraFiles) {
+        const extraSha = await getExistingFileSha(env, file.path, branch, installationToken);
+        const extraBase64 = utf8ToBase64(file.content);
+
+        await ghFetch(
+          `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${encodePathForUrl(file.path)}`,
+          installationToken,
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              message: `docs: update ${file.path} via article studio`,
+              content: extraBase64,
+              branch,
+              sha: extraSha || undefined
+            })
+          }
+        );
+      }
+
       const prTitle = (prTitleInput || `docs: 更新 ${targetPath}`).slice(0, 120);
       const bodyLines = [];
       if (prBodyInput) {
         bodyLines.push(prBodyInput);
       } else {
-        bodyLines.push("Created by Article Studio.", "", `- File: \`${repoPath}\``, `- Branch: \`${branch}\``);
+        bodyLines.push("Created by Article Studio.", "", `- File: \`${repoPath}\``, `- Extra files: ${extraFiles.length}`, `- Branch: \`${branch}\``);
       }
 
       if (submitter) {
@@ -130,6 +150,7 @@ export default {
           prNumber: pr.number,
           branch,
           filePath: repoPath,
+          extraFiles: extraFiles.map((f) => f.path),
           submitter: submitter || null
         },
         200,
@@ -386,6 +407,42 @@ function sanitizeTargetPath(input) {
   if (p.includes("..")) throw new Error("targetPath 非法");
   if (!/\.md$/i.test(p)) throw new Error("只允许 .md");
   return p;
+}
+
+function sanitizeExtraFilePath(input) {
+  let p = String(input || "").trim().replace(/\\/g, "/");
+  p = p.replace(/^\/+/, "");
+  p = p.replace(/\/{2,}/g, "/");
+
+  if (!p) throw new Error("extra file path 为空");
+  if (p.includes("..")) throw new Error("extra file path 非法");
+  if (!/^site\/content\/routes\/.+\.route\.json$/i.test(p)) {
+    throw new Error("extra file 只允许 site/content/routes/*.route.json");
+  }
+
+  return p;
+}
+
+function normalizeExtraFiles(input) {
+  if (!Array.isArray(input)) return [];
+  if (input.length > 5) throw new Error("extraFiles 数量不能超过 5");
+
+  return input.map((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      throw new Error(`extraFiles[${index}] 必须是对象`);
+    }
+
+    const path = sanitizeExtraFilePath(item.path);
+    const content = String(item.content || "");
+    if (!content.trim()) {
+      throw new Error(`extraFiles[${index}] content 不能为空`);
+    }
+    if (content.length > 200000) {
+      throw new Error(`extraFiles[${index}] content 过大（>200KB）`);
+    }
+
+    return { path, content };
+  });
 }
 
 function encodePathForUrl(path) {

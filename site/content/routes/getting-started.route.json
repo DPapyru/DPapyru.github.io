@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "article": "Modder入门学习/CSharp基础/CSharp_Frist.md",
+  "entry": "entry",
+  "nodes": [
+    {
+      "id": "entry",
+      "type": "decision",
+      "dimension": "C",
+      "fallback": "standard",
+      "map": {
+        "0": "remedial",
+        "1": "standard",
+        "2": "fast"
+      }
+    },
+    {
+      "id": "remedial",
+      "type": "path",
+      "path": "remedial"
+    },
+    {
+      "id": "standard",
+      "type": "path",
+      "path": "standard"
+    },
+    {
+      "id": "fast",
+      "type": "path",
+      "path": "fast"
+    }
+  ]
+}

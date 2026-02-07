@@ -2,6 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { compileRoutes } = require('./route-v2');
 
 function writeLine(text) {
     const line = String(text || '');
@@ -67,11 +68,12 @@ function hasRoutingAssertion(bodyText, profileLabel) {
 
 function printHelp() {
     writeLine([
-        'Usage: node site/tooling/scripts/check-content.js [--root <dir>] [--help]',
+        'Usage: node site/tooling/scripts/check-content.js [--root <dir>] [--routes <dir>] [--help]',
         '',
         'Checks:',
         '- Disallow prev_chapter: null / next_chapter: null (use empty value or omit key)',
         '- If routing_manual: true, require 3 assertions (C0/T0, C1/T1, C2/T2)',
+        '- Validate route v2 files (*.route.json): fallback/targets/path coverage',
         '',
         'Exit codes:',
         '- 0: OK',
@@ -80,7 +82,11 @@ function printHelp() {
 }
 
 function parseArgs(argv) {
-    const args = { rootDir: path.resolve('site/content'), help: false };
+    const args = {
+        rootDir: path.resolve('site/content'),
+        routesDir: path.resolve('site/content/routes'),
+        help: false
+    };
     const rest = Array.isArray(argv) ? argv.slice() : [];
     while (rest.length) {
         const token = rest.shift();
@@ -91,6 +97,11 @@ function parseArgs(argv) {
         if (token === '--root') {
             const value = rest.shift();
             if (value) args.rootDir = path.resolve(value);
+            continue;
+        }
+        if (token === '--routes') {
+            const value = rest.shift();
+            if (value) args.routesDir = path.resolve(value);
             continue;
         }
     }
@@ -141,6 +152,14 @@ function main() {
                 });
             }
         }
+    }
+
+    const routeResult = compileRoutes({ rootDir: args.routesDir });
+    for (const err of routeResult.errors) {
+        errors.push({
+            filePath: err.filePath,
+            message: `route 校验失败: ${err.message}`
+        });
     }
 
     if (errors.length) {

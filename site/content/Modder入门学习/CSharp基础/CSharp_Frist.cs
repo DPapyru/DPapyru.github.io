@@ -1,7 +1,10 @@
-﻿namespace ExMod.CSharpLearn
+﻿using System.Collections.Generic;
+
+namespace ExMod.CSharpLearn
 {
     public class CSharp_Frist
     {
+        public Dictionary<int, int> t;
         /// <summary>
         /// 这里是C#的主方法，程序的入口点
         /// <para>程序的运行从这里开始</para>
