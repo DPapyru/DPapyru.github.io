@@ -105,14 +105,16 @@ test('viewer ai panel keeps warning notice without separate index button', () =>
     assert.match(html, /AI 生成内容可能不准确，请以教程原文为准/);
 });
 
-test('viewer ai chat builds stronger prompt with ai-guided index recommendations', () => {
+test('viewer ai chat uses local index recommendation and keeps ai for qa', () => {
     const htmlPath = path.resolve('site/pages/viewer.html');
     const html = fs.readFileSync(htmlPath, 'utf8');
 
-    assert.match(html, /function\s+buildAiSystemPrompt\s*\(userPrompt,\s*options\s*\)/);
+    assert.match(html, /function\s+buildAiSystemPrompt\s*\(userPrompt\s*\)/);
     assert.match(html, /function\s+getCurrentArticleContextForAi\s*\(maxChars\s*\)/);
-    assert.match(html, /function\s+buildTutorialIndexContext\s*\(/);
+    assert.match(html, /function\s+buildLocalIndexRecommendationMarkdown\s*\(/);
+    assert.match(html, /说明：以上为本地目录推荐，不会调用 AI 接口/);
     assert.match(html, /viewer\.html\?file=\$\{encodeURIComponent\(/);
-    assert.match(html, /preferIndexSuggestions\s*=\s*shouldUseIndexSuggestionMode\(prompt\)/);
-    assert.match(html, /不得编造事实或路径/);
+    assert.match(html, /setAiOutput\(buildLocalIndexRecommendationMarkdown\(prompt\),\s*\{\s*markdown:\s*true\s*\}\)/);
+    assert.match(html, /不要输出长篇阅读索引；当用户要阅读路线时，由前端本地推荐处理/);
+    assert.doesNotMatch(html, /function\s+buildTutorialIndexContext\s*\(/);
 });

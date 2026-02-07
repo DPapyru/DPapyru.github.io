@@ -7506,58 +7506,184 @@
                 return records;
             }
 
-            function buildTutorialIndexContext(maxChars) {
-                const records = buildTutorialIndexRecords();
-                if (records.length === 0) {
-                    return '当前无法读取教程索引。';
-                }
+            function collectIndexIntentTokens(prompt) {
+                const text = String(prompt || '').toLowerCase();
+                if (!text) return [];
 
-                const limit = Number.isFinite(Number(maxChars))
-                    ? Math.max(600, Math.floor(Number(maxChars)))
-                    : 2200;
-                const lines = ['教程索引候选（标题 | 分类 | 跳转链接 | 简介）'];
+                const groups = [
+                    { label: '入门', keys: ['入门', '新手', '基础', '从零', '刚开始', '初学'] },
+                    { label: 'C#', keys: ['c#', 'csharp', '语法', '变量', '函数', '类'] },
+                    { label: 'tModLoader', keys: ['tmodloader', '模组', 'mod', '环境', '安装'] },
+                    { label: 'UI', keys: ['ui', '界面', '按钮', '面板'] },
+                    { label: '网络', keys: ['网络', '联机', '同步', '多人'] },
+                    { label: '物品', keys: ['物品', '武器', '掉落', '装备'] },
+                    { label: 'NPC', keys: ['npc', '怪物', '敌怪', '生物群系'] }
+                ];
 
-                for (const item of records) {
-                    const row = `- ${item.title} | ${item.category} | ${item.href}${item.description ? ` | ${item.description}` : ''}`;
-                    lines.push(row);
-                }
+                const tokens = [];
+                groups.forEach(function (group) {
+                    if (group.keys.some(function (key) { return text.includes(String(key).toLowerCase()); })) {
+                        tokens.push(group.label);
+                    }
+                });
 
-                const raw = lines.join('\n');
-                if (raw.length <= limit) {
-                    return raw;
-                }
+                const asciiWords = text
+                    .replace(/[^a-z0-9#.+\-\s]/g, ' ')
+                    .split(/\s+/)
+                    .map(function (item) { return item.trim(); })
+                    .filter(function (item) { return item.length >= 2; })
+                    .slice(0, 8);
 
-                return `${raw.slice(0, limit)}\n...（索引内容已截断，请优先推荐最相关条目）`;
+                asciiWords.forEach(function (word) {
+                    if (!tokens.includes(word)) {
+                        tokens.push(word);
+                    }
+                });
+
+                return tokens.slice(0, 10);
             }
 
-            function buildAiSystemPrompt(userPrompt, options) {
+            function buildLocalIndexRecommendationMarkdown(prompt) {
+                const records = buildTutorialIndexRecords();
+                if (records.length === 0) {
+                    return [
+                        '> AI 生成内容可能不准确，请以教程原文为准。',
+                        '',
+                        '当前无法读取教程索引，请稍后重试。'
+                    ].join('\n');
+                }
+
+                const promptText = String(prompt || '').trim();
+                const tokens = collectIndexIntentTokens(promptText);
+                const currentPath = String(CURRENT_DOC_PATH || '').trim().toLowerCase();
+
+                let currentCategory = '';
+                if (currentPath) {
+                    const currentRecord = records.find(function (item) {
+                        return item.path.toLowerCase() === currentPath;
+                    });
+                    currentCategory = currentRecord ? currentRecord.category : '';
+                }
+
+                const scored = records.map(function (item) {
+                    const searchable = `${item.title} ${item.category} ${item.description} ${item.path}`.toLowerCase();
+                    const matched = [];
+                    let score = 0;
+
+                    if (currentCategory && item.category === currentCategory) {
+                        score += 6;
+                    }
+
+                    if (currentPath && item.path.toLowerCase() === currentPath) {
+                        score -= 30;
+                    }
+
+                    tokens.forEach(function (token) {
+                        if (searchable.includes(String(token).toLowerCase())) {
+                            score += 10;
+                            matched.push(token);
+                        }
+                    });
+
+                    if (searchable.includes('入门') || searchable.includes('基础') || searchable.includes('第一')) {
+                        score += 2;
+                    }
+
+                    return {
+                        item: item,
+                        score: score,
+                        matchedTokens: matched
+                    };
+                }).sort(function (left, right) {
+                    if (right.score !== left.score) return right.score - left.score;
+                    if (left.item.order !== right.item.order) return left.item.order - right.item.order;
+                    return left.item.title.localeCompare(right.item.title, 'zh-Hans-CN');
+                });
+
+                const selected = [];
+                const selectedPaths = new Set();
+
+                function tryPush(entry) {
+                    if (!entry || !entry.item) return;
+                    const key = entry.item.path;
+                    if (selectedPaths.has(key)) return;
+                    selected.push(entry);
+                    selectedPaths.add(key);
+                }
+
+                scored.forEach(function (entry) {
+                    if (selected.length >= 6) return;
+                    if (entry.score > 0) {
+                        tryPush(entry);
+                    }
+                });
+
+                if (selected.length < 4 && currentCategory) {
+                    scored.forEach(function (entry) {
+                        if (selected.length >= 6) return;
+                        if (entry.item.category === currentCategory) {
+                            tryPush(entry);
+                        }
+                    });
+                }
+
+                if (selected.length < 4) {
+                    scored.forEach(function (entry) {
+                        if (selected.length >= 6) return;
+                        tryPush(entry);
+                    });
+                }
+
+                const lines = [];
+                lines.push('> AI 生成内容可能不准确，请以教程原文为准。');
+                lines.push('');
+                lines.push('## 推荐阅读路线（本地推荐）');
+                if (tokens.length > 0) {
+                    lines.push(`关键词匹配：${tokens.join('、')}`);
+                } else {
+                    lines.push('未识别到明确关键词，已按当前文章和教程顺序推荐。');
+                }
+                lines.push('');
+
+                selected.forEach(function (entry, index) {
+                    const item = entry.item;
+                    let reason = '';
+
+                    if (entry.matchedTokens.length > 0) {
+                        reason = `匹配关键词：${entry.matchedTokens.slice(0, 3).join('、')}`;
+                    } else if (currentCategory && item.category === currentCategory) {
+                        reason = `与当前文章同属分类：${item.category}`;
+                    } else if (item.description) {
+                        reason = item.description;
+                    } else {
+                        reason = `教程分类：${item.category}`;
+                    }
+
+                    lines.push(`${index + 1}. [${item.title}](${item.href}) - ${reason}`);
+                });
+
+                lines.push('');
+                lines.push('说明：以上为本地目录推荐，不会调用 AI 接口。');
+                return lines.join('\n');
+            }
+
+            function buildAiSystemPrompt(userPrompt) {
+                const article = getCurrentArticleContextForAi(2600);
                 const promptText = String(userPrompt || '').trim();
-                const opts = options && typeof options === 'object' ? options : {};
-                const preferIndexSuggestions = !!opts.preferIndexSuggestions;
-                const article = getCurrentArticleContextForAi(preferIndexSuggestions ? 1400 : 2600);
-                const tutorialIndexContext = buildTutorialIndexContext(preferIndexSuggestions ? 3400 : 1800);
 
                 return [
                     '你是 tModLoader 教程页面内的 AI 助手。',
                     '第一行必须原样输出：> AI 生成内容可能不准确，请以教程原文为准。',
                     '严格要求：',
-                    '1. 只基于给定文章内容和教程索引回答，不得编造事实或路径。',
-                    '2. 先正面回答问题，再给出下一步阅读建议。',
-                    '3. 不要使用分隔线 ---，避免堆叠过多标题。',
-                    preferIndexSuggestions
-                        ? '4. 用户当前需要“索引推荐”：请给出 3-6 条教程，使用 Markdown 可点击链接，链接必须直接使用提供的 viewer.html?file=...。每条附一句推荐理由。'
-                        : '4. 简单问题直接回答；如需延伸学习，最多给 1-3 条相关教程链接。',
-                    '5. 信息不足时，请明确写“我不确定”，并提示以教程原文为准。',
+                    '1. 只基于当前文章内容回答简单问题，不得编造事实。',
+                    '2. 回答先给结论，再给 2-5 条简短步骤。',
+                    '3. 不要输出长篇阅读索引；当用户要阅读路线时，由前端本地推荐处理。',
+                    '4. 信息不足时，请明确写“我不确定”，并提醒以教程原文为准。',
                     '',
                     `当前文章标题: ${article.title}`,
                     `当前文章路径: ${article.path}`,
-                    `当前文章内容摘录:
-${article.text}`,
+                    `当前文章内容摘录:\n${article.text}`,
                     '',
-                    '可用教程索引（供推荐使用，禁止虚构路径）:',
-                    tutorialIndexContext,
-                    '',
-                    preferIndexSuggestions ? '推荐输出格式示例：\n## 推荐阅读路线\n- [教程标题](viewer.html?file=xxx) - 为什么先读它' : '普通问答输出要求：先给结论，再给简短步骤。',
                     `用户问题: ${promptText}`
                 ].join('\n');
             }
@@ -7894,6 +8020,18 @@ ${article.text}`,
                 const authToken = String(state.authToken || '').trim();
                 const prompt = String(dom.input ? dom.input.value : '').trim();
 
+                if (!prompt) {
+                    setAiOutput('请输入问题后再发送 AI 对话');
+                    if (dom.input) dom.input.focus();
+                    return;
+                }
+
+                const preferIndexSuggestions = shouldUseIndexSuggestionMode(prompt);
+                if (preferIndexSuggestions) {
+                    setAiOutput(buildLocalIndexRecommendationMarkdown(prompt), { markdown: true });
+                    return;
+                }
+
                 if (!authToken) {
                     setAiOutput('请先点击“GitHub 登录”后再使用 AI 对话');
                     if (dom.login) dom.login.focus();
@@ -7907,12 +8045,6 @@ ${article.text}`,
                     return;
                 }
 
-                if (!prompt) {
-                    setAiOutput('请输入问题后再发送 AI 对话');
-                    if (dom.input) dom.input.focus();
-                    return;
-                }
-
                 const remaining = getAiCooldownRemainingSeconds();
                 if (remaining > 0) {
                     setAiOutput(`AI 对话冷却中，请等待 ${formatCooldownSeconds(remaining)}`);
@@ -7922,11 +8054,8 @@ ${article.text}`,
                 if (dom.endpoint) {
                     dom.endpoint.value = apiUrl;
                 }
-
-                const preferIndexSuggestions = shouldUseIndexSuggestionMode(prompt);
-
                 setAiSendBusy(true);
-                setAiOutput(preferIndexSuggestions ? 'AI 正在整理推荐路线，请稍候...' : 'AI 正在思考，请稍候...');
+                setAiOutput('AI 正在思考，请稍候...');
 
                 try {
                     const response = await fetch(apiUrl, {
@@ -7936,7 +8065,7 @@ ${article.text}`,
                             'authorization': `Bearer ${authToken}`
                         },
                         body: JSON.stringify({
-                            prompt: buildAiSystemPrompt(prompt, { preferIndexSuggestions: preferIndexSuggestions })
+                            prompt: buildAiSystemPrompt(prompt)
                         })
                     });
 
