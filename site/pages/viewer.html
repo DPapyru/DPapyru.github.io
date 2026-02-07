@@ -7575,10 +7575,16 @@
                         responseData = null;
                     }
 
-                    if (!response.ok || !responseData || responseData.ok !== true || !responseData.user) {
+                    if (response.status === 401) {
                         clearAuthSession();
                         updateAuthUi();
                         setAiOutput('GitHub 登录已失效，请重新登录');
+                        return;
+                    }
+
+                    if (!response.ok || !responseData || responseData.ok !== true || !responseData.user) {
+                        updateAuthUi();
+                        setAiOutput(`验证登录状态失败（HTTP ${response.status}），已保留登录态`);
                         return;
                     }
 

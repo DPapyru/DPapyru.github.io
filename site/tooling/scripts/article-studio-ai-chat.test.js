@@ -49,3 +49,17 @@ test('viewer ai floating button supports drag and persisted position', () => {
     assert.match(html, /touch-action:\s*none/);
     assert.match(html, /data-panel-align/);
 });
+
+test('viewer auth verification keeps token on non-401 errors', () => {
+    const htmlPath = path.resolve('site/pages/viewer.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+
+    const fnStart = html.indexOf('async function verifyAuthSession()');
+    const fnEnd = html.indexOf('function toggleAiPanel', fnStart);
+    const verifyAuthBody = fnStart >= 0 && fnEnd > fnStart
+        ? html.slice(fnStart, fnEnd)
+        : '';
+
+    assert.notEqual(verifyAuthBody, '', 'verifyAuthSession should exist');
+    assert.match(verifyAuthBody, /if\s*\(response\.status\s*===\s*401\)/);
+});
