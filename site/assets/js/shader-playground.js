@@ -9,6 +9,7 @@
     const COMMON_TAB_ID = '__common__';
     const hlslAdapter = (typeof window !== 'undefined' && window.ShaderHlslAdapter) ? window.ShaderHlslAdapter : null;
     const editorAssist = (typeof window !== 'undefined' && window.ShaderEditorAssist) ? window.ShaderEditorAssist : null;
+    const commandParamsAdapter = (typeof window !== 'undefined' && window.ShaderCommandParams) ? window.ShaderCommandParams : null;
 
     function $(id) {
         return document.getElementById(id);
@@ -320,6 +321,7 @@
             vsSource: buildVertexSource(),
             startMs: nowMs(),
             lastMs: nowMs(),
+            elapsedSec: 0,
             frame: 0,
             mouse: { x: 0, y: 0, down: false, downX: 0, downY: 0 },
             builtins: new Map(),
@@ -440,9 +442,12 @@
         });
 
         const tMs = nowMs();
-        const baseTime = (tMs - runtime.startMs) / 1000;
-        const time = baseTime + Number(runtime.iTimeOffset || 0);
-        const dt = clamp((tMs - runtime.lastMs) / 1000, 0, 0.2);
+        const rawDelta = clamp((tMs - runtime.lastMs) / 1000, 0, 0.2);
+        if (state.isRunning) {
+            runtime.elapsedSec = Number(runtime.elapsedSec || 0) + rawDelta;
+        }
+        const time = Number(runtime.elapsedSec || 0) + Number(runtime.iTimeOffset || 0);
+        const dt = state.isRunning ? rawDelta : 0;
         const addressMode = normalizeTextureAddressMode(state.addressMode);
         runtime.lastMs = tMs;
 
@@ -820,6 +825,7 @@
         const iTimeMinusBtn = $('shaderpg-itime-minus');
         const iTimePlusBtn = $('shaderpg-itime-plus');
         const iTimeResetBtn = $('shaderpg-itime-reset');
+        const commandVarsEl = $('shaderpg-command-vars');
         const statsEl = $('shaderpg-stats');
         const channelsEl = $('shaderpg-channels');
         const uploadInput = $('shaderpg-upload');
@@ -841,6 +847,10 @@
         const editorHighlightCode = $('shaderpg-editor-highlight-code');
         const editorHighlightWrap = $('shaderpg-editor-highlight');
         const editorAutocomplete = $('shaderpg-autocomplete');
+        const commandUiState = {
+            key: '',
+            values: {}
+        };
 
         const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
         const mainNav = $('main-nav') || document.querySelector('.main-nav');
@@ -902,12 +912,22 @@
         function setITimeOffset(value, persist) {
             const next = clamp(Number(value || 0), -120, 120);
             runtime.iTimeOffset = next;
-            if (iTimeInput) iTimeInput.value = next.toFixed(1);
+            if (iTimeInput) iTimeInput.value = next.toFixed(3);
             if (persist) {
                 try {
                     localStorage.setItem(ITIME_OFFSET_STORAGE_KEY, String(next));
                 } catch (_) { }
             }
+        }
+
+        function currentITimeValue() {
+            return Number(runtime.elapsedSec || 0) + Number(runtime.iTimeOffset || 0);
+        }
+
+        function refreshITimeDisplay() {
+            if (!iTimeInput) return;
+            if (document.activeElement === iTimeInput) return;
+            iTimeInput.value = currentITimeValue().toFixed(3);
         }
 
         let savedITimeOffset = 0;
@@ -1091,6 +1111,10 @@
         }
 
         function syncEditorScroll() {
+            if (editorHighlightWrap) {
+                editorHighlightWrap.scrollTop = editorTa.scrollTop;
+                editorHighlightWrap.scrollLeft = editorTa.scrollLeft;
+            }
             if (!completionState.visible) return;
             positionAutocompleteAtCursor();
         }
@@ -1202,6 +1226,113 @@
 
         function setStatus(text) {
             setText(statusEl, text);
+        }
+
+        function getCurrentEditorSourceText() {
+            const target = getEditorTarget();
+            if (target === COMMON_TAB_ID) return String(state.common || '');
+            const pass = getSelectedPass();
+            return pass ? String(pass.code || '') : '';
+        }
+
+        function setCurrentEditorSourceText(nextText) {
+            const target = getEditorTarget();
+            const next = String(nextText || '');
+            if (target === COMMON_TAB_ID) {
+                state.common = next;
+            } else {
+                const pass = getSelectedPass();
+                if (pass) pass.code = next;
+            }
+            editorTa.value = next;
+        }
+
+        function applyEditorSourceMutation(nextSourceText, persist) {
+            setCurrentEditorSourceText(nextSourceText);
+            afterEditorChanged();
+            hideAutocomplete();
+            if (persist) saveState(state);
+
+            const target = getEditorTarget();
+            if (target === COMMON_TAB_ID) {
+                scheduleCompile('Common', null);
+                return;
+            }
+            const pass = getSelectedPass();
+            if (pass) scheduleCompile(pass.name, pass.id);
+        }
+
+        function renderCommandControls() {
+            if (!commandVarsEl) return;
+            commandVarsEl.replaceChildren();
+
+            if (!commandParamsAdapter || typeof commandParamsAdapter.parseCommandVariables !== 'function') {
+                return;
+            }
+
+            const source = getCurrentEditorSourceText();
+            const vars = commandParamsAdapter.parseCommandVariables(source);
+            const nextKey = vars.map((v) => String(v.name)).join('|');
+            if (commandUiState.key !== nextKey) {
+                commandUiState.key = nextKey;
+                commandUiState.values = {};
+            }
+
+            if (vars.length === 0) {
+                const empty = createEl('div', 'shaderpg-command-empty');
+                empty.textContent = '当前无 Command 变量。示例：float speed = 1.0; // Command(min=0,max=4,step=0.1)';
+                commandVarsEl.appendChild(empty);
+                return;
+            }
+
+            for (const v of vars) {
+                const item = createEl('div', 'shaderpg-command-item');
+
+                const label = createEl('label', 'shaderpg-command-name');
+                const inputId = 'shaderpg-command-' + v.name;
+                label.setAttribute('for', inputId);
+                label.textContent = v.name;
+
+                const input = createEl('input', 'shaderpg-number');
+                input.type = 'number';
+                input.id = inputId;
+                input.step = String(v.step);
+                input.min = String(v.min);
+                input.max = String(v.max);
+
+                const hasSaved = Object.prototype.hasOwnProperty.call(commandUiState.values, v.name);
+                const current = hasSaved ? commandUiState.values[v.name] : v.value;
+                const clamped = commandParamsAdapter.clampCommandValue(v.type, current, v.min, v.max);
+                commandUiState.values[v.name] = clamped;
+                input.value = commandParamsAdapter.formatCommandNumber(v.type, clamped);
+
+                function updateCommandVariableValue(persist) {
+                    const raw = Number(input.value);
+                    const nextValue = commandParamsAdapter.clampCommandValue(v.type, raw, v.min, v.max);
+                    commandUiState.values[v.name] = nextValue;
+                    input.value = commandParamsAdapter.formatCommandNumber(v.type, nextValue);
+
+                    const sourceBefore = getCurrentEditorSourceText();
+                    const nextSource = commandParamsAdapter.applyCommandValues(sourceBefore, {
+                        [v.name]: nextValue
+                    });
+
+                    if (nextSource === sourceBefore) return;
+                    applyEditorSourceMutation(nextSource, persist);
+                }
+
+                input.addEventListener('change', function () {
+                    updateCommandVariableValue(true);
+                });
+
+                input.addEventListener('blur', function () {
+                    updateCommandVariableValue(true);
+                });
+
+                item.appendChild(label);
+                item.appendChild(input);
+                commandVarsEl.appendChild(item);
+            }
         }
 
         function getSelectedPass() {
@@ -1413,12 +1544,14 @@
             if (target === COMMON_TAB_ID) {
                 editorTa.value = String(state.common || '');
                 afterEditorChanged();
+                renderCommandControls();
                 hideAutocomplete();
                 return;
             }
             const pass = state.passes.find((p) => String(p.id) === String(state.editorTarget)) || getSelectedPass();
             editorTa.value = pass ? pass.code : '';
             afterEditorChanged();
+            renderCommandControls();
             hideAutocomplete();
         }
 
@@ -1644,6 +1777,7 @@
             commitEditorToState();
             saveState(state);
             afterEditorChanged();
+            renderCommandControls();
 
             const target = getEditorTarget();
             if (target === COMMON_TAB_ID) {
@@ -1674,6 +1808,7 @@
                 commitEditorToState();
                 saveState(state);
                 afterEditorChanged();
+                renderCommandControls();
 
                 const target = getEditorTarget();
                 if (target === COMMON_TAB_ID) {
@@ -1754,12 +1889,15 @@
             try {
                 renderFrame(runtime, state);
             } catch (_) { }
+            refreshITimeDisplay();
         }
 
         function resetPlaybackClock() {
             const current = nowMs();
             runtime.startMs = current;
             runtime.lastMs = current;
+            runtime.elapsedSec = 0;
+            setITimeOffset(0, true);
             runtime.frame = 0;
             if (!contextLost) {
                 try {
@@ -1773,8 +1911,9 @@
             if (!iTimeInput) return;
             const raw = Number(iTimeInput.value);
             if (!isFinite(raw)) return;
-            setITimeOffset(raw, persist);
+            setITimeOffset(raw - Number(runtime.elapsedSec || 0), persist);
             rerenderWithCurrentITime();
+            refreshITimeDisplay();
         }
 
         if (iTimeInput) {
@@ -1790,6 +1929,7 @@
             iTimeMinusBtn.addEventListener('click', function () {
                 setITimeOffset(Number(runtime.iTimeOffset || 0) - 1, true);
                 rerenderWithCurrentITime();
+                refreshITimeDisplay();
             });
         }
 
@@ -1797,13 +1937,15 @@
             iTimePlusBtn.addEventListener('click', function () {
                 setITimeOffset(Number(runtime.iTimeOffset || 0) + 1, true);
                 rerenderWithCurrentITime();
+                refreshITimeDisplay();
             });
         }
 
         if (iTimeResetBtn) {
             iTimeResetBtn.addEventListener('click', function () {
-                setITimeOffset(0, true);
+                setITimeOffset(-Number(runtime.elapsedSec || 0), true);
                 rerenderWithCurrentITime();
+                refreshITimeDisplay();
             });
         }
 
@@ -1815,6 +1957,9 @@
 
         runBtn.addEventListener('click', function () {
             state.isRunning = !state.isRunning;
+            if (state.isRunning) {
+                runtime.lastMs = nowMs();
+            }
             runBtn.textContent = state.isRunning ? '暂停' : '继续';
             runBtn.setAttribute('aria-pressed', state.isRunning ? 'true' : 'false');
             saveState(state);
@@ -2020,10 +2165,12 @@
 
         // Initial UI
         syncEditor();
+        renderCommandControls();
         afterEditorChanged();
         hideAutocomplete();
         renderAll();
         compileAll('初始化');
+        refreshITimeDisplay();
 
         function rafLoop() {
             try {
@@ -2033,6 +2180,7 @@
             } catch (e) {
                 setError(String(e && e.message ? e.message : e));
             }
+            refreshITimeDisplay();
             updateStats(estimateFps(), canvas.width, canvas.height);
             requestAnimationFrame(rafLoop);
         }

@@ -54,6 +54,51 @@
     background: var(--bg-secondary);
 }
 
+.shaderpg-command-panel {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.shaderpg-command-header {
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+}
+
+.shaderpg-command-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.shaderpg-command-vars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.shaderpg-command-empty {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.shaderpg-command-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-color);
+    min-height: 34px;
+}
+
+.shaderpg-command-name {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
 .shaderpg-number {
     width: 88px;
     padding: 4px 6px;
@@ -171,28 +216,26 @@
     gap: 10px;
 }
 
-.shaderpg-highlight-panel {
-    display: flex;
-    flex-direction: column;
-    min-height: 180px;
+.shaderpg-editor-stack {
+    position: relative;
     flex: 1;
+    min-height: 260px;
     border: 1px solid var(--border-color);
     border-radius: 10px;
     overflow: hidden;
-    background: #0a0a0b;
-}
-
-.shaderpg-highlight-title {
-    padding: 6px 10px;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 12px;
-    color: var(--text-secondary);
-    background: var(--bg-color);
+    background: #0c0c0d;
+    --shaderpg-editor-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --shaderpg-editor-font-size: 12px;
+    --shaderpg-editor-line-height: 1.55;
+    --shaderpg-editor-letter-spacing: 0;
 }
 
 .shaderpg-editor-highlight {
-    position: relative;
-    inset: auto;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
     margin: 0;
     padding: 12px;
     overflow: auto;
@@ -200,12 +243,14 @@
     white-space: pre;
     word-break: normal;
     tab-size: 4;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 12px;
-    line-height: 1.55;
+    font-family: var(--shaderpg-editor-font-family);
+    font-size: var(--shaderpg-editor-font-size);
+    line-height: var(--shaderpg-editor-line-height);
+    letter-spacing: var(--shaderpg-editor-letter-spacing);
+    font-weight: 400;
     color: #d4d4d4;
     user-select: none;
-    flex: 1;
+    z-index: 1;
 }
 
 .shaderpg-editor-highlight-code {
@@ -218,8 +263,15 @@
 }
 
 .shaderpg-textarea--editor {
-    position: relative;
-    z-index: 1;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    background: transparent;
+    color: transparent;
+    caret-color: #f1f1f1;
 }
 
 .shaderpg-autocomplete {
@@ -380,36 +432,42 @@
 
 /* 覆盖通用 textarea 样式，确保编辑器稳定输入 */
 .shaderpg-textarea.shaderpg-textarea--editor {
-    position: relative;
-    inset: auto;
+    position: absolute;
+    inset: 0;
     width: 100%;
-    height: auto;
-    min-height: 240px;
-    max-height: 52vh;
-    flex: 0 0 auto;
-    resize: vertical;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    flex: 1;
+    resize: none;
+    border: 0;
+    border-radius: 0;
     padding: 12px;
-    background: #0c0c0d;
-    color: #d4d4d4;
+    background: transparent;
+    color: transparent;
     caret-color: #f1f1f1;
-    -webkit-text-fill-color: #d4d4d4;
-    font: inherit;
-    line-height: inherit;
-    letter-spacing: inherit;
+    -webkit-text-fill-color: transparent;
+    font-family: var(--shaderpg-editor-font-family);
+    font-size: var(--shaderpg-editor-font-size);
+    line-height: var(--shaderpg-editor-line-height);
+    letter-spacing: var(--shaderpg-editor-letter-spacing);
+    font-weight: 400;
     margin: 0;
     box-sizing: border-box;
     tab-size: 4;
     white-space: pre;
     overflow-wrap: normal;
     word-break: normal;
-    z-index: 1;
+    z-index: 2;
 }
 
 .shaderpg-textarea.shaderpg-textarea--editor::placeholder {
-    color: #7a7f87;
-    -webkit-text-fill-color: #7a7f87;
+    color: rgba(122, 127, 135, 0.75);
+    -webkit-text-fill-color: rgba(122, 127, 135, 0.75);
+}
+
+.shaderpg-textarea.shaderpg-textarea--editor::selection {
+    background: rgba(112, 162, 255, 0.28);
 }
 
 .shaderpg-editor-highlight code {
@@ -597,6 +655,10 @@
         grid-template-columns: 1fr;
     }
     .shaderpg-itime-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .shaderpg-command-item {
         width: 100%;
         justify-content: space-between;
     }

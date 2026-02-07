@@ -115,13 +115,6 @@
                                     <option value="wrap">Wrap 循环</option>
                                 </select>
                             </div>
-                            <div class="shaderpg-topbar-group shaderpg-itime-group">
-                                <label class="shaderpg-inline-label" for="shaderpg-itime">iTime</label>
-                                <button class="btn btn-small btn-outline" id="shaderpg-itime-minus" type="button" title="iTime -1">-1</button>
-                                <input class="shaderpg-number" id="shaderpg-itime" type="number" min="-120" max="120" step="0.1" value="0">
-                                <button class="btn btn-small btn-outline" id="shaderpg-itime-plus" type="button" title="iTime +1">+1</button>
-                                <button class="btn btn-small btn-outline" id="shaderpg-itime-reset" type="button" title="重置 iTime">重置</button>
-                            </div>
                             <button class="btn btn-small btn-outline" id="shaderpg-layout-toggle" type="button" title="切换布局">⇄</button>
                             <button class="btn btn-small btn-outline" id="shaderpg-help-toggle" type="button" title="帮助">?</button>
                             <div class="shaderpg-stats" id="shaderpg-stats">fps: -- | 0x0</div>
@@ -131,14 +124,29 @@
                     <!-- Pass 标签 -->
                     <div class="shaderpg-pass-tabs" role="tablist" id="shaderpg-pass-tabs"></div>
 
+                    <div class="shaderpg-command-panel" id="shaderpg-command-panel">
+                        <div class="shaderpg-panel-header shaderpg-command-header">
+                            <h2 class="shaderpg-panel-title">参数调节</h2>
+                        </div>
+                        <div class="shaderpg-command-controls" id="shaderpg-command-controls">
+                            <div class="shaderpg-topbar-group shaderpg-itime-group">
+                                <label class="shaderpg-inline-label" for="shaderpg-itime">iTime</label>
+                                <button class="btn btn-small btn-outline" id="shaderpg-itime-minus" type="button" title="iTime -1">-1</button>
+                                <input class="shaderpg-number" id="shaderpg-itime" type="number" min="-120" max="120" step="0.1" value="0">
+                                <button class="btn btn-small btn-outline" id="shaderpg-itime-plus" type="button" title="iTime +1">+1</button>
+                                <button class="btn btn-small btn-outline" id="shaderpg-itime-reset" type="button" title="重置 iTime">重置</button>
+                            </div>
+                            <div class="shaderpg-command-vars" id="shaderpg-command-vars"></div>
+                        </div>
+                    </div>
+
                     <!-- 编辑器和预览区 -->
                     <div class="shaderpg-main" id="shaderpg-main" data-layout="horizontal">
                         <section class="shaderpg-editor">
                             <div class="shaderpg-editor-surface" id="shaderpg-editor-surface">
-                                <textarea class="shaderpg-textarea shaderpg-textarea--editor" id="shaderpg-editor" spellcheck="false" wrap="off" placeholder="// 在此编写 HLSL 代码..."></textarea>
-                                <div class="shaderpg-highlight-panel" aria-label="HLSL 高亮预览">
-                                    <div class="shaderpg-highlight-title">HLSL 高亮预览</div>
+                                <div class="shaderpg-editor-stack" id="shaderpg-editor-stack">
                                     <pre class="shaderpg-editor-highlight" id="shaderpg-editor-highlight" aria-hidden="true"><code class="shaderpg-editor-highlight-code" id="shaderpg-editor-highlight-code"></code></pre>
+                                    <textarea class="shaderpg-textarea shaderpg-textarea--editor" id="shaderpg-editor" spellcheck="false" wrap="off" placeholder="// 在此编写 HLSL 代码..."></textarea>
                                 </div>
                                 <div class="shaderpg-autocomplete" id="shaderpg-autocomplete" role="listbox" aria-label="HLSL 自动补全"></div>
                             </div>
@@ -208,7 +216,8 @@
 
             <h4>1. 页面分区</h4>
             <ul>
-                <li><strong>顶部工具栏</strong>：运行控制、重播（重置播放时钟）、手动编译、重置、Pass 管理、布局切换、采样越界模式（Wrap/Clamp）、iTime 数值调参。</li>
+                <li><strong>顶部工具栏</strong>：运行控制、重播（重置播放时钟）、手动编译、重置、Pass 管理、布局切换、采样越界模式（Wrap/Clamp）。</li>
+                <li><strong>参数调节区</strong>：iTime 实时值与 Command 变量调参。</li>
                 <li><strong>Pass 标签区</strong>：切换当前编辑目标（<strong>Common</strong> 或某个 Pass）。</li>
                 <li><strong>左侧编辑区</strong>：编写 HLSL；支持自动编译。</li>
                 <li><strong>右侧预览区</strong>：实时画布输出与状态显示。</li>
@@ -227,7 +236,7 @@
             <h4>2.1 建议调试顺序</h4>
             <ol>
                 <li>先做最小可运行（只返回纯色或 uv 可视化）。</li>
-                <li>再加时间项（iTime）确认动画节奏；可用右上 iTime 输入框与快捷按钮快速偏移时间。</li>
+                <li>再加时间项（iTime）确认动画节奏；可用参数调节区快速偏移时间。</li>
                 <li>再加纹理采样（iChannel / uImage）。</li>
                 <li>最后再加复杂逻辑（分支、反馈、混合）。</li>
             </ol>
@@ -298,6 +307,26 @@ float2 uv = fragCoord / iResolution.xy;
 // 中心化坐标 -> -1~1
 float2 p = uv * 2.0 - 1.0;</code></pre>
 
+            <h4>2.2 自定义变量（Command）示例</h4>
+            <pre><code>// 标量参数：会在“参数调节”区自动出现
+float speed = 1.0;       // Command(min=0,max=5,step=0.1)
+float amplitude = 0.5;   // Command(0, 2, 0.1)
+int iterations = 3;      // Command(min=1,max=8,step=1)
+
+// iTime：可在参数调节区直接输入，并可自定义输入框步长
+// 例如把步长改为 0.5，便于做节奏更粗的调参
+
+// 向量/矩阵固定值（当前推荐写法）
+float2 uvOffset = float2(0.0, 0.0);
+float2x2 rotMatFixed = float2x2(1.0, 0.0, 0.0, 1.0);
+
+// 向量/矩阵可变值：先拆成可调标量，再组装
+float m00 = 1.0; // Command(min=-2,max=2,step=0.1)
+float m01 = 0.0; // Command(min=-2,max=2,step=0.1)
+float m10 = 0.0; // Command(min=-2,max=2,step=0.1)
+float m11 = 1.0; // Command(min=-2,max=2,step=0.1)
+float2x2 rotMat = float2x2(m00, m01, m10, m11);</code></pre>
+
             <h4>3. 常用类型与函数</h4>
             <pre><code>// 类型
 float2/3/4, int2/3/4, uint2/3/4, bool2/3/4
@@ -357,6 +386,7 @@ float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0 {
     <script src="/site/assets/js/accent-theme.js"></script>
     <script src="/site/assets/js/shader-hlsl-adapter.js"></script>
     <script src="/site/assets/js/shader-editor-assist.js"></script>
+    <script src="/site/assets/js/shader-command-params.js"></script>
     <script src="/site/assets/js/shader-playground.js"></script>
 </body>
 </html>
