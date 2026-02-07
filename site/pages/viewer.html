@@ -44,6 +44,66 @@
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
     <script src="/site/assets/js/theme-init.js"></script>
 
+    <!-- Studio 内嵌预览：仅显示 Markdown 渲染内容 -->
+    <style>
+        html[data-studio-embed='1'] .skip-link,
+        html[data-studio-embed='1'] .site-header,
+        html[data-studio-embed='1'] .learn-top-banner,
+        html[data-studio-embed='1'] .sidebar,
+        html[data-studio-embed='1'] .tutorial-header,
+        html[data-studio-embed='1'] .learning-author-diagnostics,
+        html[data-studio-embed='1'] .comments-section,
+        html[data-studio-embed='1'] .tutorial-footer,
+        html[data-studio-embed='1'] .site-footer,
+        html[data-studio-embed='1'] .mobile-nav-overlay,
+        html[data-studio-embed='1'] .learn-modal-overlay,
+        html[data-studio-embed='1'] #table-of-contents,
+        html[data-studio-embed='1'] #source-code-section,
+        html[data-studio-embed='1'] .mobile-nav-toggle,
+        html[data-studio-embed='1'] .mobile-menu-toggle {
+            display: none !important;
+        }
+
+        html[data-studio-embed='1'] body.viewer-page {
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        html[data-studio-embed='1'] .site-container,
+        html[data-studio-embed='1'] .main-content,
+        html[data-studio-embed='1'] .content-wrapper,
+        html[data-studio-embed='1'] .tutorial-content {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+        }
+
+        html[data-studio-embed='1'] .site-container {
+            display: block;
+            padding: 0;
+            min-height: 0;
+        }
+
+        html[data-studio-embed='1'] .main-content {
+            padding: 0;
+            border: 0;
+        }
+
+        html[data-studio-embed='1'] .content-wrapper {
+            padding: 12px 16px;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        html[data-studio-embed='1'] .tutorial-content {
+            padding: 0;
+            border: 0;
+            background: transparent;
+        }
+    </style>
+
 </head>
 
 <body class="viewer-page">
@@ -381,6 +441,187 @@
         let ALL_DOCS = [];
 	        let CURRENT_DOC_PATH = null;
 	        let DOC_LOOKUP_MAP = null;
+	        const STUDIO_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
+	        let STUDIO_PREVIEW_MODE = false;
+	        let STUDIO_EMBED_MODE = false;
+	        let STUDIO_PREVIEW_RELOAD_TIMER = 0;
+
+	        function normalizeStudioPreviewPath(input) {
+	            let value = String(input || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+	            value = value.replace(/^site\/content\//i, '').replace(/^content\//i, '').replace(/\/{2,}/g, '/');
+	            return value;
+	        }
+
+	        function readStudioPreviewPayloadFromStorage() {
+	            try {
+	                const raw = window.localStorage.getItem(STUDIO_PREVIEW_STORAGE_KEY);
+	                if (!raw) return null;
+	                const parsed = JSON.parse(raw);
+	                if (!parsed || typeof parsed !== 'object') return null;
+	                const targetPath = normalizeStudioPreviewPath(parsed.targetPath || '');
+	                if (!targetPath) return null;
+	                let simulatedProfile = null;
+	                if (parsed.simulatedProfile && typeof parsed.simulatedProfile === 'object') {
+	                    const cRaw = parsed.simulatedProfile.c;
+	                    const tRaw = parsed.simulatedProfile.t;
+
+	                    function parseLevel(rawLevel) {
+	                        const n = Number.parseInt(rawLevel, 10);
+	                        if (!Number.isFinite(n)) return null;
+	                        if (n < 0 || n > 2) return null;
+	                        return n;
+	                    }
+
+	                    const cLevel = parseLevel(cRaw);
+	                    const tLevel = parseLevel(tRaw);
+	                    if (cLevel != null || tLevel != null) {
+	                        simulatedProfile = { c: cLevel, t: tLevel };
+	                    }
+	                }
+
+	                return {
+	                    targetPath: targetPath,
+	                    markdown: String(parsed.markdown || ''),
+	                    simulatedProfile: simulatedProfile,
+	                    updatedAt: String(parsed.updatedAt || '')
+	                };
+	            } catch (_) {
+	                return null;
+	            }
+	        }
+
+	        function isStudioPreviewModeEnabled() {
+            try {
+                const url = new URL(window.location.href);
+                const flag = String(url.searchParams.get('studio_preview') || '').trim().toLowerCase();
+                return flag === '1' || flag === 'true' || flag === 'yes';
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function isStudioEmbedModeEnabled() {
+            try {
+                const url = new URL(window.location.href);
+                const flag = String(url.searchParams.get('studio_embed') || '').trim().toLowerCase();
+                return flag === '1' || flag === 'true' || flag === 'yes';
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function applyStudioEmbedMode() {
+            if (!STUDIO_EMBED_MODE) return;
+            document.documentElement.setAttribute('data-studio-embed', '1');
+            if (document.body) {
+                document.body.classList.add('viewer-studio-embed');
+            }
+        }
+
+        function getStudioPreviewTargetPath() {
+            if (!STUDIO_PREVIEW_MODE) return '';
+            const payload = readStudioPreviewPayloadFromStorage();
+            return payload && payload.targetPath ? normalizeStudioPreviewPath(payload.targetPath) : '';
+        }
+
+        function installStudioPreviewFetchBridge() {
+	            if (!STUDIO_PREVIEW_MODE) return;
+	            if (window.__STUDIO_PREVIEW_FETCH_PATCHED) return;
+
+	            const nativeFetch = window.fetch.bind(window);
+	            window.fetch = function (input, init) {
+	                try {
+	                    let requestUrl = null;
+	                    if (typeof input === 'string') {
+	                        requestUrl = new URL(input, window.location.origin);
+	                    } else if (input && typeof input.url === 'string') {
+	                        requestUrl = new URL(input.url, window.location.origin);
+	                    }
+
+	                    if (requestUrl && requestUrl.pathname.startsWith('/site/content/')) {
+	                        let requestPath = requestUrl.pathname.replace(/^\/site\/content\//, '');
+	                        try {
+	                            requestPath = decodeURIComponent(requestPath);
+	                        } catch (_) {
+	                            requestPath = requestPath;
+	                        }
+	                        requestPath = normalizeStudioPreviewPath(requestPath);
+	
+	                        const payload = readStudioPreviewPayloadFromStorage();
+	                        if (payload && payload.targetPath === requestPath) {
+	                            return Promise.resolve(new Response(payload.markdown || '', {
+	                                status: 200,
+	                                headers: {
+	                                    'content-type': 'text/markdown; charset=utf-8'
+	                                }
+	                            }));
+	                        }
+	                    }
+	                } catch (_) {
+	                    // ignore and fallback
+	                }
+
+	                return nativeFetch(input, init);
+	            };
+
+	            window.__STUDIO_PREVIEW_FETCH_PATCHED = true;
+	        }
+
+	        function scheduleStudioPreviewReload(path) {
+	            if (!STUDIO_PREVIEW_MODE) return;
+	            const targetPath = normalizeStudioPreviewPath(path || CURRENT_DOC_PATH || '');
+	            if (!targetPath) return;
+
+	            if (STUDIO_PREVIEW_RELOAD_TIMER) {
+	                clearTimeout(STUDIO_PREVIEW_RELOAD_TIMER);
+	            }
+
+	            STUDIO_PREVIEW_RELOAD_TIMER = window.setTimeout(function () {
+	                STUDIO_PREVIEW_RELOAD_TIMER = 0;
+	                try {
+	                    loadMarkdownDirectly(targetPath);
+	                } catch (err) {
+	                    console.warn('studio preview reload failed:', err);
+	                }
+	            }, 80);
+	        }
+
+	        function installStudioPreviewMessageBridge() {
+	            if (!STUDIO_PREVIEW_MODE) return;
+	            if (window.__STUDIO_PREVIEW_MESSAGE_PATCHED) return;
+
+	            window.addEventListener('message', function (event) {
+	                if (event.origin !== window.location.origin) return;
+	                const data = event && event.data ? event.data : null;
+	                if (!data || data.type !== 'article-studio-preview-update') return;
+
+	                const payload = data.payload || {};
+	                const targetPath = normalizeStudioPreviewPath(payload.targetPath || '');
+	                if (!targetPath) return;
+
+	                try {
+	                    window.localStorage.setItem(STUDIO_PREVIEW_STORAGE_KEY, JSON.stringify({
+	                        targetPath: targetPath,
+	                        markdown: String(payload.markdown || ''),
+	                        simulatedProfile: payload.simulatedProfile && typeof payload.simulatedProfile === 'object'
+	                            ? {
+	                                c: payload.simulatedProfile.c,
+	                                t: payload.simulatedProfile.t
+	                            }
+	                            : null,
+	                        updatedAt: String(payload.updatedAt || new Date().toISOString())
+	                    }));
+	                } catch (_) {
+	                    // ignore storage failures
+	                }
+
+	                if (normalizeStudioPreviewPath(CURRENT_DOC_PATH || '') === targetPath) {
+	                    scheduleStudioPreviewReload(targetPath);
+	                }
+	            });
+
+	            window.__STUDIO_PREVIEW_MESSAGE_PATCHED = true;
+	        }
 	        
 	        function initializeMermaidOnce() {
 	            if (window.__MERMAID_INITIALIZED) return;
@@ -619,6 +860,12 @@
 	            // 初始化侧边栏滚动功能
 	            initializeSidebarScrolling();
 
+            STUDIO_PREVIEW_MODE = isStudioPreviewModeEnabled();
+            STUDIO_EMBED_MODE = isStudioEmbedModeEnabled();
+            applyStudioEmbedMode();
+            installStudioPreviewFetchBridge();
+            installStudioPreviewMessageBridge();
+
             // 初始化文档配置
             initializeDocumentConfig().then(() => {
                 // 初始化分类导航
@@ -627,7 +874,13 @@
                 // 从URL参数获取要加载的Markdown文件
                 const urlParams = new URLSearchParams(window.location.search);
                 let markdownFile = urlParams.get('file');
-                console.log('从URL参数获取的文件名:', markdownFile);
+                const studioTargetPath = getStudioPreviewTargetPath();
+                if (studioTargetPath) {
+                    markdownFile = studioTargetPath;
+                    console.log('studio_preview 模式：优先使用草稿目标路径:', markdownFile);
+                } else {
+                    console.log('从URL参数获取的文件名:', markdownFile);
+                }
 
                 // 如果没有指定文件，尝试从路径中获取
                 if (!markdownFile) {
@@ -1700,6 +1953,32 @@
 	        }
 
 	        function getLearningConditionContext() {
+	            if (STUDIO_PREVIEW_MODE) {
+	                const previewPayload = readStudioPreviewPayloadFromStorage();
+	                const simulated = previewPayload && previewPayload.simulatedProfile ? previewPayload.simulatedProfile : null;
+	                if (simulated && (simulated.c != null || simulated.t != null)) {
+	                    const baseProfile = (function () {
+	                        try {
+	                            const raw = window.localStorage.getItem('learningProfile');
+	                            if (!raw) return { C: 0, T: 0 };
+	                            const parsed = JSON.parse(raw);
+	                            if (!parsed || typeof parsed !== 'object') return { C: 0, T: 0 };
+	                            return {
+	                                C: clampLearningLevel(parsed.c),
+	                                T: clampLearningLevel(parsed.t)
+	                            };
+	                        } catch (_) {
+	                            return { C: 0, T: 0 };
+	                        }
+	                    }());
+
+	                    return {
+	                        C: simulated.c == null ? baseProfile.C : clampLearningLevel(simulated.c),
+	                        T: simulated.t == null ? baseProfile.T : clampLearningLevel(simulated.t)
+	                    };
+	                }
+	            }
+
 	            try {
 	                const raw = window.localStorage.getItem('learningProfile');
 	                if (!raw) return { C: 0, T: 0 };
@@ -2005,6 +2284,22 @@
 	            return missing;
 	        }
 
+	        function isRoutingManualEnabled(rawMetadata) {
+	            if (!rawMetadata || typeof rawMetadata !== 'object') return false;
+	            const value = rawMetadata.routing_manual;
+	            if (value === true) return true;
+	            if (typeof value === 'string') {
+	                return value.trim().toLowerCase() === 'true';
+	            }
+	            return false;
+	        }
+
+	        function hasRoutingAssertionInBody(bodyText, profileLabel) {
+	            const normalized = String(profileLabel || '').replace('/', '\\s*\\/\\s*');
+	            const re = new RegExp('^\\s*(?:[-*]|\\d+\\.)\\s*' + normalized + '\\s*[：:]', 'im');
+	            return re.test(String(bodyText || ''));
+	        }
+
 	        function collectAuthorDiagnostics(diag, rawMetadata, metadata, filePath, rawContent) {
 	            if (!diag) return;
 
@@ -2017,6 +2312,16 @@
 	            const hasMinT = rawMetadata && typeof rawMetadata.min_t === 'number';
 	            if (!hasMinC && !hasMinT) {
 	                diag.metadata.warnings.push('未标注建议门槛：min_c / min_t（软建议，不影响阅读）');
+	            }
+
+	            if (isRoutingManualEnabled(rawMetadata)) {
+	                const requiredProfiles = ['C0/T0', 'C1/T1', 'C2/T2'];
+	                const missingProfiles = requiredProfiles.filter(function (label) {
+	                    return !hasRoutingAssertionInBody(rawContent, label);
+	                });
+	                if (missingProfiles.length) {
+	                    diag.metadata.warnings.push('routing_manual: true 但缺少分流断言：' + missingProfiles.join(' / '));
+	                }
 	            }
 
 	            const missingHeadings = scanRequiredReferenceHeadings(rawContent);
@@ -4030,9 +4335,15 @@
 	                let fetchPath = filePath;
 	                console.log(`site/pages/viewer.html: 初始fetchPath: ${fetchPath}`);
 
-	                // 1. URL解码
+	                                const studioPreviewTargetPath = getStudioPreviewTargetPath();
+                let allowStudioPreviewUnindexed = false;
+
+// 1. URL解码
 	                fetchPath = decodeURIComponent(fetchPath);
 	                console.log(`site/pages/viewer.html: URL解码后: ${fetchPath}`);
+                if (studioPreviewTargetPath && normalizeStudioPreviewPath(fetchPath) === studioPreviewTargetPath) {
+                    allowStudioPreviewUnindexed = true;
+                }
 
 	                // 1.1 基础安全校验：拒绝路径穿越/反斜杠/空字节
 	                if (/(^|\/|\\)\.\.(\/|\\|$)/.test(fetchPath) || fetchPath.includes('\\') || fetchPath.includes('\0')) {
@@ -4155,23 +4466,37 @@
 	                    fetchPath = doc.path || doc.filename;
 	                    console.log(`site/pages/viewer.html: 找到匹配文档: ${fetchPath}`);
 	                } else {
-	                    if (!defaultDocPath) throw new Error('未找到可用文档');
-	                    fetchPath = defaultDocPath;
-	                    console.log(`site/pages/viewer.html: 未找到匹配文档，使用默认: ${fetchPath}`);
-	                }
-	            }
+                    if (allowStudioPreviewUnindexed && studioPreviewTargetPath) {
+                        fetchPath = studioPreviewTargetPath;
+                        console.log(`site/pages/viewer.html: 使用 studio 草稿路径: ${fetchPath}`);
+                    } else {
+                        if (!defaultDocPath) throw new Error('未找到可用文档');
+                        fetchPath = defaultDocPath;
+                        console.log(`site/pages/viewer.html: 未找到匹配文档，使用默认: ${fetchPath}`);
+                    }
+                }
+            }
 
-	            // 6. 最终白名单校验：必须存在于 ALL_DOCS 中
+            if (!allowStudioPreviewUnindexed && studioPreviewTargetPath) {
+                allowStudioPreviewUnindexed = normalizeStudioPreviewPath(fetchPath) === studioPreviewTargetPath;
+            }
+
+            // 6. 最终白名单校验：必须存在于 ALL_DOCS 中
 	            if (ALL_DOCS && ALL_DOCS.length > 0) {
-	                const matches = ALL_DOCS.filter(d => d.path === fetchPath || d.filename === fetchPath);
-	                if (matches.length === 1) {
-	                    fetchPath = matches[0].path || matches[0].filename;
-	                } else if (matches.length === 0) {
-                    throw new Error('文档不存在或未被索引（请使用 site/content/config.json 中的路径）');
-	                } else {
-	                    throw new Error('文档名称不唯一，请使用完整路径');
-	                }
-	            }
+                const matches = ALL_DOCS.filter(d => d.path === fetchPath || d.filename === fetchPath);
+                if (matches.length === 1) {
+                    fetchPath = matches[0].path || matches[0].filename;
+                } else if (matches.length === 0) {
+                    if (allowStudioPreviewUnindexed && studioPreviewTargetPath) {
+                        fetchPath = studioPreviewTargetPath;
+                        console.log(`site/pages/viewer.html: 白名单豁免（studio 草稿）: ${fetchPath}`);
+                    } else {
+                        throw new Error('文档不存在或未被索引（请使用 site/content/config.json 中的路径）');
+                    }
+                } else {
+                    throw new Error('文档名称不唯一，请使用完整路径');
+                }
+            }
 
 	            // 7. 确保文件以.md结尾
 	            if (!fetchPath.endsWith('.md')) {

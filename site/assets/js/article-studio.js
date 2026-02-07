@@ -1,21 +1,27 @@
 (function () {
     'use strict';
 
-    const STORAGE_KEY = 'articleStudioMarkdown.v5';
+    const STORAGE_KEY = 'articleStudioMarkdown.v6';
     const SESSION_AUTH_TOKEN_KEY = 'articleStudioOAuthToken.v1';
     const SESSION_AUTH_USER_KEY = 'articleStudioOAuthUser.v1';
+    const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
     const STORAGE_DEBOUNCE_MS = 300;
+    const PREVIEW_SYNC_DEBOUNCE_MS = 120;
     const DEFAULT_PR_WORKER_API_URL = 'https://greenhome-pr.3577415213.workers.dev/api/create-pr';
+    const LEVEL_AUTO = 'auto';
 
     const dom = {
         markdown: document.getElementById('studio-markdown'),
-        preview: document.getElementById('studio-preview'),
+        previewFrame: document.getElementById('studio-preview-frame'),
+        openViewerPreview: document.getElementById('studio-open-viewer-preview'),
         status: document.getElementById('studio-status'),
         stats: document.getElementById('studio-stats'),
         currentPath: document.getElementById('studio-current-path'),
         activeTab: document.getElementById('studio-active-tab'),
         targetPath: document.getElementById('studio-target-path'),
         filename: document.getElementById('studio-filename'),
+        simulateCLevel: document.getElementById('studio-simulate-c-level'),
+        simulateTLevel: document.getElementById('studio-simulate-t-level'),
         existingSelect: document.getElementById('studio-existing-select'),
         loadExisting: document.getElementById('studio-load-existing'),
         loadPath: document.getElementById('studio-load-path'),
@@ -32,6 +38,7 @@
         authLogout: document.getElementById('studio-auth-logout'),
         authStatus: document.getElementById('studio-auth-status'),
         lastPrLink: document.getElementById('studio-last-pr-link'),
+        syntaxButtons: Array.from(document.querySelectorAll('[data-studio-insert]')),
         titlebar: document.querySelector('.studio-titlebar')
     };
 
@@ -43,10 +50,13 @@
         lastPrUrl: '',
         authToken: '',
         githubUser: '',
-        isFullscreen: false
+        isFullscreen: false,
+        simulatedCLevel: LEVEL_AUTO,
+        simulatedTLevel: LEVEL_AUTO
     };
 
     let saveTimer = 0;
+    let previewSyncTimer = 0;
 
     function nowStamp() {
         return new Date().toLocaleString('zh-CN', { hour12: false });
@@ -80,6 +90,12 @@
         }
 
         return value;
+    }
+
+    function normalizeLevelSelection(value) {
+        const text = String(value || '').trim().toLowerCase();
+        if (text === '0' || text === '1' || text === '2') return text;
+        return LEVEL_AUTO;
     }
 
     function normalizeWorkerApiUrl(input) {
@@ -373,8 +389,13 @@
     }
 
     function setTargetPath(nextPath, silent) {
+        const previousPath = state.targetPath;
         state.targetPath = ensureMarkdownPath(nextPath);
         updateFileIdentity();
+
+        if (previousPath !== state.targetPath) {
+            schedulePreviewSync(true);
+        }
 
         if (!silent) {
             setStatus(`目标路径已更新：${state.targetPath}`);
@@ -655,21 +676,30 @@
             state.workerApiUrl = normalizeWorkerApiUrl(parsed.workerApiUrl || state.workerApiUrl);
             state.prTitle = String(parsed.prTitle || '');
             state.lastPrUrl = String(parsed.lastPrUrl || '');
+            state.simulatedCLevel = normalizeLevelSelection(parsed.simulatedCLevel);
+            state.simulatedTLevel = normalizeLevelSelection(parsed.simulatedTLevel);
         } catch (err) {
             setStatus(`读取本地草稿失败：${err && err.message ? err.message : String(err)}`);
         }
     }
 
+    function syncSimulationControlsFromState() {
+        if (dom.simulateCLevel) dom.simulateCLevel.value = state.simulatedCLevel;
+        if (dom.simulateTLevel) dom.simulateTLevel.value = state.simulatedTLevel;
+    }
+
     function persistState() {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                version: 5,
+                version: 6,
                 updatedAt: new Date().toISOString(),
                 targetPath: state.targetPath,
                 markdown: state.markdown,
                 workerApiUrl: state.workerApiUrl,
                 prTitle: state.prTitle,
-                lastPrUrl: state.lastPrUrl
+                lastPrUrl: state.lastPrUrl,
+                simulatedCLevel: state.simulatedCLevel,
+                simulatedTLevel: state.simulatedTLevel
             }));
             setStatus('Markdown 草稿已自动保存');
         } catch (err) {
@@ -685,74 +715,321 @@
         }, STORAGE_DEBOUNCE_MS);
     }
 
-    function normalizeLang(lang) {
-        const value = String(lang || '').trim().toLowerCase();
-        if (value === 'c#' || value === 'cs' || value === 'dotnet') {
-            return 'csharp';
-        }
-        return value;
+    function buildViewerPreviewUrl(path) {
+        const target = ensureMarkdownPath(path || state.targetPath);
+        return `/site/pages/viewer.html?studio_preview=1&studio_embed=1&file=${encodeURIComponent(target)}`;
     }
 
-    function escapeHtml(text) {
-        return String(text || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
+    function buildViewerPreviewPayload() {
+        const shouldSimulateC = state.simulatedCLevel !== LEVEL_AUTO;
+        const shouldSimulateT = state.simulatedTLevel !== LEVEL_AUTO;
+        let simulatedProfile = null;
 
-    function renderPreview() {
-        if (!dom.preview) return;
-
-        const source = String(state.markdown || '');
-
-        if (typeof marked === 'undefined') {
-            dom.preview.innerHTML = `<pre><code>${escapeHtml(source)}</code></pre>`;
-            return;
-        }
-
-        const renderer = (marked.Renderer && typeof marked.Renderer === 'function')
-            ? new marked.Renderer()
-            : null;
-
-        if (renderer) {
-            renderer.code = function (code, lang) {
-                if (code && typeof code === 'object') {
-                    lang = code.lang;
-                    code = code.text || code.raw || '';
-                }
-
-                const language = normalizeLang(lang);
-                const raw = String(code || '');
-                let highlighted = escapeHtml(raw);
-
-                if (typeof Prism !== 'undefined' && language && Prism.languages[language]) {
-                    highlighted = Prism.highlight(raw, Prism.languages[language], language);
-                }
-
-                if (language) {
-                    return `<pre class="language-${language}"><code class="language-${language}">${highlighted}</code></pre>`;
-                }
-                return `<pre><code>${highlighted}</code></pre>`;
+        if (shouldSimulateC || shouldSimulateT) {
+            simulatedProfile = {
+                c: shouldSimulateC ? Number.parseInt(state.simulatedCLevel, 10) : null,
+                t: shouldSimulateT ? Number.parseInt(state.simulatedTLevel, 10) : null
             };
         }
 
-        marked.setOptions({
-            renderer: renderer || undefined,
-            breaks: true,
-            gfm: true,
-            tables: true,
-            smartypants: true,
-            mangle: true,
-            headerIds: false
-        });
+        return {
+            targetPath: ensureMarkdownPath(state.targetPath),
+            markdown: String(state.markdown || ''),
+            simulatedProfile: simulatedProfile,
+            updatedAt: new Date().toISOString()
+        };
+    }
 
-        const html = marked.parse(source || '');
-        dom.preview.innerHTML = html;
+    function persistViewerPreviewPayload(payload) {
+        try {
+            localStorage.setItem(VIEWER_PREVIEW_STORAGE_KEY, JSON.stringify(payload));
+        } catch (_) {
+            // ignore preview storage failures
+        }
+    }
 
-        if (typeof Prism !== 'undefined' && typeof Prism.highlightAllUnder === 'function') {
-            Prism.highlightAllUnder(dom.preview);
+    function postViewerPreviewMessage(payload) {
+        if (!dom.previewFrame || !dom.previewFrame.contentWindow) return;
+
+        try {
+            dom.previewFrame.contentWindow.postMessage({
+                type: 'article-studio-preview-update',
+                payload: payload
+            }, window.location.origin);
+        } catch (_) {
+            // ignore postMessage errors
+        }
+    }
+
+    function syncViewerPreview(forceReload) {
+        const payload = buildViewerPreviewPayload();
+        persistViewerPreviewPayload(payload);
+
+        if (!dom.previewFrame) return;
+
+        const desiredUrl = buildViewerPreviewUrl(payload.targetPath);
+        let shouldReload = !!forceReload;
+        const currentSrc = String(dom.previewFrame.getAttribute('src') || '').trim();
+
+        if (!currentSrc) {
+            shouldReload = true;
+        } else {
+            try {
+                const currentUrl = new URL(dom.previewFrame.src, window.location.href);
+                const desired = new URL(desiredUrl, window.location.href);
+                if (currentUrl.searchParams.get('file') !== desired.searchParams.get('file')) {
+                    shouldReload = true;
+                }
+            } catch (_) {
+                shouldReload = true;
+            }
+        }
+
+        if (shouldReload) {
+            dom.previewFrame.src = desiredUrl;
+        }
+
+        postViewerPreviewMessage(payload);
+    }
+
+    function schedulePreviewSync(forceReload) {
+        if (previewSyncTimer) clearTimeout(previewSyncTimer);
+        previewSyncTimer = setTimeout(function () {
+            previewSyncTimer = 0;
+            syncViewerPreview(forceReload);
+        }, PREVIEW_SYNC_DEBOUNCE_MS);
+    }
+
+    function renderPreview() {
+        schedulePreviewSync(false);
+    }
+
+    function focusEditor() {
+        if (!dom.markdown) return false;
+        dom.markdown.focus();
+        return true;
+    }
+
+    function updateEditorContent(nextText, selectionStart, selectionEnd) {
+        if (!dom.markdown) return;
+
+        state.markdown = String(nextText || '');
+        dom.markdown.value = state.markdown;
+        updateStats();
+        renderPreview();
+        scheduleSave();
+
+        focusEditor();
+        if (Number.isFinite(selectionStart) && Number.isFinite(selectionEnd)) {
+            dom.markdown.setSelectionRange(selectionStart, selectionEnd);
+        }
+    }
+
+    function wrapSelection(prefix, suffix, placeholder) {
+        if (!dom.markdown) return;
+
+        const value = String(dom.markdown.value || '');
+        const start = dom.markdown.selectionStart || 0;
+        const end = dom.markdown.selectionEnd || 0;
+        const selected = value.slice(start, end);
+        const content = selected || String(placeholder || '内容');
+        const inserted = `${prefix}${content}${suffix}`;
+        const next = value.slice(0, start) + inserted + value.slice(end);
+
+        const caretStart = start + prefix.length;
+        const caretEnd = caretStart + content.length;
+        updateEditorContent(next, caretStart, caretEnd);
+    }
+
+    function insertBlockSnippet(snippet, selectText) {
+        if (!dom.markdown) return;
+
+        const value = String(dom.markdown.value || '');
+        const start = dom.markdown.selectionStart || 0;
+        const end = dom.markdown.selectionEnd || 0;
+        const before = value.slice(0, start);
+        const after = value.slice(end);
+        const prefix = before && !before.endsWith('\n') ? '\n' : '';
+        const suffix = after && !after.startsWith('\n') ? '\n' : '';
+        const body = String(snippet || '');
+        const inserted = `${prefix}${body}${suffix}`;
+        const next = before + inserted + after;
+
+        let caretStart = before.length + prefix.length;
+        let caretEnd = caretStart;
+
+        if (selectText) {
+            const idx = body.indexOf(selectText);
+            if (idx >= 0) {
+                caretStart += idx;
+                caretEnd = caretStart + selectText.length;
+            }
+        }
+
+        updateEditorContent(next, caretStart, caretEnd);
+    }
+
+    function readCurrentSelectionText() {
+        if (!dom.markdown) return '';
+        const value = String(dom.markdown.value || '');
+        const start = dom.markdown.selectionStart || 0;
+        const end = dom.markdown.selectionEnd || 0;
+        return String(value.slice(start, end) || '').trim();
+    }
+
+    function toSingleLineText(value, fallback) {
+        const cleaned = String(value || '').replace(/\r?\n+/g, ' ').trim();
+        if (cleaned) return cleaned;
+        return String(fallback || '').trim();
+    }
+
+    function createQuizId(prefix) {
+        const safePrefix = String(prefix || 'quiz').trim() || 'quiz';
+        return `${safePrefix}-${Date.now().toString(36).slice(-6)}`;
+    }
+
+    function applyInsertAction(action) {
+        const key = String(action || '').trim();
+        if (!key) return;
+
+        if (key === 'bold') {
+            wrapSelection('**', '**', '加粗文本');
+            return;
+        }
+
+        if (key === 'h1') {
+            insertBlockSnippet('# 章节标题\n', '章节标题');
+            return;
+        }
+
+        if (key === 'h2') {
+            insertBlockSnippet('## 小节标题\n', '小节标题');
+            return;
+        }
+
+        if (key === 'list') {
+            insertBlockSnippet('- 项目 1\n- 项目 2\n', '项目 1');
+            return;
+        }
+
+        if (key === 'quote') {
+            insertBlockSnippet('> 这里是引用内容\n', '这里是引用内容');
+            return;
+        }
+
+        if (key === 'ref') {
+            const selectedTitle = toSingleLineText(readCurrentSelectionText(), '引用标题');
+            insertBlockSnippet(`{{ref:目标文档.md|${selectedTitle}}}\n`, '目标文档.md');
+            return;
+        }
+
+        if (key === 'cs') {
+            const selectedTitle = toSingleLineText(readCurrentSelectionText(), '代码片段标题');
+            insertBlockSnippet(`{{cs:你的文件.cs#cs:t:命名空间.类型名|${selectedTitle}}}\n`, '你的文件.cs#cs:t:命名空间.类型名');
+            return;
+        }
+
+        if (key === 'anim') {
+            insertBlockSnippet('{{anim:anims/你的动画文件.cs}}\n', 'anims/你的动画文件.cs');
+            return;
+        }
+
+        if (key === 'if') {
+            const advancedPart = readCurrentSelectionText() || '这里写进阶读者内容。';
+            insertBlockSnippet([
+                '{if C >= 1}',
+                advancedPart,
+                '{else}',
+                '这里写入门读者内容。',
+                '{end}',
+                ''
+            ].join('\n'), '这里写入门读者内容。');
+            return;
+        }
+
+        if (key === 'routing-assertions') {
+            insertBlockSnippet([
+                '## 分流断言',
+                '- C0/T0：应看到补课内容。',
+                '- C1/T1：应看到标准主线。',
+                '- C2/T2：应看到进阶补充。',
+                ''
+            ].join('\n'), 'C1/T1：应看到标准主线。');
+            return;
+        }
+
+        if (key === 'quiz-tf') {
+            const quizId = createQuizId('quiz-tf');
+            const question = toSingleLineText(readCurrentSelectionText(), '这里填写判断题题干。');
+            insertBlockSnippet([
+                '```quiz',
+                'type: tf',
+                `id: ${quizId}`,
+                'question: |',
+                `  ${question}`,
+                'answer: true',
+                'explain: |',
+                '  这里填写解析。',
+                '```',
+                ''
+            ].join('\n'), `  ${question}`);
+            return;
+        }
+
+        if (key === 'quiz-single') {
+            const quizId = createQuizId('quiz-single');
+            const question = toSingleLineText(readCurrentSelectionText(), '这里填写单选题题干。');
+            insertBlockSnippet([
+                '```quiz',
+                'type: single',
+                `id: ${quizId}`,
+                'question: |',
+                `  ${question}`,
+                'options:',
+                '  - id: A',
+                '    text: 选项 A',
+                '  - id: B',
+                '    text: 选项 B',
+                '  - id: C',
+                '    text: 选项 C',
+                '  - id: D',
+                '    text: 选项 D',
+                'answer: A',
+                'explain: |',
+                '  这里填写解析。',
+                '```',
+                ''
+            ].join('\n'), '选项 A');
+            return;
+        }
+
+        if (key === 'quiz-multi') {
+            const quizId = createQuizId('quiz-multi');
+            const question = toSingleLineText(readCurrentSelectionText(), '这里填写多选题题干。');
+            insertBlockSnippet([
+                '```quiz',
+                'type: multiple',
+                `id: ${quizId}`,
+                'question: |',
+                `  ${question}`,
+                'options:',
+                '  - id: A',
+                '    text: 选项 A',
+                '  - id: B',
+                '    text: 选项 B',
+                '  - id: C',
+                '    text: 选项 C',
+                '  - id: D',
+                '    text: 选项 D',
+                'answer:',
+                '  - A',
+                '  - C',
+                'explain: |',
+                '  这里填写解析。',
+                '```',
+                ''
+            ].join('\n'), '选项 A');
+            return;
         }
     }
 
@@ -780,7 +1057,7 @@
 
     function exportDraftJson() {
         const payload = {
-            version: 5,
+            version: 6,
             exportedAt: new Date().toISOString(),
             targetPath: state.targetPath,
             markdown: state.markdown,
@@ -808,7 +1085,13 @@
             'author: 你的名字',
             'topic: article-contribution',
             'description: 一句话说明本文内容',
+            'routing_manual: true',
             '---',
+            '',
+            '## 分流断言',
+            '- C0/T0：应看到补课内容。',
+            '- C1/T1：应看到标准主线。',
+            '- C2/T2：应看到进阶补充。',
             '',
             '# 本章目标',
             '',
@@ -899,6 +1182,26 @@
             });
         }
 
+        if (dom.simulateCLevel) {
+            dom.simulateCLevel.addEventListener('change', function () {
+                state.simulatedCLevel = normalizeLevelSelection(dom.simulateCLevel.value);
+                syncSimulationControlsFromState();
+                renderPreview();
+                scheduleSave();
+                setStatus('模拟阅读档位已更新（C）');
+            });
+        }
+
+        if (dom.simulateTLevel) {
+            dom.simulateTLevel.addEventListener('change', function () {
+                state.simulatedTLevel = normalizeLevelSelection(dom.simulateTLevel.value);
+                syncSimulationControlsFromState();
+                renderPreview();
+                scheduleSave();
+                setStatus('模拟阅读档位已更新（T）');
+            });
+        }
+
         if (dom.filename) {
             dom.filename.addEventListener('change', applyFilename);
             dom.filename.addEventListener('blur', applyFilename);
@@ -982,6 +1285,24 @@
             });
         }
 
+        if (dom.syntaxButtons && dom.syntaxButtons.length > 0) {
+            dom.syntaxButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const action = button.getAttribute('data-studio-insert') || '';
+                    applyInsertAction(action);
+                });
+            });
+        }
+
+        if (dom.openViewerPreview) {
+            dom.openViewerPreview.addEventListener('click', function () {
+                const payload = buildViewerPreviewPayload();
+                persistViewerPreviewPayload(payload);
+                const url = buildViewerPreviewUrl(payload.targetPath);
+                window.open(url, '_blank', 'noopener,noreferrer');
+            });
+        }
+
         if (dom.toggleFullscreen) {
             dom.toggleFullscreen.addEventListener('click', function () {
                 setFullscreenMode(!state.isFullscreen, false);
@@ -1003,6 +1324,7 @@
 
         setFullscreenMode(false, true);
         setPrSubmitBusy(false);
+        syncSimulationControlsFromState();
         updateStats();
         renderPreview();
         loadExistingList();
@@ -1012,7 +1334,7 @@
         }
 
         if (!consumedOauthHash) {
-            setStatus('就绪：支持载入已有 Markdown，并可 GitHub 登录后直接提交 PR。快捷键：Ctrl+Shift+Enter 切换全屏。');
+            setStatus('就绪：支持 viewer 同级预览、特殊语法快捷插入，并可 GitHub 登录后直接提交 PR。快捷键：Ctrl+Shift+Enter 切换全屏。');
         }
     }
 

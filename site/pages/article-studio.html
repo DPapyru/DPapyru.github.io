@@ -58,7 +58,7 @@
                 <div class="tutorial-header">
                     <h1 class="tutorial-title">Markdown 写作工作区</h1>
                     <div class="tutorial-meta">
-                        <span class="author">定位: <span>仅 Markdown 编辑 + 预览（C# 代码基础高亮）</span></span>
+                        <span class="author">定位: <span>仅 Markdown 编辑 + viewer.html 同级预览</span></span>
                     </div>
                 </div>
 
@@ -66,15 +66,6 @@
                     <strong>重要提示：</strong>本页不支持编辑或编译 `*.cs`/`anims/*.cs` 文件。需要真实 tModLoader C# API 开发时，请先 Clone 仓库并在本地 IDE（VSCode / Rider / VS）中进行。
                 </section>
 
-                <section class="studio-toolbar">
-                    <button id="studio-insert-template" class="btn btn-small" type="button">插入教程模板</button>
-                    <button id="studio-submit-pr" class="btn btn-small" type="button">提交 PR</button>
-                    <button id="studio-toggle-fullscreen" class="btn btn-small btn-outline" type="button">全屏编辑</button>
-                    <button id="studio-copy-markdown" class="btn btn-small btn-outline" type="button">复制 Markdown</button>
-                    <button id="studio-export" class="btn btn-small btn-outline" type="button">导出草稿 JSON</button>
-                    <button id="studio-reset" class="btn btn-small btn-outline" type="button">清空草稿</button>
-                    <a id="studio-last-pr-link" class="btn btn-small btn-outline" href="#" target="_blank" rel="noopener noreferrer" hidden>打开最新 PR</a>
-                </section>
 
                 <section class="studio-filebar" aria-label="文章文件控制">
                     <div class="studio-filebar-group">
@@ -92,6 +83,22 @@
                     <div class="studio-filebar-group studio-filebar-group--name">
                         <label for="studio-filename">Markdown 文件名</label>
                         <input id="studio-filename" class="studio-input" type="text" value="新文章.md" placeholder="例如：新文章.md">
+                        <label>模拟阅读（C/T 档位）</label>
+                        <div class="studio-simulate-levels" aria-label="模拟阅读级别">
+                            <select id="studio-simulate-c-level" class="studio-select" aria-label="模拟 C# 级别">
+                                <option value="auto">C：跟随当前档位</option>
+                                <option value="0">C：0</option>
+                                <option value="1">C：1</option>
+                                <option value="2">C：2</option>
+                            </select>
+                            <select id="studio-simulate-t-level" class="studio-select" aria-label="模拟 tModLoader 级别">
+                                <option value="auto">T：跟随当前档位</option>
+                                <option value="0">T：0</option>
+                                <option value="1">T：1</option>
+                                <option value="2">T：2</option>
+                            </select>
+                        </div>
+                        <span class="studio-help">仅影响右侧和新标签预览，不会修改你的本机学习档位。</span>
                     </div>
                 </section>
 
@@ -123,6 +130,33 @@
                     <div class="studio-titlebar">article-studio · markdown-only mode</div>
                     <div class="studio-workbench">
                         <section class="studio-editor-area">
+                            <div class="studio-commandbars">
+                                <section class="studio-toolbar studio-toolbar--embedded">
+                                    <button id="studio-insert-template" class="btn btn-small" type="button">插入教程模板</button>
+                                    <button id="studio-submit-pr" class="btn btn-small" type="button">提交 PR</button>
+                                    <button id="studio-toggle-fullscreen" class="btn btn-small btn-outline" type="button">全屏编辑</button>
+                                    <button id="studio-copy-markdown" class="btn btn-small btn-outline" type="button">复制 Markdown</button>
+                                    <button id="studio-export" class="btn btn-small btn-outline" type="button">导出草稿 JSON</button>
+                                    <button id="studio-reset" class="btn btn-small btn-outline" type="button">清空草稿</button>
+                                    <a id="studio-last-pr-link" class="btn btn-small btn-outline" href="#" target="_blank" rel="noopener noreferrer" hidden>打开最新 PR</a>
+                                </section>
+                                <section class="studio-syntaxbar studio-syntaxbar--embedded" aria-label="常用语法快捷按钮">
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="bold">加粗</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="h1">大标题</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="h2">二级标题</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="list">列表</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quote">引用</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="ref" title="插入文档引用语法">引用文档</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="cs" title="插入 C# 片段语法">代码片段</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="anim" title="插入动画片段语法">动画片段</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="if" title="插入分流条件块">分流块</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="routing-assertions" title="插入手动分流断言块">分流断言</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-tf" title="插入判断题模板">判断题</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-single" title="插入单选题模板">单选题</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-multi" title="插入多选题模板">多选题</button>
+                                </section>
+                            </div>
+
                             <div class="studio-tabs">
                                 <button id="studio-active-tab" class="studio-tab studio-tab--active" type="button" aria-current="page">新文章.md</button>
                             </div>
@@ -137,8 +171,11 @@
 ```"></textarea>
                                 </div>
                                 <div class="studio-pane">
-                                    <div class="studio-pane-title">Preview（含 C# 基础高亮）</div>
-                                    <div id="studio-preview" class="studio-preview"></div>
+                                    <div class="studio-pane-title studio-pane-title--split">
+                                        <span>Preview（viewer.html 同级渲染）</span>
+                                        <button id="studio-open-viewer-preview" class="btn btn-small btn-outline" type="button">新标签预览</button>
+                                    </div>
+                                    <iframe id="studio-preview-frame" class="studio-preview-frame" title="Article Studio Viewer Preview" loading="lazy"></iframe>
                                 </div>
                             </div>
 
