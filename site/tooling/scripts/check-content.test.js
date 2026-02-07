@@ -97,3 +97,91 @@ test('check-content: manual routing passes with 3 profile assertions', () => {
     assert.match(res.stdout + res.stderr, /OK/i);
 });
 
+test('check-content: rejects route decision without fallback', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
+    const root = path.join(tmp, 'content');
+    const routesRoot = path.join(tmp, 'routes');
+    fs.mkdirSync(root, { recursive: true });
+    fs.mkdirSync(routesRoot, { recursive: true });
+
+    fs.writeFileSync(path.join(root, 'a.md'), [
+        '---',
+        'title: A',
+        '---',
+        '',
+        'body'
+    ].join('\n'), 'utf8');
+
+    fs.writeFileSync(path.join(routesRoot, 'demo.route.json'), JSON.stringify({
+        version: 2,
+        article: 'a.md',
+        entry: 'entry',
+        nodes: [
+            {
+                id: 'entry',
+                type: 'decision',
+                dimension: 'C',
+                map: {
+                    '0': 'remedial',
+                    '1': 'standard',
+                    '2': 'advanced'
+                }
+            },
+            { id: 'remedial', type: 'path', path: 'remedial' },
+            { id: 'standard', type: 'path', path: 'standard' },
+            { id: 'advanced', type: 'path', path: 'deep' }
+        ]
+    }, null, 2), 'utf8');
+
+    const script = path.resolve(__dirname, 'check-content.js');
+    const res = runNode([script, '--root', root, '--routes', routesRoot]);
+
+    assert.equal(res.status, 1, res.stderr || res.stdout);
+    assert.match(res.stdout + res.stderr, /fallback/i);
+    assert.match(res.stdout + res.stderr, /route/i);
+});
+
+test('check-content: passes with valid route files', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
+    const root = path.join(tmp, 'content');
+    const routesRoot = path.join(tmp, 'routes');
+    fs.mkdirSync(root, { recursive: true });
+    fs.mkdirSync(routesRoot, { recursive: true });
+
+    fs.writeFileSync(path.join(root, 'a.md'), [
+        '---',
+        'title: A',
+        '---',
+        '',
+        'body'
+    ].join('\n'), 'utf8');
+
+    fs.writeFileSync(path.join(routesRoot, 'demo.route.json'), JSON.stringify({
+        version: 2,
+        article: 'a.md',
+        entry: 'entry',
+        nodes: [
+            {
+                id: 'entry',
+                type: 'decision',
+                dimension: 'C',
+                fallback: 'standard',
+                map: {
+                    '0': 'remedial',
+                    '1': 'standard',
+                    '2': 'advanced'
+                }
+            },
+            { id: 'remedial', type: 'path', path: 'remedial' },
+            { id: 'standard', type: 'path', path: 'standard' },
+            { id: 'advanced', type: 'path', path: 'deep' }
+        ]
+    }, null, 2), 'utf8');
+
+    const script = path.resolve(__dirname, 'check-content.js');
+    const res = runNode([script, '--root', root, '--routes', routesRoot]);
+
+    assert.equal(res.status, 0, res.stderr || res.stdout);
+    assert.match(res.stdout + res.stderr, /OK/i);
+});
+

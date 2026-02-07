@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const STORAGE_KEY = 'articleStudioMarkdown.v6';
+    const STORAGE_KEY = 'articleStudioMarkdown.v7';
     const SESSION_AUTH_TOKEN_KEY = 'articleStudioOAuthToken.v1';
     const SESSION_AUTH_USER_KEY = 'articleStudioOAuthUser.v1';
     const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
@@ -9,6 +9,10 @@
     const PREVIEW_SYNC_DEBOUNCE_MS = 120;
     const DEFAULT_PR_WORKER_API_URL = 'https://greenhome-pr.3577415213.workers.dev/api/create-pr';
     const LEVEL_AUTO = 'auto';
+    const ROUTE_TEMPLATE_BY_C = 'by-c';
+    const ROUTE_TEMPLATE_BY_T = 'by-t';
+    const ROUTE_TEMPLATE_BY_G = 'by-g';
+    const COMPOSE_STORAGE_VERSION = 1;
 
     const dom = {
         markdown: document.getElementById('studio-markdown'),
@@ -34,6 +38,20 @@
         prWorkerUrl: document.getElementById('studio-pr-worker-url'),
         prSharedKey: document.getElementById('studio-pr-shared-key'),
         prTitle: document.getElementById('studio-pr-title'),
+        prIncludeRoute: document.getElementById('studio-pr-include-route'),
+        routePath: document.getElementById('studio-route-path'),
+        routePathExisting: document.getElementById('studio-route-path-existing'),
+        routePathOptions: document.getElementById('studio-route-path-options'),
+        routeTemplate: document.getElementById('studio-route-template'),
+        routeJson: document.getElementById('studio-route-json'),
+        routeGenerate: document.getElementById('studio-route-generate'),
+        composeEnabled: document.getElementById('studio-compose-enabled'),
+        composeFileList: document.getElementById('studio-compose-file-list'),
+        composeAddFile: document.getElementById('studio-compose-add-file'),
+        composeRemoveFile: document.getElementById('studio-compose-remove-file'),
+        composeMoveUp: document.getElementById('studio-compose-move-up'),
+        composeMoveDown: document.getElementById('studio-compose-move-down'),
+        composeApplyMerged: document.getElementById('studio-compose-apply-merged'),
         authLogin: document.getElementById('studio-auth-login'),
         authLogout: document.getElementById('studio-auth-logout'),
         authStatus: document.getElementById('studio-auth-status'),
@@ -47,6 +65,13 @@
         targetPath: '怎么贡献/新文章.md',
         workerApiUrl: DEFAULT_PR_WORKER_API_URL,
         prTitle: '',
+        includeRoute: false,
+        routePath: '',
+        routeTemplate: ROUTE_TEMPLATE_BY_C,
+        routeJson: '',
+        composeModeEnabled: false,
+        composeFiles: [],
+        composeActiveId: '',
         lastPrUrl: '',
         authToken: '',
         githubUser: '',
@@ -182,6 +207,379 @@
 
     function defaultPrTitle() {
         return `docs: 更新 ${state.targetPath}`;
+    }
+
+    function createComposeId() {
+        return `compose-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+    }
+
+    function normalizeComposeFileEntry(raw, fallbackName) {
+        const entry = raw && typeof raw === 'object' ? raw : {};
+        const id = String(entry.id || '').trim() || createComposeId();
+        const nameBase = String(entry.name || fallbackName || '').trim();
+        const safeName = nameBase || `片段-${id.slice(-4)}`;
+        const markdown = String(entry.markdown || '').replace(/\r\n/g, '\n');
+        return {
+            id: id,
+            name: safeName,
+            markdown: markdown
+        };
+    }
+
+    function ensureComposeModelInitialized() {
+        if (!Array.isArray(state.composeFiles)) {
+            state.composeFiles = [];
+        }
+
+        state.composeFiles = state.composeFiles
+            .map(function (item, index) {
+                return normalizeComposeFileEntry(item, `片段-${index + 1}`);
+            })
+            .filter(function (item) {
+                return !!String(item.id || '').trim();
+            });
+
+        if (state.composeFiles.length === 0) {
+            state.composeFiles = [normalizeComposeFileEntry({ name: '主稿', markdown: state.markdown }, '主稿')];
+        }
+
+        const hasActive = state.composeFiles.some(function (item) {
+            return item.id === state.composeActiveId;
+        });
+        if (!hasActive) {
+            state.composeActiveId = state.composeFiles[0].id;
+        }
+    }
+
+    function getComposeActiveFile() {
+        ensureComposeModelInitialized();
+        return state.composeFiles.find(function (item) {
+            return item.id === state.composeActiveId;
+        }) || state.composeFiles[0];
+    }
+
+    function buildComposedMarkdown() {
+        ensureComposeModelInitialized();
+        return state.composeFiles
+            .map(function (item) {
+                return String(item.markdown || '').trim();
+            })
+            .filter(Boolean)
+            .join('\n\n');
+    }
+
+    function getEffectiveMarkdownForOutput() {
+        if (!state.composeModeEnabled) {
+            return String(state.markdown || '');
+        }
+        return buildComposedMarkdown();
+    }
+
+    function syncComposeListUi() {
+        if (!dom.composeFileList) return;
+        ensureComposeModelInitialized();
+
+        dom.composeFileList.innerHTML = '';
+        state.composeFiles.forEach(function (item, index) {
+            const option = document.createElement('option');
+            option.value = item.id;
+            const lines = String(item.markdown || '').split(/\r?\n/).length;
+            option.textContent = `${index + 1}. ${item.name} (${lines} 行)`;
+            dom.composeFileList.appendChild(option);
+        });
+        dom.composeFileList.value = state.composeActiveId;
+    }
+
+    function syncComposeControlsState() {
+        const enabled = !!state.composeModeEnabled;
+        if (dom.composeEnabled) dom.composeEnabled.checked = enabled;
+
+        const controls = [
+            dom.composeFileList,
+            dom.composeAddFile,
+            dom.composeRemoveFile,
+            dom.composeMoveUp,
+            dom.composeMoveDown,
+            dom.composeApplyMerged
+        ];
+
+        controls.forEach(function (control) {
+            if (!control) return;
+            control.disabled = !enabled;
+        });
+
+        syncComposeListUi();
+    }
+
+    function setComposeActiveById(fileId, syncEditor) {
+        const id = String(fileId || '').trim();
+        if (!id) return;
+        ensureComposeModelInitialized();
+        const found = state.composeFiles.find(function (item) {
+            return item.id === id;
+        });
+        if (!found) return;
+
+        state.composeActiveId = found.id;
+        syncComposeListUi();
+
+        if (syncEditor && dom.markdown) {
+            state.markdown = String(found.markdown || '');
+            dom.markdown.value = state.markdown;
+            updateStats();
+            renderPreview();
+        }
+    }
+
+    function updateComposeActiveFromEditor() {
+        if (!state.composeModeEnabled) return;
+        const active = getComposeActiveFile();
+        if (!active) return;
+        active.markdown = String(state.markdown || '');
+        syncComposeListUi();
+    }
+
+    function trimMdExtension(input) {
+        return String(input || '').trim().replace(/\.md$/i, '');
+    }
+
+    function defaultRoutePathFromTarget() {
+        const normalized = ensureMarkdownPath(state.targetPath);
+        return `${trimMdExtension(normalized)}.route.json`;
+    }
+
+    function mapRouteTemplateToDimension(templateId) {
+        const id = String(templateId || '').trim().toLowerCase();
+        if (id === ROUTE_TEMPLATE_BY_T) return 'T';
+        if (id === ROUTE_TEMPLATE_BY_G) return 'G';
+        return 'C';
+    }
+
+    function normalizeRouteTemplate(input) {
+        const text = String(input || '').trim().toLowerCase();
+        if (text === ROUTE_TEMPLATE_BY_T) return ROUTE_TEMPLATE_BY_T;
+        if (text === ROUTE_TEMPLATE_BY_G) return ROUTE_TEMPLATE_BY_G;
+        return ROUTE_TEMPLATE_BY_C;
+    }
+
+    function normalizeRouteRelativePath(input) {
+        let value = String(input || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+        value = value.replace(/^site\/content\/routes\//i, '');
+        value = value.replace(/\/{2,}/g, '/');
+        if (!value) {
+            value = defaultRoutePathFromTarget();
+        }
+        if (!/\.route\.json$/i.test(value)) {
+            value = `${trimMdExtension(value)}.route.json`;
+        }
+        return value;
+    }
+
+    function buildDefaultRouteObject() {
+        const template = normalizeRouteTemplate(state.routeTemplate);
+        const dimension = mapRouteTemplateToDimension(template);
+
+        return {
+            version: 2,
+            article: ensureMarkdownPath(state.targetPath),
+            entry: 'entry',
+            nodes: [
+                {
+                    id: 'entry',
+                    type: 'decision',
+                    dimension: dimension,
+                    fallback: 'standard',
+                    map: {
+                        '0': 'remedial',
+                        '1': 'standard',
+                        '2': dimension === 'G' ? 'deep' : 'fast'
+                    }
+                },
+                {
+                    id: 'remedial',
+                    type: 'path',
+                    path: 'remedial'
+                },
+                {
+                    id: 'standard',
+                    type: 'path',
+                    path: 'standard'
+                },
+                {
+                    id: dimension === 'G' ? 'deep' : 'fast',
+                    type: 'path',
+                    path: dimension === 'G' ? 'deep' : 'fast'
+                }
+            ]
+        };
+    }
+
+    function buildDefaultRouteDocument() {
+        return JSON.stringify(buildDefaultRouteObject(), null, 2) + '\n';
+    }
+
+    function ensureRouteDraftInitialized() {
+        if (!state.routePath) {
+            state.routePath = normalizeRouteRelativePath('');
+        }
+        if (!String(state.routeJson || '').trim()) {
+            state.routeJson = buildDefaultRouteDocument();
+        }
+    }
+
+    function extractRoutePathChoicesFromManifest(manifest) {
+        const result = [];
+        const seen = new Set();
+        const routes = manifest && manifest.routes && typeof manifest.routes === 'object'
+            ? manifest.routes
+            : {};
+
+        Object.keys(routes).forEach(function (articlePath) {
+            const routeItem = routes[articlePath] || {};
+            const sourcePath = String(routeItem.source || '').trim();
+            if (!sourcePath) return;
+
+            const normalized = normalizeRouteRelativePath(sourcePath);
+            if (!normalized || seen.has(normalized)) return;
+
+            seen.add(normalized);
+            result.push(normalized);
+        });
+
+        result.sort(function (a, b) {
+            return a.localeCompare(b, 'zh-CN');
+        });
+
+        return result;
+    }
+
+    function syncRoutePathChoiceSelection() {
+        if (!dom.routePathExisting) return;
+
+        const current = normalizeRouteRelativePath(state.routePath);
+        const options = Array.from(dom.routePathExisting.options || []).map(function (option) {
+            return String(option.value || '').trim();
+        });
+
+        if (options.includes(current)) {
+            dom.routePathExisting.value = current;
+            return;
+        }
+
+        dom.routePathExisting.value = '';
+    }
+
+    function renderRoutePathChoices(paths) {
+        const normalizedPaths = Array.isArray(paths)
+            ? paths
+                .map(function (item) {
+                    return normalizeRouteRelativePath(item);
+                })
+                .filter(Boolean)
+            : [];
+
+        const uniquePaths = [];
+        const seen = new Set();
+
+        normalizedPaths.forEach(function (item) {
+            if (seen.has(item)) return;
+            seen.add(item);
+            uniquePaths.push(item);
+        });
+
+        if (state.routePath && !seen.has(state.routePath)) {
+            uniquePaths.unshift(state.routePath);
+        }
+
+        if (dom.routePathExisting) {
+            dom.routePathExisting.innerHTML = '';
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '从已有 route 选择（也可手动新建）';
+            dom.routePathExisting.appendChild(defaultOption);
+
+            uniquePaths.forEach(function (item) {
+                const option = document.createElement('option');
+                option.value = item;
+                option.textContent = item;
+                dom.routePathExisting.appendChild(option);
+            });
+        }
+
+        if (dom.routePathOptions) {
+            dom.routePathOptions.innerHTML = '';
+            uniquePaths.forEach(function (item) {
+                const option = document.createElement('option');
+                option.value = item;
+                dom.routePathOptions.appendChild(option);
+            });
+        }
+
+        syncRoutePathChoiceSelection();
+    }
+
+    async function loadRoutePathChoices() {
+        if (!dom.routePathExisting && !dom.routePathOptions) return;
+
+        try {
+            const response = await fetch('/site/assets/route-manifest.json', { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+
+            const manifest = await response.json();
+            const choices = extractRoutePathChoicesFromManifest(manifest);
+            renderRoutePathChoices(choices);
+        } catch (_) {
+            renderRoutePathChoices([]);
+        }
+    }
+
+    function syncRouteControlsFromState() {
+        if (dom.prIncludeRoute) dom.prIncludeRoute.checked = !!state.includeRoute;
+        if (dom.routePath) dom.routePath.value = state.routePath;
+        if (dom.routeTemplate) dom.routeTemplate.value = state.routeTemplate;
+        if (dom.routeJson) dom.routeJson.value = state.routeJson;
+        syncRoutePathChoiceSelection();
+    }
+
+    function parseRouteJsonInput(input) {
+        const text = String(input || '').trim();
+        if (!text) throw new Error('路由 JSON 为空');
+
+        let parsed = null;
+        try {
+            parsed = JSON.parse(text);
+        } catch (e) {
+            throw new Error(`路由 JSON 解析失败：${String(e && e.message ? e.message : e)}`);
+        }
+
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            throw new Error('路由 JSON 顶层必须是对象');
+        }
+
+        if (parsed.version !== 2) {
+            throw new Error('路由 JSON version 必须为 2');
+        }
+
+        if (!Array.isArray(parsed.nodes) || parsed.nodes.length === 0) {
+            throw new Error('路由 JSON nodes 必须是非空数组');
+        }
+
+        return parsed;
+    }
+
+    function buildRouteExtraFileOrThrow() {
+        const relativeRoutePath = normalizeRouteRelativePath(state.routePath);
+        const fullRoutePath = `site/content/routes/${relativeRoutePath}`;
+        const parsed = parseRouteJsonInput(state.routeJson);
+        parsed.article = ensureMarkdownPath(state.targetPath);
+
+        return {
+            path: fullRoutePath,
+            content: JSON.stringify(parsed, null, 2) + '\n'
+        };
     }
 
     function updatePrLink(prUrl) {
@@ -400,6 +798,15 @@
         if (!silent) {
             setStatus(`目标路径已更新：${state.targetPath}`);
         }
+
+        if (state.composeModeEnabled) {
+            ensureComposeModelInitialized();
+            const active = getComposeActiveFile();
+            if (active && !String(active.name || '').trim()) {
+                active.name = getFilenameFromPath(state.targetPath) || '主稿';
+                syncComposeListUi();
+            }
+        }
     }
 
     function applyFilename() {
@@ -516,6 +923,16 @@
 
             state.markdown = String(text || '').replace(/\r\n/g, '\n');
 
+            if (state.composeModeEnabled) {
+                ensureComposeModelInitialized();
+                state.composeFiles = [normalizeComposeFileEntry({
+                    name: getFilenameFromPath(targetPath) || '主稿',
+                    markdown: state.markdown
+                }, '主稿')];
+                state.composeActiveId = state.composeFiles[0].id;
+                syncComposeControlsState();
+            }
+
             if (dom.markdown) {
                 dom.markdown.value = state.markdown;
             }
@@ -553,7 +970,9 @@
             return;
         }
 
-        if (!String(state.markdown || '').trim()) {
+        const effectiveMarkdown = String(getEffectiveMarkdownForOutput() || '');
+
+        if (!effectiveMarkdown.trim()) {
             setStatus('当前 Markdown 内容为空，无法提交 PR');
             return;
         }
@@ -565,9 +984,21 @@
 
         const payload = {
             targetPath: state.targetPath,
-            markdown: state.markdown,
+            markdown: getEffectiveMarkdownForOutput(),
             prTitle: titleInput || defaultPrTitle()
         };
+
+        if (state.includeRoute) {
+            let routeExtra = null;
+            try {
+                routeExtra = buildRouteExtraFileOrThrow();
+            } catch (err) {
+                setStatus(`分流路由无效：${err && err.message ? err.message : String(err)}`);
+                if (dom.routeJson) dom.routeJson.focus();
+                return;
+            }
+            payload.extraFiles = [routeExtra];
+        }
 
         const headers = {
             'content-type': 'application/json'
@@ -637,13 +1068,13 @@
         document.body.classList.toggle('article-studio-page--fullscreen', state.isFullscreen);
 
         if (dom.toggleFullscreen) {
-            dom.toggleFullscreen.textContent = state.isFullscreen ? '退出全屏编辑 (Esc)' : '全屏编辑';
+            dom.toggleFullscreen.textContent = state.isFullscreen ? '退出专注模式 (Esc)' : '专注模式';
         }
 
         if (dom.titlebar) {
             dom.titlebar.textContent = state.isFullscreen
-                ? 'article-studio · fullscreen editing mode'
-                : 'article-studio · markdown-only mode';
+                ? 'article-studio · focus mode'
+                : 'article-studio · modern writer mode';
         }
 
         if (state.isFullscreen && dom.markdown) {
@@ -651,13 +1082,13 @@
         }
 
         if (!silent) {
-            setStatus(state.isFullscreen ? '已进入全屏编辑模式（按 Esc 退出）' : '已退出全屏编辑模式');
+            setStatus(state.isFullscreen ? '已进入专注模式（按 Esc 退出）' : '已退出专注模式');
         }
     }
 
     function updateStats() {
         if (!dom.stats) return;
-        const text = String(state.markdown || '');
+        const text = String(state.composeModeEnabled ? getEffectiveMarkdownForOutput() : state.markdown || '');
         const lines = text ? text.split(/\r?\n/).length : 0;
         const chars = text.length;
         dom.stats.textContent = `${lines} 行 · ${chars} 字`;
@@ -675,9 +1106,19 @@
             state.targetPath = ensureMarkdownPath(parsed.targetPath || state.targetPath);
             state.workerApiUrl = normalizeWorkerApiUrl(parsed.workerApiUrl || state.workerApiUrl);
             state.prTitle = String(parsed.prTitle || '');
+            state.includeRoute = !!parsed.includeRoute;
+            state.routePath = normalizeRouteRelativePath(parsed.routePath || defaultRoutePathFromTarget());
+            state.routeTemplate = normalizeRouteTemplate(parsed.routeTemplate || ROUTE_TEMPLATE_BY_C);
+            state.routeJson = String(parsed.routeJson || '');
+            state.composeModeEnabled = !!parsed.composeModeEnabled;
+            state.composeFiles = Array.isArray(parsed.composeFiles) ? parsed.composeFiles : [];
+            state.composeActiveId = String(parsed.composeActiveId || '');
             state.lastPrUrl = String(parsed.lastPrUrl || '');
             state.simulatedCLevel = normalizeLevelSelection(parsed.simulatedCLevel);
             state.simulatedTLevel = normalizeLevelSelection(parsed.simulatedTLevel);
+
+            ensureRouteDraftInitialized();
+            ensureComposeModelInitialized();
         } catch (err) {
             setStatus(`读取本地草稿失败：${err && err.message ? err.message : String(err)}`);
         }
@@ -697,6 +1138,13 @@
                 markdown: state.markdown,
                 workerApiUrl: state.workerApiUrl,
                 prTitle: state.prTitle,
+                includeRoute: !!state.includeRoute,
+                routePath: state.routePath,
+                routeTemplate: state.routeTemplate,
+                routeJson: state.routeJson,
+                composeModeEnabled: !!state.composeModeEnabled,
+                composeFiles: state.composeFiles,
+                composeActiveId: state.composeActiveId,
                 lastPrUrl: state.lastPrUrl,
                 simulatedCLevel: state.simulatedCLevel,
                 simulatedTLevel: state.simulatedTLevel
@@ -734,7 +1182,7 @@
 
         return {
             targetPath: ensureMarkdownPath(state.targetPath),
-            markdown: String(state.markdown || ''),
+            markdown: String(getEffectiveMarkdownForOutput() || ''),
             simulatedProfile: simulatedProfile,
             updatedAt: new Date().toISOString()
         };
@@ -815,6 +1263,7 @@
 
         state.markdown = String(nextText || '');
         dom.markdown.value = state.markdown;
+        updateComposeActiveFromEditor();
         updateStats();
         renderPreview();
         scheduleSave();
@@ -947,6 +1396,24 @@
             return;
         }
 
+        if (key === 'route-path-block') {
+            insertBlockSnippet([
+                '{if R_REMEDIAL == 1}',
+                '这里写补救路径内容。',
+                '{else if R_STANDARD == 1}',
+                '这里写标准路径内容。',
+                '{else if R_FAST == 1}',
+                '这里写速通路径内容。',
+                '{else if R_DEEP == 1}',
+                '这里写深挖路径内容。',
+                '{else}',
+                '这里写兜底内容。',
+                '{end}',
+                ''
+            ].join('\n'), '这里写标准路径内容。');
+            return;
+        }
+
         if (key === 'routing-assertions') {
             insertBlockSnippet([
                 '## 分流断言',
@@ -1057,12 +1524,20 @@
 
     function exportDraftJson() {
         const payload = {
-            version: 6,
+            version: 7,
             exportedAt: new Date().toISOString(),
             targetPath: state.targetPath,
             markdown: state.markdown,
+            markdownMerged: getEffectiveMarkdownForOutput(),
             workerApiUrl: state.workerApiUrl,
             prTitle: state.prTitle,
+            includeRoute: !!state.includeRoute,
+            routePath: state.routePath,
+            routeTemplate: state.routeTemplate,
+            routeJson: state.routeJson,
+            composeModeEnabled: !!state.composeModeEnabled,
+            composeFiles: state.composeFiles,
+            composeActiveId: state.composeActiveId,
             lastPrUrl: state.lastPrUrl
         };
 
@@ -1114,7 +1589,10 @@
     function resetAll() {
         if (!window.confirm('确认清空当前 Markdown 草稿吗？')) return;
         state.markdown = '';
+        state.composeFiles = [normalizeComposeFileEntry({ name: '主稿', markdown: '' }, '主稿')];
+        state.composeActiveId = state.composeFiles[0].id;
         if (dom.markdown) dom.markdown.value = '';
+        syncComposeControlsState();
         renderPreview();
         updateStats();
         persistState();
@@ -1127,11 +1605,20 @@
         const consumedOauthHash = consumeOauthResultFromHash();
 
         setTargetPath(state.targetPath, true);
+        ensureRouteDraftInitialized();
+        ensureComposeModelInitialized();
+        syncRouteControlsFromState();
+        syncComposeControlsState();
 
         if (dom.markdown) {
+            if (state.composeModeEnabled) {
+                const active = getComposeActiveFile();
+                state.markdown = String(active && active.markdown ? active.markdown : '');
+            }
             dom.markdown.value = state.markdown;
             dom.markdown.addEventListener('input', function () {
                 state.markdown = String(dom.markdown.value || '');
+                updateComposeActiveFromEditor();
                 updateStats();
                 renderPreview();
                 scheduleSave();
@@ -1173,6 +1660,16 @@
         if (dom.targetPath) {
             dom.targetPath.addEventListener('change', function () {
                 setTargetPath(dom.targetPath.value, true);
+                state.routePath = normalizeRouteRelativePath(state.routePath || defaultRoutePathFromTarget());
+                ensureRouteDraftInitialized();
+                syncRouteControlsFromState();
+                if (state.composeModeEnabled) {
+                    const active = getComposeActiveFile();
+                    if (active && !active.name) {
+                        active.name = getFilenameFromPath(state.targetPath) || '主稿';
+                    }
+                    syncComposeControlsState();
+                }
                 scheduleSave();
                 setStatus('目标路径已更新');
             });
@@ -1243,6 +1740,129 @@
             });
         }
 
+        if (dom.composeEnabled) {
+            dom.composeEnabled.addEventListener('change', function () {
+                state.composeModeEnabled = !!dom.composeEnabled.checked;
+                ensureComposeModelInitialized();
+
+                if (state.composeModeEnabled) {
+                    const hasContent = state.composeFiles.some(function (item) {
+                        return String(item.markdown || '').trim();
+                    });
+                    if (!hasContent && String(state.markdown || '').trim()) {
+                        const active = getComposeActiveFile();
+                        active.markdown = state.markdown;
+                    }
+                    const active = getComposeActiveFile();
+                    state.markdown = String(active && active.markdown ? active.markdown : '');
+                    if (dom.markdown) dom.markdown.value = state.markdown;
+                    setStatus('已启用多文件编排模式');
+                } else {
+                    state.markdown = buildComposedMarkdown();
+                    if (dom.markdown) dom.markdown.value = state.markdown;
+                    setStatus('已关闭多文件编排模式，编辑器显示合并结果');
+                }
+
+                syncComposeControlsState();
+                updateStats();
+                renderPreview();
+                scheduleSave();
+            });
+        }
+
+        if (dom.composeFileList) {
+            dom.composeFileList.addEventListener('change', function () {
+                setComposeActiveById(dom.composeFileList.value, true);
+                scheduleSave();
+            });
+        }
+
+        if (dom.composeAddFile) {
+            dom.composeAddFile.addEventListener('click', function () {
+                ensureComposeModelInitialized();
+                const nameInput = window.prompt('新片段名称（例如：补救路径内容）', `片段-${state.composeFiles.length + 1}`);
+                if (nameInput == null) return;
+
+                const newItem = normalizeComposeFileEntry({
+                    name: String(nameInput || '').trim(),
+                    markdown: ''
+                }, `片段-${state.composeFiles.length + 1}`);
+
+                state.composeFiles.push(newItem);
+                state.composeActiveId = newItem.id;
+                syncComposeControlsState();
+                setComposeActiveById(newItem.id, true);
+                scheduleSave();
+                setStatus(`已新增片段：${newItem.name}`);
+            });
+        }
+
+        if (dom.composeRemoveFile) {
+            dom.composeRemoveFile.addEventListener('click', function () {
+                ensureComposeModelInitialized();
+                if (state.composeFiles.length <= 1) {
+                    setStatus('至少保留一个片段');
+                    return;
+                }
+
+                const idx = state.composeFiles.findIndex(function (item) {
+                    return item.id === state.composeActiveId;
+                });
+                if (idx < 0) return;
+
+                const removed = state.composeFiles[idx];
+                state.composeFiles.splice(idx, 1);
+                const nextIndex = Math.max(0, idx - 1);
+                state.composeActiveId = state.composeFiles[nextIndex].id;
+                setComposeActiveById(state.composeActiveId, true);
+                syncComposeControlsState();
+                updateStats();
+                renderPreview();
+                scheduleSave();
+                setStatus(`已删除片段：${removed.name}`);
+            });
+        }
+
+        function moveComposeActive(delta) {
+            ensureComposeModelInitialized();
+            const idx = state.composeFiles.findIndex(function (item) {
+                return item.id === state.composeActiveId;
+            });
+            if (idx < 0) return;
+            const targetIdx = idx + delta;
+            if (targetIdx < 0 || targetIdx >= state.composeFiles.length) return;
+
+            const current = state.composeFiles[idx];
+            state.composeFiles.splice(idx, 1);
+            state.composeFiles.splice(targetIdx, 0, current);
+            state.composeActiveId = current.id;
+            syncComposeControlsState();
+            scheduleSave();
+        }
+
+        if (dom.composeMoveUp) {
+            dom.composeMoveUp.addEventListener('click', function () {
+                moveComposeActive(-1);
+            });
+        }
+
+        if (dom.composeMoveDown) {
+            dom.composeMoveDown.addEventListener('click', function () {
+                moveComposeActive(1);
+            });
+        }
+
+        if (dom.composeApplyMerged) {
+            dom.composeApplyMerged.addEventListener('click', function () {
+                state.markdown = buildComposedMarkdown();
+                if (dom.markdown) dom.markdown.value = state.markdown;
+                updateStats();
+                renderPreview();
+                scheduleSave();
+                setStatus('已将编排片段合并写回主稿编辑器');
+            });
+        }
+
         if (dom.authLogin) {
             dom.authLogin.addEventListener('click', startGithubLogin);
         }
@@ -1255,9 +1875,70 @@
             dom.submitPr.addEventListener('click', submitPullRequest);
         }
 
+        if (dom.prIncludeRoute) {
+            dom.prIncludeRoute.addEventListener('change', function () {
+                state.includeRoute = !!dom.prIncludeRoute.checked;
+                ensureRouteDraftInitialized();
+                syncRouteControlsFromState();
+                scheduleSave();
+                setStatus(state.includeRoute ? '已启用：提交 PR 时附带分流路由' : '已关闭：提交 PR 时附带分流路由');
+            });
+        }
+
+        if (dom.routePathExisting) {
+            dom.routePathExisting.addEventListener('change', function () {
+                const selected = String(dom.routePathExisting.value || '').trim();
+                if (!selected) return;
+
+                state.routePath = normalizeRouteRelativePath(selected);
+                syncRouteControlsFromState();
+                scheduleSave();
+                setStatus(`已选择已有路由路径：${state.routePath}`);
+            });
+        }
+
+        if (dom.routePath) {
+            dom.routePath.addEventListener('change', function () {
+                state.routePath = normalizeRouteRelativePath(dom.routePath.value);
+                syncRouteControlsFromState();
+                scheduleSave();
+            });
+
+            dom.routePath.addEventListener('blur', function () {
+                state.routePath = normalizeRouteRelativePath(dom.routePath.value);
+                syncRouteControlsFromState();
+            });
+        }
+
+        if (dom.routeTemplate) {
+            dom.routeTemplate.addEventListener('change', function () {
+                state.routeTemplate = normalizeRouteTemplate(dom.routeTemplate.value);
+                state.routeJson = buildDefaultRouteDocument();
+                syncRouteControlsFromState();
+                scheduleSave();
+                setStatus('分流路由模板已更新');
+            });
+        }
+
+        if (dom.routeJson) {
+            dom.routeJson.addEventListener('input', function () {
+                state.routeJson = String(dom.routeJson.value || '');
+                scheduleSave();
+            });
+        }
+
+        if (dom.routeGenerate) {
+            dom.routeGenerate.addEventListener('click', function () {
+                state.routeJson = buildDefaultRouteDocument();
+                syncRouteControlsFromState();
+                scheduleSave();
+                setStatus('已按模板重建分流路由 JSON');
+            });
+        }
+
         if (dom.copyMarkdown) {
             dom.copyMarkdown.addEventListener('click', async function () {
-                const ok = await copyText(state.markdown || '');
+                const ok = await copyText(getEffectiveMarkdownForOutput() || '');
                 setStatus(ok ? '已复制 Markdown' : '复制失败，请手动复制');
             });
         }
@@ -1278,6 +1959,7 @@
 
                 state.markdown = defaultTemplate();
                 if (dom.markdown) dom.markdown.value = state.markdown;
+                updateComposeActiveFromEditor();
                 updateStats();
                 renderPreview();
                 persistState();
@@ -1328,6 +2010,7 @@
         updateStats();
         renderPreview();
         loadExistingList();
+        loadRoutePathChoices();
 
         if (state.authToken) {
             verifyAuthSession();

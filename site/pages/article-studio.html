@@ -66,126 +66,218 @@
                     <strong>重要提示：</strong>本页不支持编辑或编译 `*.cs`/`anims/*.cs` 文件。需要真实 tModLoader C# API 开发时，请先 Clone 仓库并在本地 IDE（VSCode / Rider / VS）中进行。
                 </section>
 
-
-                <section class="studio-filebar" aria-label="文章文件控制">
-                    <div class="studio-filebar-group">
-                        <label for="studio-existing-select">已有文章</label>
-                        <select id="studio-existing-select" class="studio-select">
-                            <option value="">从站点目录选择文章...</option>
-                        </select>
-                        <button id="studio-load-existing" class="btn btn-small btn-outline" type="button">载入文章</button>
-                    </div>
-                    <div class="studio-filebar-group">
-                        <label for="studio-target-path">目标路径</label>
-                        <input id="studio-target-path" class="studio-input" type="text" value="怎么贡献/新文章.md" placeholder="例如：怎么贡献/新文章.md">
-                        <button id="studio-load-path" class="btn btn-small btn-outline" type="button">按路径载入</button>
-                    </div>
-                    <div class="studio-filebar-group studio-filebar-group--name">
-                        <label for="studio-filename">Markdown 文件名</label>
-                        <input id="studio-filename" class="studio-input" type="text" value="新文章.md" placeholder="例如：新文章.md">
-                        <label>模拟阅读（C/T 档位）</label>
-                        <div class="studio-simulate-levels" aria-label="模拟阅读级别">
-                            <select id="studio-simulate-c-level" class="studio-select" aria-label="模拟 C# 级别">
-                                <option value="auto">C：跟随当前档位</option>
-                                <option value="0">C：0</option>
-                                <option value="1">C：1</option>
-                                <option value="2">C：2</option>
-                            </select>
-                            <select id="studio-simulate-t-level" class="studio-select" aria-label="模拟 tModLoader 级别">
-                                <option value="auto">T：跟随当前档位</option>
-                                <option value="0">T：0</option>
-                                <option value="1">T：1</option>
-                                <option value="2">T：2</option>
-                            </select>
-                        </div>
-                        <span class="studio-help">仅影响右侧和新标签预览，不会修改你的本机学习档位。</span>
-                    </div>
+                <section class="studio-statusline" aria-label="工作模式">
+                    <span class="studio-lazy-mode-tag">FLOW</span>
+                    <span class="studio-statusline-sep">|</span>
+                    <span class="studio-statusline-text">LazyVim Inspired UI</span>
+                    <span class="studio-help">现代写作流：选文章 -> 编写 -> 预览 -> 发布</span>
                 </section>
 
-                <section class="studio-prbar" aria-label="PR 提交配置">
-                    <div class="studio-prbar-group">
-                        <label for="studio-pr-worker-url">Worker API 地址</label>
-                        <input id="studio-pr-worker-url" class="studio-input" type="text" placeholder="https://xxx.workers.dev/api/create-pr">
-                    </div>
-                    <div class="studio-prbar-group">
-                        <label>GitHub 账号</label>
-                        <div class="studio-auth-actions">
-                            <button id="studio-auth-login" class="btn btn-small" type="button">GitHub 登录</button>
-                            <button id="studio-auth-logout" class="btn btn-small btn-outline" type="button">退出</button>
-                            <span id="studio-auth-status" class="studio-auth-status">未登录</span>
-                        </div>
-                    </div>
-                    <div class="studio-prbar-group">
-                        <label for="studio-pr-title">PR 标题（可选）</label>
-                        <input id="studio-pr-title" class="studio-input" type="text" placeholder="例如：docs: 更新 某章节">
-                    </div>
-                    <div class="studio-prbar-group studio-prbar-group--shared-key">
-                        <label for="studio-pr-shared-key">兼容密钥（可选）</label>
-                        <input id="studio-pr-shared-key" class="studio-input" type="password" placeholder="仅兼容旧版 Worker 的 STUDIO_SHARED_KEY" autocomplete="off">
-                        <span class="studio-help">优先使用 GitHub 登录；仅在 Worker 仍启用密钥模式时填写。</span>
-                    </div>
-                </section>
+                <section class="studio-lazy-workspace" aria-label="LazyVim 风格工作台">
+                    <aside class="studio-lazy-column studio-lazy-column--left" aria-label="左栏：Explorer">
+                        <section class="studio-lazy-panel" aria-label="文章文件控制">
+                            <h2 class="studio-panel-title">Explorer</h2>
 
-                <section class="studio-shell" aria-label="在线写作IDE">
-                    <div class="studio-titlebar">article-studio · markdown-only mode</div>
-                    <div class="studio-workbench">
-                        <section class="studio-editor-area">
-                            <div class="studio-commandbars">
-                                <section class="studio-toolbar studio-toolbar--embedded">
-                                    <button id="studio-insert-template" class="btn btn-small" type="button">插入教程模板</button>
-                                    <button id="studio-submit-pr" class="btn btn-small" type="button">提交 PR</button>
-                                    <button id="studio-toggle-fullscreen" class="btn btn-small btn-outline" type="button">全屏编辑</button>
-                                    <button id="studio-copy-markdown" class="btn btn-small btn-outline" type="button">复制 Markdown</button>
-                                    <button id="studio-export" class="btn btn-small btn-outline" type="button">导出草稿 JSON</button>
-                                    <button id="studio-reset" class="btn btn-small btn-outline" type="button">清空草稿</button>
-                                    <a id="studio-last-pr-link" class="btn btn-small btn-outline" href="#" target="_blank" rel="noopener noreferrer" hidden>打开最新 PR</a>
-                                </section>
-                                <section class="studio-syntaxbar studio-syntaxbar--embedded" aria-label="常用语法快捷按钮">
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="bold">加粗</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="h1">大标题</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="h2">二级标题</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="list">列表</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quote">引用</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="ref" title="插入文档引用语法">引用文档</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="cs" title="插入 C# 片段语法">代码片段</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="anim" title="插入动画片段语法">动画片段</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="if" title="插入分流条件块">分流块</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="routing-assertions" title="插入手动分流断言块">分流断言</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-tf" title="插入判断题模板">判断题</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-single" title="插入单选题模板">单选题</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-multi" title="插入多选题模板">多选题</button>
-                                </section>
+                            <div class="studio-panel-section">
+                                <label for="studio-existing-select">已有文章</label>
+                                <select id="studio-existing-select" class="studio-select">
+                                    <option value="">从站点目录选择文章...</option>
+                                </select>
+                                <button id="studio-load-existing" class="btn btn-small btn-outline" type="button">载入文章</button>
                             </div>
 
-                            <div class="studio-tabs">
-                                <button id="studio-active-tab" class="studio-tab studio-tab--active" type="button" aria-current="page">新文章.md</button>
+                            <div class="studio-panel-section">
+                                <label for="studio-target-path">目标路径</label>
+                                <input id="studio-target-path" class="studio-input" type="text" value="怎么贡献/新文章.md" placeholder="例如：怎么贡献/新文章.md">
+                                <button id="studio-load-path" class="btn btn-small btn-outline" type="button">按路径载入</button>
                             </div>
 
-                            <div class="studio-panes">
-                                <div class="studio-pane">
-                                    <div class="studio-pane-title">Markdown Editor</div>
-                                    <textarea id="studio-markdown" class="studio-editor" spellcheck="false" placeholder="在这里编写 Markdown 教程内容...
+                            <div class="studio-panel-section">
+                                <label for="studio-filename">Markdown 文件名</label>
+                                <input id="studio-filename" class="studio-input" type="text" value="新文章.md" placeholder="例如：新文章.md">
+                            </div>
+
+                            <div class="studio-panel-section">
+                                <label>模拟阅读（C/T 档位）</label>
+                                <div class="studio-simulate-levels" aria-label="模拟阅读级别">
+                                    <select id="studio-simulate-c-level" class="studio-select" aria-label="模拟 C# 级别">
+                                        <option value="auto">C：跟随当前档位</option>
+                                        <option value="0">C：0</option>
+                                        <option value="1">C：1</option>
+                                        <option value="2">C：2</option>
+                                    </select>
+                                    <select id="studio-simulate-t-level" class="studio-select" aria-label="模拟 tModLoader 级别">
+                                        <option value="auto">T：跟随当前档位</option>
+                                        <option value="0">T：0</option>
+                                        <option value="1">T：1</option>
+                                        <option value="2">T：2</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </section>
+
+                        <details class="studio-lazy-panel studio-compose-panel" open>
+                            <summary class="studio-panel-title">Compose（多文件合并）</summary>
+                            <div class="studio-panel-section">
+                                <label class="studio-inline-check" for="studio-compose-enabled">
+                                    <input id="studio-compose-enabled" type="checkbox">
+                                    <span>启用多文件编排</span>
+                                </label>
+                                <span class="studio-help">分段写作，输出自动合并为一个 Markdown。</span>
+                            </div>
+                            <div class="studio-panel-section studio-panel-section--compose-list">
+                                <label for="studio-compose-file-list">编排片段</label>
+                                <select id="studio-compose-file-list" class="studio-select" size="6" aria-label="编排文件列表"></select>
+                            </div>
+                            <div class="studio-compose-actions" aria-label="编排操作">
+                                <button id="studio-compose-add-file" class="btn btn-small btn-outline" type="button">新增片段</button>
+                                <button id="studio-compose-remove-file" class="btn btn-small btn-outline" type="button">删除片段</button>
+                                <button id="studio-compose-move-up" class="btn btn-small btn-outline" type="button">上移</button>
+                                <button id="studio-compose-move-down" class="btn btn-small btn-outline" type="button">下移</button>
+                                <button id="studio-compose-apply-merged" class="btn btn-small" type="button">合并写回主稿</button>
+                            </div>
+                        </details>
+                    </aside>
+
+                    <section class="studio-lazy-column studio-lazy-column--center" aria-label="中栏：Editor">
+                        <section class="studio-shell" aria-label="在线写作IDE">
+                            <div class="studio-titlebar">article-studio · modern writer mode</div>
+                            <div class="studio-workbench">
+                                <section class="studio-editor-area">
+                                    <div class="studio-commandbars">
+                                        <section class="studio-toolbar studio-toolbar--embedded">
+                                            <div class="studio-quick-actions">
+                                                <button id="studio-insert-template" class="btn btn-small" type="button">插入模板</button>
+                                                <button id="studio-toggle-fullscreen" class="btn btn-small btn-outline" type="button">专注模式</button>
+                                                <button id="studio-open-viewer-preview" class="btn btn-small btn-outline" type="button">新标签预览</button>
+                                            </div>
+                                            <details class="studio-advanced-panel">
+                                                <summary>更多操作</summary>
+                                                <div class="studio-advanced-actions">
+                                                    <button id="studio-copy-markdown" class="btn btn-small btn-outline" type="button">复制 Markdown</button>
+                                                    <button id="studio-export" class="btn btn-small btn-outline" type="button">导出草稿 JSON</button>
+                                                    <button id="studio-reset" class="btn btn-small btn-outline" type="button">清空草稿</button>
+                                                    <a id="studio-last-pr-link" class="btn btn-small btn-outline" href="#" target="_blank" rel="noopener noreferrer" hidden>打开最新 PR</a>
+                                                </div>
+                                            </details>
+                                        </section>
+
+                                        <section class="studio-syntaxbar studio-syntaxbar--embedded" aria-label="常用语法快捷按钮">
+                                            <button class="btn btn-small btn-outline" type="button" data-studio-insert="bold">加粗</button>
+                                            <button class="btn btn-small btn-outline" type="button" data-studio-insert="h2">二级标题</button>
+                                            <button class="btn btn-small btn-outline" type="button" data-studio-insert="list">列表</button>
+                                            <button class="btn btn-small btn-outline" type="button" data-studio-insert="quote">引用</button>
+                                            <button class="btn btn-small btn-outline" type="button" data-studio-insert="if" title="插入分流条件块">分流块</button>
+                                            <details class="studio-advanced-panel">
+                                                <summary>更多片段</summary>
+                                                <div class="studio-advanced-actions">
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="h1">大标题</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="ref" title="插入文档引用语法">引用文档</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="cs" title="插入 C# 片段语法">代码片段</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="anim" title="插入动画片段语法">动画片段</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="route-path-block" title="插入按路径显示内容块">路径块</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="routing-assertions" title="插入手动分流断言块">分流断言</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-tf" title="插入判断题模板">判断题</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-single" title="插入单选题模板">单选题</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-multi" title="插入多选题模板">多选题</button>
+                                                </div>
+                                            </details>
+                                        </section>
+                                    </div>
+
+                                    <div class="studio-tabs">
+                                        <button id="studio-active-tab" class="studio-tab studio-tab--active" type="button" aria-current="page">新文章.md</button>
+                                    </div>
+
+                                    <div class="studio-panes">
+                                        <div class="studio-pane">
+                                            <div class="studio-pane-title">Markdown Editor</div>
+                                            <textarea id="studio-markdown" class="studio-editor" spellcheck="false" placeholder="在这里编写 Markdown 教程内容...
 
 ```csharp
 // C# 代码会在右侧预览中高亮
 ```"></textarea>
-                                </div>
-                                <div class="studio-pane">
-                                    <div class="studio-pane-title studio-pane-title--split">
-                                        <span>Preview（viewer.html 同级渲染）</span>
-                                        <button id="studio-open-viewer-preview" class="btn btn-small btn-outline" type="button">新标签预览</button>
+                                        </div>
+                                        <div class="studio-pane">
+                                            <div class="studio-pane-title">Preview（viewer.html 同级渲染）</div>
+                                            <iframe id="studio-preview-frame" class="studio-preview-frame" title="Article Studio Viewer Preview" loading="lazy"></iframe>
+                                        </div>
                                     </div>
-                                    <iframe id="studio-preview-frame" class="studio-preview-frame" title="Article Studio Viewer Preview" loading="lazy"></iframe>
-                                </div>
-                            </div>
 
-                            <div class="studio-statusbar">
-                                <span id="studio-status">就绪</span>
-                                <span id="studio-current-path">目标: 怎么贡献/新文章.md</span>
-                                <span id="studio-stats">0 行 · 0 字</span>
+                                    <div class="studio-statusbar">
+                                        <span id="studio-status">就绪</span>
+                                        <span id="studio-current-path">目标: 怎么贡献/新文章.md</span>
+                                        <span id="studio-stats">0 行 · 0 字</span>
+                                    </div>
+                                </section>
                             </div>
                         </section>
-                    </div>
+                    </section>
+
+                    <aside class="studio-lazy-column studio-lazy-column--right" aria-label="右栏：Publish">
+                        <section class="studio-lazy-panel" aria-label="页面选项与 PR 发布">
+                            <h2 class="studio-panel-title">Publish</h2>
+
+                            <div class="studio-panel-section">
+                                <label for="studio-pr-worker-url">Worker API 地址</label>
+                                <input id="studio-pr-worker-url" class="studio-input" type="text" placeholder="https://xxx.workers.dev/api/create-pr">
+                            </div>
+
+                            <div class="studio-panel-section">
+                                <label>GitHub 账号</label>
+                                <div class="studio-auth-actions">
+                                    <button id="studio-auth-login" class="btn btn-small" type="button">GitHub 登录</button>
+                                    <button id="studio-auth-logout" class="btn btn-small btn-outline" type="button">退出</button>
+                                </div>
+                                <span id="studio-auth-status" class="studio-auth-status">未登录</span>
+                            </div>
+
+                            <div class="studio-panel-section">
+                                <label for="studio-pr-title">PR 标题（可选）</label>
+                                <input id="studio-pr-title" class="studio-input" type="text" placeholder="例如：docs: 更新 某章节">
+                            </div>
+
+                            <div class="studio-panel-section">
+                                <button id="studio-submit-pr" class="btn btn-small studio-btn-primary" type="button">提交 PR</button>
+                            </div>
+
+                            <details class="studio-advanced-panel">
+                                <summary>高级发布选项</summary>
+                                <div class="studio-panel-section">
+                                    <label for="studio-pr-shared-key">兼容密钥（可选）</label>
+                                    <input id="studio-pr-shared-key" class="studio-input" type="password" placeholder="仅兼容旧版 Worker 的 STUDIO_SHARED_KEY" autocomplete="off">
+                                    <span class="studio-help">优先使用 GitHub 登录；仅在 Worker 仍启用密钥模式时填写。</span>
+                                </div>
+
+                                <div class="studio-panel-section">
+                                    <label class="studio-inline-check" for="studio-pr-include-route">
+                                        <input id="studio-pr-include-route" type="checkbox">
+                                        <span>提交 PR 时附带分流路由（Route V2）</span>
+                                    </label>
+                                </div>
+
+                                <div class="studio-route-config" aria-label="分流路由提交配置">
+                                    <label for="studio-route-path-existing">已有路由路径（可选）</label>
+                                    <select id="studio-route-path-existing" class="studio-select">
+                                        <option value="">从已有 route 选择（也可手动新建）</option>
+                                    </select>
+                                    <label for="studio-route-path">路由文件路径（相对 site/content/routes/）</label>
+                                    <input id="studio-route-path" class="studio-input" type="text" list="studio-route-path-options" placeholder="例如：怎么贡献/新文章.route.json">
+                                    <datalist id="studio-route-path-options"></datalist>
+                                    <span class="studio-help">可从已有路由中选择，也可直接输入新路径。</span>
+                                    <label for="studio-route-template">路由模板</label>
+                                    <select id="studio-route-template" class="studio-select">
+                                        <option value="by-c">按 C 档位分流</option>
+                                        <option value="by-t">按 T 档位分流</option>
+                                        <option value="by-g">按 G 目标分流</option>
+                                    </select>
+                                    <label for="studio-route-json">路由 JSON</label>
+                                    <textarea id="studio-route-json" class="studio-route-json" spellcheck="false" placeholder="这里可编辑将随 PR 一起提交的 route v2 JSON"></textarea>
+                                    <button id="studio-route-generate" class="btn btn-small btn-outline" type="button">按模板重建路由 JSON</button>
+                                </div>
+                            </details>
+                        </section>
+                    </aside>
                 </section>
             </div>
         </div>

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dpapyru.github.io/site/content/routes/route.schema.v2.json",
+  "title": "Tutorial Route V2",
+  "type": "object",
+  "required": ["version", "article", "entry", "nodes"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 2
+    },
+    "article": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entry": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["id", "type", "dimension", "fallback", "map"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "type": { "const": "decision" },
+              "dimension": {
+                "type": "string",
+                "enum": ["C", "T", "G"]
+              },
+              "fallback": { "type": "string", "minLength": 1 },
+              "map": {
+                "type": "object",
+                "propertyNames": {
+                  "pattern": "^(0|1|2)$"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": ["id", "type", "path"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "type": { "const": "path" },
+              "path": {
+                "type": "string",
+                "enum": ["remedial", "standard", "fast", "deep"]
+              },
+              "next": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}
