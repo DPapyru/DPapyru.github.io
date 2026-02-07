@@ -60,7 +60,8 @@
         html[data-studio-embed='1'] #table-of-contents,
         html[data-studio-embed='1'] #source-code-section,
         html[data-studio-embed='1'] .mobile-nav-toggle,
-        html[data-studio-embed='1'] .mobile-menu-toggle {
+        html[data-studio-embed='1'] .mobile-menu-toggle,
+        html[data-studio-embed='1'] .viewer-ai-fab-wrap {
             display: none !important;
         }
 
@@ -101,6 +102,185 @@
             padding: 0;
             border: 0;
             background: transparent;
+        }
+
+        .viewer-ai-fab-wrap {
+            position: fixed;
+            right: 18px;
+            bottom: 20px;
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            touch-action: none;
+        }
+
+        .viewer-ai-fab-wrap[data-panel-align='left'] {
+            align-items: flex-start;
+        }
+
+        .viewer-ai-fab-wrap[data-panel-align='right'] {
+            align-items: flex-end;
+        }
+
+        .viewer-ai-fab {
+            width: 52px;
+            height: 52px;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            background: var(--primary-color);
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            user-select: none;
+            touch-action: none;
+        }
+
+        html[data-theme='dark'] .viewer-ai-fab {
+            color: var(--text-color);
+        }
+
+        html:not([data-theme='dark']) .viewer-ai-fab {
+            color: var(--bg-color);
+        }
+
+        .viewer-ai-fab:hover,
+        .viewer-ai-fab:focus-visible {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .viewer-ai-fab.viewer-ai-fab--dragging {
+            cursor: grabbing;
+            transform: none;
+        }
+
+        .viewer-ai-panel {
+            width: min(420px, calc(100vw - 20px));
+            max-height: min(70vh, 560px);
+            overflow: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-color);
+            box-shadow: var(--shadow-lg);
+            padding: 12px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .viewer-ai-panel[hidden] {
+            display: none;
+        }
+
+        .viewer-ai-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .viewer-ai-panel-header h3 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .viewer-ai-close {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .viewer-ai-auth {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .viewer-ai-auth-status,
+        .viewer-ai-cooldown {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 0 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .viewer-ai-panel label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .viewer-ai-input,
+        .viewer-ai-endpoint,
+        .viewer-ai-output {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .viewer-ai-endpoint {
+            padding: 8px 10px;
+        }
+
+        .viewer-ai-input {
+            min-height: 84px;
+            resize: vertical;
+            padding: 8px 10px;
+        }
+
+        .viewer-ai-output {
+            margin: 0;
+            min-height: 80px;
+            max-height: 220px;
+            overflow: auto;
+            padding: 10px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .viewer-ai-input:focus,
+        .viewer-ai-endpoint:focus,
+        .viewer-ai-close:focus-visible,
+        .viewer-ai-fab:focus-visible {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--search-focus);
+        }
+
+        .viewer-ai-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 640px) {
+            .viewer-ai-fab-wrap {
+                right: 10px;
+                bottom: 12px;
+            }
+
+            .viewer-ai-panel {
+                width: min(100vw - 12px, 100vw - 12px);
+                max-height: 72vh;
+            }
         }
     </style>
 
@@ -379,6 +559,31 @@
 	                </div>
 	            </div>
 	        </div>
+	    </div>
+
+	    <div class="viewer-ai-fab-wrap" id="viewer-ai-root">
+	        <button class="viewer-ai-fab" id="viewer-ai-fab" type="button" aria-label="打开 AI 对话" aria-controls="viewer-ai-panel" aria-expanded="false">AI</button>
+	        <section class="viewer-ai-panel" id="viewer-ai-panel" aria-label="AI 对话服务" hidden>
+	            <div class="viewer-ai-panel-header">
+	                <h3>AI 对话</h3>
+	                <button class="viewer-ai-close" id="viewer-ai-close" type="button" aria-label="关闭 AI 对话">✕</button>
+	            </div>
+	            <div class="viewer-ai-auth">
+	                <span class="viewer-ai-auth-status" id="viewer-ai-auth-status">未登录</span>
+	                <button class="btn btn-small" id="viewer-ai-login" type="button">GitHub 登录</button>
+	                <button class="btn btn-small btn-outline" id="viewer-ai-logout" type="button">退出</button>
+	            </div>
+	            <label for="viewer-ai-endpoint">AI API 地址</label>
+	            <input class="viewer-ai-endpoint" id="viewer-ai-endpoint" type="text" autocomplete="off">
+	            <div class="viewer-ai-actions">
+	                <button class="btn btn-small" id="viewer-ai-send" type="button">发送 AI 对话</button>
+	                <span class="viewer-ai-cooldown" id="viewer-ai-cooldown">可发送</span>
+	            </div>
+	            <label for="viewer-ai-input">提问内容</label>
+	            <textarea class="viewer-ai-input" id="viewer-ai-input" rows="4" placeholder="输入你的问题，然后发送给 AI。"></textarea>
+	            <label for="viewer-ai-output">AI 回复</label>
+	            <pre class="viewer-ai-output" id="viewer-ai-output">等待提问...</pre>
+	        </section>
 	    </div>
 
 		    <!-- 加载JavaScript文件 -->
@@ -6774,6 +6979,696 @@
             const observer = new MutationObserver(checkScrollNeeded);
             observer.observe(sidebar, { childList: true, subtree: true });
         }
+    </script>
+    <script>
+        (function () {
+            'use strict';
+
+            const VIEWER_AUTH_WORKER_ORIGIN = 'https://greenhome-pr.3577415213.workers.dev';
+            const VIEWER_AI_ENDPOINT = 'https://jjktycjjcsbulyunqlqe.supabase.co/functions/v1/ai-chat';
+            const VIEWER_AI_COOLDOWN_SECONDS = 120;
+            const VIEWER_AI_COOLDOWN_STORAGE_KEY = 'viewerAiCooldownUntil.v1';
+            const VIEWER_AI_FAB_POSITION_STORAGE_KEY = 'viewerAiFabPosition.v1';
+            const VIEWER_AUTH_TOKEN_KEY = 'articleStudioOAuthToken.v1';
+            const VIEWER_AUTH_USER_KEY = 'articleStudioOAuthUser.v1';
+
+            const dom = {
+                root: document.getElementById('viewer-ai-root'),
+                fab: document.getElementById('viewer-ai-fab'),
+                panel: document.getElementById('viewer-ai-panel'),
+                close: document.getElementById('viewer-ai-close'),
+                endpoint: document.getElementById('viewer-ai-endpoint'),
+                input: document.getElementById('viewer-ai-input'),
+                send: document.getElementById('viewer-ai-send'),
+                cooldown: document.getElementById('viewer-ai-cooldown'),
+                output: document.getElementById('viewer-ai-output'),
+                login: document.getElementById('viewer-ai-login'),
+                logout: document.getElementById('viewer-ai-logout'),
+                authStatus: document.getElementById('viewer-ai-auth-status')
+            };
+
+            if (!dom.root || !dom.fab || !dom.panel) {
+                return;
+            }
+
+            const state = {
+                authToken: '',
+                githubUser: '',
+                aiBusy: false,
+                aiCooldownUntil: 0,
+                fabDragging: false
+            };
+
+            let cooldownTimer = 0;
+
+            function parsePx(value) {
+                if (value == null) return null;
+                const parsed = Number.parseFloat(String(value));
+                if (!Number.isFinite(parsed)) return null;
+                return parsed;
+            }
+
+            function clampFabPosition(left, top) {
+                const viewportW = window.innerWidth || document.documentElement.clientWidth || 0;
+                const viewportH = window.innerHeight || document.documentElement.clientHeight || 0;
+                const rootRect = dom.root.getBoundingClientRect();
+                const fallbackFabRect = dom.fab.getBoundingClientRect();
+                const rootWidth = Math.max(rootRect.width || 0, fallbackFabRect.width || 0);
+                const rootHeight = Math.max(rootRect.height || 0, fallbackFabRect.height || 0);
+                const maxLeft = Math.max(0, viewportW - rootWidth);
+                const maxTop = Math.max(0, viewportH - rootHeight);
+
+                const clampedTop = Math.max(0, Math.min(Number(top || 0), maxTop));
+                const clampedLeft = Math.max(0, Math.min(Number(left || 0), maxLeft));
+
+                return {
+                    left: clampedLeft,
+                    top: clampedTop
+                };
+            }
+
+            function updatePanelAlignByFabPosition() {
+                const viewportW = window.innerWidth || document.documentElement.clientWidth || 0;
+                const fabRect = dom.fab.getBoundingClientRect();
+                const centerX = fabRect.left + fabRect.width / 2;
+                const align = centerX < viewportW / 2 ? 'left' : 'right';
+                dom.root.setAttribute('data-panel-align', align);
+            }
+
+            function applyFabPosition(left, top, persist) {
+                const clamped = clampFabPosition(left, top);
+                dom.root.style.left = `${Math.round(clamped.left)}px`;
+                dom.root.style.top = `${Math.round(clamped.top)}px`;
+                dom.root.style.right = 'auto';
+                dom.root.style.bottom = 'auto';
+
+                updatePanelAlignByFabPosition();
+
+                if (persist) {
+                    try {
+                        localStorage.setItem(VIEWER_AI_FAB_POSITION_STORAGE_KEY, JSON.stringify({
+                            left: Math.round(clamped.left),
+                            top: Math.round(clamped.top)
+                        }));
+                    } catch (_) {
+                        // ignore local storage failures
+                    }
+                }
+            }
+
+            function setFabDefaultPosition() {
+                const viewportW = window.innerWidth || document.documentElement.clientWidth || 0;
+                const viewportH = window.innerHeight || document.documentElement.clientHeight || 0;
+                const fabRect = dom.fab.getBoundingClientRect();
+                const left = Math.max(0, viewportW - fabRect.width - 18);
+                const top = Math.max(0, viewportH - fabRect.height - 20);
+                applyFabPosition(left, top, false);
+            }
+
+            function snapFabToEdge(left, top, persist) {
+                const viewportW = window.innerWidth || document.documentElement.clientWidth || 0;
+                const safeLeft = parsePx(left);
+                const safeTop = parsePx(top);
+
+                if (safeLeft == null || safeTop == null) {
+                    return;
+                }
+
+                const rootRect = dom.root.getBoundingClientRect();
+                const fallbackFabRect = dom.fab.getBoundingClientRect();
+                const rootWidth = Math.max(rootRect.width || 0, fallbackFabRect.width || 0);
+                const maxLeft = Math.max(0, viewportW - rootWidth);
+                const midpoint = maxLeft / 2;
+                const clamped = clampFabPosition(safeLeft, safeTop);
+                const targetLeft = clamped.left <= midpoint ? 0 : maxLeft;
+
+                applyFabPosition(targetLeft, clamped.top, !!persist);
+            }
+
+            function restoreFabPosition() {
+                try {
+                    const raw = localStorage.getItem(VIEWER_AI_FAB_POSITION_STORAGE_KEY);
+                    if (!raw) {
+                        setFabDefaultPosition();
+                        return;
+                    }
+
+                    const parsed = JSON.parse(raw);
+                    if (!parsed || typeof parsed !== 'object') {
+                        setFabDefaultPosition();
+                        return;
+                    }
+
+                    const left = parsePx(parsed.left);
+                    const top = parsePx(parsed.top);
+                    if (left == null || top == null) {
+                        setFabDefaultPosition();
+                        return;
+                    }
+
+                    snapFabToEdge(left, top, false);
+                } catch (_) {
+                    setFabDefaultPosition();
+                }
+            }
+
+            function setupFabDrag() {
+                if (!dom.fab) return;
+
+                let pointerId = null;
+                let startX = 0;
+                let startY = 0;
+                let originLeft = 0;
+                let originTop = 0;
+                let moved = false;
+
+                function onPointerMove(event) {
+                    if (pointerId == null || event.pointerId !== pointerId) return;
+
+                    const dx = event.clientX - startX;
+                    const dy = event.clientY - startY;
+
+                    if (!moved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
+                        moved = true;
+                        state.fabDragging = true;
+                        dom.fab.classList.add('viewer-ai-fab--dragging');
+                    }
+
+                    if (!moved) return;
+
+                    event.preventDefault();
+                    applyFabPosition(originLeft + dx, originTop + dy, false);
+                }
+
+                function endDrag(event) {
+                    if (pointerId == null || event.pointerId !== pointerId) return;
+
+                    if (moved) {
+                        const left = parsePx(dom.root.style.left);
+                        const top = parsePx(dom.root.style.top);
+                        if (left != null && top != null) {
+                            snapFabToEdge(left, top, true);
+                        }
+                    }
+
+                    pointerId = null;
+                    moved = false;
+                    state.fabDragging = false;
+                    dom.fab.classList.remove('viewer-ai-fab--dragging');
+
+                    window.removeEventListener('pointermove', onPointerMove);
+                    window.removeEventListener('pointerup', endDrag);
+                    window.removeEventListener('pointercancel', endDrag);
+                }
+
+                dom.fab.addEventListener('pointerdown', function (event) {
+                    if (event.button !== 0) return;
+
+                    pointerId = event.pointerId;
+                    moved = false;
+                    startX = event.clientX;
+                    startY = event.clientY;
+
+                    const currentLeft = parsePx(dom.root.style.left);
+                    const currentTop = parsePx(dom.root.style.top);
+                    originLeft = currentLeft == null ? dom.root.getBoundingClientRect().left : currentLeft;
+                    originTop = currentTop == null ? dom.root.getBoundingClientRect().top : currentTop;
+
+                    if (typeof dom.fab.setPointerCapture === 'function') {
+                        dom.fab.setPointerCapture(pointerId);
+                    }
+
+                    window.addEventListener('pointermove', onPointerMove, { passive: false });
+                    window.addEventListener('pointerup', endDrag);
+                    window.addEventListener('pointercancel', endDrag);
+                });
+            }
+
+            function isStudioEmbedModeEnabled() {
+                try {
+                    const url = new URL(window.location.href);
+                    const flag = String(url.searchParams.get('studio_embed') || '').trim().toLowerCase();
+                    if (flag === '1' || flag === 'true' || flag === 'yes') return true;
+                } catch (_) {
+                    // ignore url parse errors
+                }
+
+                return document.documentElement.getAttribute('data-studio-embed') === '1';
+            }
+
+            function normalizeAiApiUrl(input) {
+                let value = String(input || '').trim();
+                if (!value) return '';
+
+                if (!/^https?:\/\//i.test(value)) {
+                    value = `https://${value}`;
+                }
+
+                return value.replace(/\/+$/, '');
+            }
+
+            function setAiOutput(text) {
+                if (!dom.output) return;
+                dom.output.textContent = String(text || '') || '等待提问...';
+            }
+
+            function formatCooldownSeconds(totalSeconds) {
+                const seconds = Math.max(0, Math.ceil(Number(totalSeconds || 0)));
+                const mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const ss = String(seconds % 60).padStart(2, '0');
+                return `${mm}:${ss}`;
+            }
+
+            function getAiCooldownRemainingSeconds() {
+                const diff = Number(state.aiCooldownUntil || 0) - Date.now();
+                return Math.max(0, Math.ceil(diff / 1000));
+            }
+
+            function persistAiCooldown() {
+                try {
+                    if (state.aiCooldownUntil > Date.now()) {
+                        localStorage.setItem(VIEWER_AI_COOLDOWN_STORAGE_KEY, String(state.aiCooldownUntil));
+                    } else {
+                        localStorage.removeItem(VIEWER_AI_COOLDOWN_STORAGE_KEY);
+                    }
+                } catch (_) {
+                    // ignore local storage failures
+                }
+            }
+
+            function stopAiCooldownTimer() {
+                if (!cooldownTimer) return;
+                clearInterval(cooldownTimer);
+                cooldownTimer = 0;
+            }
+
+            function setAiSendBusy(isBusy) {
+                state.aiBusy = !!isBusy;
+                if (!dom.send) return;
+                dom.send.textContent = isBusy ? '发送中...' : '发送 AI 对话';
+                if (!isBusy) {
+                    updateAiCooldownUi();
+                    return;
+                }
+                dom.send.disabled = true;
+            }
+
+            function updateAiCooldownUi() {
+                const remaining = getAiCooldownRemainingSeconds();
+                const hasCooldown = remaining > 0;
+                const isLoggedIn = !!state.authToken;
+
+                if (dom.cooldown) {
+                    dom.cooldown.textContent = hasCooldown ? `冷却中 ${formatCooldownSeconds(remaining)}` : '可发送';
+                    dom.cooldown.style.color = hasCooldown ? 'var(--text-secondary)' : 'var(--text-color)';
+                }
+
+                if (dom.send && !state.aiBusy) {
+                    dom.send.disabled = !isLoggedIn || hasCooldown;
+                }
+
+                if (!hasCooldown) {
+                    stopAiCooldownTimer();
+                    state.aiCooldownUntil = 0;
+                }
+
+                persistAiCooldown();
+            }
+
+            function startAiCooldown(seconds) {
+                const ttl = Math.max(1, Math.ceil(Number(seconds || 0)));
+                state.aiCooldownUntil = Date.now() + ttl * 1000;
+                persistAiCooldown();
+                stopAiCooldownTimer();
+                updateAiCooldownUi();
+
+                cooldownTimer = setInterval(function () {
+                    updateAiCooldownUi();
+                }, 1000);
+            }
+
+            function restoreAiCooldownFromStorage() {
+                try {
+                    const saved = Number(localStorage.getItem(VIEWER_AI_COOLDOWN_STORAGE_KEY) || 0);
+                    if (saved > Date.now()) {
+                        state.aiCooldownUntil = saved;
+                        updateAiCooldownUi();
+                        cooldownTimer = setInterval(function () {
+                            updateAiCooldownUi();
+                        }, 1000);
+                        return;
+                    }
+                } catch (_) {
+                    // ignore local storage failures
+                }
+
+                state.aiCooldownUntil = 0;
+                updateAiCooldownUi();
+            }
+
+            function loadAuthSession() {
+                try {
+                    state.authToken = String(sessionStorage.getItem(VIEWER_AUTH_TOKEN_KEY) || '').trim();
+                    state.githubUser = String(sessionStorage.getItem(VIEWER_AUTH_USER_KEY) || '').trim();
+                } catch (_) {
+                    state.authToken = '';
+                    state.githubUser = '';
+                }
+            }
+
+            function persistAuthSession() {
+                try {
+                    if (state.authToken) {
+                        sessionStorage.setItem(VIEWER_AUTH_TOKEN_KEY, state.authToken);
+                    } else {
+                        sessionStorage.removeItem(VIEWER_AUTH_TOKEN_KEY);
+                    }
+
+                    if (state.githubUser) {
+                        sessionStorage.setItem(VIEWER_AUTH_USER_KEY, state.githubUser);
+                    } else {
+                        sessionStorage.removeItem(VIEWER_AUTH_USER_KEY);
+                    }
+                } catch (_) {
+                    // ignore session storage failures
+                }
+            }
+
+            function clearAuthSession() {
+                state.authToken = '';
+                state.githubUser = '';
+                persistAuthSession();
+            }
+
+            function updateAuthUi() {
+                const isLoggedIn = !!state.authToken;
+                const userText = state.githubUser ? `@${state.githubUser}` : '已登录';
+
+                if (dom.authStatus) {
+                    dom.authStatus.textContent = isLoggedIn ? userText : '未登录';
+                    dom.authStatus.style.color = isLoggedIn ? 'var(--text-color)' : 'var(--text-secondary)';
+                }
+
+                if (dom.login) {
+                    dom.login.textContent = isLoggedIn ? '切换 GitHub 账号' : 'GitHub 登录';
+                }
+
+                if (dom.logout) {
+                    dom.logout.disabled = !isLoggedIn;
+                }
+
+                updateAiCooldownUi();
+            }
+
+            function authLoginUrl() {
+                try {
+                    const loginUrl = new URL('/auth/github/login', VIEWER_AUTH_WORKER_ORIGIN);
+                    const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}`;
+                    loginUrl.searchParams.set('return_to', returnTo);
+                    return loginUrl.toString();
+                } catch (_) {
+                    return '';
+                }
+            }
+
+            function authMeUrl() {
+                try {
+                    return new URL('/auth/me', VIEWER_AUTH_WORKER_ORIGIN).toString();
+                } catch (_) {
+                    return '';
+                }
+            }
+
+            function consumeOauthResultFromHash() {
+                const hash = String(window.location.hash || '').replace(/^#/, '');
+                if (!hash) return false;
+
+                const hasOauthToken = /(^|&)oauth_token=/.test(hash);
+                const hasOauthError = /(^|&)oauth_error=/.test(hash);
+                if (!hasOauthToken && !hasOauthError) return false;
+
+                const params = new URLSearchParams(hash);
+                const oauthToken = String(params.get('oauth_token') || '').trim();
+                const githubUser = String(params.get('github_user') || '').trim();
+                const oauthError = String(params.get('oauth_error') || '').trim();
+
+                if (oauthToken) {
+                    state.authToken = oauthToken;
+                    state.githubUser = githubUser;
+                    persistAuthSession();
+                    updateAuthUi();
+                    setAiOutput(`GitHub 登录成功${githubUser ? `：@${githubUser}` : ''}`);
+                } else {
+                    clearAuthSession();
+                    updateAuthUi();
+                    setAiOutput(`GitHub 登录失败：${oauthError || '未知错误'}`);
+                }
+
+                const cleanUrl = `${window.location.pathname}${window.location.search}`;
+                window.history.replaceState(null, '', cleanUrl);
+                return true;
+            }
+
+            async function verifyAuthSession() {
+                if (!state.authToken) {
+                    updateAuthUi();
+                    return;
+                }
+
+                const meUrl = authMeUrl();
+                if (!meUrl) {
+                    clearAuthSession();
+                    updateAuthUi();
+                    setAiOutput('Worker 地址无效，无法验证 GitHub 登录状态');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(meUrl, {
+                        method: 'GET',
+                        headers: {
+                            'authorization': `Bearer ${state.authToken}`
+                        }
+                    });
+
+                    const responseText = await response.text();
+                    let responseData = null;
+                    try {
+                        responseData = responseText ? JSON.parse(responseText) : null;
+                    } catch (_) {
+                        responseData = null;
+                    }
+
+                    if (!response.ok || !responseData || responseData.ok !== true || !responseData.user) {
+                        clearAuthSession();
+                        updateAuthUi();
+                        setAiOutput('GitHub 登录已失效，请重新登录');
+                        return;
+                    }
+
+                    state.githubUser = String(responseData.user || '').trim();
+                    persistAuthSession();
+                    updateAuthUi();
+                } catch (err) {
+                    setAiOutput(`验证登录状态失败：${err && err.message ? err.message : String(err)}`);
+                }
+            }
+
+            function toggleAiPanel(forceOpen) {
+                const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !!dom.panel.hidden;
+                dom.panel.hidden = !shouldOpen;
+                dom.fab.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+                updatePanelAlignByFabPosition();
+                const left = parsePx(dom.root.style.left);
+                const top = parsePx(dom.root.style.top);
+                if (left != null && top != null) {
+                    snapFabToEdge(left, top, false);
+                }
+                if (shouldOpen && dom.input) {
+                    dom.input.focus();
+                }
+            }
+
+            async function submitViewerAiChat() {
+                const apiUrl = normalizeAiApiUrl(dom.endpoint ? dom.endpoint.value : VIEWER_AI_ENDPOINT);
+                const authToken = String(state.authToken || '').trim();
+                const prompt = String(dom.input ? dom.input.value : '').trim();
+
+                if (!authToken) {
+                    setAiOutput('请先点击“GitHub 登录”后再使用 AI 对话');
+                    if (dom.login) dom.login.focus();
+                    updateAiCooldownUi();
+                    return;
+                }
+
+                if (!apiUrl || /REPLACE_WITH_PROJECT_REF\.supabase\.co/i.test(apiUrl)) {
+                    setAiOutput('请先把 AI API 地址改成你的 Supabase ai-chat 地址');
+                    if (dom.endpoint) dom.endpoint.focus();
+                    return;
+                }
+
+                if (!prompt) {
+                    setAiOutput('请输入问题后再发送 AI 对话');
+                    if (dom.input) dom.input.focus();
+                    return;
+                }
+
+                const remaining = getAiCooldownRemainingSeconds();
+                if (remaining > 0) {
+                    setAiOutput(`AI 对话冷却中，请等待 ${formatCooldownSeconds(remaining)}`);
+                    updateAiCooldownUi();
+                    return;
+                }
+
+                if (dom.endpoint) {
+                    dom.endpoint.value = apiUrl;
+                }
+
+                setAiSendBusy(true);
+                setAiOutput('AI 正在思考，请稍候...');
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'content-type': 'application/json',
+                            'authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({
+                            prompt: prompt
+                        })
+                    });
+
+                    const responseText = await response.text();
+                    let responseData = null;
+                    try {
+                        responseData = responseText ? JSON.parse(responseText) : null;
+                    } catch (_) {
+                        responseData = null;
+                    }
+
+                    if (response.status === 401) {
+                        clearAuthSession();
+                        updateAuthUi();
+                        throw new Error('GitHub 登录已过期，请重新登录');
+                    }
+
+                    if (response.status === 429) {
+                        const retryAfter = responseData && responseData.retry_after_sec
+                            ? Number(responseData.retry_after_sec)
+                            : VIEWER_AI_COOLDOWN_SECONDS;
+                        startAiCooldown(retryAfter);
+                        throw new Error(`请求过于频繁，请等待 ${formatCooldownSeconds(retryAfter)}`);
+                    }
+
+                    if (!response.ok) {
+                        const errMessage = responseData && responseData.error
+                            ? String(responseData.error)
+                            : `HTTP ${response.status}`;
+                        throw new Error(errMessage);
+                    }
+
+                    const outputText = responseData && typeof responseData.text === 'string'
+                        ? responseData.text
+                        : (responseText || '').trim();
+
+                    if (!outputText) {
+                        throw new Error('AI 返回为空，请稍后重试');
+                    }
+
+                    setAiOutput(outputText);
+                    startAiCooldown(VIEWER_AI_COOLDOWN_SECONDS);
+                } catch (err) {
+                    setAiOutput(`请求失败：${err && err.message ? err.message : String(err)}`);
+                } finally {
+                    setAiSendBusy(false);
+                    updateAiCooldownUi();
+                }
+            }
+
+            function setupEvents() {
+                if (dom.fab) {
+                    dom.fab.addEventListener('click', function () {
+                        if (state.fabDragging) return;
+                        toggleAiPanel();
+                    });
+                }
+
+                if (dom.close) {
+                    dom.close.addEventListener('click', function () {
+                        toggleAiPanel(false);
+                    });
+                }
+
+                if (dom.login) {
+                    dom.login.addEventListener('click', function () {
+                        const loginUrl = authLoginUrl();
+                        if (!loginUrl) {
+                            setAiOutput('无法生成 GitHub 登录地址，请检查 Worker 配置');
+                            return;
+                        }
+                        window.location.href = loginUrl;
+                    });
+                }
+
+                if (dom.logout) {
+                    dom.logout.addEventListener('click', function () {
+                        clearAuthSession();
+                        updateAuthUi();
+                        setAiOutput('已退出 GitHub 登录状态');
+                    });
+                }
+
+                if (dom.endpoint) {
+                    dom.endpoint.addEventListener('blur', function () {
+                        dom.endpoint.value = normalizeAiApiUrl(dom.endpoint.value);
+                    });
+                }
+
+                if (dom.send) {
+                    dom.send.addEventListener('click', submitViewerAiChat);
+                }
+
+                if (dom.input) {
+                    dom.input.addEventListener('keydown', function (event) {
+                        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                            event.preventDefault();
+                            submitViewerAiChat();
+                        }
+                    });
+                }
+            }
+
+            if (isStudioEmbedModeEnabled()) {
+                dom.root.hidden = true;
+                return;
+            }
+
+            setupFabDrag();
+            restoreFabPosition();
+
+            window.addEventListener('resize', function () {
+                const left = parsePx(dom.root.style.left);
+                const top = parsePx(dom.root.style.top);
+                if (left != null && top != null) {
+                    snapFabToEdge(left, top, false);
+                    return;
+                }
+
+                setFabDefaultPosition();
+            });
+
+            if (dom.endpoint) {
+                dom.endpoint.value = normalizeAiApiUrl(VIEWER_AI_ENDPOINT);
+            }
+
+            loadAuthSession();
+            consumeOauthResultFromHash();
+            updateAuthUi();
+            restoreAiCooldownFromStorage();
+            setupEvents();
+            verifyAuthSession();
+        })();
     </script>
 </body>
 
