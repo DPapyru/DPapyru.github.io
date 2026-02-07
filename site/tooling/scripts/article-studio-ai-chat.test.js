@@ -96,3 +96,22 @@ test('viewer ai response supports markdown rendering', () => {
     assert.match(html, /setAiOutput\(outputText,\s*\{\s*markdown:\s*true\s*\}\)/);
     assert.match(html, /viewer-ai-output--markdown/);
 });
+
+test('viewer ai panel exposes tutorial index action and warning notice', () => {
+    const htmlPath = path.resolve('site/pages/viewer.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+
+    assert.match(html, /id="viewer-ai-index"/);
+    assert.match(html, /AI 生成内容可能不准确，请以教程原文为准/);
+});
+
+test('viewer ai chat builds prompt with article context and local index links', () => {
+    const htmlPath = path.resolve('site/pages/viewer.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+
+    assert.match(html, /function\s+buildAiSystemPrompt\s*\(/);
+    assert.match(html, /function\s+getCurrentArticleContextForAi\s*\(/);
+    assert.match(html, /function\s+buildTutorialIndexMarkdown\s*\(/);
+    assert.match(html, /viewer\.html\?file=\$\{encodeURIComponent\(/);
+    assert.match(html, /if\s*\(shouldUseIndexSuggestionMode\(prompt\)\)/);
+});

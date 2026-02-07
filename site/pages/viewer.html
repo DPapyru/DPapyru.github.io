@@ -205,6 +205,16 @@
             gap: 8px;
         }
 
+        .viewer-ai-notice {
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-color);
+            color: var(--text-secondary);
+            padding: 8px 10px;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
         .viewer-ai-auth-status,
         .viewer-ai-cooldown {
             display: inline-flex;
@@ -628,10 +638,12 @@
 	                <button class="btn btn-small" id="viewer-ai-login" type="button">GitHub 登录</button>
 	                <button class="btn btn-small btn-outline" id="viewer-ai-logout" type="button">退出</button>
 	            </div>
+	            <div class="viewer-ai-notice" id="viewer-ai-notice">AI 生成内容可能不准确，请以教程原文为准。</div>
 	            <label for="viewer-ai-endpoint">AI API 地址</label>
 	            <input class="viewer-ai-endpoint" id="viewer-ai-endpoint" type="text" autocomplete="off">
 	            <div class="viewer-ai-actions">
 	                <button class="btn btn-small" id="viewer-ai-send" type="button">发送 AI 对话</button>
+	                <button class="btn btn-small btn-outline" id="viewer-ai-index" type="button">阅读索引建议</button>
 	                <span class="viewer-ai-cooldown" id="viewer-ai-cooldown">可发送</span>
 	            </div>
 	            <label for="viewer-ai-input">提问内容</label>
@@ -7171,6 +7183,7 @@
                 endpoint: document.getElementById('viewer-ai-endpoint'),
                 input: document.getElementById('viewer-ai-input'),
                 send: document.getElementById('viewer-ai-send'),
+                index: document.getElementById('viewer-ai-index'),
                 cooldown: document.getElementById('viewer-ai-cooldown'),
                 output: document.getElementById('viewer-ai-output'),
                 login: document.getElementById('viewer-ai-login'),
@@ -7434,6 +7447,108 @@
 
                 dom.output.classList.remove('viewer-ai-output--markdown');
                 dom.output.textContent = String(text || '') || '等待提问...';
+            }
+
+            function getCurrentArticleContextForAi() {
+                const titleEl = document.getElementById('doc-title');
+                const articleTitle = titleEl ? String(titleEl.textContent || '').trim() : '';
+                const articlePath = String(CURRENT_DOC_PATH || '').trim();
+
+                let articleText = '';
+                const markdownEl = document.getElementById('markdown-content');
+                if (markdownEl) {
+                    articleText = String(markdownEl.textContent || '').replace(/\s+/g, ' ').trim();
+                }
+
+                const maxChars = 3000;
+                if (articleText.length > maxChars) {
+                    articleText = `${articleText.slice(0, maxChars)}...`;
+                }
+
+                return {
+                    title: articleTitle || '未命名文章',
+                    path: articlePath || '未知路径',
+                    text: articleText || '当前文章正文暂不可用'
+                };
+            }
+
+            function buildAiSystemPrompt(userPrompt) {
+                const article = getCurrentArticleContextForAi();
+                const promptText = String(userPrompt || '').trim();
+                return [
+                    '你是 tModLoader 教程页面内的 AI 助手。',
+                    '回答要求：',
+                    '1. 明确提醒 AI 可能不准确，以教程原文为准。',
+                    '2. 优先基于当前文章内容解释，再补充简单实践建议。',
+                    '3. 只回答简单问题；复杂问题请建议用户回到教程定位章节。',
+                    '',
+                    `当前文章标题: ${article.title}`,
+                    `当前文章路径: ${article.path}`,
+                    `当前文章内容摘录:\n${article.text}`,
+                    '',
+                    `用户问题: ${promptText}`
+                ].join('\n');
+            }
+
+            function buildTutorialIndexMarkdown() {
+                if (!Array.isArray(ALL_DOCS) || ALL_DOCS.length === 0) {
+                    return '当前无法读取教程索引，请稍后重试。';
+                }
+
+                const groups = new Map();
+                for (const doc of ALL_DOCS) {
+                    if (!doc || typeof doc !== 'object') continue;
+                    const category = String(doc.category || '未分类').trim() || '未分类';
+                    const list = groups.get(category) || [];
+                    list.push(doc);
+                    groups.set(category, list);
+                }
+
+                const orderedCategories = Array.from(groups.keys()).sort(function (a, b) {
+                    return a.localeCompare(b, 'zh-Hans-CN');
+                });
+
+                const lines = [];
+                lines.push('> AI 生成内容可能不准确，请以教程原文为准。');
+                lines.push('');
+                lines.push('# tModLoader 教程阅读索引（点击可跳转）');
+
+                orderedCategories.forEach(function (category) {
+                    lines.push('');
+                    lines.push(`## ${category}`);
+
+                    const docs = groups.get(category) || [];
+                    docs.sort(function (left, right) {
+                        const orderA = Number(left.order || 9999);
+                        const orderB = Number(right.order || 9999);
+                        if (orderA !== orderB) return orderA - orderB;
+                        const titleA = String(left.title || left.filename || '').trim();
+                        const titleB = String(right.title || right.filename || '').trim();
+                        return titleA.localeCompare(titleB, 'zh-Hans-CN');
+                    });
+
+                    docs.forEach(function (doc) {
+                        const path = String(doc.path || doc.filename || '').trim();
+                        if (!path) return;
+                        const title = String(doc.title || doc.filename || path).trim();
+                        const desc = String(doc.description || '').trim();
+                        const href = `viewer.html?file=${encodeURIComponent(path)}`;
+                        lines.push(`- [${title}](${href})${desc ? ` - ${desc}` : ''}`);
+                    });
+                });
+
+                return lines.join('\n');
+            }
+
+            function shouldUseIndexSuggestionMode(prompt) {
+                const text = String(prompt || '').trim().toLowerCase();
+                if (!text) return false;
+                return text.includes('索引')
+                    || text.includes('目录')
+                    || text.includes('文章推荐')
+                    || text.includes('阅读建议')
+                    || text.includes('从哪开始')
+                    || text.includes('教程路线');
             }
 
             function formatCooldownSeconds(totalSeconds) {
@@ -7784,6 +7899,11 @@
                     dom.endpoint.value = apiUrl;
                 }
 
+                if (shouldUseIndexSuggestionMode(prompt)) {
+                    setAiOutput(buildTutorialIndexMarkdown(), { markdown: true });
+                    return;
+                }
+
                 setAiSendBusy(true);
                 setAiOutput('AI 正在思考，请稍候...');
 
@@ -7795,7 +7915,7 @@
                             'authorization': `Bearer ${authToken}`
                         },
                         body: JSON.stringify({
-                            prompt: prompt
+                            prompt: buildAiSystemPrompt(prompt)
                         })
                     });
 
@@ -7897,6 +8017,12 @@
 
                 if (dom.send) {
                     dom.send.addEventListener('click', submitViewerAiChat);
+                }
+
+                if (dom.index) {
+                    dom.index.addEventListener('click', function () {
+                        setAiOutput(buildTutorialIndexMarkdown(), { markdown: true });
+                    });
                 }
 
                 if (dom.input) {
