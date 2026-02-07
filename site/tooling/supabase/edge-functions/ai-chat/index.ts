@@ -9,10 +9,12 @@ type CooldownRow = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 
-const PR_AUTH_ME_URL = Deno.env.get("PR_AUTH_ME_URL") || "";
-const SILICONFLOW_API_KEY = Deno.env.get("SILICONFLOW_API_KEY") || "";
-const SILICONFLOW_BASE_URL = (Deno.env.get("SILICONFLOW_BASE_URL") || "https://api.siliconflow.com/v1").replace(/\/+$/, "");
-const MODEL_ID = Deno.env.get("MODEL_ID") || "Qwen/Qwen3-8B";
+const PR_AUTH_ME_URL = String(Deno.env.get("PR_AUTH_ME_URL") || "").trim();
+const SILICONFLOW_API_KEY = normalizeSecretEnv(Deno.env.get("SILICONFLOW_API_KEY"));
+const SILICONFLOW_BASE_URL = String(Deno.env.get("SILICONFLOW_BASE_URL") || "https://api.siliconflow.com/v1")
+    .trim()
+    .replace(/\/+$/, "");
+const MODEL_ID = String(Deno.env.get("MODEL_ID") || "Qwen/Qwen3-8B").trim();
 const AI_COOLDOWN_SECONDS = toPositiveInt(Deno.env.get("AI_COOLDOWN_SECONDS"), 120);
 const MAX_PROMPT_CHARS = toPositiveInt(Deno.env.get("MAX_PROMPT_CHARS"), 6000);
 
@@ -244,12 +246,15 @@ async function callSiliconFlow(prompt: string): Promise<{ ok: boolean; text: str
         });
 
         const rawText = await response.text();
-        const body = rawText ? JSON.parse(rawText) : null;
+        let body: Record<string, unknown> | null = null;
+        try {
+            body = rawText ? JSON.parse(rawText) : null;
+        } catch {
+            body = null;
+        }
 
         if (!response.ok) {
-            const message = body && body.error && body.error.message
-                ? String(body.error.message)
-                : `HTTP ${response.status}`;
+            const message = extractSiliconFlowError(response.status, body, rawText);
             return { ok: false, text: "", error: `SiliconFlow error: ${message}` };
         }
 
@@ -270,6 +275,52 @@ async function callSiliconFlow(prompt: string): Promise<{ ok: boolean; text: str
             error: error instanceof Error ? error.message : String(error)
         };
     }
+}
+
+function normalizeSecretEnv(input: string | undefined): string {
+    let value = String(input || "").trim();
+    if (!value) return "";
+
+    const hasDoubleQuotes = value.startsWith('"') && value.endsWith('"');
+    const hasSingleQuotes = value.startsWith("'") && value.endsWith("'");
+    if (hasDoubleQuotes || hasSingleQuotes) {
+        value = value.slice(1, -1).trim();
+    }
+
+    return value;
+}
+
+function extractSiliconFlowError(
+    status: number,
+    body: Record<string, unknown> | null,
+    rawText: string
+): string {
+    const nestedError = body && typeof body === "object" ? body.error : null;
+    if (nestedError && typeof nestedError === "object") {
+        const nestedMessage = (nestedError as { message?: unknown }).message;
+        if (typeof nestedMessage === "string" && nestedMessage.trim()) {
+            return nestedMessage.trim();
+        }
+    }
+
+    if (body && typeof body === "object") {
+        const topMessage = (body as { message?: unknown }).message;
+        if (typeof topMessage === "string" && topMessage.trim()) {
+            return topMessage.trim();
+        }
+    }
+
+    const fallbackText = String(rawText || "").trim();
+    if (fallbackText) {
+        const compact = fallbackText.replace(/\s+/g, " ").slice(0, 240);
+        return compact;
+    }
+
+    if (status === 401) {
+        return "HTTP 401 (check SILICONFLOW_API_KEY and model access)";
+    }
+
+    return `HTTP ${status}`;
 }
 
 function normalizeAssistantContent(content: unknown): string {
