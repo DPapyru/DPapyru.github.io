@@ -63,3 +63,18 @@ test('viewer auth verification keeps token on non-401 errors', () => {
     assert.notEqual(verifyAuthBody, '', 'verifyAuthSession should exist');
     assert.match(verifyAuthBody, /if\s*\(response\.status\s*===\s*401\)/);
 });
+
+test('viewer ai chat re-checks token before clearing on 401', () => {
+    const htmlPath = path.resolve('site/pages/viewer.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+
+    const submitStart = html.indexOf('async function submitViewerAiChat()');
+    const submitEnd = html.indexOf('function setupEvents()', submitStart);
+    const submitBody = submitStart >= 0 && submitEnd > submitStart
+        ? html.slice(submitStart, submitEnd)
+        : '';
+
+    assert.notEqual(submitBody, '', 'submitViewerAiChat should exist');
+    assert.match(submitBody, /checkAuthTokenAgainstWorker\(authToken\)/);
+    assert.match(submitBody, /AI 服务认证配置不一致/);
+});

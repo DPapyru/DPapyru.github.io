@@ -7596,6 +7596,56 @@
                 }
             }
 
+            async function checkAuthTokenAgainstWorker(authToken) {
+                const token = String(authToken || '').trim();
+                const meUrl = authMeUrl();
+
+                if (!token || !meUrl) {
+                    return {
+                        ok: false,
+                        status: 0,
+                        user: ''
+                    };
+                }
+
+                try {
+                    const response = await fetch(meUrl, {
+                        method: 'GET',
+                        headers: {
+                            'authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const responseText = await response.text();
+                    let responseData = null;
+                    try {
+                        responseData = responseText ? JSON.parse(responseText) : null;
+                    } catch (_) {
+                        responseData = null;
+                    }
+
+                    if (!response.ok || !responseData || responseData.ok !== true || !responseData.user) {
+                        return {
+                            ok: false,
+                            status: response.status,
+                            user: ''
+                        };
+                    }
+
+                    return {
+                        ok: true,
+                        status: response.status,
+                        user: String(responseData.user || '').trim()
+                    };
+                } catch (_) {
+                    return {
+                        ok: false,
+                        status: 0,
+                        user: ''
+                    };
+                }
+            }
+
             function toggleAiPanel(forceOpen) {
                 const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !!dom.panel.hidden;
                 dom.panel.hidden = !shouldOpen;
@@ -7670,6 +7720,16 @@
                     }
 
                     if (response.status === 401) {
+                        const authCheck = await checkAuthTokenAgainstWorker(authToken);
+                        if (authCheck.ok) {
+                            if (authCheck.user) {
+                                state.githubUser = authCheck.user;
+                                persistAuthSession();
+                            }
+                            updateAuthUi();
+                            throw new Error('AI 服务认证配置不一致：请检查 Supabase 的 PR_AUTH_ME_URL 与 Worker 会话签名配置');
+                        }
+
                         clearAuthSession();
                         updateAuthUi();
                         throw new Error('GitHub 登录已过期，请重新登录');
