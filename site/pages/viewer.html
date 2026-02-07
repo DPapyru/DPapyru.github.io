@@ -643,7 +643,6 @@
 	            <input class="viewer-ai-endpoint" id="viewer-ai-endpoint" type="text" autocomplete="off">
 	            <div class="viewer-ai-actions">
 	                <button class="btn btn-small" id="viewer-ai-send" type="button">发送 AI 对话</button>
-	                <button class="btn btn-small btn-outline" id="viewer-ai-index" type="button">阅读索引建议</button>
 	                <span class="viewer-ai-cooldown" id="viewer-ai-cooldown">可发送</span>
 	            </div>
 	            <label for="viewer-ai-input">提问内容</label>
@@ -7183,7 +7182,6 @@
                 endpoint: document.getElementById('viewer-ai-endpoint'),
                 input: document.getElementById('viewer-ai-input'),
                 send: document.getElementById('viewer-ai-send'),
-                index: document.getElementById('viewer-ai-index'),
                 cooldown: document.getElementById('viewer-ai-cooldown'),
                 output: document.getElementById('viewer-ai-output'),
                 login: document.getElementById('viewer-ai-login'),
@@ -7449,7 +7447,10 @@
                 dom.output.textContent = String(text || '') || '等待提问...';
             }
 
-            function getCurrentArticleContextForAi() {
+            function getCurrentArticleContextForAi(maxChars) {
+                const limit = Number.isFinite(Number(maxChars))
+                    ? Math.max(400, Math.floor(Number(maxChars)))
+                    : 2400;
                 const titleEl = document.getElementById('doc-title');
                 const articleTitle = titleEl ? String(titleEl.textContent || '').trim() : '';
                 const articlePath = String(CURRENT_DOC_PATH || '').trim();
@@ -7460,9 +7461,8 @@
                     articleText = String(markdownEl.textContent || '').replace(/\s+/g, ' ').trim();
                 }
 
-                const maxChars = 3000;
-                if (articleText.length > maxChars) {
-                    articleText = `${articleText.slice(0, maxChars)}...`;
+                if (articleText.length > limit) {
+                    articleText = `${articleText.slice(0, limit)}...`;
                 }
 
                 return {
@@ -7472,72 +7472,94 @@
                 };
             }
 
-            function buildAiSystemPrompt(userPrompt) {
-                const article = getCurrentArticleContextForAi();
+            function buildTutorialIndexRecords() {
+                if (!Array.isArray(ALL_DOCS) || ALL_DOCS.length === 0) {
+                    return [];
+                }
+
+                const records = [];
+                for (const doc of ALL_DOCS) {
+                    if (!doc || typeof doc !== 'object') continue;
+                    const path = String(doc.path || doc.filename || '').trim();
+                    if (!path) continue;
+
+                    records.push({
+                        path: path,
+                        href: `viewer.html?file=${encodeURIComponent(path)}`,
+                        title: String(doc.title || doc.filename || path).trim() || path,
+                        category: String(doc.category || '未分类').trim() || '未分类',
+                        description: String(doc.description || '').replace(/\s+/g, ' ').trim(),
+                        order: Number(doc.order || 9999)
+                    });
+                }
+
+                records.sort(function (left, right) {
+                    const categoryCompare = left.category.localeCompare(right.category, 'zh-Hans-CN');
+                    if (categoryCompare !== 0) return categoryCompare;
+
+                    const orderCompare = left.order - right.order;
+                    if (orderCompare !== 0) return orderCompare;
+
+                    return left.title.localeCompare(right.title, 'zh-Hans-CN');
+                });
+
+                return records;
+            }
+
+            function buildTutorialIndexContext(maxChars) {
+                const records = buildTutorialIndexRecords();
+                if (records.length === 0) {
+                    return '当前无法读取教程索引。';
+                }
+
+                const limit = Number.isFinite(Number(maxChars))
+                    ? Math.max(600, Math.floor(Number(maxChars)))
+                    : 2200;
+                const lines = ['教程索引候选（标题 | 分类 | 跳转链接 | 简介）'];
+
+                for (const item of records) {
+                    const row = `- ${item.title} | ${item.category} | ${item.href}${item.description ? ` | ${item.description}` : ''}`;
+                    lines.push(row);
+                }
+
+                const raw = lines.join('\n');
+                if (raw.length <= limit) {
+                    return raw;
+                }
+
+                return `${raw.slice(0, limit)}\n...（索引内容已截断，请优先推荐最相关条目）`;
+            }
+
+            function buildAiSystemPrompt(userPrompt, options) {
                 const promptText = String(userPrompt || '').trim();
+                const opts = options && typeof options === 'object' ? options : {};
+                const preferIndexSuggestions = !!opts.preferIndexSuggestions;
+                const article = getCurrentArticleContextForAi(preferIndexSuggestions ? 1400 : 2600);
+                const tutorialIndexContext = buildTutorialIndexContext(preferIndexSuggestions ? 3400 : 1800);
+
                 return [
                     '你是 tModLoader 教程页面内的 AI 助手。',
-                    '回答要求：',
-                    '1. 明确提醒 AI 可能不准确，以教程原文为准。',
-                    '2. 优先基于当前文章内容解释，再补充简单实践建议。',
-                    '3. 只回答简单问题；复杂问题请建议用户回到教程定位章节。',
+                    '第一行必须原样输出：> AI 生成内容可能不准确，请以教程原文为准。',
+                    '严格要求：',
+                    '1. 只基于给定文章内容和教程索引回答，不得编造事实或路径。',
+                    '2. 先正面回答问题，再给出下一步阅读建议。',
+                    '3. 不要使用分隔线 ---，避免堆叠过多标题。',
+                    preferIndexSuggestions
+                        ? '4. 用户当前需要“索引推荐”：请给出 3-6 条教程，使用 Markdown 可点击链接，链接必须直接使用提供的 viewer.html?file=...。每条附一句推荐理由。'
+                        : '4. 简单问题直接回答；如需延伸学习，最多给 1-3 条相关教程链接。',
+                    '5. 信息不足时，请明确写“我不确定”，并提示以教程原文为准。',
                     '',
                     `当前文章标题: ${article.title}`,
                     `当前文章路径: ${article.path}`,
-                    `当前文章内容摘录:\n${article.text}`,
+                    `当前文章内容摘录:
+${article.text}`,
                     '',
+                    '可用教程索引（供推荐使用，禁止虚构路径）:',
+                    tutorialIndexContext,
+                    '',
+                    preferIndexSuggestions ? '推荐输出格式示例：\n## 推荐阅读路线\n- [教程标题](viewer.html?file=xxx) - 为什么先读它' : '普通问答输出要求：先给结论，再给简短步骤。',
                     `用户问题: ${promptText}`
                 ].join('\n');
-            }
-
-            function buildTutorialIndexMarkdown() {
-                if (!Array.isArray(ALL_DOCS) || ALL_DOCS.length === 0) {
-                    return '当前无法读取教程索引，请稍后重试。';
-                }
-
-                const groups = new Map();
-                for (const doc of ALL_DOCS) {
-                    if (!doc || typeof doc !== 'object') continue;
-                    const category = String(doc.category || '未分类').trim() || '未分类';
-                    const list = groups.get(category) || [];
-                    list.push(doc);
-                    groups.set(category, list);
-                }
-
-                const orderedCategories = Array.from(groups.keys()).sort(function (a, b) {
-                    return a.localeCompare(b, 'zh-Hans-CN');
-                });
-
-                const lines = [];
-                lines.push('> AI 生成内容可能不准确，请以教程原文为准。');
-                lines.push('');
-                lines.push('# tModLoader 教程阅读索引（点击可跳转）');
-
-                orderedCategories.forEach(function (category) {
-                    lines.push('');
-                    lines.push(`## ${category}`);
-
-                    const docs = groups.get(category) || [];
-                    docs.sort(function (left, right) {
-                        const orderA = Number(left.order || 9999);
-                        const orderB = Number(right.order || 9999);
-                        if (orderA !== orderB) return orderA - orderB;
-                        const titleA = String(left.title || left.filename || '').trim();
-                        const titleB = String(right.title || right.filename || '').trim();
-                        return titleA.localeCompare(titleB, 'zh-Hans-CN');
-                    });
-
-                    docs.forEach(function (doc) {
-                        const path = String(doc.path || doc.filename || '').trim();
-                        if (!path) return;
-                        const title = String(doc.title || doc.filename || path).trim();
-                        const desc = String(doc.description || '').trim();
-                        const href = `viewer.html?file=${encodeURIComponent(path)}`;
-                        lines.push(`- [${title}](${href})${desc ? ` - ${desc}` : ''}`);
-                    });
-                });
-
-                return lines.join('\n');
             }
 
             function shouldUseIndexSuggestionMode(prompt) {
@@ -7548,7 +7570,10 @@
                     || text.includes('文章推荐')
                     || text.includes('阅读建议')
                     || text.includes('从哪开始')
-                    || text.includes('教程路线');
+                    || text.includes('教程路线')
+                    || text.includes('学习路线')
+                    || text.includes('先学什么')
+                    || text.includes('推荐我读');
             }
 
             function formatCooldownSeconds(totalSeconds) {
@@ -7894,18 +7919,14 @@
                     updateAiCooldownUi();
                     return;
                 }
-
                 if (dom.endpoint) {
                     dom.endpoint.value = apiUrl;
                 }
 
-                if (shouldUseIndexSuggestionMode(prompt)) {
-                    setAiOutput(buildTutorialIndexMarkdown(), { markdown: true });
-                    return;
-                }
+                const preferIndexSuggestions = shouldUseIndexSuggestionMode(prompt);
 
                 setAiSendBusy(true);
-                setAiOutput('AI 正在思考，请稍候...');
+                setAiOutput(preferIndexSuggestions ? 'AI 正在整理推荐路线，请稍候...' : 'AI 正在思考，请稍候...');
 
                 try {
                     const response = await fetch(apiUrl, {
@@ -7915,7 +7936,7 @@
                             'authorization': `Bearer ${authToken}`
                         },
                         body: JSON.stringify({
-                            prompt: buildAiSystemPrompt(prompt)
+                            prompt: buildAiSystemPrompt(prompt, { preferIndexSuggestions: preferIndexSuggestions })
                         })
                     });
 
@@ -8017,12 +8038,6 @@
 
                 if (dom.send) {
                     dom.send.addEventListener('click', submitViewerAiChat);
-                }
-
-                if (dom.index) {
-                    dom.index.addEventListener('click', function () {
-                        setAiOutput(buildTutorialIndexMarkdown(), { markdown: true });
-                    });
                 }
 
                 if (dom.input) {

@@ -97,21 +97,22 @@ test('viewer ai response supports markdown rendering', () => {
     assert.match(html, /viewer-ai-output--markdown/);
 });
 
-test('viewer ai panel exposes tutorial index action and warning notice', () => {
+test('viewer ai panel keeps warning notice without separate index button', () => {
     const htmlPath = path.resolve('site/pages/viewer.html');
     const html = fs.readFileSync(htmlPath, 'utf8');
 
-    assert.match(html, /id="viewer-ai-index"/);
+    assert.doesNotMatch(html, /id="viewer-ai-index"/);
     assert.match(html, /AI 生成内容可能不准确，请以教程原文为准/);
 });
 
-test('viewer ai chat builds prompt with article context and local index links', () => {
+test('viewer ai chat builds stronger prompt with ai-guided index recommendations', () => {
     const htmlPath = path.resolve('site/pages/viewer.html');
     const html = fs.readFileSync(htmlPath, 'utf8');
 
-    assert.match(html, /function\s+buildAiSystemPrompt\s*\(/);
-    assert.match(html, /function\s+getCurrentArticleContextForAi\s*\(/);
-    assert.match(html, /function\s+buildTutorialIndexMarkdown\s*\(/);
+    assert.match(html, /function\s+buildAiSystemPrompt\s*\(userPrompt,\s*options\s*\)/);
+    assert.match(html, /function\s+getCurrentArticleContextForAi\s*\(maxChars\s*\)/);
+    assert.match(html, /function\s+buildTutorialIndexContext\s*\(/);
     assert.match(html, /viewer\.html\?file=\$\{encodeURIComponent\(/);
-    assert.match(html, /if\s*\(shouldUseIndexSuggestionMode\(prompt\)\)/);
+    assert.match(html, /preferIndexSuggestions\s*=\s*shouldUseIndexSuggestionMode\(prompt\)/);
+    assert.match(html, /不得编造事实或路径/);
 });
