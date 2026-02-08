@@ -3935,14 +3935,6 @@ html {
     font-size: 0.9rem;
 }
 
-.learning-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    margin-top: 18px;
-}
-
 .learning-result {
     color: var(--text-secondary);
     margin-left: auto;
@@ -3956,69 +3948,3 @@ html {
     color: var(--text-color);
 }
 
-.learning-path-bar {
-    margin: 16px 0;
-    padding: 14px 16px;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-}
-
-.learning-path-title {
-    font-weight: 600;
-}
-
-.learning-path-meta {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    flex: 0 0 100%;
-}
-
-.learning-path-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-left: auto;
-}
-
-.learning-toggle {
-    border: 1px solid var(--border-color);
-    background: transparent;
-    color: var(--text-color);
-    padding: 6px 10px;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
-}
-
-.learning-toggle:hover {
-    border-color: var(--link-color);
-    color: var(--link-color);
-}
-
-.learning-toggle[aria-pressed="true"] {
-    border-color: var(--link-color);
-    color: var(--link-color);
-    background-color: var(--bg-color);
-}
-
-.learning-empty-state {
-    padding: 22px;
-    border-radius: 16px;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    text-align: center;
-}
-
-.learning-empty-state h3 {
-    margin: 0 0 10px;
-}
-
-.learning-empty-state p {
-    margin: 0 0 14px;
-    color: var(--text-secondary);
-}

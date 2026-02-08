@@ -5,7 +5,7 @@ date: 2026-02-07
 last_updated: 2026-02-07
 difficulty: beginner
 time: 25分钟
-description: 面向当前 article-studio 页面，讲清写作、分流模拟、多文件编排与PR提交流程
+description: 面向当前 article-studio 页面，讲清写作、多文件编排与 PR 提交流程
 topic: article-contribution
 order: 3
 prev_chapter: 站点Markdown扩展语法说明.md
@@ -22,15 +22,14 @@ next_chapter: ContentProjects解决方案说明.md
 
 1. 在页面中选择或创建目标文档路径
 2. 使用模板与快捷片段编写正文
-3. 模拟不同 C/T 档位验证分流
-4. 使用多文件编排合并输出
-5. 需要时附带 route v2 提交 PR
+3. 使用多文件编排合并输出
+4. 提交 PR
 
 ## 界面分区速览
 
 页面分成三栏：
 
-1. 左栏 Explorer：文章路径、模拟阅读、多文件编排
+1. 左栏 Explorer：文章路径、多文件编排
 2. 中栏 Editor：Markdown 编辑与 viewer 同级预览
 3. 右栏 Publish：GitHub 登录与 PR 提交
 
@@ -62,18 +61,6 @@ next_chapter: ContentProjects解决方案说明.md
 
 当你需要完整阅读视角时，用 `新标签预览` 打开 viewer 页面再检查一次。
 
-## 对应级别模拟阅读
-
-左栏的 `模拟阅读(C/T档位)` 用于本地演练分流效果。
-
-推荐验证顺序：
-
-1. `C0/T0`：检查补课路径
-2. `C1/T1`：检查标准路径
-3. `C2/T2`：检查进阶路径
-
-如果某档位看不到预期内容，优先检查条件块语法。
-
 ## 多文件编排模式
 
 长文建议使用 `Compose(多文件合并)`：
@@ -89,12 +76,10 @@ next_chapter: ContentProjects解决方案说明.md
 
 常用按钮：
 
-1. 分流块
-2. 路径块
-3. 分流断言
-4. quiz 模板
+1. 引用文档
+2. quiz 模板
 
-实践经验：先写主线，再插分流，不要一开始就写满条件。
+实践经验：先写主线，再补题目，不要一开始就堆太多扩展语法。
 
 ## 提交 PR 的标准流程
 
@@ -105,28 +90,12 @@ next_chapter: ContentProjects解决方案说明.md
 3. 可选填写 `PR 标题`
 4. 点击 `提交 PR`
 
-### 附带 route v2 的流程
-
-开启 `提交PR时附带分流路由(Route V2)` 后：
-
-1. 先选已有 route 路径，或输入新路径
-2. 选择路由模板（按 C、按 T、按 G）
-3. 点击 `按模板重建路由 JSON`
-4. 按文章需求微调节点
-5. 提交 PR
-
-建议提交前确认两件事：
-
-1. route 的 `article` 路径是否与目标 Markdown 一致
-2. decision 节点是否有 fallback
-
 ## 发布前检查清单
 
 1. Front Matter 完整，含 `title` 和 `description`
 2. 正文结构清晰，最小示例可读
-3. 分流块在 3 个档位下可验证
-4. route JSON 可解析且路径正确
-5. 页面预览无明显错位或截断
+3. quiz 区块可以正常渲染与作答
+4. 页面预览无明显错位或截断
 
 ## 常见问题
 
@@ -134,9 +103,9 @@ next_chapter: ContentProjects解决方案说明.md
 
 可以先切换一次标签或重新打开 `新标签预览`，再检查是否是缓存问题。
 
-### Q2：提交时提示路由无效
+### Q2：提交后预览与本地不一致
 
-通常是 JSON 结构错误或缺少 fallback。先用模板重建，再做最小改动。
+先确认是否提交了最新 Markdown，再检查引用路径是否指向正确文件。
 
 ### Q3：我是否必须使用多文件编排
 

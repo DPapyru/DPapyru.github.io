@@ -41,9 +41,7 @@ function main() {
         { file: 'site/index.html', script: '/site/assets/js/accent-theme.js' },
         { file: 'site/qa.html', script: '/site/assets/js/accent-theme.js' },
         { file: 'site/search-results.html', script: '/site/assets/js/accent-theme.js' },
-        { file: 'site/404.html', script: '/site/assets/js/accent-theme.js' },
-        { file: 'site/onboarding.html', script: '/site/assets/js/accent-theme.js' },
-        { file: 'site/pages/viewer.html', script: '/site/assets/js/accent-theme.js' },
+        { file: 'site/404.html', script: '/site/assets/js/accent-theme.js' },        { file: 'site/pages/viewer.html', script: '/site/assets/js/accent-theme.js' },
         { file: 'site/pages/folder.html', script: '/site/assets/js/accent-theme.js' }
     ];
 

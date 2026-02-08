@@ -312,4 +312,4 @@ public class MySword : ModItem {
 
 学会提问后，你还能用 AI 工具辅助解决问题。但要注意使用方法，AI 不是"万能答案库"，而是"辅助工具"。
 
-{{ref:DPapyru-如何用好AI.md|如何用好AI？}}
+[如何用好AI？](DPapyru-如何用好AI.md)

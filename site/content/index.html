@@ -38,9 +38,6 @@
     <link rel="stylesheet" href="../assets/css/prism.min.css">
     <link rel="stylesheet" href="../assets/css/vs2022-theme.css">
     <link rel="icon" type="image/png" href="../assets/imgs/Green_tModLoader.png">
-    
-    <!-- 入站测评跳转（首次进入可跳过） -->
-    <script src="../assets/js/onboarding-gate.js"></script>
 
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
     <script src="../assets/js/theme-init.js"></script>
@@ -528,7 +525,6 @@
         <!-- 文档分类内容区域 -->
         <section class="docs-content">
             <div class="container">
-                <div id="learning-path-bar"></div>
                 <div class="category-grid" id="category-grid">
                     <!-- 分类卡片将通过JavaScript动态生成 -->
                 </div>
@@ -581,7 +577,6 @@
 	    <script src="../assets/js/site-config.js"></script>
 	    <script src="../assets/js/accent-theme.js"></script>
 	    <script src="../assets/js/folder-filter.js"></script>
-	    <script src="../assets/js/learning-paths.js"></script>
 	    <script src="../assets/js/main.js"></script> <!-- 主要功能脚本 -->
 	    <script src="../assets/js/navigation.js"></script> <!-- 导航增强脚本 -->
 	    <script src="../assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
@@ -595,7 +590,6 @@
         // 注意：不要在这里声明 DOC_CONFIG，因为它已经在 main.js 中声明了
         let ALL_DOCS = [];
         let VISIBLE_DOCS = [];
-        let LEARNING_STATE = null;
         
         // 主分类配置 - 将从配置文件动态加载
         let MAIN_CATEGORIES = {};
@@ -614,115 +608,9 @@
         });
 
         async function refreshDocsView() {
-            await applyLearningFilter();
-            renderLearningPathBar();
+            VISIBLE_DOCS = ALL_DOCS.slice();
             generateCategoryCards();
             generateQuickLinks();
-        }
-
-        async function applyLearningFilter() {
-            VISIBLE_DOCS = ALL_DOCS.slice();
-            LEARNING_STATE = null;
-
-            if (!window.LearningPaths || typeof window.LearningPaths.applyFilter !== 'function') return;
-
-            try {
-                LEARNING_STATE = await window.LearningPaths.applyFilter(ALL_DOCS);
-                VISIBLE_DOCS = (LEARNING_STATE && Array.isArray(LEARNING_STATE.visibleDocs)) ? LEARNING_STATE.visibleDocs : ALL_DOCS.slice();
-            } catch (e) {
-                console.warn('LearningPaths filter failed:', e);
-                VISIBLE_DOCS = ALL_DOCS.slice();
-                LEARNING_STATE = null;
-            }
-        }
-
-        function renderLearningPathBar() {
-            const bar = document.getElementById('learning-path-bar');
-            if (!bar) return;
-
-            bar.className = 'learning-path-bar';
-            bar.innerHTML = '';
-
-            if (!window.LearningPaths) return;
-
-            const profile = window.LearningPaths.getProfile();
-            const prefs = window.LearningPaths.getPrefs();
-            const preferences = (typeof window.LearningPaths.getPreferences === 'function')
-                ? window.LearningPaths.getPreferences()
-                : {};
-            const counts = (LEARNING_STATE && LEARNING_STATE.counts) ? LEARNING_STATE.counts : {
-                total: ALL_DOCS.length,
-                visible: VISIBLE_DOCS.length,
-                mapped: 0,
-                unmapped: 0,
-                hidden: Math.max(0, ALL_DOCS.length - VISIBLE_DOCS.length)
-            };
-
-            const title = document.createElement('div');
-            title.className = 'learning-path-title';
-            title.textContent = profile ? ('当前路径：C' + profile.c + ' / T' + profile.t) : '未设置学习路径';
-
-            const meta = document.createElement('div');
-            meta.className = 'learning-path-meta';
-            if (!profile) {
-                meta.textContent = '当前展示全部文档；建议测评以启用过滤。';
-            } else {
-                const mode = prefs.showAll ? '已显示全部' : (prefs.showUnmapped ? '已显示未标注' : '严格过滤');
-                meta.textContent = '显示 ' + counts.visible + ' / ' + counts.total + '；' + mode;
-            }
-
-            const prefLine = document.createElement('div');
-            prefLine.className = 'learning-path-meta';
-            const prefOrder = ['pref-goal', 'pref-time', 'pref-csharp', 'pref-tml'];
-            const prefLabels = prefOrder.map(function (id) {
-                const entry = preferences && preferences[id] ? preferences[id] : null;
-                return entry && entry.label ? String(entry.label) : '';
-            }).filter(Boolean);
-            prefLine.textContent = prefLabels.length ? ('偏好：' + prefLabels.join(' / ')) : '';
-
-            const actions = document.createElement('div');
-            actions.className = 'learning-path-actions';
-
-            function makeToggle(label, pressed, onClick) {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'learning-toggle';
-                btn.textContent = label;
-                btn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
-                btn.addEventListener('click', onClick);
-                return btn;
-            }
-
-            const onboardingLink = document.createElement('a');
-            onboardingLink.className = 'btn btn-small btn-outline';
-            onboardingLink.href = window.LearningPaths.getOnboardingUrl();
-            onboardingLink.textContent = profile ? '修改路径' : '开始测评';
-
-            if (profile) {
-                const showUnmapped = makeToggle('显示未标注', prefs.showUnmapped, function () {
-                    const next = !window.LearningPaths.getPrefs().showUnmapped;
-                    window.LearningPaths.setPref('showUnmapped', next);
-                    if (next) window.LearningPaths.setPref('showAll', false);
-                    refreshDocsView();
-                });
-
-                const showAll = makeToggle('显示全部', prefs.showAll, function () {
-                    const next = !window.LearningPaths.getPrefs().showAll;
-                    window.LearningPaths.setPref('showAll', next);
-                    if (next) window.LearningPaths.setPref('showUnmapped', false);
-                    refreshDocsView();
-                });
-
-                actions.appendChild(showUnmapped);
-                actions.appendChild(showAll);
-            }
-
-            actions.appendChild(onboardingLink);
-
-            bar.appendChild(title);
-            bar.appendChild(actions);
-            bar.appendChild(meta);
-            if (prefLine.textContent) bar.appendChild(prefLine);
         }
 
         // 初始化文档配置
@@ -1268,10 +1156,6 @@
 	            const esc = (window.SiteUtils && typeof window.SiteUtils.escapeHtml === 'function')
 	                ? window.SiteUtils.escapeHtml
 	                : (v) => String(v);
-	            const profile = (window.LearningPaths && typeof window.LearningPaths.getProfile === 'function')
-	                ? window.LearningPaths.getProfile()
-	                : null;
-
 	            const normalizeDifficultyClass = (difficulty) => {
 	                const allowed = ['beginner', 'intermediate', 'advanced'];
 	                if (difficulty === 'all') return 'beginner';
@@ -1287,17 +1171,9 @@
 	                if (minC != null) parts.push('C≥' + String(minC));
 	                if (minT != null) parts.push('T≥' + String(minT));
 
-	                let below = false;
-	                if (profile) {
-	                    if (minC != null && Number(profile.c) < Number(minC)) below = true;
-	                    if (minT != null && Number(profile.t) < Number(minT)) below = true;
-	                }
+	                const title = '建议 ' + parts.join(' · ');
 
-	                const title = profile
-	                    ? ('建议 ' + parts.join(' · ') + '（当前 C' + Number(profile.c) + '/T' + Number(profile.t) + '）')
-	                    : ('建议 ' + parts.join(' · '));
-
-	                return `<span class="recommendation-badge${below ? ' low' : ''}" title="${esc(title)}">建议 ${esc(parts.join(' · '))}</span>`;
+	                return `<span class="recommendation-badge" title="${esc(title)}">建议 ${esc(parts.join(' · '))}</span>`;
 	            }
 
 	            const categoryGrid = document.getElementById('category-grid');
@@ -1305,62 +1181,6 @@
             // 清空现有内容
             categoryGrid.innerHTML = '';
 
-            if (LEARNING_STATE && LEARNING_STATE.profile && !LEARNING_STATE.prefs.showAll && !LEARNING_STATE.prefs.showUnmapped &&
-                VISIBLE_DOCS.length === 0 && ALL_DOCS.length > 0) {
-                const empty = document.createElement('div');
-                empty.className = 'learning-empty-state';
-
-                const title = document.createElement('h3');
-                title.textContent = LEARNING_STATE.mappingEmpty ? '学习路径映射尚未配置' : '当前路径下暂无匹配文档';
-
-                const desc = document.createElement('p');
-                desc.textContent = LEARNING_STATE.mappingEmpty
-                    ? '当前启用了严格过滤（默认隐藏未标注）。你可以先“显示未标注/显示全部”，或稍后再回来测评。'
-                    : '你可以尝试“显示未标注/显示全部”，或修改学习路径。';
-
-                const actions = document.createElement('div');
-                actions.className = 'learning-actions';
-
-                const btnUnmapped = document.createElement('button');
-                btnUnmapped.type = 'button';
-                btnUnmapped.className = 'btn btn-primary';
-                btnUnmapped.textContent = '显示未标注';
-                btnUnmapped.addEventListener('click', function () {
-                    if (window.LearningPaths) {
-                        window.LearningPaths.setPref('showUnmapped', true);
-                        window.LearningPaths.setPref('showAll', false);
-                    }
-                    refreshDocsView();
-                });
-
-                const btnAll = document.createElement('button');
-                btnAll.type = 'button';
-                btnAll.className = 'btn btn-outline';
-                btnAll.textContent = '显示全部';
-                btnAll.addEventListener('click', function () {
-                    if (window.LearningPaths) {
-                        window.LearningPaths.setPref('showAll', true);
-                        window.LearningPaths.setPref('showUnmapped', false);
-                    }
-                    refreshDocsView();
-                });
-
-                const btnChange = document.createElement('a');
-                btnChange.className = 'btn btn-outline';
-                btnChange.href = window.LearningPaths ? window.LearningPaths.getOnboardingUrl() : '../onboarding.html';
-                btnChange.textContent = '修改路径';
-
-                actions.appendChild(btnUnmapped);
-                actions.appendChild(btnAll);
-                actions.appendChild(btnChange);
-
-                empty.appendChild(title);
-                empty.appendChild(desc);
-                empty.appendChild(actions);
-                categoryGrid.appendChild(empty);
-                return;
-            }
-            
             // 获取所有分类并按排序
             const sortedCategories = Object.keys(MAIN_CATEGORIES).sort((a, b) => {
                 return MAIN_CATEGORIES[a].order - MAIN_CATEGORIES[b].order;

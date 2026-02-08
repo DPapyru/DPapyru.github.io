@@ -37,9 +37,6 @@
     <link rel="stylesheet" href="/site/assets/css/vs2022-theme.css">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
 
-    <!-- 入站测评跳转（首次进入可跳过） -->
-    <script src="/site/assets/js/onboarding-gate.js"></script>
-
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
     <script src="/site/assets/js/theme-init.js"></script>
 
@@ -725,8 +722,6 @@
                     <!-- 文件夹标题和描述将通过JavaScript动态生成 -->
                 </div>
 
-                <div id="learning-path-bar"></div>
-
                 <!-- 工具入口（静态） -->
                 <section class="folder-tools" aria-label="工具">
                     <div class="folder-tools-header">
@@ -849,7 +844,6 @@
     <script src="/site/assets/js/site-config.js"></script>
     <script src="/site/assets/js/accent-theme.js"></script>
     <script src="/site/assets/js/folder-filter.js"></script>
-    <script src="/site/assets/js/learning-paths.js"></script>
     <script src="/site/assets/js/main.js"></script>
     <script src="/site/assets/js/search-index-loader.js"></script>
     <script src="/site/assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
@@ -864,7 +858,6 @@
 	        let ALL_DOCS = [];
 	        let VISIBLE_DOCS = [];
 	        let FOLDER_DOCS = [];
-	        let LEARNING_STATE = null;
 	        let CURRENT_FOLDER = '';
 
 	        function escapeHtml(text) {
@@ -891,21 +884,9 @@
 	            if (minC != null) parts.push('C≥' + String(minC));
 	            if (minT != null) parts.push('T≥' + String(minT));
 
-	            const profile = (window.LearningPaths && typeof window.LearningPaths.getProfile === 'function')
-	                ? window.LearningPaths.getProfile()
-	                : null;
+	            const title = '建议 ' + parts.join(' · ');
 
-	            let below = false;
-	            if (profile) {
-	                if (minC != null && Number(profile.c) < Number(minC)) below = true;
-	                if (minT != null && Number(profile.t) < Number(minT)) below = true;
-	            }
-
-	            const title = profile
-	                ? ('建议 ' + parts.join(' · ') + '（当前 C' + Number(profile.c) + '/T' + Number(profile.t) + '）')
-	                : ('建议 ' + parts.join(' · '));
-
-	            return `<span class="recommendation-badge${below ? ' low' : ''}" title="${escapeHtml(title)}">建议 ${escapeHtml(parts.join(' · '))}</span>`;
+	            return `<span class="recommendation-badge" title="${escapeHtml(title)}">建议 ${escapeHtml(parts.join(' · '))}</span>`;
 	        }
 
         // 页面加载完成后执行
@@ -918,11 +899,10 @@
             updateFolderSeoMeta(folderPath);
 
             // 初始化文档配置
-            initializeDocumentConfig().then(async () => {
-                await applyLearningFilter();
-                renderLearningPathBar();
+            initializeDocumentConfig().then(() => {
+                VISIBLE_DOCS = ALL_DOCS.slice();
 
-                // 筛选当前文件夹的文档（基于学习路径过滤后的列表）
+                // 筛选当前文件夹的文档（基于当前可见列表）
                 filterDocumentsByFolder(folderPath);
 
                 // 生成面包屑导航
@@ -943,111 +923,6 @@
                 initFilterAndSortFunctionality();
             });
         });
-
-        async function applyLearningFilter() {
-            VISIBLE_DOCS = ALL_DOCS.slice();
-            LEARNING_STATE = null;
-
-            if (!window.LearningPaths || typeof window.LearningPaths.applyFilter !== 'function') return;
-
-            try {
-                LEARNING_STATE = await window.LearningPaths.applyFilter(ALL_DOCS);
-                VISIBLE_DOCS = (LEARNING_STATE && Array.isArray(LEARNING_STATE.visibleDocs)) ? LEARNING_STATE.visibleDocs : ALL_DOCS.slice();
-            } catch (e) {
-                console.warn('LearningPaths filter failed:', e);
-                VISIBLE_DOCS = ALL_DOCS.slice();
-                LEARNING_STATE = null;
-            }
-        }
-
-        function renderLearningPathBar() {
-            const bar = document.getElementById('learning-path-bar');
-            if (!bar) return;
-
-            bar.className = 'learning-path-bar';
-            bar.innerHTML = '';
-
-            if (!window.LearningPaths) return;
-
-            const profile = window.LearningPaths.getProfile();
-            const prefs = window.LearningPaths.getPrefs();
-            const preferences = (typeof window.LearningPaths.getPreferences === 'function')
-                ? window.LearningPaths.getPreferences()
-                : {};
-            const counts = (LEARNING_STATE && LEARNING_STATE.counts) ? LEARNING_STATE.counts : {
-                total: ALL_DOCS.length,
-                visible: VISIBLE_DOCS.length,
-                mapped: 0,
-                unmapped: 0,
-                hidden: Math.max(0, ALL_DOCS.length - VISIBLE_DOCS.length)
-            };
-
-            const title = document.createElement('div');
-            title.className = 'learning-path-title';
-            title.textContent = profile ? ('当前路径：C' + profile.c + ' / T' + profile.t) : '未设置学习路径';
-
-            const meta = document.createElement('div');
-            meta.className = 'learning-path-meta';
-            if (!profile) {
-                meta.textContent = '当前展示全部文档；建议测评以启用过滤。';
-            } else {
-                const mode = prefs.showAll ? '已显示全部' : (prefs.showUnmapped ? '已显示未标注' : '严格过滤');
-                meta.textContent = '显示 ' + counts.visible + ' / ' + counts.total + '；' + mode;
-            }
-
-            const prefLine = document.createElement('div');
-            prefLine.className = 'learning-path-meta';
-            const prefOrder = ['pref-goal', 'pref-time', 'pref-csharp', 'pref-tml'];
-            const prefLabels = prefOrder.map(function (id) {
-                const entry = preferences && preferences[id] ? preferences[id] : null;
-                return entry && entry.label ? String(entry.label) : '';
-            }).filter(Boolean);
-            prefLine.textContent = prefLabels.length ? ('偏好：' + prefLabels.join(' / ')) : '';
-
-            const actions = document.createElement('div');
-            actions.className = 'learning-path-actions';
-
-            function makeToggle(label, pressed, onClick) {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'learning-toggle';
-                btn.textContent = label;
-                btn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
-                btn.addEventListener('click', onClick);
-                return btn;
-            }
-
-            const onboardingLink = document.createElement('a');
-            onboardingLink.className = 'btn btn-small btn-outline';
-            onboardingLink.href = window.LearningPaths.getOnboardingUrl();
-            onboardingLink.textContent = profile ? '修改路径' : '开始测评';
-
-            if (profile) {
-                const showUnmapped = makeToggle('显示未标注', prefs.showUnmapped, function () {
-                    const next = !window.LearningPaths.getPrefs().showUnmapped;
-                    window.LearningPaths.setPref('showUnmapped', next);
-                    if (next) window.LearningPaths.setPref('showAll', false);
-                    window.location.reload();
-                });
-
-                const showAll = makeToggle('显示全部', prefs.showAll, function () {
-                    const next = !window.LearningPaths.getPrefs().showAll;
-                    window.LearningPaths.setPref('showAll', next);
-                    if (next) window.LearningPaths.setPref('showUnmapped', false);
-                    window.location.reload();
-                });
-
-                actions.appendChild(showUnmapped);
-                actions.appendChild(showAll);
-            }
-
-            actions.appendChild(onboardingLink);
-
-            bar.appendChild(title);
-            bar.appendChild(actions);
-            bar.appendChild(meta);
-            if (prefLine.textContent) bar.appendChild(prefLine);
-        }
 
         // 从URL参数获取文件夹路径
         function getFolderPathFromURL() {

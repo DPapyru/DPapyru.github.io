@@ -35,7 +35,7 @@
               "title": "教学文章写作指南",
               "author": "小天使",
               "order": 1,
-              "description": "面向当前项目的统一写作与提交流程，覆盖结构、分流、验证与发布",
+              "description": "面向当前项目的统一写作与提交流程，覆盖结构、验证与发布",
               "time": "35分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
@@ -52,7 +52,7 @@
               "title": "站点Markdown扩展语法说明",
               "author": "小天使",
               "order": 2,
-              "description": "当前 viewer 渲染器支持的扩展语法与分流变量，含实用示例与排错建议",
+              "description": "当前 viewer 渲染器支持的扩展语法，含实用示例与排错建议",
               "time": "20分钟",
               "difficulty": "beginner",
               "prev_chapter": "教学文章写作指南.md",
@@ -69,7 +69,7 @@
               "title": "在线写作IDE使用教程",
               "author": "小天使",
               "order": 3,
-              "description": "面向当前 article-studio 页面，讲清写作、分流模拟、多文件编排与PR提交流程",
+              "description": "面向当前 article-studio 页面，讲清写作、多文件编排与 PR 提交流程",
               "time": "25分钟",
               "difficulty": "beginner",
               "prev_chapter": "站点Markdown扩展语法说明.md",
@@ -135,6 +135,132 @@
           "title": "物品系统",
           "description": "物品、武器和装备的开发",
           "files": []
+        }
+      }
+    },
+    "Modder入门学习": {
+      "title": "Modder入门学习",
+      "description": "Modder入门学习相关的教程",
+      "topics": {
+        "mod-basics": {
+          "title": "Mod基础",
+          "description": "Mod开发的基础概念和核心API",
+          "files": [
+            {
+              "filename": "CSharp_Frist.md",
+              "path": "Modder入门学习/CSharp基础/CSharp_Frist.md",
+              "originalPath": "Modder入门学习/CSharp基础/CSharp_Frist.md",
+              "title": "C#基础教程-第一课-C#语法基础",
+              "author": "小天使",
+              "order": 1,
+              "description": "C#基础第一课，用于学习C#的基础语法知识",
+              "time": "30分钟",
+              "difficulty": "Beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            }
+          ]
+        }
+      }
+    },
+    "方向性指导": {
+      "title": "方向性指导",
+      "description": "方向性指导相关的教程",
+      "topics": {
+        "mod-basics": {
+          "title": "Mod基础",
+          "description": "Mod开发的基础概念和核心API",
+          "files": [
+            {
+              "filename": "DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md",
+              "path": "方向性指导/DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md",
+              "originalPath": "方向性指导/DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md",
+              "title": "AI Agent 的使用——在拥有水平后使用Agent提高开发速度",
+              "author": "DPapyru",
+              "order": 999,
+              "description": "理解 AI Agent 的能力、适用场景、前提条件、最佳实践",
+              "time": "25分钟",
+              "difficulty": "advanced",
+              "prev_chapter": "DPapyru-如何用好AI.md",
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-如何提问.md",
+              "path": "方向性指导/DPapyru-如何提问.md",
+              "originalPath": "方向性指导/DPapyru-如何提问.md",
+              "title": "如何提问？",
+              "author": "DPapyru",
+              "order": 999,
+              "description": "写出清晰完整的问题描述，提高获得有效回复的概率",
+              "time": "15分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-学会搜索自己需要的内容.md",
+              "next_chapter": "DPapyru-如何用好AI.md",
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-如何用好AI.md",
+              "path": "方向性指导/DPapyru-如何用好AI.md",
+              "originalPath": "方向性指导/DPapyru-如何用好AI.md",
+              "title": "如何用好AI？",
+              "author": "DPapyru",
+              "order": 999,
+              "description": "理解 AI 的能力边界，写好 Prompt，验证输出正确性",
+              "time": "20分钟",
+              "difficulty": "intermediate",
+              "prev_chapter": "DPapyru-如何提问.md",
+              "next_chapter": "DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md",
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-学会搜索自己需要的内容.md",
+              "path": "方向性指导/DPapyru-学会搜索自己需要的内容.md",
+              "originalPath": "方向性指导/DPapyru-学会搜索自己需要的内容.md",
+              "title": "学会搜索自己需要的内容",
+              "author": "DPapyru",
+              "order": 999,
+              "description": "提炼关键词、找可靠信息源、快速找到解决方案",
+              "time": "15分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "DPapyru-掌握编程的逻辑和思想.md",
+              "next_chapter": "DPapyru-如何提问.md",
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "DPapyru-掌握编程的逻辑和思想.md",
+              "path": "方向性指导/DPapyru-掌握编程的逻辑和思想.md",
+              "originalPath": "方向性指导/DPapyru-掌握编程的逻辑和思想.md",
+              "title": "掌握编程的逻辑和思想",
+              "author": "DPapyru",
+              "order": 999,
+              "description": "理解编程思维的核心：分解问题、抽象模式、模块化组织",
+              "time": "20分钟",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": "DPapyru-学会搜索自己需要的内容.md",
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            }
+          ]
         }
       }
     },
@@ -2343,17 +2469,6 @@
         }
       }
     },
-    "resources": {
-      "title": "resources",
-      "description": "resources相关的教程",
-      "topics": {
-        "mod-basics": {
-          "title": "Mod基础",
-          "description": "Mod开发的基础概念和核心API",
-          "files": []
-        }
-      }
-    },
     "风凌的模组制作大观": {
       "title": "风凌的模组制作大观",
       "description": "风凌的模组制作大观相关的教程",
@@ -2436,161 +2551,6 @@
               "colors": {
                 "Mad": "#f00"
               },
-              "colorChange": null
-            }
-          ]
-        }
-      }
-    },
-    "方向性指导": {
-      "title": "方向性指导",
-      "description": "方向性指导相关的教程",
-      "topics": {
-        "mod-basics": {
-          "title": "Mod基础",
-          "description": "Mod开发的基础概念和核心API",
-          "files": [
-            {
-              "filename": "DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md",
-              "path": "方向性指导/DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md",
-              "originalPath": "方向性指导/DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md",
-              "title": "AI Agent 的使用——在拥有水平后使用Agent提高开发速度",
-              "author": "DPapyru",
-              "order": 999,
-              "description": "理解 AI Agent 的能力、适用场景、前提条件、最佳实践",
-              "time": "25分钟",
-              "difficulty": "advanced",
-              "prev_chapter": "DPapyru-如何用好AI.md",
-              "next_chapter": null,
-              "min_c": null,
-              "min_t": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-如何提问.md",
-              "path": "方向性指导/DPapyru-如何提问.md",
-              "originalPath": "方向性指导/DPapyru-如何提问.md",
-              "title": "如何提问？",
-              "author": "DPapyru",
-              "order": 999,
-              "description": "写出清晰完整的问题描述，提高获得有效回复的概率",
-              "time": "15分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "DPapyru-学会搜索自己需要的内容.md",
-              "next_chapter": "DPapyru-如何用好AI.md",
-              "min_c": null,
-              "min_t": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-如何用好AI.md",
-              "path": "方向性指导/DPapyru-如何用好AI.md",
-              "originalPath": "方向性指导/DPapyru-如何用好AI.md",
-              "title": "如何用好AI？",
-              "author": "DPapyru",
-              "order": 999,
-              "description": "理解 AI 的能力边界，写好 Prompt，验证输出正确性",
-              "time": "20分钟",
-              "difficulty": "intermediate",
-              "prev_chapter": "DPapyru-如何提问.md",
-              "next_chapter": "DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md",
-              "min_c": null,
-              "min_t": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-学会搜索自己需要的内容.md",
-              "path": "方向性指导/DPapyru-学会搜索自己需要的内容.md",
-              "originalPath": "方向性指导/DPapyru-学会搜索自己需要的内容.md",
-              "title": "学会搜索自己需要的内容",
-              "author": "DPapyru",
-              "order": 999,
-              "description": "提炼关键词、找可靠信息源、快速找到解决方案",
-              "time": "15分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "DPapyru-掌握编程的逻辑和思想.md",
-              "next_chapter": "DPapyru-如何提问.md",
-              "min_c": null,
-              "min_t": null,
-              "colors": null,
-              "colorChange": null
-            },
-            {
-              "filename": "DPapyru-掌握编程的逻辑和思想.md",
-              "path": "方向性指导/DPapyru-掌握编程的逻辑和思想.md",
-              "originalPath": "方向性指导/DPapyru-掌握编程的逻辑和思想.md",
-              "title": "掌握编程的逻辑和思想",
-              "author": "DPapyru",
-              "order": 999,
-              "description": "理解编程思维的核心：分解问题、抽象模式、模块化组织",
-              "time": "20分钟",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": "DPapyru-学会搜索自己需要的内容.md",
-              "min_c": null,
-              "min_t": null,
-              "colors": null,
-              "colorChange": null
-            }
-          ]
-        }
-      }
-    },
-    "Modder入门学习": {
-      "title": "Modder入门学习",
-      "description": "Modder入门学习相关的教程",
-      "topics": {
-        "mod-basics": {
-          "title": "Mod基础",
-          "description": "Mod开发的基础概念和核心API",
-          "files": [
-            {
-              "filename": "CSharp_Frist.md",
-              "path": "Modder入门学习/CSharp基础/CSharp_Frist.md",
-              "originalPath": "Modder入门学习/CSharp基础/CSharp_Frist.md",
-              "title": "C#基础教程-第一课-C#语法基础",
-              "author": "小天使",
-              "order": 1,
-              "description": "C#基础第一课，用于学习C#的基础语法知识",
-              "time": "30分钟",
-              "difficulty": "Beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
-              "min_c": null,
-              "min_t": null,
-              "colors": null,
-              "colorChange": null
-            }
-          ]
-        }
-      }
-    },
-    "routes": {
-      "title": "routes",
-      "description": "routes相关的教程",
-      "topics": {
-        "mod-basics": {
-          "title": "Mod基础",
-          "description": "Mod开发的基础概念和核心API",
-          "files": [
-            {
-              "filename": "README.md",
-              "path": "routes/README.md",
-              "originalPath": "routes/README.md",
-              "title": "分流路由编写说明（V2）",
-              "author": "DPapyru",
-              "order": 999,
-              "description": "无描述",
-              "time": "不具体",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
-              "min_c": null,
-              "min_t": null,
-              "colors": null,
               "colorChange": null
             }
           ]
@@ -2721,7 +2681,6 @@
     "DPapyru": {
       "name": "DPapyru",
       "files": [
-        "README.md",
         "ContentProjects解决方案说明.md",
         "使用网页特殊动画模块.md",
         "DPapyru-AI Agent的使用-在拥有水平后使用Agent提高开发速度.md",
@@ -5384,24 +5343,6 @@
       "colors": {
         "Mad": "#f00"
       },
-      "colorChange": null
-    },
-    {
-      "filename": "README.md",
-      "path": "routes/README.md",
-      "originalPath": "routes/README.md",
-      "title": "分流路由编写说明（V2）",
-      "author": "DPapyru",
-      "category": "routes",
-      "topic": "mod-basics",
-      "order": 999,
-      "time": "不具体",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
-      "min_c": null,
-      "min_t": null,
-      "colors": null,
       "colorChange": null
     },
     {

@@ -2,7 +2,6 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { compileRoutes } = require('./route-v2');
 
 function writeLine(text) {
     const line = String(text || '');
@@ -48,32 +47,15 @@ function hasExplicitNullKey(frontMatterText, key) {
     return re.test(String(frontMatterText || ''));
 }
 
-function hasExplicitTrueKey(frontMatterText, key) {
-    const re = new RegExp(`^\\s*${key}\\s*:\\s*true\\s*$`, 'im');
-    return re.test(String(frontMatterText || ''));
-}
 
-function stripFrontMatter(text) {
-    const s = String(text || '');
-    const m = s.match(/^\s*---\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
-    if (!m) return s;
-    return s.slice(m[0].length);
-}
 
-function hasRoutingAssertion(bodyText, profileLabel) {
-    const normalized = String(profileLabel || '').replace('/', '\\s*\\/\\s*');
-    const re = new RegExp(`^\\s*(?:[-*]|\\d+\\.)\\s*${normalized}\\s*[：:]`, 'im');
-    return re.test(String(bodyText || ''));
-}
 
 function printHelp() {
     writeLine([
-        'Usage: node site/tooling/scripts/check-content.js [--root <dir>] [--routes <dir>] [--help]',
+        'Usage: node site/tooling/scripts/check-content.js [--root <dir>] [--help]',
         '',
         'Checks:',
         '- Disallow prev_chapter: null / next_chapter: null (use empty value or omit key)',
-        '- If routing_manual: true, require 3 assertions (C0/T0, C1/T1, C2/T2)',
-        '- Validate route v2 files (*.route.json): fallback/targets/path coverage',
         '',
         'Exit codes:',
         '- 0: OK',
@@ -84,7 +66,6 @@ function printHelp() {
 function parseArgs(argv) {
     const args = {
         rootDir: path.resolve('site/content'),
-        routesDir: path.resolve('site/content/routes'),
         help: false
     };
     const rest = Array.isArray(argv) ? argv.slice() : [];
@@ -97,11 +78,6 @@ function parseArgs(argv) {
         if (token === '--root') {
             const value = rest.shift();
             if (value) args.rootDir = path.resolve(value);
-            continue;
-        }
-        if (token === '--routes') {
-            const value = rest.shift();
-            if (value) args.routesDir = path.resolve(value);
             continue;
         }
     }
@@ -137,29 +113,6 @@ function main() {
         if (hasExplicitNullKey(fm, 'next_chapter')) {
             errors.push({ filePath, message: 'next_chapter: null' });
         }
-
-        if (hasExplicitTrueKey(fm, 'routing_manual')) {
-            const body = stripFrontMatter(raw);
-            const requiredProfiles = ['C0/T0', 'C1/T1', 'C2/T2'];
-            const missingProfiles = requiredProfiles.filter(function (label) {
-                return !hasRoutingAssertion(body, label);
-            });
-
-            if (missingProfiles.length) {
-                errors.push({
-                    filePath,
-                    message: 'routing_manual: true 但缺少分流断言：' + missingProfiles.join(', ')
-                });
-            }
-        }
-    }
-
-    const routeResult = compileRoutes({ rootDir: args.routesDir });
-    for (const err of routeResult.errors) {
-        errors.push({
-            filePath: err.filePath,
-            message: `route 校验失败: ${err.message}`
-        });
     }
 
     if (errors.length) {
