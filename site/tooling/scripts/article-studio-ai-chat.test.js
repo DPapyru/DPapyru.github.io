@@ -30,7 +30,7 @@ test('viewer ai chat enforces github auth and cooldown', () => {
     const htmlPath = path.resolve('site/pages/viewer.html');
     const html = fs.readFileSync(htmlPath, 'utf8');
 
-    assert.match(html, /VIEWER_AI_COOLDOWN_SECONDS\s*=\s*120/);
+    assert.match(html, /VIEWER_AI_COOLDOWN_SECONDS\s*=\s*60/);
     assert.match(html, /VIEWER_AI_ENDPOINT\s*=\s*['"]https:\/\/[^'"]+\/functions\/v1\/ai-chat['"]/);
     assert.match(html, /function\s+submitViewerAiChat\s*\(/);
     assert.match(html, /请先点击“GitHub 登录”后再使用 AI 对话/);
