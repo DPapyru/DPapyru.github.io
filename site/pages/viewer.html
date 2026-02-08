@@ -3602,7 +3602,7 @@
                             message: '非法路径'
                         });
                     }
-                    return `\n\n> 无法载入引用：非法路径 \`${m.target}\`\n\n`;
+                    return `\n\n> 无法载入代码：非法路径 \`${m.target}\`\n\n`;
                 }
 
                 const { base, hash } = splitHash(m.target);
@@ -3611,146 +3611,44 @@
                     codeBase += '.cs';
                 }
 
-                const isCSharpInclude = m.kind === 'cs' || /\.cs$/i.test(codeBase);
-                if (isCSharpInclude) {
-                    const normalized = normalizeSourceCodePath(codeBase, currentDocPath);
-                    if (!normalized) {
-                        return `\n\n> 无法载入代码：非法路径 \`${m.target}\`\n\n`;
-                    }
+                const normalized = normalizeSourceCodePath(codeBase, currentDocPath);
+                if (!normalized) {
+                    return `\n\n> 无法载入代码：非法路径 \`${m.target}\`\n\n`;
+                }
 
-                    const fetchUrl = `/site/content/${normalized.replace(/^\/+/, '')}`;
-                    let selector = null;
-                    if (hash && hash.startsWith('#')) {
-                        let decoded = hash;
-                        try {
-                            decoded = '#' + decodeURIComponent(hash.slice(1));
-                        } catch (_) {
-                            decoded = hash;
-                        }
-                        selector = parseCSharpSnippetSelector(decoded);
-                    }
-
+                const fetchUrl = `/site/content/${normalized.replace(/^\/+/, '')}`;
+                let selector = null;
+                if (hash && hash.startsWith('#')) {
+                    let decoded = hash;
                     try {
-                        const resp = await fetch(encodeURI(fetchUrl), { cache: 'no-store' });
-                        if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
-                        const sourceText = await resp.text();
-
-                        if (selector) {
-                            const mask = buildCSharpCodeMask(sourceText);
-                            const fullTypeName = getCSharpFullTypeNameFromSelector(selector.kind, selector.selector);
-                            if (!fullTypeName) {
-                                return `\n\n> 无法载入代码：\`${normalized}${hash}\`（选择器格式错误）\n\n`;
-                            }
-                            const result = extractMemberSnippet(sourceText, mask, fullTypeName, selector.kind, selector.selector);
-                            if (!result.ok) {
-                                return `\n\n> 无法载入代码：\`${normalized}${hash}\`（${String(result.message || '未知错误')}）\n\n`;
-                            }
-                            return `\n\n${buildFencedCodeBlock('csharp', dedentCodeBlockText(result.snippet))}\n\n`;
-                        }
-
-                        return `\n\n${buildFencedCodeBlock('csharp', sourceText)}\n\n`;
-                    } catch (err) {
-                        return `\n\n> 无法载入代码：\`${normalized}\`（${String(err && err.message ? err.message : err)}）\n\n`;
+                        decoded = '#' + decodeURIComponent(hash.slice(1));
+                    } catch (_) {
+                        decoded = hash;
                     }
-                }
-
-                const resolvedDoc = resolveTransclusionDocPath(base);
-                if (!resolvedDoc) {
-                    if (diag && diag.transclusion) {
-                        diag.transclusion.errors.push({
-                            from: String(currentDocPath || ''),
-                            target: String(m.target || ''),
-                            message: '找不到文档'
-                        });
-                    }
-                    return `\n\n> 无法载入引用：找不到文档 \`${m.target}\`\n\n`;
-                }
-
-                if (stack.includes(resolvedDoc)) {
-                    if (diag && diag.transclusion) {
-                        diag.transclusion.errors.push({
-                            from: String(currentDocPath || ''),
-                            target: String(resolvedDoc || ''),
-                            message: '检测到循环引用'
-                        });
-                    }
-                    return `\n\n> 无法载入引用：检测到循环引用 \`${resolvedDoc}\`\n\n`;
+                    selector = parseCSharpSnippetSelector(decoded);
                 }
 
                 try {
-                    const rawText = await fetchMarkdownDocText(resolvedDoc);
-                    if (diag && diag.transclusion) {
-                        diag.transclusion.expandedCount += 1;
-                        diag.transclusion.includedDocs.push({
-                            from: String(currentDocPath || ''),
-                            doc: String(resolvedDoc || ''),
-                            selector: hash || ''
-                        });
-                    }
+                    const resp = await fetch(encodeURI(fetchUrl), { cache: 'no-store' });
+                    if (!resp.ok) throw new Error(`HTTP ${resp.status} ${resp.statusText}`);
+                    const sourceText = await resp.text();
 
-                    const fm = parseFrontMatter(rawText);
-                    let body = fm.content || '';
-                    const rawTitle = String(m.title || '').trim();
-                    const effectiveTitle = rawTitle || (fm.metadata && fm.metadata.title) || '引用内容';
-                    body = stripLeadingTitleHeading(body, [effectiveTitle, fm.metadata && fm.metadata.title]);
-
-                    let sectionSelector = '';
-                    if (hash && hash.startsWith('#')) {
-                        sectionSelector = hash.slice(1);
-                        try {
-                            sectionSelector = decodeURIComponent(sectionSelector);
-                        } catch (e) {
-                            sectionSelector = hash.slice(1);
+                    if (selector) {
+                        const mask = buildCSharpCodeMask(sourceText);
+                        const fullTypeName = getCSharpFullTypeNameFromSelector(selector.kind, selector.selector);
+                        if (!fullTypeName) {
+                            return `\n\n> 无法载入代码：\`${normalized}${hash}\`（选择器格式错误）\n\n`;
                         }
-                        sectionSelector = String(sectionSelector || '').trim();
-                    }
-
-                    if (sectionSelector) {
-                        const extracted = extractMarkdownSectionByHeading(body, sectionSelector);
-                        if (extracted == null) {
-                            if (diag && diag.transclusion) {
-                                diag.transclusion.errors.push({
-                                    from: String(currentDocPath || ''),
-                                    target: String(resolvedDoc || ''),
-                                    message: '找不到标题：' + String(sectionSelector || '')
-                                });
-                            }
-                            return `\n\n> 无法载入引用：在 \`${resolvedDoc}\` 中找不到标题 \`${sectionSelector}\`\n\n`;
+                        const result = extractMemberSnippet(sourceText, mask, fullTypeName, selector.kind, selector.selector);
+                        if (!result.ok) {
+                            return `\n\n> 无法载入代码：\`${normalized}${hash}\`（${String(result.message || '未知错误')}）\n\n`;
                         }
-                        body = extracted;
+                        return `\n\n${buildFencedCodeBlock('csharp', dedentCodeBlockText(result.snippet))}\n\n`;
                     }
 
-                    body = rewriteTranscludedLinksAndImages(body, resolvedDoc);
-                    body = await expandMarkdownTransclusions(body, resolvedDoc, depth + 1, stack.concat(resolvedDoc), ctx);
-
-                    if (rawTitle.startsWith('!')) {
-                        const inlineTitle = rawTitle.slice(1).trim() || '引用内容';
-                        if (!sectionSelector) {
-                            body = demoteMarkdownHeadingsToBold(body);
-                        }
-                        return `\n\n**${inlineTitle}**\n\n${body}\n\n`;
-                    }
-
-                    const wrapperLevel = Math.max(2, Math.min(6, Number(m.wrapperLevel) || 2));
-                    const wrapperHash = '#'.repeat(wrapperLevel);
-                    const minLevel = getMarkdownMinHeadingLevel(body);
-                    if (minLevel) {
-                        const desiredMin = Math.min(6, wrapperLevel + 1);
-                        const shift = Math.max(0, desiredMin - minLevel);
-                        body = shiftMarkdownHeadings(body, shift);
-                    }
-
-                    const headingTitle = rawTitle || effectiveTitle;
-                    return `\n\n${wrapperHash} ${headingTitle}\n\n${body}\n\n`;
+                    return `\n\n${buildFencedCodeBlock('csharp', sourceText)}\n\n`;
                 } catch (err) {
-                    if (diag && diag.transclusion) {
-                        diag.transclusion.errors.push({
-                            from: String(currentDocPath || ''),
-                            target: String(resolvedDoc || ''),
-                            message: String(err && err.message ? err.message : err)
-                        });
-                    }
-                    return `\n\n> 无法载入引用：\`${resolvedDoc}${hash || ''}\`（${String(err && err.message ? err.message : err)}）\n\n`;
+                    return `\n\n> 无法载入代码：\`${normalized}\`（${String(err && err.message ? err.message : err)}）\n\n`;
                 }
             }));
 
