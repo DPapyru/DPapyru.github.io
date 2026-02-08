@@ -804,7 +804,7 @@
 
                 <!-- 返回文档首页链接 -->
                 <div class="back-to-docs">
-                    <a href="index.html" class="btn">返回文档首页</a>
+                    <a href="folder.html" class="btn">返回文档首页</a>
                 </div>
             </div>
         </section>
@@ -822,7 +822,7 @@
 	                    <h4>快速链接</h4>
 	                    <ul>
 	                        <li><a href="../index.html">首页</a></li>
-	                        <li><a href="index.html">文档</a></li>
+	                        <li><a href="folder.html">文档</a></li>
 	                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
 	                    </ul>
 	                </div>
@@ -860,12 +860,13 @@
 
 	    <script>
 	        // 文档配置和元数据管理 - 使用页面级变量避免冲突
-	        let FOLDER_DOC_CONFIG = null;
-	        let ALL_DOCS = [];
-	        let VISIBLE_DOCS = [];
-	        let FOLDER_DOCS = [];
-	        let LEARNING_STATE = null;
-	        let CURRENT_FOLDER = '';
+ 	        let FOLDER_DOC_CONFIG = null;
+ 	        let ALL_DOCS = [];
+ 	        let VISIBLE_DOCS = [];
+ 	        let FOLDER_DOCS = [];
+ 	        let LEARNING_STATE = null;
+ 	        let CURRENT_FOLDER = '';
+	        let CURRENT_DOC_VIEW = 'grid';
 
 	        function escapeHtml(text) {
 	            return String(text)
@@ -1416,7 +1417,7 @@
             // 文档首页链接
             const docsItem = document.createElement('div');
             docsItem.className = 'breadcrumb-item';
-            docsItem.innerHTML = '<a href="index.html">文档</a>';
+            docsItem.innerHTML = '<a href="folder.html">文档</a>';
             breadcrumb.appendChild(docsItem);
 
             // 当前文件夹
@@ -1913,21 +1914,19 @@
 
             // 网格视图切换事件
             gridViewBtn.addEventListener('click', function () {
-                docGrid.classList.remove('list-view');
-                gridViewBtn.classList.add('active');
-                listViewBtn.classList.remove('active');
-                gridViewBtn.setAttribute('aria-pressed', 'true');
-                listViewBtn.setAttribute('aria-pressed', 'false');
+                CURRENT_DOC_VIEW = 'grid';
+                syncDocViewToggleState();
+                applyAllFiltersAndSort();
             });
 
             // 列表视图切换事件
             listViewBtn.addEventListener('click', function () {
-                docGrid.classList.add('list-view');
-                listViewBtn.classList.add('active');
-                gridViewBtn.classList.remove('active');
-                listViewBtn.setAttribute('aria-pressed', 'true');
-                gridViewBtn.setAttribute('aria-pressed', 'false');
+                CURRENT_DOC_VIEW = 'list';
+                syncDocViewToggleState();
+                applyAllFiltersAndSort();
             });
+
+            syncDocViewToggleState();
 
             // 初始应用过滤器和排序
             applyAllFiltersAndSort();
@@ -2030,11 +2029,76 @@
                 return;
             }
 
-            // 显示文档网格
-            docGrid.style.display = 'block';
             noDocs.style.display = 'none';
-            docGrid.classList.add('tree-view');
-            renderDocTree(docGrid, filteredDocs, CURRENT_FOLDER);
+
+            if (CURRENT_DOC_VIEW === 'list') {
+                docGrid.style.display = 'block';
+                docGrid.classList.remove('list-view');
+                docGrid.classList.add('tree-view');
+                renderDocTree(docGrid, filteredDocs, CURRENT_FOLDER);
+                return;
+            }
+
+            docGrid.style.display = 'grid';
+            docGrid.classList.remove('tree-view');
+            docGrid.classList.remove('list-view');
+            renderDocCardGrid(docGrid, filteredDocs);
+        }
+
+        function renderDocCardGrid(docGrid, docs) {
+            docs.forEach(doc => {
+                const docCard = document.createElement('div');
+                docCard.className = 'doc-card';
+
+                const difficultyClass = normalizeDifficultyClass(doc.difficulty);
+                const difficultyText = getDifficultyText(doc.difficulty);
+                const recommendationBadge = buildRecommendationBadge(doc);
+                const description = (doc.description && typeof doc.description === 'string' && doc.description.trim() !== '')
+                    ? doc.description
+                    : '暂无描述';
+
+                docCard.innerHTML = `
+                    <div class="doc-card-header">
+                        <h3 class="doc-title">${escapeHtml(doc.title || doc.filename || '未命名')}</h3>
+                        <div class="doc-meta">
+                            <div class="doc-meta-item">
+                                <span class="difficulty-badge ${difficultyClass}">${escapeHtml(difficultyText)}</span>
+                            </div>
+                            ${recommendationBadge ? `<div class="doc-meta-item">${recommendationBadge}</div>` : ''}
+                            <div class="doc-meta-item">
+                                <span>作者: ${escapeHtml(doc.author || '未知')}</span>
+                            </div>
+                            <div class="doc-meta-item">
+                                <span>更新: ${escapeHtml(doc.last_updated || '未知')}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doc-card-body">
+                        <p class="doc-description">${escapeHtml(description)}</p>
+                    </div>
+                    <div class="doc-card-footer">
+                        <div class="doc-author">作者: ${escapeHtml(doc.author || '未知')}</div>
+                        <a href="/site/pages/viewer.html?file=${encodeURIComponent(doc.path || doc.filename)}" class="doc-link">查看文档</a>
+                    </div>
+                `;
+
+                docGrid.appendChild(docCard);
+            });
+        }
+
+        function syncDocViewToggleState() {
+            const gridViewBtn = document.getElementById('grid-view-btn');
+            const listViewBtn = document.getElementById('list-view-btn');
+
+            if (!gridViewBtn || !listViewBtn) {
+                return;
+            }
+
+            const isListView = CURRENT_DOC_VIEW === 'list';
+            gridViewBtn.classList.toggle('active', !isListView);
+            listViewBtn.classList.toggle('active', isListView);
+            gridViewBtn.setAttribute('aria-pressed', isListView ? 'false' : 'true');
+            listViewBtn.setAttribute('aria-pressed', isListView ? 'true' : 'false');
         }
 
         function renderDocTree(docGrid, docs, basePath) {
