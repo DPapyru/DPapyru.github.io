@@ -76,4 +76,4 @@ source_cs: ./CSharp_Fourth.cs
 
 掌握流程控制后，你已经能写出“有逻辑分支、能重复处理”的基础程序。
 
-下一课继续：{{ref:./CSharp_Fifth.md|C#基础教程-第五课-方法与参数}}
+下一课继续：[C#基础教程-第五课-方法与参数](./CSharp_Fifth.md)
