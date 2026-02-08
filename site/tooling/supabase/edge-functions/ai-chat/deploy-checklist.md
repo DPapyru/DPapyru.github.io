@@ -16,7 +16,7 @@ In `Edge Functions -> Secrets`, add:
 - `SILICONFLOW_API_KEY` = your SiliconFlow API key
 - `SILICONFLOW_BASE_URL` = `https://api.siliconflow.com/v1`
 - `MODEL_ID` = your model id, for example `Pro/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B`
-- `AI_COOLDOWN_SECONDS` = `120`
+- `AI_COOLDOWN_SECONDS` = `60`
 - `MAX_PROMPT_CHARS` = `6000`
 - `ALLOWED_ORIGIN` = `https://dpapyru.github.io`
 

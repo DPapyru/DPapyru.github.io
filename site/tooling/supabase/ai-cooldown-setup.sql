@@ -8,7 +8,7 @@ alter table public.ai_cooldowns enable row level security;
 
 create or replace function public.consume_ai_cooldown(
     p_github_user text,
-    p_cooldown_seconds integer default 120
+    p_cooldown_seconds integer default 60
 )
 returns table(
     allowed boolean,
@@ -23,7 +23,7 @@ declare
     v_user text := lower(trim(coalesce(p_github_user, '')));
     v_now timestamptz := now();
     v_next timestamptz;
-    v_cooldown integer := greatest(coalesce(p_cooldown_seconds, 120), 1);
+    v_cooldown integer := greatest(coalesce(p_cooldown_seconds, 60), 1);
 begin
     if v_user = '' then
         raise exception 'github_user is required';

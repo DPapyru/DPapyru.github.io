@@ -13,7 +13,7 @@ const PR_AUTH_ME_URL = String(Deno.env.get("PR_AUTH_ME_URL") || "").trim();
 const SILICONFLOW_API_KEY = normalizeSecretEnv(Deno.env.get("SILICONFLOW_API_KEY"));
 const SILICONFLOW_BASE_URL = normalizeSiliconFlowBaseUrl(Deno.env.get("SILICONFLOW_BASE_URL"));
 const MODEL_ID = normalizeModelId(Deno.env.get("MODEL_ID"));
-const AI_COOLDOWN_SECONDS = toPositiveInt(Deno.env.get("AI_COOLDOWN_SECONDS"), 120);
+const AI_COOLDOWN_SECONDS = toPositiveInt(Deno.env.get("AI_COOLDOWN_SECONDS"), 60);
 const MAX_PROMPT_CHARS = toPositiveInt(Deno.env.get("MAX_PROMPT_CHARS"), 6000);
 
 const allowedOrigins = String(Deno.env.get("ALLOWED_ORIGIN") || "")

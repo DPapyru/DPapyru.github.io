@@ -72,4 +72,4 @@ source_cs: ./CSharp_Frist.cs
 
 你已经完成了 C# 的第一步：看懂程序入口、写出变量、理解作用域。
 
-下一课继续：{{ref:./CSharp_Second.md|C#基础教程-第二课-变量与常见数据类型}}
+下一课继续：[C#基础教程-第二课-变量与常见数据类型](./CSharp_Second.md)
