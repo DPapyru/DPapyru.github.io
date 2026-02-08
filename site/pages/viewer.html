@@ -38,9 +38,6 @@
     <link rel="stylesheet" href="/site/assets/css/animts-runtime.css"> <!-- 动画运行时样式 -->
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png"> <!-- 网站图标 -->
 
-    <!-- 入站测评跳转（首次进入可跳过） -->
-    <script src="/site/assets/js/onboarding-gate.js"></script>
-
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
     <script src="/site/assets/js/theme-init.js"></script>
 
@@ -409,7 +406,7 @@
         <div class="container-fluid learn-top-banner-inner">
             <div class="learn-top-banner-left">
                 <span class="learn-top-banner-icon" aria-hidden="true">ⓘ</span>
-                <div class="learn-top-banner-text" id="learn-top-banner-text">你尚未完成测评。</div>
+                <div class="learn-top-banner-text" id="learn-top-banner-text">当前按默认方式展示内容。</div>
             </div>
             <button class="learn-top-banner-close" id="learn-top-banner-close" type="button" aria-label="关闭提示">✕</button>
         </div>
@@ -461,11 +458,10 @@
                             <a href="index.html">文档</a> &gt;
                             <span class="current" id="current-doc-name">文档</span>
 	                        </div>
-	                        <div class="tutorial-actions" aria-label="阅读工具">
-	                            <button class="btn btn-small btn-outline" id="focus-mode-toggle" type="button" aria-pressed="false">焦点模式</button>
-	                            <button class="btn btn-small btn-outline" id="learning-settings-toggle" type="button" aria-haspopup="dialog" aria-controls="learning-settings-overlay" aria-expanded="false">分流设置</button>
-	                            <button class="btn btn-small btn-outline" id="author-mode-toggle" type="button" aria-pressed="false">作者模式</button>
-	                        </div>
+		                        <div class="tutorial-actions" aria-label="阅读工具">
+		                            <button class="btn btn-small btn-outline" id="focus-mode-toggle" type="button" aria-pressed="false">焦点模式</button>
+		                            <button class="btn btn-small btn-outline" id="author-mode-toggle" type="button" aria-pressed="false">作者模式</button>
+		                        </div>
 	                    </div>
                     <!-- 文档标题 -->
                     <h1 class="tutorial-title" id="doc-title">文档</h1>
@@ -611,20 +607,7 @@
 	        </button>
 	    </div>
 
-	    <!-- Learn 风格：分流设置弹层（从侧边栏移出） -->
-	    <div class="learn-modal-overlay" id="learning-settings-overlay" role="dialog" aria-modal="true" aria-label="分流设置" aria-hidden="true" style="display:none;">
-	        <div class="learn-modal" role="document">
-	            <div class="learn-modal-header">
-	                <div class="learn-modal-title">分流设置</div>
-	                <button class="learn-modal-close" id="learning-settings-close" type="button" aria-label="关闭">✕</button>
-	            </div>
-	            <div class="learn-modal-body">
-	                <div class="learning-sidebar-panel" id="learning-sidebar-panel">
-	                    <!-- 将通过 JavaScript 动态生成 -->
-	                </div>
-	            </div>
-	        </div>
-	    </div>
+	    <div class="learning-sidebar-panel" id="learning-sidebar-panel" hidden></div>
 
 	    <div class="viewer-ai-fab-wrap" id="viewer-ai-root">
 	        <button class="viewer-ai-fab" id="viewer-ai-fab" type="button" aria-label="打开 AI 对话" aria-controls="viewer-ai-panel" aria-expanded="false">AI</button>
@@ -712,7 +695,6 @@
         let ALL_DOCS = [];
 	        let CURRENT_DOC_PATH = null;
 	        let DOC_LOOKUP_MAP = null;
-	        let ROUTE_MANIFEST = null;
 	        const STUDIO_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
 	        let STUDIO_PREVIEW_MODE = false;
 	        let STUDIO_EMBED_MODE = false;
@@ -732,29 +714,9 @@
 	                if (!parsed || typeof parsed !== 'object') return null;
 	                const targetPath = normalizeStudioPreviewPath(parsed.targetPath || '');
 	                if (!targetPath) return null;
-	                let simulatedProfile = null;
-	                if (parsed.simulatedProfile && typeof parsed.simulatedProfile === 'object') {
-	                    const cRaw = parsed.simulatedProfile.c;
-	                    const tRaw = parsed.simulatedProfile.t;
-
-	                    function parseLevel(rawLevel) {
-	                        const n = Number.parseInt(rawLevel, 10);
-	                        if (!Number.isFinite(n)) return null;
-	                        if (n < 0 || n > 2) return null;
-	                        return n;
-	                    }
-
-	                    const cLevel = parseLevel(cRaw);
-	                    const tLevel = parseLevel(tRaw);
-	                    if (cLevel != null || tLevel != null) {
-	                        simulatedProfile = { c: cLevel, t: tLevel };
-	                    }
-	                }
-
 	                return {
 	                    targetPath: targetPath,
 	                    markdown: String(parsed.markdown || ''),
-	                    simulatedProfile: simulatedProfile,
 	                    updatedAt: String(parsed.updatedAt || '')
 	                };
 	            } catch (_) {
@@ -875,12 +837,6 @@
 	                    window.localStorage.setItem(STUDIO_PREVIEW_STORAGE_KEY, JSON.stringify({
 	                        targetPath: targetPath,
 	                        markdown: String(payload.markdown || ''),
-	                        simulatedProfile: payload.simulatedProfile && typeof payload.simulatedProfile === 'object'
-	                            ? {
-	                                c: payload.simulatedProfile.c,
-	                                t: payload.simulatedProfile.t
-	                            }
-	                            : null,
 	                        updatedAt: String(payload.updatedAt || new Date().toISOString())
 	                    }));
 	                } catch (_) {
@@ -895,21 +851,6 @@
 	            window.__STUDIO_PREVIEW_MESSAGE_PATCHED = true;
 	        }
 
-        async function loadRouteManifest() {
-            try {
-                const response = await fetch('/site/assets/route-manifest.json', { cache: 'no-store' });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const parsed = await response.json();
-                if (!parsed || typeof parsed !== 'object' || !parsed.routes || typeof parsed.routes !== 'object') {
-                    ROUTE_MANIFEST = { version: 2, routes: {} };
-                    return;
-                }
-                ROUTE_MANIFEST = parsed;
-            } catch (e) {
-                console.warn('加载 route-manifest 失败，使用空分流清单:', e);
-                ROUTE_MANIFEST = { version: 2, routes: {} };
-            }
-        }
 	        
 	        function initializeMermaidOnce() {
 	            if (window.__MERMAID_INITIALIZED) return;
@@ -1137,7 +1078,7 @@
 	                    // Learn 风格：焦点模式与侧边栏快速查找
 	                    initializeViewerFocusMode();
 	                    initializeSidebarQuickSearch();
-	                    initializeLearningSettingsUi();
+	                    initializeLearningAuthorToggle();
 		
 			            // 作者模式：支持 ?author=1/0，并持久化到 localStorage
 			            initializeLearningAuthorModeFromUrl();
@@ -1155,7 +1096,7 @@
             installStudioPreviewMessageBridge();
 
             // 初始化文档配置
-            Promise.all([initializeDocumentConfig(), loadRouteManifest()]).then(() => {
+            Promise.all([initializeDocumentConfig()]).then(() => {
                 // 初始化分类导航
                 initializeCategoryNavigation();
 
@@ -1207,48 +1148,16 @@
 			            initializeMobileNavigation();
 			        });
 
-			        function initializeLearningSettingsUi() {
-			            const openBtn = document.getElementById('learning-settings-toggle');
-			            const overlay = document.getElementById('learning-settings-overlay');
-			            const closeBtn = document.getElementById('learning-settings-close');
-			            const authorToggle = document.getElementById('author-mode-toggle');
-			            const authorDisable = document.getElementById('author-mode-disable');
-			            if (!openBtn || !overlay) return;
+	        function initializeLearningAuthorToggle() {
+	            const authorToggle = document.getElementById('author-mode-toggle');
+	            if (!authorToggle) return;
 
-			            function setOpen(isOpen) {
-			                overlay.style.display = isOpen ? 'flex' : 'none';
-			                overlay.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
-			                openBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-			                document.body.style.overflow = isOpen ? 'hidden' : '';
-			            }
-
-			            function open() { setOpen(true); }
-			            function close() { setOpen(false); }
-
-			            openBtn.addEventListener('click', open);
-			            if (closeBtn) closeBtn.addEventListener('click', close);
-			            overlay.addEventListener('click', function (e) {
-			                if (e.target === overlay) close();
-			            });
-			            document.addEventListener('keydown', function (e) {
-			                if (e.key === 'Escape' && overlay.getAttribute('aria-hidden') === 'false') close();
-			            });
-
-			            if (authorToggle) {
-			                authorToggle.addEventListener('click', function () {
-			                    const next = !isLearningAuthorModeEnabled();
-			                    writeLearningAuthorMode(next);
-			                    rerenderCurrentDocPreserveScroll();
-			                });
-			            }
-
-			            if (authorDisable) {
-			                authorDisable.addEventListener('click', function () {
-			                    writeLearningAuthorMode(false);
-			                    rerenderCurrentDocPreserveScroll();
-			                });
-			            }
-			        }
+	            authorToggle.addEventListener('click', function () {
+	                const next = !isLearningAuthorModeEnabled();
+	                writeLearningAuthorMode(next);
+	                rerenderCurrentDocPreserveScroll();
+	            });
+	        }
 
 	        async function initializeMarkedRender() {
 	            console.log('初始化MD渲染器...');
@@ -1967,33 +1876,7 @@
 	        const TRANSCLUSION_MAX_DEPTH = 4;
 	        const TRANSCLUSION_MAX_FILES = 30;
 	        const TRANSCLUSION_CACHE = new Map();
-	        const LEARNING_PREFS_KEY = 'learningPreferences';
-	        const LEARNING_PREF_OVERRIDES_KEY = 'learningPreferenceOverrides';
-	        const LEARNING_NO_PREFS_HINT_DISMISSED_SESSION_KEY = 'learningNoPrefsHintDismissedSession';
 	        const LEARNING_AUTHOR_MODE_KEY = 'learningAuthorMode';
-
-		        const LEARNING_PREF_KEYS = [
-		            { key: 'P_step', label: '更细步骤', description: '按步骤走，像照着菜谱做，不漏关键操作' },
-		            { key: 'P_code', label: '更多代码', description: '代码占比更高，优先给能跑的示例' },
-		            { key: 'P_theory', label: '原理解释', description: '先讲概念与原理，再动手实现' },
-		            { key: 'P_minimal', label: '最小示例', description: '最小可用示例，先跑通再扩展' },
-		            { key: 'P_troubleshoot', label: '排错清单', description: '排错导向，给常见坑与检查清单' },
-		            { key: 'P_best_practice', label: '规范写法', description: '偏规范与惯用写法，方便长期维护' },
-		            { key: 'P_api_reference', label: 'API 说明', description: '查表式 API 说明，参数与行为一眼对上' },
-		            { key: 'P_visual', label: '图示类比', description: '用图示与类比解释结构，帮助建立直觉' },
-		            { key: 'P_performance', label: '性能敏感', description: '强调性能点，例如 GC 与帧率影响' },
-		            { key: 'P_rendering', label: '渲染方向', description: '偏渲染实现，例如绘制流程与 Shader 相关' }
-		        ];
-
-	        function safeJsonParse(raw, fallback) {
-	            try {
-	                if (!raw) return fallback;
-	                const parsed = JSON.parse(raw);
-	                return parsed == null ? fallback : parsed;
-	            } catch (e) {
-	                return fallback;
-	            }
-	        }
 
 	        function getLearningAuthorModeFromUrl() {
 	            try {
@@ -2122,233 +2005,13 @@
 	            return false;
 	        }
 
-	        function readLearningQuizPreferences() {
-	            const raw = window.localStorage.getItem(LEARNING_PREFS_KEY);
-	            const parsed = safeJsonParse(raw, {});
-	            return parsed && typeof parsed === 'object' ? parsed : {};
-	        }
-
-	        function normalizeTriState(value) {
-	            const v = String(value || '').toLowerCase();
-	            if (v === 'on' || v === 'off' || v === 'auto') return v;
-	            return 'auto';
-	        }
-
-	        function readLearningPreferenceOverrides() {
-	            const raw = window.localStorage.getItem(LEARNING_PREF_OVERRIDES_KEY);
-	            const parsed = safeJsonParse(raw, {});
-	            const out = {};
-	            if (!parsed || typeof parsed !== 'object') return out;
-	            Object.keys(parsed).forEach(function (k) {
-	                out[String(k)] = normalizeTriState(parsed[k]);
-	            });
-	            return out;
-	        }
-
-	        function writeLearningPreferenceOverrides(overrides) {
-	            try {
-	                window.localStorage.setItem(LEARNING_PREF_OVERRIDES_KEY, JSON.stringify(overrides || {}));
-	            } catch (e) {
-	                // ignore
-	            }
-	        }
-
-	        function hasAnyNonAutoOverrides(overrides) {
-	            if (!overrides) return false;
-	            return Object.keys(overrides).some(function (k) {
-	                const v = normalizeTriState(overrides[k]);
-	                return v === 'on' || v === 'off';
-	            });
-	        }
-
-	        function setSessionNoPrefsHintDismissed() {
-	            try {
-	                window.sessionStorage.setItem(LEARNING_NO_PREFS_HINT_DISMISSED_SESSION_KEY, 'true');
-	            } catch (e) {
-	                // ignore
-	            }
-	        }
-
-	        function getSessionNoPrefsHintDismissed() {
-	            try {
-	                return window.sessionStorage.getItem(LEARNING_NO_PREFS_HINT_DISMISSED_SESSION_KEY) === 'true';
-	            } catch (e) {
-	                return false;
-	            }
-	        }
-
-	        function derivePreferenceFlagsFromQuiz(quizPrefs) {
-	            const prefs = quizPrefs && typeof quizPrefs === 'object' ? quizPrefs : {};
-	            const flags = {};
-	            LEARNING_PREF_KEYS.forEach(function (p) { flags[p.key] = 0; });
-
-	            function getValue(id) {
-	                const hit = prefs[id];
-	                if (!hit || typeof hit !== 'object') return '';
-	                return String(hit.value || '');
-	            }
-
-	            function enable(keys) {
-	                (keys || []).forEach(function (k) { flags[k] = 1; });
-	            }
-
-	            const time = getValue('pref-time');
-	            if (time === 'fast') enable(['P_minimal', 'P_code']);
-	            else if (time === 'balanced') enable(['P_step']);
-	            else if (time === 'deep') enable(['P_theory', 'P_api_reference', 'P_best_practice']);
-
-	            const style = getValue('pref-style');
-	            if (style === 'snippets') enable(['P_code', 'P_minimal']);
-	            else if (style === 'templates') enable(['P_code', 'P_step']);
-	            else if (style === 'longform') enable(['P_theory', 'P_api_reference']);
-
-	            const help = getValue('pref-help');
-	            if (help === 'tutorial-first') enable(['P_step']);
-	            else if (help === 'search-first') enable(['P_troubleshoot']);
-	            else if (help === 'source-first') enable(['P_theory', 'P_api_reference', 'P_best_practice']);
-
-	            const goal = getValue('pref-goal');
-	            if (goal === 'first-mod') enable(['P_step', 'P_code', 'P_minimal']);
-	            else if (goal === 'systematic') enable(['P_theory', 'P_api_reference', 'P_best_practice']);
-	            else if (goal === 'problem-driven') enable(['P_troubleshoot', 'P_api_reference']);
-
-	            const focus = getValue('pref-focus');
-	            if (focus === 'env') enable(['P_troubleshoot', 'P_step']);
-	            else if (focus === 'timing') enable(['P_troubleshoot', 'P_theory']);
-	            else if (focus === 'perf-net') enable(['P_performance', 'P_best_practice', 'P_troubleshoot']);
-
-	            const output = getValue('pref-output');
-	            if (output === 'new-content') enable(['P_code']);
-	            else if (output === 'new-system') enable(['P_theory', 'P_best_practice']);
-	            else if (output === 'fx') enable(['P_rendering', 'P_visual']);
-
-	            const tml = getValue('pref-tml');
-	            if (tml === 'systems') enable(['P_theory', 'P_best_practice']);
-	            else if (tml === 'advanced') enable(['P_api_reference', 'P_best_practice', 'P_performance']);
-
-	            const csharp = getValue('pref-csharp');
-	            if (csharp === 'csharp-first') enable(['P_theory', 'P_best_practice']);
-	            else if (csharp === 'learn-as-you-go') enable(['P_troubleshoot']);
-	            else if (csharp === 'results-first') enable(['P_minimal', 'P_code']);
-
-	            return flags;
-	        }
-
         function clampLearningLevel(value) {
             const n = Number.parseInt(value, 10);
             if (!Number.isFinite(n)) return 0;
             return Math.max(0, Math.min(2, n));
         }
 
-        function routeDimensionLevel(ctx, dimension) {
-            const d = String(dimension || '').toUpperCase();
-            if (d === 'C') return clampLearningLevel(ctx && ctx.C);
-            if (d === 'T') return clampLearningLevel(ctx && ctx.T);
-            if (d === 'G') {
-                try {
-                    const prefs = readLearningQuizPreferences();
-                    const goalValue = prefs && prefs['pref-goal'] && prefs['pref-goal'].value
-                        ? String(prefs['pref-goal'].value)
-                        : '';
-                    if (goalValue === 'first-mod') return 0;
-                    if (goalValue === 'problem-driven') return 1;
-                    if (goalValue === 'systematic') return 2;
-                } catch (_) {
-                    // ignore
-                }
-                return 1;
-            }
-            return 1;
-        }
-
-        function resolveRoutePathForCurrentDoc(docPath, ctx) {
-            const normalizedDocPath = String(docPath || '').trim();
-            const routes = ROUTE_MANIFEST && ROUTE_MANIFEST.routes && typeof ROUTE_MANIFEST.routes === 'object'
-                ? ROUTE_MANIFEST.routes
-                : null;
-            if (!normalizedDocPath || !routes || !routes[normalizedDocPath]) {
-                return {
-                    path: 'standard',
-                    entry: null,
-                    visited: []
-                };
-            }
-
-            const routeDef = routes[normalizedDocPath];
-            const nodes = routeDef && routeDef.nodes && typeof routeDef.nodes === 'object' ? routeDef.nodes : {};
-            let nodeId = routeDef.entry || null;
-            const visited = [];
-
-            for (let i = 0; i < 16; i += 1) {
-                if (!nodeId || typeof nodeId !== 'string') break;
-                const node = nodes[nodeId];
-                if (!node || typeof node !== 'object') break;
-
-                visited.push(nodeId);
-
-                if (node.type === 'path') {
-                    const currentPath = String(node.path || 'standard');
-                    if (node.next && typeof node.next === 'string') {
-                        nodeId = node.next;
-                        continue;
-                    }
-                    return {
-                        path: currentPath,
-                        entry: routeDef.entry || null,
-                        visited: visited
-                    };
-                }
-
-                if (node.type === 'decision') {
-                    const level = routeDimensionLevel(ctx, node.dimension);
-                    const mapped = node.map && Object.prototype.hasOwnProperty.call(node.map, String(level))
-                        ? node.map[String(level)]
-                        : null;
-                    const nextNode = mapped || node.fallback;
-                    if (!nextNode || typeof nextNode !== 'string') {
-                        break;
-                    }
-                    nodeId = nextNode;
-                    continue;
-                }
-
-                break;
-            }
-
-            return {
-                path: 'standard',
-                entry: routeDef.entry || null,
-                visited: visited
-            };
-        }
-
 	        function getLearningConditionContext() {
-	            if (STUDIO_PREVIEW_MODE) {
-	                const previewPayload = readStudioPreviewPayloadFromStorage();
-	                const simulated = previewPayload && previewPayload.simulatedProfile ? previewPayload.simulatedProfile : null;
-	                if (simulated && (simulated.c != null || simulated.t != null)) {
-	                    const baseProfile = (function () {
-	                        try {
-	                            const raw = window.localStorage.getItem('learningProfile');
-	                            if (!raw) return { C: 0, T: 0 };
-	                            const parsed = JSON.parse(raw);
-	                            if (!parsed || typeof parsed !== 'object') return { C: 0, T: 0 };
-	                            return {
-	                                C: clampLearningLevel(parsed.c),
-	                                T: clampLearningLevel(parsed.t)
-	                            };
-	                        } catch (_) {
-	                            return { C: 0, T: 0 };
-	                        }
-	                    }());
-
-	                    return {
-	                        C: simulated.c == null ? baseProfile.C : clampLearningLevel(simulated.c),
-	                        T: simulated.t == null ? baseProfile.T : clampLearningLevel(simulated.t)
-	                    };
-	                }
-	            }
-
 	            try {
 	                const raw = window.localStorage.getItem('learningProfile');
 	                if (!raw) return { C: 0, T: 0 };
@@ -2365,9 +2028,6 @@
 
 	        function getLearningRenderContext() {
 	            const base = getLearningConditionContext();
-	            const quizPrefs = readLearningQuizPreferences();
-	            const overrides = readLearningPreferenceOverrides();
-	            const autoFlags = derivePreferenceFlagsFromQuiz(quizPrefs);
 	            const authorMode = isLearningAuthorModeEnabled();
 
 	            const ctx = {
@@ -2376,113 +2036,11 @@
 	                AUTHOR: authorMode ? 1 : 0
 	            };
 
-	            LEARNING_PREF_KEYS.forEach(function (p) {
-	                const key = p.key;
-	                const tri = normalizeTriState(overrides[key]);
-	                const auto = Number(autoFlags[key] || 0) ? 1 : 0;
-	                const final = tri === 'on' ? 1 : (tri === 'off' ? 0 : auto);
-
-	                ctx[key] = final;
-	                ctx[key.toUpperCase()] = final;
-	            });
-
-            const routeInfo = resolveRoutePathForCurrentDoc(CURRENT_DOC_PATH, ctx);
-            const routePath = String(routeInfo && routeInfo.path ? routeInfo.path : 'standard');
-            ctx.ROUTE_PATH = routePath;
-            ctx.R_REMEDIAL = routePath === 'remedial' ? 1 : 0;
-            ctx.R_STANDARD = routePath === 'standard' ? 1 : 0;
-            ctx.R_FAST = routePath === 'fast' ? 1 : 0;
-            ctx.R_DEEP = routePath === 'deep' ? 1 : 0;
-
 	            return {
 	                ctx: ctx,
-	                quizPrefs: quizPrefs,
-	                overrides: overrides,
-	                autoFlags: autoFlags,
-	                authorMode: authorMode,
-	                routeInfo: routeInfo
+	                authorMode: authorMode
 	            };
 	        }
-
-	        function getOnboardingUrlFromViewer() {
-	            return '../onboarding.html';
-	        }
-
-		        function renderLearningHintsBanner(model) {
-		            const container = document.getElementById('learning-hints');
-		            const hints = document.getElementById('learning-hint-prefs') || container;
-		            if (!container || !hints) return;
-
-	            const hasQuizPrefs = model && model.quizPrefs && Object.keys(model.quizPrefs).length > 0;
-	            const hasOverrides = model && hasAnyNonAutoOverrides(model.overrides);
-	            const dismissed = getSessionNoPrefsHintDismissed();
-
-	            if (hasQuizPrefs || hasOverrides || dismissed) {
-	                hints.innerHTML = '';
-	                updateLearningHintsVisibility();
-	                return;
-	            }
-
-		            hints.innerHTML = [
-		                '<div class="learning-hint-card">',
-		                '<div class="learning-hint-title">尚未完成测评</div>',
-		                '<div class="learning-hint-text">你尚未完成入站测评，且未手动设置分流偏好。内容仍可正常阅读，但分流提示/推荐可能不够贴合。</div>',
-		                '<div class="learning-hint-actions">',
-		                '<button type="button" class="btn btn-small btn-primary" data-action="open-prefs">打开偏好设置</button>',
-		                '<a class="btn btn-small btn-outline" href="' + getOnboardingUrlFromViewer() + '">去做入站测评</a>',
-		                '<button type="button" class="btn btn-small btn-secondary" data-action="dismiss-session">本次不再提示</button>',
-		                '</div>',
-		                '</div>'
-		            ].join('');
-
-	            const openBtn = hints.querySelector('[data-action="open-prefs"]');
-			            if (openBtn) {
-			                openBtn.addEventListener('click', function () {
-			                    const trigger = document.getElementById('learning-settings-toggle');
-			                    if (trigger) trigger.click();
-			                });
-			            }
-
-	            const dismissBtn = hints.querySelector('[data-action="dismiss-session"]');
-	            if (dismissBtn) {
-	                dismissBtn.addEventListener('click', function () {
-	                    setSessionNoPrefsHintDismissed();
-	                    renderLearningHintsBanner(model);
-	                });
-	            }
-
-		            updateLearningHintsVisibility();
-		        }
-
-                function renderLearningTopBanner(model) {
-                    const banner = document.getElementById('learn-top-banner');
-                    const bannerText = document.getElementById('learn-top-banner-text');
-                    const closeBtn = document.getElementById('learn-top-banner-close');
-                    if (!banner || !bannerText) return;
-
-                    const hasQuizPrefs = model && model.quizPrefs && Object.keys(model.quizPrefs).length > 0;
-                    const hasOverrides = model && hasAnyNonAutoOverrides(model.overrides);
-                    const dismissed = getSessionNoPrefsHintDismissed();
-
-                    if (hasQuizPrefs || hasOverrides || dismissed) {
-                        banner.style.display = 'none';
-                        banner.setAttribute('aria-hidden', 'true');
-                        return;
-                    }
-
-                    bannerText.textContent = '你尚未完成入站测评，当前为默认显示（不影响阅读）。';
-                    banner.style.display = 'block';
-                    banner.setAttribute('aria-hidden', 'false');
-
-                    if (closeBtn && !closeBtn.__LEARN_BOUND) {
-                        closeBtn.__LEARN_BOUND = true;
-                        closeBtn.addEventListener('click', function () {
-                            setSessionNoPrefsHintDismissed();
-                            renderLearningTopBanner(model);
-                            renderLearningHintsBanner(model);
-                        });
-                    }
-                }
 
                 function initializeViewerFocusMode() {
                     const btn = document.getElementById('focus-mode-toggle');
@@ -2663,22 +2221,6 @@
 	            return missing;
 	        }
 
-	        function isRoutingManualEnabled(rawMetadata) {
-	            if (!rawMetadata || typeof rawMetadata !== 'object') return false;
-	            const value = rawMetadata.routing_manual;
-	            if (value === true) return true;
-	            if (typeof value === 'string') {
-	                return value.trim().toLowerCase() === 'true';
-	            }
-	            return false;
-	        }
-
-	        function hasRoutingAssertionInBody(bodyText, profileLabel) {
-	            const normalized = String(profileLabel || '').replace('/', '\\s*\\/\\s*');
-	            const re = new RegExp('^\\s*(?:[-*]|\\d+\\.)\\s*' + normalized + '\\s*[：:]', 'im');
-	            return re.test(String(bodyText || ''));
-	        }
-
 	        function collectAuthorDiagnostics(diag, rawMetadata, metadata, filePath, rawContent) {
 	            if (!diag) return;
 
@@ -2690,17 +2232,7 @@
 	            const hasMinC = rawMetadata && typeof rawMetadata.min_c === 'number';
 	            const hasMinT = rawMetadata && typeof rawMetadata.min_t === 'number';
 	            if (!hasMinC && !hasMinT) {
-	                diag.metadata.warnings.push('未标注建议门槛：min_c / min_t（软建议，不影响阅读）');
-	            }
-
-	            if (isRoutingManualEnabled(rawMetadata)) {
-	                const requiredProfiles = ['C0/T0', 'C1/T1', 'C2/T2'];
-	                const missingProfiles = requiredProfiles.filter(function (label) {
-	                    return !hasRoutingAssertionInBody(rawContent, label);
-	                });
-	                if (missingProfiles.length) {
-	                    diag.metadata.warnings.push('routing_manual: true 但缺少分流断言：' + missingProfiles.join(' / '));
-	                }
+	                diag.metadata.warnings.push('建议补充阅读门槛标注：min_c / min_t（软建议，不影响阅读）');
 	            }
 
 	            const missingHeadings = scanRequiredReferenceHeadings(rawContent);
@@ -2878,17 +2410,6 @@
 	                '</details>',
 
 	                '<details class="learning-diag-block">',
-	                '<summary>条件分流统计</summary>',
-	                '<div class="learning-diag-mono">blocks=' + Number(diag.condition.blocks || 0) +
-	                    ' · if=' + Number(diag.condition.directives.if || 0) +
-	                    ' · elseif=' + Number(diag.condition.directives.elseif || 0) +
-	                    ' · else=' + Number(diag.condition.directives.else || 0) +
-	                    ' · end=' + Number(diag.condition.directives.end || 0) +
-	                    ' · removedLines=' + Number(diag.condition.removedLines || 0) + '</div>',
-	                listItems(diag.condition.errors, function (e) { return (e.expr ? e.expr + '：' : '') + e.message; }),
-	                '</details>',
-
-	                '<details class="learning-diag-block">',
 	                '<summary>链接 / 资源</summary>',
 	                '<div class="learning-diag-actions">',
 	                '<button type="button" class="btn btn-small btn-outline" data-action="scan-links">扫描链接</button>',
@@ -2928,90 +2449,9 @@
 	            }
 	        }
 
-		        function renderLearningSidebarPanel(model) {
-		            const root = document.getElementById('learning-sidebar-panel');
-		            if (!root) return;
-
-	            const ctx = model && model.ctx ? model.ctx : {};
-	            const overrides = model && model.overrides ? model.overrides : {};
-	            const autoFlags = model && model.autoFlags ? model.autoFlags : {};
-	            const authorMode = Boolean(model && model.authorMode);
-
-	            function escapeHtml(s) {
-	                return String(s || '')
-	                    .replace(/&/g, '&amp;')
-	                    .replace(/</g, '&lt;')
-	                    .replace(/>/g, '&gt;')
-	                    .replace(/"/g, '&quot;')
-	                    .replace(/'/g, '&#039;');
-	            }
-
-		            const rows = LEARNING_PREF_KEYS.map(function (p) {
-		                const key = p.key;
-		                const tri = normalizeTriState(overrides[key]);
-		                const final = Number(ctx[key] || 0) ? 1 : 0;
-		                const auto = Number(autoFlags[key] || 0) ? 1 : 0;
-		                const source = tri === 'auto' ? ('自动：' + (auto ? '开' : '关')) : ('手动：' + (tri === 'on' ? '开' : '关'));
-		                return [
-		                    '<div class="learning-pref-row">',
-		                    '<div class="learning-pref-main">',
-		                    '<div class="learning-pref-name" title="' + escapeHtml(p.description) + '">' + escapeHtml(p.label) + '</div>',
-		                    '<div class="learning-pref-desc">' + escapeHtml(p.description) + '</div>',
-		                    '<div class="learning-pref-meta">' + escapeHtml(key) + ' · ' + escapeHtml(source) + '</div>',
-		                    '</div>',
-		                    '<div class="learning-pref-control">',
-		                    '<select class="learning-pref-select" data-pref-key="' + escapeHtml(key) + '">',
-		                    '<option value="auto"' + (tri === 'auto' ? ' selected' : '') + '>自动</option>',
-		                    '<option value="on"' + (tri === 'on' ? ' selected' : '') + '>强制开</option>',
-		                    '<option value="off"' + (tri === 'off' ? ' selected' : '') + '>强制关</option>',
-		                    '</select>',
-		                    '<span class="learning-pref-badge ' + (final ? 'on' : 'off') + '">' + (final ? '开' : '关') + '</span>',
-		                    '</div>',
-		                    '</div>'
-		                ].join('');
-		            }).join('');
-
-		            root.innerHTML = [
-		                '<div class="learning-ct">',
-		                '<div class="learning-ct-title">当前档位</div>',
-		                '<div class="learning-ct-value">C' + Number(ctx.C || 0) + ' / T' + Number(ctx.T || 0) + '</div>',
-		                '<div class="learning-ct-actions">',
-		                '<a class="btn btn-small btn-outline" href="' + getOnboardingUrlFromViewer() + '">重新测评</a>',
-		                '<button type="button" class="btn btn-small btn-secondary" data-action="reset-prefs">偏好全设为自动</button>',
-		                '</div>',
-		                '</div>',
-		                '<div class="learning-pref-list">',
-		                rows,
-		                '</div>'
-		            ].join('');
-
-	            const resetBtn = root.querySelector('[data-action="reset-prefs"]');
-	            if (resetBtn) {
-	                resetBtn.addEventListener('click', function () {
-	                    const next = readLearningPreferenceOverrides();
-	                    LEARNING_PREF_KEYS.forEach(function (p) { next[p.key] = 'auto'; });
-	                    writeLearningPreferenceOverrides(next);
-	                    rerenderCurrentDocPreserveScroll();
-	                });
-	            }
-
-	            root.querySelectorAll('select[data-pref-key]').forEach(function (sel) {
-	                sel.addEventListener('change', function () {
-	                    const k = String(sel.getAttribute('data-pref-key') || '');
-	                    const v = normalizeTriState(sel.value);
-	                    const next = readLearningPreferenceOverrides();
-	                    next[k] = v;
-	                    writeLearningPreferenceOverrides(next);
-	                    rerenderCurrentDocPreserveScroll();
-	                });
-	            });
-
-		            renderLearningAuthorToolbar();
-		        }
-
-		        function renderLearningAuthorToolbar() {
-		            const btn = document.getElementById('author-mode-toggle');
-		            if (!btn) return;
+	        function renderLearningAuthorToolbar() {
+	            const btn = document.getElementById('author-mode-toggle');
+	            if (!btn) return;
 		            const enabled = isLearningAuthorModeEnabled();
 		            btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
 		            btn.textContent = enabled ? '作者模式：开' : '作者模式：关';
@@ -3029,332 +2469,7 @@
 	            document.addEventListener('viewer:content-ready', restore);
 	        }
 
-	        function tokenizeLearningCondition(expr) {
-	            const s = String(expr || '');
-	            const tokens = [];
-	            let i = 0;
-
-	            function isWs(ch) {
-	                return ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r';
-	            }
-
-	            while (i < s.length) {
-	                const ch = s[i];
-	                if (isWs(ch)) {
-	                    i += 1;
-	                    continue;
-	                }
-
-	                const two = s.slice(i, i + 2);
-	                if (two === '&&' || two === '||' || two === '>=' || two === '<=' || two === '==' || two === '!=') {
-	                    tokens.push({ type: 'op', value: two });
-	                    i += 2;
-	                    continue;
-	                }
-
-	                if (ch === '>' || ch === '<' || ch === '!' || ch === '(' || ch === ')') {
-	                    if (ch === '(' || ch === ')') {
-	                        tokens.push({ type: 'paren', value: ch });
-	                    } else {
-	                        tokens.push({ type: 'op', value: ch });
-	                    }
-	                    i += 1;
-	                    continue;
-	                }
-
-	                if (ch >= '0' && ch <= '9') {
-	                    let j = i + 1;
-	                    while (j < s.length && s[j] >= '0' && s[j] <= '9') j += 1;
-	                    tokens.push({ type: 'num', value: Number.parseInt(s.slice(i, j), 10) });
-	                    i = j;
-	                    continue;
-	                }
-
-	                if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch === '_') {
-	                    let j = i + 1;
-	                    while (j < s.length) {
-	                        const cj = s[j];
-	                        const ok =
-	                            (cj >= 'A' && cj <= 'Z') ||
-	                            (cj >= 'a' && cj <= 'z') ||
-	                            (cj >= '0' && cj <= '9') ||
-	                            cj === '_';
-	                        if (!ok) break;
-	                        j += 1;
-	                    }
-	                    const ident = s.slice(i, j);
-	                    tokens.push({ type: 'id', value: ident });
-	                    i = j;
-	                    continue;
-	                }
-
-	                throw new Error('无法识别的字符: ' + ch);
-	            }
-
-	            return tokens;
-	        }
-
-	        function evaluateLearningCondition(expr, ctx) {
-	            const tokens = tokenizeLearningCondition(expr);
-	            const output = [];
-	            const ops = [];
-
-	            function precedence(op) {
-	                if (op === '!') return 4;
-	                if (op === '>' || op === '<' || op === '>=' || op === '<=' || op === '==' || op === '!=') return 3;
-	                if (op === '&&') return 2;
-	                if (op === '||') return 1;
-	                return 0;
-	            }
-
-	            function isRightAssociative(op) {
-	                return op === '!';
-	            }
-
-	            tokens.forEach(function (t) {
-	                if (t.type === 'num' || t.type === 'id') {
-	                    output.push(t);
-	                    return;
-	                }
-	                if (t.type === 'paren') {
-	                    if (t.value === '(') {
-	                        ops.push(t);
-	                        return;
-	                    }
-	                    while (ops.length && ops[ops.length - 1].type !== 'paren') {
-	                        output.push(ops.pop());
-	                    }
-	                    if (!ops.length) throw new Error('括号不匹配');
-	                    ops.pop();
-	                    return;
-	                }
-	                if (t.type === 'op') {
-	                    while (ops.length) {
-	                        const top = ops[ops.length - 1];
-	                        if (top.type !== 'op') break;
-	                        const p1 = precedence(t.value);
-	                        const p2 = precedence(top.value);
-	                        const shouldPop = isRightAssociative(t.value) ? (p1 < p2) : (p1 <= p2);
-	                        if (!shouldPop) break;
-	                        output.push(ops.pop());
-	                    }
-	                    ops.push(t);
-	                    return;
-	                }
-	            });
-
-	            while (ops.length) {
-	                const op = ops.pop();
-	                if (op.type === 'paren') throw new Error('括号不匹配');
-	                output.push(op);
-	            }
-
-	            const stack = [];
-	            function toBool(v) { return Boolean(v); }
-	            function toNum(v) { return typeof v === 'number' ? v : (toBool(v) ? 1 : 0); }
-
-	            output.forEach(function (t) {
-	                if (t.type === 'num') {
-	                    stack.push(t.value);
-	                    return;
-	                }
-	                if (t.type === 'id') {
-	                    const rawId = String(t.value || '').trim();
-	                    const id = rawId.toUpperCase();
-	                    if (id === 'C') stack.push(Number(ctx && ctx.C != null ? ctx.C : 0));
-	                    else if (id === 'T') stack.push(Number(ctx && ctx.T != null ? ctx.T : 0));
-	                    else if (id === 'AUTHOR') stack.push(Number(ctx && ctx.AUTHOR != null ? ctx.AUTHOR : 0));
-	                    else if (id.startsWith('P_')) {
-	                        const v =
-	                            (ctx && ctx[id] != null ? ctx[id] : undefined) ??
-	                            (ctx && ctx[rawId] != null ? ctx[rawId] : undefined);
-	                        stack.push(Number(v || 0));
-	                    } else if (id.startsWith('R_')) {
-	                        const v =
-	                            (ctx && ctx[id] != null ? ctx[id] : undefined) ??
-	                            (ctx && ctx[rawId] != null ? ctx[rawId] : undefined);
-	                        stack.push(Number(v || 0));
-	                    } else if (id === 'ROUTE_PATH') {
-	                        const routePath = String(ctx && ctx.ROUTE_PATH != null ? ctx.ROUTE_PATH : '');
-	                        stack.push(routePath === rawId ? 1 : 0);
-	                    } else {
-	                        throw new Error('未知变量: ' + t.value);
-	                    }
-	                    return;
-	                }
-	                if (t.type === 'op') {
-	                    const op = t.value;
-	                    if (op === '!') {
-	                        if (stack.length < 1) throw new Error('表达式缺少操作数');
-	                        const a = stack.pop();
-	                        stack.push(!toBool(a));
-	                        return;
-	                    }
-	                    if (stack.length < 2) throw new Error('表达式缺少操作数');
-	                    const b = stack.pop();
-	                    const a = stack.pop();
-	                    if (op === '&&') stack.push(toBool(a) && toBool(b));
-	                    else if (op === '||') stack.push(toBool(a) || toBool(b));
-	                    else if (op === '>') stack.push(toNum(a) > toNum(b));
-	                    else if (op === '<') stack.push(toNum(a) < toNum(b));
-	                    else if (op === '>=') stack.push(toNum(a) >= toNum(b));
-	                    else if (op === '<=') stack.push(toNum(a) <= toNum(b));
-	                    else if (op === '==') stack.push(toNum(a) === toNum(b));
-	                    else if (op === '!=') stack.push(toNum(a) !== toNum(b));
-	                    else throw new Error('未知操作符: ' + op);
-	                    return;
-	                }
-	            });
-
-	            if (stack.length !== 1) throw new Error('表达式解析失败');
-	            return Boolean(stack[0]);
-	        }
-
-	        function applyLearningConditionBlocks(markdown, ctx) {
-	            const diag = getCurrentLearningDiagnostics();
-	            const lines = String(markdown || '').split(/\r?\n/);
-	            const out = [];
-	            const stack = [];
-	            const IF_RE = /^\s*\{if\s+(.+?)\}\s*$/;
-	            const ELSEIF_RE = /^\s*\{else\s+if\s+(.+?)\}\s*$/;
-	            const ELSE_RE = /^\s*\{else\}\s*$/;
-	            const END_RE = /^\s*\{end\}\s*$/;
-
-	            let inFence = false;
-	            let fenceChar = '';
-
-	            function currentActive() {
-	                if (!stack.length) return true;
-	                return Boolean(stack[stack.length - 1].active);
-	            }
-
-	            if (diag && diag.condition) {
-	                diag.condition.blocks += 1;
-	                diag.condition.inputLines += lines.length;
-	            }
-
-	            for (let i = 0; i < lines.length; i++) {
-	                const line = lines[i];
-	                const fenceMatch = line.match(/^\s*(```+|~~~+)\s*/);
-	                if (fenceMatch) {
-	                    const currentFence = fenceMatch[1][0];
-	                    if (!inFence) {
-	                        inFence = true;
-	                        fenceChar = currentFence;
-	                    } else if (fenceChar === currentFence) {
-	                        inFence = false;
-	                        fenceChar = '';
-	                    }
-	                    if (currentActive()) out.push(line);
-	                    continue;
-	                }
-
-	                if (inFence) {
-	                    if (currentActive()) out.push(line);
-	                    continue;
-	                }
-
-	                const ifMatch = line.match(IF_RE);
-	                if (ifMatch) {
-	                    if (diag && diag.condition) diag.condition.directives.if += 1;
-	                    const parentActive = currentActive();
-	                    let ok = false;
-	                    if (parentActive) {
-	                        try {
-	                            ok = evaluateLearningCondition(ifMatch[1], ctx);
-	                        } catch (e) {
-	                            console.warn('条件表达式解析失败:', ifMatch[1], e);
-	                            if (diag && diag.condition) {
-	                                diag.condition.errors.push({
-	                                    expr: ifMatch[1],
-	                                    message: String(e && e.message ? e.message : e)
-	                                });
-	                            }
-	                            ok = false;
-	                        }
-	                    }
-	                    stack.push({
-	                        parentActive: parentActive,
-	                        branchTaken: ok,
-	                        inElse: false,
-	                        active: parentActive && ok
-	                    });
-	                    continue;
-	                }
-
-	                const elseifMatch = line.match(ELSEIF_RE);
-	                if (elseifMatch) {
-	                    if (diag && diag.condition) diag.condition.directives.elseif += 1;
-	                    if (!stack.length) {
-	                        if (currentActive()) out.push(line);
-	                        continue;
-	                    }
-	                    const top = stack[stack.length - 1];
-	                    if (top.inElse) {
-	                        top.active = false;
-	                        continue;
-	                    }
-	                    if (!top.parentActive || top.branchTaken) {
-	                        top.active = false;
-	                        continue;
-	                    }
-	                    let ok = false;
-	                    try {
-	                        ok = evaluateLearningCondition(elseifMatch[1], ctx);
-	                    } catch (e) {
-	                        console.warn('条件表达式解析失败:', elseifMatch[1], e);
-	                        if (diag && diag.condition) {
-	                            diag.condition.errors.push({
-	                                expr: elseifMatch[1],
-	                                message: String(e && e.message ? e.message : e)
-	                            });
-	                        }
-	                        ok = false;
-	                    }
-	                    top.branchTaken = Boolean(top.branchTaken || ok);
-	                    top.active = top.parentActive && ok;
-	                    continue;
-	                }
-
-	                if (line.match(ELSE_RE)) {
-	                    if (diag && diag.condition) diag.condition.directives.else += 1;
-	                    if (!stack.length) {
-	                        if (currentActive()) out.push(line);
-	                        continue;
-	                    }
-	                    const top = stack[stack.length - 1];
-	                    if (top.inElse) {
-	                        top.active = false;
-	                        continue;
-	                    }
-	                    top.inElse = true;
-	                    top.active = top.parentActive && !top.branchTaken;
-	                    top.branchTaken = true;
-	                    continue;
-	                }
-
-	                if (line.match(END_RE)) {
-	                    if (diag && diag.condition) diag.condition.directives.end += 1;
-	                    if (!stack.length) {
-	                        if (currentActive()) out.push(line);
-	                        continue;
-	                    }
-	                    stack.pop();
-	                    continue;
-	                }
-
-	                if (currentActive()) out.push(line);
-	            }
-
-	            if (diag && diag.condition) {
-	                diag.condition.outputLines += out.length;
-	                diag.condition.removedLines += Math.max(0, lines.length - out.length);
-	            }
-
-	            return out.join('\n');
-	        }
-
-		        function isUnsafeTransclusionTarget(target) {
+	        function isUnsafeTransclusionTarget(target) {
 		            const value = String(target || '');
 		            return (
 		                !value ||
@@ -3384,7 +2499,7 @@
 	                return { kind, target: rawPayload, title: '' };
 	            }
 
-	            if (kind !== 'ref' && kind !== 'cs') return null;
+            if (kind !== 'cs') return null;
 
 	            const pipeIndex = rawPayload.indexOf('|');
 	            if (pipeIndex < 0) {
@@ -4578,7 +3693,6 @@
                     const rawTitle = String(m.title || '').trim();
                     const effectiveTitle = rawTitle || (fm.metadata && fm.metadata.title) || '引用内容';
                     body = stripLeadingTitleHeading(body, [effectiveTitle, fm.metadata && fm.metadata.title]);
-                    body = applyLearningConditionBlocks(body, ctx);
 
                     let sectionSelector = '';
                     if (hash && hash.startsWith('#')) {
@@ -4973,8 +4087,7 @@
 		                            renderLearningTopBanner(learningModel);
 		                            renderLearningAuthorHeaderHint(diag);
 
-	                            content = applyLearningConditionBlocks(content, learningModel.ctx);
-	                            content = await expandMarkdownTransclusions(content, fetchPath, 0, [], learningModel.ctx);
+		                            content = await expandMarkdownTransclusions(content, fetchPath, 0, [], learningModel.ctx);
 	                        } catch (err) {
 	                            console.warn('展开引用内容失败，继续渲染原始文档:', err);
 	                        }

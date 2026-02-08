@@ -129,7 +129,7 @@
 
 .studio-select,
 .studio-input,
-.studio-route-json {
+.studio-input {
     width: 100%;
     border: 1px solid var(--border-color);
     border-radius: 6px;
@@ -141,82 +141,10 @@
 
 .studio-select:focus,
 .studio-input:focus,
-.studio-route-json:focus,
 .studio-editor:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px var(--search-focus);
-}
-
-.studio-simulate-levels {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
-
-.studio-inline-check {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-color);
-}
-
-.studio-inline-check input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-}
-
-#studio-compose-file-list {
-    min-height: 150px;
-}
-
-.studio-compose-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
-
-.studio-compose-panel {
-    min-height: 0;
-    display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
-    overflow: auto;
-}
-
-.studio-compose-panel .studio-panel-section {
-    min-height: 0;
-}
-
-.studio-panel-section--compose-list {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    min-height: 0;
-}
-
-#studio-compose-file-list {
-    min-height: 0;
-    height: 100%;
-}
-
-.studio-route-json {
-    min-height: 190px;
-    resize: vertical;
-    font-family: Consolas, 'Monaco', 'Courier New', monospace;
-    line-height: 1.5;
-}
-
-.studio-route-config {
-    display: grid;
-    gap: 6px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-color);
-    padding: 10px;
-}
-
-.studio-route-config label {
-    font-size: 12px;
-    color: var(--text-secondary);
 }
 
 .studio-auth-actions {
@@ -456,19 +384,14 @@
 
 @media (max-width: 1180px) {
     .studio-lazy-workspace {
+        grid-template-columns: minmax(200px, 240px) minmax(0, 1fr) minmax(210px, 250px);
+        gap: 12px;
+    }
+}
+
+@media (max-width: 980px) {
+    .studio-lazy-workspace {
         grid-template-columns: 1fr;
-    }
-
-    .studio-lazy-column--center {
-        order: 1;
-    }
-
-    .studio-lazy-column--left {
-        order: 2;
-    }
-
-    .studio-lazy-column--right {
-        order: 3;
     }
 
     .studio-shell {
@@ -493,10 +416,6 @@
         gap: 4px;
     }
 
-    .studio-simulate-levels,
-    .studio-compose-actions {
-        grid-template-columns: 1fr;
-    }
 }
 
 .article-studio-page--fullscreen {

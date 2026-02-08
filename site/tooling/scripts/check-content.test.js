@@ -21,7 +21,8 @@ test('check-content: --help exits 0', () => {
     const script = path.resolve(__dirname, 'check-content.js');
     const res = runNode([script, '--help']);
     assert.equal(res.status, 0, res.stderr || res.stdout);
-    assert.match(res.stdout + res.stderr, /routing_manual\s*:\s*true/i);
+    assert.doesNotMatch(res.stdout + res.stderr, /routing_manual\s*:\s*true/i);
+    assert.doesNotMatch(res.stdout + res.stderr, /route\s+v2/i);
 });
 
 test('check-content: rejects prev_chapter: null', () => {
@@ -45,7 +46,7 @@ test('check-content: rejects prev_chapter: null', () => {
     assert.match(res.stdout + res.stderr, /prev_chapter:\s*null/i);
 });
 
-test('check-content: manual routing requires 3 profile assertions', () => {
+test('check-content: ignores routing_manual metadata field', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
     const root = path.join(tmp, 'content');
     fs.mkdirSync(root, { recursive: true });
@@ -64,12 +65,11 @@ test('check-content: manual routing requires 3 profile assertions', () => {
     const script = path.resolve(__dirname, 'check-content.js');
     const res = runNode([script, '--root', root]);
 
-    assert.equal(res.status, 1, res.stderr || res.stdout);
-    assert.match(res.stdout + res.stderr, /routing_manual\s*:\s*true/i);
-    assert.match(res.stdout + res.stderr, /分流断言/i);
+    assert.equal(res.status, 0, res.stderr || res.stdout);
+    assert.match(res.stdout + res.stderr, /OK/i);
 });
 
-test('check-content: manual routing passes with 3 profile assertions', () => {
+test('check-content: still passes when markdown contains routing assertions text', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
     const root = path.join(tmp, 'content');
     fs.mkdirSync(root, { recursive: true });
@@ -97,7 +97,7 @@ test('check-content: manual routing passes with 3 profile assertions', () => {
     assert.match(res.stdout + res.stderr, /OK/i);
 });
 
-test('check-content: rejects route decision without fallback', () => {
+test('check-content: ignores route files even if invalid', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
     const root = path.join(tmp, 'content');
     const routesRoot = path.join(tmp, 'routes');
@@ -134,14 +134,13 @@ test('check-content: rejects route decision without fallback', () => {
     }, null, 2), 'utf8');
 
     const script = path.resolve(__dirname, 'check-content.js');
-    const res = runNode([script, '--root', root, '--routes', routesRoot]);
+    const res = runNode([script, '--root', root]);
 
-    assert.equal(res.status, 1, res.stderr || res.stdout);
-    assert.match(res.stdout + res.stderr, /fallback/i);
-    assert.match(res.stdout + res.stderr, /route/i);
+    assert.equal(res.status, 0, res.stderr || res.stdout);
+    assert.match(res.stdout + res.stderr, /OK/i);
 });
 
-test('check-content: passes with valid route files', () => {
+test('check-content: still passes with standalone markdown checks', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
     const root = path.join(tmp, 'content');
     const routesRoot = path.join(tmp, 'routes');
@@ -179,7 +178,7 @@ test('check-content: passes with valid route files', () => {
     }, null, 2), 'utf8');
 
     const script = path.resolve(__dirname, 'check-content.js');
-    const res = runNode([script, '--root', root, '--routes', routesRoot]);
+    const res = runNode([script, '--root', root]);
 
     assert.equal(res.status, 0, res.stderr || res.stdout);
     assert.match(res.stdout + res.stderr, /OK/i);

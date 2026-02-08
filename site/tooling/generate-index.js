@@ -1615,6 +1615,24 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
         });
     }
 
+    const defaultCategories = new Set(Object.keys(configManager.getDefaultConfig().categories || {}));
+    if (configData.categories) {
+        Object.keys(configData.categories).forEach(category => {
+            const categoryData = configData.categories[category] || {};
+            const topics = categoryData.topics && typeof categoryData.topics === 'object'
+                ? categoryData.topics
+                : {};
+            const hasFiles = Object.keys(topics).some(topic => {
+                const topicData = topics[topic] || {};
+                return Array.isArray(topicData.files) && topicData.files.length > 0;
+            });
+
+            if (!hasFiles && !defaultCategories.has(category)) {
+                delete configData.categories[category];
+            }
+        });
+    }
+
     // 清理authors中的无效记录
     if (configData.authors) {
         Object.keys(configData.authors).forEach(author => {
