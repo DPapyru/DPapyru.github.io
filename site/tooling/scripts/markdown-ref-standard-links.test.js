@@ -54,3 +54,18 @@ test('viewer transclusion parser no longer handles ref kind', () => {
 
     assert.doesNotMatch(viewerHtml, /kind !== 'ref' && kind !== 'cs'/);
 });
+
+test('content avoids markdown links for csharp selector embeds', () => {
+    const contentRoot = path.resolve('site/content');
+    const markdownFiles = walkMarkdownFiles(contentRoot);
+    const offenders = [];
+
+    markdownFiles.forEach((filePath) => {
+        const source = fs.readFileSync(filePath, 'utf8');
+        if (/\[[^\]]+\]\([^\)\n]+\.cs#cs:[^\)\n]+\)/.test(source)) {
+            offenders.push(path.relative(process.cwd(), filePath));
+        }
+    });
+
+    assert.deepEqual(offenders, []);
+});
