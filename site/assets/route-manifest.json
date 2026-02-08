@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "generatedAt": "2026-02-07T11:36:15.127Z",
+  "generatedAt": "2026-02-07T14:28:55.807Z",
   "routes": {
     "Modder入门学习/CSharp基础/CSharp_Frist.md": {
       "entry": "entry",
@@ -29,6 +29,58 @@
         }
       },
       "source": "getting-started.route.json"
+    },
+    "Modder入门学习/CSharp基础/新人路由导航.md": {
+      "entry": "entry",
+      "nodes": {
+        "entry": {
+          "type": "decision",
+          "dimension": "C",
+          "map": {
+            "0": "remedial",
+            "1": "c_standard",
+            "2": "c_fast"
+          },
+          "fallback": "c_standard"
+        },
+        "c_standard": {
+          "type": "decision",
+          "dimension": "T",
+          "map": {
+            "0": "remedial",
+            "1": "standard",
+            "2": "deep"
+          },
+          "fallback": "standard"
+        },
+        "c_fast": {
+          "type": "decision",
+          "dimension": "T",
+          "map": {
+            "0": "standard",
+            "1": "fast",
+            "2": "deep"
+          },
+          "fallback": "fast"
+        },
+        "remedial": {
+          "type": "path",
+          "path": "remedial"
+        },
+        "standard": {
+          "type": "path",
+          "path": "standard"
+        },
+        "fast": {
+          "type": "path",
+          "path": "fast"
+        },
+        "deep": {
+          "type": "path",
+          "path": "deep"
+        }
+      },
+      "source": "newbie-navigation.route.json"
     }
   }
 }
