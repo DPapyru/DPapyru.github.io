@@ -517,7 +517,7 @@
                 <p>探索泰拉瑞亚Mod制作的完整教程体系，从入门到精通，一步步成为Mod开发专家</p>
                 <div class="hero-buttons">
                     <a href="#category-grid" class="btn btn-primary">开始学习</a>
-                    <a href="viewer.html?file=Modder入门/DPapyru-从这里开始.md" class="btn btn-secondary">查看教程</a>
+                    <a href="/site/pages/viewer.html?file=Modder入门/DPapyru-从这里开始.md" class="btn btn-secondary">查看教程</a>
                 </div>
             </div>
         </section>
@@ -1316,7 +1316,7 @@
 	            const docLink = document.createElement('a');
 	            docLink.className = 'doc-link tree-row';
 	            docLink.style.setProperty('--tree-depth', depth);
-	            docLink.href = `viewer.html?file=${encodeURIComponent(doc.path || doc.filename)}`;
+            docLink.href = `/site/pages/viewer.html?file=${encodeURIComponent(doc.path || doc.filename)}`;
 	            docLink.title = `${doc.author} - ${doc.description || doc.title}`;
 
 	            const difficultyClass = normalizeDifficultyClass(doc.difficulty);
@@ -1592,7 +1592,7 @@
                     case 'view-all':
                         // 查找第一个文档
                         if (VISIBLE_DOCS.length > 0) {
-                            buttonLink = `viewer.html?file=${encodeURIComponent(VISIBLE_DOCS[0].path || VISIBLE_DOCS[0].filename)}`;
+                            buttonLink = `/site/pages/viewer.html?file=${encodeURIComponent(VISIBLE_DOCS[0].path || VISIBLE_DOCS[0].filename)}`;
                         }
                         break;
                     case 'get-started':
@@ -1600,7 +1600,7 @@
                         {
                             const beginnerDoc = VISIBLE_DOCS.find(doc => doc.category === '入门');
                             if (beginnerDoc) {
-                                buttonLink = `viewer.html?file=${encodeURIComponent(beginnerDoc.path || beginnerDoc.filename)}`;
+                                buttonLink = `/site/pages/viewer.html?file=${encodeURIComponent(beginnerDoc.path || beginnerDoc.filename)}`;
                             }
                         }
                         break;
@@ -1611,7 +1611,7 @@
                                 doc.category === '高级' || doc.category === '进阶'
                             );
                             if (apiDoc) {
-                                buttonLink = `viewer.html?file=${encodeURIComponent(apiDoc.path || apiDoc.filename)}`;
+                                buttonLink = `/site/pages/viewer.html?file=${encodeURIComponent(apiDoc.path || apiDoc.filename)}`;
                             }
                         }
                         break;
