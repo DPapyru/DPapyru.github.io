@@ -3978,14 +3978,21 @@
 	                            if (diag) {
 	                                collectAuthorDiagnostics(diag, rawMetadata, metadata, fetchPath, rawSourceContent);
 	                            }
-		                            renderLearningSidebarPanel(learningModel);
-		                            renderLearningAuthorToolbar();
-		                            renderLearningRecommendationHint(metadata, learningModel);
-		                            renderLearningHintsBanner(learningModel);
-		                            renderLearningTopBanner(learningModel);
-		                            renderLearningAuthorHeaderHint(diag);
 
 		                            content = await expandMarkdownTransclusions(content, fetchPath, 0, [], learningModel.ctx);
+
+		                            if (typeof renderLearningSidebarPanel === 'function') {
+		                                renderLearningSidebarPanel(learningModel);
+		                            }
+		                            renderLearningAuthorToolbar();
+		                            renderLearningRecommendationHint(metadata, learningModel);
+		                            if (typeof renderLearningHintsBanner === 'function') {
+		                                renderLearningHintsBanner(learningModel);
+		                            }
+		                            if (typeof renderLearningTopBanner === 'function') {
+		                                renderLearningTopBanner(learningModel);
+		                            }
+		                            renderLearningAuthorHeaderHint(diag);
 	                        } catch (err) {
 	                            console.warn('展开引用内容失败，继续渲染原始文档:', err);
 	                        }
