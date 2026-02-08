@@ -6,8 +6,6 @@
     var PROFILE_KEY = 'learningProfile';
     var DISMISSED_KEY = 'learningOnboardingDismissed';
     var PREFS_KEY = 'learningPreferences';
-    var SHOW_UNMAPPED_KEY = 'learningFilterShowUnmapped';
-    var SHOW_ALL_KEY = 'learningFilterShowAll';
 
     var state = {
         promise: null,
@@ -70,14 +68,6 @@
         }
     }
 
-    function readBool(key) {
-        try {
-            return window.localStorage.getItem(key) === 'true';
-        } catch (e) {
-            return false;
-        }
-    }
-
     function getProfile() {
         var parsed = readJsonFromLocalStorage(PROFILE_KEY);
         if (!parsed || typeof parsed !== 'object') return null;
@@ -112,18 +102,13 @@
 
     function getPrefs() {
         return {
-            showUnmapped: readBool(SHOW_UNMAPPED_KEY),
-            showAll: readBool(SHOW_ALL_KEY)
+            showUnmapped: false,
+            showAll: false
         };
     }
 
     function setPref(prefKey, value) {
-        if (prefKey === 'showUnmapped') {
-            writeLocalStorage(SHOW_UNMAPPED_KEY, value ? 'true' : 'false');
-        }
-        if (prefKey === 'showAll') {
-            writeLocalStorage(SHOW_ALL_KEY, value ? 'true' : 'false');
-        }
+        return;
     }
 
     function getOnboardingUrl() {
@@ -239,7 +224,7 @@
             hidden: 0
         };
 
-        if (!profile || prefs.showAll) {
+        if (!profile) {
             visible = docList.slice();
             counts.visible = visible.length;
             counts.hidden = Math.max(0, counts.total - counts.visible);
@@ -248,7 +233,7 @@
                 mappingEmpty: isMappingEmpty(mapping),
                 profile: profile,
                 prefs: prefs,
-                isStrict: Boolean(profile) && !prefs.showAll && !prefs.showUnmapped,
+                isStrict: false,
                 visibleDocs: visible,
                 counts: counts
             };
@@ -260,11 +245,7 @@
             var rule = getEffectiveRule(mapping, normalized) || getMetaRule(doc);
             if (!rule) {
                 counts.unmapped += 1;
-                if (prefs.showUnmapped) {
-                    visible.push(doc);
-                } else {
-                    counts.hidden += 1;
-                }
+                visible.push(doc);
                 return;
             }
 
@@ -278,13 +259,14 @@
         });
 
         counts.visible = visible.length;
+        counts.hidden = 0;
 
         return {
             mapping: mapping,
             mappingEmpty: isMappingEmpty(mapping),
             profile: profile,
             prefs: prefs,
-            isStrict: Boolean(profile) && !prefs.showAll && !prefs.showUnmapped,
+            isStrict: false,
             visibleDocs: visible,
             counts: counts
         };

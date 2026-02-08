@@ -882,6 +882,21 @@
 	            return allowed.includes(difficulty) ? difficulty : 'beginner';
 	        }
 
+	        function parseOptionalLevel(value) {
+	            if (typeof value === 'number' && Number.isFinite(value)) {
+	                return Math.max(0, Math.min(2, Math.floor(value)));
+	            }
+
+	            if (typeof value === 'string' && value.trim() !== '') {
+	                const parsed = Number.parseInt(value, 10);
+	                if (Number.isFinite(parsed)) {
+	                    return Math.max(0, Math.min(2, parsed));
+	                }
+	            }
+
+	            return null;
+	        }
+
 	        function buildRecommendationBadge(doc) {
 	            const minC = (doc && typeof doc.min_c === 'number') ? doc.min_c : null;
 	            const minT = (doc && typeof doc.min_t === 'number') ? doc.min_t : null;
@@ -969,11 +984,10 @@
 
             if (!window.LearningPaths) return;
 
-            const profile = window.LearningPaths.getProfile();
-            const prefs = window.LearningPaths.getPrefs();
-            const preferences = (typeof window.LearningPaths.getPreferences === 'function')
-                ? window.LearningPaths.getPreferences()
-                : {};
+	            const profile = window.LearningPaths.getProfile();
+	            const preferences = (typeof window.LearningPaths.getPreferences === 'function')
+	                ? window.LearningPaths.getPreferences()
+	                : {};
             const counts = (LEARNING_STATE && LEARNING_STATE.counts) ? LEARNING_STATE.counts : {
                 total: ALL_DOCS.length,
                 visible: VISIBLE_DOCS.length,
@@ -986,14 +1000,13 @@
             title.className = 'learning-path-title';
             title.textContent = profile ? ('当前路径：C' + profile.c + ' / T' + profile.t) : '未设置学习路径';
 
-            const meta = document.createElement('div');
-            meta.className = 'learning-path-meta';
-            if (!profile) {
-                meta.textContent = '当前展示全部文档；建议测评以启用过滤。';
-            } else {
-                const mode = prefs.showAll ? '已显示全部' : (prefs.showUnmapped ? '已显示未标注' : '严格过滤');
-                meta.textContent = '显示 ' + counts.visible + ' / ' + counts.total + '；' + mode;
-            }
+	            const meta = document.createElement('div');
+	            meta.className = 'learning-path-meta';
+	            if (!profile) {
+	                meta.textContent = '当前展示全部文档；建议完成测评以获得路径建议。';
+	            } else {
+	                meta.textContent = '显示 ' + counts.visible + ' / ' + counts.total + '；文章列表不做分流';
+	            }
 
             const prefLine = document.createElement('div');
             prefLine.className = 'learning-path-meta';
@@ -1004,44 +1017,15 @@
             }).filter(Boolean);
             prefLine.textContent = prefLabels.length ? ('偏好：' + prefLabels.join(' / ')) : '';
 
-            const actions = document.createElement('div');
-            actions.className = 'learning-path-actions';
+	            const actions = document.createElement('div');
+	            actions.className = 'learning-path-actions';
 
-            function makeToggle(label, pressed, onClick) {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'learning-toggle';
-                btn.textContent = label;
-                btn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
-                btn.addEventListener('click', onClick);
-                return btn;
-            }
+	            const onboardingLink = document.createElement('a');
+	            onboardingLink.className = 'btn btn-small btn-outline';
+	            onboardingLink.href = window.LearningPaths.getOnboardingUrl();
+	            onboardingLink.textContent = profile ? '修改路径' : '开始测评';
 
-            const onboardingLink = document.createElement('a');
-            onboardingLink.className = 'btn btn-small btn-outline';
-            onboardingLink.href = window.LearningPaths.getOnboardingUrl();
-            onboardingLink.textContent = profile ? '修改路径' : '开始测评';
-
-            if (profile) {
-                const showUnmapped = makeToggle('显示未标注', prefs.showUnmapped, function () {
-                    const next = !window.LearningPaths.getPrefs().showUnmapped;
-                    window.LearningPaths.setPref('showUnmapped', next);
-                    if (next) window.LearningPaths.setPref('showAll', false);
-                    window.location.reload();
-                });
-
-                const showAll = makeToggle('显示全部', prefs.showAll, function () {
-                    const next = !window.LearningPaths.getPrefs().showAll;
-                    window.LearningPaths.setPref('showAll', next);
-                    if (next) window.LearningPaths.setPref('showUnmapped', false);
-                    window.location.reload();
-                });
-
-                actions.appendChild(showUnmapped);
-                actions.appendChild(showAll);
-            }
-
-            actions.appendChild(onboardingLink);
+	            actions.appendChild(onboardingLink);
 
             bar.appendChild(title);
             bar.appendChild(actions);
@@ -1344,10 +1328,12 @@
 	                    ALL_DOCS = ALL_DOCS.map(doc => {
 	                        // 尝试从分类的topics中获取description
 	                        let description = doc.description || '';
+	                        const minC = parseOptionalLevel(doc.min_c);
+	                        const minT = parseOptionalLevel(doc.min_t);
 	                        if (!description && doc.category && doc.topic && FOLDER_DOC_CONFIG.categories &&
 	                            FOLDER_DOC_CONFIG.categories[doc.category] &&
-                            FOLDER_DOC_CONFIG.categories[doc.category].topics &&
-                            FOLDER_DOC_CONFIG.categories[doc.category].topics[doc.topic] &&
+	                            FOLDER_DOC_CONFIG.categories[doc.category].topics &&
+	                            FOLDER_DOC_CONFIG.categories[doc.category].topics[doc.topic] &&
                             FOLDER_DOC_CONFIG.categories[doc.category].topics[doc.topic].files) {
                             
                             const topicFiles = FOLDER_DOC_CONFIG.categories[doc.category].topics[doc.topic].files;
@@ -1367,7 +1353,9 @@
 	                            order: parseInt(doc.order) || 999,
 	                            description: description,
 	                            last_updated: doc.last_updated || '未知',
-	                            difficulty: doc.difficulty || 'beginner'
+	                            difficulty: doc.difficulty || 'beginner',
+	                            min_c: minC,
+	                            min_t: minT
 	                        };
 	                    });
 
