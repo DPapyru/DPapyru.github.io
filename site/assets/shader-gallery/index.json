@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-02-08T10:32:34.537Z",
+  "total": 1,
+  "items": [
+    {
+      "slug": "noise-vignette",
+      "title": "Noise Vignette",
+      "author": "DPapyru",
+      "description": "一个用于调试 iTime 的噪声暗角示例。",
+      "tags": [
+        "noise",
+        "vignette",
+        "time"
+      ],
+      "updated_at": "2026-02-08",
+      "cover": "",
+      "source": {
+        "entry": "/site/content/shader-gallery/examples/noise-vignette/entry.json",
+        "shader": "/site/content/shader-gallery/examples/noise-vignette/shader.json"
+      },
+      "payload": {
+        "common": "",
+        "passes": [
+          {
+            "name": "Pass 1",
+            "type": "image",
+            "scale": 1,
+            "code": "float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0\n{\n    float2 uv = texCoord;\n    float2 p = uv * 2.0 - 1.0;\n    float noise = frac(sin(dot(uv * 128.0, float2(12.9898, 78.233))) * 43758.5453);\n    float vignette = saturate(1.0 - dot(p, p) * 0.55);\n    float wave = 0.5 + 0.5 * sin(iTime * 1.2 + uv.x * 8.0);\n    float3 col = float3(noise * 0.4 + wave * 0.6, uv.y, wave) * vignette;\n    return float4(col, 1.0);\n}\n",
+            "channels": [
+              {
+                "kind": "none"
+              },
+              {
+                "kind": "none"
+              },
+              {
+                "kind": "none"
+              },
+              {
+                "kind": "none"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

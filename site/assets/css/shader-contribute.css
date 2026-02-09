@@ -1,0 +1,130 @@
+.shader-contribute-page .container {
+    max-width: min(1700px, 96vw);
+}
+
+.shader-contribute-shell {
+    margin-top: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    overflow: hidden;
+    padding: 14px;
+}
+
+.shader-contribute-grid {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.95fr) minmax(420px, 1.25fr);
+    gap: 12px;
+}
+
+.shader-contribute-card {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-color);
+    padding: 12px;
+}
+
+.shader-contribute-title {
+    margin: 0 0 10px;
+    font-size: 16px;
+    color: var(--text-color);
+}
+
+.shader-contribute-list {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 13px;
+}
+
+.shader-contribute-list li {
+    margin: 6px 0;
+}
+
+.shader-contribute-note {
+    margin: 12px 0 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.shader-contribute-actions {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.shader-contribute-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.shader-contribute-link:hover {
+    border-color: var(--primary-color);
+}
+
+.shader-contribute-template-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.shader-contribute-template-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.shader-contribute-template {
+    width: 100%;
+    min-height: 520px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: #0c0c0d;
+    color: #d4d4d4;
+    padding: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.55;
+    resize: vertical;
+}
+
+.shader-contribute-template:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 55%, transparent);
+}
+
+.shader-contribute-status {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.shader-contribute-status[data-error="true"] {
+    color: var(--danger-color);
+}
+
+@media (max-width: 1100px) {
+    .shader-contribute-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .shader-contribute-template {
+        min-height: 420px;
+    }
+}

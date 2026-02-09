@@ -6,12 +6,15 @@
   "scripts": {
     "generate-structure": "node site/tooling/generate-structure.js",
     "generate-search": "node site/tooling/generate-search.js",
+    "generate-shader-gallery": "node site/tooling/scripts/generate-shader-gallery.js",
     "generate-routes": "node site/tooling/scripts/compile-routes.js",
-    "generate-index": "npm run generate-structure && npm run generate-search",
+    "generate-index": "npm run generate-structure && npm run generate-search && npm run generate-shader-gallery",
+    "gallery:normalize": "node site/tooling/scripts/gallery-normalize.js",
+    "gallery:check": "node site/tooling/scripts/gallery-check.js",
     "build:anims": "node site/tooling/scripts/build-anims.js",
     "build:animcs": "node site/tooling/scripts/build-animcs.js",
     "build": "npm run generate-index && npm run build:anims",
-    "check-generated": "npm run build && git diff --exit-code",
+    "check-generated": "npm run gallery:check && npm run build && git diff --exit-code",
     "check-content": "node site/tooling/scripts/check-content.js",
     "test": "node --test"
   },
@@ -27,7 +30,9 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "js-yaml": "^4.1.1"
+    "gifuct-js": "^2.1.2",
+    "js-yaml": "^4.1.1",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

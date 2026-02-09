@@ -196,8 +196,11 @@ function sanitizeExtraFilePath(input) {
 
   if (!p) throw new Error("extra file path 为空");
   if (p.includes("..")) throw new Error("extra file path 非法");
-  if (!/^site\/content\/routes\/.+\.route\.json$/i.test(p)) {
-    throw new Error("extra file 只允许 site/content/routes/*.route.json");
+
+  const isRouteFile = /^site\/content\/routes\/.+\.route\.json$/i.test(p);
+  const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(p);
+  if (!isRouteFile && !isShaderGalleryFile) {
+    throw new Error("extra file 只允许 site/content/routes/*.route.json 或 site/content/shader-gallery/<slug>/(entry|shader).json");
   }
 
   return p;

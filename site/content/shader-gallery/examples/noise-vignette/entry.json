@@ -1,0 +1,14 @@
+{
+  "slug": "noise-vignette",
+  "title": "Noise Vignette",
+  "author": "DPapyru",
+  "description": "一个用于调试 iTime 的噪声暗角示例。",
+  "shader": "shader.json",
+  "cover": "",
+  "tags": [
+    "noise",
+    "vignette",
+    "time"
+  ],
+  "updated_at": "2026-02-08"
+}

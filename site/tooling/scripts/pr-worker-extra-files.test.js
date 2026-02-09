@@ -37,6 +37,7 @@ test('oauth worker restricts extraFiles path and count', () => {
     const text = fs.readFileSync(file, 'utf8');
 
     assert.match(text, /site\/content\/routes\/\*\.route\.json/);
+    assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
     assert.match(text, /extraFiles\s*数量不能超过\s*5/);
     assert.match(text, /content\s*过大/);
 });
@@ -48,6 +49,16 @@ test('shared-key worker defines extraFiles sanitizer helpers', () => {
     assert.match(text, /function\s+sanitizeExtraFilePath\s*\(/);
     assert.match(text, /function\s+normalizeExtraFiles\s*\(/);
     assert.match(text, /extraFiles\s*=\s*normalizeExtraFiles\(/);
+});
+
+test('shared-key worker supports shader gallery extra files', () => {
+    const file = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
+    const text = fs.readFileSync(file, 'utf8');
+
+    assert.match(text, /site\/content\/routes\/\*\.route\.json/);
+    assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
+    assert.match(text, /extraFiles\s*数量不能超过\s*5/);
+    assert.match(text, /content\s*过大/);
 });
 
 test('shared-key worker writes extra files to github contents api', () => {
