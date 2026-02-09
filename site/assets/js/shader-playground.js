@@ -6,9 +6,19 @@
 
     const STORAGE_KEY = 'shader-playground.v1';
     const ITIME_OFFSET_STORAGE_KEY = 'shader-playground.iTimeOffset';
+    const PLAYGROUND_IMPORT_KEY = 'shader-playground.import.v1';
     const BLEND_MODE_STORAGE_KEY = 'shader-playground.blend-mode';
     const BG_MODE_STORAGE_KEY = 'shader-playground.bg-mode';
     const COMMON_TAB_ID = '__common__';
+    const DEFAULT_BASE_WIDTH = 960;
+    const DEFAULT_ASPECT_MODE = '16:9';
+    const ASPECT_PRESETS = {
+        '16:9': { w: 16, h: 9 },
+        '4:3': { w: 4, h: 3 },
+        '1:1': { w: 1, h: 1 },
+        '21:9': { w: 21, h: 9 },
+        'custom': null
+    };
     const hlslAdapter = (typeof window !== 'undefined' && window.ShaderHlslAdapter) ? window.ShaderHlslAdapter : null;
     const editorAssist = (typeof window !== 'undefined' && window.ShaderEditorAssist) ? window.ShaderEditorAssist : null;
     const commandParamsAdapter = (typeof window !== 'undefined' && window.ShaderCommandParams) ? window.ShaderCommandParams : null;
@@ -19,6 +29,67 @@
 
     function clamp(v, min, max) {
         return Math.max(min, Math.min(max, v));
+    }
+
+    function normalizeGlobalScale(value) {
+        const num = Number(value);
+        if (!isFinite(num)) return 1;
+        return clamp(num, 0.25, 4);
+    }
+
+    function normalizeBaseWidth(value) {
+        const num = Number(value);
+        if (!isFinite(num)) return DEFAULT_BASE_WIDTH;
+        return Math.round(clamp(num, 320, 7680));
+    }
+
+    function normalizeAspectMode(mode) {
+        const key = String(mode || '').toLowerCase();
+        if (Object.prototype.hasOwnProperty.call(ASPECT_PRESETS, key)) return key;
+        return DEFAULT_ASPECT_MODE;
+    }
+
+    function normalizeRatioComponent(value, fallback) {
+        const num = Number(value);
+        if (!isFinite(num)) return fallback;
+        return clamp(num, 0.1, 100);
+    }
+
+    function getAspectComponents(state) {
+        const mode = normalizeAspectMode(state && state.aspectMode);
+        if (mode !== 'custom') {
+            const preset = ASPECT_PRESETS[mode] || ASPECT_PRESETS[DEFAULT_ASPECT_MODE];
+            return { mode: mode, w: preset.w, h: preset.h };
+        }
+
+        const customW = normalizeRatioComponent(state && state.customAspectW, 16);
+        const customH = normalizeRatioComponent(state && state.customAspectH, 9);
+        return { mode: mode, w: customW, h: customH };
+    }
+
+    function computeRenderResolution(state) {
+        const aspect = getAspectComponents(state || {});
+        const baseWidth = normalizeBaseWidth(state && state.baseWidth);
+        const baseHeight = Math.max(1, Math.round(baseWidth * aspect.h / aspect.w));
+        const scale = normalizeGlobalScale(state && state.globalScale);
+        const renderWidth = Math.max(1, Math.round(baseWidth * scale));
+        const renderHeight = Math.max(1, Math.round(baseHeight * scale));
+        return {
+            baseWidth: baseWidth,
+            baseHeight: baseHeight,
+            renderWidth: renderWidth,
+            renderHeight: renderHeight,
+            aspectW: aspect.w,
+            aspectH: aspect.h,
+            aspectMode: aspect.mode,
+            scale: scale
+        };
+    }
+
+    function applyCanvasAspectRatio(canvas, state) {
+        if (!canvas) return;
+        const info = computeRenderResolution(state);
+        canvas.style.aspectRatio = info.baseWidth + ' / ' + info.baseHeight;
     }
 
     function nowMs() {
@@ -135,6 +206,10 @@
                 selected: state.selected,
                 editorTarget: state.editorTarget,
                 globalScale: state.globalScale,
+                baseWidth: state.baseWidth,
+                aspectMode: state.aspectMode,
+                customAspectW: state.customAspectW,
+                customAspectH: state.customAspectH,
                 addressMode: state.addressMode
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -172,9 +247,93 @@
             selected: pass1.id,
             editorTarget: pass1.id,
             globalScale: 1,
+            baseWidth: DEFAULT_BASE_WIDTH,
+            aspectMode: DEFAULT_ASPECT_MODE,
+            customAspectW: 16,
+            customAspectH: 9,
             addressMode: "clamp",
             isRunning: true
         };
+    }
+
+    function normalizeImportedPassState(payload, baseState) {
+        const source = payload && payload.payload ? payload.payload : payload;
+        if (!source || !Array.isArray(source.passes) || source.passes.length === 0) return null;
+
+        const next = createDefaultState();
+        const idMap = new Map();
+        next.common = typeof source.common === 'string' ? source.common : '';
+        next.passes = source.passes.map((raw, idx) => {
+            const id = createId('pass');
+            const oldId = String((raw && raw.id) || idx);
+            idMap.set(oldId, id);
+            return {
+                id: id,
+                name: sanitizeName((raw && raw.name) || ('Pass ' + (idx + 1))),
+                type: (raw && raw.type === 'buffer') ? 'buffer' : 'image',
+                scale: clamp(Number(raw && raw.scale ? raw.scale : 1), 0.1, 1),
+                code: String((raw && raw.code) || ''),
+                channels: [{ kind: 'none' }, { kind: 'none' }, { kind: 'none' }, { kind: 'none' }]
+            };
+        });
+
+        next.passes.forEach((pass, idx) => {
+            const raw = source.passes[idx] || {};
+            const rawChannels = Array.isArray(raw.channels) ? raw.channels : [];
+            for (let i = 0; i < 4; i += 1) {
+                const ch = rawChannels[i] || { kind: 'none' };
+                const kind = String(ch.kind || 'none');
+                if (kind === 'builtin' && (ch.id === 'builtin:checker' || ch.id === 'builtin:noise')) {
+                    pass.channels[i] = { kind: 'builtin', id: ch.id };
+                    continue;
+                }
+                if (kind === 'buffer') {
+                    const mappedPassId = idMap.get(String(ch.passId || ''));
+                    if (mappedPassId) {
+                        pass.channels[i] = {
+                            kind: 'buffer',
+                            passId: mappedPassId,
+                            frame: ch.frame === 'current' ? 'current' : 'prev'
+                        };
+                    }
+                    continue;
+                }
+                pass.channels[i] = { kind: 'none' };
+            }
+        });
+
+        if (baseState) {
+            next.globalScale = normalizeGlobalScale(baseState.globalScale);
+            next.baseWidth = normalizeBaseWidth(baseState.baseWidth);
+            next.aspectMode = normalizeAspectMode(baseState.aspectMode);
+            next.customAspectW = normalizeRatioComponent(baseState.customAspectW, 16);
+            next.customAspectH = normalizeRatioComponent(baseState.customAspectH, 9);
+            next.addressMode = normalizeTextureAddressMode(baseState.addressMode);
+        }
+
+        next.selected = next.passes[0].id;
+        next.editorTarget = next.selected;
+        return next;
+    }
+
+    function consumeGalleryImportPayload() {
+        if (typeof window === 'undefined') return null;
+        const params = new URLSearchParams(window.location.search || '');
+        if (params.get('import') !== 'gallery') return null;
+
+        let payload = null;
+        try {
+            const raw = localStorage.getItem(PLAYGROUND_IMPORT_KEY);
+            payload = raw ? safeJsonParse(raw) : null;
+        } catch (_) {
+            payload = null;
+        }
+
+        try {
+            localStorage.removeItem(PLAYGROUND_IMPORT_KEY);
+        } catch (_) { }
+
+        return payload;
     }
 
     // --- Toy-HLSL -> GLSL ES 3.00
@@ -552,8 +711,9 @@
         const addressMode = normalizeTextureAddressMode(state.addressMode);
         runtime.lastMs = tMs;
 
-        const canvasW = Math.max(1, Math.floor(canvas.clientWidth * state.globalScale));
-        const canvasH = Math.max(1, Math.floor(canvas.clientHeight * state.globalScale));
+        const resolution = computeRenderResolution(state);
+        const canvasW = resolution.renderWidth;
+        const canvasH = resolution.renderHeight;
         if (canvas.width !== canvasW) canvas.width = canvasW;
         if (canvas.height !== canvasH) canvas.height = canvasH;
 
@@ -926,6 +1086,11 @@
         const statusEl = $('shaderpg-status');
         const runBtn = $('shaderpg-toggle-run');
         const resetPlaybackBtn = $('shaderpg-reset-playback');
+        const aspectSelect = $('shaderpg-aspect');
+        const customAspectGroup = $('shaderpg-custom-aspect-group');
+        const customAspectWInput = $('shaderpg-custom-aspect-w');
+        const customAspectHInput = $('shaderpg-custom-aspect-h');
+        const baseWidthInput = $('shaderpg-base-width');
         const scaleSelect = $('shaderpg-scale');
         const addressModeSelect = $('shaderpg-address-mode');
         const bgModeSelect = $('shaderpg-bg-mode');
@@ -1129,14 +1294,71 @@
             }
             base.selected = saved.selected || base.passes[0].id;
             base.editorTarget = saved.editorTarget || base.selected;
-            base.globalScale = Number(saved.globalScale || 1);
+            base.globalScale = normalizeGlobalScale(saved.globalScale);
+            base.baseWidth = normalizeBaseWidth(saved.baseWidth || DEFAULT_BASE_WIDTH);
+            base.aspectMode = normalizeAspectMode(saved.aspectMode || DEFAULT_ASPECT_MODE);
+            base.customAspectW = normalizeRatioComponent(saved.customAspectW, 16);
+            base.customAspectH = normalizeRatioComponent(saved.customAspectH, 9);
             base.addressMode = normalizeTextureAddressMode(saved.addressMode);
             return base;
         })();
 
+        const importedPayload = consumeGalleryImportPayload();
+        if (importedPayload) {
+            const importedState = normalizeImportedPassState(importedPayload, state);
+            if (importedState) {
+                state = importedState;
+            }
+        }
+
         // Editor shows either Common or selected pass.
         editorTa.value = '';
-        scaleSelect.value = String(state.globalScale || 1);
+        state.globalScale = normalizeGlobalScale(state.globalScale);
+        state.baseWidth = normalizeBaseWidth(state.baseWidth);
+        state.aspectMode = normalizeAspectMode(state.aspectMode);
+        state.customAspectW = normalizeRatioComponent(state.customAspectW, 16);
+        state.customAspectH = normalizeRatioComponent(state.customAspectH, 9);
+
+        if (scaleSelect) scaleSelect.value = String(state.globalScale || 1);
+        if (baseWidthInput) baseWidthInput.value = String(state.baseWidth);
+        if (aspectSelect) aspectSelect.value = state.aspectMode;
+        if (customAspectWInput) customAspectWInput.value = String(state.customAspectW);
+        if (customAspectHInput) customAspectHInput.value = String(state.customAspectH);
+        applyCanvasAspectRatio(canvas, state);
+
+        function syncResolutionControlsFromState() {
+            if (aspectSelect) aspectSelect.value = normalizeAspectMode(state.aspectMode);
+            if (customAspectWInput) customAspectWInput.value = String(normalizeRatioComponent(state.customAspectW, 16));
+            if (customAspectHInput) customAspectHInput.value = String(normalizeRatioComponent(state.customAspectH, 9));
+            if (baseWidthInput) baseWidthInput.value = String(normalizeBaseWidth(state.baseWidth));
+            if (scaleSelect) scaleSelect.value = String(normalizeGlobalScale(state.globalScale));
+        }
+
+        function refreshCustomAspectUi() {
+            if (!customAspectGroup) return;
+            const isCustom = normalizeAspectMode(state.aspectMode) === 'custom';
+            customAspectGroup.hidden = !isCustom;
+        }
+
+        function updateResolutionStateAndPersist() {
+            state.globalScale = normalizeGlobalScale(state.globalScale);
+            state.baseWidth = normalizeBaseWidth(state.baseWidth);
+            state.aspectMode = normalizeAspectMode(state.aspectMode);
+            state.customAspectW = normalizeRatioComponent(state.customAspectW, 16);
+            state.customAspectH = normalizeRatioComponent(state.customAspectH, 9);
+            syncResolutionControlsFromState();
+            refreshCustomAspectUi();
+            applyCanvasAspectRatio(canvas, state);
+            saveState(state);
+            if (!state.isRunning && !contextLost) {
+                try {
+                    renderFrame(runtime, state);
+                } catch (_) { }
+            }
+        }
+
+        syncResolutionControlsFromState();
+        refreshCustomAspectUi();
         if (addressModeSelect) addressModeSelect.value = normalizeTextureAddressMode(state.addressMode);
 
         const completionState = {
@@ -1922,7 +2144,9 @@
         resetBtn.addEventListener('click', function () {
             if (!confirm('重置为示例内容？（会覆盖当前代码与 pass 列表）')) return;
             state = createDefaultState();
-            scaleSelect.value = String(state.globalScale);
+            syncResolutionControlsFromState();
+            refreshCustomAspectUi();
+            applyCanvasAspectRatio(canvas, state);
             if (addressModeSelect) addressModeSelect.value = normalizeTextureAddressMode(state.addressMode);
             syncEditor();
             renderAll();
@@ -2023,10 +2247,52 @@
             }
         });
 
-        scaleSelect.addEventListener('change', function () {
-            state.globalScale = Number(scaleSelect.value || 1);
-            saveState(state);
-        });
+        if (scaleSelect) {
+            scaleSelect.addEventListener('change', function () {
+                state.globalScale = normalizeGlobalScale(scaleSelect.value);
+                updateResolutionStateAndPersist();
+            });
+        }
+
+        if (aspectSelect) {
+            aspectSelect.addEventListener('change', function () {
+                state.aspectMode = normalizeAspectMode(aspectSelect.value);
+                updateResolutionStateAndPersist();
+            });
+        }
+
+        if (baseWidthInput) {
+            baseWidthInput.addEventListener('change', function () {
+                state.baseWidth = normalizeBaseWidth(baseWidthInput.value);
+                updateResolutionStateAndPersist();
+            });
+            baseWidthInput.addEventListener('blur', function () {
+                state.baseWidth = normalizeBaseWidth(baseWidthInput.value);
+                updateResolutionStateAndPersist();
+            });
+        }
+
+        if (customAspectWInput) {
+            customAspectWInput.addEventListener('change', function () {
+                state.customAspectW = normalizeRatioComponent(customAspectWInput.value, 16);
+                updateResolutionStateAndPersist();
+            });
+            customAspectWInput.addEventListener('blur', function () {
+                state.customAspectW = normalizeRatioComponent(customAspectWInput.value, 16);
+                updateResolutionStateAndPersist();
+            });
+        }
+
+        if (customAspectHInput) {
+            customAspectHInput.addEventListener('change', function () {
+                state.customAspectH = normalizeRatioComponent(customAspectHInput.value, 9);
+                updateResolutionStateAndPersist();
+            });
+            customAspectHInput.addEventListener('blur', function () {
+                state.customAspectH = normalizeRatioComponent(customAspectHInput.value, 9);
+                updateResolutionStateAndPersist();
+            });
+        }
 
         if (bgModeSelect) {
             bgModeSelect.addEventListener('change', function () {
