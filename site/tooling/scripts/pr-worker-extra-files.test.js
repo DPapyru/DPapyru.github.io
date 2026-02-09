@@ -38,8 +38,10 @@ test('oauth worker restricts extraFiles path and count', () => {
 
     assert.match(text, /site\/content\/routes\/\*\.route\.json/);
     assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
+    assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
     assert.match(text, /extraFiles\s*数量不能超过\s*5/);
     assert.match(text, /content\s*过大/);
+    assert.match(text, /base64\s*content\s*过大/);
 });
 
 test('shared-key worker defines extraFiles sanitizer helpers', () => {
@@ -57,8 +59,22 @@ test('shared-key worker supports shader gallery extra files', () => {
 
     assert.match(text, /site\/content\/routes\/\*\.route\.json/);
     assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
+    assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
     assert.match(text, /extraFiles\s*数量不能超过\s*5/);
     assert.match(text, /content\s*过大/);
+    assert.match(text, /base64\s*content\s*过大/);
+});
+
+test('workers accept base64 encoded extra files', () => {
+    const oauthFile = path.resolve('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
+    const sharedFile = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
+    const oauthText = fs.readFileSync(oauthFile, 'utf8');
+    const sharedText = fs.readFileSync(sharedFile, 'utf8');
+
+    assert.match(oauthText, /encoding\s*===\s*"base64"/);
+    assert.match(sharedText, /encoding\s*===\s*"base64"/);
+    assert.match(oauthText, /extraBase64\s*=\s*file\.encoding\s*===\s*"base64"\s*\?\s*file\.content/);
+    assert.match(sharedText, /extraBase64\s*=\s*file\.encoding\s*===\s*"base64"\s*\?\s*file\.content/);
 });
 
 test('shared-key worker writes extra files to github contents api', () => {

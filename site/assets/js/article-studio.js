@@ -1,13 +1,15 @@
 (function () {
     'use strict';
 
-    const STORAGE_KEY = 'articleStudioMarkdown.v7';
+    const STORAGE_KEY = 'articleStudioMarkdown.v8';
     const SESSION_AUTH_TOKEN_KEY = 'articleStudioOAuthToken.v1';
     const SESSION_AUTH_USER_KEY = 'articleStudioOAuthUser.v1';
     const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
     const STORAGE_DEBOUNCE_MS = 300;
     const PREVIEW_SYNC_DEBOUNCE_MS = 120;
     const DEFAULT_PR_WORKER_API_URL = 'https://greenhome-pr.3577415213.workers.dev/api/create-pr';
+    const MAX_IMAGE_FILE_SIZE = 2 * 1024 * 1024;
+    const MAX_IMAGE_COUNT = 12;
 
     const dom = {
         markdown: document.getElementById('studio-markdown'),
@@ -26,11 +28,17 @@
         exportJson: document.getElementById('studio-export'),
         reset: document.getElementById('studio-reset'),
         insertTemplate: document.getElementById('studio-insert-template'),
+        insertImage: document.getElementById('studio-insert-image'),
+        imageUpload: document.getElementById('studio-image-upload'),
+        imageList: document.getElementById('studio-image-list'),
         toggleFullscreen: document.getElementById('studio-toggle-fullscreen'),
         submitPr: document.getElementById('studio-submit-pr'),
         prWorkerUrl: document.getElementById('studio-pr-worker-url'),
         prSharedKey: document.getElementById('studio-pr-shared-key'),
         prTitle: document.getElementById('studio-pr-title'),
+        prChainSelect: document.getElementById('studio-pr-chain-select'),
+        refreshMyPrs: document.getElementById('studio-refresh-my-prs'),
+        togglePreviewImageNotice: document.getElementById('studio-toggle-preview-image-notice'),
         authLogin: document.getElementById('studio-auth-login'),
         authLogout: document.getElementById('studio-auth-logout'),
         authStatus: document.getElementById('studio-auth-status'),
@@ -45,6 +53,10 @@
         workerApiUrl: DEFAULT_PR_WORKER_API_URL,
         prTitle: '',
         lastPrUrl: '',
+        linkedPrNumber: '',
+        myOpenPrs: [],
+        uploadedImages: [],
+        previewImageNoticeEnabled: true,
         authToken: '',
         githubUser: '',
         isFullscreen: false
@@ -52,6 +64,8 @@
 
     let saveTimer = 0;
     let previewSyncTimer = 0;
+    let lastPreviewImageNotice = '';
+    let lastPreviewImageNoticeAt = 0;
 
     function nowStamp() {
         return new Date().toLocaleString('zh-CN', { hour12: false });
@@ -104,6 +118,17 @@
         return value;
     }
 
+    function workerApiEndpointFromApiUrl(apiUrl, pathname) {
+        const workerOrigin = workerOriginFromApiUrl(apiUrl);
+        if (!workerOrigin) return '';
+
+        try {
+            return new URL(pathname, workerOrigin).toString();
+        } catch (_) {
+            return '';
+        }
+    }
+
     function workerOriginFromApiUrl(apiUrl) {
         const normalized = normalizeWorkerApiUrl(apiUrl);
         if (!normalized) return '';
@@ -131,15 +156,11 @@
     }
 
     function authMeUrlFromApiUrl(apiUrl) {
-        const workerOrigin = workerOriginFromApiUrl(apiUrl);
-        if (!workerOrigin) return '';
+        return workerApiEndpointFromApiUrl(apiUrl, '/auth/me');
+    }
 
-        try {
-            const meUrl = new URL('/auth/me', workerOrigin);
-            return meUrl.toString();
-        } catch (_) {
-            return '';
-        }
+    function myOpenPrsUrlFromApiUrl(apiUrl) {
+        return workerApiEndpointFromApiUrl(apiUrl, '/api/my-open-prs');
     }
 
     function getFilenameFromPath(path) {
@@ -152,6 +173,27 @@
         const normalized = normalizePath(path);
         const index = normalized.lastIndexOf('/');
         return index >= 0 ? normalized.slice(0, index) : '';
+    }
+
+    function showPreviewImageMappedNotice(assetPath) {
+        if (!state.previewImageNoticeEnabled) return;
+        const normalized = normalizePath(assetPath || '');
+        if (!normalized) return;
+
+        const now = Date.now();
+        if (normalized === lastPreviewImageNotice && now - lastPreviewImageNoticeAt < 1500) {
+            return;
+        }
+
+        lastPreviewImageNotice = normalized;
+        lastPreviewImageNoticeAt = now;
+        setStatus(`预览已使用本地草稿图片：${normalized}`);
+    }
+
+    function updatePreviewImageNoticeToggleUi() {
+        if (!dom.togglePreviewImageNotice) return;
+        dom.togglePreviewImageNotice.textContent = state.previewImageNoticeEnabled ? '已开启' : '已关闭';
+        dom.togglePreviewImageNotice.classList.toggle('studio-preview-notice-toggle--off', !state.previewImageNoticeEnabled);
     }
 
     function normalizeFilename(input) {
@@ -171,6 +213,305 @@
 
     function defaultPrTitle() {
         return `docs: 更新 ${state.targetPath}`;
+    }
+
+    function formatBytes(size) {
+        const n = Number(size || 0);
+        if (!Number.isFinite(n) || n <= 0) return '0 B';
+        if (n < 1024) return `${n} B`;
+        if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+        return `${(n / (1024 * 1024)).toFixed(2)} MB`;
+    }
+
+    function stripImageExt(name) {
+        return String(name || '').replace(/\.[a-z0-9]+$/i, '');
+    }
+
+    function slugifyImageName(name) {
+        const base = stripImageExt(name).trim().toLowerCase();
+        const safe = base.replace(/[^a-z0-9\u4e00-\u9fa5_-]+/g, '-').replace(/-{2,}/g, '-').replace(/^-+|-+$/g, '');
+        return safe || `image-${Date.now().toString(36)}`;
+    }
+
+    function imageAssetPathFromTarget(targetPath, imageName) {
+        const markdownPath = ensureMarkdownPath(targetPath || state.targetPath);
+        const dir = getDirectoryFromPath(markdownPath);
+        const safeImage = slugifyImageName(imageName);
+        const uniqueSuffix = Math.random().toString(36).slice(2, 7);
+        if (dir) {
+            return `${dir}/imgs/${safeImage}-${uniqueSuffix}.png`;
+        }
+
+        return `imgs/${safeImage}-${uniqueSuffix}.png`;
+    }
+
+    function fileToDataUrl(file) {
+        return new Promise(function (resolve, reject) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                resolve(String(reader.result || ''));
+            };
+            reader.onerror = function () {
+                reject(new Error('读取图片失败'));
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function dataUrlToBase64(dataUrl) {
+        const text = String(dataUrl || '');
+        const comma = text.indexOf(',');
+        if (comma < 0) return '';
+        return text.slice(comma + 1);
+    }
+
+    function imageMarkdownText(item) {
+        if (!item) return '';
+        const alt = stripImageExt(item.name || 'image') || 'image';
+        return `![${alt}](/site/content/${encodePathForUrl(item.assetPath || '')})`;
+    }
+
+    function imageInsertionText(item) {
+        const md = imageMarkdownText(item);
+        if (!md) return '';
+        return `\n${md}\n`;
+    }
+
+    function buildImageExtraFiles() {
+        const list = Array.isArray(state.uploadedImages) ? state.uploadedImages : [];
+        return list.map(function (item) {
+            return {
+                path: `site/content/${item.assetPath}`,
+                content: String(item.base64 || ''),
+                encoding: 'base64'
+            };
+        }).filter(function (item) {
+            return !!item.content;
+        });
+    }
+
+    function updatePrChainSelectOptions() {
+        if (!dom.prChainSelect) return;
+
+        const previousValue = String(state.linkedPrNumber || '').trim();
+        dom.prChainSelect.innerHTML = '';
+
+        const createNewOption = document.createElement('option');
+        createNewOption.value = '';
+        createNewOption.textContent = '创建新 PR（默认）';
+        dom.prChainSelect.appendChild(createNewOption);
+
+        const list = Array.isArray(state.myOpenPrs) ? state.myOpenPrs : [];
+        list.forEach(function (pr) {
+            if (!pr || !pr.number) return;
+            const option = document.createElement('option');
+            option.value = String(pr.number);
+            option.textContent = `#${pr.number} · ${String(pr.title || '').trim() || '(无标题)'}`;
+            dom.prChainSelect.appendChild(option);
+        });
+
+        if (previousValue && list.some(function (pr) { return String(pr.number) === previousValue; })) {
+            dom.prChainSelect.value = previousValue;
+            state.linkedPrNumber = previousValue;
+        } else {
+            dom.prChainSelect.value = '';
+            if (previousValue && list.length > 0) {
+                setStatus('之前绑定的 PR 已关闭或不可见，已切换为“创建新 PR”');
+            }
+            state.linkedPrNumber = '';
+        }
+    }
+
+    function renderUploadedImages() {
+        if (!dom.imageList) return;
+
+        dom.imageList.innerHTML = '';
+        const list = Array.isArray(state.uploadedImages) ? state.uploadedImages : [];
+        if (list.length === 0) {
+            const empty = document.createElement('span');
+            empty.className = 'studio-help';
+            empty.textContent = '当前没有已上传图片';
+            dom.imageList.appendChild(empty);
+            return;
+        }
+
+        list.forEach(function (item) {
+            const row = document.createElement('div');
+            row.className = 'studio-image-item';
+
+            const head = document.createElement('div');
+            head.className = 'studio-image-item-head';
+
+            const name = document.createElement('span');
+            name.className = 'studio-image-item-name';
+            name.textContent = item.name || 'image.png';
+            head.appendChild(name);
+
+            const remove = document.createElement('button');
+            remove.className = 'btn btn-small btn-outline';
+            remove.type = 'button';
+            remove.textContent = '移除';
+            remove.addEventListener('click', function () {
+                state.uploadedImages = state.uploadedImages.filter(function (it) {
+                    return it.id !== item.id;
+                });
+                renderUploadedImages();
+                scheduleSave();
+                setStatus(`已移除图片：${item.name}`);
+            });
+
+            const insertRef = document.createElement('button');
+            insertRef.className = 'btn btn-small btn-outline';
+            insertRef.type = 'button';
+            insertRef.textContent = '插入引用';
+            insertRef.addEventListener('click', function () {
+                insertBlockSnippet(imageInsertionText(item));
+                setStatus(`已插入图片引用：${item.name}`);
+            });
+
+            const actions = document.createElement('div');
+            actions.className = 'studio-image-item-actions';
+            actions.appendChild(insertRef);
+            actions.appendChild(remove);
+            head.appendChild(actions);
+
+            const meta = document.createElement('span');
+            meta.className = 'studio-image-item-meta';
+            meta.textContent = `${formatBytes(item.size)} · /site/content/${item.assetPath || ''}`;
+
+            const preview = document.createElement('img');
+            preview.className = 'studio-image-item-preview';
+            preview.src = item.dataUrl || '';
+            preview.alt = item.name || 'uploaded image';
+
+            row.appendChild(head);
+            row.appendChild(meta);
+            row.appendChild(preview);
+            dom.imageList.appendChild(row);
+        });
+    }
+
+    async function insertImagesFromFiles(fileList) {
+        const files = Array.from(fileList || []);
+        if (files.length === 0) return;
+
+        if (state.uploadedImages.length >= MAX_IMAGE_COUNT) {
+            setStatus(`最多保留 ${MAX_IMAGE_COUNT} 张图片，请先移除旧图片`);
+            return;
+        }
+
+        const accepted = [];
+        for (const file of files) {
+            if (!file || !String(file.type || '').startsWith('image/')) {
+                setStatus(`已跳过非图片文件：${file && file.name ? file.name : '未知文件'}`);
+                continue;
+            }
+            if (file.size > MAX_IMAGE_FILE_SIZE) {
+                setStatus(`图片过大（>${formatBytes(MAX_IMAGE_FILE_SIZE)}）：${file.name}`);
+                continue;
+            }
+            if (state.uploadedImages.length + accepted.length >= MAX_IMAGE_COUNT) {
+                setStatus(`最多保留 ${MAX_IMAGE_COUNT} 张图片，其余已跳过`);
+                break;
+            }
+
+            const dataUrl = await fileToDataUrl(file);
+            const base64 = dataUrlToBase64(dataUrl);
+            if (!base64) {
+                setStatus(`图片编码失败，已跳过：${file.name}`);
+                continue;
+            }
+
+            const assetPath = imageAssetPathFromTarget(state.targetPath, file.name);
+            const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+            const item = {
+                id: id,
+                name: String(file.name || `image-${id}.png`),
+                type: String(file.type || 'image/png'),
+                size: Number(file.size || 0),
+                assetPath: assetPath,
+                dataUrl: dataUrl,
+                base64: base64,
+                insertedAt: new Date().toISOString()
+            };
+            accepted.push(item);
+        }
+
+        if (accepted.length === 0) {
+            return;
+        }
+
+        accepted.forEach(function (item) {
+            state.uploadedImages.push(item);
+            insertBlockSnippet(imageInsertionText(item));
+        });
+
+        renderUploadedImages();
+        scheduleSave();
+        setStatus(`已插入 ${accepted.length} 张图片并写入 Markdown`);
+    }
+
+    async function loadMyOpenPrs() {
+        const apiUrl = normalizeWorkerApiUrl(dom.prWorkerUrl ? dom.prWorkerUrl.value : state.workerApiUrl);
+        const authToken = String(state.authToken || '').trim();
+
+        if (!apiUrl) {
+            setStatus('请先填写 Worker API 地址');
+            return;
+        }
+
+        if (!authToken) {
+            setStatus('请先完成 GitHub 登录，再刷新未关闭 PR 列表');
+            return;
+        }
+
+        const listUrl = myOpenPrsUrlFromApiUrl(apiUrl);
+        if (!listUrl) {
+            setStatus('Worker 地址无效，无法读取未关闭 PR 列表');
+            return;
+        }
+
+        try {
+            if (dom.refreshMyPrs) dom.refreshMyPrs.disabled = true;
+            setStatus('正在读取你的未关闭 PR 列表...');
+
+            const response = await fetch(listUrl, {
+                method: 'GET',
+                headers: {
+                    authorization: `Bearer ${authToken}`
+                }
+            });
+
+            const responseText = await response.text();
+            let responseData = null;
+            try {
+                responseData = responseText ? JSON.parse(responseText) : null;
+            } catch (_) {
+                responseData = null;
+            }
+
+            if (response.status === 401) {
+                clearAuthSession();
+                updateAuthUi();
+                throw new Error('GitHub 登录已过期，请重新登录');
+            }
+
+            if (!response.ok || !responseData || responseData.ok !== true) {
+                const errMessage = responseData && responseData.error
+                    ? String(responseData.error)
+                    : `HTTP ${response.status}`;
+                throw new Error(errMessage);
+            }
+
+            state.myOpenPrs = Array.isArray(responseData.pullRequests) ? responseData.pullRequests : [];
+            updatePrChainSelectOptions();
+            scheduleSave();
+            setStatus(`已加载 ${state.myOpenPrs.length} 个未关闭 PR`);
+        } catch (err) {
+            setStatus(`读取未关闭 PR 失败：${err && err.message ? err.message : String(err)}`);
+        } finally {
+            if (dom.refreshMyPrs) dom.refreshMyPrs.disabled = false;
+        }
     }
 
     function updatePrLink(prUrl) {
@@ -349,6 +690,10 @@
     function logoutGithub() {
         if (!state.authToken) return;
         clearAuthSession();
+        state.myOpenPrs = [];
+        state.linkedPrNumber = '';
+        updatePrChainSelectOptions();
+        scheduleSave();
         updateAuthUi();
         setStatus('已退出 GitHub 登录状态');
     }
@@ -528,6 +873,7 @@
         const apiUrl = normalizeWorkerApiUrl(dom.prWorkerUrl ? dom.prWorkerUrl.value : state.workerApiUrl);
         const sharedKey = String(dom.prSharedKey ? dom.prSharedKey.value : '').trim();
         const titleInput = String(dom.prTitle ? dom.prTitle.value : '').trim();
+        const linkedPrNumber = String(state.linkedPrNumber || '').trim();
         const authToken = String(state.authToken || '').trim();
 
         if (!apiUrl) {
@@ -559,6 +905,13 @@
             markdown: String(state.markdown || ''),
             prTitle: titleInput || defaultPrTitle()
         };
+        const imageExtraFiles = buildImageExtraFiles();
+        if (imageExtraFiles.length > 0) {
+            payload.extraFiles = imageExtraFiles;
+        }
+        if (linkedPrNumber) {
+            payload.existingPrNumber = linkedPrNumber;
+        }
         const headers = {
             'content-type': 'application/json'
         };
@@ -570,7 +923,9 @@
         }
 
         setPrSubmitBusy(true);
-        setStatus('正在提交到 Worker 并创建 PR，请稍候...');
+        setStatus(linkedPrNumber
+            ? `正在提交到 Worker 并追加到 PR #${linkedPrNumber}...`
+            : '正在提交到 Worker 并创建 PR，请稍候...');
 
         try {
             const response = await fetch(apiUrl, {
@@ -608,9 +963,18 @@
 
             const prUrl = String(responseData.prUrl || '').trim();
             updatePrLink(prUrl);
+            if (responseData.prNumber) {
+                const prNumberText = String(responseData.prNumber);
+                state.linkedPrNumber = prNumberText;
+                updatePrChainSelectOptions();
+            }
             persistState();
 
-            setStatus(`PR 创建成功${responseData.prNumber ? ` #${responseData.prNumber}` : ''}`);
+            if (responseData.reusedExistingPr === true) {
+                setStatus(`已成功追加到 PR #${responseData.prNumber}`);
+            } else {
+                setStatus(`PR 创建成功${responseData.prNumber ? ` #${responseData.prNumber}` : ''}`);
+            }
 
             if (prUrl) {
                 window.open(prUrl, '_blank', 'noopener,noreferrer');
@@ -666,6 +1030,27 @@
             state.workerApiUrl = normalizeWorkerApiUrl(parsed.workerApiUrl || state.workerApiUrl);
             state.prTitle = String(parsed.prTitle || '');
             state.lastPrUrl = String(parsed.lastPrUrl || '');
+            state.linkedPrNumber = String(parsed.linkedPrNumber || '').trim();
+            state.myOpenPrs = Array.isArray(parsed.myOpenPrs) ? parsed.myOpenPrs : [];
+            state.uploadedImages = Array.isArray(parsed.uploadedImages)
+                ? parsed.uploadedImages.map(function (item) {
+                    return {
+                        id: String(item && item.id || ''),
+                        name: String(item && item.name || ''),
+                        type: String(item && item.type || 'image/png'),
+                        size: Number(item && item.size || 0),
+                        assetPath: normalizePath(item && item.assetPath || ''),
+                        dataUrl: String(item && item.dataUrl || ''),
+                        base64: String(item && item.base64 || ''),
+                        insertedAt: String(item && item.insertedAt || '')
+                    };
+                }).filter(function (item) {
+                    return item.id && item.assetPath && item.base64 && item.dataUrl;
+                })
+                : [];
+            if (typeof parsed.previewImageNoticeEnabled === 'boolean') {
+                state.previewImageNoticeEnabled = parsed.previewImageNoticeEnabled;
+            }
         } catch (err) {
             setStatus(`读取本地草稿失败：${err && err.message ? err.message : String(err)}`);
         }
@@ -674,13 +1059,17 @@
     function persistState() {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                version: 6,
+                version: 8,
                 updatedAt: new Date().toISOString(),
                 targetPath: state.targetPath,
                 markdown: state.markdown,
                 workerApiUrl: state.workerApiUrl,
                 prTitle: state.prTitle,
-                lastPrUrl: state.lastPrUrl
+                lastPrUrl: state.lastPrUrl,
+                linkedPrNumber: String(state.linkedPrNumber || ''),
+                myOpenPrs: Array.isArray(state.myOpenPrs) ? state.myOpenPrs : [],
+                uploadedImages: Array.isArray(state.uploadedImages) ? state.uploadedImages : [],
+                previewImageNoticeEnabled: !!state.previewImageNoticeEnabled
             }));
             setStatus('Markdown 草稿已自动保存');
         } catch (err) {
@@ -705,6 +1094,17 @@
         return {
             targetPath: ensureMarkdownPath(state.targetPath),
             markdown: String(state.markdown || ''),
+            uploadedImages: Array.isArray(state.uploadedImages)
+                ? state.uploadedImages.map(function (item) {
+                    return {
+                        assetPath: normalizePath(item && item.assetPath || ''),
+                        dataUrl: String(item && item.dataUrl || ''),
+                        name: String(item && item.name || '')
+                    };
+                }).filter(function (item) {
+                    return item.assetPath && item.dataUrl;
+                })
+                : [],
             updatedAt: new Date().toISOString()
         };
     }
@@ -1002,13 +1402,17 @@
 
     function exportDraftJson() {
         const payload = {
-            version: 7,
+            version: 8,
             exportedAt: new Date().toISOString(),
             targetPath: state.targetPath,
             markdown: state.markdown,
             workerApiUrl: state.workerApiUrl,
             prTitle: state.prTitle,
-            lastPrUrl: state.lastPrUrl
+            lastPrUrl: state.lastPrUrl,
+            linkedPrNumber: String(state.linkedPrNumber || ''),
+            myOpenPrs: Array.isArray(state.myOpenPrs) ? state.myOpenPrs : [],
+            uploadedImages: Array.isArray(state.uploadedImages) ? state.uploadedImages : [],
+            previewImageNoticeEnabled: !!state.previewImageNoticeEnabled
         };
 
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -1067,6 +1471,9 @@
         const consumedOauthHash = consumeOauthResultFromHash();
 
         setTargetPath(state.targetPath, true);
+        renderUploadedImages();
+        updatePrChainSelectOptions();
+        updatePreviewImageNoticeToggleUi();
 
         if (dom.markdown) {
             dom.markdown.value = state.markdown;
@@ -1104,6 +1511,54 @@
             dom.prTitle.addEventListener('input', function () {
                 state.prTitle = String(dom.prTitle.value || '');
                 scheduleSave();
+            });
+        }
+
+        if (dom.prChainSelect) {
+            dom.prChainSelect.value = String(state.linkedPrNumber || '');
+            dom.prChainSelect.addEventListener('change', function () {
+                state.linkedPrNumber = String(dom.prChainSelect.value || '').trim();
+                scheduleSave();
+                if (state.linkedPrNumber) {
+                    setStatus(`将继续提交到 PR #${state.linkedPrNumber}`);
+                } else {
+                    setStatus('已切换为创建新 PR');
+                }
+            });
+        }
+
+        if (dom.refreshMyPrs) {
+            dom.refreshMyPrs.addEventListener('click', loadMyOpenPrs);
+        }
+
+        if (dom.togglePreviewImageNotice) {
+            dom.togglePreviewImageNotice.addEventListener('click', function () {
+                state.previewImageNoticeEnabled = !state.previewImageNoticeEnabled;
+                updatePreviewImageNoticeToggleUi();
+                scheduleSave();
+                setStatus(state.previewImageNoticeEnabled ? '已开启预览图片提示' : '已关闭预览图片提示');
+            });
+        }
+
+        if (dom.imageUpload) {
+            dom.imageUpload.addEventListener('change', async function () {
+                try {
+                    await insertImagesFromFiles(dom.imageUpload.files);
+                } catch (err) {
+                    setStatus(`插入图片失败：${err && err.message ? err.message : String(err)}`);
+                } finally {
+                    dom.imageUpload.value = '';
+                }
+            });
+        }
+
+        if (dom.insertImage) {
+            dom.insertImage.addEventListener('click', function () {
+                if (!dom.imageUpload) {
+                    setStatus('当前页面未找到图片上传控件');
+                    return;
+                }
+                dom.imageUpload.click();
             });
         }
 
@@ -1241,6 +1696,15 @@
             }
         });
 
+        window.addEventListener('message', function (event) {
+            if (event.origin !== window.location.origin) return;
+            const data = event && event.data ? event.data : null;
+            if (!data || data.type !== 'article-studio-preview-image-mapped') return;
+
+            const payload = data.payload || {};
+            showPreviewImageMappedNotice(payload.assetPath || '');
+        });
+
         setFullscreenMode(false, true);
         setPrSubmitBusy(false);
         updateStats();
@@ -1248,6 +1712,9 @@
         loadExistingList();
         if (state.authToken) {
             verifyAuthSession();
+            if ((state.myOpenPrs || []).length === 0) {
+                loadMyOpenPrs();
+            }
         }
 
         if (!consumedOauthHash) {
