@@ -1,0 +1,26 @@
+{
+  "common": "// 公共函数区（所有 Pass 自动注入）\n// 这里适合写通用函数、常量、噪声工具等。\n\nfloat Hash21(float2 p)\n{\n    p = frac(p * float2(123.34, 456.21));\n    p += dot(p, p + 45.32);\n    return frac(p.x * p.y);\n}\n",
+  "passes": [
+    {
+      "name": "Pass 1",
+      "type": "image",
+      "scale": 1,
+      "code": "// tModLoader 风格像素着色器示例\n// 支持 mainImage(...) 与 MainPS(float2 texCoord : TEXCOORD0) : COLOR0\n// 可用纹理: iChannel0-3（也兼容 uImage0-3）\n\nfloat4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0\n{\n    float2 uv = texCoord;\n    float2 p = uv * 3.0 - 2.;\n    float vignette = saturate(1.0 - dot(p, p) * 0.45);\n    float wave = 0.5 + 0.5 * sin(iTime + uv.x * 6.0);\n    float3 col = float3(uv.x, uv.y, wave) * vignette * tex2D(uImage0,uv).rgb;\n    return float4(col, 1.0);\n}\n",
+      "channels": [
+        {
+          "kind": "builtin",
+          "id": "builtin:noise"
+        },
+        {
+          "kind": "none"
+        },
+        {
+          "kind": "none"
+        },
+        {
+          "kind": "none"
+        }
+      ]
+    }
+  ]
+}
