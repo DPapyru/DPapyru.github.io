@@ -700,6 +700,8 @@
 	        let STUDIO_PREVIEW_MODE = false;
 	        let STUDIO_EMBED_MODE = false;
 	        let STUDIO_PREVIEW_RELOAD_TIMER = 0;
+	        let STUDIO_PREVIEW_LAST_IMAGE_NOTICE = '';
+	        let STUDIO_PREVIEW_LAST_IMAGE_NOTICE_AT = 0;
 
 	        function normalizeStudioPreviewPath(input) {
 	            let value = String(input || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
@@ -715,9 +717,21 @@
 	                if (!parsed || typeof parsed !== 'object') return null;
 	                const targetPath = normalizeStudioPreviewPath(parsed.targetPath || '');
 	                if (!targetPath) return null;
+	                const uploadedImages = Array.isArray(parsed.uploadedImages)
+	                    ? parsed.uploadedImages.map(function (item) {
+	                        return {
+	                            assetPath: normalizeStudioPreviewPath(item && item.assetPath || ''),
+	                            dataUrl: String(item && item.dataUrl || ''),
+	                            name: String(item && item.name || '')
+	                        };
+	                    }).filter(function (item) {
+	                        return item.assetPath && item.dataUrl;
+	                    })
+	                    : [];
 	                return {
 	                    targetPath: targetPath,
 	                    markdown: String(parsed.markdown || ''),
+	                    uploadedImages: uploadedImages,
 	                    updatedAt: String(parsed.updatedAt || '')
 	                };
 	            } catch (_) {
@@ -753,11 +767,79 @@
             }
         }
 
-        function getStudioPreviewTargetPath() {
-            if (!STUDIO_PREVIEW_MODE) return '';
-            const payload = readStudioPreviewPayloadFromStorage();
-            return payload && payload.targetPath ? normalizeStudioPreviewPath(payload.targetPath) : '';
-        }
+	        function getStudioPreviewTargetPath() {
+	            if (!STUDIO_PREVIEW_MODE) return '';
+	            const payload = readStudioPreviewPayloadFromStorage();
+	            return payload && payload.targetPath ? normalizeStudioPreviewPath(payload.targetPath) : '';
+	        }
+
+	        function notifyStudioPreviewImageMapped(assetPath) {
+	            if (!STUDIO_PREVIEW_MODE || !STUDIO_EMBED_MODE) return;
+	
+	            const normalized = normalizeStudioPreviewPath(assetPath || '');
+	            if (!normalized) return;
+	
+	            const now = Date.now();
+	            if (
+	                STUDIO_PREVIEW_LAST_IMAGE_NOTICE === normalized &&
+	                now - STUDIO_PREVIEW_LAST_IMAGE_NOTICE_AT < 1500
+	            ) {
+	                return;
+	            }
+	
+	            STUDIO_PREVIEW_LAST_IMAGE_NOTICE = normalized;
+	            STUDIO_PREVIEW_LAST_IMAGE_NOTICE_AT = now;
+	
+	            try {
+	                if (window.parent && window.parent !== window) {
+	                    window.parent.postMessage({
+	                        type: 'article-studio-preview-image-mapped',
+	                        payload: {
+	                            assetPath: normalized
+	                        }
+	                    }, window.location.origin);
+	                }
+	            } catch (_) {
+	                // ignore postMessage errors
+	            }
+	        }
+
+	        function resolveStudioPreviewImageDataUrl(rawPath) {
+	            if (!STUDIO_PREVIEW_MODE) return '';
+
+	            const payload = readStudioPreviewPayloadFromStorage();
+	            if (!payload || !Array.isArray(payload.uploadedImages) || payload.uploadedImages.length === 0) {
+	                return '';
+	            }
+
+	            let normalized = String(rawPath || '').trim();
+	            if (!normalized) return '';
+
+	            normalized = normalized.split('#')[0].split('?')[0];
+	            try {
+	                normalized = decodeURIComponent(normalized);
+	            } catch (_) {
+	                normalized = normalized;
+	            }
+	            normalized = normalized.replace(/^https?:\/\/[^/]+/i, '');
+	            normalized = normalized.replace(/^\/site\/content\//i, '');
+	            normalized = normalized.replace(/^site\/content\//i, '');
+	            normalized = normalized.replace(/^content\//i, '');
+	            normalized = normalizeStudioPreviewPath(normalized);
+
+	            if (!normalized) return '';
+
+	            const item = payload.uploadedImages.find(function (image) {
+	                return normalizeStudioPreviewPath(image && image.assetPath || '') === normalized;
+	            });
+	
+	            if (item && item.dataUrl) {
+	                notifyStudioPreviewImageMapped(item.assetPath || normalized);
+	                return String(item.dataUrl);
+	            }
+	
+	            return '';
+	        }
 
         function installStudioPreviewFetchBridge() {
 	            if (!STUDIO_PREVIEW_MODE) return;
@@ -783,13 +865,22 @@
 	                        requestPath = normalizeStudioPreviewPath(requestPath);
 	
 	                        const payload = readStudioPreviewPayloadFromStorage();
-	                        if (payload && payload.targetPath === requestPath) {
-	                            return Promise.resolve(new Response(payload.markdown || '', {
-	                                status: 200,
-	                                headers: {
-	                                    'content-type': 'text/markdown; charset=utf-8'
-	                                }
-	                            }));
+	                        if (payload) {
+	                            if (payload.targetPath === requestPath) {
+	                                return Promise.resolve(new Response(payload.markdown || '', {
+	                                    status: 200,
+	                                    headers: {
+	                                        'content-type': 'text/markdown; charset=utf-8'
+	                                    }
+	                                }));
+	                            }
+
+	                            const imageMatch = (payload.uploadedImages || []).find(function (item) {
+	                                return normalizeStudioPreviewPath(item.assetPath || '') === requestPath;
+	                            });
+	                            if (imageMatch && imageMatch.dataUrl) {
+	                                return nativeFetch(imageMatch.dataUrl, init);
+	                            }
 	                        }
 	                    }
 	                } catch (_) {
@@ -838,6 +929,7 @@
 	                    window.localStorage.setItem(STUDIO_PREVIEW_STORAGE_KEY, JSON.stringify({
 	                        targetPath: targetPath,
 	                        markdown: String(payload.markdown || ''),
+	                        uploadedImages: Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [],
 	                        updatedAt: String(payload.updatedAt || new Date().toISOString())
 	                    }));
 	                } catch (_) {
@@ -1246,7 +1338,8 @@
 	                        const normalized = normalizeMarkedArgs(href, title, text);
 	                        if (!isSafeUrl(normalized.href)) return '';
 	                        const resolvedSrc = resolveRelativeHref(normalized.href, CURRENT_DOC_PATH);
-	                        const safeSrc = escapeHtml(resolvedSrc);
+	                        const previewDataUrl = resolveStudioPreviewImageDataUrl(resolvedSrc);
+	                        const safeSrc = escapeHtml(previewDataUrl || resolvedSrc);
 	                        const safeAlt = escapeHtml(normalized.text || '');
 	                        const safeTitle = normalized.title ? ` title="${escapeHtml(normalized.title)}"` : '';
 	                        return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} loading="lazy" decoding="async" />`;

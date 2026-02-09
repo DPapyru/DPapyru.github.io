@@ -139,6 +139,66 @@
     padding: 8px 10px;
 }
 
+.studio-input--file {
+    padding: 6px 8px;
+}
+
+.studio-image-list {
+    display: grid;
+    gap: 6px;
+    max-height: 180px;
+    overflow: auto;
+    padding-right: 2px;
+}
+
+.studio-image-item {
+    display: grid;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-color);
+}
+
+.studio-image-item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.studio-image-item-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.studio-image-item-name {
+    font-size: 12px;
+    color: var(--text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.studio-image-item-meta {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.studio-image-item-preview {
+    width: 100%;
+    max-height: 120px;
+    object-fit: contain;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-secondary);
+}
+
+.studio-preview-notice-toggle--off {
+    opacity: 0.72;
+}
+
 .studio-select:focus,
 .studio-input:focus,
 .studio-editor:focus {

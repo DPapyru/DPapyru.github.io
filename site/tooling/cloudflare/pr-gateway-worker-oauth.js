@@ -24,6 +24,10 @@ export default {
         return handleAuthMe(request, env, origin);
       }
 
+      if (request.method === "GET" && url.pathname === "/api/my-open-prs") {
+        return handleMyOpenPrs(request, env, origin);
+      }
+
       if (request.method !== "POST") {
         return json({ ok: false, error: "Method Not Allowed" }, 405, origin, env);
       }
@@ -51,6 +55,7 @@ export default {
       const markdown = String(body.markdown || "");
       const prTitleInput = String(body.prTitle || "");
       const prBodyInput = String(body.prBody || "");
+      const existingPrNumber = parseExistingPrNumber(body.existingPrNumber);
       const extraFiles = normalizeExtraFiles(body.extraFiles || []);
 
       if (!markdown.trim()) {
@@ -66,20 +71,43 @@ export default {
       const appJwt = await createAppJwt(env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY);
       const installationToken = await getInstallationToken(env, appJwt);
 
-      const baseHeadSha = await getBranchHeadSha(env, baseBranch, installationToken);
-      const branch = makeBranchName(targetPath);
+      let branch = "";
+      let reusedExistingPr = false;
+      let currentPrNumber = 0;
+      let currentPrUrl = "";
 
-      await ghFetch(
-        `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/git/refs`,
-        installationToken,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            ref: `refs/heads/${branch}`,
-            sha: baseHeadSha
-          })
+      if (existingPrNumber > 0) {
+        if (!submitter) {
+          throw new Error("existingPrNumber 仅支持 GitHub 登录模式");
         }
-      );
+
+        const existingPr = await getPullRequestByNumber(env, existingPrNumber, installationToken);
+        ensurePullRequestReusable(existingPr, submitter, baseBranch);
+
+        branch = normalizeRefName(existingPr.head && existingPr.head.ref);
+        if (!branch) {
+          throw new Error("无法获取目标 PR 的 head 分支");
+        }
+
+        reusedExistingPr = true;
+        currentPrNumber = Number(existingPr.number || 0);
+        currentPrUrl = String(existingPr.html_url || "");
+      } else {
+        const baseHeadSha = await getBranchHeadSha(env, baseBranch, installationToken);
+        branch = makeBranchName(targetPath);
+
+        await ghFetch(
+          `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/git/refs`,
+          installationToken,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              ref: `refs/heads/${branch}`,
+              sha: baseHeadSha
+            })
+          }
+        );
+      }
 
       const existingSha = await getExistingFileSha(env, repoPath, branch, installationToken);
       const contentBase64 = utf8ToBase64(markdown);
@@ -100,7 +128,7 @@ export default {
 
       for (const file of extraFiles) {
         const extraSha = await getExistingFileSha(env, file.path, branch, installationToken);
-        const extraBase64 = utf8ToBase64(file.content);
+        const extraBase64 = file.encoding === "base64" ? file.content : utf8ToBase64(file.content);
 
         await ghFetch(
           `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${encodePathForUrl(file.path)}`,
@@ -130,28 +158,33 @@ export default {
         bodyLines.push("", `- Submitter: @${submitter}`);
       }
 
-      const pr = await ghFetch(
-        `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/pulls`,
-        installationToken,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            title: prTitle,
-            head: branch,
-            base: baseBranch,
-            body: bodyLines.join("\n")
-          })
-        }
-      );
+      if (!reusedExistingPr) {
+        const pr = await ghFetch(
+          `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/pulls`,
+          installationToken,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              title: prTitle,
+              head: branch,
+              base: baseBranch,
+              body: bodyLines.join("\n")
+            })
+          }
+        );
+        currentPrNumber = Number(pr.number || 0);
+        currentPrUrl = String(pr.html_url || "");
+      }
 
       return json(
         {
           ok: true,
-          prUrl: pr.html_url,
-          prNumber: pr.number,
+          prUrl: currentPrUrl,
+          prNumber: currentPrNumber,
           branch,
           filePath: repoPath,
           extraFiles: extraFiles.map((f) => f.path),
+          reusedExistingPr,
           submitter: submitter || null
         },
         200,
@@ -284,6 +317,45 @@ async function handleAuthMe(request, env, origin) {
   }
 
   return json({ ok: true, user: user }, 200, origin, env);
+}
+
+async function handleMyOpenPrs(request, env, origin) {
+  if (origin && !isAllowedOrigin(origin, env)) {
+    return json({ ok: false, error: "Origin not allowed" }, 403, origin, env);
+  }
+
+  const user = await resolveAuthUserFromBearer(request, env);
+  if (!user) {
+    return json({ ok: false, error: "Unauthorized" }, 401, origin, env);
+  }
+
+  const appJwt = await createAppJwt(env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY);
+  const installationToken = await getInstallationToken(env, appJwt);
+  const baseBranch = env.GITHUB_BASE_BRANCH || "main";
+
+  const pulls = await ghFetch(
+    `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/pulls?state=open&base=${encodeURIComponent(baseBranch)}&per_page=100`,
+    installationToken
+  );
+
+  const list = Array.isArray(pulls) ? pulls : [];
+  const mine = list
+    .filter((pr) => isPullRequestOwnedByUser(pr, user) && isPullRequestHeadInTargetRepo(pr, env))
+    .map((pr) => ({
+      number: Number(pr.number || 0),
+      title: String(pr.title || ""),
+      url: String(pr.html_url || ""),
+      branch: normalizeRefName(pr.head && pr.head.ref),
+      updatedAt: String(pr.updated_at || "")
+    }))
+    .filter((pr) => pr.number > 0 && pr.branch)
+    .sort((a, b) => {
+      const left = Date.parse(a.updatedAt || "") || 0;
+      const right = Date.parse(b.updatedAt || "") || 0;
+      return right - left;
+    });
+
+  return json({ ok: true, user, pullRequests: mine }, 200, origin, env);
 }
 
 function assertOauthConfigured(env) {
@@ -420,8 +492,9 @@ function sanitizeExtraFilePath(input) {
 
   const isRouteFile = /^site\/content\/routes\/.+\.route\.json$/i.test(p);
   const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(p);
-  if (!isRouteFile && !isShaderGalleryFile) {
-    throw new Error("extra file 只允许 site/content/routes/*.route.json 或 site/content/shader-gallery/<slug>/(entry|shader).json");
+  const isArticleImageFile = /^site\/content\/.+\/imgs\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(p);
+  if (!isRouteFile && !isShaderGalleryFile && !isArticleImageFile) {
+    throw new Error("extra file 只允许 site/content/routes/*.route.json、site/content/shader-gallery/<slug>/(entry|shader).json 或 site/content/**/imgs/*.{png,jpg,jpeg,gif,webp,svg,bmp,avif}");
   }
 
   return p;
@@ -438,15 +511,98 @@ function normalizeExtraFiles(input) {
 
     const path = sanitizeExtraFilePath(item.path);
     const content = String(item.content || "");
+    const encoding = String(item.encoding || "utf8").trim().toLowerCase();
+    const isBase64 = encoding === "base64";
+
+    if (!isBase64 && encoding !== "utf8") {
+      throw new Error(`extraFiles[${index}] encoding 非法`);
+    }
+
     if (!content.trim()) {
       throw new Error(`extraFiles[${index}] content 不能为空`);
     }
-    if (content.length > 200000) {
+
+    if (isBase64) {
+      if (!/^[A-Za-z0-9+/=\s]+$/.test(content)) {
+        throw new Error(`extraFiles[${index}] base64 content 非法`);
+      }
+      if (content.length > 3200000) {
+        throw new Error(`extraFiles[${index}] base64 content 过大（>3.2MB）`);
+      }
+    } else if (content.length > 200000) {
       throw new Error(`extraFiles[${index}] content 过大（>200KB）`);
     }
 
-    return { path, content };
+    return {
+      path,
+      content: isBase64 ? content.replace(/\s+/g, "") : content,
+      encoding: isBase64 ? "base64" : "utf8"
+    };
   });
+}
+
+function parseExistingPrNumber(input) {
+  const text = String(input || "").trim();
+  if (!text) return 0;
+  const num = Number(text);
+  if (!Number.isInteger(num) || num <= 0) {
+    throw new Error("existingPrNumber 非法");
+  }
+  return num;
+}
+
+function normalizeRefName(value) {
+  const ref = String(value || "").trim();
+  if (!ref) return "";
+  return ref.replace(/^refs\/heads\//i, "");
+}
+
+function isPullRequestOwnedByUser(pr, user) {
+  if (!pr || !user) return false;
+  const login = String(user || "").toLowerCase();
+  const headUser = String(pr.head && pr.head.user && pr.head.user.login || "").toLowerCase();
+  const owner = String(pr.user && pr.user.login || "").toLowerCase();
+  return headUser === login || owner === login;
+}
+
+function isPullRequestHeadInTargetRepo(pr, env) {
+  if (!pr) return false;
+  const full = String(pr.head && pr.head.repo && pr.head.repo.full_name || "").toLowerCase();
+  const expected = `${String(env.GITHUB_OWNER || "").toLowerCase()}/${String(env.GITHUB_REPO || "").toLowerCase()}`;
+  return !!full && full === expected;
+}
+
+async function getPullRequestByNumber(env, prNumber, token) {
+  return ghFetch(
+    `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/pulls/${encodeURIComponent(String(prNumber))}`,
+    token
+  );
+}
+
+function ensurePullRequestReusable(pr, submitter, baseBranch) {
+  if (!pr || Number(pr.number || 0) <= 0) {
+    throw new Error("目标 PR 不存在");
+  }
+
+  if (String(pr.state || "").toLowerCase() !== "open") {
+    throw new Error("目标 PR 已关闭，无法继续提交");
+  }
+
+  const currentBase = String(pr.base && pr.base.ref || "").trim();
+  if (currentBase !== String(baseBranch || "").trim()) {
+    throw new Error(`目标 PR 的 base 分支不是 ${baseBranch}`);
+  }
+
+  if (!isPullRequestOwnedByUser(pr, submitter)) {
+    throw new Error("只能追加到你自己创建（或 head 属于你）的 PR");
+  }
+
+  if (!isPullRequestHeadInTargetRepo(pr, {
+    GITHUB_OWNER: pr.base && pr.base.repo && pr.base.repo.owner && pr.base.repo.owner.login,
+    GITHUB_REPO: pr.base && pr.base.repo && pr.base.repo.name
+  })) {
+    throw new Error("目标 PR head 分支不在当前仓库，无法直接追加提交");
+  }
 }
 
 function encodePathForUrl(path) {
