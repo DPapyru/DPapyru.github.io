@@ -252,6 +252,35 @@
         }
       }
     },
+    "shader-gallery": {
+      "title": "shader-gallery",
+      "description": "shader-gallery相关的教程",
+      "topics": {
+        "mod-basics": {
+          "title": "Mod基础",
+          "description": "Mod开发的基础概念和核心API",
+          "files": [
+            {
+              "filename": "README.md",
+              "path": "shader-gallery/README.md",
+              "originalPath": "shader-gallery/README.md",
+              "title": "README",
+              "author": "未知",
+              "order": 999,
+              "description": "无描述",
+              "time": "不具体",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            }
+          ]
+        }
+      }
+    },
     "方向性指导": {
       "title": "方向性指导",
       "description": "方向性指导相关的教程",
@@ -5523,6 +5552,24 @@
       "colors": {
         "Mad": "#f00"
       },
+      "colorChange": null
+    },
+    {
+      "filename": "README.md",
+      "path": "shader-gallery/README.md",
+      "originalPath": "shader-gallery/README.md",
+      "title": "README",
+      "author": "未知",
+      "category": "shader-gallery",
+      "topic": "mod-basics",
+      "order": 999,
+      "time": "不具体",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
       "colorChange": null
     },
     {

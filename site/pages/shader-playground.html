@@ -29,6 +29,8 @@
                         <li class="nav-item"><a href="folder.html" class="nav-link">文档</a></li>
                         <li class="nav-item"><a href="article-studio.html" class="nav-link">在线写作IDE</a></li>
                         <li class="nav-item"><a href="shader-playground.html" class="nav-link active" aria-current="page">Shader</a></li>
+                        <li class="nav-item"><a href="shader-gallery.html" class="nav-link">Gallery</a></li>
+                        <li class="nav-item"><a href="shader-contribute.html" class="nav-link">投稿</a></li>
                         <li class="nav-item"><a href="../qa.html" class="nav-link">问答</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li class="nav-item nav-accent">
@@ -87,7 +89,7 @@
                                 <button class="btn btn-small btn-outline" id="shaderpg-reset" type="button">重置</button>
                             </div>
                             <div class="shaderpg-topbar-group">
-                                <button class="btn btn-small" id="shaderpg-add-pass" type="button">+ 新增 Pass</button>
+                                <button class="btn btn-small btn-outline" id="shaderpg-add-pass" type="button">+ 新增 Pass</button>
                                 <div class="shaderpg-dropdown">
                                     <button class="btn btn-small btn-outline" id="shaderpg-pass-menu" type="button">Pass ▼</button>
                                     <div class="shaderpg-dropdown-content" id="shaderpg-pass-dropdown">
@@ -101,11 +103,35 @@
                         </div>
                         <div class="shaderpg-topbar-right">
                             <div class="shaderpg-topbar-group">
-                                <label class="shaderpg-inline-label" for="shaderpg-scale">分辨率</label>
+                                <label class="shaderpg-inline-label" for="shaderpg-aspect">比例</label>
+                                <select class="btn btn-small btn-outline" id="shaderpg-aspect">
+                                    <option value="16:9">16:9</option>
+                                    <option value="4:3">4:3</option>
+                                    <option value="1:1">1:1</option>
+                                    <option value="21:9">21:9</option>
+                                    <option value="custom">自定义</option>
+                                </select>
+                            </div>
+                            <div class="shaderpg-topbar-group shaderpg-custom-aspect-group" id="shaderpg-custom-aspect-group" hidden>
+                                <label class="shaderpg-inline-label" for="shaderpg-custom-aspect-w">自定义</label>
+                                <input class="shaderpg-number" id="shaderpg-custom-aspect-w" type="number" min="0.1" max="100" step="0.1" value="16">
+                                <span class="shaderpg-inline-label">:</span>
+                                <input class="shaderpg-number" id="shaderpg-custom-aspect-h" type="number" min="0.1" max="100" step="0.1" value="9">
+                            </div>
+                            <div class="shaderpg-topbar-group">
+                                <label class="shaderpg-inline-label" for="shaderpg-base-width">宽度</label>
+                                <input class="shaderpg-number" id="shaderpg-base-width" type="number" min="320" max="7680" step="1" value="960">
+                            </div>
+                            <div class="shaderpg-topbar-group">
+                                <label class="shaderpg-inline-label" for="shaderpg-scale">倍率</label>
                                 <select class="btn btn-small btn-outline" id="shaderpg-scale">
-                                    <option value="1">1x</option>
-                                    <option value="0.5">0.5x</option>
                                     <option value="0.25">0.25x</option>
+                                    <option value="0.5">0.5x</option>
+                                    <option value="1">1x</option>
+                                    <option value="1.5">1.5x</option>
+                                    <option value="2">2x</option>
+                                    <option value="3">3x</option>
+                                    <option value="4">4x</option>
                                 </select>
                             </div>
                             <div class="shaderpg-topbar-group">
@@ -183,8 +209,11 @@
                             <div class="shaderpg-panel-header">
                                 <h2 class="shaderpg-panel-title">Export</h2>
                                 <div class="shaderpg-panel-actions">
-                                    <button class="btn btn-small" id="shaderpg-export-fx" type="button">生成 .fx</button>
+                                    <button class="btn btn-small btn-outline" id="shaderpg-export-gif" type="button">导出 GIF</button>
+                                    <button class="btn btn-small btn-outline" id="shaderpg-export-png" type="button">导出 PNG</button>
+                                    <button class="btn btn-small btn-outline" id="shaderpg-export-fx" type="button">生成 .fx</button>
                                     <button class="btn btn-small btn-outline" id="shaderpg-copy-fx" type="button" disabled>复制</button>
+                                    <button class="btn btn-small btn-outline" id="shaderpg-contribute" type="button">投稿页面</button>
                                 </div>
                             </div>
                             <textarea class="shaderpg-textarea shaderpg-export" id="shaderpg-fx" spellcheck="false" readonly></textarea>
@@ -193,7 +222,7 @@
 
                     <!-- 底部提示 -->
                     <div class="shaderpg-hint shaderpg-hint--footer">
-                        <div>提示：Ctrl+Enter 编译 | Ctrl+S 导出 | 点击右上角 ? 查看帮助</div>
+                        <div>提示：Ctrl+Enter 编译 | Ctrl+S 导出 .fx | Ctrl+Shift+S 导出 PNG | 导出 GIF 按钮可导出动画</div>
                     </div>
                 </section>
             </div>
@@ -385,6 +414,8 @@ float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0 {
     </script>
     <script src="/site/assets/js/accent-theme.js"></script>
     <script src="/site/assets/js/shader-hlsl-adapter.js"></script>
+    <script src="/site/assets/js/vendor/gifuct-js.js"></script>
+    <script src="/site/assets/js/vendor/gif.js"></script>
     <script src="/site/assets/js/shader-editor-assist.js"></script>
     <script src="/site/assets/js/shader-command-params.js"></script>
     <script src="/site/assets/js/shader-playground.js"></script>

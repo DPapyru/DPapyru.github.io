@@ -47,6 +47,13 @@
     gap: 8px;
 }
 
+.shaderpg-custom-aspect-group {
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-secondary);
+}
+
 .shaderpg-itime-group {
     padding: 4px 8px;
     border: 1px solid var(--border-color);
@@ -100,7 +107,7 @@
 }
 
 .shaderpg-number {
-    width: 88px;
+    width: 96px;
     padding: 4px 6px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -541,9 +548,9 @@
 }
 
 .shaderpg-texture-item {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
     padding: 8px;
     border: 1px solid var(--border-color);
@@ -552,6 +559,14 @@
 }
 
 .shaderpg-texture-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.shaderpg-texture-meta {
+    font-size: 11px;
+    color: var(--text-secondary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
