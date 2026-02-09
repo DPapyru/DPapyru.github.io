@@ -21,7 +21,11 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     'use strict';
 
-    const DEFAULT_PR_WORKER_API_URL = 'https://greenhome-pr.3577415213.workers.dev/api/create-pr';
+    const DEFAULT_PR_WORKER_API_URLS = [
+        'https://greenhome-pr.3577415213.workers.dev/api/create-pr',
+        'https://greenhome-pr-3577415213.workers.dev/api/create-pr'
+    ];
+    const DEFAULT_PR_WORKER_API_URL = DEFAULT_PR_WORKER_API_URLS[0];
     const STATE_KEY = 'shader-contribute.state.v2';
     const CONTRIBUTION_DRAFT_KEY = 'shader-playground.contribute-draft.v1';
     const PLAYGROUND_STATE_KEY = 'shader-playground.v1';
@@ -106,6 +110,95 @@
         }
 
         return value;
+    }
+
+    function isLikelyWorkerNetworkError(err) {
+        const message = String(err && err.message ? err.message : err || '').toLowerCase();
+        return message.includes('failed to fetch')
+            || message.includes('networkerror')
+            || message.includes('network request failed')
+            || message.includes('err_connection_closed')
+            || message.includes('load failed')
+            || message.includes('timeout');
+    }
+
+    function buildWorkerApiCandidates(input) {
+        const primary = normalizeWorkerApiUrl(input);
+        if (!primary) return [];
+
+        const candidates = [];
+        const seen = new Set();
+
+        function pushCandidate(url) {
+            const normalized = normalizeWorkerApiUrl(url);
+            if (!normalized || seen.has(normalized)) return;
+            seen.add(normalized);
+            candidates.push(normalized);
+        }
+
+        pushCandidate(primary);
+
+        try {
+            const parsed = new URL(primary);
+            const host = parsed.host.toLowerCase();
+            const knownWorkerHosts = new Set([
+                'greenhome-pr.3577415213.workers.dev',
+                'greenhome-pr-3577415213.workers.dev'
+            ]);
+
+            if (knownWorkerHosts.has(host)) {
+                const altHostMap = {
+                    'greenhome-pr.3577415213.workers.dev': 'greenhome-pr-3577415213.workers.dev',
+                    'greenhome-pr-3577415213.workers.dev': 'greenhome-pr.3577415213.workers.dev'
+                };
+                const altHost = altHostMap[host];
+                if (altHost) {
+                    const altUrl = new URL(primary);
+                    altUrl.host = altHost;
+                    pushCandidate(altUrl.toString());
+                }
+
+                DEFAULT_PR_WORKER_API_URLS.forEach(pushCandidate);
+            }
+        } catch (_) {
+            // ignore invalid URL and keep primary candidate
+        }
+
+        return candidates;
+    }
+
+    async function postCreatePrWithFallback(apiUrl, fetchOptions, onFallbackTry) {
+        const candidates = buildWorkerApiCandidates(apiUrl);
+        if (!candidates.length) {
+            throw new Error('Worker API 地址为空');
+        }
+
+        let lastError = null;
+
+        for (let index = 0; index < candidates.length; index += 1) {
+            const candidate = candidates[index];
+
+            if (index > 0 && typeof onFallbackTry === 'function') {
+                onFallbackTry(candidate, index + 1, candidates.length);
+            }
+
+            try {
+                const response = await fetch(candidate, fetchOptions);
+                return {
+                    response: response,
+                    apiUrl: candidate,
+                    usedFallback: index > 0
+                };
+            } catch (err) {
+                lastError = err;
+                const hasMoreCandidate = index + 1 < candidates.length;
+                if (!hasMoreCandidate || !isLikelyWorkerNetworkError(err)) {
+                    throw err;
+                }
+            }
+        }
+
+        throw lastError || new Error('Failed to fetch');
     }
 
     function workerOriginFromApiUrl(apiUrl) {
@@ -972,12 +1065,21 @@
             setStatus('正在提交到 Worker 并创建 PR，请稍候...');
 
             try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: headers,
-                    body: JSON.stringify(payload)
-                });
+                const requestResult = await postCreatePrWithFallback(
+                    apiUrl,
+                    {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify(payload)
+                    },
+                    function (fallbackApiUrl, attempt, total) {
+                        setStatus(`主 Worker 暂不可达，正在尝试备用地址（${attempt}/${total}）...`);
+                        if (dom.prWorkerUrl) dom.prWorkerUrl.value = fallbackApiUrl;
+                    }
+                );
 
+                const response = requestResult.response;
+                const usedApiUrl = requestResult.apiUrl;
                 const responseText = await response.text();
                 const responseData = responseText ? safeJsonParse(responseText) : null;
 
@@ -1000,17 +1102,28 @@
                     updateAuthUi();
                 }
 
+                state.workerApiUrl = usedApiUrl;
+                if (dom.prWorkerUrl) dom.prWorkerUrl.value = usedApiUrl;
+
                 const prUrl = String(responseData.prUrl || '').trim();
                 updatePrLink(prUrl);
                 persistState();
 
-                setStatus(`PR 创建成功${responseData.prNumber ? ` #${responseData.prNumber}` : ''}`);
+                if (requestResult.usedFallback) {
+                    setStatus(`已使用备用 Worker 创建 PR 成功${responseData.prNumber ? ` #${responseData.prNumber}` : ''}`);
+                } else {
+                    setStatus(`PR 创建成功${responseData.prNumber ? ` #${responseData.prNumber}` : ''}`);
+                }
 
                 if (prUrl) {
                     window.open(prUrl, '_blank', 'noopener,noreferrer');
                 }
             } catch (err) {
-                setStatus(`提交 PR 失败：${err && err.message ? err.message : String(err)}`, true);
+                if (isLikelyWorkerNetworkError(err)) {
+                    setStatus('提交 PR 失败：无法连接 Worker 服务（可能被网络策略拦截）。请在“Worker API 地址”中填写可访问域名后重试。', true);
+                } else {
+                    setStatus(`提交 PR 失败：${err && err.message ? err.message : String(err)}`, true);
+                }
             } finally {
                 setPrSubmitBusy(false);
             }
@@ -1157,6 +1270,8 @@
     return {
         init: init,
         normalizeWorkerApiUrl: normalizeWorkerApiUrl,
+        buildWorkerApiCandidates: buildWorkerApiCandidates,
+        isLikelyWorkerNetworkError: isLikelyWorkerNetworkError,
         normalizeSlug: normalizeSlug,
         parseContributionTemplate: parseContributionTemplate,
         buildContributionPayload: buildContributionPayload,

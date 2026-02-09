@@ -3,6 +3,8 @@ const assert = require('node:assert/strict');
 
 const {
     normalizeWorkerApiUrl,
+    buildWorkerApiCandidates,
+    isLikelyWorkerNetworkError,
     normalizeSlug,
     parseContributionTemplate,
     buildContributionPayload
@@ -17,6 +19,35 @@ test('normalizeWorkerApiUrl completes protocol and create-pr path', () => {
         normalizeWorkerApiUrl('https://example.workers.dev/api/create-pr'),
         'https://example.workers.dev/api/create-pr'
     );
+});
+
+test('buildWorkerApiCandidates adds known mirror and deduplicates', () => {
+    assert.deepEqual(
+        buildWorkerApiCandidates('greenhome-pr.3577415213.workers.dev'),
+        [
+            'https://greenhome-pr.3577415213.workers.dev/api/create-pr',
+            'https://greenhome-pr-3577415213.workers.dev/api/create-pr'
+        ]
+    );
+    assert.deepEqual(
+        buildWorkerApiCandidates('https://greenhome-pr-3577415213.workers.dev/api/create-pr'),
+        [
+            'https://greenhome-pr-3577415213.workers.dev/api/create-pr',
+            'https://greenhome-pr.3577415213.workers.dev/api/create-pr'
+        ]
+    );
+    assert.deepEqual(
+        buildWorkerApiCandidates('https://example.com/api/create-pr'),
+        [
+            'https://example.com/api/create-pr'
+        ]
+    );
+});
+
+test('isLikelyWorkerNetworkError detects fetch-level failures', () => {
+    assert.equal(isLikelyWorkerNetworkError(new TypeError('Failed to fetch')), true);
+    assert.equal(isLikelyWorkerNetworkError(new Error('Network request failed')), true);
+    assert.equal(isLikelyWorkerNetworkError(new Error('Unauthorized')), false);
 });
 
 test('normalizeSlug keeps lowercase slug format', () => {

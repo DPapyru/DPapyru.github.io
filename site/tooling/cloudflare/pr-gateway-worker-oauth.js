@@ -124,8 +124,9 @@ export default {
       } else {
         bodyLines.push("Created by Article Studio.", "", `- File: \`${repoPath}\``, `- Extra files: ${extraFiles.length}`, `- Branch: \`${branch}\``);
       }
+      const hasSubmitterLine = /(^|\n)-\s*Submitter:\s*@/i.test(prBodyInput);
 
-      if (submitter) {
+      if (submitter && !hasSubmitterLine) {
         bodyLines.push("", `- Submitter: @${submitter}`);
       }
 

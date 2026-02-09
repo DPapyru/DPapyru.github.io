@@ -182,6 +182,7 @@
                             <div class="studio-panel-section">
                                 <label for="studio-pr-worker-url">Worker API 地址</label>
                                 <input id="studio-pr-worker-url" class="studio-input" type="text" placeholder="https://xxx.workers.dev/api/create-pr">
+                                <span class="studio-help">若出现 Failed to fetch，建议改为可访问的 Worker 自定义域名。</span>
                             </div>
 
                             <div class="studio-panel-section">
@@ -206,7 +207,7 @@
                                 <summary>高级发布选项</summary>
                                 <div class="studio-panel-section">
                                     <label for="studio-pr-shared-key">兼容密钥（可选）</label>
-                                    <input id="studio-pr-shared-key" class="studio-input" type="password" placeholder="仅兼容旧版 Worker 的 STUDIO_SHARED_KEY" autocomplete="off">
+                                    <input id="studio-pr-shared-key" class="studio-input" type="password" placeholder="仅兼容旧版 Worker 的 STUDIO_SHARED_KEY" autocomplete="current-password">
                                     <span class="studio-help">优先使用 GitHub 登录；仅在 Worker 仍启用密钥模式时填写。</span>
                                 </div>
                             </details>

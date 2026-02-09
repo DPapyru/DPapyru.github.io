@@ -100,6 +100,7 @@
                                 <div class="shader-contribute-panel-section">
                                     <label for="shader-contribute-pr-worker-url">Worker API 地址</label>
                                     <input id="shader-contribute-pr-worker-url" class="shader-contribute-input" type="text" placeholder="https://xxx.workers.dev/api/create-pr">
+                                    <span class="shader-contribute-help">若出现 Failed to fetch，系统会自动尝试备用 Worker；仍失败请改为可访问的自定义域名。</span>
                                 </div>
 
                                 <div class="shader-contribute-panel-section">
@@ -134,7 +135,7 @@
                                     <summary>高级发布选项</summary>
                                     <div class="shader-contribute-panel-section">
                                         <label for="shader-contribute-pr-shared-key">兼容密钥（可选）</label>
-                                        <input id="shader-contribute-pr-shared-key" class="shader-contribute-input" type="password" placeholder="仅兼容旧版 Worker 的 STUDIO_SHARED_KEY" autocomplete="off">
+                                        <input id="shader-contribute-pr-shared-key" class="shader-contribute-input" type="password" placeholder="仅兼容旧版 Worker 的 STUDIO_SHARED_KEY" autocomplete="current-password">
                                         <span class="shader-contribute-help">优先使用 GitHub 登录；仅在 Worker 仍启用密钥模式时填写。</span>
                                     </div>
                                 </details>
