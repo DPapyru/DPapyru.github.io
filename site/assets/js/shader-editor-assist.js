@@ -53,6 +53,40 @@
         'TEXCOORD0', 'COLOR0', 'SV_TARGET', 'SV_POSITION'
     ];
 
+    const DP_KEYWORDS = [
+        'profile', 'swing',
+        'state', 'on_tick', 'tick', 'goto', 'trail', 'coord', 'space', 'uv_mode', 'blend',
+        'fun', 'let', 'const', 'if', 'else', 'for', 'while', 'break', 'continue', 'return',
+        'make'
+    ];
+
+    const DP_TYPES = [
+        'void', 'bool', 'int', 'float',
+        'vec2', 'vec3', 'vec4',
+        'TrailPoint', 'TrailContext', 'TrailVec2', 'TrailColor'
+    ];
+
+    const DP_FUNCTIONS = [
+        'build', 'emit', 'biu', 'slash', 'arc', 'swing',
+        'rgba', 'rainbow',
+        'vec2', 'v2',
+        'sin', 'cos', 'tan', 'pow', 'sqrt', 'abs',
+        'min', 'max', 'clamp', 'lerp', 'length', 'normalize', 'dot',
+        'shader_pass', 'use_shader', 'uv', 'blend', 'u',
+        'center', 'at', 'pos',
+        'radius', 'angle',
+        'count', 'samples', 'points',
+        'width', 'thickness',
+        'color', 'colour'
+    ];
+
+    const DP_BUILTINS = [
+        'ctx', 'Time', 'Dt', 'Progress', 'Origin', 'Dir', 'Length', 'Seed',
+        't', 'dt', 'p',
+        'state_tick', 'state_time', 'phase_tick', 'tick', 'global_tick', 'phase', 'on', 'off', 'uv', 'center', 'auto',
+        'linear', 'manual', 'point', 'alpha', 'alphablend', 'additive', 'add', 'addictive', 'PI', 'pi'
+    ];
+
     const COMPLETION_WORDS = Array.from(new Set([
         ...KEYWORDS,
         ...TYPES,
@@ -60,7 +94,16 @@
         ...BUILTINS
     ])).sort((a, b) => a.localeCompare(b));
 
+    const DP_COMPLETION_WORDS = Array.from(new Set([
+        ...DP_KEYWORDS,
+        ...DP_TYPES,
+        ...DP_FUNCTIONS,
+        ...DP_BUILTINS,
+        'TrailPoint[]'
+    ])).sort((a, b) => a.localeCompare(b));
+
     const COMPLETION_RESERVED = new Set(COMPLETION_WORDS.map((word) => word.toLowerCase()));
+    const DP_COMPLETION_RESERVED = new Set(DP_COMPLETION_WORDS.map((word) => word.toLowerCase()));
 
     function clampInt(v, min, max) {
         return Math.max(min, Math.min(max, v));
@@ -104,16 +147,17 @@
         return /^[xyzwrgba]{1,4}$/.test(String(word || '').toLowerCase());
     }
 
-    function collectUserDefinedIdentifiers(sourceText) {
+    function collectUserDefinedIdentifiers(sourceText, reservedSet) {
         const cleaned = stripCommentsAndStrings(sourceText);
         const matches = cleaned.match(/\b[A-Za-z_][A-Za-z0-9_]*\b/g) || [];
         const result = [];
         const seen = new Set();
+        const reserved = reservedSet || COMPLETION_RESERVED;
 
         matches.forEach((word) => {
             const key = String(word || '').toLowerCase();
             if (!key) return;
-            if (COMPLETION_RESERVED.has(key)) return;
+            if (reserved.has(key)) return;
             if (isSwizzleIdentifier(key)) return;
             if (seen.has(word)) return;
             seen.add(word);
@@ -135,12 +179,12 @@
         return a.localeCompare(b);
     }
 
-    function collectCompletionItems(prefix, sourceText) {
+    function collectCompletionItemsFromDictionary(prefix, sourceText, dictionaryWords, reservedSet) {
         const query = String(prefix || '').trim();
         const queryLower = query.toLowerCase();
-        const dynamicWords = collectUserDefinedIdentifiers(sourceText);
+        const dynamicWords = collectUserDefinedIdentifiers(sourceText, reservedSet);
         const dictionary = Array.from(new Set([
-            ...COMPLETION_WORDS,
+            ...dictionaryWords,
             ...dynamicWords
         ]));
 
@@ -149,6 +193,14 @@
         const items = dictionary.filter((item) => item.toLowerCase().startsWith(queryLower));
         items.sort((a, b) => compareCompletionItems(a, b, queryLower));
         return items.slice(0, 30);
+    }
+
+    function collectCompletionItems(prefix, sourceText) {
+        return collectCompletionItemsFromDictionary(prefix, sourceText, COMPLETION_WORDS, COMPLETION_RESERVED);
+    }
+
+    function collectDpapyruCompletionItems(prefix, sourceText) {
+        return collectCompletionItemsFromDictionary(prefix, sourceText, DP_COMPLETION_WORDS, DP_COMPLETION_RESERVED);
     }
 
     function applyCompletion(text, cursor, completion) {
@@ -272,12 +324,38 @@
         return html;
     }
 
+    function highlightDpapyruToHtml(source) {
+        const placeholders = [];
+        let html = escapeHtml(source);
+
+        html = protectTokens(html, /\/\*[\s\S]*?\*\//g, 'shaderpg-token-comment', placeholders);
+        html = protectTokens(html, /\/\/[^\n]*/g, 'shaderpg-token-comment', placeholders);
+        html = protectTokens(html, /"(?:\\.|[^"\\])*"/g, 'shaderpg-token-string', placeholders);
+        html = protectTokens(html, /'(?:\\.|[^'\\])*'/g, 'shaderpg-token-string', placeholders);
+
+        html = html.replace(/\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?(?:f)?\b/g, '<span class="shaderpg-token-number">$&</span>');
+        html = highlightWordSet(html, DP_TYPES, 'shaderpg-token-type');
+        html = highlightWordSet(html, DP_KEYWORDS, 'shaderpg-token-keyword');
+        html = highlightWordSet(html, DP_FUNCTIONS, 'shaderpg-token-function');
+        html = highlightWordSet(html, DP_BUILTINS, 'shaderpg-token-builtin');
+
+        html = restoreTokens(html, placeholders);
+
+        if (html.length === 0) {
+            return ' ';
+        }
+        return html;
+    }
+
     return {
         COMPLETION_WORDS: COMPLETION_WORDS,
+        DP_COMPLETION_WORDS: DP_COMPLETION_WORDS,
         getCompletionRange: getCompletionRange,
         collectCompletionItems: collectCompletionItems,
+        collectDpapyruCompletionItems: collectDpapyruCompletionItems,
         applyCompletion: applyCompletion,
         indentTextBlock: indentTextBlock,
-        highlightHlslToHtml: highlightHlslToHtml
+        highlightHlslToHtml: highlightHlslToHtml,
+        highlightDpapyruToHtml: highlightDpapyruToHtml
     };
 });

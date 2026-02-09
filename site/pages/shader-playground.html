@@ -71,22 +71,28 @@
                     <h1 class="tutorial-title">HLSL Shader Playground</h1>
                     <div class="tutorial-meta">
                         <span>用途: tModLoader Shader 开发与调试</span>
+                        <span class="shaderpg-mode-indicator is-hlsl" id="shaderpg-mode-indicator">当前模式: Toy-HLSL</span>
                     </div>
                 </div>
 
                 <!-- Shader Playground 主体 -->
-                <section class="shaderpg-shell">
+                <section class="shaderpg-shell" id="shaderpg-shell" data-mode="hlsl" data-bg-mode="transparent">
+                    <div class="shaderpg-modebar">
+                        <div class="shaderpg-lang-switch" id="shaderpg-lang-switch" role="tablist" aria-label="编辑模式切换">
+                            <button class="shaderpg-lang-btn active" id="shaderpg-mode-hlsl" data-mode="hlsl" role="tab" aria-selected="true" type="button">Toy-HLSL</button>
+                            <button class="shaderpg-lang-btn" id="shaderpg-mode-dp" data-mode="dp" role="tab" aria-selected="false" type="button">DPapyru--</button>
+                        </div>
+                    </div>
                     <!-- 工具栏 -->
                     <div class="shaderpg-topbar">
                         <div class="shaderpg-topbar-left">
-                            <span class="shaderpg-brand">Toy-HLSL</span>
-                            <div class="shaderpg-topbar-group">
+                            <div class="shaderpg-topbar-group shaderpg-mode-hlsl">
                                 <button class="btn btn-small btn-outline" id="shaderpg-toggle-run" type="button">暂停</button>
                                 <button class="btn btn-small btn-outline" id="shaderpg-reset-playback" type="button" title="重置动画播放时间">重播</button>
                                 <button class="btn btn-small btn-outline" id="shaderpg-compile" type="button">编译</button>
                                 <button class="btn btn-small btn-outline" id="shaderpg-reset" type="button">重置</button>
                             </div>
-                            <div class="shaderpg-topbar-group">
+                            <div class="shaderpg-topbar-group shaderpg-mode-hlsl">
                                 <button class="btn btn-small" id="shaderpg-add-pass" type="button">+ 新增 Pass</button>
                                 <div class="shaderpg-dropdown">
                                     <button class="btn btn-small btn-outline" id="shaderpg-pass-menu" type="button">Pass ▼</button>
@@ -98,9 +104,19 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="shaderpg-topbar-group shaderpg-mode-dp">
+                                <label class="shaderpg-inline-label" for="shaderpg-dp-preset">预设</label>
+                                <select class="btn btn-small btn-outline" id="shaderpg-dp-preset" aria-label="DP 预设">
+                                    <option value="longsword_manual">刀光</option>
+                                    <option value="single_rect">单个矩形</option>
+                                </select>
+                                <button class="btn btn-small" id="shaderpg-dp-compile" type="button">应用脚本</button>
+                                <button class="btn btn-small btn-outline" id="shaderpg-dp-shader-toggle" type="button">Shader上色: 关</button>
+                                <button class="btn btn-small btn-outline" id="shaderpg-dp-reset" type="button">重置示例</button>
+                            </div>
                         </div>
                         <div class="shaderpg-topbar-right">
-                            <div class="shaderpg-topbar-group">
+                            <div class="shaderpg-topbar-group shaderpg-mode-hlsl">
                                 <label class="shaderpg-inline-label" for="shaderpg-scale">分辨率</label>
                                 <select class="btn btn-small btn-outline" id="shaderpg-scale">
                                     <option value="1">1x</option>
@@ -108,23 +124,32 @@
                                     <option value="0.25">0.25x</option>
                                 </select>
                             </div>
-                            <div class="shaderpg-topbar-group">
+                            <div class="shaderpg-topbar-group shaderpg-mode-hlsl">
                                 <label class="shaderpg-inline-label" for="shaderpg-address-mode">采样</label>
                                 <select class="btn btn-small btn-outline" id="shaderpg-address-mode" aria-label="采样越界模式">
                                     <option value="clamp">Clamp 截断</option>
                                     <option value="wrap">Wrap 循环</option>
                                 </select>
                             </div>
-                            <button class="btn btn-small btn-outline" id="shaderpg-layout-toggle" type="button" title="切换布局">⇄</button>
+                            <div class="shaderpg-topbar-group">
+                                <label class="shaderpg-inline-label" for="shaderpg-bg-mode">背景</label>
+                                <select class="btn btn-small btn-outline" id="shaderpg-bg-mode" aria-label="预览背景模式">
+                                    <option value="transparent">透明棋盘</option>
+                                    <option value="white">白色</option>
+                                    <option value="black">黑色</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-small btn-outline" id="shaderpg-blend-toggle" type="button" title="切换轨迹混合模式">混合: AlphaBlend</button>
+                            <button class="btn btn-small btn-outline shaderpg-mode-hlsl" id="shaderpg-layout-toggle" type="button" title="切换布局">⇄</button>
                             <button class="btn btn-small btn-outline" id="shaderpg-help-toggle" type="button" title="帮助">?</button>
-                            <div class="shaderpg-stats" id="shaderpg-stats">fps: -- | 0x0</div>
+                            <div class="shaderpg-stats shaderpg-mode-hlsl" id="shaderpg-stats">fps: -- | 0x0</div>
                         </div>
                     </div>
 
                     <!-- Pass 标签 -->
-                    <div class="shaderpg-pass-tabs" role="tablist" id="shaderpg-pass-tabs"></div>
+                    <div class="shaderpg-pass-tabs shaderpg-mode-hlsl" role="tablist" id="shaderpg-pass-tabs"></div>
 
-                    <div class="shaderpg-command-panel" id="shaderpg-command-panel">
+                    <div class="shaderpg-command-panel shaderpg-mode-hlsl" id="shaderpg-command-panel">
                         <div class="shaderpg-panel-header shaderpg-command-header">
                             <h2 class="shaderpg-panel-title">参数调节</h2>
                         </div>
@@ -143,28 +168,42 @@
                     <!-- 编辑器和预览区 -->
                     <div class="shaderpg-main" id="shaderpg-main" data-layout="horizontal">
                         <section class="shaderpg-editor">
-                            <div class="shaderpg-editor-surface" id="shaderpg-editor-surface">
-                                <div class="shaderpg-editor-stack" id="shaderpg-editor-stack">
-                                    <pre class="shaderpg-editor-highlight" id="shaderpg-editor-highlight" aria-hidden="true"><code class="shaderpg-editor-highlight-code" id="shaderpg-editor-highlight-code"></code></pre>
-                                    <textarea class="shaderpg-textarea shaderpg-textarea--editor" id="shaderpg-editor" spellcheck="false" wrap="off" placeholder="// 在此编写 HLSL 代码..."></textarea>
+                            <div class="shaderpg-mode-hlsl">
+                                <div class="shaderpg-editor-surface" id="shaderpg-editor-surface">
+                                    <div class="shaderpg-editor-stack" id="shaderpg-editor-stack">
+                                        <pre class="shaderpg-editor-highlight" id="shaderpg-editor-highlight" aria-hidden="true"><code class="shaderpg-editor-highlight-code" id="shaderpg-editor-highlight-code"></code></pre>
+                                        <textarea class="shaderpg-textarea shaderpg-textarea--editor" id="shaderpg-editor" spellcheck="false" wrap="off" placeholder="// 在此编写 HLSL 代码..."></textarea>
+                                    </div>
+                                    <div class="shaderpg-autocomplete" id="shaderpg-autocomplete" role="listbox" aria-label="HLSL 自动补全"></div>
                                 </div>
-                                <div class="shaderpg-autocomplete" id="shaderpg-autocomplete" role="listbox" aria-label="HLSL 自动补全"></div>
+                                <div class="shaderpg-console">
+                                    <div class="shaderpg-console-title">Console</div>
+                                    <pre class="shaderpg-console-body" id="shaderpg-error"></pre>
+                                </div>
                             </div>
-                            <div class="shaderpg-console">
-                                <div class="shaderpg-console-title">Console</div>
-                                <pre class="shaderpg-console-body" id="shaderpg-error"></pre>
+                            <div class="shaderpg-mode-dp shaderpg-dp-mode-pane">
+                                <div class="shaderpg-dpapyru-label">DPapyru--（trail profile）</div>
+                                <div class="shaderpg-dp-editor-surface" id="shaderpg-dp-editor-surface">
+                                    <div class="shaderpg-editor-stack shaderpg-dp-editor-stack" id="shaderpg-dp-editor-stack">
+                                        <pre class="shaderpg-editor-highlight shaderpg-dp-editor-highlight" id="shaderpg-dp-editor-highlight" aria-hidden="true"><code class="shaderpg-editor-highlight-code" id="shaderpg-dp-editor-highlight-code"></code></pre>
+                                        <textarea class="shaderpg-textarea shaderpg-textarea--editor shaderpg-dpapyru-editor" id="shaderpg-dp-editor" spellcheck="false" wrap="off" placeholder="// 在此编写 DPapyru-- trail 代码..."></textarea>
+                                    </div>
+                                    <div class="shaderpg-autocomplete shaderpg-dp-autocomplete" id="shaderpg-dp-autocomplete" role="listbox" aria-label="DPapyru-- 自动补全"></div>
+                                </div>
+                                <div class="shaderpg-dpapyru-status" id="shaderpg-dp-status">等待编译</div>
                             </div>
                         </section>
                         <section class="shaderpg-preview">
                             <div class="shaderpg-canvas-wrap">
                                 <canvas id="shaderpg-canvas" class="shaderpg-canvas" width="960" height="540"></canvas>
+                                <canvas id="shaderpg-dp-canvas" class="shaderpg-canvas shaderpg-dp-canvas" width="960" height="540"></canvas>
                             </div>
                             <div class="shaderpg-status" id="shaderpg-status"></div>
                         </section>
                     </div>
 
                     <!-- 底部面板 -->
-                    <div class="shaderpg-bottom">
+                    <div class="shaderpg-bottom shaderpg-mode-hlsl">
                         <section class="shaderpg-panel">
                             <div class="shaderpg-panel-header">
                                 <h2 class="shaderpg-panel-title">Shader Inputs</h2>
@@ -191,6 +230,21 @@
                         </section>
                     </div>
 
+                    <div class="shaderpg-bottom shaderpg-mode-dp">
+                        <section class="shaderpg-panel">
+                            <div class="shaderpg-panel-header">
+                                <h2 class="shaderpg-panel-title">DP 前端预览</h2>
+                            </div>
+                            <pre class="shaderpg-console-body shaderpg-dp-log-body" id="shaderpg-dp-log"></pre>
+                        </section>
+                        <section class="shaderpg-panel">
+                            <div class="shaderpg-panel-header">
+                                <h2 class="shaderpg-panel-title">DP 参数</h2>
+                            </div>
+                            <pre class="shaderpg-console-body shaderpg-dp-param-body" id="shaderpg-dp-params"></pre>
+                        </section>
+                    </div>
+
                     <!-- 底部提示 -->
                     <div class="shaderpg-hint shaderpg-hint--footer">
                         <div>提示：Ctrl+Enter 编译 | Ctrl+S 导出 | 点击右上角 ? 查看帮助</div>
@@ -207,6 +261,143 @@
             <button class="btn btn-small btn-outline" id="shaderpg-help-close" type="button">✕</button>
         </div>
         <div class="shaderpg-drawer-content">
+            <h3>DPapyru-- 语法说明</h3>
+            <p>简化用法：一个 <code>state slash</code> 里用一个 <code>make slash { ... }</code> 完成弧线点生成，再由管线自动按运动方向取法线生成双边顶点（位置/颜色/uv），拼接三角形后应用。需要细控时依然可写 <code>emit(...)</code>。</p>
+            <p>页面内置两个 DP 预设：<code>刀光</code> 与 <code>单个矩形</code>。你可以在顶部工具栏切换预设，再点“应用脚本”或“重置示例”快速回到该预设。</p>
+            <pre class="shaderpg-console-body shaderpg-dp-syntax-body" id="shaderpg-dp-syntax-body">profile swing demo {
+    const int SLASH_TICKS = 24;
+
+    state slash(SLASH_TICKS) {
+        tick {
+            let float t = state_tick / SLASH_TICKS;
+            let float cx = 0.46;
+            let float cy = 0.58;
+            let float a = -2.72 + t * 2.34;
+
+            make slash {
+                center(cx, cy);              // 必填: 中心点
+                radius(0.34);                // 可选: 半径
+                angle(a - 0.84, a + 0.96);   // 必填: 起止弧度
+                count(20);                   // 可选: 点数量
+                width(1.20, 0.26);           // 可选: 起止宽度
+                color(rgba(0.94, 0.94, 0.94, 0.22), rgba(1.00, 1.00, 1.00, 0.14));
+                uv(0.00, 1.00);              // 可选: U 区间
+            }
+        }
+    }
+
+    trail {
+        shader_pass 0;
+        use_shader on;
+        coord uv;
+        uv linear;
+    }
+}
+
+快速上手:
+- 先选择顶部“预设”: 刀光 / 单个矩形
+- 点“应用脚本”运行当前编辑器内容
+- 点“重置示例”恢复当前预设源码
+
+别名:
+- biu == emit
+- rainbow == rgba
+- v2 == vec2
+- slash/arc/swing: 兼容旧写法, 直接生成弧线点
+- make slash { ... }: 推荐封装写法
+</pre>
+            <p>内置方法参数（前端运行时）</p>
+            <pre class="shaderpg-console-body shaderpg-dp-api-body" id="shaderpg-dp-api-body">make slash { ... } 字段与参数
+- center(x, y) | at(x, y) | pos(x, y)
+  类型: number, number; 必填; 表示拖尾弧线的中心点
+- angle(start, end)
+  类型: number, number(弧度); 必填; 定义弧线区间
+- radius(r)
+  类型: number; 默认 0.34; 半径
+- count(n) | samples(n) | points(n)
+  类型: int; 默认 20; 范围 2..96; 轨迹点数量上限
+  展开: 实际显示点数会按时间渐进增长，默认公式 `visible = round(count * pow(state_progress, 3.5))`
+- width(wStart, wEnd) | thickness(wStart, wEnd)
+  类型: number, number; 默认 1.22 -> 0.28
+- color(cStart, cEnd) | colour(cStart, cEnd)
+  类型: rgba, rgba; 默认淡白到透明
+- uv(uStart, uEnd) | u(uStart, uEnd)
+  类型: number, number; 默认 0 -> 1
+
+emit / biu
+- emit(v2(x, y), width, rgba(r,g,b,a), u)
+- emit(x, y, width, rgba(r,g,b,a), u)
+- emit(x, y, width, r, g, b, a, u)
+
+emit mesh (顶点+索引)
+- emit mesh { ... }
+- topology triangle_list | triangle_strip
+- vertices [v(x,y,rgba,u,v), ...]
+- indices [i0, i1, i2, ...] (可选)
+- vertex_offset / num_vertices / index_offset / primitive_count
+
+slash / arc / swing (兼容)
+- slash(x, y, radius, start, end, widthStart, widthEnd, colorStart, colorEnd)
+- slash(x, y, radius, start, end, count, widthStart, widthEnd, colorStart, colorEnd)
+- slash(x, y, radius, start, end, widthStart, widthEnd, colorStart, colorEnd, uStart, uEnd)
+- slash(x, y, radius, start, end, count, widthStart, widthEnd, colorStart, colorEnd, uStart, uEnd)
+
+颜色与向量
+- rgba(r, g, b, a), rainbow(r, g, b, a)
+- vec2(x, y), v2(x, y)
+
+trail 配置
+- shader_pass 0..8
+- use_shader on/off
+- coord uv | center | auto
+- uv linear | manual (point == manual)
+- blend 推荐用顶部按钮切换 (脚本里的 blend 为兼容项)
+
+状态机语义
+- profile swing name { ... }: 声明一个状态机拖尾脚本
+- state s(TICKS) { tick { ... } }: 每帧执行一次 tick
+- goto next; / if (cond) goto next;: 状态跳转
+- 若不写 goto, 状态会在时长结束后按定义顺序自动切换
+- 内置时序变量: state_tick/state_time/phase_tick/tick/global_tick
+
+默认顶点管线(前端)
+1) 保存脚本输出点与运动方向
+2) 用方向法线生成左右顶点
+3) 顶点携带: position + color + uv
+4) 相邻段拼接为三角形
+5) 渲染三角形并可应用 Toy-HLSL 采样色
+
+UV 对齐说明
+- uv linear: 整条拖尾按顺序线性映射 0 -> 1
+- uv manual: 使用点上的 u 值
+- make slash 的 uv(...) 或 slash(..., uStart, uEnd) 在 linear 下也会触发点级 UV
+- 采样区域映射到当前渲染窗口(整张画布), 仅用于刀光颜色采样
+
+DP 背景说明
+- DP 模式背景固定黑色, 用于观察刀光形状与亮度
+
+透明底说明
+- 默认背景为 16px 黑白棋盘格, 作为透明区域标识
+- 顶部背景可切换: 透明棋盘 / 白色 / 黑色, 用于观察不同透明与亮度对比
+
+混合模式说明
+- alpha:
+  src_rgb = shader_rgb * vertex_rgb
+  a = clamp(vertex_a)
+  out_rgb = src_rgb + dst_rgb * (1 - a)
+  a = 1: 完全覆盖
+  a = 0: 会出现 src + dst 的叠加效果
+- additive:
+  src_rgb = shader_rgb * vertex_rgb
+  a = clamp(vertex_a)
+  out_rgb = dst_rgb + src_rgb * a
+  始终叠加, a 控制叠加强度
+
+状态机内置变量
+- state_tick, state_time, phase_tick, tick, global_tick
+- state, phase, Time, Dt, Progress, PI
+</pre>
+
             <h3>教程一：使用教程 / 页面说明</h3>
             <p>这个页面是一个实时 HLSL 预览器。你可以一边写代码，一边看右侧画布输出，并在 Console 中查看编译错误。</p>
 
@@ -387,6 +578,8 @@ float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0 {
     <script src="/site/assets/js/shader-hlsl-adapter.js"></script>
     <script src="/site/assets/js/shader-editor-assist.js"></script>
     <script src="/site/assets/js/shader-command-params.js"></script>
+    <script src="/site/assets/js/shader-mode-switch.js"></script>
     <script src="/site/assets/js/shader-playground.js"></script>
+    <script src="/site/assets/js/dpapyru-trail-playground.js"></script>
 </body>
 </html>

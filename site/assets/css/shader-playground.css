@@ -11,6 +11,12 @@
     overflow: hidden;
 }
 
+.shaderpg-modebar {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-color);
+}
+
 .shaderpg-topbar {
     display: flex;
     align-items: center;
@@ -29,16 +35,66 @@
     flex-wrap: wrap;
 }
 
-.shaderpg-brand {
+.shaderpg-lang-switch {
     display: inline-flex;
     align-items: center;
-    font-weight: 700;
+    gap: 4px;
+    padding: 3px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+}
+
+.shaderpg-lang-btn {
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
     font-size: 12px;
+    font-weight: 700;
+    border-radius: 8px;
     padding: 4px 8px;
+    cursor: pointer;
+}
+
+.shaderpg-lang-btn.active {
+    background: var(--bg-color);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.shaderpg-mode-indicator {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 10px;
+    padding: 2px 8px;
     border-radius: 999px;
     border: 1px solid var(--border-color);
-    background: var(--bg-secondary);
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.shaderpg-mode-indicator.is-hlsl {
+    border-color: color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
     color: var(--text-color);
+    background: color-mix(in srgb, var(--primary-color) 18%, transparent);
+}
+
+.shaderpg-mode-indicator.is-dp {
+    border-color: color-mix(in srgb, var(--accent-color) 45%, var(--border-color));
+    color: var(--text-color);
+    background: color-mix(in srgb, var(--accent-color) 18%, transparent);
+}
+
+.shaderpg-shell[data-mode="hlsl"] .shaderpg-mode-dp {
+    display: none !important;
+}
+
+.shaderpg-shell[data-mode="dp"] .shaderpg-mode-hlsl {
+    display: none !important;
+}
+
+.shaderpg-shell[data-mode="dp"] .shaderpg-main {
+    grid-template-columns: minmax(620px, 1fr) 620px;
 }
 
 .shaderpg-topbar-group {
@@ -224,9 +280,9 @@
     border-radius: 10px;
     overflow: hidden;
     background: #0c0c0d;
-    --shaderpg-editor-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --shaderpg-editor-font-size: 12px;
-    --shaderpg-editor-line-height: 1.55;
+    --shaderpg-editor-font-family: "Cascadia Mono", "JetBrains Mono", "SFMono-Regular", "Consolas", "Menlo", "Monaco", "Liberation Mono", "Courier New", monospace;
+    --shaderpg-editor-font-size: 13px;
+    --shaderpg-editor-line-height: 20px;
     --shaderpg-editor-letter-spacing: 0;
 }
 
@@ -238,7 +294,8 @@
     bottom: 0;
     margin: 0;
     padding: 12px;
-    overflow: auto;
+    overflow: hidden;
+    box-sizing: border-box;
     pointer-events: none;
     white-space: pre;
     word-break: normal;
@@ -247,7 +304,12 @@
     font-size: var(--shaderpg-editor-font-size);
     line-height: var(--shaderpg-editor-line-height);
     letter-spacing: var(--shaderpg-editor-letter-spacing);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     font-weight: 400;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+    font-kerning: none;
     color: #d4d4d4;
     user-select: none;
     z-index: 1;
@@ -260,6 +322,8 @@
     font: inherit;
     line-height: inherit;
     letter-spacing: inherit;
+    transform: translate(0, 0);
+    will-change: transform;
 }
 
 .shaderpg-textarea--editor {
@@ -451,9 +515,15 @@
     font-size: var(--shaderpg-editor-font-size);
     line-height: var(--shaderpg-editor-line-height);
     letter-spacing: var(--shaderpg-editor-letter-spacing);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     font-weight: 400;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+    font-kerning: none;
     margin: 0;
     box-sizing: border-box;
+    scrollbar-gutter: stable;
     tab-size: 4;
     white-space: pre;
     overflow-wrap: normal;
@@ -486,16 +556,46 @@
 }
 
 .shaderpg-canvas-wrap {
+    position: relative;
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid var(--border-color);
-    background: #000;
+    background-color: #ffffff;
+    background-image:
+        linear-gradient(45deg, #000000 25%, transparent 25%, transparent 75%, #000000 75%, #000000),
+        linear-gradient(45deg, #000000 25%, transparent 25%, transparent 75%, #000000 75%, #000000);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+}
+
+.shaderpg-shell[data-bg-mode="white"] .shaderpg-canvas-wrap {
+    background: #ffffff;
+}
+
+.shaderpg-shell[data-bg-mode="black"] .shaderpg-canvas-wrap {
+    background: #000000;
 }
 
 .shaderpg-canvas {
     width: 100%;
     height: auto;
     display: block;
+}
+
+.shaderpg-dp-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: none;
+    pointer-events: none;
+}
+
+.shaderpg-shell[data-mode="dp"] .shaderpg-dp-canvas {
+    display: block;
+}
+
+.shaderpg-shell[data-mode="dp"] #shaderpg-canvas {
+    visibility: hidden;
 }
 
 .shaderpg-status {
@@ -511,6 +611,75 @@
     padding: 12px;
     border-top: 1px solid var(--border-color);
     background: var(--bg-secondary);
+}
+
+.shaderpg-shell[data-mode="dp"] .shaderpg-bottom {
+    grid-template-columns: minmax(420px, 1.2fr) minmax(320px, 0.8fr);
+}
+
+.shaderpg-dp-param-body {
+    min-height: 220px;
+    max-height: 360px;
+}
+
+.shaderpg-dp-log-body {
+    min-height: 220px;
+    max-height: 360px;
+}
+
+
+.shaderpg-dp-syntax-body {
+    min-height: 260px;
+    max-height: 420px;
+}
+
+.shaderpg-dp-api-body {
+    min-height: 240px;
+    max-height: 420px;
+}
+
+.shaderpg-dp-syntax-body code,
+.shaderpg-dp-api-body code {
+    color: inherit;
+}
+
+
+.shaderpg-dp-mode-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+}
+
+.shaderpg-dpapyru-label {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.shaderpg-dpapyru-editor {
+    min-height: 480px;
+    resize: vertical;
+}
+
+.shaderpg-dp-editor-surface {
+    position: relative;
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+}
+
+.shaderpg-dp-editor-stack {
+    min-height: 480px;
+}
+
+.shaderpg-dp-autocomplete {
+    z-index: 4;
+}
+
+.shaderpg-dpapyru-status {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
 }
 
 .shaderpg-channels {
@@ -652,6 +821,9 @@
         border-bottom: 1px solid var(--border-color);
     }
     .shaderpg-bottom {
+        grid-template-columns: 1fr;
+    }
+    .shaderpg-dpapyru-grid {
         grid-template-columns: 1fr;
     }
     .shaderpg-itime-group {

@@ -6,6 +6,8 @@
 
     const STORAGE_KEY = 'shader-playground.v1';
     const ITIME_OFFSET_STORAGE_KEY = 'shader-playground.iTimeOffset';
+    const BLEND_MODE_STORAGE_KEY = 'shader-playground.blend-mode';
+    const BG_MODE_STORAGE_KEY = 'shader-playground.bg-mode';
     const COMMON_TAB_ID = '__common__';
     const hlslAdapter = (typeof window !== 'undefined' && window.ShaderHlslAdapter) ? window.ShaderHlslAdapter : null;
     const editorAssist = (typeof window !== 'undefined' && window.ShaderEditorAssist) ? window.ShaderEditorAssist : null;
@@ -36,6 +38,40 @@
     function setText(el, text) {
         if (!el) return;
         el.textContent = String(text || '');
+    }
+
+    function readStoredBlendMode() {
+        try {
+            const raw = localStorage.getItem(BLEND_MODE_STORAGE_KEY);
+            return raw === 'additive' ? 'additive' : 'alpha';
+        } catch (_) {
+            return 'alpha';
+        }
+    }
+
+    function getBlendModeText(mode) {
+        return mode === 'additive' ? 'Additive' : 'AlphaBlend';
+    }
+
+    function normalizeBgMode(mode) {
+        const raw = String(mode || '').toLowerCase();
+        if (raw === 'white') return 'white';
+        if (raw === 'black') return 'black';
+        return 'transparent';
+    }
+
+    function readStoredBgMode() {
+        try {
+            return normalizeBgMode(localStorage.getItem(BG_MODE_STORAGE_KEY));
+        } catch (_) {
+            return 'transparent';
+        }
+    }
+
+    function saveBgMode(mode) {
+        try {
+            localStorage.setItem(BG_MODE_STORAGE_KEY, normalizeBgMode(mode));
+        } catch (_) { }
     }
 
     function isIdentifierChar(ch) {
@@ -433,6 +469,71 @@
         return { ok: true, program: program, uniforms: u };
     }
 
+    function normalizeBlendMode(mode) {
+        return mode === 'additive' ? 'additive' : 'alpha';
+    }
+
+    function clearDefaultFramebufferColor(gl, width, height, r, g, b, a) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, width, height);
+        gl.clearColor(r, g, b, a);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+
+    function clearDefaultFramebufferChecker(gl, width, height) {
+        const tile = 16;
+        const cols = Math.ceil(width / tile);
+        const rows = Math.ceil(height / tile);
+        const prevScissorEnabled = gl.isEnabled(gl.SCISSOR_TEST);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, width, height);
+        gl.enable(gl.SCISSOR_TEST);
+
+        for (let gy = 0; gy < rows; gy += 1) {
+            for (let gx = 0; gx < cols; gx += 1) {
+                const isBlack = ((gx + gy) & 1) === 1;
+                gl.scissor(gx * tile, gy * tile, tile, tile);
+                if (isBlack) {
+                    gl.clearColor(0, 0, 0, 1);
+                } else {
+                    gl.clearColor(1, 1, 1, 1);
+                }
+                gl.clear(gl.COLOR_BUFFER_BIT);
+            }
+        }
+
+        if (!prevScissorEnabled) {
+            gl.disable(gl.SCISSOR_TEST);
+        }
+    }
+
+    function clearDefaultFramebufferBackground(gl, width, height, mode) {
+        const bgMode = normalizeBgMode(mode);
+        if (bgMode === 'white') {
+            clearDefaultFramebufferColor(gl, width, height, 1, 1, 1, 1);
+            return;
+        }
+        if (bgMode === 'black') {
+            clearDefaultFramebufferColor(gl, width, height, 0, 0, 0, 1);
+            return;
+        }
+        clearDefaultFramebufferChecker(gl, width, height);
+    }
+
+    function applyImageBlendMode(gl, mode) {
+        const blendMode = normalizeBlendMode(mode);
+        gl.enable(gl.BLEND);
+        gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
+
+        if (blendMode === 'additive') {
+            gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ONE, gl.ONE);
+            return;
+        }
+
+        gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    }
+
     function renderFrame(runtime, state) {
         const gl = runtime.gl;
         const canvas = runtime.canvas;
@@ -478,7 +579,11 @@
 
         gl.disable(gl.DEPTH_TEST);
         gl.disable(gl.CULL_FACE);
+        gl.disable(gl.BLEND);
         gl.bindVertexArray(runtime.vao);
+
+        const blendMode = normalizeBlendMode(readStoredBlendMode());
+        clearDefaultFramebufferBackground(gl, canvasW, canvasH, readStoredBgMode());
 
         for (const pass of state.passes) {
             const compiled = runtime.compiled.get(String(pass.id));
@@ -493,8 +598,10 @@
                 viewportW = buf.w;
                 viewportH = buf.h;
                 gl.bindFramebuffer(gl.FRAMEBUFFER, buf.fboWrite);
+                gl.disable(gl.BLEND);
             } else {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                applyImageBlendMode(gl, blendMode);
             }
 
             gl.viewport(0, 0, viewportW, viewportH);
@@ -821,6 +928,7 @@
         const resetPlaybackBtn = $('shaderpg-reset-playback');
         const scaleSelect = $('shaderpg-scale');
         const addressModeSelect = $('shaderpg-address-mode');
+        const bgModeSelect = $('shaderpg-bg-mode');
         const iTimeInput = $('shaderpg-itime');
         const iTimeMinusBtn = $('shaderpg-itime-minus');
         const iTimePlusBtn = $('shaderpg-itime-plus');
@@ -843,7 +951,9 @@
         const helpCloseBtn = $('shaderpg-help-close');
         const drawerOverlay = $('shaderpg-drawer-overlay');
         const mainEl = $('shaderpg-main');
+        const shellEl = $('shaderpg-shell');
         const editorSurface = $('shaderpg-editor-surface');
+        const editorStack = $('shaderpg-editor-stack');
         const editorHighlightCode = $('shaderpg-editor-highlight-code');
         const editorHighlightWrap = $('shaderpg-editor-highlight');
         const editorAutocomplete = $('shaderpg-autocomplete');
@@ -901,7 +1011,7 @@
         }
 
         if (!canvas) return;
-        const gl = canvas.getContext('webgl2', { alpha: false, antialias: true, premultipliedAlpha: false });
+        const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: false });
         if (!gl) {
             setText(errorEl, '无法创建 WebGL2 上下文。请使用支持 WebGL2 的桌面浏览器。');
             return;
@@ -948,12 +1058,12 @@
             runBtn.textContent = '继续';
             runBtn.disabled = true;
             setText(errorEl, 'WebGL 上下文丢失。正在尝试恢复...');
-            setText(statusEl, 'Context Lost');
+            setStatus('Context Lost');
         }, false);
 
         canvas.addEventListener('webglcontextrestored', function (e) {
             setText(errorEl, '');
-            setText(statusEl, '正在重建资源...');
+            setStatus('正在重建资源...');
 
             try {
                 recreateRuntimeResources();
@@ -963,7 +1073,7 @@
                 runBtn.disabled = false;
                 state.isRunning = true;
                 runBtn.textContent = '暂停';
-                setText(statusEl, '上下文已恢复');
+                setStatus('上下文已恢复');
             } catch (err) {
                 setText(errorEl, '恢复失败: ' + (err.message || err));
             }
@@ -1052,7 +1162,9 @@
                 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
                 'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize',
                 'lineHeight', 'fontFamily', 'letterSpacing', 'textTransform',
-                'textIndent', 'textDecoration', 'wordSpacing', 'tabSize'
+                'textIndent', 'textDecoration', 'wordSpacing', 'tabSize',
+                'fontVariantLigatures', 'fontFeatureSettings', 'fontKerning',
+                'fontVariantNumeric', 'fontSynthesis', 'textRendering'
             ];
 
             props.forEach((name) => {
@@ -1112,9 +1224,15 @@
 
         function syncEditorScroll() {
             if (editorHighlightWrap) {
-                editorHighlightWrap.scrollTop = editorTa.scrollTop;
-                editorHighlightWrap.scrollLeft = editorTa.scrollLeft;
+                editorHighlightWrap.scrollTop = 0;
+                editorHighlightWrap.scrollLeft = 0;
             }
+            if (editorHighlightCode) {
+                const x = -Math.round(Number(editorTa.scrollLeft || 0));
+                const y = -Math.round(Number(editorTa.scrollTop || 0));
+                editorHighlightCode.style.transform = 'translate(' + String(x) + 'px, ' + String(y) + 'px)';
+            }
+            syncEditorSizing();
             if (!completionState.visible) return;
             positionAutocompleteAtCursor();
         }
@@ -1130,6 +1248,10 @@
         }
 
         function syncEditorSizing() {
+            if (editorStack) {
+                const minHeight = Math.max(260, editorTa.clientHeight || 0);
+                editorStack.style.minHeight = minHeight + 'px';
+            }
             if (!completionState.visible) return;
             positionAutocompleteAtCursor();
         }
@@ -1194,13 +1316,25 @@
         }
 
         function showAutocompleteForCurrentCursor() {
-            if (!editorAssist || !editorAutocomplete) return;
+            if (!editorAssist || !editorAutocomplete || typeof editorAssist.getCompletionRange !== 'function') {
+                return;
+            }
             const range = editorAssist.getCompletionRange(editorTa.value, editorTa.selectionStart);
             if (!range || !range.prefix) {
                 hideAutocomplete();
                 return;
             }
-            const items = editorAssist.collectCompletionItems(range.prefix, editorTa.value, editorTa.selectionStart);
+
+            const collect = typeof editorAssist.collectCompletionItems === 'function'
+                ? editorAssist.collectCompletionItems
+                : (editorAssist.collectDpapyruCompletionItems || null);
+
+            if (!collect) {
+                hideAutocomplete();
+                return;
+            }
+
+            const items = collect(range.prefix, editorTa.value, editorTa.selectionStart);
             if (!items.length) {
                 hideAutocomplete();
                 return;
@@ -1225,7 +1359,30 @@
         }
 
         function setStatus(text) {
-            setText(statusEl, text);
+            const raw = String(text || '');
+            const blendText = '混合: ' + getBlendModeText(readStoredBlendMode());
+            const bgMap = {
+                transparent: '透明棋盘',
+                white: '白色',
+                black: '黑色'
+            };
+            const bgText = '背景: ' + (bgMap[normalizeBgMode(readStoredBgMode())] || '透明棋盘');
+            const suffix = blendText + ' | ' + bgText;
+            const full = raw ? (raw + ' | ' + suffix) : suffix;
+            setText(statusEl, full);
+        }
+
+        window.addEventListener('shader-playground:blend-mode-changed', function () {
+            setStatus('');
+        });
+
+        function applyBgMode(mode, persist) {
+            const resolved = normalizeBgMode(mode);
+            if (shellEl) shellEl.setAttribute('data-bg-mode', resolved);
+            if (bgModeSelect && bgModeSelect.value !== resolved) {
+                bgModeSelect.value = resolved;
+            }
+            if (persist) saveBgMode(resolved);
         }
 
         function getCurrentEditorSourceText() {
@@ -1871,6 +2028,16 @@
             saveState(state);
         });
 
+        if (bgModeSelect) {
+            bgModeSelect.addEventListener('change', function () {
+                applyBgMode(bgModeSelect.value, true);
+                const label = bgModeSelect.options && bgModeSelect.selectedIndex >= 0
+                    ? bgModeSelect.options[bgModeSelect.selectedIndex].text
+                    : '透明棋盘';
+                setStatus('背景已切换为: ' + label);
+            });
+        }
+
         if (addressModeSelect) {
             addressModeSelect.addEventListener('change', function () {
                 state.addressMode = normalizeTextureAddressMode(addressModeSelect.value);
@@ -2164,6 +2331,7 @@
         }
 
         // Initial UI
+        applyBgMode(readStoredBgMode(), false);
         syncEditor();
         renderCommandControls();
         afterEditorChanged();
