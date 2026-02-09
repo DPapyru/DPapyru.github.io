@@ -68,7 +68,7 @@
                     </div>
                     <h1 class="tutorial-title">Shader 投稿</h1>
                     <div class="tutorial-meta">
-                        <span>用途: GitHub 登录后自动创建 Shader Gallery PR</span>
+                        <span>用途: GitHub 登录后自动创建 Shader Gallery PR（README + entry.json + shader.json）</span>
                     </div>
                 </div>
 
@@ -78,14 +78,16 @@
                             <section class="shader-contribute-card">
                                 <h2 class="shader-contribute-title">投稿步骤</h2>
                                 <ol class="shader-contribute-list">
-                                    <li>在 Shader Playground 调好效果后，点击“投稿页面”跳转到此页。</li>
-                                    <li>确认模板中的 `entry.json` 和 `shader.json` 内容。</li>
+                                    <li>在 Shader Playground 调好效果后，点击“投稿页面”或本页“填充草稿”。</li>
+                                    <li>确认模板中的 `entry.json`、`shader.json` 与 `README.md` 内容。</li>
+                                    <li>点击“校验模板”，确认 slug、路径与 pass 数量正确。</li>
                                     <li>点击“GitHub 登录”，完成授权。</li>
                                     <li>点击“提交 PR”，系统会自动生成投稿目录与 JSON 文件。</li>
-                                    <li>本地补充封面图后，运行 `npm run gallery:normalize && npm run gallery:check`。</li>
+                                    <li>本地补充封面图后，运行 `npm run gallery:normalize` 和 `npm run gallery:check`。</li>
                                 </ol>
-                                <p class="shader-contribute-note">说明：封面支持先传 PNG/JPG/GIF，最终会被规范化为 WebP 以控制仓库体积。</p>
+                                <p class="shader-contribute-note">说明：封面支持先传 PNG/JPG/GIF，最终会规范化为 WebP，便于控制仓库体积。</p>
                                 <div class="shader-contribute-actions">
+                                    <a class="shader-contribute-link" href="shader-playground.html">返回 Playground</a>
                                     <a class="shader-contribute-link" href="shader-gallery.html">返回 Gallery</a>
                                     <a class="shader-contribute-link" href="https://github.com/DPapyru/DPapyru.github.io/tree/main/site/content/shader-gallery" target="_blank" rel="noopener noreferrer">查看投稿目录</a>
                                     <a class="shader-contribute-link" href="https://github.com/DPapyru/DPapyru.github.io/compare" target="_blank" rel="noopener noreferrer">发起 PR 投稿</a>
@@ -115,12 +117,15 @@
                                 </div>
 
                                 <div class="shader-contribute-panel-section shader-contribute-targets">
+                                    <div class="shader-contribute-target-head">本次提交将写入：</div>
                                     <div class="shader-contribute-target-item"><span>entry.json</span><code id="shader-contribute-target-entry">site/content/shader-gallery/my-shader/entry.json</code></div>
                                     <div class="shader-contribute-target-item"><span>shader.json</span><code id="shader-contribute-target-shader">site/content/shader-gallery/my-shader/shader.json</code></div>
                                     <div class="shader-contribute-target-item"><span>README.md</span><code id="shader-contribute-target-readme">site/content/shader-gallery/my-shader/README.md</code></div>
+                                    <div class="shader-contribute-template-summary" id="shader-contribute-template-summary">等待解析模板...</div>
                                 </div>
 
                                 <div class="shader-contribute-panel-section">
+                                    <button id="shader-contribute-validate" class="btn btn-small btn-outline" type="button">校验模板</button>
                                     <button id="shader-contribute-submit-pr" class="btn btn-small shader-contribute-btn-primary" type="button">提交 PR</button>
                                     <a id="shader-contribute-last-pr-link" class="shader-contribute-link shader-contribute-link--inline" href="#" target="_blank" rel="noopener noreferrer" hidden>查看最近 PR</a>
                                 </div>

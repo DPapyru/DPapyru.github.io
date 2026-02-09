@@ -7,6 +7,7 @@
     const STORAGE_KEY = 'shader-playground.v1';
     const ITIME_OFFSET_STORAGE_KEY = 'shader-playground.iTimeOffset';
     const PLAYGROUND_IMPORT_KEY = 'shader-playground.import.v1';
+    const CONTRIBUTION_DRAFT_KEY = 'shader-playground.contribute-draft.v1';
     const BLEND_MODE_STORAGE_KEY = 'shader-playground.blend-mode';
     const BG_MODE_STORAGE_KEY = 'shader-playground.bg-mode';
     const COMMON_TAB_ID = '__common__';
@@ -1106,6 +1107,7 @@
         const exportBtn = $('shaderpg-export-fx');
         const copyBtn = $('shaderpg-copy-fx');
         const fxTa = $('shaderpg-fx');
+        const contributeBtn = $('shaderpg-contribute');
 
         // 新增 UI 元素
         const passMenuBtn = $('shaderpg-pass-menu');
@@ -2011,6 +2013,87 @@
             renderTextures();
         }
 
+        function buildContributeDraftPayload() {
+            const selectedPass = getSelectedPass();
+            const passName = selectedPass && selectedPass.name ? String(selectedPass.name) : '未命名 Pass';
+            const title = passName || 'My Shader';
+            const slug = String(title)
+                .toLowerCase()
+                .replace(/[^a-z0-9-]+/g, '-')
+                .replace(/-{2,}/g, '-')
+                .replace(/^-+/, '')
+                .replace(/-+$/, '')
+                .slice(0, 63) || 'my-shader';
+
+            const entry = {
+                slug: slug,
+                title: title,
+                author: '你的名字',
+                description: '由 Shader Playground 草稿生成，请补充详细说明。',
+                shader: 'shader.json',
+                cover: 'cover.webp',
+                tags: ['playground'],
+                updated_at: (function () {
+                    const date = new Date();
+                    const yyyy = date.getFullYear();
+                    const mm = String(date.getMonth() + 1).padStart(2, '0');
+                    const dd = String(date.getDate()).padStart(2, '0');
+                    return yyyy + '-' + mm + '-' + dd;
+                })()
+            };
+
+            const shader = {
+                common: String(state.common || ''),
+                passes: state.passes.map(function (pass) {
+                    return {
+                        name: String(pass.name || 'Pass'),
+                        type: pass.type === 'buffer' ? 'buffer' : 'image',
+                        scale: clamp(Number(pass.scale || 1), 0.1, 4),
+                        code: String(pass.code || ''),
+                        channels: Array.isArray(pass.channels)
+                            ? pass.channels.map(function (ch) {
+                                if (!ch || typeof ch !== 'object') return { kind: 'none' };
+                                if (ch.kind === 'builtin') {
+                                    const id = String(ch.id || '');
+                                    if (id === 'builtin:checker' || id === 'builtin:noise') {
+                                        return { kind: 'builtin', id: id };
+                                    }
+                                }
+                                if (ch.kind === 'buffer') {
+                                    return {
+                                        kind: 'buffer',
+                                        passId: String(ch.passId || ''),
+                                        frame: ch.frame === 'current' ? 'current' : 'prev'
+                                    };
+                                }
+                                return { kind: 'none' };
+                            })
+                            : [{ kind: 'none' }, { kind: 'none' }, { kind: 'none' }, { kind: 'none' }]
+                    };
+                })
+            };
+
+            const readme = [
+                '# ' + entry.title,
+                '',
+                entry.description,
+                '',
+                '## 来源',
+                '',
+                '- 由 `shader-playground.html` 草稿生成。',
+                '- 提交前建议重新检查通道输入与参数。',
+                ''
+            ].join('\n');
+
+            return {
+                source: 'playground',
+                passName: passName,
+                entry: entry,
+                shader: shader,
+                readme: readme
+            };
+        }
+
         addPassBtn.addEventListener('click', function () {
             const nextNum = state.passes.length + 1;
             const defaultName = 'Pass ' + nextNum;
@@ -2046,6 +2129,24 @@
             renderAll();
             saveState(state);
         });
+
+        if (contributeBtn) {
+            contributeBtn.addEventListener('click', function () {
+                commitEditorToState();
+                saveState(state);
+
+                try {
+                    const draft = buildContributeDraftPayload();
+                    localStorage.setItem(CONTRIBUTION_DRAFT_KEY, JSON.stringify(draft));
+                } catch (err) {
+                    setStatus('写入投稿草稿失败：' + (err && err.message ? err.message : String(err)));
+                    return;
+                }
+
+                setStatus('已写入投稿草稿，正在跳转到投稿页面...');
+                window.location.href = 'shader-contribute.html';
+            });
+        }
 
         if (moveLeftBtn) {
             moveLeftBtn.addEventListener('click', function () {
