@@ -1108,6 +1108,8 @@
         const copyBtn = $('shaderpg-copy-fx');
         const fxTa = $('shaderpg-fx');
         const contributeBtn = $('shaderpg-contribute');
+        const contributePanel = $('shaderpg-contribute-panel');
+        const contributeCloseBtn = $('shaderpg-contribute-close');
 
         // 新增 UI 元素
         const passMenuBtn = $('shaderpg-pass-menu');
@@ -2131,7 +2133,25 @@
         });
 
         if (contributeBtn) {
+            if (contributePanel) {
+                contributeBtn.setAttribute('aria-expanded', 'false');
+            }
+
+            function setContributePanelVisible(visible) {
+                if (!contributePanel) return;
+                const isOpen = !!visible;
+                contributePanel.hidden = !isOpen;
+                contributeBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                contributeBtn.textContent = isOpen ? '收起投稿' : '投稿面板';
+            }
+
             contributeBtn.addEventListener('click', function () {
+                if (contributePanel && !contributePanel.hidden) {
+                    setContributePanelVisible(false);
+                    setStatus('已收起投稿面板');
+                    return;
+                }
+
                 commitEditorToState();
                 saveState(state);
 
@@ -2143,9 +2163,32 @@
                     return;
                 }
 
-                setStatus('已写入投稿草稿，正在跳转到投稿页面...');
-                window.location.href = 'shader-contribute.html';
+                if (contributePanel) {
+                    setContributePanelVisible(true);
+                    if (typeof window.ShaderContribute !== 'undefined' && window.ShaderContribute && typeof window.ShaderContribute.init === 'function') {
+                        window.ShaderContribute.init();
+                    }
+
+                    const fillDraftBtn = $('shader-contribute-fill-draft');
+                    if (fillDraftBtn) {
+                        fillDraftBtn.click();
+                    }
+
+                    contributePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setStatus('已填充投稿草稿并展开投稿面板');
+                }
             });
+
+            if (contributePanel && contributePanel.hidden) {
+                contributeBtn.textContent = '投稿面板';
+            }
+
+            if (contributeCloseBtn && contributePanel) {
+                contributeCloseBtn.addEventListener('click', function () {
+                    setContributePanelVisible(false);
+                    setStatus('已收起投稿面板');
+                });
+            }
         }
 
         if (moveLeftBtn) {

@@ -8,6 +8,7 @@
     <meta name="keywords" content="HLSL,Shader,tModLoader,泰拉瑞亚,Mod,WebGL">
     <link rel="stylesheet" href="/site/assets/css/style.css">
     <link rel="stylesheet" href="/site/assets/css/shader-playground.css">
+    <link rel="stylesheet" href="/site/assets/css/shader-contribute.css">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
     <script src="/site/assets/js/theme-init.js"></script>
 </head>
@@ -167,7 +168,7 @@
                             </div>
                             <button class="btn btn-small btn-outline" id="shaderpg-blend-toggle" type="button" title="切换轨迹混合模式">混合: AlphaBlend</button>
                             <button class="btn btn-small btn-outline shaderpg-mode-hlsl" id="shaderpg-layout-toggle" type="button" title="切换布局">⇄</button>
-                            <button class="btn btn-small btn-outline shaderpg-mode-hlsl" id="shaderpg-contribute" type="button" title="填充草稿并前往投稿页">投稿页面</button>
+                            <button class="btn btn-small btn-outline shaderpg-mode-hlsl" id="shaderpg-contribute" type="button" title="填充草稿并展开投稿面板">投稿面板</button>
                             <button class="btn btn-small btn-outline" id="shaderpg-help-toggle" type="button" title="帮助">?</button>
                             <div class="shaderpg-stats shaderpg-mode-hlsl" id="shaderpg-stats">fps: -- | 0x0</div>
                         </div>
@@ -275,6 +276,80 @@
                     <!-- 底部提示 -->
                     <div class="shaderpg-hint shaderpg-hint--footer">
                         <div>提示：Ctrl+Enter 编译 | Ctrl+S 导出 | 点击右上角 ? 查看帮助</div>
+                    </div>
+                </section>
+
+                <section class="shaderpg-contribute-panel" id="shaderpg-contribute-panel" aria-label="Shader 投稿面板" hidden>
+                    <div class="shaderpg-contribute-panel-head">
+                        <h2 class="shaderpg-contribute-panel-title">Shader 投稿面板</h2>
+                        <button class="btn btn-small btn-outline" id="shaderpg-contribute-close" type="button">收起面板</button>
+                    </div>
+
+                    <div class="shader-contribute-shell" aria-label="Shader 投稿入口">
+                        <div class="shader-contribute-grid">
+                            <div class="shader-contribute-left">
+                                <section class="shader-contribute-card shader-contribute-publish-card">
+                                    <h2 class="shader-contribute-title">自动投稿</h2>
+
+                                    <div class="shader-contribute-panel-section">
+                                        <label for="shader-contribute-pr-worker-url">Worker API 地址</label>
+                                        <input id="shader-contribute-pr-worker-url" class="shader-contribute-input" type="text" placeholder="https://xxx.workers.dev/api/create-pr">
+                                    </div>
+
+                                    <div class="shader-contribute-panel-section">
+                                        <label>GitHub 账号</label>
+                                        <div class="shader-contribute-auth-actions">
+                                            <button id="shader-contribute-auth-login" class="btn btn-small btn-outline" type="button">GitHub 登录</button>
+                                            <button id="shader-contribute-auth-logout" class="btn btn-small btn-outline" type="button">退出</button>
+                                        </div>
+                                        <span id="shader-contribute-auth-status" class="shader-contribute-auth-status">未登录</span>
+                                    </div>
+
+                                    <div class="shader-contribute-panel-section">
+                                        <label for="shader-contribute-pr-title">PR 标题（可选）</label>
+                                        <input id="shader-contribute-pr-title" class="shader-contribute-input" type="text" placeholder="例如：shader: 投稿 My Shader">
+                                    </div>
+
+                                    <div class="shader-contribute-panel-section shader-contribute-targets">
+                                        <div class="shader-contribute-target-head">本次提交将写入：</div>
+                                        <div class="shader-contribute-target-item"><span>entry.json</span><code id="shader-contribute-target-entry">site/content/shader-gallery/my-shader/entry.json</code></div>
+                                        <div class="shader-contribute-target-item"><span>shader.json</span><code id="shader-contribute-target-shader">site/content/shader-gallery/my-shader/shader.json</code></div>
+                                        <div class="shader-contribute-target-item"><span>README.md</span><code id="shader-contribute-target-readme">site/content/shader-gallery/my-shader/README.md</code></div>
+                                        <div class="shader-contribute-template-summary" id="shader-contribute-template-summary">等待解析模板...</div>
+                                    </div>
+
+                                    <div class="shader-contribute-panel-section">
+                                        <button id="shader-contribute-validate" class="btn btn-small btn-outline" type="button">校验模板</button>
+                                        <button id="shader-contribute-submit-pr" class="btn btn-small shader-contribute-btn-primary" type="button">提交 PR</button>
+                                        <a id="shader-contribute-last-pr-link" class="shader-contribute-link shader-contribute-link--inline" href="#" target="_blank" rel="noopener noreferrer" hidden>查看最近 PR</a>
+                                    </div>
+
+                                    <details class="shader-contribute-advanced-panel">
+                                        <summary>高级发布选项</summary>
+                                        <div class="shader-contribute-panel-section">
+                                            <label for="shader-contribute-pr-shared-key">兼容密钥（可选）</label>
+                                            <input id="shader-contribute-pr-shared-key" class="shader-contribute-input" type="password" placeholder="仅兼容旧版 Worker 的 STUDIO_SHARED_KEY" autocomplete="off">
+                                            <span class="shader-contribute-help">优先使用 GitHub 登录；仅在 Worker 仍启用密钥模式时填写。</span>
+                                        </div>
+                                    </details>
+                                </section>
+                            </div>
+
+                            <section class="shader-contribute-card shader-contribute-template-card">
+                                <div class="shader-contribute-template-header">
+                                    <h2 class="shader-contribute-title">投稿模板</h2>
+                                    <div class="shader-contribute-template-actions">
+                                        <button class="btn btn-small btn-outline" id="shader-contribute-fill-draft" type="button">填充草稿</button>
+                                        <button class="btn btn-small btn-outline" id="shader-contribute-copy" type="button">复制模板</button>
+                                        <button class="btn btn-small btn-outline" id="shader-contribute-download" type="button">下载 .md</button>
+                                        <button class="btn btn-small btn-outline" id="shader-contribute-reset" type="button">恢复默认</button>
+                                    </div>
+                                </div>
+                                <textarea class="shader-contribute-template" id="shader-contribute-template" spellcheck="false"></textarea>
+                            </section>
+                        </div>
+
+                        <div class="shader-contribute-status" id="shader-contribute-status">准备就绪。</div>
                     </div>
                 </section>
             </div>
@@ -607,6 +682,7 @@ float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0 {
     <script src="/site/assets/js/shader-command-params.js"></script>
     <script src="/site/assets/js/shader-mode-switch.js"></script>
     <script src="/site/assets/js/shader-playground.js"></script>
+    <script src="/site/assets/js/shader-contribute.js"></script>
     <script src="/site/assets/js/dpapyru-trail-playground.js"></script>
 </body>
 </html>

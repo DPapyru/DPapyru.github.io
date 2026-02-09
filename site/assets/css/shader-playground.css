@@ -1054,6 +1054,40 @@
     visibility: visible;
 }
 
+.shaderpg-contribute-panel {
+    margin-top: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    padding: 12px;
+}
+
+.shaderpg-contribute-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.shaderpg-contribute-panel-title {
+    margin: 0;
+    font-size: 18px;
+    color: var(--text-color);
+}
+
+.shaderpg-contribute-panel .shader-contribute-shell {
+    margin-top: 0;
+}
+
+.shaderpg-contribute-panel .shader-contribute-grid {
+    grid-template-columns: minmax(300px, 0.95fr) minmax(420px, 1.25fr);
+}
+
+.shaderpg-contribute-panel .shader-contribute-template {
+    min-height: 420px;
+}
+
 /* 移动端适配 */
 @media (max-width: 768px) {
     .shaderpg-topbar {
@@ -1082,5 +1116,9 @@
 
     .shaderpg-drawer.open {
         transform: none;
+    }
+
+    .shaderpg-contribute-panel .shader-contribute-grid {
+        grid-template-columns: 1fr;
     }
 }
