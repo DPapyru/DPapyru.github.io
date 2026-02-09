@@ -6,21 +6,9 @@
 
     const STORAGE_KEY = 'shader-playground.v1';
     const ITIME_OFFSET_STORAGE_KEY = 'shader-playground.iTimeOffset';
-    const PLAYGROUND_IMPORT_KEY = 'shader-playground.import.v1';
-    const CONTRIBUTION_DRAFT_KEY = 'shader-playground.contribute-draft.v1';
-    const GIF_EXPORT_DEFAULT_SECONDS = 3;
-    const GIF_EXPORT_MAX_SECONDS = 10;
-    const GIF_EXPORT_FPS = 12;
+    const BLEND_MODE_STORAGE_KEY = 'shader-playground.blend-mode';
+    const BG_MODE_STORAGE_KEY = 'shader-playground.bg-mode';
     const COMMON_TAB_ID = '__common__';
-    const DEFAULT_BASE_WIDTH = 960;
-    const DEFAULT_ASPECT_MODE = '16:9';
-    const ASPECT_PRESETS = {
-        '16:9': { w: 16, h: 9 },
-        '4:3': { w: 4, h: 3 },
-        '1:1': { w: 1, h: 1 },
-        '21:9': { w: 21, h: 9 },
-        'custom': null
-    };
     const hlslAdapter = (typeof window !== 'undefined' && window.ShaderHlslAdapter) ? window.ShaderHlslAdapter : null;
     const editorAssist = (typeof window !== 'undefined' && window.ShaderEditorAssist) ? window.ShaderEditorAssist : null;
     const commandParamsAdapter = (typeof window !== 'undefined' && window.ShaderCommandParams) ? window.ShaderCommandParams : null;
@@ -31,67 +19,6 @@
 
     function clamp(v, min, max) {
         return Math.max(min, Math.min(max, v));
-    }
-
-    function normalizeGlobalScale(value) {
-        const num = Number(value);
-        if (!isFinite(num)) return 1;
-        return clamp(num, 0.25, 4);
-    }
-
-    function normalizeBaseWidth(value) {
-        const num = Number(value);
-        if (!isFinite(num)) return DEFAULT_BASE_WIDTH;
-        return Math.round(clamp(num, 320, 7680));
-    }
-
-    function normalizeAspectMode(mode) {
-        const key = String(mode || '').toLowerCase();
-        if (Object.prototype.hasOwnProperty.call(ASPECT_PRESETS, key)) return key;
-        return DEFAULT_ASPECT_MODE;
-    }
-
-    function normalizeRatioComponent(value, fallback) {
-        const num = Number(value);
-        if (!isFinite(num)) return fallback;
-        return clamp(num, 0.1, 100);
-    }
-
-    function getAspectComponents(state) {
-        const mode = normalizeAspectMode(state && state.aspectMode);
-        if (mode !== 'custom') {
-            const preset = ASPECT_PRESETS[mode] || ASPECT_PRESETS[DEFAULT_ASPECT_MODE];
-            return { mode: mode, w: preset.w, h: preset.h };
-        }
-
-        const customW = normalizeRatioComponent(state && state.customAspectW, 16);
-        const customH = normalizeRatioComponent(state && state.customAspectH, 9);
-        return { mode: mode, w: customW, h: customH };
-    }
-
-    function computeRenderResolution(state) {
-        const aspect = getAspectComponents(state || {});
-        const baseWidth = normalizeBaseWidth(state && state.baseWidth);
-        const baseHeight = Math.max(1, Math.round(baseWidth * aspect.h / aspect.w));
-        const scale = normalizeGlobalScale(state && state.globalScale);
-        const renderWidth = Math.max(1, Math.round(baseWidth * scale));
-        const renderHeight = Math.max(1, Math.round(baseHeight * scale));
-        return {
-            baseWidth: baseWidth,
-            baseHeight: baseHeight,
-            renderWidth: renderWidth,
-            renderHeight: renderHeight,
-            aspectW: aspect.w,
-            aspectH: aspect.h,
-            aspectMode: aspect.mode,
-            scale: scale
-        };
-    }
-
-    function applyCanvasAspectRatio(canvas, state) {
-        if (!canvas) return;
-        const info = computeRenderResolution(state);
-        canvas.style.aspectRatio = info.baseWidth + ' / ' + info.baseHeight;
     }
 
     function nowMs() {
@@ -111,6 +38,40 @@
     function setText(el, text) {
         if (!el) return;
         el.textContent = String(text || '');
+    }
+
+    function readStoredBlendMode() {
+        try {
+            const raw = localStorage.getItem(BLEND_MODE_STORAGE_KEY);
+            return raw === 'additive' ? 'additive' : 'alpha';
+        } catch (_) {
+            return 'alpha';
+        }
+    }
+
+    function getBlendModeText(mode) {
+        return mode === 'additive' ? 'Additive' : 'AlphaBlend';
+    }
+
+    function normalizeBgMode(mode) {
+        const raw = String(mode || '').toLowerCase();
+        if (raw === 'white') return 'white';
+        if (raw === 'black') return 'black';
+        return 'transparent';
+    }
+
+    function readStoredBgMode() {
+        try {
+            return normalizeBgMode(localStorage.getItem(BG_MODE_STORAGE_KEY));
+        } catch (_) {
+            return 'transparent';
+        }
+    }
+
+    function saveBgMode(mode) {
+        try {
+            localStorage.setItem(BG_MODE_STORAGE_KEY, normalizeBgMode(mode));
+        } catch (_) { }
     }
 
     function isIdentifierChar(ch) {
@@ -174,10 +135,6 @@
                 selected: state.selected,
                 editorTarget: state.editorTarget,
                 globalScale: state.globalScale,
-                baseWidth: state.baseWidth,
-                aspectMode: state.aspectMode,
-                customAspectW: state.customAspectW,
-                customAspectH: state.customAspectH,
                 addressMode: state.addressMode
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -215,10 +172,6 @@
             selected: pass1.id,
             editorTarget: pass1.id,
             globalScale: 1,
-            baseWidth: DEFAULT_BASE_WIDTH,
-            aspectMode: DEFAULT_ASPECT_MODE,
-            customAspectW: 16,
-            customAspectH: 9,
             addressMode: "clamp",
             isRunning: true
         };
@@ -308,383 +261,6 @@
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
         gl.bindTexture(gl.TEXTURE_2D, null);
         return tex;
-    }
-
-    function updateTextureFromImage(gl, tex, img, flipY) {
-        if (!gl || !tex || !img) return;
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY ? 1 : 0);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-    }
-
-    function isGifFile(file) {
-        if (!file) return false;
-        const type = String(file.type || '').toLowerCase();
-        if (type === 'image/gif') return true;
-        const name = String(file.name || '').toLowerCase();
-        return name.endsWith('.gif');
-    }
-
-    function loadImageFromFile(file) {
-        return new Promise((resolve, reject) => {
-            const url = URL.createObjectURL(file);
-            const img = new Image();
-            img.onload = function () {
-                URL.revokeObjectURL(url);
-                resolve(img);
-            };
-            img.onerror = function () {
-                URL.revokeObjectURL(url);
-                reject(new Error('图片加载失败'));
-            };
-            img.src = url;
-        });
-    }
-
-    async function decodeGifFramesWithImageDecoder(file) {
-        if (!isGifFile(file)) return null;
-        if (typeof ImageDecoder === 'undefined') return null;
-
-        const contentType = String(file.type || '').toLowerCase() || 'image/gif';
-        const bytes = await file.arrayBuffer();
-        const decoder = new ImageDecoder({ data: bytes, type: contentType });
-        const track = decoder.tracks && decoder.tracks.selectedTrack ? decoder.tracks.selectedTrack : null;
-        const frameCount = track && Number(track.frameCount) > 0 ? Number(track.frameCount) : 1;
-
-        const frames = [];
-        let totalMs = 0;
-        let width = 0;
-        let height = 0;
-
-        for (let i = 0; i < frameCount; i += 1) {
-            const result = await decoder.decode({ frameIndex: i });
-            const videoFrame = result && result.image ? result.image : null;
-            if (!videoFrame) continue;
-
-            const frameWidth = Number(videoFrame.displayWidth || videoFrame.codedWidth || 0) || 0;
-            const frameHeight = Number(videoFrame.displayHeight || videoFrame.codedHeight || 0) || 0;
-            if (!width || frameWidth > width) width = frameWidth;
-            if (!height || frameHeight > height) height = frameHeight;
-
-            const frameCanvas = document.createElement('canvas');
-            frameCanvas.width = Math.max(1, frameWidth || width || 1);
-            frameCanvas.height = Math.max(1, frameHeight || height || 1);
-            const frameCtx = frameCanvas.getContext('2d');
-            if (frameCtx) {
-                frameCtx.clearRect(0, 0, frameCanvas.width, frameCanvas.height);
-                frameCtx.drawImage(videoFrame, 0, 0, frameCanvas.width, frameCanvas.height);
-            }
-
-            const rawDurationUs = Number(videoFrame.duration || 0);
-            const durationMs = clamp(Math.round(rawDurationUs > 0 ? rawDurationUs / 1000 : 100), 16, 10000);
-            totalMs += durationMs;
-
-            frames.push({
-                canvas: frameCanvas,
-                delayMs: durationMs,
-                endMs: totalMs
-            });
-
-            try { videoFrame.close(); } catch (_) { }
-        }
-
-        if (typeof decoder.close === 'function') {
-            try { decoder.close(); } catch (_) { }
-        }
-
-        if (!frames.length) return null;
-        return {
-            width: Math.max(1, width || frames[0].canvas.width),
-            height: Math.max(1, height || frames[0].canvas.height),
-            totalMs: Math.max(1, totalMs),
-            frames: frames
-        };
-    }
-
-    async function decodeGifFramesWithGifuct(file) {
-        if (!isGifFile(file)) return null;
-        const api = getGifDecoderApi();
-        if (!api || typeof api.parseGIF !== 'function' || typeof api.decompressFrames !== 'function') return null;
-
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        const parsed = api.parseGIF(bytes.buffer);
-        const frames = api.decompressFrames(parsed, true) || [];
-        if (!Array.isArray(frames) || frames.length === 0) return null;
-
-        let maxW = 1;
-        let maxH = 1;
-        frames.forEach((frame) => {
-            const dims = frame && frame.dims ? frame.dims : null;
-            const right = dims ? Number(dims.left || 0) + Number(dims.width || 0) : 0;
-            const bottom = dims ? Number(dims.top || 0) + Number(dims.height || 0) : 0;
-            if (right > maxW) maxW = right;
-            if (bottom > maxH) maxH = bottom;
-        });
-
-        const composed = document.createElement('canvas');
-        composed.width = Math.max(1, maxW);
-        composed.height = Math.max(1, maxH);
-        const ctx = composed.getContext('2d');
-        if (!ctx) return null;
-
-        const outFrames = [];
-        let totalMs = 0;
-
-        for (let i = 0; i < frames.length; i += 1) {
-            const frame = frames[i] || {};
-            const dims = frame.dims || { left: 0, top: 0, width: composed.width, height: composed.height };
-            const disposal = Number(frame.disposalType || 0);
-
-            let restoreData = null;
-            if (disposal === 3) {
-                try {
-                    restoreData = ctx.getImageData(dims.left, dims.top, dims.width, dims.height);
-                } catch (_) {
-                    restoreData = null;
-                }
-            }
-
-            if (frame.patch && dims.width > 0 && dims.height > 0) {
-                const patchData = new ImageData(frame.patch, dims.width, dims.height);
-                ctx.putImageData(patchData, dims.left, dims.top);
-            }
-
-            const snapshot = document.createElement('canvas');
-            snapshot.width = composed.width;
-            snapshot.height = composed.height;
-            const sctx = snapshot.getContext('2d');
-            if (!sctx) continue;
-            sctx.clearRect(0, 0, snapshot.width, snapshot.height);
-            sctx.drawImage(composed, 0, 0);
-
-            const delayMs = clamp(Math.round(Number(frame.delay || 100)), 16, 10000);
-            totalMs += delayMs;
-
-            outFrames.push({
-                canvas: snapshot,
-                delayMs: delayMs,
-                endMs: totalMs
-            });
-
-            if (disposal === 2) {
-                ctx.clearRect(dims.left, dims.top, dims.width, dims.height);
-            } else if (disposal === 3 && restoreData) {
-                ctx.putImageData(restoreData, dims.left, dims.top);
-            }
-        }
-
-        if (!outFrames.length) return null;
-        return {
-            width: composed.width,
-            height: composed.height,
-            totalMs: Math.max(1, totalMs),
-            frames: outFrames
-        };
-    }
-
-    function selectGifFrameIndexByTime(gifData, timeSec) {
-        if (!gifData || !Array.isArray(gifData.frames) || gifData.frames.length === 0) return 0;
-        const totalMs = Math.max(1, Number(gifData.totalMs || 0));
-        const tMs = ((Number(timeSec || 0) * 1000) % totalMs + totalMs) % totalMs;
-
-        for (let i = 0; i < gifData.frames.length; i += 1) {
-            if (tMs < Number(gifData.frames[i].endMs || 0)) return i;
-        }
-        return gifData.frames.length - 1;
-    }
-
-    function normalizeImportedPassState(payload, baseState) {
-        const source = payload && payload.payload ? payload.payload : payload;
-        if (!source || !Array.isArray(source.passes) || source.passes.length === 0) return null;
-
-        const next = createDefaultState();
-        const idMap = new Map();
-        next.common = typeof source.common === 'string' ? source.common : '';
-        next.passes = source.passes.map((raw, idx) => {
-            const id = createId('pass');
-            const oldId = String((raw && raw.id) || idx);
-            idMap.set(oldId, id);
-            return {
-                id: id,
-                name: sanitizeName((raw && raw.name) || ('Pass ' + (idx + 1))),
-                type: (raw && raw.type === 'buffer') ? 'buffer' : 'image',
-                scale: clamp(Number(raw && raw.scale ? raw.scale : 1), 0.1, 1),
-                code: String((raw && raw.code) || ''),
-                channels: [{ kind: 'none' }, { kind: 'none' }, { kind: 'none' }, { kind: 'none' }]
-            };
-        });
-
-        next.passes.forEach((pass, idx) => {
-            const raw = source.passes[idx] || {};
-            const rawChannels = Array.isArray(raw.channels) ? raw.channels : [];
-            for (let i = 0; i < 4; i += 1) {
-                const ch = rawChannels[i] || { kind: 'none' };
-                const kind = String(ch.kind || 'none');
-                if (kind === 'builtin' && (ch.id === 'builtin:checker' || ch.id === 'builtin:noise')) {
-                    pass.channels[i] = { kind: 'builtin', id: ch.id };
-                    continue;
-                }
-                if (kind === 'buffer') {
-                    const mappedPassId = idMap.get(String(ch.passId || ''));
-                    if (mappedPassId) {
-                        pass.channels[i] = {
-                            kind: 'buffer',
-                            passId: mappedPassId,
-                            frame: ch.frame === 'current' ? 'current' : 'prev'
-                        };
-                    }
-                    continue;
-                }
-                pass.channels[i] = { kind: 'none' };
-            }
-        });
-
-        if (baseState) {
-            next.globalScale = normalizeGlobalScale(baseState.globalScale);
-            next.baseWidth = normalizeBaseWidth(baseState.baseWidth);
-            next.aspectMode = normalizeAspectMode(baseState.aspectMode);
-            next.customAspectW = normalizeRatioComponent(baseState.customAspectW, 16);
-            next.customAspectH = normalizeRatioComponent(baseState.customAspectH, 9);
-            next.addressMode = normalizeTextureAddressMode(baseState.addressMode);
-        }
-
-        next.selected = next.passes[0].id;
-        next.editorTarget = next.selected;
-        return next;
-    }
-
-    function consumeGalleryImportPayload() {
-        if (typeof window === 'undefined') return null;
-        const params = new URLSearchParams(window.location.search || '');
-        if (params.get('import') !== 'gallery') return null;
-
-        let payload = null;
-        try {
-            const raw = localStorage.getItem(PLAYGROUND_IMPORT_KEY);
-            payload = raw ? safeJsonParse(raw) : null;
-        } catch (_) {
-            payload = null;
-        }
-
-        try {
-            localStorage.removeItem(PLAYGROUND_IMPORT_KEY);
-        } catch (_) { }
-
-        return payload;
-    }
-
-    function makeContributionTemplate(state, passName) {
-        const safePass = sanitizeName(passName || 'My Shader');
-        const slugSeed = safePass.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-        const slug = slugSeed || 'my-shader';
-        const date = new Date();
-        const yyyy = date.getFullYear();
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const dd = String(date.getDate()).padStart(2, '0');
-        const updatedAt = yyyy + '-' + mm + '-' + dd;
-
-        const shaderPayload = {
-            common: String(state && state.common ? state.common : ''),
-            passes: Array.isArray(state && state.passes)
-                ? state.passes.map((p) => ({
-                    name: sanitizeName(p.name || 'Pass'),
-                    type: (p.type === 'buffer') ? 'buffer' : 'image',
-                    scale: clamp(Number(p.scale || 1), 0.1, 1),
-                    code: String(p.code || ''),
-                    channels: Array.isArray(p.channels) ? p.channels.map((ch) => {
-                        const kind = ch && ch.kind ? ch.kind : 'none';
-                        if (kind === 'builtin' && (ch.id === 'builtin:checker' || ch.id === 'builtin:noise')) {
-                            return { kind: 'builtin', id: ch.id };
-                        }
-                        if (kind === 'buffer') {
-                            return {
-                                kind: 'buffer',
-                                passId: String(ch.passId || ''),
-                                frame: ch.frame === 'current' ? 'current' : 'prev'
-                            };
-                        }
-                        return { kind: 'none' };
-                    }) : [{ kind: 'none' }, { kind: 'none' }, { kind: 'none' }, { kind: 'none' }]
-                }))
-                : []
-        };
-
-        const entryPayload = {
-            slug: slug,
-            title: safePass,
-            author: '你的名字',
-            description: '简要描述这个 Shader 的用途与效果。',
-            shader: 'shader.json',
-            cover: 'cover.webp',
-            tags: ['demo'],
-            updated_at: updatedAt
-        };
-
-        const lines = [];
-        lines.push('# Shader 投稿模板');
-        lines.push('');
-        lines.push('建议目录：`site/content/shader-gallery/' + slug + '/`');
-        lines.push('');
-        lines.push('## entry.json');
-        lines.push('```json');
-        lines.push(JSON.stringify(entryPayload, null, 2));
-        lines.push('```');
-        lines.push('');
-        lines.push('## shader.json');
-        lines.push('```json');
-        lines.push(JSON.stringify(shaderPayload, null, 2));
-        lines.push('```');
-        lines.push('');
-        lines.push('提交前运行：');
-        lines.push('```bash');
-        lines.push('npm run gallery:normalize');
-        lines.push('npm run gallery:check');
-        lines.push('```');
-        return lines.join('\n');
-    }
-
-    async function copyTextWithFallback(text) {
-        const raw = String(text || '');
-        if (!raw) return false;
-        try {
-            await navigator.clipboard.writeText(raw);
-            return true;
-        } catch (_) {
-            const ta = document.createElement('textarea');
-            ta.value = raw;
-            ta.style.position = 'fixed';
-            ta.style.left = '-9999px';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            let ok = false;
-            try { ok = document.execCommand('copy'); } catch (_) { ok = false; }
-            document.body.removeChild(ta);
-            return ok;
-        }
-    }
-
-    function getGifDecoderApi() {
-        if (typeof window === 'undefined') return null;
-
-        const existing = window.GifuctJs;
-        if (existing && typeof existing.parseGIF === 'function' && typeof existing.decompressFrames === 'function') {
-            return existing;
-        }
-
-        const parseGIF = typeof window.parseGIF === 'function' ? window.parseGIF : null;
-        const decompressFrames = typeof window.decompressFrames === 'function' ? window.decompressFrames : null;
-        if (parseGIF && decompressFrames) {
-            return { parseGIF, decompressFrames };
-        }
-        return null;
-    }
-
-    function getGifEncoderApi() {
-        if (typeof window === 'undefined') return null;
-        if (window.GIF && typeof window.GIF === 'function') return window.GIF;
-        return null;
     }
 
     function createEmptyTexture(gl, w, h) {
@@ -867,21 +443,6 @@
         return null;
     }
 
-    function updateAnimatedUploads(runtime, timeSec) {
-        const gl = runtime.gl;
-        runtime.uploads.forEach((entry) => {
-            if (!entry || !entry.isAnimatedGif || !entry.gifData || !Array.isArray(entry.gifData.frames) || entry.gifData.frames.length === 0) {
-                return;
-            }
-            const frameIndex = selectGifFrameIndexByTime(entry.gifData, timeSec);
-            if (frameIndex === entry.currentFrame) return;
-            const frame = entry.gifData.frames[frameIndex];
-            if (!frame || !frame.canvas) return;
-            updateTextureFromImage(gl, entry.texture, frame.canvas, true);
-            entry.currentFrame = frameIndex;
-        });
-    }
-
     function compilePass(runtime, common, pass) {
         const gl = runtime.gl;
         const built = buildFragmentSource(common, pass.code);
@@ -908,6 +469,71 @@
         return { ok: true, program: program, uniforms: u };
     }
 
+    function normalizeBlendMode(mode) {
+        return mode === 'additive' ? 'additive' : 'alpha';
+    }
+
+    function clearDefaultFramebufferColor(gl, width, height, r, g, b, a) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, width, height);
+        gl.clearColor(r, g, b, a);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+    }
+
+    function clearDefaultFramebufferChecker(gl, width, height) {
+        const tile = 16;
+        const cols = Math.ceil(width / tile);
+        const rows = Math.ceil(height / tile);
+        const prevScissorEnabled = gl.isEnabled(gl.SCISSOR_TEST);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, width, height);
+        gl.enable(gl.SCISSOR_TEST);
+
+        for (let gy = 0; gy < rows; gy += 1) {
+            for (let gx = 0; gx < cols; gx += 1) {
+                const isBlack = ((gx + gy) & 1) === 1;
+                gl.scissor(gx * tile, gy * tile, tile, tile);
+                if (isBlack) {
+                    gl.clearColor(0, 0, 0, 1);
+                } else {
+                    gl.clearColor(1, 1, 1, 1);
+                }
+                gl.clear(gl.COLOR_BUFFER_BIT);
+            }
+        }
+
+        if (!prevScissorEnabled) {
+            gl.disable(gl.SCISSOR_TEST);
+        }
+    }
+
+    function clearDefaultFramebufferBackground(gl, width, height, mode) {
+        const bgMode = normalizeBgMode(mode);
+        if (bgMode === 'white') {
+            clearDefaultFramebufferColor(gl, width, height, 1, 1, 1, 1);
+            return;
+        }
+        if (bgMode === 'black') {
+            clearDefaultFramebufferColor(gl, width, height, 0, 0, 0, 1);
+            return;
+        }
+        clearDefaultFramebufferChecker(gl, width, height);
+    }
+
+    function applyImageBlendMode(gl, mode) {
+        const blendMode = normalizeBlendMode(mode);
+        gl.enable(gl.BLEND);
+        gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
+
+        if (blendMode === 'additive') {
+            gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ONE, gl.ONE);
+            return;
+        }
+
+        gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    }
+
     function renderFrame(runtime, state) {
         const gl = runtime.gl;
         const canvas = runtime.canvas;
@@ -926,11 +552,8 @@
         const addressMode = normalizeTextureAddressMode(state.addressMode);
         runtime.lastMs = tMs;
 
-        updateAnimatedUploads(runtime, time);
-
-        const resolution = computeRenderResolution(state);
-        const canvasW = resolution.renderWidth;
-        const canvasH = resolution.renderHeight;
+        const canvasW = Math.max(1, Math.floor(canvas.clientWidth * state.globalScale));
+        const canvasH = Math.max(1, Math.floor(canvas.clientHeight * state.globalScale));
         if (canvas.width !== canvasW) canvas.width = canvasW;
         if (canvas.height !== canvasH) canvas.height = canvasH;
 
@@ -956,7 +579,11 @@
 
         gl.disable(gl.DEPTH_TEST);
         gl.disable(gl.CULL_FACE);
+        gl.disable(gl.BLEND);
         gl.bindVertexArray(runtime.vao);
+
+        const blendMode = normalizeBlendMode(readStoredBlendMode());
+        clearDefaultFramebufferBackground(gl, canvasW, canvasH, readStoredBgMode());
 
         for (const pass of state.passes) {
             const compiled = runtime.compiled.get(String(pass.id));
@@ -971,8 +598,10 @@
                 viewportW = buf.w;
                 viewportH = buf.h;
                 gl.bindFramebuffer(gl.FRAMEBUFFER, buf.fboWrite);
+                gl.disable(gl.BLEND);
             } else {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                applyImageBlendMode(gl, blendMode);
             }
 
             gl.viewport(0, 0, viewportW, viewportH);
@@ -1297,13 +926,9 @@
         const statusEl = $('shaderpg-status');
         const runBtn = $('shaderpg-toggle-run');
         const resetPlaybackBtn = $('shaderpg-reset-playback');
-        const aspectSelect = $('shaderpg-aspect');
-        const customAspectGroup = $('shaderpg-custom-aspect-group');
-        const customAspectWInput = $('shaderpg-custom-aspect-w');
-        const customAspectHInput = $('shaderpg-custom-aspect-h');
-        const baseWidthInput = $('shaderpg-base-width');
         const scaleSelect = $('shaderpg-scale');
         const addressModeSelect = $('shaderpg-address-mode');
+        const bgModeSelect = $('shaderpg-bg-mode');
         const iTimeInput = $('shaderpg-itime');
         const iTimeMinusBtn = $('shaderpg-itime-minus');
         const iTimePlusBtn = $('shaderpg-itime-plus');
@@ -1313,11 +938,8 @@
         const channelsEl = $('shaderpg-channels');
         const uploadInput = $('shaderpg-upload');
         const texturesEl = $('shaderpg-textures');
-        const exportGifBtn = $('shaderpg-export-gif');
-        const exportPngBtn = $('shaderpg-export-png');
         const exportBtn = $('shaderpg-export-fx');
         const copyBtn = $('shaderpg-copy-fx');
-        const contributeBtn = $('shaderpg-contribute');
         const fxTa = $('shaderpg-fx');
 
         // 新增 UI 元素
@@ -1329,7 +951,9 @@
         const helpCloseBtn = $('shaderpg-help-close');
         const drawerOverlay = $('shaderpg-drawer-overlay');
         const mainEl = $('shaderpg-main');
+        const shellEl = $('shaderpg-shell');
         const editorSurface = $('shaderpg-editor-surface');
+        const editorStack = $('shaderpg-editor-stack');
         const editorHighlightCode = $('shaderpg-editor-highlight-code');
         const editorHighlightWrap = $('shaderpg-editor-highlight');
         const editorAutocomplete = $('shaderpg-autocomplete');
@@ -1387,7 +1011,7 @@
         }
 
         if (!canvas) return;
-        const gl = canvas.getContext('webgl2', { alpha: false, antialias: true, premultipliedAlpha: false });
+        const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: false });
         if (!gl) {
             setText(errorEl, '无法创建 WebGL2 上下文。请使用支持 WebGL2 的桌面浏览器。');
             return;
@@ -1434,12 +1058,12 @@
             runBtn.textContent = '继续';
             runBtn.disabled = true;
             setText(errorEl, 'WebGL 上下文丢失。正在尝试恢复...');
-            setText(statusEl, 'Context Lost');
+            setStatus('Context Lost');
         }, false);
 
         canvas.addEventListener('webglcontextrestored', function (e) {
             setText(errorEl, '');
-            setText(statusEl, '正在重建资源...');
+            setStatus('正在重建资源...');
 
             try {
                 recreateRuntimeResources();
@@ -1449,7 +1073,7 @@
                 runBtn.disabled = false;
                 state.isRunning = true;
                 runBtn.textContent = '暂停';
-                setText(statusEl, '上下文已恢复');
+                setStatus('上下文已恢复');
             } catch (err) {
                 setText(errorEl, '恢复失败: ' + (err.message || err));
             }
@@ -1459,7 +1083,7 @@
             // 清除旧引用
             runtime.buffers.clear();
             runtime.compiled.clear();
-            cleanupUploadEntries();
+            runtime.uploads.clear();
             runtime.builtins.clear();
 
             // 重建 VAO/VBO
@@ -1486,15 +1110,6 @@
             renderTextures();
         }
 
-        function cleanupUploadEntries() {
-            runtime.uploads.forEach((entry) => {
-                if (entry && entry.texture) {
-                    try { gl.deleteTexture(entry.texture); } catch (_) { }
-                }
-            });
-            runtime.uploads.clear();
-        }
-
         let state = (function () {
             const saved = loadState();
             if (!saved) return createDefaultState();
@@ -1514,71 +1129,14 @@
             }
             base.selected = saved.selected || base.passes[0].id;
             base.editorTarget = saved.editorTarget || base.selected;
-            base.globalScale = normalizeGlobalScale(saved.globalScale);
-            base.baseWidth = normalizeBaseWidth(saved.baseWidth || DEFAULT_BASE_WIDTH);
-            base.aspectMode = normalizeAspectMode(saved.aspectMode || DEFAULT_ASPECT_MODE);
-            base.customAspectW = normalizeRatioComponent(saved.customAspectW, 16);
-            base.customAspectH = normalizeRatioComponent(saved.customAspectH, 9);
+            base.globalScale = Number(saved.globalScale || 1);
             base.addressMode = normalizeTextureAddressMode(saved.addressMode);
             return base;
         })();
 
-        const importedPayload = consumeGalleryImportPayload();
-        if (importedPayload) {
-            const importedState = normalizeImportedPassState(importedPayload, state);
-            if (importedState) {
-                state = importedState;
-            }
-        }
-
         // Editor shows either Common or selected pass.
         editorTa.value = '';
-        state.globalScale = normalizeGlobalScale(state.globalScale);
-        state.baseWidth = normalizeBaseWidth(state.baseWidth);
-        state.aspectMode = normalizeAspectMode(state.aspectMode);
-        state.customAspectW = normalizeRatioComponent(state.customAspectW, 16);
-        state.customAspectH = normalizeRatioComponent(state.customAspectH, 9);
-
-        if (scaleSelect) scaleSelect.value = String(state.globalScale || 1);
-        if (baseWidthInput) baseWidthInput.value = String(state.baseWidth);
-        if (aspectSelect) aspectSelect.value = state.aspectMode;
-        if (customAspectWInput) customAspectWInput.value = String(state.customAspectW);
-        if (customAspectHInput) customAspectHInput.value = String(state.customAspectH);
-        applyCanvasAspectRatio(canvas, state);
-
-        function syncResolutionControlsFromState() {
-            if (aspectSelect) aspectSelect.value = normalizeAspectMode(state.aspectMode);
-            if (customAspectWInput) customAspectWInput.value = String(normalizeRatioComponent(state.customAspectW, 16));
-            if (customAspectHInput) customAspectHInput.value = String(normalizeRatioComponent(state.customAspectH, 9));
-            if (baseWidthInput) baseWidthInput.value = String(normalizeBaseWidth(state.baseWidth));
-            if (scaleSelect) scaleSelect.value = String(normalizeGlobalScale(state.globalScale));
-        }
-
-        function refreshCustomAspectUi() {
-            if (!customAspectGroup) return;
-            const isCustom = normalizeAspectMode(state.aspectMode) === 'custom';
-            customAspectGroup.hidden = !isCustom;
-        }
-
-        function updateResolutionStateAndPersist() {
-            state.globalScale = normalizeGlobalScale(state.globalScale);
-            state.baseWidth = normalizeBaseWidth(state.baseWidth);
-            state.aspectMode = normalizeAspectMode(state.aspectMode);
-            state.customAspectW = normalizeRatioComponent(state.customAspectW, 16);
-            state.customAspectH = normalizeRatioComponent(state.customAspectH, 9);
-            syncResolutionControlsFromState();
-            refreshCustomAspectUi();
-            applyCanvasAspectRatio(canvas, state);
-            saveState(state);
-            if (!state.isRunning && !contextLost) {
-                try {
-                    renderFrame(runtime, state);
-                } catch (_) { }
-            }
-        }
-
-        syncResolutionControlsFromState();
-        refreshCustomAspectUi();
+        scaleSelect.value = String(state.globalScale || 1);
         if (addressModeSelect) addressModeSelect.value = normalizeTextureAddressMode(state.addressMode);
 
         const completionState = {
@@ -1604,7 +1162,9 @@
                 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
                 'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize',
                 'lineHeight', 'fontFamily', 'letterSpacing', 'textTransform',
-                'textIndent', 'textDecoration', 'wordSpacing', 'tabSize'
+                'textIndent', 'textDecoration', 'wordSpacing', 'tabSize',
+                'fontVariantLigatures', 'fontFeatureSettings', 'fontKerning',
+                'fontVariantNumeric', 'fontSynthesis', 'textRendering'
             ];
 
             props.forEach((name) => {
@@ -1664,9 +1224,15 @@
 
         function syncEditorScroll() {
             if (editorHighlightWrap) {
-                editorHighlightWrap.scrollTop = editorTa.scrollTop;
-                editorHighlightWrap.scrollLeft = editorTa.scrollLeft;
+                editorHighlightWrap.scrollTop = 0;
+                editorHighlightWrap.scrollLeft = 0;
             }
+            if (editorHighlightCode) {
+                const x = -Math.round(Number(editorTa.scrollLeft || 0));
+                const y = -Math.round(Number(editorTa.scrollTop || 0));
+                editorHighlightCode.style.transform = 'translate(' + String(x) + 'px, ' + String(y) + 'px)';
+            }
+            syncEditorSizing();
             if (!completionState.visible) return;
             positionAutocompleteAtCursor();
         }
@@ -1682,6 +1248,10 @@
         }
 
         function syncEditorSizing() {
+            if (editorStack) {
+                const minHeight = Math.max(260, editorTa.clientHeight || 0);
+                editorStack.style.minHeight = minHeight + 'px';
+            }
             if (!completionState.visible) return;
             positionAutocompleteAtCursor();
         }
@@ -1746,13 +1316,25 @@
         }
 
         function showAutocompleteForCurrentCursor() {
-            if (!editorAssist || !editorAutocomplete) return;
+            if (!editorAssist || !editorAutocomplete || typeof editorAssist.getCompletionRange !== 'function') {
+                return;
+            }
             const range = editorAssist.getCompletionRange(editorTa.value, editorTa.selectionStart);
             if (!range || !range.prefix) {
                 hideAutocomplete();
                 return;
             }
-            const items = editorAssist.collectCompletionItems(range.prefix, editorTa.value, editorTa.selectionStart);
+
+            const collect = typeof editorAssist.collectCompletionItems === 'function'
+                ? editorAssist.collectCompletionItems
+                : (editorAssist.collectDpapyruCompletionItems || null);
+
+            if (!collect) {
+                hideAutocomplete();
+                return;
+            }
+
+            const items = collect(range.prefix, editorTa.value, editorTa.selectionStart);
             if (!items.length) {
                 hideAutocomplete();
                 return;
@@ -1777,7 +1359,30 @@
         }
 
         function setStatus(text) {
-            setText(statusEl, text);
+            const raw = String(text || '');
+            const blendText = '混合: ' + getBlendModeText(readStoredBlendMode());
+            const bgMap = {
+                transparent: '透明棋盘',
+                white: '白色',
+                black: '黑色'
+            };
+            const bgText = '背景: ' + (bgMap[normalizeBgMode(readStoredBgMode())] || '透明棋盘');
+            const suffix = blendText + ' | ' + bgText;
+            const full = raw ? (raw + ' | ' + suffix) : suffix;
+            setText(statusEl, full);
+        }
+
+        window.addEventListener('shader-playground:blend-mode-changed', function () {
+            setStatus('');
+        });
+
+        function applyBgMode(mode, persist) {
+            const resolved = normalizeBgMode(mode);
+            if (shellEl) shellEl.setAttribute('data-bg-mode', resolved);
+            if (bgModeSelect && bgModeSelect.value !== resolved) {
+                bgModeSelect.value = resolved;
+            }
+            if (persist) saveBgMode(resolved);
         }
 
         function getCurrentEditorSourceText() {
@@ -2065,24 +1670,12 @@
             }
             runtime.uploads.forEach((t) => {
                 const item = createEl('div', 'shaderpg-texture-item');
-                const metaWrap = createEl('div');
                 const name = createEl('div', 'shaderpg-texture-name');
                 name.textContent = t.label + ' (' + t.width + 'x' + t.height + ')';
-                const meta = createEl('div', 'shaderpg-texture-meta');
-                if (t.isAnimatedGif && t.gifData && Array.isArray(t.gifData.frames)) {
-                    meta.textContent = 'GIF 动态纹理 | ' + t.gifData.frames.length + ' 帧';
-                } else {
-                    meta.textContent = '静态纹理';
-                }
-                metaWrap.appendChild(name);
-                metaWrap.appendChild(meta);
                 const del = createEl('button', 'btn btn-small btn-outline');
                 del.type = 'button';
                 del.textContent = '移除';
                 del.addEventListener('click', function () {
-                    if (t.texture) {
-                        try { gl.deleteTexture(t.texture); } catch (_) { }
-                    }
                     runtime.uploads.delete(t.id);
                     // Remove references
                     state.passes.forEach((p) => {
@@ -2097,7 +1690,7 @@
                     renderTextures();
                     saveState(state);
                 });
-                item.appendChild(metaWrap);
+                item.appendChild(name);
                 item.appendChild(del);
                 texturesEl.appendChild(item);
             });
@@ -2329,9 +1922,7 @@
         resetBtn.addEventListener('click', function () {
             if (!confirm('重置为示例内容？（会覆盖当前代码与 pass 列表）')) return;
             state = createDefaultState();
-            syncResolutionControlsFromState();
-            refreshCustomAspectUi();
-            applyCanvasAspectRatio(canvas, state);
+            scaleSelect.value = String(state.globalScale);
             if (addressModeSelect) addressModeSelect.value = normalizeTextureAddressMode(state.addressMode);
             syncEditor();
             renderAll();
@@ -2432,50 +2023,18 @@
             }
         });
 
-        if (scaleSelect) {
-            scaleSelect.addEventListener('change', function () {
-                state.globalScale = normalizeGlobalScale(scaleSelect.value);
-                updateResolutionStateAndPersist();
-            });
-        }
+        scaleSelect.addEventListener('change', function () {
+            state.globalScale = Number(scaleSelect.value || 1);
+            saveState(state);
+        });
 
-        if (aspectSelect) {
-            aspectSelect.addEventListener('change', function () {
-                state.aspectMode = normalizeAspectMode(aspectSelect.value);
-                updateResolutionStateAndPersist();
-            });
-        }
-
-        if (baseWidthInput) {
-            baseWidthInput.addEventListener('change', function () {
-                state.baseWidth = normalizeBaseWidth(baseWidthInput.value);
-                updateResolutionStateAndPersist();
-            });
-            baseWidthInput.addEventListener('blur', function () {
-                state.baseWidth = normalizeBaseWidth(baseWidthInput.value);
-                updateResolutionStateAndPersist();
-            });
-        }
-
-        if (customAspectWInput) {
-            customAspectWInput.addEventListener('change', function () {
-                state.customAspectW = normalizeRatioComponent(customAspectWInput.value, 16);
-                updateResolutionStateAndPersist();
-            });
-            customAspectWInput.addEventListener('blur', function () {
-                state.customAspectW = normalizeRatioComponent(customAspectWInput.value, 16);
-                updateResolutionStateAndPersist();
-            });
-        }
-
-        if (customAspectHInput) {
-            customAspectHInput.addEventListener('change', function () {
-                state.customAspectH = normalizeRatioComponent(customAspectHInput.value, 9);
-                updateResolutionStateAndPersist();
-            });
-            customAspectHInput.addEventListener('blur', function () {
-                state.customAspectH = normalizeRatioComponent(customAspectHInput.value, 9);
-                updateResolutionStateAndPersist();
+        if (bgModeSelect) {
+            bgModeSelect.addEventListener('change', function () {
+                applyBgMode(bgModeSelect.value, true);
+                const label = bgModeSelect.options && bgModeSelect.selectedIndex >= 0
+                    ? bgModeSelect.options[bgModeSelect.selectedIndex].text
+                    : '透明棋盘';
+                setStatus('背景已切换为: ' + label);
             });
         }
 
@@ -2563,239 +2122,6 @@
             });
         }
 
-        async function addStaticUploadTexture(file) {
-            const img = await loadImageFromFile(file);
-            const tex = createTextureFromImage(gl, img, true);
-            const id = createId('upload');
-            runtime.uploads.set(id, {
-                id: id,
-                label: file.name,
-                width: img.naturalWidth || img.width,
-                height: img.naturalHeight || img.height,
-                texture: tex,
-                isAnimatedGif: false,
-                currentFrame: 0,
-                gifData: null
-            });
-            return id;
-        }
-
-        async function addGifUploadTexture(file) {
-            let gifData = null;
-            try {
-                gifData = await decodeGifFramesWithImageDecoder(file);
-            } catch (_) {
-                gifData = null;
-            }
-            if (!gifData) {
-                try {
-                    gifData = await decodeGifFramesWithGifuct(file);
-                } catch (_) {
-                    gifData = null;
-                }
-            }
-            if (!gifData || !gifData.frames || gifData.frames.length === 0) {
-                return addStaticUploadTexture(file);
-            }
-
-            const firstFrame = gifData.frames[0];
-            const tex = createTextureFromImage(gl, firstFrame.canvas, true);
-            const id = createId('upload');
-            runtime.uploads.set(id, {
-                id: id,
-                label: file.name,
-                width: gifData.width,
-                height: gifData.height,
-                texture: tex,
-                isAnimatedGif: true,
-                currentFrame: 0,
-                gifData: gifData
-            });
-            return id;
-        }
-
-        async function addUploadTextureFromFile(file) {
-            if (isGifFile(file)) {
-                return addGifUploadTexture(file);
-            }
-            return addStaticUploadTexture(file);
-        }
-
-        function exportCanvasAsPng() {
-            commitEditorToState();
-            if (!contextLost) {
-                try {
-                    renderFrame(runtime, state);
-                } catch (_) { }
-            }
-
-            let dataUrl = '';
-            try {
-                dataUrl = canvas.toDataURL('image/png');
-            } catch (_) {
-                setStatus('导出 PNG 失败');
-                return;
-            }
-            if (!dataUrl) {
-                setStatus('导出 PNG 失败');
-                return;
-            }
-
-            const res = computeRenderResolution(state);
-            const targetPass = getSelectedPass();
-            const passName = sanitizeName(targetPass ? targetPass.name : 'shader').replace(/\s+/g, '-');
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const filename = [
-                passName,
-                res.renderWidth + 'x' + res.renderHeight,
-                timestamp
-            ].join('_') + '.png';
-
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            setStatus('PNG 已导出: ' + filename);
-        }
-
-        function drawFrameAtITime(absTimeSec) {
-            const oldRunning = !!state.isRunning;
-            const oldElapsed = Number(runtime.elapsedSec || 0);
-            const oldOffset = Number(runtime.iTimeOffset || 0);
-            state.isRunning = false;
-            runtime.elapsedSec = 0;
-            runtime.iTimeOffset = absTimeSec;
-            try {
-                renderFrame(runtime, state);
-            } finally {
-                runtime.elapsedSec = oldElapsed;
-                runtime.iTimeOffset = oldOffset;
-                state.isRunning = oldRunning;
-            }
-        }
-
-        async function exportCanvasAsGif() {
-            const GifEncoder = getGifEncoderApi();
-            if (!GifEncoder) {
-                setStatus('导出 GIF 失败: 编码器未加载');
-                return;
-            }
-
-            const rawDuration = prompt('导出 GIF 时长（秒，1-10）', String(GIF_EXPORT_DEFAULT_SECONDS));
-            if (rawDuration === null) return;
-
-            const durationNum = Number(rawDuration);
-            const durationSec = isFinite(durationNum)
-                ? clamp(durationNum, 1, GIF_EXPORT_MAX_SECONDS)
-                : GIF_EXPORT_DEFAULT_SECONDS;
-            const frameCount = Math.max(2, Math.round(durationSec * GIF_EXPORT_FPS));
-            const delayMs = Math.max(16, Math.round(1000 / GIF_EXPORT_FPS));
-            const timeoutMs = Math.max(6000, Math.round(durationSec * 1000 * 8));
-
-            commitEditorToState();
-            const targetPass = getSelectedPass();
-            const passName = sanitizeName(targetPass ? targetPass.name : 'shader').replace(/\s+/g, '-');
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-
-            const oldRunning = !!state.isRunning;
-            const oldLastMs = Number(runtime.lastMs || nowMs());
-            const oldElapsed = Number(runtime.elapsedSec || 0);
-            const oldOffset = Number(runtime.iTimeOffset || 0);
-            const oldBtnText = exportGifBtn ? String(exportGifBtn.textContent || '导出 GIF') : '导出 GIF';
-
-            try {
-                state.isRunning = false;
-                if (exportGifBtn) {
-                    exportGifBtn.disabled = true;
-                    exportGifBtn.textContent = '导出中...';
-                }
-
-                drawFrameAtITime(0);
-                const res = computeRenderResolution(state);
-                const filename = [passName, res.renderWidth + 'x' + res.renderHeight, timestamp].join('_') + '.gif';
-
-                const encoder = new GifEncoder({
-                    workers: 2,
-                    quality: 10,
-                    width: canvas.width,
-                    height: canvas.height,
-                    workerScript: '/site/assets/js/vendor/gif.worker.js'
-                });
-
-                let lastProgress = -1;
-                const blobPromise = new Promise((resolve, reject) => {
-                    encoder.on('finished', function (blob) {
-                        resolve(blob);
-                    });
-                    encoder.on('error', function (error) {
-                        reject(error || new Error('GIF 编码失败'));
-                    });
-                    encoder.on('abort', function () {
-                        reject(new Error('GIF 导出已中断'));
-                    });
-                    encoder.on('progress', function (value) {
-                        const p = clamp(Math.round(Number(value || 0) * 100), 0, 100);
-                        if (p === lastProgress) return;
-                        lastProgress = p;
-                        if (p % 10 === 0 || p >= 99) {
-                            setStatus('正在导出 GIF... ' + p + '%');
-                        }
-                    });
-                });
-
-                for (let i = 0; i < frameCount; i += 1) {
-                    const t = (i / frameCount) * durationSec;
-                    drawFrameAtITime(t);
-                    encoder.addFrame(canvas, { copy: true, delay: delayMs });
-                }
-
-                setStatus('正在导出 GIF...');
-                encoder.render();
-
-                const blob = await Promise.race([
-                    blobPromise,
-                    new Promise((_, reject) => {
-                        setTimeout(function () {
-                            reject(new Error('GIF 导出超时，请降低分辨率或缩短时长'));
-                        }, timeoutMs);
-                    })
-                ]);
-
-                if (!blob || (typeof blob.size === 'number' && blob.size <= 0)) {
-                    throw new Error('导出的 GIF 为空');
-                }
-
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                setStatus('GIF 已导出: ' + filename);
-            } catch (error) {
-                console.warn('GIF export failed:', error);
-                setStatus('导出 GIF 失败: ' + String(error && error.message ? error.message : error));
-            } finally {
-                runtime.elapsedSec = oldElapsed;
-                runtime.iTimeOffset = oldOffset;
-                runtime.lastMs = oldRunning ? nowMs() : oldLastMs;
-                state.isRunning = oldRunning;
-                if (exportGifBtn) {
-                    exportGifBtn.disabled = false;
-                    exportGifBtn.textContent = oldBtnText;
-                }
-                if (!contextLost) {
-                    try {
-                        renderFrame(runtime, state);
-                    } catch (_) { }
-                }
-            }
-        }
-
         runBtn.addEventListener('click', function () {
             state.isRunning = !state.isRunning;
             if (state.isRunning) {
@@ -2803,65 +2129,36 @@
             }
             runBtn.textContent = state.isRunning ? '暂停' : '继续';
             runBtn.setAttribute('aria-pressed', state.isRunning ? 'true' : 'false');
-            if (!state.isRunning && !contextLost) {
-                try {
-                    renderFrame(runtime, state);
-                } catch (_) { }
-            }
             saveState(state);
         });
 
-        uploadInput.addEventListener('change', async function () {
+        uploadInput.addEventListener('change', function () {
             const files = Array.from(uploadInput.files || []);
             if (!files.length) return;
-            for (const file of files) {
-                try {
-                    await addUploadTextureFromFile(file);
-                } catch (error) {
-                    setStatus('上传失败: ' + String(file && file.name ? file.name : 'unknown'));
-                    console.warn('Upload texture failed:', error);
-                }
-            }
-            try { uploadInput.value = ''; } catch (_) { }
-            renderChannels();
-            renderTextures();
-            if (!state.isRunning && !contextLost) {
-                try {
-                    renderFrame(runtime, state);
-                } catch (_) { }
-            }
-        });
-
-        if (exportGifBtn) {
-            exportGifBtn.addEventListener('click', async function () {
-                await exportCanvasAsGif();
-            });
-        }
-
-        if (exportPngBtn) {
-            exportPngBtn.addEventListener('click', function () {
-                exportCanvasAsPng();
-            });
-        }
-
-        if (contributeBtn) {
-            contributeBtn.addEventListener('click', function () {
-                commitEditorToState();
-                const pass = getSelectedPass();
-                const passName = pass ? pass.name : 'My Shader';
-                const template = makeContributionTemplate(state, passName);
-                const payload = {
-                    v: 1,
-                    passName: sanitizeName(passName),
-                    createdAt: Date.now(),
-                    template: template
+            files.forEach((file) => {
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = function () {
+                    const tex = createTextureFromImage(gl, img, true);
+                    const id = createId('upload');
+                    runtime.uploads.set(id, {
+                        id: id,
+                        label: file.name,
+                        width: img.naturalWidth || img.width,
+                        height: img.naturalHeight || img.height,
+                        texture: tex
+                    });
+                    URL.revokeObjectURL(url);
+                    renderChannels();
+                    renderTextures();
                 };
-                try {
-                    localStorage.setItem(CONTRIBUTION_DRAFT_KEY, JSON.stringify(payload));
-                } catch (_) { }
-                window.location.href = 'shader-contribute.html';
+                img.onerror = function () {
+                    URL.revokeObjectURL(url);
+                };
+                img.src = url;
             });
-        }
+            try { uploadInput.value = ''; } catch (_) { }
+        });
 
         exportBtn.addEventListener('click', function () {
             commitEditorToState();
@@ -2879,17 +2176,11 @@
             const isSave = key.toLowerCase() === 's';
             const isCompileCombo = (e.ctrlKey || e.metaKey) && isEnter;
             const isExportCombo = (e.ctrlKey || e.metaKey) && isSave;
-            const isPngCombo = (e.ctrlKey || e.metaKey) && e.shiftKey && key.toLowerCase() === 's';
             if (isCompileCombo) {
                 e.preventDefault();
                 commitEditorToState();
                 saveState(state);
                 compileAll('快捷键');
-                return;
-            }
-            if (isPngCombo) {
-                e.preventDefault();
-                exportCanvasAsPng();
                 return;
             }
             if (isExportCombo) {
@@ -3040,22 +2331,13 @@
         }
 
         // Initial UI
+        applyBgMode(readStoredBgMode(), false);
         syncEditor();
         renderCommandControls();
         afterEditorChanged();
         hideAutocomplete();
         renderAll();
-        applyCanvasAspectRatio(canvas, state);
-        updateResolutionStateAndPersist();
         compileAll('初始化');
-        if (importedPayload) {
-            const importTitle = importedPayload && importedPayload.title ? String(importedPayload.title) : '';
-            if (importTitle) {
-                setStatus('已从 Gallery 导入: ' + importTitle);
-            } else {
-                setStatus('已从 Gallery 导入 Shader');
-            }
-        }
         refreshITimeDisplay();
 
         function rafLoop() {
