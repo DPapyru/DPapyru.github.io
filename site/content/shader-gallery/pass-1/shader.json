@@ -9,7 +9,7 @@
       "channels": [
         {
           "kind": "builtin",
-          "id": "builtin:noise"
+          "id": "builtin:checker"
         },
         {
           "kind": "none"
