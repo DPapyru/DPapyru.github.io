@@ -34,6 +34,7 @@
         insertTemplate: document.getElementById('studio-insert-template'),
         formatMarkdown: document.getElementById('studio-format-markdown'),
         insertImage: document.getElementById('studio-insert-image'),
+        assetUpload: document.getElementById('studio-asset-upload'),
         imageUpload: document.getElementById('studio-image-upload'),
         imageList: document.getElementById('studio-image-list'),
         csharpUpload: document.getElementById('studio-csharp-upload'),
@@ -1135,6 +1136,51 @@
             row.appendChild(preview);
             dom.imageList.appendChild(row);
         });
+    }
+
+    async function insertAssetsFromUpload(fileList) {
+        const files = Array.from(fileList || []);
+        if (files.length === 0) return;
+
+        const imageFiles = [];
+        const csharpFiles = [];
+        let skipped = 0;
+
+        files.forEach(function (file) {
+            if (!file) return;
+
+            const name = String(file.name || '');
+            const type = String(file.type || '').toLowerCase();
+            const isImage = type.startsWith('image/') || /\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(name);
+            const isCsharp = /\.cs$/i.test(name) || type.indexOf('csharp') >= 0;
+
+            if (isImage) {
+                imageFiles.push(file);
+                return;
+            }
+            if (isCsharp) {
+                csharpFiles.push(file);
+                return;
+            }
+
+            skipped += 1;
+        });
+
+        if (imageFiles.length > 0) {
+            await insertImagesFromFiles(imageFiles);
+        }
+        if (csharpFiles.length > 0) {
+            await insertCsharpFilesFromUpload(csharpFiles);
+        }
+
+        if (imageFiles.length === 0 && csharpFiles.length === 0) {
+            setStatus('未发现可上传的图片或 C# 文件');
+            return;
+        }
+
+        if (skipped > 0) {
+            setStatus(`已处理图片 ${imageFiles.length} 个、C# ${csharpFiles.length} 个，跳过 ${skipped} 个不支持文件`);
+        }
     }
 
     async function insertImagesFromFiles(fileList) {
@@ -2603,6 +2649,18 @@
             });
         }
 
+        if (dom.assetUpload) {
+            dom.assetUpload.addEventListener('change', async function () {
+                try {
+                    await insertAssetsFromUpload(dom.assetUpload.files);
+                } catch (err) {
+                    setStatus(`上传附件失败：${err && err.message ? err.message : String(err)}`);
+                } finally {
+                    dom.assetUpload.value = '';
+                }
+            });
+        }
+
         if (dom.imageUpload) {
             dom.imageUpload.addEventListener('change', async function () {
                 try {
@@ -2655,11 +2713,12 @@
 
         if (dom.insertImage) {
             dom.insertImage.addEventListener('click', function () {
-                if (!dom.imageUpload) {
-                    setStatus('当前页面未找到图片上传控件');
+                const uploadInput = dom.assetUpload || dom.imageUpload;
+                if (!uploadInput) {
+                    setStatus('当前页面未找到上传控件');
                     return;
                 }
-                dom.imageUpload.click();
+                uploadInput.click();
             });
         }
 

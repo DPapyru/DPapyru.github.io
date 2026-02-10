@@ -718,22 +718,34 @@
 	                const targetPath = normalizeStudioPreviewPath(parsed.targetPath || '');
 	                if (!targetPath) return null;
 	                const uploadedImages = Array.isArray(parsed.uploadedImages)
-	                    ? parsed.uploadedImages.map(function (item) {
-	                        return {
-	                            assetPath: normalizeStudioPreviewPath(item && item.assetPath || ''),
-	                            dataUrl: String(item && item.dataUrl || ''),
-	                            name: String(item && item.name || '')
-	                        };
-	                    }).filter(function (item) {
-	                        return item.assetPath && item.dataUrl;
-	                    })
-	                    : [];
-	                return {
-	                    targetPath: targetPath,
-	                    markdown: String(parsed.markdown || ''),
-	                    uploadedImages: uploadedImages,
-	                    updatedAt: String(parsed.updatedAt || '')
-	                };
+                    ? parsed.uploadedImages.map(function (item) {
+                        return {
+                            assetPath: normalizeStudioPreviewPath(item && item.assetPath || ''),
+                            dataUrl: String(item && item.dataUrl || ''),
+                            name: String(item && item.name || '')
+                        };
+                    }).filter(function (item) {
+                        return item.assetPath && item.dataUrl;
+                    })
+                    : [];
+                const uploadedCsharpFiles = Array.isArray(parsed.uploadedCsharpFiles)
+                    ? parsed.uploadedCsharpFiles.map(function (item) {
+                        return {
+                            assetPath: normalizeStudioPreviewPath(item && item.assetPath || ''),
+                            content: String(item && item.content || ''),
+                            name: String(item && item.name || '')
+                        };
+                    }).filter(function (item) {
+                        return item.assetPath && item.content;
+                    })
+                    : [];
+                return {
+                    targetPath: targetPath,
+                    markdown: String(parsed.markdown || ''),
+                    uploadedImages: uploadedImages,
+                    uploadedCsharpFiles: uploadedCsharpFiles,
+                    updatedAt: String(parsed.updatedAt || '')
+                };
 	            } catch (_) {
 	                return null;
 	            }
@@ -876,11 +888,23 @@
 	                            }
 
 	                            const imageMatch = (payload.uploadedImages || []).find(function (item) {
-	                                return normalizeStudioPreviewPath(item.assetPath || '') === requestPath;
-	                            });
-	                            if (imageMatch && imageMatch.dataUrl) {
-	                                return nativeFetch(imageMatch.dataUrl, init);
-	                            }
+                                return normalizeStudioPreviewPath(item.assetPath || '') === requestPath;
+                            });
+                            if (imageMatch && imageMatch.dataUrl) {
+                                return nativeFetch(imageMatch.dataUrl, init);
+                            }
+
+                            const csharpMatch = (payload.uploadedCsharpFiles || []).find(function (item) {
+                                return normalizeStudioPreviewPath(item.assetPath || '') === requestPath;
+                            });
+                            if (csharpMatch && csharpMatch.content) {
+                                return Promise.resolve(new Response(csharpMatch.content, {
+                                    status: 200,
+                                    headers: {
+                                        'content-type': 'text/x-csharp; charset=utf-8'
+                                    }
+                                }));
+                            }
 	                        }
 	                    }
 	                } catch (_) {
@@ -927,11 +951,12 @@
 
 	                try {
 	                    window.localStorage.setItem(STUDIO_PREVIEW_STORAGE_KEY, JSON.stringify({
-	                        targetPath: targetPath,
-	                        markdown: String(payload.markdown || ''),
-	                        uploadedImages: Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [],
-	                        updatedAt: String(payload.updatedAt || new Date().toISOString())
-	                    }));
+                        targetPath: targetPath,
+                        markdown: String(payload.markdown || ''),
+                        uploadedImages: Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [],
+                        uploadedCsharpFiles: Array.isArray(payload.uploadedCsharpFiles) ? payload.uploadedCsharpFiles : [],
+                        updatedAt: String(payload.updatedAt || new Date().toISOString())
+                    }));
 	                } catch (_) {
 	                    // ignore storage failures
 	                }

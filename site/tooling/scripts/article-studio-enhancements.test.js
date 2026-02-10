@@ -112,3 +112,30 @@ test('viewer studio preview image resolver decodes encoded image paths', () => {
     assert.match(fn, /decodeURIComponent\(/);
     assert.match(viewer, /article-studio-preview-image-mapped/);
 });
+
+test('article studio html includes unified asset upload control', () => {
+    const html = read('site/pages/article-studio.html');
+
+    assert.match(html, /id="studio-asset-upload"/);
+    assert.match(html, /上传附件/);
+});
+
+test('article studio js supports unified mixed asset upload', () => {
+    const js = read('site/assets/js/article-studio.js');
+
+    assert.match(js, /studio-asset-upload/);
+    assert.match(js, /function\s+insertAssetsFromUpload\s*\(/);
+    assert.match(js, /insertAssetsFromUpload\(dom\.assetUpload\.files\)/);
+});
+
+test('viewer studio preview bridge supports uploaded csharp files', () => {
+    const viewer = read('site/pages/viewer.html');
+    const readFn = getFunctionBody(viewer, 'readStudioPreviewPayloadFromStorage');
+    const bridgeFn = getFunctionBody(viewer, 'installStudioPreviewFetchBridge');
+
+    assert.ok(readFn, 'readStudioPreviewPayloadFromStorage should exist');
+    assert.ok(bridgeFn, 'installStudioPreviewFetchBridge should exist');
+    assert.match(readFn, /uploadedCsharpFiles/);
+    assert.match(bridgeFn, /payload\.uploadedCsharpFiles/);
+    assert.match(bridgeFn, /text\/x-csharp/);
+});
