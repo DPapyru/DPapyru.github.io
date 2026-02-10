@@ -644,6 +644,20 @@
         }
     }
 
+    function readFileAsUtf8Text(file) {
+        return new Promise(function (resolve, reject) {
+            const reader = new FileReader();
+            reader.onload = function () {
+                const text = String(reader.result || '').replace(/^\uFEFF/, '');
+                resolve(text);
+            };
+            reader.onerror = function () {
+                reject(new Error('读取文本失败'));
+            };
+            reader.readAsText(file, 'UTF-8');
+        });
+    }
+
     function extractCSharpSymbols(sourceText) {
         const text = String(sourceText || '');
         const result = [];
@@ -652,13 +666,13 @@
 
         for (let i = 0; i < lines.length; i++) {
             const line = String(lines[i] || '').trim();
-            const namespaceMatch = line.match(/^namespace\s+([A-Za-z0-9_.]+)/);
+            const namespaceMatch = line.match(/^namespace\s+([$_\p{L}\p{N}.]+)/u);
             if (namespaceMatch) {
                 namespaces.push(namespaceMatch[1]);
                 continue;
             }
 
-            const typeMatch = line.match(/^(?:public|internal|protected|private|static|sealed|partial|abstract|record|class|struct|interface|enum|\s)+\s*(class|struct|interface|enum|record)\s+([A-Za-z0-9_]+)/);
+            const typeMatch = line.match(/^(?:public|internal|protected|private|static|sealed|partial|abstract|record|class|struct|interface|enum|\s)+\s*(class|struct|interface|enum|record)\s+([$_\p{L}][$_\p{L}\p{N}]*)/u);
             if (typeMatch) {
                 const fullType = namespaces.length > 0 ? `${namespaces[namespaces.length - 1]}.${typeMatch[2]}` : typeMatch[2];
                 result.push({
@@ -669,7 +683,7 @@
                 continue;
             }
 
-            const methodMatch = line.match(/^(?:public|internal|protected|private|static|virtual|override|async|sealed|partial|extern|new|unsafe|\s)+\s*[A-Za-z0-9_<>,\[\]\.?]+\s+([A-Za-z0-9_]+)\s*\(([^)]*)\)/);
+            const methodMatch = line.match(/^(?:public|internal|protected|private|static|virtual|override|async|sealed|partial|extern|new|unsafe|\s)+\s*[A-Za-z0-9_<>,\[\]\\.?]+\s+([$_\p{L}][$_\p{L}\p{N}]*)\s*\(([^)]*)\)/u);
             if (methodMatch && result.length > 0) {
                 const latestType = result.slice().reverse().find(function (entry) {
                     return entry.selectorKind === 't';
@@ -1333,8 +1347,7 @@
                 continue;
             }
 
-            const dataUrl = await fileToDataUrl(file);
-            const content = dataUrlToPlainText(dataUrl);
+            const content = await readFileAsUtf8Text(file);
             if (!content) {
                 setStatus(`读取 C# 文件失败：${fileName}`);
                 continue;
