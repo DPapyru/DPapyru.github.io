@@ -2,7 +2,7 @@
 title: 站点Markdown扩展语法说明
 author: 小天使
 date: 2026-02-07
-last_updated: 2026-02-07
+last_updated: 2026-02-10
 difficulty: beginner
 time: 20分钟
 description: 当前 viewer 渲染器支持的扩展语法，含实用示例与排错建议
@@ -141,6 +141,90 @@ source_cs:
 min_c: 1
 min_t: 1
 ```
+
+### `colors`
+
+用于定义正文可调用的单色变量，配合 `{color:变量名}{文本}` 使用。
+
+```yaml
+colors:
+  Mad: "#ff4d4f"
+  Good: "#22c55e"
+```
+
+### `colorChange`
+
+用于定义正文可调用的颜色动画，配合 `{colorChange:动画名}{文本}` 使用。
+
+```yaml
+colorChange:
+  rainbow:
+    - "#ff0000"
+    - "#00ff00"
+    - "#0000ff"
+```
+
+## 文字颜色扩展语法
+
+### 单色文本
+
+```text
+{color:Mad}{这是一段单色文字}
+```
+
+说明：
+
+1. `Mad` 需要在 front matter 的 `colors` 中定义
+2. 变量名建议只用英文、数字、`_`、`-`
+
+### 颜色动画文本
+
+```text
+{colorChange:rainbow}{这是一段颜色动画文字}
+```
+
+说明：
+
+1. `rainbow` 需要在 front matter 的 `colorChange` 中定义
+2. 动画颜色序列至少写 1 个颜色，推荐 3 个以上
+
+### 完整可运行示例
+
+````md
+---
+title: 颜色示例
+author: 你的名字
+topic: article-contribution
+description: 演示 colors 与 colorChange 的写法
+order: 100
+difficulty: beginner
+time: 5分钟
+colors:
+  Mad: "#ff4d4f"
+colorChange:
+  rainbow:
+    - "#ff0000"
+    - "#00ff00"
+    - "#0000ff"
+---
+
+普通文本。
+
+{color:Mad}{这是单色强调文本}
+
+{colorChange:rainbow}{这是颜色动画文本}
+````
+
+### 内置可直接使用的颜色名
+
+不写 `colors` 也可直接用这些内置名：`primary`、`secondary`、`accent`、`success`、`warning`、`error`、`info`、`link`、`red`、`green`、`blue`、`yellow`、`purple`、`orange`、`cyan`、`pink`。
+
+```text
+{color:primary}{使用主题主色}
+{color:warning}{使用警告色}
+```
+
+提示：在 `site/pages/article-studio.html` 左侧 Metadata 面板中填写 `colors` 和 `colorChange` 后，会自动写入 front matter。
 
 ## 作者模式调试
 
