@@ -1,4 +1,4 @@
-﻿using Terraria.ModLoader;
+using Terraria.ModLoader;
 
 // 命名空间,默认情况下,贴图存放路径需要和命名空间对应
 namespace ModDocProject.ModsSource.Modder入门
@@ -18,7 +18,7 @@ namespace ModDocProject.ModsSource.Modder入门
 
         public override void AddRecipes()
         {
-            
+
         }
     }
 }

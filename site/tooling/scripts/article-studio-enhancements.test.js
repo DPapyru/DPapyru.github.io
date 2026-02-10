@@ -139,3 +139,13 @@ test('viewer studio preview bridge supports uploaded csharp files', () => {
     assert.match(bridgeFn, /payload\.uploadedCsharpFiles/);
     assert.match(bridgeFn, /text\/x-csharp/);
 });
+
+test('viewer csharp selector parser supports unicode identifiers for chinese paths and namespaces', () => {
+    const viewer = read('site/pages/viewer.html');
+    const readFn = getFunctionBody(viewer, 'readIdentifierAt');
+
+    assert.ok(readFn, 'readIdentifierAt should exist');
+    assert.match(readFn, /\\p\{L\}/);
+    assert.match(readFn, /\\p\{N\}/);
+    assert.ok(viewer.includes(String.raw`const nsRe = /\bnamespace\s+([$_\p{L}\p{N}.]+)\s*([;{])/gu;`));
+});
