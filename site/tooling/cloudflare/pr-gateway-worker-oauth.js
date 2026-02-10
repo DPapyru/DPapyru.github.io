@@ -32,7 +32,9 @@ export default {
         return json({ ok: false, error: "Method Not Allowed" }, 405, origin, env);
       }
 
-      if (url.pathname !== "/api/create-pr") {
+      const isCreatePr = url.pathname === "/api/create-pr";
+      const isPreflightCheck = url.pathname === "/api/preflight-check";
+      if (!isCreatePr && !isPreflightCheck) {
         return json({ ok: false, error: "Not Found" }, 404, origin, env);
       }
 
@@ -51,6 +53,13 @@ export default {
       }
 
       const body = await request.json();
+
+      if (isPreflightCheck) {
+        const result = await handlePreflightCheck(body, env);
+        const hasErrors = Array.isArray(result.errors) && result.errors.length > 0;
+        return json(result, hasErrors ? 409 : 200, origin, env);
+      }
+
       const targetPath = sanitizeTargetPath(body.targetPath);
       const markdown = String(body.markdown || "");
       const prTitleInput = String(body.prTitle || "");
@@ -493,8 +502,9 @@ function sanitizeExtraFilePath(input) {
   const isRouteFile = /^site\/content\/routes\/.+\.route\.json$/i.test(p);
   const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(p);
   const isArticleImageFile = /^site\/content\/.+\/imgs\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(p);
-  if (!isRouteFile && !isShaderGalleryFile && !isArticleImageFile) {
-    throw new Error("extra file 只允许 site/content/routes/*.route.json、site/content/shader-gallery/<slug>/(entry|shader).json 或 site/content/**/imgs/*.{png,jpg,jpeg,gif,webp,svg,bmp,avif}");
+  const isArticleCsharpFile = /^site\/content\/.+\/code\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(p);
+  if (!isRouteFile && !isShaderGalleryFile && !isArticleImageFile && !isArticleCsharpFile) {
+    throw new Error("extra file 只允许 site/content/routes/*.route.json、site/content/shader-gallery/<slug>/(entry|shader).json、site/content/**/imgs/*.{png,jpg,jpeg,gif,webp,svg,bmp,avif} 或 site/content/**/code/*.cs");
   }
 
   return p;
@@ -539,6 +549,73 @@ function normalizeExtraFiles(input) {
       encoding: isBase64 ? "base64" : "utf8"
     };
   });
+}
+
+async function handlePreflightCheck(body, env) {
+  const mode = String(body && body.mode || "hard").trim().toLowerCase() === "soft" ? "soft" : "hard";
+  const targetPath = sanitizeTargetPath(body && body.targetPath);
+  const markdown = String(body && body.markdown || "");
+  const extraFiles = normalizeExtraFiles(body && body.extraFiles || []);
+  const errors = [];
+  const warnings = [];
+
+  if (!markdown.trim()) {
+    errors.push({
+      code: "empty_markdown",
+      path: `site/content/${targetPath}`,
+      message: "markdown 不能为空"
+    });
+  }
+
+  if (markdown.length > 300000) {
+    errors.push({
+      code: "markdown_too_large",
+      path: `site/content/${targetPath}`,
+      message: "markdown 过大（>300KB）"
+    });
+  }
+
+  const localSeen = new Set();
+  for (const file of extraFiles) {
+    const key = String(file.path || "").toLowerCase();
+    if (!key) continue;
+    if (localSeen.has(key)) {
+      errors.push({
+        code: "duplicate_extra_path",
+        path: file.path,
+        message: "extraFiles 中出现重复路径"
+      });
+      continue;
+    }
+    localSeen.add(key);
+  }
+
+  const csharpFiles = extraFiles.filter((file) => /\.cs$/i.test(String(file.path || "")));
+  if (csharpFiles.length > 0) {
+    const appJwt = await createAppJwt(env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY);
+    const installationToken = await getInstallationToken(env, appJwt);
+    const baseBranch = env.GITHUB_BASE_BRANCH || "main";
+
+    for (const file of csharpFiles) {
+      const existingSha = await getExistingFileSha(env, file.path, baseBranch, installationToken);
+      if (existingSha) {
+        errors.push({
+          code: "repo_path_conflict",
+          path: file.path,
+          message: "仓库中已存在同路径 C# 文件，请重命名后重试"
+        });
+      }
+    }
+  }
+
+  return {
+    ok: errors.length === 0,
+    mode,
+    targetPath,
+    checkedFiles: extraFiles.map((file) => file.path),
+    warnings,
+    errors
+  };
 }
 
 function parseExistingPrNumber(input) {

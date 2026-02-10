@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    const STORAGE_KEY = 'articleStudioMarkdown.v8';
+    const STORAGE_KEY = 'articleStudioMarkdown.v9';
     const SESSION_AUTH_TOKEN_KEY = 'articleStudioOAuthToken.v1';
     const SESSION_AUTH_USER_KEY = 'articleStudioOAuthUser.v1';
     const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
@@ -10,6 +10,8 @@
     const DEFAULT_PR_WORKER_API_URL = 'https://greenhome-pr.3577415213.workers.dev/api/create-pr';
     const MAX_IMAGE_FILE_SIZE = 2 * 1024 * 1024;
     const MAX_IMAGE_COUNT = 12;
+    const MAX_CSHARP_FILE_SIZE = 200 * 1024;
+    const MAX_CSHARP_COUNT = 5;
 
     const dom = {
         markdown: document.getElementById('studio-markdown'),
@@ -26,11 +28,37 @@
         loadPath: document.getElementById('studio-load-path'),
         copyMarkdown: document.getElementById('studio-copy-markdown'),
         exportJson: document.getElementById('studio-export'),
+        importJson: document.getElementById('studio-import'),
+        importFile: document.getElementById('studio-import-file'),
         reset: document.getElementById('studio-reset'),
         insertTemplate: document.getElementById('studio-insert-template'),
+        formatMarkdown: document.getElementById('studio-format-markdown'),
         insertImage: document.getElementById('studio-insert-image'),
         imageUpload: document.getElementById('studio-image-upload'),
         imageList: document.getElementById('studio-image-list'),
+        csharpUpload: document.getElementById('studio-csharp-upload'),
+        csharpList: document.getElementById('studio-csharp-list'),
+        csharpSymbolSelect: document.getElementById('studio-csharp-symbol-select'),
+        csharpInsertSymbol: document.getElementById('studio-csharp-insert-symbol'),
+        metaTitle: document.getElementById('studio-meta-title'),
+        metaAuthor: document.getElementById('studio-meta-author'),
+        metaTopic: document.getElementById('studio-meta-topic'),
+        metaDescription: document.getElementById('studio-meta-description'),
+        metaOrder: document.getElementById('studio-meta-order'),
+        metaDifficulty: document.getElementById('studio-meta-difficulty'),
+        metaTime: document.getElementById('studio-meta-time'),
+        metaPrevChapter: document.getElementById('studio-meta-prev-chapter'),
+        metaNextChapter: document.getElementById('studio-meta-next-chapter'),
+        metaMinC: document.getElementById('studio-meta-min-c'),
+        metaMinT: document.getElementById('studio-meta-min-t'),
+        colorName: document.getElementById('studio-color-name'),
+        colorValue: document.getElementById('studio-color-value'),
+        colorAdd: document.getElementById('studio-color-add'),
+        colorList: document.getElementById('studio-color-list'),
+        colorChangeName: document.getElementById('studio-color-change-name'),
+        colorChangeValues: document.getElementById('studio-color-change-values'),
+        colorChangeAdd: document.getElementById('studio-color-change-add'),
+        colorChangeList: document.getElementById('studio-color-change-list'),
         toggleFullscreen: document.getElementById('studio-toggle-fullscreen'),
         submitPr: document.getElementById('studio-submit-pr'),
         prWorkerUrl: document.getElementById('studio-pr-worker-url'),
@@ -56,7 +84,25 @@
         linkedPrNumber: '',
         myOpenPrs: [],
         uploadedImages: [],
+        uploadedCsharpFiles: [],
+        csharpSymbolEntries: [],
+        preflightPending: false,
         previewImageNoticeEnabled: true,
+        metadata: {
+            title: '',
+            author: '',
+            topic: 'article-contribution',
+            description: '',
+            order: '',
+            difficulty: 'beginner',
+            time: '',
+            prev_chapter: '',
+            next_chapter: '',
+            min_c: '',
+            min_t: '',
+            colors: {},
+            colorChange: {}
+        },
         authToken: '',
         githubUser: '',
         isFullscreen: false
@@ -66,6 +112,8 @@
     let previewSyncTimer = 0;
     let lastPreviewImageNotice = '';
     let lastPreviewImageNoticeAt = 0;
+    let metaSyncLock = false;
+    let knownMarkdownEntries = [];
 
     function nowStamp() {
         return new Date().toLocaleString('zh-CN', { hour12: false });
@@ -110,6 +158,8 @@
         }
 
         value = value.replace(/\/+$/, '');
+
+        value = value.replace(/\/api\/(?:create-pr|preflight-check|my-open-prs|auth\/me|auth\/github\/login)$/i, '');
 
         if (!/\/api\/create-pr(?:\?|$)/.test(value)) {
             value = `${value}/api/create-pr`;
@@ -223,6 +273,624 @@
         return `${(n / (1024 * 1024)).toFixed(2)} MB`;
     }
 
+    function hashText(text) {
+        const source = String(text || '');
+        let hash = 0;
+        for (let i = 0; i < source.length; i++) {
+            hash = ((hash << 5) - hash + source.charCodeAt(i)) | 0;
+        }
+        return String(Math.abs(hash));
+    }
+
+    function ensureObject(value) {
+        return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    }
+
+    function normalizeMetaNumberInput(value) {
+        const text = String(value || '').trim();
+        if (!text) return '';
+        const parsed = Number.parseInt(text, 10);
+        return Number.isFinite(parsed) ? String(parsed) : '';
+    }
+
+    function markdownDirectoryFromTargetPath(pathValue) {
+        const markdownPath = ensureMarkdownPath(pathValue || state.targetPath);
+        return getDirectoryFromPath(markdownPath);
+    }
+
+    function csharpAssetPathFromTarget(targetPath, sourceName) {
+        const dir = markdownDirectoryFromTargetPath(targetPath);
+        const base = String(sourceName || 'source').trim().toLowerCase().replace(/\.cs$/i, '');
+        const safe = base.replace(/[^a-z0-9\u4e00-\u9fa5_-]+/g, '-').replace(/-{2,}/g, '-').replace(/^-+|-+$/g, '') || `source-${Date.now().toString(36)}`;
+        if (dir) return `${dir}/code/${safe}.cs`;
+        return `code/${safe}.cs`;
+    }
+
+    function parseColorListInput(raw) {
+        const text = String(raw || '').trim();
+        if (!text) return [];
+        return text.split(',').map(function (item) {
+            return String(item || '').trim();
+        }).filter(Boolean);
+    }
+
+    function metaFieldMap() {
+        return {
+            title: dom.metaTitle,
+            author: dom.metaAuthor,
+            topic: dom.metaTopic,
+            description: dom.metaDescription,
+            order: dom.metaOrder,
+            difficulty: dom.metaDifficulty,
+            time: dom.metaTime,
+            prev_chapter: dom.metaPrevChapter,
+            next_chapter: dom.metaNextChapter,
+            min_c: dom.metaMinC,
+            min_t: dom.metaMinT
+        };
+    }
+
+    function parseFrontMatterFromMarkdown(markdownText) {
+        const text = String(markdownText || '');
+        const frontMatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n?/;
+        const match = text.match(frontMatterRegex);
+        if (!match) {
+            return {
+                metadata: {},
+                body: text,
+                hasFrontMatter: false
+            };
+        }
+
+        const yamlText = String(match[1] || '');
+        const body = text.slice(match[0].length);
+        const meta = {};
+
+        yamlText.split(/\r?\n/).forEach(function (line) {
+            const raw = String(line || '');
+            if (!raw.trim()) return;
+            if (/^\s/.test(raw)) return;
+
+            const idx = raw.indexOf(':');
+            if (idx <= 0) return;
+            const key = raw.slice(0, idx).trim();
+            const value = raw.slice(idx + 1).trim();
+            if (!key) return;
+            meta[key] = value;
+        });
+
+        return {
+            metadata: meta,
+            body: body,
+            hasFrontMatter: true
+        };
+    }
+
+    function applyMetadataDefaults(metadata) {
+        const base = ensureObject(metadata);
+        const next = {
+            title: String(base.title || '').trim(),
+            author: String(base.author || '').trim(),
+            topic: String(base.topic || 'article-contribution').trim() || 'article-contribution',
+            description: String(base.description || '').trim(),
+            order: normalizeMetaNumberInput(base.order),
+            difficulty: String(base.difficulty || 'beginner').trim() || 'beginner',
+            time: String(base.time || '').trim(),
+            prev_chapter: String(base.prev_chapter || '').trim(),
+            next_chapter: String(base.next_chapter || '').trim(),
+            min_c: normalizeMetaNumberInput(base.min_c),
+            min_t: normalizeMetaNumberInput(base.min_t),
+            colors: ensureObject(base.colors),
+            colorChange: ensureObject(base.colorChange)
+        };
+
+        if (!['beginner', 'intermediate', 'advanced'].includes(next.difficulty)) {
+            next.difficulty = 'beginner';
+        }
+
+        return next;
+    }
+
+    function pickMetadataFromParsedFrontMatter(parsedFront) {
+        const metadata = ensureObject(parsedFront && parsedFront.metadata);
+        const fromState = {
+            title: metadata.title,
+            author: metadata.author,
+            topic: metadata.topic,
+            description: metadata.description,
+            order: metadata.order,
+            difficulty: metadata.difficulty,
+            time: metadata.time,
+            prev_chapter: metadata.prev_chapter,
+            next_chapter: metadata.next_chapter,
+            min_c: metadata.min_c,
+            min_t: metadata.min_t
+        };
+
+        return applyMetadataDefaults({
+            ...state.metadata,
+            ...fromState
+        });
+    }
+
+    function buildFrontMatterLinesFromState() {
+        const m = applyMetadataDefaults(state.metadata);
+        const lines = [
+            '---',
+            `title: ${m.title || '教程标题'}`,
+            `author: ${m.author || '你的名字'}`,
+            `topic: ${m.topic || 'article-contribution'}`,
+            `description: ${m.description || '一句话说明本文内容'}`,
+            `order: ${m.order || '100'}`,
+            `difficulty: ${m.difficulty || 'beginner'}`,
+            `time: ${m.time || '25分钟'}`
+        ];
+
+        if (m.prev_chapter) lines.push(`prev_chapter: ${m.prev_chapter}`);
+        if (m.next_chapter) lines.push(`next_chapter: ${m.next_chapter}`);
+        if (m.min_c) lines.push(`min_c: ${m.min_c}`);
+        if (m.min_t) lines.push(`min_t: ${m.min_t}`);
+
+        const colorEntries = Object.entries(ensureObject(m.colors));
+        if (colorEntries.length > 0) {
+            lines.push('colors:');
+            colorEntries.forEach(function (entry) {
+                const key = String(entry[0] || '').trim();
+                const value = String(entry[1] || '').trim();
+                if (!key || !value) return;
+                lines.push(`  ${key}: "${value}"`);
+            });
+        }
+
+        const colorChangeEntries = Object.entries(ensureObject(m.colorChange));
+        if (colorChangeEntries.length > 0) {
+            lines.push('colorChange:');
+            colorChangeEntries.forEach(function (entry) {
+                const key = String(entry[0] || '').trim();
+                const values = Array.isArray(entry[1]) ? entry[1] : [];
+                if (!key || values.length === 0) return;
+                lines.push(`  ${key}:`);
+                values.forEach(function (colorText) {
+                    const color = String(colorText || '').trim();
+                    if (!color) return;
+                    lines.push(`    - "${color}"`);
+                });
+            });
+        }
+
+        lines.push('---', '');
+        return lines;
+    }
+
+    function mergeFrontMatterIntoMarkdown(markdownText) {
+        const parsed = parseFrontMatterFromMarkdown(markdownText);
+        const body = String(parsed.body || markdownText || '').replace(/^\s+/, '');
+        const lines = buildFrontMatterLinesFromState();
+        return `${lines.join('\n')}${body}`;
+    }
+
+    function setMetadataState(nextMeta, options) {
+        const silent = !!(options && options.silent);
+        state.metadata = applyMetadataDefaults(nextMeta);
+        if (!silent) {
+            renderMetadataFormFromState();
+            renderColorListsFromState();
+        }
+    }
+
+    function renderMetadataFormFromState() {
+        const mapping = metaFieldMap();
+        const m = applyMetadataDefaults(state.metadata);
+        Object.keys(mapping).forEach(function (key) {
+            const input = mapping[key];
+            if (!input) return;
+            const nextValue = String(m[key] || '');
+            if (String(input.value || '') !== nextValue) {
+                input.value = nextValue;
+            }
+        });
+    }
+
+    function createMetaListRow(label, value, onRemove) {
+        const row = document.createElement('div');
+        row.className = 'studio-meta-item';
+        const content = document.createElement('span');
+        content.innerHTML = `<strong>${label}</strong>: ${value}`;
+
+        const remove = document.createElement('button');
+        remove.className = 'btn btn-small btn-outline';
+        remove.type = 'button';
+        remove.textContent = '移除';
+        remove.addEventListener('click', onRemove);
+
+        row.appendChild(content);
+        row.appendChild(remove);
+        return row;
+    }
+
+    function renderColorListsFromState() {
+        if (dom.colorList) {
+            dom.colorList.innerHTML = '';
+            const entries = Object.entries(ensureObject(state.metadata.colors));
+            if (entries.length === 0) {
+                const empty = document.createElement('span');
+                empty.className = 'studio-help';
+                empty.textContent = '暂无自定义颜色';
+                dom.colorList.appendChild(empty);
+            } else {
+                entries.forEach(function (entry) {
+                    const row = createMetaListRow(entry[0], String(entry[1] || ''), function () {
+                        delete state.metadata.colors[entry[0]];
+                        renderColorListsFromState();
+                        applyMetadataToMarkdownAndRefresh('已移除颜色配置');
+                    });
+                    dom.colorList.appendChild(row);
+                });
+            }
+        }
+
+        if (dom.colorChangeList) {
+            dom.colorChangeList.innerHTML = '';
+            const entries = Object.entries(ensureObject(state.metadata.colorChange));
+            if (entries.length === 0) {
+                const empty = document.createElement('span');
+                empty.className = 'studio-help';
+                empty.textContent = '暂无颜色动画';
+                dom.colorChangeList.appendChild(empty);
+            } else {
+                entries.forEach(function (entry) {
+                    const values = Array.isArray(entry[1]) ? entry[1] : [];
+                    const row = createMetaListRow(entry[0], values.join(', '), function () {
+                        delete state.metadata.colorChange[entry[0]];
+                        renderColorListsFromState();
+                        applyMetadataToMarkdownAndRefresh('已移除颜色动画配置');
+                    });
+                    dom.colorChangeList.appendChild(row);
+                });
+            }
+        }
+    }
+
+    function applyMetadataToMarkdownAndRefresh(statusText) {
+        if (metaSyncLock) return;
+        metaSyncLock = true;
+        const next = mergeFrontMatterIntoMarkdown(state.markdown);
+        updateEditorContent(next);
+        metaSyncLock = false;
+        if (statusText) setStatus(statusText);
+    }
+
+    function syncMetadataFromMarkdownEditor(markdownText) {
+        if (metaSyncLock) return;
+        const parsed = parseFrontMatterFromMarkdown(markdownText);
+        const nextMeta = pickMetadataFromParsedFrontMatter(parsed);
+        setMetadataState(nextMeta);
+        updateChapterSelectOptions();
+    }
+
+    function updateMetadataFromForm() {
+        const mapping = metaFieldMap();
+        const nextMeta = {
+            ...state.metadata,
+            colors: ensureObject(state.metadata.colors),
+            colorChange: ensureObject(state.metadata.colorChange)
+        };
+
+        Object.keys(mapping).forEach(function (key) {
+            const input = mapping[key];
+            if (!input) return;
+            nextMeta[key] = String(input.value || '').trim();
+        });
+
+        nextMeta.order = normalizeMetaNumberInput(nextMeta.order);
+        nextMeta.min_c = normalizeMetaNumberInput(nextMeta.min_c);
+        nextMeta.min_t = normalizeMetaNumberInput(nextMeta.min_t);
+        setMetadataState(nextMeta, { silent: true });
+        applyMetadataToMarkdownAndRefresh('已同步 Metadata 到 Markdown');
+    }
+
+    function updateChapterSelectOptions() {
+        const updateSingle = function (selectEl, selectedValue) {
+            if (!selectEl) return;
+            const current = String(selectedValue || '').trim();
+            const baseDir = markdownDirectoryFromTargetPath(state.targetPath);
+            const candidates = knownMarkdownEntries.filter(function (entry) {
+                if (!entry || !entry.path) return false;
+                return getDirectoryFromPath(entry.path) === baseDir;
+            });
+
+            selectEl.innerHTML = '';
+            const empty = document.createElement('option');
+            empty.value = '';
+            empty.textContent = '(无)';
+            selectEl.appendChild(empty);
+
+            candidates.forEach(function (entry) {
+                const option = document.createElement('option');
+                option.value = entry.path;
+                option.textContent = `${entry.path} · ${entry.title || entry.path}`;
+                selectEl.appendChild(option);
+            });
+
+            if (current) {
+                const existing = Array.from(selectEl.options).find(function (opt) {
+                    return opt.value === current;
+                });
+
+                if (!existing) {
+                    const custom = document.createElement('option');
+                    custom.value = current;
+                    custom.textContent = `${current} · (当前值)`;
+                    selectEl.appendChild(custom);
+                }
+                selectEl.value = current;
+            }
+        };
+
+        updateSingle(dom.metaPrevChapter, state.metadata.prev_chapter);
+        updateSingle(dom.metaNextChapter, state.metadata.next_chapter);
+    }
+
+    function dataUrlToPlainText(dataUrl) {
+        const text = String(dataUrl || '');
+        const comma = text.indexOf(',');
+        if (comma < 0) return '';
+
+        try {
+            return atob(text.slice(comma + 1));
+        } catch (_) {
+            return '';
+        }
+    }
+
+    function extractCSharpSymbols(sourceText) {
+        const text = String(sourceText || '');
+        const result = [];
+        const namespaces = [];
+        const lines = text.split(/\r?\n/);
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = String(lines[i] || '').trim();
+            const namespaceMatch = line.match(/^namespace\s+([A-Za-z0-9_.]+)/);
+            if (namespaceMatch) {
+                namespaces.push(namespaceMatch[1]);
+                continue;
+            }
+
+            const typeMatch = line.match(/^(?:public|internal|protected|private|static|sealed|partial|abstract|record|class|struct|interface|enum|\s)+\s*(class|struct|interface|enum|record)\s+([A-Za-z0-9_]+)/);
+            if (typeMatch) {
+                const fullType = namespaces.length > 0 ? `${namespaces[namespaces.length - 1]}.${typeMatch[2]}` : typeMatch[2];
+                result.push({
+                    label: `类型: ${fullType}`,
+                    selectorKind: 't',
+                    selector: fullType
+                });
+                continue;
+            }
+
+            const methodMatch = line.match(/^(?:public|internal|protected|private|static|virtual|override|async|sealed|partial|extern|new|unsafe|\s)+\s*[A-Za-z0-9_<>,\[\]\.?]+\s+([A-Za-z0-9_]+)\s*\(([^)]*)\)/);
+            if (methodMatch && result.length > 0) {
+                const latestType = result.slice().reverse().find(function (entry) {
+                    return entry.selectorKind === 't';
+                });
+                if (latestType) {
+                    const fullSelector = `${latestType.selector}.${methodMatch[1]}(${String(methodMatch[2] || '').trim()})`;
+                    result.push({
+                        label: `方法: ${fullSelector}`,
+                        selectorKind: 'm',
+                        selector: fullSelector
+                    });
+                }
+            }
+        }
+
+        return result;
+    }
+
+    function buildCSharpExtraFiles() {
+        const list = Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [];
+        return list.map(function (item) {
+            return {
+                path: `site/content/${item.assetPath}`,
+                content: String(item.content || ''),
+                encoding: 'utf8'
+            };
+        }).filter(function (item) {
+            return !!item.content;
+        });
+    }
+
+    function formatMarkdownForStudio(markdownText) {
+        const source = String(markdownText || '');
+        const lines = source.replace(/\r\n/g, '\n').split('\n');
+        const out = [];
+        let inFence = false;
+
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].replace(/[ \t]+$/g, '');
+
+            if (/^\s*(```|~~~)/.test(line)) {
+                inFence = !inFence;
+                out.push(line);
+                continue;
+            }
+
+            if (!inFence) {
+                line = line.replace(/^(#{1,6})([^\s#])/, '$1 $2');
+                line = line.replace(/^(\s*)-\s{2,}/, '$1- ');
+            }
+
+            out.push(line);
+        }
+
+        const compacted = [];
+        let blankCount = 0;
+        out.forEach(function (line) {
+            if (!line.trim()) {
+                blankCount += 1;
+                if (blankCount <= 1) {
+                    compacted.push('');
+                }
+                return;
+            }
+            blankCount = 0;
+            compacted.push(line);
+        });
+
+        return compacted.join('\n').trimEnd() + '\n';
+    }
+
+    function handleTabIndent(event) {
+        if (!dom.markdown) return;
+        if (event.key === 'Tab') {
+            event.preventDefault();
+
+            const value = String(dom.markdown.value || '');
+            const start = dom.markdown.selectionStart || 0;
+            const end = dom.markdown.selectionEnd || 0;
+
+            const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+            const lineEndSearch = value.indexOf('\n', end);
+            const lineEnd = lineEndSearch >= 0 ? lineEndSearch : value.length;
+            const block = value.slice(lineStart, lineEnd);
+            const lines = block.split('\n');
+
+            const indentUnit = '    ';
+            let updatedLines = [];
+            if (event.shiftKey) {
+                updatedLines = lines.map(function (line) {
+                    if (line.startsWith(indentUnit)) return line.slice(indentUnit.length);
+                    if (line.startsWith('\t')) return line.slice(1);
+                    if (line.startsWith('  ')) return line.slice(2);
+                    if (line.startsWith(' ')) return line.slice(1);
+                    return line;
+                });
+            } else {
+                updatedLines = lines.map(function (line) {
+                    return `${indentUnit}${line}`;
+                });
+            }
+
+            const replaced = updatedLines.join('\n');
+            const next = value.slice(0, lineStart) + replaced + value.slice(lineEnd);
+
+            let nextStart = start;
+            let nextEnd = end;
+            if (event.shiftKey) {
+                const removedFromFirst = lines[0].length - updatedLines[0].length;
+                nextStart = Math.max(lineStart, start - removedFromFirst);
+                const removedTotal = block.length - replaced.length;
+                nextEnd = Math.max(nextStart, end - removedTotal);
+            } else {
+                nextStart = start + indentUnit.length;
+                nextEnd = end + (indentUnit.length * lines.length);
+            }
+
+            updateEditorContent(next, nextStart, nextEnd);
+            return;
+        }
+    }
+
+    function preflightUrlFromApiUrl(apiUrl) {
+        return workerApiEndpointFromApiUrl(apiUrl, '/api/preflight-check');
+    }
+
+    function preflightHeaders(sharedKey, authToken) {
+        const headers = {
+            'content-type': 'application/json'
+        };
+        if (authToken) {
+            headers.authorization = `Bearer ${authToken}`;
+        } else {
+            headers['x-studio-key'] = sharedKey;
+        }
+        return headers;
+    }
+
+    async function runPreflightCheck(options) {
+        const mode = String(options && options.mode || 'soft');
+        const throwOnError = !!(options && options.throwOnError);
+        const apiUrl = normalizeWorkerApiUrl(options && options.apiUrl || state.workerApiUrl);
+        const sharedKey = String(options && options.sharedKey || (dom.prSharedKey ? dom.prSharedKey.value : '')).trim();
+        const authToken = String(options && options.authToken || state.authToken).trim();
+
+        if (!apiUrl) {
+            const error = '缺少 Worker API 地址，无法执行冲突检查';
+            if (throwOnError) throw new Error(error);
+            return { ok: false, pending: true, error: error };
+        }
+
+        if (!authToken && !sharedKey) {
+            const error = '缺少鉴权信息，无法执行冲突检查';
+            if (throwOnError) throw new Error(error);
+            return { ok: false, pending: true, error: error };
+        }
+
+        const payload = {
+            mode: mode,
+            targetPath: ensureMarkdownPath(state.targetPath),
+            markdown: String(state.markdown || ''),
+            extraFiles: [
+                ...buildImageExtraFiles(),
+                ...buildCSharpExtraFiles()
+            ]
+        };
+
+        const url = preflightUrlFromApiUrl(apiUrl);
+        if (!url) {
+            const error = '无法生成 preflight-check 地址';
+            if (throwOnError) throw new Error(error);
+            return { ok: false, pending: true, error: error };
+        }
+
+        state.preflightPending = true;
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: preflightHeaders(sharedKey, authToken),
+                body: JSON.stringify(payload)
+            });
+
+            const responseText = await response.text();
+            let data = null;
+            try {
+                data = responseText ? JSON.parse(responseText) : null;
+            } catch (_) {
+                data = null;
+            }
+
+            if (!response.ok || !data || data.ok !== true) {
+                const errorText = data && data.error ? String(data.error) : `HTTP ${response.status}`;
+                if (throwOnError) {
+                    throw new Error(errorText);
+                }
+                return {
+                    ok: false,
+                    pending: mode === 'soft',
+                    error: errorText,
+                    errors: Array.isArray(data && data.errors) ? data.errors : []
+                };
+            }
+
+            return {
+                ok: true,
+                pending: false,
+                warnings: Array.isArray(data.warnings) ? data.warnings : [],
+                errors: Array.isArray(data.errors) ? data.errors : []
+            };
+        } catch (err) {
+            const msg = err && err.message ? err.message : String(err);
+            if (throwOnError) throw new Error(msg);
+            return {
+                ok: false,
+                pending: mode === 'soft',
+                error: msg
+            };
+        } finally {
+            state.preflightPending = false;
+        }
+    }
+
     function stripImageExt(name) {
         return String(name || '').replace(/\.[a-z0-9]+$/i, '');
     }
@@ -287,6 +955,84 @@
             };
         }).filter(function (item) {
             return !!item.content;
+        });
+    }
+
+    function renderUploadedCsharpFiles() {
+        if (!dom.csharpList) return;
+
+        dom.csharpList.innerHTML = '';
+        const list = Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [];
+        if (list.length === 0) {
+            const empty = document.createElement('span');
+            empty.className = 'studio-help';
+            empty.textContent = '当前没有已上传 C# 文件';
+            dom.csharpList.appendChild(empty);
+            return;
+        }
+
+        list.forEach(function (item) {
+            const row = document.createElement('div');
+            row.className = 'studio-image-item';
+
+            const head = document.createElement('div');
+            head.className = 'studio-image-item-head';
+
+            const name = document.createElement('span');
+            name.className = 'studio-image-item-name';
+            name.textContent = item.name || 'source.cs';
+            head.appendChild(name);
+
+            const remove = document.createElement('button');
+            remove.className = 'btn btn-small btn-outline';
+            remove.type = 'button';
+            remove.textContent = '移除';
+            remove.addEventListener('click', function () {
+                state.uploadedCsharpFiles = state.uploadedCsharpFiles.filter(function (it) {
+                    return it.id !== item.id;
+                });
+                refreshCsharpSymbolOptions();
+                renderUploadedCsharpFiles();
+                scheduleSave();
+                setStatus(`已移除 C# 文件：${item.name}`);
+            });
+
+            const insertRef = document.createElement('button');
+            insertRef.className = 'btn btn-small btn-outline';
+            insertRef.type = 'button';
+            insertRef.textContent = '插入引用';
+            insertRef.addEventListener('click', function () {
+                const relPath = `./${String(item.assetPath || '').split('/').slice(-2).join('/')}`;
+                insertBlockSnippet(`{{cs:${relPath}}}\n`, relPath);
+                setStatus(`已插入 C# 引用：${item.name}`);
+            });
+
+            const actions = document.createElement('div');
+            actions.className = 'studio-image-item-actions';
+            actions.appendChild(insertRef);
+            actions.appendChild(remove);
+            head.appendChild(actions);
+
+            const meta = document.createElement('span');
+            meta.className = 'studio-image-item-meta';
+            meta.textContent = `${formatBytes(item.size)} · /site/content/${item.assetPath || ''}`;
+
+            const status = document.createElement('span');
+            status.className = 'studio-image-item-status';
+            if (item.checkState === 'error') {
+                status.classList.add('studio-image-item-status--error');
+                status.textContent = item.checkMessage || '冲突检查失败';
+            } else if (item.checkState === 'warn') {
+                status.classList.add('studio-image-item-status--warn');
+                status.textContent = item.checkMessage || '待复检';
+            } else {
+                status.textContent = item.checkMessage || '已通过检查';
+            }
+
+            row.appendChild(head);
+            row.appendChild(meta);
+            row.appendChild(status);
+            dom.csharpList.appendChild(row);
         });
     }
 
@@ -449,6 +1195,146 @@
         renderUploadedImages();
         scheduleSave();
         setStatus(`已插入 ${accepted.length} 张图片并写入 Markdown`);
+    }
+
+    function csharpFileConflictInLocal(assetPath) {
+        const normalized = normalizePath(assetPath || '');
+        if (!normalized) return true;
+
+        return state.uploadedCsharpFiles.some(function (item) {
+            return normalizePath(item && item.assetPath || '') === normalized;
+        });
+    }
+
+    function refreshCsharpSymbolOptions() {
+        if (!dom.csharpSymbolSelect) return;
+
+        const previous = String(dom.csharpSymbolSelect.value || '').trim();
+        dom.csharpSymbolSelect.innerHTML = '';
+        const initial = document.createElement('option');
+        initial.value = '';
+        initial.textContent = '先上传 C# 文件并选择符号...';
+        dom.csharpSymbolSelect.appendChild(initial);
+
+        const entries = [];
+        state.uploadedCsharpFiles.forEach(function (fileItem) {
+            const symbols = Array.isArray(fileItem.symbols) ? fileItem.symbols : [];
+            const relPath = `./${String(fileItem.assetPath || '').split('/').slice(-2).join('/')}`;
+            if (symbols.length === 0) {
+                entries.push({
+                    value: `${relPath}|` ,
+                    label: `${fileItem.name} · 整文件`,
+                    path: relPath,
+                    selectorKind: '',
+                    selector: ''
+                });
+                return;
+            }
+
+            symbols.forEach(function (symbol) {
+                entries.push({
+                    value: `${relPath}|${symbol.selectorKind}:${symbol.selector}`,
+                    label: `${fileItem.name} · ${symbol.label}`,
+                    path: relPath,
+                    selectorKind: symbol.selectorKind,
+                    selector: symbol.selector
+                });
+            });
+        });
+
+        state.csharpSymbolEntries = entries;
+        entries.forEach(function (entry) {
+            const option = document.createElement('option');
+            option.value = entry.value;
+            option.textContent = entry.label;
+            dom.csharpSymbolSelect.appendChild(option);
+        });
+
+        if (previous && entries.some(function (entry) { return entry.value === previous; })) {
+            dom.csharpSymbolSelect.value = previous;
+        }
+    }
+
+    async function insertCsharpFilesFromUpload(fileList) {
+        const files = Array.from(fileList || []);
+        if (files.length === 0) return;
+
+        if (state.uploadedCsharpFiles.length >= MAX_CSHARP_COUNT) {
+            setStatus(`最多保留 ${MAX_CSHARP_COUNT} 个 C# 文件，请先移除旧文件`);
+            return;
+        }
+
+        let insertedCount = 0;
+        for (const file of files) {
+            if (!file) continue;
+            const fileName = String(file.name || 'source.cs');
+            if (!/\.cs$/i.test(fileName)) {
+                setStatus(`已跳过非 C# 文件：${fileName}`);
+                continue;
+            }
+            if (Number(file.size || 0) > MAX_CSHARP_FILE_SIZE) {
+                setStatus(`C# 文件过大（>${formatBytes(MAX_CSHARP_FILE_SIZE)}）：${fileName}`);
+                continue;
+            }
+            if (state.uploadedCsharpFiles.length + insertedCount >= MAX_CSHARP_COUNT) {
+                setStatus(`最多保留 ${MAX_CSHARP_COUNT} 个 C# 文件，其余已跳过`);
+                break;
+            }
+
+            const assetPath = csharpAssetPathFromTarget(state.targetPath, fileName);
+            if (csharpFileConflictInLocal(assetPath)) {
+                setStatus(`C# 文件冲突：${assetPath} 已存在，请重命名后重试`);
+                continue;
+            }
+
+            const dataUrl = await fileToDataUrl(file);
+            const content = dataUrlToPlainText(dataUrl);
+            if (!content) {
+                setStatus(`读取 C# 文件失败：${fileName}`);
+                continue;
+            }
+
+            const localItem = {
+                id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+                name: fileName,
+                size: Number(file.size || 0),
+                assetPath: assetPath,
+                content: content,
+                symbols: extractCSharpSymbols(content),
+                checkState: 'ok',
+                checkMessage: '已通过检查',
+                preflightPending: false
+            };
+
+            state.uploadedCsharpFiles.push(localItem);
+            insertedCount += 1;
+
+            const softResult = await runPreflightCheck({ mode: 'soft' });
+            if (!softResult.ok) {
+                if (softResult.pending) {
+                    localItem.checkState = 'warn';
+                    localItem.checkMessage = `待复检：${softResult.error || '检查失败'}`;
+                } else {
+                    state.uploadedCsharpFiles = state.uploadedCsharpFiles.filter(function (it) {
+                        return it.id !== localItem.id;
+                    });
+                    insertedCount -= 1;
+                    setStatus(`C# 文件冲突：${assetPath}，请重命名后重试`);
+                    continue;
+                }
+            }
+
+            const relPath = `./${String(localItem.assetPath || '').split('/').slice(-2).join('/')}`;
+            insertBlockSnippet(`{{cs:${relPath}}}\n`, relPath);
+        }
+
+        refreshCsharpSymbolOptions();
+        renderUploadedCsharpFiles();
+        scheduleSave();
+
+        if (insertedCount > 0) {
+            setStatus(`已插入 ${insertedCount} 个 C# 文件`);
+        }
     }
 
     async function loadMyOpenPrs() {
@@ -726,6 +1612,7 @@
         const previousPath = state.targetPath;
         state.targetPath = ensureMarkdownPath(nextPath);
         updateFileIdentity();
+        updateChapterSelectOptions();
 
         if (previousPath !== state.targetPath) {
             schedulePreviewSync(true);
@@ -808,6 +1695,7 @@
 
             const config = await response.json();
             const entries = flattenConfigEntries(config);
+            knownMarkdownEntries = entries;
 
             dom.existingSelect.innerHTML = '';
 
@@ -826,6 +1714,8 @@
             if (entries.some(function (entry) { return entry.path === state.targetPath; })) {
                 dom.existingSelect.value = state.targetPath;
             }
+
+            updateChapterSelectOptions();
         } catch (err) {
             setStatus(`读取文章列表失败：${err && err.message ? err.message : String(err)}`);
         }
@@ -857,6 +1747,7 @@
             setTargetPath(targetPath, true);
             renderPreview();
             updateStats();
+            syncMetadataFromMarkdownEditor(state.markdown);
             persistState();
 
             if (dom.existingSelect) {
@@ -867,6 +1758,109 @@
         } catch (err) {
             setStatus(`载入失败：${err && err.message ? err.message : String(err)}`);
         }
+    }
+
+    function parseImportedDraftPayload(rawText) {
+        let parsed = null;
+        try {
+            parsed = JSON.parse(String(rawText || ''));
+        } catch (_) {
+            throw new Error('草稿 JSON 格式错误，无法解析');
+        }
+
+        if (!parsed || typeof parsed !== 'object') {
+            throw new Error('草稿 JSON 结构无效');
+        }
+
+        return parsed;
+    }
+
+    function applyImportedDraft(parsed, mergeMode) {
+        const mode = String(mergeMode || 'replace');
+        const current = {
+            markdown: String(state.markdown || ''),
+            uploadedImages: Array.isArray(state.uploadedImages) ? state.uploadedImages : [],
+            uploadedCsharpFiles: Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [],
+            metadata: applyMetadataDefaults(state.metadata)
+        };
+
+        const importedMarkdown = String(parsed.markdown || '');
+        const importedImages = Array.isArray(parsed.uploadedImages) ? parsed.uploadedImages : [];
+        const importedCsharp = Array.isArray(parsed.uploadedCsharpFiles) ? parsed.uploadedCsharpFiles : [];
+        const importedMetadata = applyMetadataDefaults(parsed.metadata || {});
+
+        if (mode === 'merge') {
+            state.markdown = [current.markdown.trim(), importedMarkdown.trim()].filter(Boolean).join('\n\n');
+            state.uploadedImages = current.uploadedImages.concat(importedImages);
+            state.uploadedCsharpFiles = current.uploadedCsharpFiles.concat(importedCsharp);
+            state.metadata = applyMetadataDefaults({
+                ...current.metadata,
+                ...importedMetadata,
+                colors: {
+                    ...ensureObject(current.metadata.colors),
+                    ...ensureObject(importedMetadata.colors)
+                },
+                colorChange: {
+                    ...ensureObject(current.metadata.colorChange),
+                    ...ensureObject(importedMetadata.colorChange)
+                }
+            });
+        } else {
+            state.markdown = importedMarkdown;
+            state.uploadedImages = importedImages;
+            state.uploadedCsharpFiles = importedCsharp;
+            state.metadata = importedMetadata;
+            state.targetPath = ensureMarkdownPath(parsed.targetPath || state.targetPath);
+            state.workerApiUrl = normalizeWorkerApiUrl(parsed.workerApiUrl || state.workerApiUrl);
+            state.prTitle = String(parsed.prTitle || state.prTitle || '');
+        }
+
+        if (dom.markdown) {
+            dom.markdown.value = state.markdown;
+        }
+        if (dom.prWorkerUrl) {
+            dom.prWorkerUrl.value = state.workerApiUrl;
+        }
+        if (dom.prTitle) {
+            dom.prTitle.value = state.prTitle;
+        }
+
+        updateFileIdentity();
+        renderUploadedImages();
+        refreshCsharpSymbolOptions();
+        renderUploadedCsharpFiles();
+        renderMetadataFormFromState();
+        renderColorListsFromState();
+        updateChapterSelectOptions();
+        updateStats();
+        renderPreview();
+        scheduleSave();
+    }
+
+    async function importDraftJson(file) {
+        if (!file) {
+            throw new Error('请选择要导入的 JSON 文件');
+        }
+
+        const text = await file.text();
+        const parsed = parseImportedDraftPayload(text);
+        const summary = `目标: ${parsed.targetPath || '(未指定)'}\n长度: ${String(parsed.markdown || '').length} 字\n图片: ${Array.isArray(parsed.uploadedImages) ? parsed.uploadedImages.length : 0}\nC#: ${Array.isArray(parsed.uploadedCsharpFiles) ? parsed.uploadedCsharpFiles.length : 0}`;
+
+        const merge = window.confirm(`导入草稿摘要：\n${summary}\n\n点击“确定”执行覆盖导入，点击“取消”进入合并/取消选择。`);
+        if (merge) {
+            applyImportedDraft(parsed, 'replace');
+            setStatus('草稿 JSON 导入完成（覆盖模式）');
+            return;
+        }
+
+        const shouldMerge = window.confirm('是否使用合并导入？\n确定=合并，取消=放弃导入。');
+        if (!shouldMerge) {
+            setStatus('已取消导入草稿 JSON');
+            return;
+        }
+
+        applyImportedDraft(parsed, 'merge');
+        setStatus('草稿 JSON 导入完成（合并模式）');
     }
 
     async function submitPullRequest() {
@@ -888,6 +1882,19 @@
             return;
         }
 
+        const hardPreflight = await runPreflightCheck({
+            mode: 'hard',
+            apiUrl: apiUrl,
+            sharedKey: sharedKey,
+            authToken: authToken,
+            throwOnError: false
+        });
+        if (!hardPreflight.ok) {
+            setStatus(`提交前复检失败，已阻止提交：${hardPreflight.error || '请稍后重试'}`);
+            renderUploadedCsharpFiles();
+            return;
+        }
+
         const effectiveMarkdown = String(state.markdown || '');
 
         if (!effectiveMarkdown.trim()) {
@@ -906,8 +1913,10 @@
             prTitle: titleInput || defaultPrTitle()
         };
         const imageExtraFiles = buildImageExtraFiles();
-        if (imageExtraFiles.length > 0) {
-            payload.extraFiles = imageExtraFiles;
+        const csharpExtraFiles = buildCSharpExtraFiles();
+        const extraFiles = imageExtraFiles.concat(csharpExtraFiles);
+        if (extraFiles.length > 0) {
+            payload.extraFiles = extraFiles;
         }
         if (linkedPrNumber) {
             payload.existingPrNumber = linkedPrNumber;
@@ -1048,6 +2057,27 @@
                     return item.id && item.assetPath && item.base64 && item.dataUrl;
                 })
                 : [];
+            state.uploadedCsharpFiles = Array.isArray(parsed.uploadedCsharpFiles)
+                ? parsed.uploadedCsharpFiles.map(function (item) {
+                    const normalizedAssetPath = normalizePath(item && item.assetPath || '');
+                    const content = String(item && item.content || '');
+                    return {
+                        id: String(item && item.id || hashText(`${normalizedAssetPath}-${Date.now()}`)),
+                        name: String(item && item.name || 'source.cs'),
+                        size: Number(item && item.size || content.length),
+                        assetPath: normalizedAssetPath,
+                        content: content,
+                        symbols: Array.isArray(item && item.symbols) ? item.symbols : extractCSharpSymbols(content),
+                        checkState: String(item && item.checkState || 'ok'),
+                        checkMessage: String(item && item.checkMessage || '已通过检查'),
+                        preflightPending: !!(item && item.preflightPending)
+                    };
+                }).filter(function (item) {
+                    return item.id && item.assetPath && item.content;
+                })
+                : [];
+
+            state.metadata = applyMetadataDefaults(parsed.metadata || state.metadata);
             if (typeof parsed.previewImageNoticeEnabled === 'boolean') {
                 state.previewImageNoticeEnabled = parsed.previewImageNoticeEnabled;
             }
@@ -1059,7 +2089,7 @@
     function persistState() {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                version: 8,
+                version: 9,
                 updatedAt: new Date().toISOString(),
                 targetPath: state.targetPath,
                 markdown: state.markdown,
@@ -1069,6 +2099,8 @@
                 linkedPrNumber: String(state.linkedPrNumber || ''),
                 myOpenPrs: Array.isArray(state.myOpenPrs) ? state.myOpenPrs : [],
                 uploadedImages: Array.isArray(state.uploadedImages) ? state.uploadedImages : [],
+                uploadedCsharpFiles: Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [],
+                metadata: applyMetadataDefaults(state.metadata),
                 previewImageNoticeEnabled: !!state.previewImageNoticeEnabled
             }));
             setStatus('Markdown 草稿已自动保存');
@@ -1094,6 +2126,7 @@
         return {
             targetPath: ensureMarkdownPath(state.targetPath),
             markdown: String(state.markdown || ''),
+            metadata: applyMetadataDefaults(state.metadata),
             uploadedImages: Array.isArray(state.uploadedImages)
                 ? state.uploadedImages.map(function (item) {
                     return {
@@ -1103,6 +2136,17 @@
                     };
                 }).filter(function (item) {
                     return item.assetPath && item.dataUrl;
+                })
+                : [],
+            uploadedCsharpFiles: Array.isArray(state.uploadedCsharpFiles)
+                ? state.uploadedCsharpFiles.map(function (item) {
+                    return {
+                        assetPath: normalizePath(item && item.assetPath || ''),
+                        content: String(item && item.content || ''),
+                        name: String(item && item.name || '')
+                    };
+                }).filter(function (item) {
+                    return item.assetPath && item.content;
                 })
                 : [],
             updatedAt: new Date().toISOString()
@@ -1402,7 +2446,7 @@
 
     function exportDraftJson() {
         const payload = {
-            version: 8,
+            version: 9,
             exportedAt: new Date().toISOString(),
             targetPath: state.targetPath,
             markdown: state.markdown,
@@ -1412,6 +2456,8 @@
             linkedPrNumber: String(state.linkedPrNumber || ''),
             myOpenPrs: Array.isArray(state.myOpenPrs) ? state.myOpenPrs : [],
             uploadedImages: Array.isArray(state.uploadedImages) ? state.uploadedImages : [],
+            uploadedCsharpFiles: Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [],
+            metadata: applyMetadataDefaults(state.metadata),
             previewImageNoticeEnabled: !!state.previewImageNoticeEnabled
         };
 
@@ -1428,12 +2474,18 @@
     }
 
     function defaultTemplate() {
+        const m = applyMetadataDefaults(state.metadata);
         return [
             '---',
-            'title: 教程标题',
-            'author: 你的名字',
-            'topic: article-contribution',
-            'description: 一句话说明本文内容',
+            `title: ${m.title || '教程标题'}`,
+            `author: ${m.author || '你的名字'}`,
+            `topic: ${m.topic || 'article-contribution'}`,
+            `description: ${m.description || '一句话说明本文内容'}`,
+            `order: ${m.order || '100'}`,
+            `difficulty: ${m.difficulty || 'beginner'}`,
+            `time: ${m.time || '25分钟'}`,
+            (m.prev_chapter ? `prev_chapter: ${m.prev_chapter}` : '').trim(),
+            (m.next_chapter ? `next_chapter: ${m.next_chapter}` : '').trim(),
             '---',
             '',
             '# 本章目标',
@@ -1451,7 +2503,9 @@
             '',
             '这里写本章总结。',
             ''
-        ].join('\n');
+        ].filter(function (line) {
+            return String(line || '').length > 0;
+        }).join('\n');
     }
 
     function resetAll() {
@@ -1472,8 +2526,12 @@
 
         setTargetPath(state.targetPath, true);
         renderUploadedImages();
+        renderUploadedCsharpFiles();
+        refreshCsharpSymbolOptions();
         updatePrChainSelectOptions();
         updatePreviewImageNoticeToggleUi();
+        renderMetadataFormFromState();
+        renderColorListsFromState();
 
         if (dom.markdown) {
             dom.markdown.value = state.markdown;
@@ -1481,7 +2539,12 @@
                 state.markdown = String(dom.markdown.value || '');
                 updateStats();
                 renderPreview();
+                syncMetadataFromMarkdownEditor(state.markdown);
                 scheduleSave();
+            });
+
+            dom.markdown.addEventListener('keydown', function (event) {
+                handleTabIndent(event);
             });
         }
 
@@ -1549,6 +2612,44 @@
                 } finally {
                     dom.imageUpload.value = '';
                 }
+            });
+        }
+
+        if (dom.csharpUpload) {
+            dom.csharpUpload.addEventListener('change', async function () {
+                try {
+                    await insertCsharpFilesFromUpload(dom.csharpUpload.files);
+                } catch (err) {
+                    setStatus(`插入 C# 文件失败：${err && err.message ? err.message : String(err)}`);
+                } finally {
+                    dom.csharpUpload.value = '';
+                }
+            });
+        }
+
+        if (dom.csharpInsertSymbol) {
+            dom.csharpInsertSymbol.addEventListener('click', function () {
+                if (!dom.csharpSymbolSelect) return;
+                const selected = String(dom.csharpSymbolSelect.value || '').trim();
+                if (!selected) {
+                    setStatus('请先选择一个 C# 符号');
+                    return;
+                }
+
+                const found = state.csharpSymbolEntries.find(function (entry) {
+                    return entry.value === selected;
+                });
+                if (!found) {
+                    setStatus('未找到对应 C# 符号');
+                    return;
+                }
+
+                const selectorPart = found.selectorKind && found.selector
+                    ? `#cs:${found.selectorKind}:${found.selector}`
+                    : '';
+                const snippet = `{{cs:${found.path}${selectorPart}}}\n`;
+                insertBlockSnippet(snippet, found.path);
+                setStatus('已插入 C# 符号引用');
             });
         }
 
@@ -1636,6 +2737,37 @@
             });
         }
 
+        if (dom.importJson) {
+            dom.importJson.addEventListener('click', function () {
+                if (!dom.importFile) {
+                    setStatus('未找到导入控件');
+                    return;
+                }
+                dom.importFile.click();
+            });
+        }
+
+        if (dom.importFile) {
+            dom.importFile.addEventListener('change', async function () {
+                const file = dom.importFile.files && dom.importFile.files[0] ? dom.importFile.files[0] : null;
+                try {
+                    await importDraftJson(file);
+                } catch (err) {
+                    setStatus(`导入草稿失败：${err && err.message ? err.message : String(err)}`);
+                } finally {
+                    dom.importFile.value = '';
+                }
+            });
+        }
+
+        if (dom.formatMarkdown) {
+            dom.formatMarkdown.addEventListener('click', function () {
+                const formatted = formatMarkdownForStudio(state.markdown);
+                updateEditorContent(formatted);
+                setStatus('已完成 Markdown 快速格式化');
+            });
+        }
+
         if (dom.exportJson) {
             dom.exportJson.addEventListener('click', exportDraftJson);
         }
@@ -1652,10 +2784,66 @@
 
                 state.markdown = defaultTemplate();
                 if (dom.markdown) dom.markdown.value = state.markdown;
+                syncMetadataFromMarkdownEditor(state.markdown);
                 updateStats();
                 renderPreview();
                 persistState();
                 setStatus('已插入 Markdown 教程模板');
+            });
+        }
+
+        const metaInputs = [
+            dom.metaTitle,
+            dom.metaAuthor,
+            dom.metaTopic,
+            dom.metaDescription,
+            dom.metaOrder,
+            dom.metaDifficulty,
+            dom.metaTime,
+            dom.metaPrevChapter,
+            dom.metaNextChapter,
+            dom.metaMinC,
+            dom.metaMinT
+        ].filter(Boolean);
+        metaInputs.forEach(function (input) {
+            input.addEventListener('change', function () {
+                updateMetadataFromForm();
+            });
+        });
+
+        if (dom.colorAdd) {
+            dom.colorAdd.addEventListener('click', function () {
+                const key = String(dom.colorName ? dom.colorName.value : '').trim();
+                const value = String(dom.colorValue ? dom.colorValue.value : '').trim();
+                if (!key || !value) {
+                    setStatus('请先填写颜色名称和值');
+                    return;
+                }
+
+                state.metadata.colors = ensureObject(state.metadata.colors);
+                state.metadata.colors[key] = value;
+                if (dom.colorName) dom.colorName.value = '';
+                if (dom.colorValue) dom.colorValue.value = '';
+                renderColorListsFromState();
+                applyMetadataToMarkdownAndRefresh(`已添加颜色：${key}`);
+            });
+        }
+
+        if (dom.colorChangeAdd) {
+            dom.colorChangeAdd.addEventListener('click', function () {
+                const key = String(dom.colorChangeName ? dom.colorChangeName.value : '').trim();
+                const list = parseColorListInput(dom.colorChangeValues ? dom.colorChangeValues.value : '');
+                if (!key || list.length === 0) {
+                    setStatus('请填写颜色动画名称与颜色序列');
+                    return;
+                }
+
+                state.metadata.colorChange = ensureObject(state.metadata.colorChange);
+                state.metadata.colorChange[key] = list;
+                if (dom.colorChangeName) dom.colorChangeName.value = '';
+                if (dom.colorChangeValues) dom.colorChangeValues.value = '';
+                renderColorListsFromState();
+                applyMetadataToMarkdownAndRefresh(`已添加颜色动画：${key}`);
             });
         }
 
@@ -1693,6 +2881,14 @@
             if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'Enter') {
                 event.preventDefault();
                 setFullscreenMode(!state.isFullscreen, false);
+                return;
+            }
+
+            if ((event.ctrlKey || event.metaKey) && event.shiftKey && (event.key === 'F' || event.key === 'f')) {
+                event.preventDefault();
+                const formatted = formatMarkdownForStudio(state.markdown);
+                updateEditorContent(formatted);
+                setStatus('已完成 Markdown 快速格式化');
             }
         });
 

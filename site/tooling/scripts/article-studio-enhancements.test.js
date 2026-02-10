@@ -35,6 +35,21 @@ test('article studio html includes image upload controls', () => {
     assert.match(html, /插入图片/);
 });
 
+test('article studio html includes metadata and csharp controls', () => {
+    const html = read('site/pages/article-studio.html');
+
+    assert.match(html, /id="studio-import"/);
+    assert.match(html, /id="studio-format-markdown"/);
+    assert.match(html, /id="studio-meta-difficulty"/);
+    assert.match(html, /id="studio-meta-time"/);
+    assert.match(html, /id="studio-meta-prev-chapter"/);
+    assert.match(html, /id="studio-meta-next-chapter"/);
+    assert.match(html, /id="studio-color-add"/);
+    assert.match(html, /id="studio-csharp-upload"/);
+    assert.match(html, /id="studio-csharp-list"/);
+    assert.match(html, /id="studio-csharp-symbol-select"/);
+});
+
 test('article studio html includes pr chain controls', () => {
     const html = read('site/pages/article-studio.html');
 
@@ -51,6 +66,27 @@ test('article studio js supports image upload and linked pr submit', () => {
     assert.match(js, /existingPrNumber/);
     assert.match(js, /my-open-prs/);
     assert.match(js, /article-studio-preview-image-mapped/);
+});
+
+test('article studio js supports draft import, editor formatting and tab indent', () => {
+    const js = read('site/assets/js/article-studio.js');
+
+    assert.match(js, /function\s+importDraftJson\s*\(/);
+    assert.match(js, /function\s+formatMarkdownForStudio\s*\(/);
+    assert.match(js, /event\.key\s*===\s*'Tab'/);
+    assert.match(js, /event\.shiftKey/);
+    assert.match(js, /studio-format-markdown/);
+});
+
+test('article studio js performs worker preflight checks before submit and csharp upload', () => {
+    const js = read('site/assets/js/article-studio.js');
+
+    assert.match(js, /\/api\/preflight-check/);
+    assert.match(js, /function\s+runPreflightCheck\s*\(/);
+    assert.match(js, /await\s+runPreflightCheck\(/);
+    assert.match(js, /preflightPending/);
+    assert.match(js, /uploadedCsharpFiles/);
+    assert.match(js, /studio-csharp-upload/);
 });
 
 test('oauth pr worker supports listing my open prs and appending commits', () => {
