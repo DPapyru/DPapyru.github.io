@@ -1058,6 +1058,7 @@
     const DEFAULT_SIMPLE_PASS = [
         '// tModLoader 风格像素着色器示例',
         '// 支持 mainImage(...) 与 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
+        '// UV 约定: 左上(0,0), 右下(1,1)',
         '// 可用纹理: iChannel0-3（也兼容 uImage0-3）',
         '',
         'float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
@@ -2688,7 +2689,7 @@
         function updateMouseFromEvent(e) {
             const rect = canvas.getBoundingClientRect();
             const x = clamp((e.clientX - rect.left) * (canvas.width / rect.width), 0, canvas.width);
-            const y = clamp((rect.bottom - e.clientY) * (canvas.height / rect.height), 0, canvas.height);
+            const y = clamp((e.clientY - rect.top) * (canvas.height / rect.height), 0, canvas.height);
             runtime.mouse.x = x;
             runtime.mouse.y = y;
         }

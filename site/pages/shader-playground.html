@@ -595,7 +595,8 @@ sampler2D iChannel0..3;
 sampler2D uImage0..3;   // 自动映射到 iChannel0..3</code></pre>
 
             <h4>2.1 坐标建议</h4>
-            <pre><code>// 屏幕坐标 -> 0~1
+            <pre><code>// UV 约定: 左上(0,0), 右下(1,1)
+// 屏幕坐标 -> 0~1
 float2 uv = fragCoord / iResolution.xy;
 
 // 中心化坐标 -> -1~1
@@ -642,13 +643,16 @@ mul, clip, atan2, mad, rcp, log10</code></pre>
             <h4>5. 最小示例到可用示例</h4>
             <pre><code>// Step 1: 最小可运行
 float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0 {
-    return float4(texCoord, 0.0, 1.0);
+    // UV 约定: 左上(0,0), 右下(1,1)
+    float2 uv = texCoord;
+    return float4(uv, 0.0, 1.0);
 }
 
 // Step 2: 增加时间动画
 float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0 {
-    float wave = 0.5 + 0.5 * sin(iTime + texCoord.x * 8.0);
-    return float4(texCoord.x, texCoord.y, wave, 1.0);
+    float2 uv = texCoord;
+    float wave = 0.5 + 0.5 * sin(iTime + uv.x * 8.0);
+    return float4(uv.x, uv.y, wave, 1.0);
 }</code></pre>
 
             <h4>6. 迁移到 tModLoader 的建议步骤</h4>

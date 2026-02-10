@@ -221,12 +221,12 @@
         transformed = replaceWord(transformed, 'mad', 'fma');
         transformed = replaceWord(transformed, 'fmod', 'mod');
 
-        transformed = transformed.replace(/\btex2D\s*\(\s*([^,]+)\s*,\s*([^\)]+)\)/g, 'texture($1, $2)');
-        transformed = transformed.replace(/\btex2Dproj\s*\(\s*([^,]+)\s*,\s*([^\)]+)\)/g, 'textureProj($1, $2)');
-        transformed = transformed.replace(/\btex2Dlod\s*\(\s*([^,]+)\s*,\s*float4\s*\(\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,\)]+)\s*,\s*([^\)]+)\s*\)\s*\)/g, 'textureLod($1, vec2($2, $3), $5)');
-        transformed = transformed.replace(/\btex2Dlod\s*\(\s*([^,]+)\s*,\s*([^\)]+)\)/g, 'textureLod($1, ($2).xy, ($2).w)');
-        transformed = transformed.replace(/\btex2Dbias\s*\(\s*([^,]+)\s*,\s*([^\)]+)\)/g, 'texture($1, ($2).xy)');
-        transformed = transformed.replace(/\btex2Dgrad\s*\(\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^\)]+)\)/g, 'textureGrad($1, $2, $3, $4)');
+        transformed = transformed.replace(/\btex2D\s*\(\s*([^,]+)\s*,\s*([^\)]+)\)/g, 'texture($1, __shaderpgFlipUv($2))');
+        transformed = transformed.replace(/\btex2Dproj\s*\(\s*([^,]+)\s*,\s*([^\)]+)\)/g, 'textureProj($1, __shaderpgFlipProj($2))');
+        transformed = transformed.replace(/\btex2Dlod\s*\(\s*([^,]+)\s*,\s*float4\s*\(\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,\)]+)\s*,\s*([^\)]+)\s*\)\s*\)/g, 'textureLod($1, __shaderpgFlipUv(vec2($2, $3)), $5)');
+        transformed = transformed.replace(/\btex2Dlod\s*\(\s*([^,]+)\s*,\s*([^\)]+)\)/g, 'textureLod($1, __shaderpgFlipUv(($2).xy), ($2).w)');
+        transformed = transformed.replace(/\btex2Dbias\s*\(\s*([^,]+)\s*,\s*([^\)]+)\)/g, 'texture($1, __shaderpgFlipUv(($2).xy))');
+        transformed = transformed.replace(/\btex2Dgrad\s*\(\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^,]+)\s*,\s*([^\)]+)\)/g, 'textureGrad($1, __shaderpgFlipUv($2), __shaderpgFlipUvGrad($3), __shaderpgFlipUvGrad($4))');
         transformed = transformed.replace(/\bmul\s*\(\s*([^,]+)\s*,\s*([^\)]+)\)/g, '($1 * $2)');
         transformed = transformed.replace(/\bclip\s*\(\s*([^\)]+)\s*\)\s*;/g, 'if (($1) < 0.0) discard;');
         transformed = transformed.replace(/\brcp\s*\(\s*([^()]+)\s*\)/g, '(1.0 / ($1))');
@@ -283,6 +283,10 @@
             'vec2 saturate(vec2 x) { return clamp(x, vec2(0.0), vec2(1.0)); }',
             'vec3 saturate(vec3 x) { return clamp(x, vec3(0.0), vec3(1.0)); }',
             'vec4 saturate(vec4 x) { return clamp(x, vec4(0.0), vec4(1.0)); }',
+            'vec2 __shaderpgFlipUv(vec2 uv) { return vec2(uv.x, 1.0 - uv.y); }',
+            'vec2 __shaderpgFlipUvGrad(vec2 gradUv) { return vec2(gradUv.x, -gradUv.y); }',
+            'vec3 __shaderpgFlipProj(vec3 uvw) { return vec3(uvw.x, uvw.z - uvw.y, uvw.z); }',
+            'vec4 __shaderpgFlipProj(vec4 uvzw) { return vec4(uvzw.x, uvzw.w - uvzw.y, uvzw.z, uvzw.w); }',
             ''
         ].join('\n');
 
@@ -304,8 +308,8 @@
 
         const glue = [
             'void main() {',
-            '    vec2 uv = vUv;',
-            '    vec2 fragCoord = vUv * iResolution.xy;',
+            '    vec2 uv = vec2(vUv.x, 1.0 - vUv.y);',
+            '    vec2 fragCoord = uv * iResolution.xy;',
             '    vec4 vertexColor = vec4(1.0);'
         ];
 
