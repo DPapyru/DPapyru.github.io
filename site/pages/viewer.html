@@ -786,7 +786,7 @@
 	        }
 
 	        function notifyStudioPreviewImageMapped(assetPath) {
-	            if (!STUDIO_PREVIEW_MODE || !STUDIO_EMBED_MODE) return;
+	            if (!STUDIO_PREVIEW_MODE) return;
 	
 	            const normalized = normalizeStudioPreviewPath(assetPath || '');
 	            if (!normalized) return;
@@ -929,6 +929,12 @@
 	            STUDIO_PREVIEW_RELOAD_TIMER = window.setTimeout(function () {
 	                STUDIO_PREVIEW_RELOAD_TIMER = 0;
 	                try {
+	                    const currentPath = normalizeStudioPreviewPath(CURRENT_DOC_PATH || '');
+	                    if (currentPath && currentPath === targetPath && typeof rerenderCurrentDocPreserveScroll === 'function') {
+	                        rerenderCurrentDocPreserveScroll();
+	                        return;
+	                    }
+
 	                    loadMarkdownDirectly(targetPath);
 	                } catch (err) {
 	                    console.warn('studio preview reload failed:', err);

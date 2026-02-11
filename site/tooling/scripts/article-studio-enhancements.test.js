@@ -128,6 +128,24 @@ test('article studio js supports unified mixed asset upload', () => {
     assert.match(js, /insertAssetsFromUpload\(dom\.assetUpload\.files\)/);
 });
 
+test('article studio preview url defaults to full viewer page', () => {
+    const js = read('site/assets/js/article-studio.js');
+    const fn = getFunctionBody(js, 'buildViewerPreviewUrl');
+
+    assert.ok(fn, 'buildViewerPreviewUrl should exist');
+    assert.match(fn, /studio_preview=1/);
+    assert.doesNotMatch(fn, /studio_embed=1/);
+});
+
+test('article studio markdown editor paste handler only intercepts pasted images', () => {
+    const js = read('site/assets/js/article-studio.js');
+
+    assert.match(js, /dom\.markdown\.addEventListener\('paste'/);
+    assert.match(js, /event\.clipboardData/);
+    assert.match(js, /preventDefault\(/);
+    assert.match(js, /insertImagesFromFiles\(/);
+});
+
 test('viewer studio preview bridge supports uploaded csharp files', () => {
     const viewer = read('site/pages/viewer.html');
     const readFn = getFunctionBody(viewer, 'readStudioPreviewPayloadFromStorage');
@@ -138,6 +156,23 @@ test('viewer studio preview bridge supports uploaded csharp files', () => {
     assert.match(readFn, /uploadedCsharpFiles/);
     assert.match(bridgeFn, /payload\.uploadedCsharpFiles/);
     assert.match(bridgeFn, /text\/x-csharp/);
+});
+
+test('viewer studio preview image notice can post from full-page iframe mode', () => {
+    const viewer = read('site/pages/viewer.html');
+    const fn = getFunctionBody(viewer, 'notifyStudioPreviewImageMapped');
+
+    assert.ok(fn, 'notifyStudioPreviewImageMapped should exist');
+    assert.match(fn, /window\.parent\s*&&\s*window\.parent\s*!==\s*window/);
+    assert.doesNotMatch(fn, /STUDIO_EMBED_MODE/);
+});
+
+test('viewer studio preview reload keeps scroll for same target path updates', () => {
+    const viewer = read('site/pages/viewer.html');
+    const fn = getFunctionBody(viewer, 'scheduleStudioPreviewReload');
+
+    assert.ok(fn, 'scheduleStudioPreviewReload should exist');
+    assert.match(fn, /rerenderCurrentDocPreserveScroll\(/);
 });
 
 test('viewer csharp selector parser supports unicode identifiers for chinese paths and namespaces', () => {
