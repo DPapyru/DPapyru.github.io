@@ -2178,7 +2178,28 @@
 
     function buildViewerPreviewUrl(path) {
         const target = ensureMarkdownPath(path || state.targetPath);
-        return `/site/pages/viewer.html?studio_preview=1&studio_embed=1&file=${encodeURIComponent(target)}`;
+        return `/site/pages/viewer.html?studio_preview=1&file=${encodeURIComponent(target)}`;
+    }
+    function collectPastedImageFiles(clipboardData) {
+        if (!clipboardData) return [];
+
+        const files = [];
+        const items = Array.from(clipboardData.items || []);
+        items.forEach(function (item) {
+            if (!item || item.kind !== 'file') return;
+            if (!String(item.type || '').startsWith('image/')) return;
+            const file = item.getAsFile();
+            if (!file) return;
+            files.push(file);
+        });
+
+        if (files.length > 0) {
+            return files;
+        }
+
+        return Array.from(clipboardData.files || []).filter(function (file) {
+            return file && String(file.type || '').startsWith('image/');
+        });
     }
 
     function buildViewerPreviewPayload() {
@@ -2604,6 +2625,20 @@
 
             dom.markdown.addEventListener('keydown', function (event) {
                 handleTabIndent(event);
+            });
+
+            dom.markdown.addEventListener('paste', async function (event) {
+                const clipboardData = event && event.clipboardData ? event.clipboardData : null;
+                const imageFiles = collectPastedImageFiles(clipboardData);
+                if (imageFiles.length === 0) return;
+
+                event.preventDefault();
+
+                try {
+                    await insertImagesFromFiles(imageFiles);
+                } catch (err) {
+                    setStatus(`粘贴图片失败：${err && err.message ? err.message : String(err)}`);
+                }
             });
         }
 
