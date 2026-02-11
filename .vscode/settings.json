@@ -23,5 +23,6 @@
   },
   "yaml.validate": true,
   "yaml.completion": true,
-  "yaml.hover": true
+  "yaml.hover": true,
+  "chatgpt.openOnStartup": true
 }
