@@ -105,3 +105,4 @@ site/content/*.pp.csproj
 .sisyphus
 site/content/anims/bin/
 site/content/anims/obj/
+.codex/config.toml
