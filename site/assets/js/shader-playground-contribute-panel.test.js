@@ -21,3 +21,20 @@ test('shader playground contribute button no longer navigates away', () => {
     assert.doesNotMatch(text, /window\.location\.href\s*=\s*'shader-contribute\.html'/);
     assert.match(text, /shaderpg-contribute-panel/);
 });
+
+test('shader playground help drawer updates aria-hidden on open/close', () => {
+    const file = path.resolve('site/assets/js/shader-playground.js');
+    const text = fs.readFileSync(file, 'utf8');
+
+    assert.match(text, /function openHelpDrawer\(\)\s*\{[\s\S]*helpDrawer\.setAttribute\('aria-hidden',\s*'false'\)/);
+    assert.match(text, /function closeHelpDrawer\(\)\s*\{[\s\S]*helpDrawer\.setAttribute\('aria-hidden',\s*'true'\)/);
+});
+
+test('shader playground compile status reports failure when compile errors exist', () => {
+    const file = path.resolve('site/assets/js/shader-playground.js');
+    const text = fs.readFileSync(file, 'utf8');
+
+    assert.match(text, /function compileAll\(reason\)\s*\{[\s\S]*let hasCompileError = false;/);
+    assert.match(text, /if \(!res\.ok\) \{[\s\S]*hasCompileError = true;/);
+    assert.match(text, /setStatus\(\(hasCompileError\s*\?\s*'编译失败'/);
+});

@@ -27,6 +27,28 @@ test('buildFragmentSource rewrites tex2D sampling to top-left uv', () => {
 
     const result = buildFragmentSource('', source);
     assert.equal(result.ok, true);
-    assert.match(result.source, /texture\(iChannel0, __shaderpgFlipUv\(texCoord\)\)/);
+    assert.match(result.source, /texture\(iChannel0, _shaderpgFlipUv\(texCoord\)\)/);
     assert.match(result.source, /fragColor = MainPS\(uv\);/);
+});
+
+test('buildFragmentSource avoids reserved double-underscore helper names', () => {
+    const source = [
+        'float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
+        '{',
+        '    float4 c0 = tex2D(iChannel0, texCoord);',
+        '    float4 c1 = tex2Dgrad(iChannel1, texCoord, float2(1.0, 0.0), float2(0.0, 1.0));',
+        '    return c0 * 0.5 + c1 * 0.5;',
+        '}'
+    ].join('\n');
+
+    const result = buildFragmentSource('', source);
+    assert.equal(result.ok, true);
+
+    assert.doesNotMatch(result.source, /__shaderpgFlipUv/);
+    assert.doesNotMatch(result.source, /__shaderpgFlipUvGrad/);
+    assert.doesNotMatch(result.source, /__shaderpgFlipProj/);
+
+    assert.match(result.source, /_shaderpgFlipUv\(/);
+    assert.match(result.source, /_shaderpgFlipUvGrad\(/);
+    assert.match(result.source, /_shaderpgFlipProj\(/);
 });

@@ -1941,6 +1941,7 @@
 
         function compileAll(reason) {
             setError('');
+            let hasCompileError = false;
             const passIndexMap = new Map();
             state.passes.forEach((p, idx) => {
                 passIndexMap.set(String(p.id), idx);
@@ -1951,6 +1952,7 @@
                 const res = compilePass(runtime, state.common, pass);
                 if (!res.ok) {
                     setError('[' + pass.name + ']\n' + res.error);
+                    hasCompileError = true;
                     continue;
                 }
                 // Replace old program
@@ -1962,7 +1964,7 @@
             }
 
             const ms = Math.max(0, Math.round(nowMs() - compileStart));
-            setStatus('Compiled in ' + ms + ' ms' + (reason ? ' (' + reason + ')' : ''));
+            setStatus((hasCompileError ? '编译失败' : ('Compiled in ' + ms + ' ms')) + (reason ? ' (' + reason + ')' : ''));
             updateTabErrorBadges();
         }
 
@@ -2655,13 +2657,19 @@
 
         // 教程大窗口
         function openHelpDrawer() {
-            if (helpDrawer) helpDrawer.classList.add('open');
+            if (helpDrawer) {
+                helpDrawer.classList.add('open');
+                helpDrawer.setAttribute('aria-hidden', 'false');
+            }
             if (drawerOverlay) drawerOverlay.classList.add('show');
             document.body.style.overflow = 'hidden';
         }
 
         function closeHelpDrawer() {
-            if (helpDrawer) helpDrawer.classList.remove('open');
+            if (helpDrawer) {
+                helpDrawer.classList.remove('open');
+                helpDrawer.setAttribute('aria-hidden', 'true');
+            }
             if (drawerOverlay) drawerOverlay.classList.remove('show');
             document.body.style.overflow = '';
         }
