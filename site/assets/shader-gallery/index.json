@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-02-08T10:32:34.537Z",
-  "total": 1,
+  "generated_at": "2026-02-11T09:36:24.544Z",
+  "total": 2,
   "items": [
     {
       "slug": "noise-vignette",
@@ -29,6 +29,47 @@
             "channels": [
               {
                 "kind": "none"
+              },
+              {
+                "kind": "none"
+              },
+              {
+                "kind": "none"
+              },
+              {
+                "kind": "none"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "slug": "pass-1",
+      "title": "Pass 1",
+      "author": "你的名字",
+      "description": "由 Shader Playground 草稿生成，请补充详细说明。",
+      "tags": [
+        "playground"
+      ],
+      "updated_at": "2026-02-09",
+      "cover": "/site/content/shader-gallery/pass-1/cover.webp",
+      "source": {
+        "entry": "/site/content/shader-gallery/pass-1/entry.json",
+        "shader": "/site/content/shader-gallery/pass-1/shader.json"
+      },
+      "payload": {
+        "common": "// 公共函数区（所有 Pass 自动注入）\n// 这里适合写通用函数、常量、噪声工具等。\n\nfloat Hash21(float2 p)\n{\n    p = frac(p * float2(123.34, 456.21));\n    p += dot(p, p + 45.32);\n    return frac(p.x * p.y);\n}\n",
+        "passes": [
+          {
+            "name": "Pass 1",
+            "type": "image",
+            "scale": 1,
+            "code": "// tModLoader 风格像素着色器示例\n// 支持 mainImage(...) 与 MainPS(float2 texCoord : TEXCOORD0) : COLOR0\n// 可用纹理: iChannel0-3（也兼容 uImage0-3）\n\nfloat4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0\n{\n    float2 uv = texCoord;\n    float2 p = uv * 3.0 - 2.;\n    float vignette = saturate(1.0 - dot(p, p) * 0.45);\n    float wave = 0.5 + 0.5 * sin(iTime + uv.x * 6.0);\n    float3 col = float3(uv.x, uv.y, wave) * vignette * tex2D(uImage0,uv).rgb;\n    return float4(col, 1.0);\n}\n",
+            "channels": [
+              {
+                "kind": "builtin",
+                "id": "builtin:checker"
               },
               {
                 "kind": "none"
