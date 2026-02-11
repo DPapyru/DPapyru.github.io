@@ -5,6 +5,30 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
+function getWritableTmpRoot() {
+    const candidates = [
+        process.env.TEST_TMPDIR,
+        '/tmp',
+        os.tmpdir()
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+        try {
+            fs.mkdirSync(candidate, { recursive: true });
+            fs.accessSync(candidate, fs.constants.W_OK);
+            return candidate;
+        } catch (_) {
+            continue;
+        }
+    }
+
+    throw new Error('No writable temp directory available');
+}
+
+function makeTempDir(prefix) {
+    return fs.mkdtempSync(path.join(getWritableTmpRoot(), prefix));
+}
+
 function runNode(args, options = {}) {
     const result = childProcess.spawnSync(process.execPath, args, {
         encoding: 'utf8',
@@ -26,7 +50,7 @@ test('check-content: --help exits 0', () => {
 });
 
 test('check-content: rejects prev_chapter: null', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
+    const tmp = makeTempDir('content-check-');
     const root = path.join(tmp, 'content');
     fs.mkdirSync(root, { recursive: true });
 
@@ -47,7 +71,7 @@ test('check-content: rejects prev_chapter: null', () => {
 });
 
 test('check-content: ignores routing_manual metadata field', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
+    const tmp = makeTempDir('content-check-');
     const root = path.join(tmp, 'content');
     fs.mkdirSync(root, { recursive: true });
 
@@ -70,7 +94,7 @@ test('check-content: ignores routing_manual metadata field', () => {
 });
 
 test('check-content: still passes when markdown contains routing assertions text', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
+    const tmp = makeTempDir('content-check-');
     const root = path.join(tmp, 'content');
     fs.mkdirSync(root, { recursive: true });
 
@@ -98,7 +122,7 @@ test('check-content: still passes when markdown contains routing assertions text
 });
 
 test('check-content: ignores route files even if invalid', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
+    const tmp = makeTempDir('content-check-');
     const root = path.join(tmp, 'content');
     const routesRoot = path.join(tmp, 'routes');
     fs.mkdirSync(root, { recursive: true });
@@ -141,7 +165,7 @@ test('check-content: ignores route files even if invalid', () => {
 });
 
 test('check-content: still passes with standalone markdown checks', () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-check-'));
+    const tmp = makeTempDir('content-check-');
     const root = path.join(tmp, 'content');
     const routesRoot = path.join(tmp, 'routes');
     fs.mkdirSync(root, { recursive: true });
@@ -182,5 +206,43 @@ test('check-content: still passes with standalone markdown checks', () => {
 
     assert.equal(res.status, 0, res.stderr || res.stdout);
     assert.match(res.stdout + res.stderr, /OK/i);
+});
+
+test('check-content: rejects markdown file without front matter', () => {
+    const tmp = makeTempDir('content-check-');
+    const root = path.join(tmp, 'content');
+    fs.mkdirSync(root, { recursive: true });
+
+    fs.writeFileSync(path.join(root, 'no-fm.md'), [
+        '# No Front Matter',
+        '',
+        'body'
+    ].join('\n'), 'utf8');
+
+    const script = path.resolve(__dirname, 'check-content.js');
+    const res = runNode([script, '--root', root]);
+
+    assert.equal(res.status, 1, res.stderr || res.stdout);
+    assert.match(res.stdout + res.stderr, /缺少\s*YAML\s*front\s*matter/i);
+});
+
+test('check-content: rejects front matter without title', () => {
+    const tmp = makeTempDir('content-check-');
+    const root = path.join(tmp, 'content');
+    fs.mkdirSync(root, { recursive: true });
+
+    fs.writeFileSync(path.join(root, 'no-title.md'), [
+        '---',
+        'author: someone',
+        '---',
+        '',
+        'body'
+    ].join('\n'), 'utf8');
+
+    const script = path.resolve(__dirname, 'check-content.js');
+    const res = runNode([script, '--root', root]);
+
+    assert.equal(res.status, 1, res.stderr || res.stdout);
+    assert.match(res.stdout + res.stderr, /缺少\s*title/i);
 });
 

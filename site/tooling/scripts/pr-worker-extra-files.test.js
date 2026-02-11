@@ -36,7 +36,7 @@ test('oauth worker restricts extraFiles path and count', () => {
     const file = path.resolve('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
     const text = fs.readFileSync(file, 'utf8');
 
-    assert.match(text, /site\/content\/routes\/\*\.route\.json/);
+    assert.doesNotMatch(text, /site\/content\/routes\/\*\.route\.json/);
     assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
     assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
     assert.match(text, /site\/content\/\*\*\/code\/\*\.cs/);
@@ -58,7 +58,7 @@ test('shared-key worker supports shader gallery extra files', () => {
     const file = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
     const text = fs.readFileSync(file, 'utf8');
 
-    assert.match(text, /site\/content\/routes\/\*\.route\.json/);
+    assert.doesNotMatch(text, /site\/content\/routes\/\*\.route\.json/);
     assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
     assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
     assert.match(text, /site\/content\/\*\*\/code\/\*\.cs/);

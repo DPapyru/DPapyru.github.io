@@ -13,8 +13,8 @@
 
 ## 从哪里开始
 
-- 新人建议先看：`site/content/Modder入门/DPapyru-给新人的前言.md`
-- 接着按顺序学：`site/content/Modder入门/DPapyru-提问的艺术.md` → `site/content/Modder入门/DPapyru-快速开始构建Mod.md`
+- 新人建议先看：`site/content/Modder入门/制作第一把武器.md`
+- 接着按顺序学：`site/content/方向性指导/DPapyru-如何提问.md` → `site/content/方向性指导/DPapyru-如何用好AI.md`
 - 风凌的系列：`site/content/风凌的模组制作大观/前言.md`
 - 螺线翻译的 tML 教程：`site/content/螺线翻译tml教程/`
 
@@ -54,7 +54,7 @@
 ## 贡献文章（简版）
 
 - 放到 `site/content/` 下面，并带 YAML Front Matter（至少要有 `title`）
-- 命名建议：优先沿用当前分类目录的习惯；常见是 `site/content/<分类>/作者-标题.md`（如 `site/content/Modder入门/DPapyru-提问的艺术.md`），系列内容可以像现有目录那样继续分子目录/用 `0-`、`1-` 这类前缀。文件名尽量别用空格和特殊符号，作者名用英文/ASCII 会更省心。
+- 命名建议：优先沿用当前分类目录的习惯；常见是 `site/content/<分类>/作者-标题.md`（如 `site/content/方向性指导/DPapyru-如何提问.md`），系列内容可以像现有目录那样继续分子目录/用 `0-`、`1-` 这类前缀。文件名尽量别用空格和特殊符号，作者名用英文/ASCII 会更省心。
 - 图片建议放 `site/assets/imgs/`，并用相对路径引用
 - 文章尽量自己写；AI 可以用来查资料/润色，但别整篇直接生成
 

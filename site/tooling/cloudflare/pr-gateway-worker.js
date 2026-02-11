@@ -234,12 +234,11 @@ function sanitizeExtraFilePath(input) {
   if (!p) throw new Error("extra file path 为空");
   if (p.includes("..")) throw new Error("extra file path 非法");
 
-  const isRouteFile = /^site\/content\/routes\/.+\.route\.json$/i.test(p);
   const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(p);
   const isArticleImageFile = /^site\/content\/.+\/imgs\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(p);
   const isArticleCsharpFile = /^site\/content\/.+\/code\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(p);
-  if (!isRouteFile && !isShaderGalleryFile && !isArticleImageFile && !isArticleCsharpFile) {
-    throw new Error("extra file 只允许 site/content/routes/*.route.json、site/content/shader-gallery/<slug>/(entry|shader).json、site/content/**/imgs/*.{png,jpg,jpeg,gif,webp,svg,bmp,avif} 或 site/content/**/code/*.cs");
+  if (!isShaderGalleryFile && !isArticleImageFile && !isArticleCsharpFile) {
+    throw new Error("extra file 只允许 site/content/shader-gallery/<slug>/(entry|shader).json、site/content/**/imgs/*.{png,jpg,jpeg,gif,webp,svg,bmp,avif} 或 site/content/**/code/*.cs");
   }
 
   return p;

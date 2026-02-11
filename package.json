@@ -7,7 +7,6 @@
     "generate-structure": "node site/tooling/generate-structure.js",
     "generate-search": "node site/tooling/generate-search.js",
     "generate-shader-gallery": "node site/tooling/scripts/generate-shader-gallery.js",
-    "generate-routes": "node site/tooling/scripts/compile-routes.js",
     "generate-index": "npm run generate-structure && npm run generate-search && npm run generate-shader-gallery",
     "gallery:normalize": "node site/tooling/scripts/gallery-normalize.js",
     "gallery:check": "node site/tooling/scripts/gallery-check.js",

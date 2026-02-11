@@ -47,6 +47,21 @@ function hasExplicitNullKey(frontMatterText, key) {
     return re.test(String(frontMatterText || ''));
 }
 
+function getFrontMatterScalar(frontMatterText, key) {
+    const re = new RegExp(`^\\s*${key}\\s*:\\s*(.*)$`, 'im');
+    const m = String(frontMatterText || '').match(re);
+    if (!m) return '';
+    return String(m[1] || '').trim();
+}
+
+function isMissingScalar(value) {
+    const v = String(value || '').trim();
+    if (!v) return true;
+    if (v === "''" || v === '""') return true;
+    if (/^null$/i.test(v)) return true;
+    return false;
+}
+
 
 
 
@@ -55,6 +70,8 @@ function printHelp() {
         'Usage: node site/tooling/scripts/check-content.js [--root <dir>] [--help]',
         '',
         'Checks:',
+        '- Require YAML front matter',
+        '- Require title in YAML front matter',
         '- Disallow prev_chapter: null / next_chapter: null (use empty value or omit key)',
         '',
         'Exit codes:',
@@ -105,7 +122,14 @@ function main() {
         }
 
         const fm = extractFrontMatter(raw);
-        if (!fm) continue;
+        if (!fm) {
+            errors.push({ filePath, message: '缺少 YAML front matter' });
+            continue;
+        }
+
+        if (isMissingScalar(getFrontMatterScalar(fm, 'title'))) {
+            errors.push({ filePath, message: '缺少 title' });
+        }
 
         if (hasExplicitNullKey(fm, 'prev_chapter')) {
             errors.push({ filePath, message: 'prev_chapter: null' });
