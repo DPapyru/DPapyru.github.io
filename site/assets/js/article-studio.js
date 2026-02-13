@@ -24,6 +24,13 @@
         targetPath: document.getElementById('studio-target-path'),
         filename: document.getElementById('studio-filename'),
         existingSelect: document.getElementById('studio-existing-select'),
+        categorySelect: document.getElementById('studio-category-select'),
+        topicSelect: document.getElementById('studio-topic-select'),
+        fileSelect: document.getElementById('studio-file-select'),
+        pathBreadcrumb: document.getElementById('studio-path-breadcrumb'),
+        directoryParent: document.getElementById('studio-directory-parent'),
+        newDirectoryName: document.getElementById('studio-new-directory-name'),
+        createDirectory: document.getElementById('studio-create-directory'),
         loadExisting: document.getElementById('studio-load-existing'),
         loadPath: document.getElementById('studio-load-path'),
         copyMarkdown: document.getElementById('studio-copy-markdown'),
@@ -147,6 +154,58 @@
             value += '.md';
         }
 
+        return value;
+    }
+
+    function ensureSafeMarkdownPath(input) {
+        const value = ensureMarkdownPath(input);
+        const segments = value.split('/').filter(Boolean);
+
+        if (segments.length === 0) {
+            throw new Error('目标路径不能为空');
+        }
+
+        if (segments.some(function (segment) {
+            return segment === '.' || segment === '..';
+        })) {
+            throw new Error('目标路径不能包含 . 或 ..');
+        }
+
+        if (value.includes('\0')) {
+            throw new Error('目标路径包含非法字符');
+        }
+
+        return value;
+    }
+
+    function ensureSafeDirectoryPath(input) {
+        const normalized = normalizePath(input).replace(/\/+$/g, '');
+        if (!normalized) return '';
+
+        const segments = normalized.split('/').filter(Boolean);
+        if (segments.some(function (segment) {
+            return segment === '.' || segment === '..' || /[\0]/.test(segment);
+        })) {
+            throw new Error('父目录包含非法路径段');
+        }
+
+        return segments.join('/');
+    }
+
+    function ensureSafeDirectoryName(input) {
+        const value = String(input || '').trim();
+        if (!value) {
+            throw new Error('请先填写目录名');
+        }
+        if (value === '.' || value === '..') {
+            throw new Error('目录名不能是 . 或 ..');
+        }
+        if (/[\\/]/.test(value)) {
+            throw new Error('目录名不能包含斜杠，请仅输入单级目录名');
+        }
+        if (/[\0]/.test(value)) {
+            throw new Error('目录名包含非法字符');
+        }
         return value;
     }
 
@@ -841,9 +900,18 @@
             return { ok: false, pending: true, error: error };
         }
 
+        let safeTargetPath = '';
+        try {
+            safeTargetPath = ensureSafeMarkdownPath(state.targetPath);
+        } catch (err) {
+            const error = err && err.message ? err.message : String(err);
+            if (throwOnError) throw new Error(error);
+            return { ok: false, pending: mode === 'soft', error: error };
+        }
+
         const payload = {
             mode: mode,
-            targetPath: ensureMarkdownPath(state.targetPath),
+            targetPath: safeTargetPath,
             markdown: String(state.markdown || ''),
             extraFiles: [
                 ...buildImageExtraFiles(),
@@ -1662,16 +1730,225 @@
             dom.filename.value = filename;
         }
 
+        if (dom.directoryParent && document.activeElement !== dom.directoryParent) {
+            dom.directoryParent.value = getDirectoryFromPath(state.targetPath);
+        }
+
         if (dom.prTitle && !String(dom.prTitle.value || '').trim()) {
             dom.prTitle.placeholder = defaultPrTitle();
         }
+
+        updatePathBreadcrumb(state.targetPath);
+    }
+
+    function findKnownEntryByPath(path) {
+        const normalized = normalizePath(path);
+        if (!normalized) return null;
+        return knownMarkdownEntries.find(function (entry) {
+            return normalizePath(entry && entry.path || '') === normalized;
+        }) || null;
+    }
+
+    function updatePathBreadcrumb(pathValue) {
+        if (!dom.pathBreadcrumb) return;
+
+        const normalized = normalizePath(pathValue || '');
+        if (!normalized) {
+            dom.pathBreadcrumb.textContent = '路径导航：未选择';
+            return;
+        }
+
+        const found = findKnownEntryByPath(normalized);
+        if (found) {
+            dom.pathBreadcrumb.textContent = `路径导航：${found.categoryTitle} > ${found.topicTitle} > ${found.title}`;
+            return;
+        }
+
+        const segments = normalized.split('/').filter(Boolean);
+        if (segments.length <= 1) {
+            dom.pathBreadcrumb.textContent = `路径导航：${normalized}（未收录）`;
+            return;
+        }
+
+        const fileLabel = segments[segments.length - 1];
+        const dirLabel = segments.slice(0, -1).join(' / ');
+        dom.pathBreadcrumb.textContent = `路径导航：${dirLabel} > ${fileLabel}（未收录）`;
+    }
+
+    function setSelectOptions(selectEl, options, defaultLabel) {
+        if (!selectEl) return;
+        selectEl.innerHTML = '';
+
+        const first = document.createElement('option');
+        first.value = '';
+        first.textContent = defaultLabel;
+        selectEl.appendChild(first);
+
+        (options || []).forEach(function (option) {
+            const next = document.createElement('option');
+            next.value = String(option.value || '');
+            next.textContent = String(option.label || option.value || '');
+            selectEl.appendChild(next);
+        });
+    }
+
+    function collectCategoryOptions(entries) {
+        const map = new Map();
+        (entries || []).forEach(function (entry) {
+            if (!entry || !entry.categoryKey) return;
+            if (map.has(entry.categoryKey)) return;
+            map.set(entry.categoryKey, {
+                value: entry.categoryKey,
+                label: entry.categoryTitle || entry.categoryKey
+            });
+        });
+        return Array.from(map.values()).sort(function (a, b) {
+            return String(a.label || '').localeCompare(String(b.label || ''), 'zh-CN');
+        });
+    }
+
+    function collectTopicOptions(entries, categoryKey) {
+        const map = new Map();
+        (entries || []).forEach(function (entry) {
+            if (!entry || !entry.topicKey) return;
+            if (categoryKey && entry.categoryKey !== categoryKey) return;
+            if (map.has(entry.topicKey)) return;
+            map.set(entry.topicKey, {
+                value: entry.topicKey,
+                label: entry.topicTitle || entry.topicKey
+            });
+        });
+        return Array.from(map.values()).sort(function (a, b) {
+            return String(a.label || '').localeCompare(String(b.label || ''), 'zh-CN');
+        });
+    }
+
+    function filterEntriesByHierarchy(categoryKey, topicKey) {
+        return knownMarkdownEntries.filter(function (entry) {
+            if (!entry || !entry.path) return false;
+            if (categoryKey && entry.categoryKey !== categoryKey) return false;
+            if (topicKey && entry.topicKey !== topicKey) return false;
+            return true;
+        });
+    }
+
+    function renderExistingSelectOptions(entries) {
+        if (!dom.existingSelect) return;
+
+        const list = Array.isArray(entries) ? entries : knownMarkdownEntries;
+        dom.existingSelect.innerHTML = '';
+
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = '从站点目录选择文章...';
+        dom.existingSelect.appendChild(defaultOption);
+
+        const grouped = new Map();
+        list.forEach(function (entry) {
+            const key = `${entry.categoryTitle || '未分类'} / ${entry.topicTitle || '未分组'}`;
+            if (!grouped.has(key)) {
+                grouped.set(key, []);
+            }
+            grouped.get(key).push(entry);
+        });
+
+        Array.from(grouped.keys()).sort(function (a, b) {
+            return String(a).localeCompare(String(b), 'zh-CN');
+        }).forEach(function (groupLabel) {
+            const group = document.createElement('optgroup');
+            group.label = groupLabel;
+
+            grouped.get(groupLabel).forEach(function (entry) {
+                const option = document.createElement('option');
+                option.value = entry.path;
+                option.textContent = `${entry.path} · ${entry.title}`;
+                group.appendChild(option);
+            });
+
+            dom.existingSelect.appendChild(group);
+        });
+
+        if (list.some(function (entry) { return entry.path === state.targetPath; })) {
+            dom.existingSelect.value = state.targetPath;
+        }
+    }
+
+    function refreshHierarchySelectors(preferredPath) {
+        const target = normalizePath(preferredPath || '');
+        const targetEntry = target ? findKnownEntryByPath(target) : null;
+
+        let selectedCategory = dom.categorySelect ? String(dom.categorySelect.value || '').trim() : '';
+        if (targetEntry) {
+            selectedCategory = targetEntry.categoryKey;
+        }
+
+        const categoryOptions = collectCategoryOptions(knownMarkdownEntries);
+        if (dom.categorySelect) {
+            setSelectOptions(dom.categorySelect, categoryOptions, '全部分类');
+            if (selectedCategory && categoryOptions.some(function (item) { return item.value === selectedCategory; })) {
+                dom.categorySelect.value = selectedCategory;
+            }
+        }
+
+        let selectedTopic = dom.topicSelect ? String(dom.topicSelect.value || '').trim() : '';
+        if (targetEntry && (!selectedCategory || targetEntry.categoryKey === selectedCategory)) {
+            selectedTopic = targetEntry.topicKey;
+        }
+
+        const topicOptions = collectTopicOptions(knownMarkdownEntries, selectedCategory);
+        if (dom.topicSelect) {
+            setSelectOptions(dom.topicSelect, topicOptions, '全部主题');
+            if (selectedTopic && topicOptions.some(function (item) { return item.value === selectedTopic; })) {
+                dom.topicSelect.value = selectedTopic;
+            } else {
+                selectedTopic = '';
+            }
+        }
+
+        const filteredEntries = filterEntriesByHierarchy(selectedCategory, selectedTopic);
+
+        if (dom.fileSelect) {
+            dom.fileSelect.innerHTML = '';
+            const first = document.createElement('option');
+            first.value = '';
+            first.textContent = '从层级导航选择文章...';
+            dom.fileSelect.appendChild(first);
+
+            filteredEntries.forEach(function (entry) {
+                const option = document.createElement('option');
+                option.value = entry.path;
+                option.textContent = `${entry.title} · ${entry.path}`;
+                dom.fileSelect.appendChild(option);
+            });
+
+            const selectedFilePath = targetEntry
+                ? targetEntry.path
+                : (dom.fileSelect.value || '');
+            if (selectedFilePath && filteredEntries.some(function (entry) { return entry.path === selectedFilePath; })) {
+                dom.fileSelect.value = selectedFilePath;
+            }
+        }
+
+        renderExistingSelectOptions(filteredEntries);
+        updatePathBreadcrumb(state.targetPath);
     }
 
     function setTargetPath(nextPath, silent) {
         const previousPath = state.targetPath;
-        state.targetPath = ensureMarkdownPath(nextPath);
+        let normalizedTargetPath = '';
+        try {
+            normalizedTargetPath = ensureSafeMarkdownPath(nextPath);
+        } catch (err) {
+            updateFileIdentity();
+            if (!silent) {
+                setStatus(`目标路径无效：${err && err.message ? err.message : String(err)}`);
+            }
+            return false;
+        }
+        state.targetPath = normalizedTargetPath;
         updateFileIdentity();
         updateChapterSelectOptions();
+        refreshHierarchySelectors(state.targetPath);
 
         if (previousPath !== state.targetPath) {
             schedulePreviewSync(true);
@@ -1680,6 +1957,8 @@
         if (!silent) {
             setStatus(`目标路径已更新：${state.targetPath}`);
         }
+
+        return true;
     }
 
     function applyFilename() {
@@ -1688,9 +1967,33 @@
         const filename = normalizeFilename(dom.filename.value);
         const directory = getDirectoryFromPath(state.targetPath);
         const nextPath = directory ? `${directory}/${filename}` : filename;
-        setTargetPath(nextPath, true);
+        const changed = setTargetPath(nextPath, true);
+        if (!changed) return;
         scheduleSave();
         setStatus(`文件名已更新：${filename}`);
+    }
+
+    function createDirectoryAndSwitch() {
+        try {
+            const parent = ensureSafeDirectoryPath(dom.directoryParent ? dom.directoryParent.value : getDirectoryFromPath(state.targetPath));
+            const directoryName = ensureSafeDirectoryName(dom.newDirectoryName ? dom.newDirectoryName.value : '');
+            const nextDirectory = parent ? `${parent}/${directoryName}` : directoryName;
+            const filename = normalizeFilename(dom.filename ? dom.filename.value : getFilenameFromPath(state.targetPath));
+            const nextPath = `${nextDirectory}/${filename}`;
+            const changed = setTargetPath(nextPath, true);
+            if (!changed) return;
+
+            if (dom.directoryParent) {
+                dom.directoryParent.value = nextDirectory;
+            }
+            if (dom.newDirectoryName) {
+                dom.newDirectoryName.value = '';
+            }
+            scheduleSave();
+            setStatus(`已创建目录并切换：${nextDirectory}`);
+        } catch (err) {
+            setStatus(`创建目录失败：${err && err.message ? err.message : String(err)}`);
+        }
     }
 
     function encodePathForUrl(path) {
@@ -1715,22 +2018,35 @@
 
         Object.keys(categories).forEach(function (categoryKey) {
             const category = categories[categoryKey] || {};
+            const categoryTitle = String(category.title || categoryKey);
             const topics = category.topics || {};
 
             Object.keys(topics).forEach(function (topicKey) {
                 const topic = topics[topicKey] || {};
+                const topicTitle = String(topic.title || topicKey);
                 const files = Array.isArray(topic.files) ? topic.files : [];
 
                 files.forEach(function (file) {
                     if (!file || typeof file !== 'object') return;
-                    const path = ensureMarkdownPath(file.path || file.filename || '');
+                    let path = '';
+                    try {
+                        path = ensureSafeMarkdownPath(file.path || file.filename || '');
+                    } catch (_) {
+                        return;
+                    }
                     if (!/\.md$/i.test(path)) return;
                     if (seen.has(path)) return;
 
                     seen.add(path);
                     result.push({
                         path: path,
-                        title: String(file.title || file.filename || path)
+                        title: String(file.title || file.filename || path),
+                        filename: getFilenameFromPath(path),
+                        directory: getDirectoryFromPath(path),
+                        categoryKey: String(categoryKey || ''),
+                        categoryTitle: categoryTitle,
+                        topicKey: String(topicKey || ''),
+                        topicTitle: topicTitle
                     });
                 });
             });
@@ -1755,24 +2071,7 @@
             const config = await response.json();
             const entries = flattenConfigEntries(config);
             knownMarkdownEntries = entries;
-
-            dom.existingSelect.innerHTML = '';
-
-            const defaultOption = document.createElement('option');
-            defaultOption.value = '';
-            defaultOption.textContent = '从站点目录选择文章...';
-            dom.existingSelect.appendChild(defaultOption);
-
-            entries.forEach(function (entry) {
-                const option = document.createElement('option');
-                option.value = entry.path;
-                option.textContent = `${entry.path} · ${entry.title}`;
-                dom.existingSelect.appendChild(option);
-            });
-
-            if (entries.some(function (entry) { return entry.path === state.targetPath; })) {
-                dom.existingSelect.value = state.targetPath;
-            }
+            refreshHierarchySelectors(state.targetPath);
 
             updateChapterSelectOptions();
         } catch (err) {
@@ -1781,7 +2080,13 @@
     }
 
     async function loadMarkdownFromPath(path, sourceLabel) {
-        const targetPath = ensureMarkdownPath(path);
+        let targetPath = '';
+        try {
+            targetPath = ensureSafeMarkdownPath(path);
+        } catch (err) {
+            setStatus(`载入失败：${err && err.message ? err.message : String(err)}`);
+            return;
+        }
 
         try {
             setStatus(`正在载入：${targetPath}`);
@@ -1803,7 +2108,10 @@
                 dom.markdown.value = state.markdown;
             }
 
-            setTargetPath(targetPath, true);
+            const changed = setTargetPath(targetPath, true);
+            if (!changed) {
+                throw new Error('目标路径校验失败');
+            }
             renderPreview();
             updateStats();
             syncMetadataFromMarkdownEditor(state.markdown);
@@ -1869,7 +2177,11 @@
             state.uploadedImages = importedImages;
             state.uploadedCsharpFiles = importedCsharp;
             state.metadata = importedMetadata;
-            state.targetPath = ensureMarkdownPath(parsed.targetPath || state.targetPath);
+            try {
+                state.targetPath = ensureSafeMarkdownPath(parsed.targetPath || state.targetPath);
+            } catch (_) {
+                state.targetPath = '怎么贡献/新文章.md';
+            }
             state.workerApiUrl = normalizeWorkerApiUrl(parsed.workerApiUrl || state.workerApiUrl);
             state.prTitle = String(parsed.prTitle || state.prTitle || '');
         }
@@ -2094,7 +2406,11 @@
             if (!parsed || typeof parsed !== 'object') return;
 
             state.markdown = String(parsed.markdown || '');
-            state.targetPath = ensureMarkdownPath(parsed.targetPath || state.targetPath);
+            try {
+                state.targetPath = ensureSafeMarkdownPath(parsed.targetPath || state.targetPath);
+            } catch (_) {
+                state.targetPath = '怎么贡献/新文章.md';
+            }
             state.workerApiUrl = normalizeWorkerApiUrl(parsed.workerApiUrl || state.workerApiUrl);
             state.prTitle = String(parsed.prTitle || '');
             state.lastPrUrl = String(parsed.lastPrUrl || '');
@@ -2176,9 +2492,10 @@
         }, STORAGE_DEBOUNCE_MS);
     }
 
-    function buildViewerPreviewUrl(path) {
-        const target = ensureMarkdownPath(path || state.targetPath);
-        return `/site/pages/viewer.html?studio_preview=1&file=${encodeURIComponent(target)}`;
+    function buildViewerPreviewUrl(path, embedMode) {
+        const target = ensureSafeMarkdownPath(path || state.targetPath);
+        const embedQuery = embedMode ? '&studio_embed=1' : '';
+        return `/site/pages/viewer.html?studio_preview=1${embedQuery}&file=${encodeURIComponent(target)}`;
     }
     function collectPastedImageFiles(clipboardData) {
         if (!clipboardData) return [];
@@ -2203,8 +2520,14 @@
     }
 
     function buildViewerPreviewPayload() {
+        let safeTargetPath = '怎么贡献/新文章.md';
+        try {
+            safeTargetPath = ensureSafeMarkdownPath(state.targetPath);
+        } catch (_) {
+            safeTargetPath = '怎么贡献/新文章.md';
+        }
         return {
-            targetPath: ensureMarkdownPath(state.targetPath),
+            targetPath: safeTargetPath,
             markdown: String(state.markdown || ''),
             metadata: applyMetadataDefaults(state.metadata),
             uploadedImages: Array.isArray(state.uploadedImages)
@@ -2260,7 +2583,7 @@
 
         if (!dom.previewFrame) return;
 
-        const desiredUrl = buildViewerPreviewUrl(payload.targetPath);
+        const desiredUrl = buildViewerPreviewUrl(payload.targetPath, true);
         let shouldReload = !!forceReload;
         const currentSrc = String(dom.previewFrame.getAttribute('src') || '').trim();
 
@@ -2270,7 +2593,10 @@
             try {
                 const currentUrl = new URL(dom.previewFrame.src, window.location.href);
                 const desired = new URL(desiredUrl, window.location.href);
-                if (currentUrl.searchParams.get('file') !== desired.searchParams.get('file')) {
+                if (
+                    currentUrl.searchParams.get('file') !== desired.searchParams.get('file')
+                    || currentUrl.searchParams.get('studio_embed') !== desired.searchParams.get('studio_embed')
+                ) {
                     shouldReload = true;
                 }
             } catch (_) {
@@ -2604,7 +2930,9 @@
         loadAuthSession();
         const consumedOauthHash = consumeOauthResultFromHash();
 
-        setTargetPath(state.targetPath, true);
+        if (!setTargetPath(state.targetPath, true)) {
+            setTargetPath('怎么贡献/新文章.md', true);
+        }
         renderUploadedImages();
         renderUploadedCsharpFiles();
         refreshCsharpSymbolOptions();
@@ -2775,7 +3103,8 @@
 
         if (dom.targetPath) {
             dom.targetPath.addEventListener('change', function () {
-                setTargetPath(dom.targetPath.value, true);
+                const changed = setTargetPath(dom.targetPath.value, true);
+                if (!changed) return;
                 scheduleSave();
                 setStatus('目标路径已更新');
             });
@@ -2801,6 +3130,45 @@
                 if (!dom.existingSelect.value) return;
                 setTargetPath(dom.existingSelect.value, true);
                 setStatus('已选择已有文章路径，可点击“载入文章”读取内容');
+            });
+        }
+
+        if (dom.categorySelect) {
+            dom.categorySelect.addEventListener('change', function () {
+                refreshHierarchySelectors('');
+                setStatus('已切换分类筛选');
+            });
+        }
+
+        if (dom.topicSelect) {
+            dom.topicSelect.addEventListener('change', function () {
+                refreshHierarchySelectors('');
+                setStatus('已切换 Topic 筛选');
+            });
+        }
+
+        if (dom.fileSelect) {
+            dom.fileSelect.addEventListener('change', function () {
+                const value = String(dom.fileSelect.value || '').trim();
+                if (!value) return;
+                const changed = setTargetPath(value, true);
+                if (!changed) return;
+                scheduleSave();
+                setStatus('已通过层级导航选择文章');
+            });
+        }
+
+        if (dom.createDirectory) {
+            dom.createDirectory.addEventListener('click', function () {
+                createDirectoryAndSwitch();
+            });
+        }
+
+        if (dom.newDirectoryName) {
+            dom.newDirectoryName.addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter') return;
+                event.preventDefault();
+                createDirectoryAndSwitch();
             });
         }
 
@@ -2967,7 +3335,7 @@
             dom.openViewerPreview.addEventListener('click', function () {
                 const payload = buildViewerPreviewPayload();
                 persistViewerPreviewPayload(payload);
-                const url = buildViewerPreviewUrl(payload.targetPath);
+                const url = buildViewerPreviewUrl(payload.targetPath, false);
                 window.open(url, '_blank', 'noopener,noreferrer');
             });
         }

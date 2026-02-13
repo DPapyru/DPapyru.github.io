@@ -57,6 +57,18 @@ test('article studio html includes pr chain controls', () => {
     assert.match(html, /id="studio-refresh-my-prs"/);
 });
 
+test('article studio html includes hierarchy navigation and create-directory controls', () => {
+    const html = read('site/pages/article-studio.html');
+
+    assert.match(html, /id="studio-category-select"/);
+    assert.match(html, /id="studio-topic-select"/);
+    assert.match(html, /id="studio-file-select"/);
+    assert.match(html, /id="studio-path-breadcrumb"/);
+    assert.match(html, /id="studio-directory-parent"/);
+    assert.match(html, /id="studio-new-directory-name"/);
+    assert.match(html, /id="studio-create-directory"/);
+});
+
 test('article studio js supports image upload and linked pr submit', () => {
     const js = read('site/assets/js/article-studio.js');
 
@@ -76,6 +88,17 @@ test('article studio js supports draft import, editor formatting and tab indent'
     assert.match(js, /event\.key\s*===\s*'Tab'/);
     assert.match(js, /event\.shiftKey/);
     assert.match(js, /studio-format-markdown/);
+});
+
+test('article studio js wires hierarchy navigation and create-directory actions', () => {
+    const js = read('site/assets/js/article-studio.js');
+
+    assert.match(js, /studio-category-select/);
+    assert.match(js, /studio-topic-select/);
+    assert.match(js, /studio-file-select/);
+    assert.match(js, /studio-create-directory/);
+    assert.match(js, /function\s+refreshHierarchySelectors\s*\(/);
+    assert.match(js, /function\s+createDirectoryAndSwitch\s*\(/);
 });
 
 test('article studio js performs worker preflight checks before submit and csharp upload', () => {
@@ -128,13 +151,14 @@ test('article studio js supports unified mixed asset upload', () => {
     assert.match(js, /insertAssetsFromUpload\(dom\.assetUpload\.files\)/);
 });
 
-test('article studio preview url defaults to full viewer page', () => {
+test('article studio preview url supports embed and full viewer modes', () => {
     const js = read('site/assets/js/article-studio.js');
     const fn = getFunctionBody(js, 'buildViewerPreviewUrl');
 
     assert.ok(fn, 'buildViewerPreviewUrl should exist');
     assert.match(fn, /studio_preview=1/);
-    assert.doesNotMatch(fn, /studio_embed=1/);
+    assert.match(fn, /studio_embed=1/);
+    assert.match(fn, /embedMode/);
 });
 
 test('article studio markdown editor paste handler only intercepts pasted images', () => {
