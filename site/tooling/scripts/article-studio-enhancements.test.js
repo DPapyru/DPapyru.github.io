@@ -50,6 +50,16 @@ test('article studio html includes metadata and csharp controls', () => {
     assert.match(html, /id="studio-csharp-symbol-select"/);
 });
 
+test('article studio html includes csharp modal editor controls', () => {
+    const html = read('site/pages/article-studio.html');
+
+    assert.match(html, /id="studio-csharp-editor-modal"/);
+    assert.match(html, /id="studio-csharp-editor-text"/);
+    assert.match(html, /id="studio-csharp-editor-preview-code"/);
+    assert.match(html, /id="studio-csharp-editor-save"/);
+    assert.match(html, /id="studio-csharp-editor-cancel"/);
+});
+
 test('article studio html includes pr chain controls', () => {
     const html = read('site/pages/article-studio.html');
 
@@ -87,6 +97,15 @@ test('article studio js performs worker preflight checks before submit and cshar
     assert.match(js, /preflightPending/);
     assert.match(js, /uploadedCsharpFiles/);
     assert.match(js, /studio-csharp-upload/);
+});
+
+test('article studio js supports csharp modal editing with highlight preview', () => {
+    const js = read('site/assets/js/article-studio.js');
+
+    assert.match(js, /studio-csharp-editor-modal/);
+    assert.match(js, /edit\.textContent\s*=\s*'编辑'/);
+    assert.match(js, /Prism\.highlightElement\(/);
+    assert.match(js, /studio-csharp-editor-save/);
 });
 
 test('oauth pr worker supports listing my open prs and appending commits', () => {

@@ -343,6 +343,29 @@
         </div>
     </main>
 
+    <div id="studio-csharp-editor-modal" class="modal studio-csharp-editor-modal" aria-hidden="true">
+        <div class="modal-content studio-csharp-editor-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-csharp-editor-title">
+            <div class="modal-header studio-csharp-editor-modal-header">
+                <h3 id="studio-csharp-editor-title" class="modal-title">编辑 C# 文件</h3>
+                <button id="studio-csharp-editor-close" class="modal-close" type="button" aria-label="关闭">×</button>
+            </div>
+            <div class="modal-body studio-csharp-editor-modal-body">
+                <div class="studio-csharp-editor-pane">
+                    <label for="studio-csharp-editor-text">源码（仅点击保存才会生效）</label>
+                    <textarea id="studio-csharp-editor-text" class="studio-editor studio-csharp-editor-text" spellcheck="false" placeholder="// 在这里编辑 C# 代码"></textarea>
+                </div>
+                <div class="studio-csharp-editor-pane">
+                    <label for="studio-csharp-editor-preview-code">语法高亮预览</label>
+                    <pre class="studio-csharp-editor-preview"><code id="studio-csharp-editor-preview-code" class="language-csharp"></code></pre>
+                </div>
+            </div>
+            <div class="modal-footer studio-csharp-editor-modal-footer">
+                <button id="studio-csharp-editor-cancel" class="btn btn-small btn-outline" type="button">取消</button>
+                <button id="studio-csharp-editor-save" class="btn btn-small" type="button">保存</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/shared/assets/js/site-core.js"></script>
     <script src="/site/assets/js/navigation.js"></script>
     <script src="/site/assets/js/marked.min.js"></script>
