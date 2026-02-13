@@ -187,6 +187,17 @@
     padding: 6px 8px;
 }
 
+.studio-path-breadcrumb {
+    border: 1px dashed var(--border-color);
+    border-radius: 6px;
+    padding: 7px 9px;
+    background: var(--bg-color);
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
 .studio-image-list {
     display: grid;
     gap: 6px;

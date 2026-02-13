@@ -89,9 +89,41 @@
                             </div>
 
                             <div class="studio-panel-section">
+                                <label>层级导航</label>
+                                <div class="studio-grid-2">
+                                    <div>
+                                        <label for="studio-category-select">分类</label>
+                                        <select id="studio-category-select" class="studio-select">
+                                            <option value="">全部分类</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="studio-topic-select">Topic</label>
+                                        <select id="studio-topic-select" class="studio-select">
+                                            <option value="">全部主题</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <label for="studio-file-select">文件</label>
+                                <select id="studio-file-select" class="studio-select">
+                                    <option value="">从层级导航选择文章...</option>
+                                </select>
+                                <div id="studio-path-breadcrumb" class="studio-path-breadcrumb" aria-live="polite">路径导航：未选择</div>
+                            </div>
+
+                            <div class="studio-panel-section">
                                 <label for="studio-target-path">目标路径</label>
                                 <input id="studio-target-path" class="studio-input" type="text" value="怎么贡献/新文章.md" placeholder="例如：怎么贡献/新文章.md">
                                 <button id="studio-load-path" class="btn btn-small btn-outline" type="button">按路径载入</button>
+                            </div>
+
+                            <div class="studio-panel-section">
+                                <label>新建目录</label>
+                                <label for="studio-directory-parent">父目录</label>
+                                <input id="studio-directory-parent" class="studio-input" type="text" value="怎么贡献" placeholder="例如：怎么贡献">
+                                <label for="studio-new-directory-name">目录名</label>
+                                <input id="studio-new-directory-name" class="studio-input" type="text" placeholder="例如：进阶篇">
+                                <button id="studio-create-directory" class="btn btn-small btn-outline" type="button">创建目录并切换</button>
                             </div>
 
                             <div class="studio-panel-section">
