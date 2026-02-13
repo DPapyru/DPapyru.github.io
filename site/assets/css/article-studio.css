@@ -504,6 +504,71 @@
     white-space: nowrap;
 }
 
+.article-studio-modal-open {
+    overflow: hidden;
+}
+
+.studio-csharp-editor-modal-content {
+    width: min(1200px, 94vw);
+    max-width: 1200px;
+    max-height: 92vh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.studio-csharp-editor-modal-header {
+    padding: 10px 12px;
+}
+
+.studio-csharp-editor-modal-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    min-height: 0;
+    padding: 12px;
+}
+
+.studio-csharp-editor-pane {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 6px;
+    min-height: 0;
+}
+
+.studio-csharp-editor-pane label {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.studio-csharp-editor-text {
+    min-height: 420px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    resize: none;
+    padding: 10px;
+}
+
+.studio-csharp-editor-preview {
+    margin: 0;
+    min-height: 420px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-color);
+    overflow: auto;
+}
+
+.studio-csharp-editor-preview code {
+    display: block;
+    min-height: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.studio-csharp-editor-modal-footer {
+    padding: 10px 12px;
+}
+
 @media (max-width: 1360px) {
     .studio-lazy-workspace {
         grid-template-columns: minmax(230px, 280px) minmax(0, 1fr) minmax(250px, 310px);
@@ -542,6 +607,20 @@
     .studio-statusbar {
         grid-template-columns: 1fr;
         gap: 4px;
+    }
+
+    .studio-csharp-editor-modal-content {
+        width: min(96vw, 96vw);
+        max-height: 94vh;
+    }
+
+    .studio-csharp-editor-modal-body {
+        grid-template-columns: 1fr;
+    }
+
+    .studio-csharp-editor-text,
+    .studio-csharp-editor-preview {
+        min-height: 260px;
     }
 
 }

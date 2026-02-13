@@ -48,6 +48,13 @@
         csharpList: document.getElementById('studio-csharp-list'),
         csharpSymbolSelect: document.getElementById('studio-csharp-symbol-select'),
         csharpInsertSymbol: document.getElementById('studio-csharp-insert-symbol'),
+        csharpEditorModal: document.getElementById('studio-csharp-editor-modal'),
+        csharpEditorTitle: document.getElementById('studio-csharp-editor-title'),
+        csharpEditorClose: document.getElementById('studio-csharp-editor-close'),
+        csharpEditorText: document.getElementById('studio-csharp-editor-text'),
+        csharpEditorPreviewCode: document.getElementById('studio-csharp-editor-preview-code'),
+        csharpEditorSave: document.getElementById('studio-csharp-editor-save'),
+        csharpEditorCancel: document.getElementById('studio-csharp-editor-cancel'),
         metaTitle: document.getElementById('studio-meta-title'),
         metaAuthor: document.getElementById('studio-meta-author'),
         metaTopic: document.getElementById('studio-meta-topic'),
@@ -94,6 +101,8 @@
         uploadedImages: [],
         uploadedCsharpFiles: [],
         csharpSymbolEntries: [],
+        csharpEditorTargetId: '',
+        csharpEditorDraft: '',
         preflightPending: false,
         previewImageNoticeEnabled: true,
         metadata: {
@@ -1041,6 +1050,129 @@
         });
     }
 
+    function getUploadedCsharpFileById(fileId) {
+        const id = String(fileId || '').trim();
+        if (!id) return null;
+
+        const list = Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [];
+        return list.find(function (item) {
+            return String(item && item.id || '') === id;
+        }) || null;
+    }
+
+    function isCsharpEditorModalOpen() {
+        return !!(dom.csharpEditorModal && dom.csharpEditorModal.classList.contains('active'));
+    }
+
+    function renderCsharpEditorPreviewHighlight() {
+        if (!dom.csharpEditorPreviewCode) return;
+
+        dom.csharpEditorPreviewCode.textContent = String(state.csharpEditorDraft || '');
+        if (window.Prism && typeof window.Prism.highlightElement === 'function') {
+            try {
+                window.Prism.highlightElement(dom.csharpEditorPreviewCode);
+            } catch (_) {
+                // ignore highlight errors to keep editor usable
+            }
+        }
+    }
+
+    function closeCsharpEditorModal(options) {
+        const keepDraft = !!(options && options.keepDraft);
+
+        if (dom.csharpEditorModal) {
+            dom.csharpEditorModal.classList.remove('active');
+            dom.csharpEditorModal.setAttribute('aria-hidden', 'true');
+        }
+        document.body.classList.remove('article-studio-modal-open');
+
+        if (keepDraft) {
+            return;
+        }
+
+        state.csharpEditorTargetId = '';
+        state.csharpEditorDraft = '';
+        if (dom.csharpEditorText) {
+            dom.csharpEditorText.value = '';
+        }
+        if (dom.csharpEditorPreviewCode) {
+            dom.csharpEditorPreviewCode.textContent = '';
+        }
+    }
+
+    function openCsharpEditorModal(fileId) {
+        const item = getUploadedCsharpFileById(fileId);
+        if (!item) {
+            setStatus('未找到要编辑的 C# 文件');
+            return;
+        }
+
+        state.csharpEditorTargetId = item.id;
+        state.csharpEditorDraft = String(item.content || '').replace(/\r\n/g, '\n');
+
+        if (dom.csharpEditorTitle) {
+            dom.csharpEditorTitle.textContent = `编辑 C# 文件 · ${item.name || 'source.cs'}`;
+        }
+        if (dom.csharpEditorText) {
+            dom.csharpEditorText.value = state.csharpEditorDraft;
+        }
+
+        renderCsharpEditorPreviewHighlight();
+
+        if (dom.csharpEditorModal) {
+            dom.csharpEditorModal.classList.add('active');
+            dom.csharpEditorModal.setAttribute('aria-hidden', 'false');
+        }
+        document.body.classList.add('article-studio-modal-open');
+
+        if (dom.csharpEditorText) {
+            dom.csharpEditorText.focus();
+            const length = dom.csharpEditorText.value.length;
+            dom.csharpEditorText.setSelectionRange(length, length);
+        }
+    }
+
+    async function saveCsharpEditorModalChanges() {
+        const item = getUploadedCsharpFileById(state.csharpEditorTargetId);
+        if (!item) {
+            closeCsharpEditorModal();
+            setStatus('当前 C# 文件不存在，已关闭编辑弹窗');
+            return;
+        }
+
+        const nextContent = String(dom.csharpEditorText ? dom.csharpEditorText.value : state.csharpEditorDraft || '').replace(/\r\n/g, '\n');
+        if (String(item.content || '') === nextContent) {
+            closeCsharpEditorModal();
+            setStatus(`未检测到变更：${item.name}`);
+            return;
+        }
+
+        item.content = nextContent;
+        item.size = Number(nextContent.length || 0);
+        item.symbols = extractCSharpSymbols(nextContent);
+        item.checkState = 'ok';
+        item.checkMessage = '已通过检查';
+        item.preflightPending = false;
+
+        const softResult = await runPreflightCheck({ mode: 'soft' });
+        if (!softResult.ok) {
+            if (softResult.pending) {
+                item.checkState = 'warn';
+                item.checkMessage = `待复检：${softResult.error || '检查失败'}`;
+            } else {
+                item.checkState = 'error';
+                item.checkMessage = `冲突检查失败：${softResult.error || '请稍后重试'}`;
+            }
+        }
+
+        refreshCsharpSymbolOptions();
+        renderUploadedCsharpFiles();
+        renderPreview();
+        scheduleSave();
+        closeCsharpEditorModal();
+        setStatus(`已保存 C# 编辑：${item.name}`);
+    }
+
     function renderUploadedCsharpFiles() {
         if (!dom.csharpList) return;
 
@@ -1071,6 +1203,9 @@
             remove.type = 'button';
             remove.textContent = '移除';
             remove.addEventListener('click', function () {
+                if (state.csharpEditorTargetId === item.id) {
+                    closeCsharpEditorModal();
+                }
                 state.uploadedCsharpFiles = state.uploadedCsharpFiles.filter(function (it) {
                     return it.id !== item.id;
                 });
@@ -1078,6 +1213,14 @@
                 renderUploadedCsharpFiles();
                 scheduleSave();
                 setStatus(`已移除 C# 文件：${item.name}`);
+            });
+
+            const edit = document.createElement('button');
+            edit.className = 'btn btn-small btn-outline';
+            edit.type = 'button';
+            edit.textContent = '编辑';
+            edit.addEventListener('click', function () {
+                openCsharpEditorModal(item.id);
             });
 
             const insertRef = document.createElement('button');
@@ -1092,6 +1235,7 @@
 
             const actions = document.createElement('div');
             actions.className = 'studio-image-item-actions';
+            actions.appendChild(edit);
             actions.appendChild(insertRef);
             actions.appendChild(remove);
             head.appendChild(actions);
@@ -3087,6 +3231,45 @@
             });
         }
 
+        if (dom.csharpEditorText) {
+            dom.csharpEditorText.addEventListener('input', function () {
+                state.csharpEditorDraft = String(dom.csharpEditorText.value || '').replace(/\r\n/g, '\n');
+                renderCsharpEditorPreviewHighlight();
+            });
+        }
+
+        if (dom.csharpEditorSave) {
+            dom.csharpEditorSave.addEventListener('click', async function () {
+                try {
+                    await saveCsharpEditorModalChanges();
+                } catch (err) {
+                    setStatus(`保存 C# 编辑失败：${err && err.message ? err.message : String(err)}`);
+                }
+            });
+        }
+
+        if (dom.csharpEditorCancel) {
+            dom.csharpEditorCancel.addEventListener('click', function () {
+                closeCsharpEditorModal();
+                setStatus('已取消 C# 编辑');
+            });
+        }
+
+        if (dom.csharpEditorClose) {
+            dom.csharpEditorClose.addEventListener('click', function () {
+                closeCsharpEditorModal();
+                setStatus('已取消 C# 编辑');
+            });
+        }
+
+        if (dom.csharpEditorModal) {
+            dom.csharpEditorModal.addEventListener('click', function (event) {
+                if (event.target !== dom.csharpEditorModal) return;
+                closeCsharpEditorModal();
+                setStatus('已取消 C# 编辑');
+            });
+        }
+
         if (dom.insertImage) {
             dom.insertImage.addEventListener('click', function () {
                 const uploadInput = dom.assetUpload || dom.imageUpload;
@@ -3347,6 +3530,13 @@
         }
 
         document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && isCsharpEditorModalOpen()) {
+                event.preventDefault();
+                closeCsharpEditorModal();
+                setStatus('已取消 C# 编辑');
+                return;
+            }
+
             if (event.key === 'Escape' && state.isFullscreen) {
                 event.preventDefault();
                 setFullscreenMode(false, false);
