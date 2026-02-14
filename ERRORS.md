@@ -179,4 +179,40 @@
 
 **备注**：按用户要求未执行 `npm` 命令；本次在 `site/assets/fonts` 引入 `HarmonyOS_Sans_SC_Regular.ttf`，并将 `--font-family-tutorial` 调整为 `JetBrainsMonoNerdFontBold`（英文/特殊字符优先）+ `HarmonyOSSansSCRegular`（中文回退）。
 
+### 验证记录 [2026-02-14 21:56]：教程页顶部栏统一为“标题 + 搜索 + 通用跳转”
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/page-common-alignment.test.js`：通过
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`；与本次顶部栏统一改造无直接关系。本次改造覆盖含站点标题“泰拉瑞亚Mod制作教程”的顶部栏页面，统一为左侧站点标题、中间搜索栏、右侧通用跳转链接。
+
+### 验证记录 [2026-02-14 22:05]：浏览器逐页一致性调试（顶部栏）
+
+**级别**：L3
+
+**命令与结果**：
+- `python3 -m http.server 4173 --bind 127.0.0.1`：通过（本地调试服务启动）
+- `google-chrome --headless --disable-gpu --no-sandbox --dump-dom` 批量校验 10 页：通过（10/10）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1440,900 --screenshot=...` 批量截图：通过（10/10）
+
+**备注**：截图输出目录为 `/tmp/header-check`；调试期间 `http.server` 出现的 `BrokenPipe/ConnectionReset` 为 headless 浏览器主动断开连接导致，不影响页面加载与顶部栏一致性判断。
+
+### 验证记录 [2026-02-14 22:22]：顶部栏内容完全一致化 + Mono 搜索图标（浏览器复核）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/page-common-alignment.test.js`：通过
+- `npm run build`：通过
+- `npm run check-generated`：失败
+- `python3 -m http.server 4173 --bind 127.0.0.1`：通过（本地调试服务启动）
+- `google-chrome --headless --disable-gpu --no-sandbox --dump-dom` 批量校验 10 页：通过（10/10，全页头部哈希一致）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1440,900 --screenshot=...` 批量截图：通过（10/10）
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`；与本次顶部栏一致化无直接关系。本次同时修复 `site/assets/js/search.js` 对 `folder.html` 导航栏注入动态搜索框的问题，避免该页顶部内容多于其它页面。
+
 *最后更新：2026-02-14*

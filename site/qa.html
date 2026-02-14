@@ -42,19 +42,26 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <a href="index.html">
+                    <a href="/site/index.html">
                         <img src="/site/assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
                         <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
                     </a>
                 </div>
+                <form class="header-search" role="search" action="/site/search-results.html" method="get">
+                    <label class="visually-hidden" for="header-search-q">搜索教程</label>
+                    <input class="header-search-input" id="header-search-q" type="search" name="q" placeholder="搜索教程..." aria-label="搜索教程">
+                    <button class="header-search-button" type="submit" aria-label="执行搜索">
+                        <i class="icon-search" aria-hidden="true"></i>
+                    </button>
+                </form>
                 <nav class="main-nav" id="main-nav">
                     <ul class="nav-list">
-                        <li class="nav-item"><a href="index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="/site/index.html" class="nav-link">首页</a></li>
                         <li class="nav-item"><a href="/site/pages/folder.html" class="nav-link">文档</a></li>
                         <li class="nav-item"><a href="/site/pages/article-studio.html" class="nav-link">在线写作IDE</a></li>
                         <li class="nav-item"><a href="/site/pages/shader-playground.html" class="nav-link">Shader</a></li>
                         <li class="nav-item"><a href="/site/pages/shader-gallery.html" class="nav-link">Gallery</a></li>
-                        <li class="nav-item"><a href="qa.html" class="nav-link active" aria-current="page">问答</a></li>
+                        <li class="nav-item"><a href="/site/qa.html" class="nav-link">问答</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li class="nav-item nav-accent">
                             <label class="visually-hidden" for="accent-select">配色</label>
@@ -67,6 +74,8 @@
                                 <option value="cyan">青色</option>
                                 <option value="black">黑色</option>
                                 <option value="white">白色</option>
+                                <option value="vs">VS</option>
+                                <option value="git">Git</option>
                             </select>
                         </li>
                     </ul>
