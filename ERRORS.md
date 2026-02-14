@@ -158,4 +158,25 @@
 
 **备注**：按用户要求未执行 `npm` 命令；本次仅调整 `site/assets/css/variables.css` 中 `data-accent="vs"` 的颜色变量，不影响其它主题预设。
 
+### 验证记录 [2026-02-14 19:27]：搜索按钮图标改为 Mono 字形
+
+**级别**：L3
+
+**命令与结果**：
+- `rg -n "icon-search|🔍|\\f002|JetBrainsMonoNerdFontBold" site/assets/css/style.css`：通过（已改为 `\f002` 并指定 Mono 字体）
+- `git diff --check -- site/assets/css/style.css`：通过
+- `nl -ba site/assets/css/style.css | sed -n '3386,3406p'`：通过
+
+**备注**：按用户要求未执行 `npm` 命令；本次仅修改搜索按钮图标样式，将 emoji 搜索符号替换为 JetBrains Mono Nerd Font 字形。
+
+### 验证记录 [2026-02-14 21:26]：教程页中文/英文字体分离
+
+**级别**：L3
+
+**命令与结果**：
+- `node site/tooling/scripts/tutorial-font.test.js`：通过（3 tests, 0 failures）
+- `node --test site/tooling/scripts/tutorial-font.test.js`：通过（1 file, 0 failures）
+
+**备注**：按用户要求未执行 `npm` 命令；本次在 `site/assets/fonts` 引入 `HarmonyOS_Sans_SC_Regular.ttf`，并将 `--font-family-tutorial` 调整为 `JetBrainsMonoNerdFontBold`（英文/特殊字符优先）+ `HarmonyOSSansSCRegular`（中文回退）。
+
 *最后更新：2026-02-14*

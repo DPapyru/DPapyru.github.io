@@ -1,6 +1,6 @@
 /* CSS变量定义 - 主题系统 */
 :root {
-  --font-family-tutorial: "JetBrainsMonoNerdFontBold", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-family-tutorial: "JetBrainsMonoNerdFontBold", "HarmonyOSSansSCRegular", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --workbench-max-width: 1440px;
   --workbench-rail-width: 64px;
   --workbench-gutter: 16px;

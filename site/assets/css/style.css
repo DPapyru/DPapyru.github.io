@@ -18,6 +18,15 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: 'HarmonyOSSansSCRegular';
+    src: url('/site/assets/fonts/HarmonyOS_Sans_SC_Regular.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    unicode-range: U+2E80-2EFF, U+2F00-2FDF, U+3000-303F, U+31C0-31EF, U+3200-32FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF;
+}
+
 /* 兼容性样式 - 保持与原有样式的兼容性 */
 body {
     font-family: var(--font-family-tutorial);
@@ -3386,8 +3395,17 @@ mark {
 }
 
 /* 图标样式 */
+.icon-search {
+    display: inline-block;
+    font-style: normal;
+    line-height: 1;
+}
+
 .icon-search::before {
-    content: "🔍";
+    content: "\f002";
+    font-family: "JetBrainsMonoNerdFontBold", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-weight: 700;
+    font-style: normal;
 }
 
 .icon-clear::before {
