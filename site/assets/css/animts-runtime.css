@@ -79,7 +79,7 @@
     color: #ffb4b4;
     background: rgba(255, 0, 0, 0.06);
     white-space: pre-wrap;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 12px;
 }
 

@@ -7,7 +7,7 @@
 
 /* 基础样式 */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-family-tutorial);
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--bg-color);

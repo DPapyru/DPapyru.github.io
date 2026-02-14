@@ -62,4 +62,16 @@
 
 **备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次 UI 修复无直接关系；本次按用户要求在 `main` 工作区直接修改（未使用工作树）。
 
+### 验证记录 [2026-02-14 13:45]：教程字体统一为 JetBrainsMonoNerdFont-Bold
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/tutorial-font.test.js`：通过
+- `npm test`：失败
+- `npm run build`：通过
+- `npm run check-generated`：待补跑
+
+**备注**：`npm test` 失败集中在 `gallery-check` / `gallery-normalize` / `generate-shader-gallery`，根因是沙箱环境无法在 `/mnt/c/Users/Administrator/AppData/Local/Temp` 创建临时目录（`EACCES: permission denied, mkdtemp`）；本次字体变更功能测试已通过，构建链路通过。
+
 *最后更新：2026-02-14*

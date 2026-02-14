@@ -16,7 +16,7 @@ pre[class*="language-"] {
 /* 代码标签 */
 code[class*="language-"] {
     color: #D4D4D4 !important;
-    font-family: 'Consolas', 'Courier New', monospace !important;
+    font-family: var(--font-family-tutorial) !important;
     font-size: 0.95em !important;
     line-height: 1.5 !important;
     text-shadow: none !important;

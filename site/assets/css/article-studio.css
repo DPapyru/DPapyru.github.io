@@ -30,7 +30,7 @@
     background: var(--bg-secondary);
     color: var(--text-secondary);
     font-size: 12px;
-    font-family: Consolas, 'Monaco', 'Courier New', monospace;
+    font-family: var(--font-family-tutorial);
 }
 
 .studio-lazy-mode-tag {
@@ -96,7 +96,7 @@
 .studio-panel-title {
     margin: 0;
     font-size: 12px;
-    font-family: Consolas, 'Monaco', 'Courier New', monospace;
+    font-family: var(--font-family-tutorial);
     letter-spacing: 0.08em;
     font-weight: 700;
     text-transform: uppercase;
@@ -320,7 +320,7 @@
     background: var(--bg-secondary);
     color: var(--text-secondary);
     font-size: 12px;
-    font-family: Consolas, 'Monaco', 'Courier New', monospace;
+    font-family: var(--font-family-tutorial);
     padding: 8px 12px;
 }
 
@@ -606,7 +606,7 @@
     min-height: 0;
     border: 0;
     resize: none;
-    font-family: Consolas, 'Monaco', 'Courier New', monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 14px;
     line-height: 1.6;
     padding: 12px;

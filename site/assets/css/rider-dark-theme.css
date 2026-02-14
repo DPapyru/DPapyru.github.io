@@ -45,7 +45,7 @@ pre[class*="language-"] {
 /* Code */
 code[class*="language-"] {
     color: var(--rider-code-fg) !important;
-    font-family: 'Consolas', 'Courier New', monospace !important;
+    font-family: var(--font-family-tutorial) !important;
     font-size: 0.95em !important;
     line-height: 1.5 !important;
     text-shadow: none !important;

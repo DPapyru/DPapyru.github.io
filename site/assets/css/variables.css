@@ -1,5 +1,7 @@
 /* CSS变量定义 - 主题系统 */
 :root {
+  --font-family-tutorial: "JetBrainsMonoNerdFontBold", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
   /* 颜色系统 - 浅色主题（默认） */
   --primary-color: #28a745;
   --primary-hover: #1e7e34;

@@ -10,13 +10,28 @@
 @import url('content.css');
 @import url('minimal-docs.css');
 
+@font-face {
+    font-family: 'JetBrainsMonoNerdFontBold';
+    src: url('/site/assets/fonts/JetBrainsMonoNerdFont-Bold.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
 /* 兼容性样式 - 保持与原有样式的兼容性 */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-family-tutorial);
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--bg-color);
     transition: var(--transition-colors);
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: var(--font-family-tutorial);
 }
 
 .container {
@@ -552,7 +567,7 @@ a:hover {
 
 .learning-diag-mono {
     margin-top: 8px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 0.78rem;
     color: var(--text-secondary);
 }
@@ -1564,7 +1579,7 @@ div.flowchart > svg {
     background-color: var(--code-bg);
     padding: 2px 4px;
     border-radius: 3px;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 0.9rem;
 }
 
@@ -1709,7 +1724,7 @@ div.flowchart > svg {
 }
 
 .qa-output {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 0.95rem;
 }
 
@@ -2761,7 +2776,7 @@ div.flowchart > svg {
     background-color: var(--code-bg);
     padding: 0.2em 0.5em;
     border-radius: 4px;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 0.9em;
     color: var(--code-text);
     border: 1px solid var(--code-border);
