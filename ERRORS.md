@@ -87,4 +87,53 @@
 
 **备注**：本次严格未修改业务 JS（仅新增测试 `site/tooling/scripts/workbench-shell.test.js`）；`npm test` 失败仍集中在 `gallery-check` / `gallery-normalize` / `generate-shader-gallery` 的既有问题，沙箱环境下临时目录权限受限（`EACCES: permission denied, mkdtemp`）。
 
+### 验证记录 [2026-02-14 14:58]：Workbench 顶部空隙修复（skip-link 归位）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/workbench-shell.test.js site/tooling/scripts/tutorial-font.test.js site/tooling/scripts/page-common-alignment.test.js`：通过
+
+**备注**：根因是 `site/assets/css/layout.css` 的 `body.workbench-page > *` 覆盖了 `.skip-link` 的 `position: absolute`，导致其占据约 50px 高度并把 header 下推；已改为 `body.workbench-page > :not(.skip-link)`，并通过本地 headless 截图复核顶部无空隙。
+
+### 验证记录 [2026-02-14 18:35]：viewer 顶部导航未固定修复
+
+**级别**：L3
+
+**命令与结果**：
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`；与本次导航定位修复无直接关系。本次修复为 `body.workbench-page` 场景下显式恢复 `.site-header` 的 `position: sticky`。
+
+### 验证记录 [2026-02-14 18:45]：viewer 左侧树导航图标与引导线优化
+
+**级别**：L3
+
+**命令与结果**：
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`；与本次树导航样式调整无直接关系。本次仅调整 `site/assets/css/minimal-docs.css` 与 `site/pages/viewer.html` 的目录图标/引导线样式。
+
+### 验证记录 [2026-02-14 18:51]：viewer AI 对话按钮误隐藏修复
+
+**级别**：L3
+
+**命令与结果**：
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`；与本次 AI 按钮修复无直接关系。本次修复将 `studio_embed` 判断收紧为“参数开启且在 iframe 中”，并在非嵌入模式下显式恢复 `#viewer-ai-root` 可见性。
+
+### 验证记录 [2026-02-14 19:09]：viewer 移除作者模式入口与诊断面板
+
+**级别**：L3
+
+**命令与结果**：
+- `rg -n "initializeLearningAuthor|author-mode-toggle|learning-author-diagnostics|learning-hint-author|renderLearningAuthor|collectAuthorDiagnostics|scanRequiredReferenceHeadings|scanDocLinksFromDom|scanImagesFromDom" site/pages/viewer.html`：通过（无输出）
+- `git diff --check -- site/pages/viewer.html`：通过
+
+**备注**：按用户要求未执行 `npm` 命令；本次仅清理 `site/pages/viewer.html` 中作者模式相关按钮、提示区、诊断面板及其脚本调用，保留普通阅读与学习提示链路。
+
 *最后更新：2026-02-14*
