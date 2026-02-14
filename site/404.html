@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/site/assets/css/style.css">
     <script src="/site/assets/js/theme-init.js"></script>
 </head>
-<body>
+<body class="workbench-page">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <header class="site-header">
         <div class="container">
@@ -52,7 +52,7 @@
             </div>
         </div>
     </header>
-    <main id="main-content" class="container" style="padding: 60px 20px;" tabindex="-1">
+    <main id="main-content" class="workbench-main container" style="padding: 60px 20px;" tabindex="-1">
         <h1 style="margin-bottom: 12px;">页面未找到</h1>
         <p style="margin-bottom: 18px;">如果这是一个教程文档链接，系统会尝试为你跳转到文档查看器。</p>
         <p style="margin-bottom: 18px;">
@@ -61,6 +61,9 @@
         </p>
         <p id="redirect-hint" style="color: var(--text-secondary);"></p>
     </main>
+
+    <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: IDE</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
+
 
     <script src="/shared/assets/js/site-core.js"></script>
     <script>

@@ -1,6 +1,13 @@
 /* CSS变量定义 - 主题系统 */
 :root {
   --font-family-tutorial: "JetBrainsMonoNerdFontBold", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --workbench-max-width: 1440px;
+  --workbench-rail-width: 64px;
+  --workbench-gutter: 16px;
+  --workbench-status-height: 34px;
+  --workbench-line-color: var(--border-color);
+  --workbench-panel-bg: var(--bg-content);
+  --workbench-muted-bg: var(--bg-secondary);
 
   /* 颜色系统 - 浅色主题（默认） */
   --primary-color: #28a745;

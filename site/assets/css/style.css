@@ -3976,3 +3976,63 @@ html {
     color: var(--text-color);
 }
 
+/* Swiss x Developer Functionalism page-shell overrides */
+body.workbench-page .main-content,
+body.workbench-page .content-wrapper {
+    box-shadow: none;
+}
+
+body.workbench-page .main-content {
+    background-color: var(--workbench-muted-bg);
+    border: 1px solid var(--workbench-line-color);
+    padding: 16px;
+}
+
+body.workbench-page .content-wrapper {
+    border: 1px solid var(--workbench-line-color);
+    border-radius: 0;
+    background-color: var(--workbench-panel-bg);
+}
+
+body.workbench-page .site-footer {
+    background-color: var(--workbench-muted-bg);
+    color: var(--text-secondary);
+    padding: 20px 0 16px;
+    border-top: 1px solid var(--workbench-line-color);
+}
+
+body.workbench-page .footer-section h4 {
+    color: var(--text-color);
+    text-transform: uppercase;
+    font-size: 0.84rem;
+    letter-spacing: 0.06em;
+}
+
+body.workbench-page .footer-section p,
+body.workbench-page .footer-section ul li a,
+body.workbench-page .footer-bottom,
+body.workbench-page .footer-bottom a {
+    color: var(--text-secondary);
+}
+
+body.workbench-page .footer-section ul li a:hover,
+body.workbench-page .footer-bottom a:hover {
+    color: var(--primary-color);
+}
+
+body.workbench-page .footer-bottom {
+    border-top: 1px solid var(--workbench-line-color);
+}
+
+@media (max-width: 768px) {
+    body.workbench-page .main-content {
+        border-left: none;
+        border-right: none;
+        padding: 12px;
+    }
+
+    body.workbench-page .content-wrapper {
+        padding: 16px 14px;
+    }
+}
+
