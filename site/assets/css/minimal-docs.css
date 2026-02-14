@@ -161,7 +161,7 @@ html[data-theme="dark"] .learn-tree-link-label {
 html[data-theme="dark"] .learn-tree-link-label::before {
     content: '\f15b';
     font-family: var(--learn-tree-glyph-font);
-    font-size: 11px;
+    font-size: 18px;
     line-height: 1;
     color: var(--text-muted);
     flex: 0 0 auto;
