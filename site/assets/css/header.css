@@ -156,3 +156,49 @@
         border-bottom: none;
     }
 }
+
+/* Workbench header refinement */
+body.workbench-page .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: none;
+    border-bottom: 1px solid var(--workbench-line-color);
+    backdrop-filter: blur(6px);
+}
+
+body.workbench-page .header-content {
+    min-height: 62px;
+    padding: 10px 0;
+    gap: 12px;
+}
+
+body.workbench-page .site-title {
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+body.workbench-page .main-nav .nav-list {
+    gap: 10px;
+}
+
+body.workbench-page .nav-item {
+    margin-left: 0;
+}
+
+body.workbench-page .nav-link {
+    border-bottom: none;
+    border-left: 2px solid transparent;
+    border-radius: 0;
+    padding: 7px 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.82rem;
+}
+
+body.workbench-page .nav-link:hover,
+body.workbench-page .nav-link.active {
+    border-left-color: var(--primary-color);
+    background-color: var(--sidebar-hover);
+}

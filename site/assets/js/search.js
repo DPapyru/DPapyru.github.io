@@ -143,12 +143,8 @@ class TutorialSearch {
             this.bindHeroSearchEvents();
             return;
         }
-        
-        // 否则，将搜索容器添加到导航栏（作为后备方案）
-        const mainNav = document.querySelector('.main-nav');
-        if (mainNav) {
-            mainNav.appendChild(searchContainer);
-        }
+
+        // 不再向顶部导航栏注入动态搜索框，避免不同页面出现额外头部内容。
     }
 
     // 绑定事件

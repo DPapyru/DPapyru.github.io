@@ -33,6 +33,7 @@
 
     <!-- 样式和图标 -->
     <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/workbench-phase.css">
     <link rel="stylesheet" href="/site/assets/css/prism.min.css">
     <link rel="stylesheet" href="/site/assets/css/vs2022-theme.css">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
@@ -291,29 +292,6 @@
 	            box-shadow: 0 0 0 2px var(--search-focus);
 	        }
 
-        .view-toggle {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-left: auto;
-        }
-
-	        .view-toggle button {
-	            background: none;
-	            border: 1px solid var(--border-color);
-	            border-radius: 4px;
-	            padding: 6px 10px;
-	            cursor: pointer;
-	            transition: all 0.2s ease;
-	            color: var(--text-color);
-	        }
-
-	        .view-toggle button.active {
-	            background-color: var(--primary-color);
-	            color: white;
-	            border-color: var(--primary-color);
-	        }
-
 	        .search-section {
 	            background-color: var(--bg-secondary);
 	            padding: 30px 0;
@@ -321,63 +299,9 @@
 	            margin-bottom: 40px;
 	        }
 
-        .search-container {
-            display: flex;
-            max-width: 600px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-	        .search-input {
-	            width: 100%;
-	            padding: 15px 50px 15px 20px;
-	            border: 1px solid var(--border-color);
-	            border-radius: 50px;
-	            font-size: 1rem;
-	            outline: none;
-	            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-	            transition: all 0.3s ease;
-	            background-color: var(--bg-color);
-	            color: var(--text-color);
-	        }
-
-	        .search-input:focus {
-	            border-color: var(--primary-color);
-	            box-shadow: 0 0 0 3px var(--search-focus);
-	        }
-
-	        .search-button {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-	            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-	        .search-button:hover {
-	            background-color: var(--primary-hover);
-	        }
-
         .doc-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            display: block;
             margin-bottom: 40px;
-        }
-
-        .doc-grid.list-view {
-            grid-template-columns: 1fr;
-            gap: 10px;
         }
 
 	        .doc-card {
@@ -523,42 +447,6 @@
 	            background-color: var(--secondary-hover);
 	        }
 
-	        .search-results {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-	            background-color: var(--bg-color);
-	            border: 1px solid var(--border-color);
-            border-top: none;
-            border-radius: 0 0 12px 12px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-            max-height: 300px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-        }
-
-        .search-result-item {
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-
-	        .search-result-item:hover {
-	            background-color: var(--sidebar-hover);
-	        }
-
-        .search-result-title {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .search-result-meta {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
         /* 工具入口 */
         .folder-tools {
             margin: 18px 0 8px;
@@ -648,45 +536,51 @@
     </style>
 </head>
 
-<body>
+<body class="workbench-page">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <!-- 网站头部导航区域 -->
     <header class="site-header">
         <div class="container">
             <div class="header-content">
-                <!-- 网站logo和标题 -->
                 <div class="logo">
-                    <a href="../index.html">
+                    <a href="/site/index.html">
                         <img src="/site/assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
                         <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
                     </a>
                 </div>
-                <!-- 主导航菜单 -->
-	                <nav class="main-nav" id="main-nav">
-	                    <ul class="nav-list">
-	                        <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
-	                        <li class="nav-item"><a href="folder.html" class="nav-link active" aria-current="page">文档</a></li>
-	                        <li class="nav-item"><a href="article-studio.html" class="nav-link">在线写作IDE</a></li>
-	                        <li class="nav-item"><a href="shader-playground.html" class="nav-link">Shader</a></li>
-                        <li class="nav-item"><a href="shader-gallery.html" class="nav-link">Gallery</a></li>
-	                        <li class="nav-item"><a href="../qa.html" class="nav-link">问答</a></li>
-	                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-	                        <li class="nav-item nav-accent">
-	                            <label class="visually-hidden" for="accent-select">配色</label>
-	                            <select class="nav-accent-select" id="accent-select" aria-label="配色">
-	                                <option value="green">绿色</option>
-	                                <option value="blue">蓝色</option>
-	                                <option value="purple">紫色</option>
-	                                <option value="orange">橙色</option>
-	                                <option value="red">红色</option>
-	                                <option value="cyan">青色</option>
-	                                <option value="black">黑色</option>
-	                                <option value="white">白色</option>
-	                            </select>
-	                        </li>
-	                    </ul>
-	                </nav>
-                <!-- 移动端菜单切换按钮 -->
+                <form class="header-search" role="search" action="/site/search-results.html" method="get">
+                    <label class="visually-hidden" for="header-search-q">搜索教程</label>
+                    <input class="header-search-input" id="header-search-q" type="search" name="q" placeholder="搜索教程..." aria-label="搜索教程">
+                    <button class="header-search-button" type="submit" aria-label="执行搜索">
+                        <i class="icon-search" aria-hidden="true"></i>
+                    </button>
+                </form>
+                <nav class="main-nav" id="main-nav">
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="/site/index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="/site/pages/folder.html" class="nav-link">文档</a></li>
+                        <li class="nav-item"><a href="/site/pages/article-studio.html" class="nav-link">在线写作IDE</a></li>
+                        <li class="nav-item"><a href="/site/pages/shader-playground.html" class="nav-link">Shader</a></li>
+                        <li class="nav-item"><a href="/site/pages/shader-gallery.html" class="nav-link">Gallery</a></li>
+                        <li class="nav-item"><a href="/site/qa.html" class="nav-link">问答</a></li>
+                        <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+                        <li class="nav-item nav-accent">
+                            <label class="visually-hidden" for="accent-select">配色</label>
+                            <select class="nav-accent-select" id="accent-select" aria-label="配色">
+                                <option value="green">绿色</option>
+                                <option value="blue">蓝色</option>
+                                <option value="purple">紫色</option>
+                                <option value="orange">橙色</option>
+                                <option value="red">红色</option>
+                                <option value="cyan">青色</option>
+                                <option value="black">黑色</option>
+                                <option value="white">白色</option>
+                                <option value="vs">VS</option>
+                                <option value="git">Git</option>
+                            </select>
+                        </li>
+                    </ul>
+                </nav>
                 <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -697,7 +591,7 @@
     </header>
 
     <!-- 文件夹页面主要内容区域 -->
-    <main id="main-content" tabindex="-1">
+    <main class="workbench-main" id="main-content" tabindex="-1">
         <!-- 面包屑导航 -->
         <section class="breadcrumb">
             <div class="container">
@@ -741,7 +635,7 @@
                     </div>
                 </section>
 
-                <!-- 过滤器和搜索区域 -->
+                <!-- 过滤器区域 -->
                 <div class="search-section">
                     <div class="filter-container">
                         <div class="filter-group">
@@ -774,18 +668,7 @@
                                 <option value="last_updated">按更新时间</option>
                             </select>
                         </div>
-                        <div class="view-toggle">
-                            <button id="grid-view-btn" class="active" type="button" aria-pressed="true">网格视图</button>
-                            <button id="list-view-btn" type="button" aria-pressed="false">列表视图</button>
-                        </div>
                     </div>
-	                    <div class="search-container">
-	                        <input type="text" id="doc-search" class="search-input" placeholder="搜索此文件夹下的文档..."
-	                            aria-label="搜索此文件夹下的文档" autocomplete="off">
-	                        <button class="search-button" id="search-btn" type="button" aria-label="搜索">搜索</button>
-	                        <div class="search-results" id="search-results"></div>
-	                    </div>
-	                    <p class="search-note">文章列表不做分流，默认展示本文件夹下全部内容。</p>
 	                </div>
 
                 <!-- 文档列表 -->
@@ -808,6 +691,8 @@
     </main>
 
     <!-- 网站底部区域 -->
+    <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: IDE</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
+
     <footer class="site-footer">
         <div class="container">
             <div class="footer-content">
@@ -851,7 +736,6 @@
     <script src="/site/assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
     <script src="/site/assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
 	    <script src="/site/assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
-	    <script src="/site/assets/js/search.js"></script>
 	    <script src="/site/assets/js/navigation.js"></script>
 
 	    <script>
@@ -861,7 +745,6 @@
         let VISIBLE_DOCS = [];
         let FOLDER_DOCS = [];
         let CURRENT_FOLDER = '';
-        let CURRENT_DOC_VIEW = 'grid';
 
 	        function escapeHtml(text) {
 	            return String(text)
@@ -870,26 +753,6 @@
 	                .replace(/>/g, '&gt;')
 	                .replace(/"/g, '&quot;')
 	                .replace(/'/g, '&#39;');
-	        }
-
-	        function normalizeDifficultyClass(difficulty) {
-	            const allowed = ['beginner', 'intermediate', 'advanced'];
-	            if (difficulty === 'all') return 'beginner';
-	            return allowed.includes(difficulty) ? difficulty : 'beginner';
-	        }
-
-	        function buildRecommendationBadge(doc) {
-	            const minC = (doc && typeof doc.min_c === 'number') ? doc.min_c : null;
-	            const minT = (doc && typeof doc.min_t === 'number') ? doc.min_t : null;
-	            if (minC == null && minT == null) return '';
-
-	            const parts = [];
-	            if (minC != null) parts.push('C≥' + String(minC));
-	            if (minT != null) parts.push('T≥' + String(minT));
-
-	            const title = '建议 ' + parts.join(' · ');
-
-	            return `<span class="recommendation-badge" title="${escapeHtml(title)}">建议 ${escapeHtml(parts.join(' · '))}</span>`;
 	        }
 
         // 页面加载完成后执行
@@ -918,9 +781,6 @@
                 // 生成文档列表
                 // 注意：这里不调用 generateDocumentGrid，因为 initFilterAndSortFunctionality 会处理
                 // generateDocumentGrid();
-
-                // 初始化搜索功能
-                initSearchFunctionality();
 
                 // 初始化过滤器和排序功能
                 initFilterAndSortFunctionality();
@@ -1380,86 +1240,7 @@
 
         // 生成文档列表
         function generateDocumentGrid() {
-            // 这个函数现在由 applyAllFiltersAndSort 代替
-            // 保留此函数是为了向后兼容，但实际功能已移至 applyAllFiltersAndSort
-            if (typeof applyAllFiltersAndSort === 'function') {
-                applyAllFiltersAndSort();
-            } else {
-                // 如果 applyAllFiltersAndSort 尚未定义，则使用原始逻辑
-                const docGrid = document.getElementById('doc-grid');
-                const noDocs = document.getElementById('no-docs');
-
-                if (!docGrid || !noDocs) return;
-
-                // 清空现有内容
-                docGrid.innerHTML = '';
-
-                const subfolderSection = buildSubfolderSection(CURRENT_FOLDER);
-                const hasSubfolders = !!subfolderSection;
-
-                if (FOLDER_DOCS.length === 0 && !hasSubfolders) {
-                    // 显示无文档提示
-                    docGrid.style.display = 'none';
-                    noDocs.style.display = 'block';
-                    return;
-                }
-
-                // 显示文档网格
-                docGrid.style.display = 'grid';
-                noDocs.style.display = 'none';
-
-                if (hasSubfolders) {
-                    docGrid.appendChild(subfolderSection);
-                }
-
-                // 按排序字段排序文档
-                const sortedDocs = [...FOLDER_DOCS].sort((a, b) => {
-                    return a.order - b.order;
-                });
-
-                // 生成文档卡片
-                sortedDocs.forEach(doc => {
-                    const docCard = document.createElement('div');
-                    docCard.className = 'doc-card';
-
-		                    const difficultyClass = normalizeDifficultyClass(doc.difficulty);
-		                    const difficultyText = getDifficultyText(doc.difficulty);
-		                    const recommendationBadge = buildRecommendationBadge(doc);
-
-	                    // 处理描述
-		                    let description = '暂无描述';
-		                    if (doc.description && typeof doc.description === 'string' && doc.description.trim() !== '') {
-	                        description = doc.description;
-	                    }
-
-	                    docCard.innerHTML = `
-	                        <div class="doc-card-header">
-	                            <h3 class="doc-title">${escapeHtml(doc.title)}</h3>
-	                            <div class="doc-meta">
-	                                <div class="doc-meta-item">
-	                                    <span class="difficulty-badge ${difficultyClass}">${escapeHtml(difficultyText)}</span>
-	                                </div>
-	                                ${recommendationBadge ? `<div class="doc-meta-item">${recommendationBadge}</div>` : ''}
-	                                <div class="doc-meta-item">
-	                                    <span>作者: ${escapeHtml(doc.author)}</span>
-	                                </div>
-	                                <div class="doc-meta-item">
-	                                    <span>更新: ${escapeHtml(doc.last_updated)}</span>
-	                                </div>
-	                            </div>
-		                        </div>
-		                        <div class="doc-card-body">
-		                            <p class="doc-description">${escapeHtml(description)}</p>
-		                        </div>
-		                        <div class="doc-card-footer">
-		                            <div class="doc-author">作者: ${escapeHtml(doc.author)}</div>
-		                            <a href="/site/pages/viewer.html?file=${encodeURIComponent(doc.path)}" class="doc-link">查看文档</a>
-	                        </div>
-	                    `;
-
-                    docGrid.appendChild(docCard);
-                });
-            }
+            applyAllFiltersAndSort();
         }
 
         // 获取难度文本 - 优先从配置文件读取，否则使用默认值
@@ -1489,132 +1270,6 @@
                 'all': '全部级别'
             };
             return defaultDifficultyMap[difficulty] || difficulty;
-        }
-
-        // 初始化搜索功能
-        function initSearchFunctionality() {
-            const searchInput = document.getElementById('doc-search');
-            const searchButton = document.getElementById('search-btn');
-            const searchResults = document.getElementById('search-results');
-
-            if (!searchInput || !searchButton || !searchResults) return;
-
-            // 搜索输入事件
-            searchInput.addEventListener('input', function () {
-                const query = this.value.trim().toLowerCase();
-
-                if (query.length === 0) {
-                    // 显示所有文档，但应用当前的过滤器和排序
-                    applyAllFiltersAndSort();
-                    searchResults.style.display = 'none';
-                    return;
-                }
-
-                // 先应用过滤器，然后在这些结果中搜索
-                let filteredDocs = applyCurrentFilters();
-
-                // 在过滤后的结果中搜索
-	                const results = filteredDocs.filter(doc =>
-	                    doc.title.toLowerCase().includes(query) ||
-	                    doc.author.toLowerCase().includes(query) ||
-	                    (doc.description && doc.description.toLowerCase().includes(query))
-	                );
-
-                // 应用当前排序
-                const sortFilter = document.getElementById('sort-filter');
-                const sortValue = sortFilter ? sortFilter.value : 'order';
-                const sortedResults = sortDocuments(results, sortValue);
-
-                // 显示搜索结果
-                displaySearchResults(sortedResults);
-                updateDocumentGridWithFilteredDocs(sortedResults);
-            });
-
-            // 搜索按钮点击事件
-            searchButton.addEventListener('click', function () {
-                const query = searchInput.value.trim();
-                if (query) {
-                    performSearch(query);
-                }
-            });
-
-            // 搜索输入框回车事件
-            searchInput.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    const query = this.value.trim();
-                    if (query) {
-                        performSearch(query);
-                    }
-                }
-            });
-
-            // 点击其他地方关闭搜索结果
-            document.addEventListener('click', function (e) {
-                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                    searchResults.style.display = 'none';
-                }
-            });
-
-            // 显示搜索结果
-	        function displaySearchResults(results) {
-	            searchResults.innerHTML = '';
-
-                if (results.length === 0) {
-                    searchResults.innerHTML = `
-                        <div class="search-result-item">
-                            <div class="search-result-title">没有找到匹配的文档</div>
-                            <div class="search-result-meta">请尝试其他关键词</div>
-                        </div>
-                    `;
-                } else {
-	                results.forEach(result => {
-	                    const resultItem = document.createElement('div');
-	                    resultItem.className = 'search-result-item';
-
-	                    resultItem.innerHTML = `
-	                        <div class="search-result-title">${escapeHtml(result.title)}</div>
-	                        <div class="search-result-meta">作者: ${escapeHtml(result.author)} | 更新: ${escapeHtml(result.last_updated)}</div>
-	                    `;
-
-                        resultItem.addEventListener('click', function () {
-                            window.location.href = `/site/pages/viewer.html?file=${encodeURIComponent(result.path)}`;
-                        });
-
-                        searchResults.appendChild(resultItem);
-                    });
-                }
-
-                searchResults.style.display = 'block';
-            }
-
-
-            // 执行搜索
-            function performSearch(query) {
-                // 先应用过滤器，然后在这些结果中搜索
-                let filteredDocs = applyCurrentFilters();
-
-	                const results = filteredDocs.filter(doc =>
-	                    doc.title.toLowerCase().includes(query.toLowerCase()) ||
-	                    doc.author.toLowerCase().includes(query.toLowerCase()) ||
-	                    (doc.description && doc.description.toLowerCase().includes(query.toLowerCase()))
-	                );
-
-                // 应用当前排序
-                const sortFilter = document.getElementById('sort-filter');
-                const sortValue = sortFilter ? sortFilter.value : 'order';
-                const sortedResults = sortDocuments(results, sortValue);
-
-                if (sortedResults.length === 0) {
-                    alert('没有找到匹配的文档，请尝试其他关键词');
-                } else if (sortedResults.length === 1) {
-                    // 如果只有一个结果，直接跳转
-                    window.location.href = `/site/pages/viewer.html?file=${encodeURIComponent(sortedResults[0].path)}`;
-                } else {
-                    // 如果有多个结果，更新文档网格
-                    updateDocumentGridWithFilteredDocs(sortedResults);
-                    searchInput.value = query;
-                }
-            }
         }
 
         // 初始化过滤器
@@ -1658,23 +1313,6 @@
 
             if (sortFilter) {
                 sortFilter.addEventListener('change', applyFiltersAndSort);
-            }
-        }
-
-        // 初始化视图切换
-        function initializeViewToggle() {
-            if (gridViewBtn && listViewBtn) {
-                gridViewBtn.addEventListener('click', function () {
-                    gridViewBtn.classList.add('active');
-                    listViewBtn.classList.remove('active');
-                    document.getElementById('doc-grid').classList.remove('list-view');
-                });
-
-                listViewBtn.addEventListener('click', function () {
-                    listViewBtn.classList.add('active');
-                    gridViewBtn.classList.remove('active');
-                    document.getElementById('doc-grid').classList.add('list-view');
-                });
             }
         }
 
@@ -1762,11 +1400,9 @@
             const categoryFilter = document.getElementById('category-filter');
             const authorFilter = document.getElementById('author-filter');
             const sortFilter = document.getElementById('sort-filter');
-            const gridViewBtn = document.getElementById('grid-view-btn');
-            const listViewBtn = document.getElementById('list-view-btn');
             const docGrid = document.getElementById('doc-grid');
 
-            if (!difficultyFilter || !categoryFilter || !authorFilter || !sortFilter || !gridViewBtn || !listViewBtn || !docGrid) {
+            if (!difficultyFilter || !categoryFilter || !authorFilter || !sortFilter || !docGrid) {
                 console.error('无法找到过滤器和排序控件');
                 return;
             }
@@ -1788,22 +1424,6 @@
 
             // 排序过滤器事件
             sortFilter.addEventListener('change', applyAllFiltersAndSort);
-
-            // 网格视图切换事件
-            gridViewBtn.addEventListener('click', function () {
-                CURRENT_DOC_VIEW = 'grid';
-                syncDocViewToggleState();
-                applyAllFiltersAndSort();
-            });
-
-            // 列表视图切换事件
-            listViewBtn.addEventListener('click', function () {
-                CURRENT_DOC_VIEW = 'list';
-                syncDocViewToggleState();
-                applyAllFiltersAndSort();
-            });
-
-            syncDocViewToggleState();
 
             // 初始应用过滤器和排序
             applyAllFiltersAndSort();
@@ -1907,75 +1527,9 @@
             }
 
             noDocs.style.display = 'none';
-
-            if (CURRENT_DOC_VIEW === 'list') {
-                docGrid.style.display = 'block';
-                docGrid.classList.remove('list-view');
-                docGrid.classList.add('tree-view');
-                renderDocTree(docGrid, filteredDocs, CURRENT_FOLDER);
-                return;
-            }
-
-            docGrid.style.display = 'grid';
-            docGrid.classList.remove('tree-view');
-            docGrid.classList.remove('list-view');
-            renderDocCardGrid(docGrid, filteredDocs);
-        }
-
-        function renderDocCardGrid(docGrid, docs) {
-            docs.forEach(doc => {
-                const docCard = document.createElement('div');
-                docCard.className = 'doc-card';
-
-                const difficultyClass = normalizeDifficultyClass(doc.difficulty);
-                const difficultyText = getDifficultyText(doc.difficulty);
-                const recommendationBadge = buildRecommendationBadge(doc);
-                const description = (doc.description && typeof doc.description === 'string' && doc.description.trim() !== '')
-                    ? doc.description
-                    : '暂无描述';
-
-                docCard.innerHTML = `
-                    <div class="doc-card-header">
-                        <h3 class="doc-title">${escapeHtml(doc.title || doc.filename || '未命名')}</h3>
-                        <div class="doc-meta">
-                            <div class="doc-meta-item">
-                                <span class="difficulty-badge ${difficultyClass}">${escapeHtml(difficultyText)}</span>
-                            </div>
-                            ${recommendationBadge ? `<div class="doc-meta-item">${recommendationBadge}</div>` : ''}
-                            <div class="doc-meta-item">
-                                <span>作者: ${escapeHtml(doc.author || '未知')}</span>
-                            </div>
-                            <div class="doc-meta-item">
-                                <span>更新: ${escapeHtml(doc.last_updated || '未知')}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="doc-card-body">
-                        <p class="doc-description">${escapeHtml(description)}</p>
-                    </div>
-                    <div class="doc-card-footer">
-                        <div class="doc-author">作者: ${escapeHtml(doc.author || '未知')}</div>
-                        <a href="/site/pages/viewer.html?file=${encodeURIComponent(doc.path || doc.filename)}" class="doc-link">查看文档</a>
-                    </div>
-                `;
-
-                docGrid.appendChild(docCard);
-            });
-        }
-
-        function syncDocViewToggleState() {
-            const gridViewBtn = document.getElementById('grid-view-btn');
-            const listViewBtn = document.getElementById('list-view-btn');
-
-            if (!gridViewBtn || !listViewBtn) {
-                return;
-            }
-
-            const isListView = CURRENT_DOC_VIEW === 'list';
-            gridViewBtn.classList.toggle('active', !isListView);
-            listViewBtn.classList.toggle('active', isListView);
-            gridViewBtn.setAttribute('aria-pressed', isListView ? 'false' : 'true');
-            listViewBtn.setAttribute('aria-pressed', isListView ? 'true' : 'false');
+            docGrid.style.display = 'block';
+            docGrid.classList.add('tree-view');
+            renderDocTree(docGrid, filteredDocs, CURRENT_FOLDER);
         }
 
         function renderDocTree(docGrid, docs, basePath) {

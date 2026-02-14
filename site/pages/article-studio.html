@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>在线写作IDE（Markdown）</title>
     <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/workbench-phase.css">
     <link rel="stylesheet" href="/site/assets/css/prism.min.css">
     <link rel="stylesheet" href="/site/assets/css/vs2022-theme.css">
     <link rel="stylesheet" href="/site/assets/css/article-studio.css">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
     <script src="/site/assets/js/theme-init.js"></script>
 </head>
-<body class="viewer-page">
+<body class="workbench-page viewer-page">
     <header class="site-header">
         <div class="container">
             <div class="header-content">
@@ -41,6 +42,8 @@
                                 <option value="cyan">青色</option>
                                 <option value="black">黑色</option>
                                 <option value="white">白色</option>
+                                <option value="vs">VS</option>
+                                <option value="git">Git</option>
                             </select>
                         </li>
                     </ul>
@@ -54,7 +57,7 @@
         </div>
     </header>
 
-    <main class="main-content article-studio-main">
+    <main class="workbench-main main-content article-studio-main">
         <div class="container">
             <div class="content-wrapper article-studio-wrapper">
                 <div class="tutorial-header">
@@ -472,6 +475,9 @@
             </div>
         </div>
     </div>
+
+    <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: IDE</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
+
 
     <script src="/shared/assets/js/site-core.js"></script>
     <script src="/site/assets/js/navigation.js"></script>

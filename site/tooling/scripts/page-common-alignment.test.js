@@ -8,6 +8,18 @@ const contentIndexPath = path.resolve('site/content/index.html');
 const pageFiles = fs.readdirSync(pagesDir)
     .filter((name) => name.endsWith('.html'))
     .sort();
+const unifiedHeaderPages = [
+    'site/index.html',
+    'site/qa.html',
+    'site/404.html',
+    'site/search-results.html',
+    'site/content/index.html',
+    'site/pages/viewer.html',
+    'site/pages/folder.html',
+    'site/pages/shader-playground.html',
+    'site/pages/shader-gallery.html',
+    'site/pages/shader-contribute.html'
+];
 
 function readPage(fileName) {
     return fs.readFileSync(path.join(pagesDir, fileName), 'utf8');
@@ -15,6 +27,24 @@ function readPage(fileName) {
 
 function readContentIndex() {
     return fs.readFileSync(contentIndexPath, 'utf8');
+}
+
+function readRelativeHtml(relativePath) {
+    return fs.readFileSync(path.resolve(relativePath), 'utf8');
+}
+
+function extractHeader(html, pagePath) {
+    const match = html.match(/<header class="site-header">[\s\S]*?<\/header>/);
+    assert.ok(match, pagePath + ' should include site-header block');
+    return match[0];
+}
+
+function normalizeHtml(html) {
+    return html
+        .replace(/\r/g, '')
+        .replace(/>\s+</g, '><')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 test('all site/pages html include favicon link', () => {
@@ -76,4 +106,35 @@ test('site/content index should route docs to /site/pages/viewer.html', () => {
         /\/site\/pages\/viewer\.html\?file=/,
         'site/content/index.html should link to /site/pages/viewer.html'
     );
+});
+
+test('tutorial header pages should use unified topbar layout', () => {
+    const headers = unifiedHeaderPages.map((relativePath) => {
+        const html = readRelativeHtml(relativePath);
+        const header = extractHeader(html, relativePath);
+        return {
+            relativePath,
+            header,
+            normalized: normalizeHtml(header)
+        };
+    });
+
+    const baseline = headers[0].normalized;
+    for (const entry of headers) {
+        assert.equal(
+            entry.normalized,
+            baseline,
+            entry.relativePath + ' should match the exact unified header template'
+        );
+        assert.doesNotMatch(
+            entry.header,
+            /nav-link\s+active|aria-current="page"/,
+            entry.relativePath + ' should not include per-page active nav state'
+        );
+        assert.match(
+            entry.header,
+            /<button class="header-search-button"[^>]*>[\s\S]*?<i class="icon-search" aria-hidden="true"><\/i>[\s\S]*?<\/button>/,
+            entry.relativePath + ' should use mono icon search button instead of text/unicode'
+        );
+    }
 });

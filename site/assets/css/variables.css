@@ -1,5 +1,14 @@
 /* CSS变量定义 - 主题系统 */
 :root {
+  --font-family-tutorial: "JetBrainsMonoNerdFontBold", "HarmonyOSSansSCRegular", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --workbench-max-width: 1440px;
+  --workbench-rail-width: 64px;
+  --workbench-gutter: 16px;
+  --workbench-status-height: 34px;
+  --workbench-line-color: var(--border-color);
+  --workbench-panel-bg: var(--bg-content);
+  --workbench-muted-bg: var(--bg-secondary);
+
   /* 颜色系统 - 浅色主题（默认） */
   --primary-color: #28a745;
   --primary-hover: #1e7e34;
@@ -380,6 +389,66 @@
   --search-border: var(--border-color);
 
   --import-color: rgba(34, 211, 238, 0.06);
+  --table-stripe: var(--bg-tertiary);
+}
+
+[data-theme="dark"][data-accent="vs"] {
+  --primary-color: #8f5cc7;
+  --primary-hover: #a77bd8;
+  --link-color: #c5a3f0;
+  --link-hover: #dec8ff;
+  --search-focus: rgba(143, 92, 199, 0.35);
+  --primary-light: rgba(143, 92, 199, 0.18);
+
+  --bg-color: #131017;
+  --bg-secondary: #191421;
+  --bg-tertiary: #221a2d;
+  --bg-content: #131017;
+
+  --header-bg: #191421;
+  --sidebar-bg: #191421;
+
+  --border-color: #332747;
+  --border-light: #3f3157;
+  --border-dark: #4e3d68;
+
+  --code-bg: #161220;
+  --code-border: #332747;
+
+  --search-bg: var(--bg-tertiary);
+  --search-border: var(--border-color);
+
+  --import-color: rgba(143, 92, 199, 0.10);
+  --table-stripe: var(--bg-tertiary);
+}
+
+[data-theme="dark"][data-accent="git"] {
+  --primary-color: #f05133;
+  --primary-hover: #ff6a47;
+  --link-color: #ff8a65;
+  --link-hover: #ffb199;
+  --search-focus: rgba(240, 81, 51, 0.35);
+  --primary-light: rgba(240, 81, 51, 0.18);
+
+  --bg-color: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --bg-content: #0d1117;
+
+  --header-bg: #161b22;
+  --sidebar-bg: #161b22;
+
+  --border-color: #30363d;
+  --border-light: #3b434c;
+  --border-dark: #484f58;
+
+  --code-bg: #161b22;
+  --code-border: #30363d;
+
+  --search-bg: var(--bg-tertiary);
+  --search-border: var(--border-color);
+
+  --import-color: rgba(240, 81, 51, 0.08);
   --table-stripe: var(--bg-tertiary);
 }
 

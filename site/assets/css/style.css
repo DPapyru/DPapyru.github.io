@@ -10,13 +10,37 @@
 @import url('content.css');
 @import url('minimal-docs.css');
 
+@font-face {
+    font-family: 'JetBrainsMonoNerdFontBold';
+    src: url('/site/assets/fonts/JetBrainsMonoNerdFont-Bold.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'HarmonyOSSansSCRegular';
+    src: url('/site/assets/fonts/HarmonyOS_Sans_SC_Regular.ttf') format('truetype');
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    unicode-range: U+2E80-2EFF, U+2F00-2FDF, U+3000-303F, U+31C0-31EF, U+3200-32FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF;
+}
+
 /* 兼容性样式 - 保持与原有样式的兼容性 */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--font-family-tutorial);
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--bg-color);
     transition: var(--transition-colors);
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: var(--font-family-tutorial);
 }
 
 .container {
@@ -164,12 +188,14 @@ a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 14px;
     padding: 15px 0;
 }
 
 .logo {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .logo a {
@@ -190,6 +216,81 @@ a:hover {
 .site-title {
     font-size: 1.5rem;
     font-weight: 700;
+}
+
+.header-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 320px;
+    max-width: 360px;
+    min-width: 160px;
+    margin-left: auto;
+}
+
+.header-search-input {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-secondary);
+    color: var(--text-color);
+    line-height: 1.25;
+}
+
+.header-search-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.header-search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--search-focus);
+}
+
+.header-search-button {
+    border: 1px solid var(--primary-color);
+    background-color: var(--primary-color);
+    color: #fff;
+    border-radius: 6px;
+    width: 42px;
+    height: 40px;
+    padding: 0;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: filter 0.2s ease;
+}
+
+.header-search-button:hover {
+    filter: brightness(1.08);
+}
+
+.header-search-button .icon-search {
+    font-size: 1rem;
+}
+
+body.workbench-page .header-search-input {
+    border-radius: 0;
+    border-color: var(--workbench-line-color);
+    background-color: var(--bg-secondary);
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+}
+
+body.workbench-page .header-search-button {
+    border-radius: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.main-nav {
+    flex-shrink: 0;
 }
 
 .main-nav .nav-list {
@@ -552,7 +653,7 @@ a:hover {
 
 .learning-diag-mono {
     margin-top: 8px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 0.78rem;
     color: var(--text-secondary);
 }
@@ -1564,7 +1665,7 @@ div.flowchart > svg {
     background-color: var(--code-bg);
     padding: 2px 4px;
     border-radius: 3px;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 0.9rem;
 }
 
@@ -1709,7 +1810,7 @@ div.flowchart > svg {
 }
 
 .qa-output {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 0.95rem;
 }
 
@@ -2098,6 +2199,16 @@ div.flowchart > svg {
     .header-content {
         flex-wrap: wrap;
         padding: 10px 0;
+    }
+
+    .header-search {
+        flex-basis: 100%;
+        max-width: none;
+        margin: 8px 0 0;
+    }
+
+    .header-search-input {
+        width: 100%;
     }
 
     .main-nav {
@@ -2761,7 +2872,7 @@ div.flowchart > svg {
     background-color: var(--code-bg);
     padding: 0.2em 0.5em;
     border-radius: 4px;
-    font-family: 'Courier New', Courier, monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 0.9em;
     color: var(--code-text);
     border: 1px solid var(--code-border);
@@ -3371,8 +3482,17 @@ mark {
 }
 
 /* 图标样式 */
+.icon-search {
+    display: inline-block;
+    font-style: normal;
+    line-height: 1;
+}
+
 .icon-search::before {
-    content: "🔍";
+    content: "\f002";
+    font-family: "JetBrainsMonoNerdFontBold", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-weight: 700;
+    font-style: normal;
 }
 
 .icon-clear::before {
@@ -3472,43 +3592,6 @@ mark {
 .breadcrumb-current {
     color: #666;
     font-weight: 500;
-}
-
-/* 返回顶部按钮样式 */
-.back-to-top {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-    z-index: 999;
-}
-
-.back-to-top.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-.back-to-top:hover {
-    background-color: #1e7e34;
-    transform: translateY(-3px);
-}
-
-.back-to-top::before {
-    content: "↑";
 }
 
 /* 改进的侧边栏导航样式 */
@@ -3959,5 +4042,65 @@ html {
     border-radius: 12px;
     background-color: var(--bg-secondary);
     color: var(--text-color);
+}
+
+/* Swiss x Developer Functionalism page-shell overrides */
+body.workbench-page .main-content,
+body.workbench-page .content-wrapper {
+    box-shadow: none;
+}
+
+body.workbench-page .main-content {
+    background-color: var(--workbench-muted-bg);
+    border: 1px solid var(--workbench-line-color);
+    padding: 16px;
+}
+
+body.workbench-page .content-wrapper {
+    border: 1px solid var(--workbench-line-color);
+    border-radius: 0;
+    background-color: var(--workbench-panel-bg);
+}
+
+body.workbench-page .site-footer {
+    background-color: var(--workbench-muted-bg);
+    color: var(--text-secondary);
+    padding: 20px 0 16px;
+    border-top: 1px solid var(--workbench-line-color);
+}
+
+body.workbench-page .footer-section h4 {
+    color: var(--text-color);
+    text-transform: uppercase;
+    font-size: 0.84rem;
+    letter-spacing: 0.06em;
+}
+
+body.workbench-page .footer-section p,
+body.workbench-page .footer-section ul li a,
+body.workbench-page .footer-bottom,
+body.workbench-page .footer-bottom a {
+    color: var(--text-secondary);
+}
+
+body.workbench-page .footer-section ul li a:hover,
+body.workbench-page .footer-bottom a:hover {
+    color: var(--primary-color);
+}
+
+body.workbench-page .footer-bottom {
+    border-top: 1px solid var(--workbench-line-color);
+}
+
+@media (max-width: 768px) {
+    body.workbench-page .main-content {
+        border-left: none;
+        border-right: none;
+        padding: 12px;
+    }
+
+    body.workbench-page .content-wrapper {
+        padding: 16px 14px;
+    }
 }
 

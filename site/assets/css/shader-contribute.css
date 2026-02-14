@@ -220,7 +220,7 @@
     background: var(--bg-color);
     color: var(--text-color);
     padding: 12px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: var(--font-family-tutorial);
     font-size: 12px;
     line-height: 1.55;
     resize: vertical;

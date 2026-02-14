@@ -258,6 +258,89 @@
     display: grid !important;
 }
 
+/* Swiss x Developer Functionalism workbench scaffold */
+body.workbench-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-color);
+}
+
+body.workbench-page::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(to right, transparent calc(var(--workbench-rail-width) - 1px), var(--workbench-line-color) calc(var(--workbench-rail-width) - 1px), var(--workbench-line-color) var(--workbench-rail-width), transparent var(--workbench-rail-width));
+    opacity: 0.35;
+    z-index: 0;
+}
+
+body.workbench-page > :where(:not(.skip-link):not(.viewer-ai-fab-wrap)) {
+    position: relative;
+    z-index: 1;
+}
+
+main.workbench-main {
+    flex: 1 1 auto;
+    width: min(100%, var(--workbench-max-width));
+    margin: 0 auto;
+    padding: var(--workbench-gutter);
+    border-left: 1px solid var(--workbench-line-color);
+    border-right: 1px solid var(--workbench-line-color);
+    background-color: var(--workbench-muted-bg);
+}
+
+main.workbench-main .container,
+main.workbench-main .container-fluid {
+    width: min(100%, calc(var(--workbench-max-width) - (var(--workbench-gutter) * 2)));
+}
+
+.workbench-statusbar {
+    height: var(--workbench-status-height);
+    border-top: 1px solid var(--workbench-line-color);
+    border-bottom: 1px solid var(--workbench-line-color);
+    background-color: var(--workbench-panel-bg);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 var(--workbench-gutter);
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.02em;
+}
+
+.workbench-statusbar-item {
+    white-space: nowrap;
+}
+
+.workbench-statusbar-sep {
+    color: var(--text-muted);
+}
+
+.workbench-statusbar-spacer {
+    flex: 1 1 auto;
+}
+
+@media (max-width: 768px) {
+    body.workbench-page::before {
+        display: none;
+    }
+
+    main.workbench-main {
+        padding: 10px;
+        border-left: none;
+        border-right: none;
+    }
+
+    .workbench-statusbar {
+        padding: 0 10px;
+        font-size: 0.72rem;
+        gap: 6px;
+    }
+}
+
 /* 可见性 */
 .invisible {
     visibility: hidden;

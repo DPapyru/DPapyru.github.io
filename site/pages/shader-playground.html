@@ -7,32 +7,39 @@
     <meta name="description" content="在线 HLSL Shader 编辑器，支持实时预览、多 Pass 渲染，适用于 tModLoader Mod 开发。">
     <meta name="keywords" content="HLSL,Shader,tModLoader,泰拉瑞亚,Mod,WebGL">
     <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/workbench-phase.css">
     <link rel="stylesheet" href="/site/assets/css/shader-playground.css">
     <link rel="stylesheet" href="/site/assets/css/shader-contribute.css">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
     <script src="/site/assets/js/theme-init.js"></script>
 </head>
 
-<body class="viewer-page shaderpg-page">
+<body class="workbench-page viewer-page shaderpg-page">
     <!-- 顶部导航栏 -->
     <header class="site-header">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <a href="../index.html">
+                    <a href="/site/index.html">
                         <img src="/site/assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
                         <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
                     </a>
                 </div>
+                <form class="header-search" role="search" action="/site/search-results.html" method="get">
+                    <label class="visually-hidden" for="header-search-q">搜索教程</label>
+                    <input class="header-search-input" id="header-search-q" type="search" name="q" placeholder="搜索教程..." aria-label="搜索教程">
+                    <button class="header-search-button" type="submit" aria-label="执行搜索">
+                        <i class="icon-search" aria-hidden="true"></i>
+                    </button>
+                </form>
                 <nav class="main-nav" id="main-nav">
                     <ul class="nav-list">
-                        <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
-                        <li class="nav-item"><a href="folder.html" class="nav-link">文档</a></li>
-                        <li class="nav-item"><a href="article-studio.html" class="nav-link">在线写作IDE</a></li>
-                        <li class="nav-item"><a href="shader-playground.html" class="nav-link active" aria-current="page">Shader</a></li>
-                        <li class="nav-item"><a href="shader-gallery.html" class="nav-link">Gallery</a></li>
-                        <li class="nav-item"><a href="shader-contribute.html" class="nav-link">投稿</a></li>
-                        <li class="nav-item"><a href="../qa.html" class="nav-link">问答</a></li>
+                        <li class="nav-item"><a href="/site/index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="/site/pages/folder.html" class="nav-link">文档</a></li>
+                        <li class="nav-item"><a href="/site/pages/article-studio.html" class="nav-link">在线写作IDE</a></li>
+                        <li class="nav-item"><a href="/site/pages/shader-playground.html" class="nav-link">Shader</a></li>
+                        <li class="nav-item"><a href="/site/pages/shader-gallery.html" class="nav-link">Gallery</a></li>
+                        <li class="nav-item"><a href="/site/qa.html" class="nav-link">问答</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li class="nav-item nav-accent">
                             <label class="visually-hidden" for="accent-select">配色</label>
@@ -45,6 +52,8 @@
                                 <option value="cyan">青色</option>
                                 <option value="black">黑色</option>
                                 <option value="white">白色</option>
+                                <option value="vs">VS</option>
+                                <option value="git">Git</option>
                             </select>
                         </li>
                     </ul>
@@ -59,7 +68,7 @@
     </header>
 
     <!-- 主内容区 -->
-    <main class="main-content">
+    <main class="workbench-main main-content">
         <div class="container">
             <div class="content-wrapper">
                 <!-- 面包屑导航 -->
@@ -669,6 +678,8 @@ float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0 {
     <div class="shaderpg-drawer-overlay" id="shaderpg-drawer-overlay" aria-hidden="true"></div>
 
     <!-- 网站底部 -->
+    <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: IDE</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
+
     <footer class="site-footer">
         <div class="container">
             <div class="footer-content">

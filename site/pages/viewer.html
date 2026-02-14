@@ -32,7 +32,8 @@
     <link rel="canonical" href="https://dpapyru.github.io/site/pages/viewer.html">
 
     <!-- 加载CSS样式文件 -->
-    <link rel="stylesheet" href="/site/assets/css/style.css"> <!-- 主样式文件 -->
+    <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/workbench-phase.css"> <!-- 主样式文件 -->
     <link rel="stylesheet" href="/site/assets/css/prism.min.css"> <!-- 代码高亮样式 -->
     <link rel="stylesheet" href="/site/assets/css/rider-dark-theme.css"> <!-- Rider Dark代码高亮主题 -->
     <link rel="stylesheet" href="/site/assets/css/animts-runtime.css"> <!-- 动画运行时样式 -->
@@ -48,7 +49,6 @@
         html[data-studio-embed='1'] .learn-top-banner,
         html[data-studio-embed='1'] .sidebar,
         html[data-studio-embed='1'] .tutorial-header,
-        html[data-studio-embed='1'] .learning-author-diagnostics,
         html[data-studio-embed='1'] .comments-section,
         html[data-studio-embed='1'] .tutorial-footer,
         html[data-studio-embed='1'] .site-footer,
@@ -109,7 +109,7 @@
             margin-bottom: 0 !important;
         }
 
-        .viewer-ai-fab-wrap {
+        body.workbench-page .viewer-ai-fab-wrap {
             position: fixed;
             right: 18px;
             bottom: 20px;
@@ -310,7 +310,7 @@
         }
 
         .viewer-ai-output.viewer-ai-output--markdown code {
-            font-family: "Fira Code", "Consolas", monospace;
+            font-family: var(--font-family-tutorial);
             font-size: 12px;
         }
 
@@ -356,29 +356,33 @@
 
 </head>
 
-<body class="viewer-page">
+<body class="workbench-page viewer-page">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <!-- 网站头部导航区域 -->
     <header class="site-header">
         <div class="container">
-            <!-- 头部内容容器：包含网站logo、导航菜单和移动端菜单按钮 -->
             <div class="header-content">
-                <!-- 网站logo和标题 -->
                 <div class="logo">
-                    <a href="../index.html">
+                    <a href="/site/index.html">
                         <img src="/site/assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
                         <h1 class="site-title">泰拉瑞亚Mod制作教程</h1>
                     </a>
                 </div>
-                <!-- 主导航菜单 -->
+                <form class="header-search" role="search" action="/site/search-results.html" method="get">
+                    <label class="visually-hidden" for="header-search-q">搜索教程</label>
+                    <input class="header-search-input" id="header-search-q" type="search" name="q" placeholder="搜索教程..." aria-label="搜索教程">
+                    <button class="header-search-button" type="submit" aria-label="执行搜索">
+                        <i class="icon-search" aria-hidden="true"></i>
+                    </button>
+                </form>
                 <nav class="main-nav" id="main-nav">
                     <ul class="nav-list">
-                        <li class="nav-item"><a href="../index.html" class="nav-link">首页</a></li>
-                        <li class="nav-item"><a href="folder.html" class="nav-link active" aria-current="page">文档</a></li>
-                        <li class="nav-item"><a href="article-studio.html" class="nav-link">在线写作IDE</a></li>
-                        <li class="nav-item"><a href="shader-playground.html" class="nav-link">Shader</a></li>
-                        <li class="nav-item"><a href="shader-gallery.html" class="nav-link">Gallery</a></li>
-                        <li class="nav-item"><a href="../qa.html" class="nav-link">问答</a></li>
+                        <li class="nav-item"><a href="/site/index.html" class="nav-link">首页</a></li>
+                        <li class="nav-item"><a href="/site/pages/folder.html" class="nav-link">文档</a></li>
+                        <li class="nav-item"><a href="/site/pages/article-studio.html" class="nav-link">在线写作IDE</a></li>
+                        <li class="nav-item"><a href="/site/pages/shader-playground.html" class="nav-link">Shader</a></li>
+                        <li class="nav-item"><a href="/site/pages/shader-gallery.html" class="nav-link">Gallery</a></li>
+                        <li class="nav-item"><a href="/site/qa.html" class="nav-link">问答</a></li>
                         <li class="nav-item"><a href="https://github.com/DPapyru/DPapyru.github.io" class="nav-link" target="_blank" rel="noopener noreferrer">GitHub</a></li>
                         <li class="nav-item nav-accent">
                             <label class="visually-hidden" for="accent-select">配色</label>
@@ -391,21 +395,17 @@
                                 <option value="cyan">青色</option>
                                 <option value="black">黑色</option>
                                 <option value="white">白色</option>
+                                <option value="vs">VS</option>
+                                <option value="git">Git</option>
                             </select>
                         </li>
                     </ul>
                 </nav>
-                <!-- 移动端菜单切换按钮 -->
-	                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
-	                    <span class="bar"></span>
-	                    <span class="bar"></span>
-	                    <span class="bar"></span>
-	                </button>
-	                <!-- 手机端文档导航按钮 -->
-	                <button class="mobile-nav-toggle" id="mobile-nav-toggle" type="button" aria-label="文档导航" aria-controls="mobile-nav-overlay" aria-expanded="false">
-	                    <span class="nav-icon">☰</span>
-	                    <span class="nav-text">导航</span>
-	                </button>
+                <button class="mobile-menu-toggle" type="button" aria-label="切换菜单" aria-controls="main-nav" aria-expanded="false">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
             </div>
         </div>
     </header>
@@ -422,7 +422,7 @@
     </div>
 
     <!-- 网站主体容器：包含侧边栏和主内容区 -->
-    <div class="site-container">
+    <div class="site-container ui-workbench-shell">
 	        <!-- 左侧边栏：文档导航和相关链接 -->
 	        <aside class="sidebar">
 	            <div class="sidebar-content">
@@ -456,7 +456,7 @@
         </aside>
 
         <!-- 主内容区域：显示Markdown文档内容 -->
-        <main class="main-content" id="main-content" tabindex="-1">
+        <main class="workbench-main main-content" id="main-content" tabindex="-1">
             <div class="content-wrapper">
                 <!-- 教程头部区域：包含面包屑导航和文档元信息 -->
                 <div class="tutorial-header">
@@ -469,7 +469,6 @@
 	                        </div>
 		                        <div class="tutorial-actions" aria-label="阅读工具">
 		                            <button class="btn btn-small btn-outline" id="focus-mode-toggle" type="button" aria-pressed="false">焦点模式</button>
-		                            <button class="btn btn-small btn-outline" id="author-mode-toggle" type="button" aria-pressed="false">作者模式</button>
 		                        </div>
 	                    </div>
                     <!-- 文档标题 -->
@@ -484,7 +483,6 @@
                     <div class="learning-hints" id="learning-hints" aria-live="polite">
                         <div id="learning-hint-recommendation"></div>
                         <div id="learning-hint-prefs"></div>
-                        <div id="learning-hint-author"></div>
                     </div>
                 </div>
 
@@ -519,15 +517,6 @@
 	                    </section>
 	                </div>
 
-		                <!-- 作者模式诊断（仅作者/贡献者可用，不影响读者） -->
-		                <section class="learning-author-diagnostics" id="learning-author-diagnostics" aria-label="作者模式诊断" style="display:none;">
-		                    <div class="learning-author-diagnostics-header">
-		                        <h3 class="learning-author-diagnostics-title">作者模式诊断</h3>
-		                        <button type="button" class="btn btn-small btn-outline" id="author-mode-disable">关闭作者模式</button>
-		                    </div>
-		                    <div class="learning-author-panel" id="learning-author-panel"></div>
-		                </section>
-	
 		                <!-- 评论区（Giscus） -->
 		                <section class="comments-section" id="comments" aria-label="评论区">
 		                    <h3 class="comments-title">评论</h3>
@@ -557,6 +546,8 @@
     </div>
 
     <!-- 网站底部区域 -->
+    <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: IDE</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
+
     <footer class="site-footer">
         <div class="container">
             <!-- 底部内容容器 -->
@@ -773,7 +764,8 @@
             try {
                 const url = new URL(window.location.href);
                 const flag = String(url.searchParams.get('studio_embed') || '').trim().toLowerCase();
-                return flag === '1' || flag === 'true' || flag === 'yes';
+                const requested = flag === '1' || flag === 'true' || flag === 'yes';
+                return requested && window.parent !== window;
             } catch (_) {
                 return false;
             }
@@ -1210,10 +1202,6 @@
 	                    // Learn 风格：焦点模式与侧边栏快速查找
 	                    initializeViewerFocusMode();
 	                    initializeSidebarQuickSearch();
-	                    initializeLearningAuthorToggle();
-		
-			            // 作者模式：支持 ?author=1/0，并持久化到 localStorage
-			            initializeLearningAuthorModeFromUrl();
 
 	            // 初始化MD渲染器（优先，避免其它初始化异常导致 Markdown 无法渲染）
 	            initializeMarkedRender();
@@ -1279,17 +1267,6 @@
 			            // 初始化手机端导航
 			            initializeMobileNavigation();
 			        });
-
-	        function initializeLearningAuthorToggle() {
-	            const authorToggle = document.getElementById('author-mode-toggle');
-	            if (!authorToggle) return;
-
-	            authorToggle.addEventListener('click', function () {
-	                const next = !isLearningAuthorModeEnabled();
-	                writeLearningAuthorMode(next);
-	                rerenderCurrentDocPreserveScroll();
-	            });
-	        }
 
 	        async function initializeMarkedRender() {
 	            console.log('初始化MD渲染器...');
@@ -2011,44 +1988,14 @@
 	        const TRANSCLUSION_CACHE = new Map();
 	        const LEARNING_AUTHOR_MODE_KEY = 'learningAuthorMode';
 
-	        function getLearningAuthorModeFromUrl() {
+	        // 作者模式已下线：清理旧偏好并强制关闭。
+	        (function clearLearningAuthorModePreference() {
 	            try {
-	                const url = new URL(window.location.href);
-	                const v = url.searchParams.get('author');
-	                if (v == null) return null;
-	                if (v === '1' || v.toLowerCase() === 'true') return true;
-	                if (v === '0' || v.toLowerCase() === 'false') return false;
-	                return null;
+	                window.localStorage.removeItem(LEARNING_AUTHOR_MODE_KEY);
 	            } catch (e) {
-	                return null;
+	                // ignore localStorage failures
 	            }
-	        }
-
-	        function readLearningAuthorMode() {
-	            try {
-	                return window.localStorage.getItem(LEARNING_AUTHOR_MODE_KEY) === 'true';
-	            } catch (e) {
-	                return false;
-	            }
-	        }
-
-	        function writeLearningAuthorMode(enabled) {
-	            try {
-	                window.localStorage.setItem(LEARNING_AUTHOR_MODE_KEY, enabled ? 'true' : 'false');
-	            } catch (e) {
-	                // ignore
-	            }
-	        }
-
-	        function initializeLearningAuthorModeFromUrl() {
-	            const parsed = getLearningAuthorModeFromUrl();
-	            if (parsed == null) return;
-	            writeLearningAuthorMode(Boolean(parsed));
-	        }
-
-	        function isLearningAuthorModeEnabled() {
-	            return readLearningAuthorMode();
-	        }
+	        })();
 
 	        function escapeHtmlAttribute(value) {
 	            return String(value || '')
@@ -2057,39 +2004,6 @@
 	                .replace(/>/g, '&gt;')
 	                .replace(/"/g, '&quot;')
 	                .replace(/'/g, '&#39;');
-	        }
-
-	        function createLearningDiagnostics(filePath) {
-	            return {
-	                filePath: String(filePath || ''),
-	                createdAt: new Date().toISOString(),
-	                condition: {
-	                    blocks: 0,
-	                    directives: { if: 0, elseif: 0, else: 0, end: 0 },
-	                    inputLines: 0,
-	                    outputLines: 0,
-	                    removedLines: 0,
-	                    errors: []
-	                },
-	                transclusion: {
-	                    matchedLines: 0,
-	                    expandedCount: 0,
-	                    includedDocs: [],
-	                    errors: []
-	                },
-	                metadata: {
-	                    warnings: [],
-	                    errors: []
-	                },
-	                structure: {
-	                    warnings: []
-	                },
-	                links: {
-	                    mdLinkErrors: [],
-	                    imageErrors: [],
-	                    scannedAt: null
-	                }
-	            };
 	        }
 
 	        function setCurrentLearningDiagnostics(diag) {
@@ -2161,17 +2075,15 @@
 
 	        function getLearningRenderContext() {
 	            const base = getLearningConditionContext();
-	            const authorMode = isLearningAuthorModeEnabled();
-
 	            const ctx = {
 	                C: base.C,
 	                T: base.T,
-	                AUTHOR: authorMode ? 1 : 0
+	                AUTHOR: 0
 	            };
 
 	            return {
 	                ctx: ctx,
-	                authorMode: authorMode
+	                authorMode: false
 	            };
 	        }
 
@@ -2291,8 +2203,7 @@
 	            if (!container) return;
 	            const nodes = [
 	                document.getElementById('learning-hint-recommendation'),
-	                document.getElementById('learning-hint-prefs'),
-	                document.getElementById('learning-hint-author')
+	                document.getElementById('learning-hint-prefs')
 	            ].filter(Boolean);
 	            const hasAny = nodes.some(function (n) { return n.innerHTML && String(n.innerHTML).trim(); });
 	            container.style.display = hasAny ? 'block' : 'none';
@@ -2330,265 +2241,6 @@
 
 	            updateLearningHintsVisibility();
 	        }
-
-	        function scanRequiredReferenceHeadings(sourceMarkdown) {
-	            const text = String(sourceMarkdown || '');
-	            const requiredGroups = [
-	                { label: '本章要点', options: ['本章要点', '小结'] },
-	                { label: '常见坑', options: ['常见坑', '常见问题'] },
-	                { label: '下一步', options: ['下一步'] }
-	            ];
-
-	            function escapeRegExp(s) {
-	                return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-	            }
-
-	            const missing = [];
-	            requiredGroups.forEach(function (group) {
-	                const ok = (group.options || []).some(function (h) {
-	                    const re = new RegExp('^##\\s+' + escapeRegExp(h) + '\\s*$', 'm');
-	                    return re.test(text);
-	                });
-	                if (!ok) missing.push(group.label);
-	            });
-	            return missing;
-	        }
-
-	        function collectAuthorDiagnostics(diag, rawMetadata, metadata, filePath, rawContent) {
-	            if (!diag) return;
-
-	            const originalTitle = rawMetadata && rawMetadata.title ? String(rawMetadata.title).trim() : '';
-	            if (!originalTitle) {
-	                diag.metadata.warnings.push('缺少 YAML 元数据字段：title');
-	            }
-
-	            const hasMinC = rawMetadata && typeof rawMetadata.min_c === 'number';
-	            const hasMinT = rawMetadata && typeof rawMetadata.min_t === 'number';
-	            if (!hasMinC && !hasMinT) {
-	                diag.metadata.warnings.push('建议补充阅读门槛标注：min_c / min_t（软建议，不影响阅读）');
-	            }
-
-	            const missingHeadings = scanRequiredReferenceHeadings(rawContent);
-	            if (missingHeadings.length) {
-	                diag.structure.warnings.push('缺少硬规范标题：' + missingHeadings.join(' / '));
-	            }
-
-	            const prev = metadata && metadata.prev_chapter ? String(metadata.prev_chapter) : '';
-	            const next = metadata && metadata.next_chapter ? String(metadata.next_chapter) : '';
-	            if (prev) {
-	                const resolvedPrev = resolveDocLinkPath(prev, filePath) || resolveRelativeHref(prev, filePath);
-	                if (!isIndexedDocPath(resolvedPrev, filePath)) {
-	                    diag.metadata.warnings.push('prev_chapter 无法解析到索引内文档：' + prev);
-	                }
-	            }
-	            if (next) {
-	                const resolvedNext = resolveDocLinkPath(next, filePath) || resolveRelativeHref(next, filePath);
-	                if (!isIndexedDocPath(resolvedNext, filePath)) {
-	                    diag.metadata.warnings.push('next_chapter 无法解析到索引内文档：' + next);
-	                }
-	            }
-	        }
-
-	        function renderLearningAuthorHeaderHint(diag) {
-	            const node = document.getElementById('learning-hint-author');
-	            if (!node) return;
-	            if (!isLearningAuthorModeEnabled() || !diag) {
-	                node.innerHTML = '';
-	                updateLearningHintsVisibility();
-	                return;
-	            }
-
-	            const warnCount =
-	                (diag.metadata.warnings || []).length +
-	                (diag.structure.warnings || []).length +
-	                (diag.transclusion.errors || []).length +
-	                (diag.condition.errors || []).length;
-
-	            if (warnCount <= 0) {
-	                node.innerHTML = '';
-	                updateLearningHintsVisibility();
-	                return;
-	            }
-
-	            const top = []
-	                .concat(diag.metadata.warnings || [])
-	                .concat(diag.structure.warnings || [])
-	                .slice(0, 2)
-	                .map(escapeHtmlAttribute);
-
-	            node.innerHTML = [
-	                '<div class="learning-hint-card learning-author-hint">',
-	                '<div class="learning-hint-title">作者模式提示</div>',
-	                '<div class="learning-hint-text">本页检测到 ' + warnCount + ' 条诊断信息：' + (top.length ? top.join('；') : '') + '</div>',
-	                '</div>'
-	            ].join('');
-	            updateLearningHintsVisibility();
-	        }
-
-	        function scanDocLinksFromDom(container, currentDocPath) {
-	            const errors = [];
-	            if (!container) return errors;
-
-	            const anchors = Array.from(container.querySelectorAll('a[href]')).slice(0, 200);
-	            anchors.forEach(function (a) {
-	                const href = String(a.getAttribute('href') || '');
-	                if (!href) return;
-	                if (href.startsWith('#')) return;
-	                if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(href)) return;
-
-	                try {
-	                    if (href.includes('viewer.html') && href.includes('file=')) {
-	                        const u = new URL(href, window.location.href);
-	                        const file = u.searchParams.get('file');
-	                        if (!file) return;
-	                        let decoded = file;
-	                        try { decoded = decodeURIComponent(file); } catch { decoded = file; }
-	                        decoded = decoded.replace(/^\.?\//, '').replace(/^docs\//, '');
-	                        if (!isIndexedDocPath(decoded, currentDocPath)) {
-	                            errors.push({ href, message: '链接指向的文档未被索引: ' + decoded });
-	                        }
-	                        return;
-	                    }
-
-	                    if (href.endsWith('.md') || href.includes('.md#')) {
-	                        const base = splitHash(href).base || href;
-	                        const resolved = resolveDocLinkPath(base, currentDocPath) || resolveRelativeHref(base, currentDocPath);
-	                        if (!isIndexedDocPath(resolved, currentDocPath)) {
-	                            errors.push({ href, message: 'Markdown 链接无法解析到索引内文档: ' + href });
-	                        }
-	                    }
-	                } catch (e) {
-	                    errors.push({ href, message: '链接解析失败: ' + String(e && e.message ? e.message : e) });
-	                }
-	            });
-
-	            return errors;
-	        }
-
-	        async function scanImagesFromDom(container) {
-	            const errors = [];
-	            if (!container) return errors;
-
-	            const imgs = Array.from(container.querySelectorAll('img[src]')).slice(0, 25);
-	            for (const img of imgs) {
-	                const srcRaw = String(img.getAttribute('src') || '').trim();
-	                if (!srcRaw) continue;
-	                if (srcRaw.startsWith('data:')) continue;
-	                if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(srcRaw)) continue;
-
-	                try {
-	                    const url = new URL(srcRaw, window.location.href).toString();
-	                    const resp = await fetch(url, { cache: 'no-cache' });
-	                    if (!resp.ok) {
-	                        errors.push({ src: srcRaw, status: resp.status, message: '图片请求失败: ' + resp.status });
-	                    }
-	                } catch (e) {
-	                    errors.push({ src: srcRaw, status: 0, message: '图片请求异常: ' + String(e && e.message ? e.message : e) });
-	                }
-	            }
-
-	            return errors;
-	        }
-
-		        function renderLearningAuthorPanel(diag, container, currentDocPath) {
-		            const section = document.getElementById('learning-author-diagnostics');
-		            const panel = document.getElementById('learning-author-panel');
-		            if (!panel) return;
-
-		            if (!diag) {
-		                panel.innerHTML = '';
-		                if (section) section.style.display = 'none';
-		                return;
-		            }
-
-		            if (section) section.style.display = 'block';
-
-	            if (!isLearningAuthorModeEnabled() || !diag) {
-	                panel.innerHTML = '';
-	                panel.style.display = 'none';
-	                return;
-	            }
-
-	            panel.style.display = 'block';
-
-	            const warnings = []
-	                .concat(diag.metadata.warnings || [])
-	                .concat(diag.structure.warnings || []);
-
-	            const errorCount = (diag.transclusion.errors || []).length + (diag.condition.errors || []).length + (diag.links.mdLinkErrors || []).length + (diag.links.imageErrors || []).length;
-	            const warnCount = warnings.length;
-
-	            function listItems(items, mapper) {
-	                const arr = Array.isArray(items) ? items : [];
-	                if (!arr.length) return '<div class="learning-diag-empty">无</div>';
-	                return '<ul class="learning-diag-list">' + arr.slice(0, 50).map(function (x) {
-	                    return '<li>' + escapeHtmlAttribute(mapper ? mapper(x) : x) + '</li>';
-	                }).join('') + '</ul>';
-	            }
-
-	            panel.innerHTML = [
-	                '<div class="learning-diag-summary">',
-	                '<div class="learning-diag-kv"><span>警告</span><span>' + warnCount + '</span></div>',
-	                '<div class="learning-diag-kv"><span>错误</span><span>' + errorCount + '</span></div>',
-	                '</div>',
-
-	                '<details class="learning-diag-block" open>',
-	                '<summary>元数据 / 结构</summary>',
-	                listItems(warnings),
-	                '</details>',
-
-	                '<details class="learning-diag-block">',
-	                '<summary>引用展开</summary>',
-	                listItems(diag.transclusion.errors, function (e) { return (e.from ? '[' + e.from + '] ' : '') + (e.target ? e.target + '：' : '') + e.message; }),
-	                '</details>',
-
-	                '<details class="learning-diag-block">',
-	                '<summary>链接 / 资源</summary>',
-	                '<div class="learning-diag-actions">',
-	                '<button type="button" class="btn btn-small btn-outline" data-action="scan-links">扫描链接</button>',
-	                '<button type="button" class="btn btn-small btn-outline" data-action="scan-images">扫描图片（发请求）</button>',
-	                '</div>',
-	                '<div class="learning-diag-mono">' + (diag.links.scannedAt ? ('上次扫描：' + escapeHtmlAttribute(diag.links.scannedAt)) : '尚未扫描') + '</div>',
-	                '<div class="learning-diag-subtitle">文档链接</div>',
-	                listItems(diag.links.mdLinkErrors, function (e) { return e.message; }),
-	                '<div class="learning-diag-subtitle">图片</div>',
-	                listItems(diag.links.imageErrors, function (e) { return (e.src ? e.src + '：' : '') + e.message; }),
-	                '</details>'
-	            ].join('');
-
-	            const scanLinks = panel.querySelector('[data-action="scan-links"]');
-	            if (scanLinks) {
-	                scanLinks.addEventListener('click', function () {
-	                    diag.links.mdLinkErrors = scanDocLinksFromDom(container, currentDocPath);
-	                    diag.links.scannedAt = new Date().toISOString();
-	                    renderLearningAuthorPanel(diag, container, currentDocPath);
-	                });
-	            }
-
-	            const scanImagesBtn = panel.querySelector('[data-action="scan-images"]');
-	            if (scanImagesBtn) {
-	                scanImagesBtn.addEventListener('click', async function () {
-	                    scanImagesBtn.disabled = true;
-	                    scanImagesBtn.textContent = '扫描中...';
-	                    try {
-	                        diag.links.imageErrors = await scanImagesFromDom(container);
-	                        diag.links.scannedAt = new Date().toISOString();
-	                    } finally {
-	                        scanImagesBtn.disabled = false;
-	                        scanImagesBtn.textContent = '扫描图片（发请求）';
-	                        renderLearningAuthorPanel(diag, container, currentDocPath);
-	                    }
-	                });
-	            }
-	        }
-
-	        function renderLearningAuthorToolbar() {
-	            const btn = document.getElementById('author-mode-toggle');
-	            if (!btn) return;
-		            const enabled = isLearningAuthorModeEnabled();
-		            btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-		            btn.textContent = enabled ? '作者模式：开' : '作者模式：关';
-		        }
 
 	        function rerenderCurrentDocPreserveScroll() {
 	            const file = CURRENT_DOC_PATH || (new URL(window.location.href)).searchParams.get('file');
@@ -4066,8 +3718,6 @@
 	                        const frontMatter = parseFrontMatter(markdownText);
 	                        let content = frontMatter.content;
 	                        const metadata = frontMatter.metadata;
-	                        const rawMetadata = { ...(metadata || {}) };
-	                        const rawSourceContent = String(content || '');
 
                         // 补齐缺失的元数据：优先使用 config.json 中的索引信息（不修改 Markdown 原文）
                         const docFromConfig = ALL_DOCS.find(d => {
@@ -4099,25 +3749,18 @@
 	                        // 如果 Front Matter 指定了 source_cs 字段，则显示对应 C# 源码（允许多个）
 	                        renderSourceCodesFromFrontMatter(metadata, fetchPath);
 
-	                        // 清理上一次的作者模式诊断状态（避免跨文档串联）
+	                        // 作者模式已移除，清理上一轮诊断缓存。
 	                        setCurrentLearningDiagnostics(null);
-	                        renderLearningAuthorHeaderHint(null);
 
 	                        try {
 	                            const learningModel = getLearningRenderContext();
 	                            window.CURRENT_LEARNING_MODEL = learningModel;
-	                            const diag = learningModel.authorMode ? createLearningDiagnostics(fetchPath) : null;
-	                            setCurrentLearningDiagnostics(diag);
-	                            if (diag) {
-	                                collectAuthorDiagnostics(diag, rawMetadata, metadata, fetchPath, rawSourceContent);
-	                            }
 
 		                            content = await expandMarkdownTransclusions(content, fetchPath, 0, [], learningModel.ctx);
 
 		                            if (typeof renderLearningSidebarPanel === 'function') {
 		                                renderLearningSidebarPanel(learningModel);
 		                            }
-		                            renderLearningAuthorToolbar();
 		                            renderLearningRecommendationHint(metadata, learningModel);
 		                            if (typeof renderLearningHintsBanner === 'function') {
 		                                renderLearningHintsBanner(learningModel);
@@ -4125,7 +3768,6 @@
 		                            if (typeof renderLearningTopBanner === 'function') {
 		                                renderLearningTopBanner(learningModel);
 		                            }
-		                            renderLearningAuthorHeaderHint(diag);
 	                        } catch (err) {
 	                            console.warn('展开引用内容失败，继续渲染原始文档:', err);
 	                        }
@@ -4170,12 +3812,8 @@
 	                        // 自动生成文档目录
 	                        generateTableOfContents(markdownContent);
 
-		                        // 作者模式诊断面板（不影响读者）
-		                        renderLearningAuthorPanel(getCurrentLearningDiagnostics(), markdownContent, fetchPath);
-		                        renderLearningAuthorToolbar();
-
-                        // 显示内容，隐藏加载指示器
-                        if (loadingIndicator) {
+	                        // 显示内容，隐藏加载指示器
+	                        if (loadingIndicator) {
                             loadingIndicator.style.display = 'none';
                             loadingIndicator.setAttribute('aria-busy', 'false');
                         }
@@ -5299,11 +4937,11 @@
 	                    guides.setAttribute('aria-hidden', 'true');
 	                    appendTreeGuides(guides, ancestor, isLast, depth);
 
-	                    const toggle = document.createElement('button');
-	                    toggle.type = 'button';
-	                    toggle.className = 'learn-tree-toggle';
-	                    toggle.setAttribute('aria-label', '展开/收起');
-	                    toggle.textContent = '▾';
+                    const toggle = document.createElement('button');
+                    toggle.type = 'button';
+                    toggle.className = 'learn-tree-toggle';
+                    toggle.setAttribute('aria-label', '展开/收起');
+                    toggle.textContent = '';
 
 	                    const item = document.createElement('span');
 	                    item.className = 'learn-tree-item';
@@ -6538,15 +6176,19 @@
             }
 
             function isStudioEmbedModeEnabled() {
+                const attrFlag = document.documentElement.getAttribute('data-studio-embed') === '1';
+                if (attrFlag) return true;
+
                 try {
                     const url = new URL(window.location.href);
                     const flag = String(url.searchParams.get('studio_embed') || '').trim().toLowerCase();
-                    if (flag === '1' || flag === 'true' || flag === 'yes') return true;
+                    const requested = flag === '1' || flag === 'true' || flag === 'yes';
+                    if (requested && window.parent !== window) return true;
                 } catch (_) {
                     // ignore url parse errors
                 }
 
-                return document.documentElement.getAttribute('data-studio-embed') === '1';
+                return false;
             }
 
             function normalizeAiApiUrl(input) {
@@ -7335,6 +6977,7 @@
                 return;
             }
 
+            dom.root.hidden = false;
             setupFabDrag();
             restoreFabPosition();
 
