@@ -2,13 +2,29 @@
 
 本文档定义本仓库的默认开发流程，以“工作树并行开发 + 统一验证”为核心。
 
+## 0. 适用范围
+
+- 本流程适用于所有会修改仓库文件的任务（代码、内容、样式、脚本、构建配置等）。
+- 纯讨论、只读排查、文档评审可不创建工作树。
+- 一旦开始写入改动，必须先进入工作树再继续开发。
+
 ## 1. 工作树划分
 
-**项目一定需要使用工作树进行开发**
-
-**工作树使用一次后删除**
+- 需要改动文件时，必须使用工作树进行开发。
+- 单次任务完成后删除对应工作树。
 
 推荐目录：`/mnt/f/DPapyru.github.io/.worktrees/<worktree-name>`。
+
+推荐命名：`feat-<topic>`、`fix-<topic>`、`content-<topic>`。
+
+常用命令：
+
+```bash
+git worktree add .worktrees/<worktree-name> -b <branch-name>
+cd .worktrees/<worktree-name>
+# 完成任务后回到仓库根目录执行
+git worktree remove .worktrees/<worktree-name>
+```
 
 ## 2. 开发原则
 
@@ -30,17 +46,20 @@
 5. 执行验证：
    - 必跑：`npm run build`
    - 条件允许时：`npm run check-generated`
-6. 记录验证结果（命令、是否通过、备注）。
+6. 记录验证结果到 `ERRORS.md`（命令、是否通过、备注、时间）。
 
-## 4. 三工作树联合验收
+## 4. L3 级统一验收（替代三工作树联合验收）
 
-任何一次面向提交的迭代，都需要在三个工作树分别通过至少 `npm run build`：
+以下场景统一按 L3 执行：发布前迭代、构建链路改动、公共脚本改动、跨模块改动。
 
-- `add-new-test-content`：`npm run build`
-- `add-new-text`：`npm run build`
-- `bug-repair`：`npm run build`
+1. 在当前工作树执行：
+   - `npm run build`
+   - `npm run check-generated`
+2. 若 `check-generated` 因平台或 Git 工作树元数据异常无法执行，允许先完成 `npm run build`，并在可用环境补跑 `npm run check-generated`。
+3. 可复现性要求：建议在干净工作树额外补跑一次 `npm run build`（不再要求固定三个工作树名称）。
+4. 验证记录统一写入 `ERRORS.md`（命令、是否通过、备注、时间）。
 
-若当前平台 Git 工作树元数据异常，允许先完成构建验证，再在对应可用平台补跑 `npm run check-generated`。
+验收未通过不得进入提交流程。
 
 ## 5. 约束与注意事项
 
@@ -53,13 +72,16 @@
 
 ```bash
 npm ci
-npm run generate-index
+git worktree add .worktrees/<worktree-name> -b <branch-name>
 npm run build
 npm run check-generated
+npm run generate-index
+git worktree remove .worktrees/<worktree-name>
 ```
 
 ## 7. 提交流程建议
 
 - 提交前确认改动与任务一致，不包含临时文件。
 - PR 描述至少包含：改了什么、为什么改、如何验证。
+- 在 PR 中引用 `ERRORS.md` 对应验证记录。
 - 以可复现验证为准，不以“本地看起来正常”为准。
