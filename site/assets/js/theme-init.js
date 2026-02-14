@@ -15,6 +15,8 @@
       orange: true,
       red: true,
       cyan: true,
+      vs: true,
+      git: true,
       black: true,
       white: true
     };
