@@ -159,6 +159,9 @@
 
 /* Workbench header refinement */
 body.workbench-page .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     box-shadow: none;
     border-bottom: 1px solid var(--workbench-line-color);
     backdrop-filter: blur(6px);

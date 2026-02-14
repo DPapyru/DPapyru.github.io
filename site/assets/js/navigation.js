@@ -9,7 +9,6 @@ class NavigationEnhancements {
     init() {
         // this.initBreadcrumb();
         this.initSidebarNavigation();
-        this.initBackToTop();
         this.initKeyboardShortcuts();
         this.initMobileNavigation();
     }
@@ -222,36 +221,6 @@ class NavigationEnhancements {
             if (linkUrl === `#${currentSection}`) {
                 parentLi.classList.add('active');
             }
-        });
-    }
-
-    // 初始化返回顶部按钮
-    initBackToTop() {
-        // 创建返回顶部按钮
-        const backToTop = document.createElement('button');
-        backToTop.className = 'back-to-top';
-        backToTop.type = 'button';
-        backToTop.setAttribute('aria-label', '返回顶部');
-        backToTop.innerHTML = '↑';
-        
-        // 添加到页面
-        document.body.appendChild(backToTop);
-        
-        // 滚动事件
-        window.addEventListener('scroll', throttle(() => {
-            if (window.scrollY > 300) {
-                backToTop.classList.add('visible');
-            } else {
-                backToTop.classList.remove('visible');
-            }
-        }, 100));
-        
-        // 点击事件
-        backToTop.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
         });
     }
 

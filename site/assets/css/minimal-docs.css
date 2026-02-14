@@ -88,7 +88,10 @@ html[data-theme="dark"] .sidebar-content {
 html[data-theme="dark"] .learn-tree-root,
 html[data-theme="dark"] .learn-tree-children {
     --learn-indent-step: 24px;
-    --learn-tree-line: rgba(255, 255, 255, 0.14);
+    --learn-tree-row-height: 34px;
+    --learn-tree-guide-center: 10px;
+    --learn-tree-line: rgba(148, 178, 228, 0.38);
+    --learn-tree-glyph-font: "JetBrainsMonoNerdFontBold", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     list-style: none;
     margin: 0;
     padding: 0;
@@ -120,19 +123,48 @@ html[data-theme="dark"] .learn-tree-link {
 }
 
 html[data-theme="dark"] .learn-tree-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-weight: 650;
+}
+
+html[data-theme="dark"] .learn-tree-label::before {
+    content: '\f07c';
+    font-family: var(--learn-tree-glyph-font);
+    font-size: 18px;
+    line-height: 1;
+    color: var(--text-secondary);
+    flex: 0 0 auto;
+}
+
+html[data-theme="dark"] .learn-tree-folder[data-collapsed="1"] > .learn-tree-row .learn-tree-label::before {
+    content: '\f07b';
 }
 
 html[data-theme="dark"] .learn-tree-link-label {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     flex: 1 1 auto;
+}
+
+html[data-theme="dark"] .learn-tree-link-label::before {
+    content: '\f15b';
+    font-family: var(--learn-tree-glyph-font);
+    font-size: 11px;
+    line-height: 1;
+    color: var(--text-muted);
+    flex: 0 0 auto;
 }
 
 html[data-theme="dark"] .learn-tree-link-text {
@@ -158,29 +190,31 @@ html[data-theme="dark"] .learn-tree-guides {
     flex: 0 0 auto;
     pointer-events: none;
     user-select: none;
+    margin-right: 0;
 }
 
 html[data-theme="dark"] .learn-tree-guide {
     position: relative;
-    width: var(--learn-indent-step, 20px);
+    width: var(--learn-indent-step, 24px);
     flex: 0 0 auto;
+    min-height: var(--learn-tree-row-height, 34px);
 }
 
 html[data-theme="dark"] .learn-tree-guide.has-vertical::before {
     content: '';
     position: absolute;
-    left: 50%;
-    top: -12px;
-    bottom: -12px;
+    left: var(--learn-tree-guide-center, 10px);
+    top: calc(var(--learn-tree-row-height, 34px) / -2);
+    bottom: calc(var(--learn-tree-row-height, 34px) / -2);
     border-left: 1px solid var(--learn-tree-line, rgba(255, 255, 255, 0.14));
 }
 
 html[data-theme="dark"] .learn-tree-guide.current::after {
     content: '';
     position: absolute;
-    left: 50%;
-    right: 0;
-    top: 50%;
+    left: var(--learn-tree-guide-center, 10px);
+    right: 3px;
+    top: calc(var(--learn-tree-row-height, 34px) / 2);
     border-top: 1px solid var(--learn-tree-line, rgba(255, 255, 255, 0.14));
 }
 
@@ -197,9 +231,14 @@ html[data-theme="dark"] .learn-tree-item {
     gap: 8px;
     flex: 1 1 auto;
     min-width: 0;
-    padding: 8px 10px;
+    min-height: var(--learn-tree-row-height, 34px);
+    padding: 4px 4px;
     border-radius: 6px;
     color: inherit;
+}
+
+html[data-theme="dark"] .learn-tree-folder-row .learn-tree-item {
+    gap: 4px;
 }
 
 html[data-theme="dark"] .learn-tree-row .learn-tree-item,
@@ -211,47 +250,51 @@ html[data-theme="dark"] .learn-tree-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
+    width: 0;
+    height: 0;
+    padding: 0;
+    margin: 0;
     border: none;
     background: transparent;
-    color: var(--text-muted);
+    color: transparent;
     cursor: pointer;
-    transition: transform 0.15s ease, color 0.15s ease, background-color 0.15s ease;
-    flex: 0 0 auto;
-}
-
-html[data-theme="dark"] .learn-tree-label {
-    flex: 1 1 auto;
+    font-size: 0;
+    line-height: 1;
+    transition: none;
+    flex: 0 0 0;
+    overflow: hidden;
 }
 
 html[data-theme="dark"] .learn-tree-toggle-spacer {
-    width: 26px;
-    height: 26px;
+    width: 18px;
+    height: 18px;
     flex: 0 0 auto;
 }
 
 html[data-theme="dark"] .learn-tree-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.04);
-    color: var(--text-color);
+    background-color: transparent;
+    color: transparent;
 }
 
 html[data-theme="dark"] .learn-tree-folder[data-collapsed="1"] > .learn-tree-children {
     display: none;
 }
 
-html[data-theme="dark"] .learn-tree-folder[data-collapsed="1"] > .learn-tree-row .learn-tree-toggle {
-    transform: rotate(-90deg);
-}
-
 html[data-theme="dark"] .learn-tree-row:hover .learn-tree-item {
     background-color: var(--sidebar-hover);
+}
+
+html[data-theme="dark"] .learn-tree-row:hover .learn-tree-label::before {
+    color: var(--primary-color);
 }
 
 html[data-theme="dark"] .learn-tree-link:hover .learn-tree-item {
     background-color: var(--sidebar-hover) !important;
     color: var(--text-color) !important;
+}
+
+html[data-theme="dark"] .learn-tree-link:hover .learn-tree-link-label::before {
+    color: var(--primary-color);
 }
 
 html[data-theme="dark"] .learn-tree-link.active .learn-tree-item {
@@ -260,6 +303,10 @@ html[data-theme="dark"] .learn-tree-link.active .learn-tree-item {
     border-left: 2px solid var(--primary-color);
     border-radius: 0 6px 6px 0;
     padding-left: 8px;
+}
+
+html[data-theme="dark"] .learn-tree-link.active .learn-tree-link-label::before {
+    color: var(--primary-color);
 }
 
 /* viewer：关闭旧的滚动提示气泡（Learn 不显示） */
@@ -807,30 +854,6 @@ html[data-theme="dark"] .learn-modal-close:hover {
 
 html[data-theme="dark"] .learn-modal-body {
     padding: 14px 16px 16px;
-}
-
-/* viewer：作者模式诊断区域（正文内，不挤侧边栏） */
-html[data-theme="dark"] .learning-author-diagnostics {
-    margin-top: 18px;
-    padding: 14px 14px 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    background: var(--learn-surface);
-}
-
-html[data-theme="dark"] .learning-author-diagnostics-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-html[data-theme="dark"] .learning-author-diagnostics-title {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 650;
 }
 
 @media (max-width: 1100px) {
