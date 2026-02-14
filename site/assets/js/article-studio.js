@@ -12,11 +12,35 @@
     const MAX_IMAGE_COUNT = 12;
     const MAX_CSHARP_FILE_SIZE = 200 * 1024;
     const MAX_CSHARP_COUNT = 5;
+    const FLOWCHART_REALTIME_DEBOUNCE_MS = 500;
 
     const dom = {
         markdown: document.getElementById('studio-markdown'),
         previewFrame: document.getElementById('studio-preview-frame'),
         openViewerPreview: document.getElementById('studio-open-viewer-preview'),
+        flowchartToggle: document.getElementById('studio-flowchart-toggle'),
+        flowchartDrawer: document.getElementById('studio-flowchart-drawer'),
+        flowchartClose: document.getElementById('studio-flowchart-close'),
+        flowchartModeVisual: document.getElementById('studio-flowchart-mode-visual'),
+        flowchartModeSource: document.getElementById('studio-flowchart-mode-source'),
+        flowchartBindingStatus: document.getElementById('studio-flowchart-binding-status'),
+        flowchartRebind: document.getElementById('studio-flowchart-rebind'),
+        flowchartBindNew: document.getElementById('studio-flowchart-bind-new'),
+        flowchartRealtimeToggle: document.getElementById('studio-flowchart-realtime-toggle'),
+        flowchartVisualPanel: document.getElementById('studio-flowchart-visual-panel'),
+        flowchartSourcePanel: document.getElementById('studio-flowchart-source-panel'),
+        flowchartDirection: document.getElementById('studio-flowchart-direction'),
+        flowchartNodeList: document.getElementById('studio-flowchart-node-list'),
+        flowchartEdgeList: document.getElementById('studio-flowchart-edge-list'),
+        flowchartAddNode: document.getElementById('studio-flowchart-add-node'),
+        flowchartAddEdge: document.getElementById('studio-flowchart-add-edge'),
+        flowchartGeneratedSource: document.getElementById('studio-flowchart-generated-source'),
+        flowchartCopySource: document.getElementById('studio-flowchart-copy-source'),
+        flowchartApply: document.getElementById('studio-flowchart-apply'),
+        flowchartSourceEditor: document.getElementById('studio-flowchart-source-editor'),
+        flowchartSourceApply: document.getElementById('studio-flowchart-source-apply'),
+        flowchartTryVisual: document.getElementById('studio-flowchart-try-visual'),
+        flowchartSourceReset: document.getElementById('studio-flowchart-source-reset'),
         status: document.getElementById('studio-status'),
         stats: document.getElementById('studio-stats'),
         currentPath: document.getElementById('studio-current-path'),
@@ -122,11 +146,23 @@
         },
         authToken: '',
         githubUser: '',
-        isFullscreen: false
+        isFullscreen: false,
+        flowchartDrawer: {
+            open: false,
+            mode: 'visual',
+            realtimeEnabled: true,
+            parseStatus: 'idle',
+            boundBlock: null,
+            model: null,
+            generatedSource: '',
+            sourceDraft: '',
+            nextNodeSeq: 1
+        }
     };
 
     let saveTimer = 0;
     let previewSyncTimer = 0;
+    let flowchartRealtimeTimer = 0;
     let lastPreviewImageNotice = '';
     let lastPreviewImageNoticeAt = 0;
     let metaSyncLock = false;
@@ -2832,6 +2868,764 @@
         updateEditorContent(next, caretStart, caretEnd);
     }
 
+    function defaultFlowchartNodeLabel(type) {
+        const key = String(type || '').trim();
+        if (key === 'start') return '开始';
+        if (key === 'decision') return '是否继续';
+        if (key === 'end') return '结束';
+        return '步骤';
+    }
+
+    function normalizeFlowchartNodeType(type) {
+        const key = String(type || '').trim();
+        if (key === 'start' || key === 'process' || key === 'decision' || key === 'end') return key;
+        return 'process';
+    }
+
+    function createDefaultFlowchartModel() {
+        return {
+            direction: 'TD',
+            nodes: [
+                { id: 'start_1', type: 'start', label: '开始' },
+                { id: 'process_1', type: 'process', label: '执行步骤' },
+                { id: 'decision_1', type: 'decision', label: '条件判断' },
+                { id: 'end_1', type: 'end', label: '结束' }
+            ],
+            edges: [
+                { from: 'start_1', to: 'process_1', label: '' },
+                { from: 'process_1', to: 'decision_1', label: '' },
+                { from: 'decision_1', to: 'end_1', label: 'Yes' },
+                { from: 'decision_1', to: 'process_1', label: 'No' }
+            ]
+        };
+    }
+
+    function cloneFlowchartModel(model) {
+        const base = model && typeof model === 'object' ? model : createDefaultFlowchartModel();
+        return {
+            direction: String(base.direction || 'TD').toUpperCase() === 'LR' ? 'LR' : 'TD',
+            nodes: Array.isArray(base.nodes)
+                ? base.nodes.map(function (node) {
+                    return {
+                        id: String(node && node.id || ''),
+                        type: normalizeFlowchartNodeType(node && node.type),
+                        label: String(node && node.label || '')
+                    };
+                }).filter(function (node) {
+                    return !!node.id;
+                })
+                : [],
+            edges: Array.isArray(base.edges)
+                ? base.edges.map(function (edge) {
+                    return {
+                        from: String(edge && edge.from || ''),
+                        to: String(edge && edge.to || ''),
+                        label: String(edge && edge.label || '')
+                    };
+                }).filter(function (edge) {
+                    return edge.from && edge.to;
+                })
+                : []
+        };
+    }
+
+    function ensureFlowchartStateInitialized() {
+        if (!state.flowchartDrawer.model || !Array.isArray(state.flowchartDrawer.model.nodes)) {
+            state.flowchartDrawer.model = createDefaultFlowchartModel();
+        }
+        if (!state.flowchartDrawer.generatedSource) {
+            state.flowchartDrawer.generatedSource = buildMermaidFlowchartFromModel(state.flowchartDrawer.model);
+        }
+        if (!state.flowchartDrawer.sourceDraft) {
+            state.flowchartDrawer.sourceDraft = state.flowchartDrawer.generatedSource;
+        }
+        if (!Number.isFinite(state.flowchartDrawer.nextNodeSeq) || state.flowchartDrawer.nextNodeSeq < 1) {
+            state.flowchartDrawer.nextNodeSeq = 1;
+        }
+    }
+
+    function flowchartNodeTypeLabel(type) {
+        const key = normalizeFlowchartNodeType(type);
+        if (key === 'start') return '开始';
+        if (key === 'decision') return '判断';
+        if (key === 'end') return '结束';
+        return '处理';
+    }
+
+    function nextFlowchartNodeId(type) {
+        ensureFlowchartStateInitialized();
+        const safeType = normalizeFlowchartNodeType(type);
+        let seq = state.flowchartDrawer.nextNodeSeq;
+        const existing = new Set(state.flowchartDrawer.model.nodes.map(function (node) {
+            return String(node.id || '');
+        }));
+        while (existing.has(`${safeType}_${seq}`)) {
+            seq += 1;
+        }
+        state.flowchartDrawer.nextNodeSeq = seq + 1;
+        return `${safeType}_${seq}`;
+    }
+
+    function buildMermaidNodeLine(node) {
+        const safeId = String(node && node.id || '').trim();
+        const type = normalizeFlowchartNodeType(node && node.type);
+        const label = String(node && node.label || defaultFlowchartNodeLabel(type)).trim();
+        if (!safeId) return '';
+
+        if (type === 'decision') return `${safeId}{${label}}`;
+        if (type === 'start' || type === 'end') return `${safeId}([${label}])`;
+        return `${safeId}[${label}]`;
+    }
+
+    function buildMermaidFlowchartFromModel(model) {
+        const normalized = cloneFlowchartModel(model);
+        const direction = normalized.direction === 'LR' ? 'LR' : 'TD';
+        const lines = [`flowchart ${direction}`];
+
+        normalized.nodes.forEach(function (node) {
+            const line = buildMermaidNodeLine(node);
+            if (line) lines.push(`    ${line}`);
+        });
+
+        normalized.edges.forEach(function (edge) {
+            const from = String(edge.from || '').trim();
+            const to = String(edge.to || '').trim();
+            const label = String(edge.label || '').trim();
+            if (!from || !to) return;
+            if (label) {
+                lines.push(`    ${from} -->|${label}| ${to}`);
+            } else {
+                lines.push(`    ${from} --> ${to}`);
+            }
+        });
+
+        return `${lines.join('\n')}\n`;
+    }
+
+    function parseFlowchartNodeType(id, shape) {
+        const nodeId = String(id || '').toLowerCase();
+        if (nodeId.startsWith('start_')) return 'start';
+        if (nodeId.startsWith('end_')) return 'end';
+        if (shape === 'decision') return 'decision';
+        if (shape === 'round') return 'start';
+        return 'process';
+    }
+
+    function parseMermaidFlowchartToModel(source) {
+        const text = String(source || '').replace(/\r\n/g, '\n').trim();
+        if (!text) {
+            return { ok: false, reason: 'invalid', message: '流程图源码为空' };
+        }
+
+        if (/\b(subgraph|classDef|class|style|linkStyle|click)\b/.test(text)) {
+            return { ok: false, reason: 'unsupported', message: '包含超出 v1 的 Mermaid 语法' };
+        }
+
+        const lines = text.split('\n').map(function (line) {
+            return String(line || '').trim();
+        }).filter(Boolean);
+        if (lines.length === 0) {
+            return { ok: false, reason: 'invalid', message: '流程图源码为空' };
+        }
+
+        const headerMatch = lines[0].match(/^(flowchart|graph)\s+([A-Za-z]{2})\b/i);
+        if (!headerMatch) {
+            return { ok: false, reason: 'unsupported', message: '仅支持 flowchart/graph 语法' };
+        }
+
+        const direction = String(headerMatch[2] || 'TD').toUpperCase();
+        if (direction !== 'TD' && direction !== 'LR') {
+            return { ok: false, reason: 'unsupported', message: 'v1 仅支持 TD 或 LR 方向' };
+        }
+
+        const nodesById = new Map();
+        const edges = [];
+
+        function upsertNode(id, type, label) {
+            const nodeId = String(id || '').trim();
+            if (!nodeId) return;
+            const existing = nodesById.get(nodeId);
+            if (existing) {
+                if (type) existing.type = normalizeFlowchartNodeType(type);
+                if (String(label || '').trim()) existing.label = String(label || '').trim();
+                return;
+            }
+            nodesById.set(nodeId, {
+                id: nodeId,
+                type: normalizeFlowchartNodeType(type || 'process'),
+                label: String(label || defaultFlowchartNodeLabel(type || 'process')).trim()
+            });
+        }
+
+        for (let i = 1; i < lines.length; i += 1) {
+            const line = lines[i];
+            if (!line || line.startsWith('%%')) continue;
+
+            const edgeMatch = line.match(/^([A-Za-z][\w-]*)\s*-->\s*(?:\|([^|]+)\|\s*)?([A-Za-z][\w-]*)$/);
+            if (edgeMatch) {
+                const from = String(edgeMatch[1] || '').trim();
+                const to = String(edgeMatch[3] || '').trim();
+                const label = String(edgeMatch[2] || '').trim();
+                if (!from || !to) continue;
+                edges.push({ from: from, to: to, label: label });
+                if (!nodesById.has(from)) upsertNode(from, parseFlowchartNodeType(from, 'rect'), from.replace(/_/g, ' '));
+                if (!nodesById.has(to)) upsertNode(to, parseFlowchartNodeType(to, 'rect'), to.replace(/_/g, ' '));
+                continue;
+            }
+
+            const roundMatch = line.match(/^([A-Za-z][\w-]*)\(\[(.+)\]\)$/);
+            if (roundMatch) {
+                const id = String(roundMatch[1] || '').trim();
+                const label = String(roundMatch[2] || '').trim();
+                upsertNode(id, parseFlowchartNodeType(id, 'round'), label);
+                continue;
+            }
+
+            const rectMatch = line.match(/^([A-Za-z][\w-]*)\[(.+)\]$/);
+            if (rectMatch) {
+                const id = String(rectMatch[1] || '').trim();
+                const label = String(rectMatch[2] || '').trim();
+                upsertNode(id, parseFlowchartNodeType(id, 'rect'), label);
+                continue;
+            }
+
+            const decisionMatch = line.match(/^([A-Za-z][\w-]*)\{(.+)\}$/);
+            if (decisionMatch) {
+                const id = String(decisionMatch[1] || '').trim();
+                const label = String(decisionMatch[2] || '').trim();
+                upsertNode(id, 'decision', label);
+                continue;
+            }
+
+            return { ok: false, reason: 'unsupported', message: '存在不可解析的 Mermaid 行' };
+        }
+
+        const nodes = Array.from(nodesById.values());
+        if (nodes.length === 0) {
+            return { ok: false, reason: 'invalid', message: '未解析到可视化节点' };
+        }
+
+        let nextNodeSeq = 1;
+        nodes.forEach(function (node) {
+            const match = String(node.id || '').match(/_(\d+)$/);
+            if (!match) return;
+            const num = Number(match[1]);
+            if (Number.isFinite(num) && num >= nextNodeSeq) {
+                nextNodeSeq = num + 1;
+            }
+        });
+
+        return {
+            ok: true,
+            reason: 'ok',
+            model: {
+                direction: direction,
+                nodes: nodes,
+                edges: edges
+            },
+            nextNodeSeq: nextNodeSeq
+        };
+    }
+
+    function buildMermaidFenceBlock(source) {
+        const body = String(source || '').replace(/\r\n/g, '\n').trim();
+        return `\`\`\`mermaid\n${body}\n\`\`\``;
+    }
+
+    function findMermaidBlockAroundSelection(markdown, selectionStart, selectionEnd) {
+        const text = String(markdown || '');
+        const start = Number.isFinite(selectionStart) ? selectionStart : 0;
+        const end = Number.isFinite(selectionEnd) ? selectionEnd : start;
+        const blockRegex = /```([^\n`]*)\n([\s\S]*?)\n```/g;
+        let match = null;
+        while ((match = blockRegex.exec(text)) !== null) {
+            const language = String(match[1] || '').trim().toLowerCase();
+            if (language !== 'mermaid') continue;
+            const blockStart = match.index;
+            const blockEnd = blockStart + match[0].length;
+            if (start > blockEnd || end < blockStart) continue;
+
+            return {
+                start: blockStart,
+                end: blockEnd,
+                source: String(match[2] || ''),
+                signature: String(match[0] || '')
+            };
+        }
+        return null;
+    }
+
+    function setFlowchartBoundBlock(block) {
+        if (!block || !Number.isFinite(block.start) || !Number.isFinite(block.end)) {
+            state.flowchartDrawer.boundBlock = null;
+            return;
+        }
+
+        state.flowchartDrawer.boundBlock = {
+            start: block.start,
+            end: block.end,
+            signature: String(block.signature || '')
+        };
+    }
+
+    function updateFlowchartBindingStatusText() {
+        if (!dom.flowchartBindingStatus) return;
+        const bound = state.flowchartDrawer.boundBlock;
+        if (!bound) {
+            dom.flowchartBindingStatus.textContent = '当前绑定：未命中，待新建';
+            return;
+        }
+
+        const statusHint = state.flowchartDrawer.parseStatus === 'unsupported'
+            ? '（仅源码模式）'
+            : '';
+        dom.flowchartBindingStatus.textContent = `当前绑定：Mermaid 块 @${bound.start}-${bound.end}${statusHint}`;
+    }
+
+    function updateFlowchartRealtimeToggleUi() {
+        if (!dom.flowchartRealtimeToggle) return;
+        dom.flowchartRealtimeToggle.textContent = state.flowchartDrawer.realtimeEnabled ? '实时写入：已开启' : '实时写入：已暂停';
+        dom.flowchartRealtimeToggle.classList.toggle('studio-flowchart-mode-btn--active', !!state.flowchartDrawer.realtimeEnabled);
+    }
+
+    function updateFlowchartModeUi() {
+        if (dom.flowchartModeVisual) {
+            dom.flowchartModeVisual.classList.toggle('studio-flowchart-mode-btn--active', state.flowchartDrawer.mode === 'visual');
+        }
+        if (dom.flowchartModeSource) {
+            dom.flowchartModeSource.classList.toggle('studio-flowchart-mode-btn--active', state.flowchartDrawer.mode === 'source');
+        }
+        if (dom.flowchartVisualPanel) {
+            dom.flowchartVisualPanel.hidden = state.flowchartDrawer.mode !== 'visual';
+        }
+        if (dom.flowchartSourcePanel) {
+            dom.flowchartSourcePanel.hidden = state.flowchartDrawer.mode !== 'source';
+        }
+    }
+
+    function setFlowchartMode(mode) {
+        state.flowchartDrawer.mode = mode === 'source' ? 'source' : 'visual';
+        updateFlowchartModeUi();
+    }
+
+    function setFlowchartDrawerOpen(open) {
+        if (!dom.flowchartDrawer) return;
+        state.flowchartDrawer.open = !!open;
+        dom.flowchartDrawer.hidden = !state.flowchartDrawer.open;
+        if (dom.flowchartToggle) {
+            dom.flowchartToggle.setAttribute('aria-expanded', state.flowchartDrawer.open ? 'true' : 'false');
+        }
+
+        if (!state.flowchartDrawer.open) return;
+        bindFlowchartAtCursor({ createIfMissing: true });
+        renderFlowchartDrawer();
+    }
+
+    function renderFlowchartNodeList() {
+        if (!dom.flowchartNodeList) return;
+        dom.flowchartNodeList.innerHTML = '';
+
+        const model = state.flowchartDrawer.model;
+        const nodes = model && Array.isArray(model.nodes) ? model.nodes : [];
+        if (nodes.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'studio-flowchart-empty';
+            empty.textContent = '暂无节点，请先新增节点。';
+            dom.flowchartNodeList.appendChild(empty);
+            return;
+        }
+
+        nodes.forEach(function (node, index) {
+            const row = document.createElement('div');
+            row.className = 'studio-flowchart-row';
+
+            const typeSelect = document.createElement('select');
+            typeSelect.className = 'studio-select';
+            ['start', 'process', 'decision', 'end'].forEach(function (type) {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = flowchartNodeTypeLabel(type);
+                if (normalizeFlowchartNodeType(node.type) === type) {
+                    option.selected = true;
+                }
+                typeSelect.appendChild(option);
+            });
+
+            const labelInput = document.createElement('input');
+            labelInput.type = 'text';
+            labelInput.className = 'studio-input';
+            labelInput.value = String(node.label || '');
+            labelInput.placeholder = defaultFlowchartNodeLabel(node.type);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-small btn-outline';
+            removeBtn.textContent = '删除';
+
+            typeSelect.addEventListener('change', function () {
+                const nextType = normalizeFlowchartNodeType(typeSelect.value);
+                node.type = nextType;
+                if (!String(node.label || '').trim()) {
+                    node.label = defaultFlowchartNodeLabel(nextType);
+                    labelInput.value = node.label;
+                }
+                syncFlowchartGeneratedSource(true);
+            });
+
+            labelInput.addEventListener('input', function () {
+                node.label = String(labelInput.value || '');
+                syncFlowchartGeneratedSource(true);
+            });
+
+            removeBtn.addEventListener('click', function () {
+                if (nodes.length <= 1) {
+                    setStatus('至少保留一个流程图节点');
+                    return;
+                }
+                const removedId = String(node.id || '');
+                model.nodes.splice(index, 1);
+                model.edges = model.edges.filter(function (edge) {
+                    return edge.from !== removedId && edge.to !== removedId;
+                });
+                renderFlowchartDrawer();
+                syncFlowchartGeneratedSource(true);
+            });
+
+            row.appendChild(typeSelect);
+            row.appendChild(labelInput);
+            row.appendChild(removeBtn);
+            dom.flowchartNodeList.appendChild(row);
+        });
+    }
+
+    function appendFlowchartNodeOptions(select, selectedId) {
+        if (!select) return;
+        select.innerHTML = '';
+        const nodes = state.flowchartDrawer.model && Array.isArray(state.flowchartDrawer.model.nodes)
+            ? state.flowchartDrawer.model.nodes
+            : [];
+
+        nodes.forEach(function (node) {
+            const option = document.createElement('option');
+            option.value = String(node.id || '');
+            option.textContent = String(node.label || node.id || '');
+            if (String(node.id || '') === String(selectedId || '')) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+    }
+
+    function renderFlowchartEdgeList() {
+        if (!dom.flowchartEdgeList) return;
+        dom.flowchartEdgeList.innerHTML = '';
+
+        const model = state.flowchartDrawer.model;
+        const edges = model && Array.isArray(model.edges) ? model.edges : [];
+        if (edges.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'studio-flowchart-empty';
+            empty.textContent = '暂无连线，可添加一条起点到终点的箭头。';
+            dom.flowchartEdgeList.appendChild(empty);
+            return;
+        }
+
+        edges.forEach(function (edge, index) {
+            const row = document.createElement('div');
+            row.className = 'studio-flowchart-row studio-flowchart-row--edge';
+
+            const fromSelect = document.createElement('select');
+            fromSelect.className = 'studio-select';
+            appendFlowchartNodeOptions(fromSelect, edge.from);
+
+            const toSelect = document.createElement('select');
+            toSelect.className = 'studio-select';
+            appendFlowchartNodeOptions(toSelect, edge.to);
+
+            const labelInput = document.createElement('input');
+            labelInput.type = 'text';
+            labelInput.className = 'studio-input';
+            labelInput.value = String(edge.label || '');
+            labelInput.placeholder = 'Yes / No / 留空';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-small btn-outline';
+            removeBtn.textContent = '删除';
+
+            fromSelect.addEventListener('change', function () {
+                edge.from = String(fromSelect.value || '').trim();
+                syncFlowchartGeneratedSource(true);
+            });
+
+            toSelect.addEventListener('change', function () {
+                edge.to = String(toSelect.value || '').trim();
+                syncFlowchartGeneratedSource(true);
+            });
+
+            labelInput.addEventListener('input', function () {
+                edge.label = String(labelInput.value || '');
+                syncFlowchartGeneratedSource(true);
+            });
+
+            removeBtn.addEventListener('click', function () {
+                model.edges.splice(index, 1);
+                renderFlowchartDrawer();
+                syncFlowchartGeneratedSource(true);
+            });
+
+            row.appendChild(fromSelect);
+            row.appendChild(toSelect);
+            row.appendChild(labelInput);
+            row.appendChild(removeBtn);
+            dom.flowchartEdgeList.appendChild(row);
+        });
+    }
+
+    function renderFlowchartDrawer() {
+        ensureFlowchartStateInitialized();
+        updateFlowchartModeUi();
+        updateFlowchartBindingStatusText();
+        updateFlowchartRealtimeToggleUi();
+
+        if (dom.flowchartDirection) {
+            dom.flowchartDirection.value = state.flowchartDrawer.model.direction === 'LR' ? 'LR' : 'TD';
+        }
+        if (dom.flowchartGeneratedSource) {
+            dom.flowchartGeneratedSource.value = state.flowchartDrawer.generatedSource;
+        }
+        if (dom.flowchartSourceEditor) {
+            dom.flowchartSourceEditor.value = state.flowchartDrawer.sourceDraft;
+        }
+
+        renderFlowchartNodeList();
+        renderFlowchartEdgeList();
+    }
+
+    function syncFlowchartGeneratedSource(triggerRealtimeApply) {
+        ensureFlowchartStateInitialized();
+        state.flowchartDrawer.generatedSource = buildMermaidFlowchartFromModel(state.flowchartDrawer.model);
+        state.flowchartDrawer.parseStatus = 'ok';
+        if (dom.flowchartGeneratedSource) {
+            dom.flowchartGeneratedSource.value = state.flowchartDrawer.generatedSource;
+        }
+        if (state.flowchartDrawer.mode === 'visual') {
+            state.flowchartDrawer.sourceDraft = state.flowchartDrawer.generatedSource;
+            if (dom.flowchartSourceEditor) {
+                dom.flowchartSourceEditor.value = state.flowchartDrawer.sourceDraft;
+            }
+        }
+        updateFlowchartBindingStatusText();
+
+        if (triggerRealtimeApply && state.flowchartDrawer.realtimeEnabled) {
+            scheduleFlowchartRealtimeApply();
+        }
+    }
+
+    function replaceBoundMermaidBlock(source, focusEditorAfter) {
+        if (!dom.markdown || !state.flowchartDrawer.boundBlock) return false;
+        const currentText = String(dom.markdown.value || '');
+        const bound = state.flowchartDrawer.boundBlock;
+        const signature = String(bound.signature || '');
+        let start = Number(bound.start);
+        let end = Number(bound.end);
+
+        if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start) return false;
+
+        if (!signature || currentText.slice(start, end) !== signature) {
+            if (!signature) return false;
+            const located = currentText.indexOf(signature);
+            if (located < 0) return false;
+            start = located;
+            end = located + signature.length;
+        }
+
+        const replacement = buildMermaidFenceBlock(source);
+        const nextText = currentText.slice(0, start) + replacement + currentText.slice(end);
+        const delta = replacement.length - (end - start);
+        const previousSelectionStart = Number(dom.markdown.selectionStart || 0);
+        const previousSelectionEnd = Number(dom.markdown.selectionEnd || 0);
+
+        function shiftPosition(pos) {
+            if (!Number.isFinite(pos)) return 0;
+            if (pos <= start) return pos;
+            if (pos >= end) return pos + delta;
+            return start + replacement.length;
+        }
+
+        const nextSelectionStart = shiftPosition(previousSelectionStart);
+        const nextSelectionEnd = shiftPosition(previousSelectionEnd);
+
+        state.markdown = nextText;
+        dom.markdown.value = nextText;
+        dom.markdown.setSelectionRange(nextSelectionStart, nextSelectionEnd);
+        updateStats();
+        renderPreview();
+        scheduleSave();
+
+        if (focusEditorAfter) {
+            focusEditor();
+        }
+
+        setFlowchartBoundBlock({
+            start: start,
+            end: start + replacement.length,
+            signature: replacement
+        });
+        updateFlowchartBindingStatusText();
+        return true;
+    }
+
+    function insertMermaidBlockAtCursor(source) {
+        if (!dom.markdown) return false;
+        const value = String(dom.markdown.value || '');
+        const selectionStart = Number(dom.markdown.selectionStart || 0);
+        const selectionEnd = Number(dom.markdown.selectionEnd || 0);
+        const before = value.slice(0, selectionStart);
+        const after = value.slice(selectionEnd);
+        const blockText = buildMermaidFenceBlock(source);
+        const prefix = before && !before.endsWith('\n') ? '\n' : '';
+        const suffix = after && !after.startsWith('\n') ? '\n' : '';
+        const nextText = before + prefix + blockText + suffix + after;
+        const blockStart = before.length + prefix.length;
+        const blockEnd = blockStart + blockText.length;
+
+        state.markdown = nextText;
+        dom.markdown.value = nextText;
+        dom.markdown.setSelectionRange(blockEnd, blockEnd);
+        updateStats();
+        renderPreview();
+        scheduleSave();
+
+        setFlowchartBoundBlock({
+            start: blockStart,
+            end: blockEnd,
+            signature: blockText
+        });
+        return true;
+    }
+
+    function bindFlowchartAtCursor(options) {
+        ensureFlowchartStateInitialized();
+        if (!dom.markdown) return false;
+
+        const opts = options && typeof options === 'object' ? options : {};
+        const createIfMissing = opts.createIfMissing !== false;
+        const selectionStart = Number(dom.markdown.selectionStart || 0);
+        const selectionEnd = Number(dom.markdown.selectionEnd || selectionStart);
+        let block = findMermaidBlockAroundSelection(dom.markdown.value, selectionStart, selectionEnd);
+
+        if (!block && createIfMissing) {
+            const generated = state.flowchartDrawer.generatedSource || buildMermaidFlowchartFromModel(state.flowchartDrawer.model);
+            insertMermaidBlockAtCursor(generated);
+            block = findMermaidBlockAroundSelection(dom.markdown.value, Number(dom.markdown.selectionStart || 0), Number(dom.markdown.selectionEnd || 0));
+        }
+
+        if (!block) {
+            setFlowchartBoundBlock(null);
+            updateFlowchartBindingStatusText();
+            return false;
+        }
+
+        setFlowchartBoundBlock(block);
+        state.flowchartDrawer.sourceDraft = String(block.source || '').replace(/\r\n/g, '\n');
+        if (dom.flowchartSourceEditor) {
+            dom.flowchartSourceEditor.value = state.flowchartDrawer.sourceDraft;
+        }
+
+        const parsed = parseMermaidFlowchartToModel(block.source);
+        if (parsed.ok) {
+            state.flowchartDrawer.model = cloneFlowchartModel(parsed.model);
+            state.flowchartDrawer.nextNodeSeq = Math.max(Number(parsed.nextNodeSeq || 1), Number(state.flowchartDrawer.nextNodeSeq || 1));
+            state.flowchartDrawer.generatedSource = buildMermaidFlowchartFromModel(state.flowchartDrawer.model);
+            state.flowchartDrawer.parseStatus = 'ok';
+            if (state.flowchartDrawer.mode !== 'source') {
+                setFlowchartMode('visual');
+            }
+        } else {
+            state.flowchartDrawer.parseStatus = parsed.reason || 'unsupported';
+            state.flowchartDrawer.generatedSource = String(block.source || '');
+            setFlowchartMode('source');
+            setStatus(`流程图进入源码模式：${parsed.message || '存在不可视化语法'}`);
+        }
+
+        renderFlowchartDrawer();
+        return true;
+    }
+
+    function scheduleFlowchartRealtimeApply() {
+        if (flowchartRealtimeTimer) clearTimeout(flowchartRealtimeTimer);
+        flowchartRealtimeTimer = setTimeout(function () {
+            flowchartRealtimeTimer = 0;
+            const source = state.flowchartDrawer.generatedSource || buildMermaidFlowchartFromModel(state.flowchartDrawer.model);
+            const ok = replaceBoundMermaidBlock(source, false);
+            if (!ok) {
+                setStatus('流程图实时写入失败：绑定失效，请重新绑定');
+            }
+        }, FLOWCHART_REALTIME_DEBOUNCE_MS);
+    }
+
+    function applyFlowchartSourceToMarkdown(source, statusText) {
+        const cleaned = String(source || '').replace(/\r\n/g, '\n').trim();
+        if (!cleaned) {
+            setStatus('流程图源码为空，无法应用');
+            return false;
+        }
+
+        if (!state.flowchartDrawer.boundBlock) {
+            bindFlowchartAtCursor({ createIfMissing: true });
+        }
+
+        const applied = replaceBoundMermaidBlock(cleaned, false);
+        if (!applied) {
+            setStatus('流程图应用失败：绑定失效，请重新绑定');
+            return false;
+        }
+
+        state.flowchartDrawer.sourceDraft = cleaned;
+        const parsed = parseMermaidFlowchartToModel(cleaned);
+        if (parsed.ok) {
+            state.flowchartDrawer.model = cloneFlowchartModel(parsed.model);
+            state.flowchartDrawer.nextNodeSeq = Math.max(Number(parsed.nextNodeSeq || 1), Number(state.flowchartDrawer.nextNodeSeq || 1));
+            state.flowchartDrawer.generatedSource = buildMermaidFlowchartFromModel(state.flowchartDrawer.model);
+            state.flowchartDrawer.parseStatus = 'ok';
+        } else {
+            state.flowchartDrawer.generatedSource = cleaned;
+            state.flowchartDrawer.parseStatus = parsed.reason || 'unsupported';
+        }
+
+        renderFlowchartDrawer();
+        if (statusText) setStatus(statusText);
+        return true;
+    }
+
+    function addFlowchartNode() {
+        ensureFlowchartStateInitialized();
+        const model = state.flowchartDrawer.model;
+        const id = nextFlowchartNodeId('process');
+        model.nodes.push({
+            id: id,
+            type: 'process',
+            label: `步骤 ${model.nodes.length + 1}`
+        });
+        renderFlowchartDrawer();
+        syncFlowchartGeneratedSource(true);
+    }
+
+    function addFlowchartEdge() {
+        ensureFlowchartStateInitialized();
+        const model = state.flowchartDrawer.model;
+        if (!Array.isArray(model.nodes) || model.nodes.length < 2) {
+            setStatus('至少需要两个节点才能创建连线');
+            return;
+        }
+        const from = String(model.nodes[0].id || '');
+        const to = String(model.nodes[1].id || '');
+        model.edges.push({ from: from, to: to, label: '' });
+        renderFlowchartDrawer();
+        syncFlowchartGeneratedSource(true);
+    }
+
     function readCurrentSelectionText() {
         if (!dom.markdown) return '';
         const value = String(dom.markdown.value || '');
@@ -3084,6 +3878,9 @@
         updatePreviewImageNoticeToggleUi();
         renderMetadataFormFromState();
         renderColorListsFromState();
+        ensureFlowchartStateInitialized();
+        syncFlowchartGeneratedSource(false);
+        renderFlowchartDrawer();
 
         if (dom.markdown) {
             dom.markdown.value = state.markdown;
@@ -3111,6 +3908,143 @@
                 } catch (err) {
                     setStatus(`粘贴图片失败：${err && err.message ? err.message : String(err)}`);
                 }
+            });
+        }
+
+        if (dom.flowchartToggle) {
+            dom.flowchartToggle.addEventListener('click', function () {
+                setFlowchartDrawerOpen(!state.flowchartDrawer.open);
+                if (state.flowchartDrawer.open) {
+                    setStatus('流程图工作台已展开');
+                }
+            });
+        }
+
+        if (dom.flowchartClose) {
+            dom.flowchartClose.addEventListener('click', function () {
+                setFlowchartDrawerOpen(false);
+                setStatus('流程图工作台已收起');
+            });
+        }
+
+        if (dom.flowchartModeVisual) {
+            dom.flowchartModeVisual.addEventListener('click', function () {
+                setFlowchartMode('visual');
+                renderFlowchartDrawer();
+            });
+        }
+
+        if (dom.flowchartModeSource) {
+            dom.flowchartModeSource.addEventListener('click', function () {
+                setFlowchartMode('source');
+                renderFlowchartDrawer();
+            });
+        }
+
+        if (dom.flowchartRebind) {
+            dom.flowchartRebind.addEventListener('click', function () {
+                const ok = bindFlowchartAtCursor({ createIfMissing: false });
+                if (ok) {
+                    setStatus('已按光标位置重新绑定流程图');
+                } else {
+                    setStatus('当前光标未命中 Mermaid 代码块');
+                }
+            });
+        }
+
+        if (dom.flowchartBindNew) {
+            dom.flowchartBindNew.addEventListener('click', function () {
+                const ok = bindFlowchartAtCursor({ createIfMissing: true });
+                if (ok) {
+                    setStatus('已新建并绑定 Mermaid 代码块');
+                } else {
+                    setStatus('新建流程图失败');
+                }
+            });
+        }
+
+        if (dom.flowchartRealtimeToggle) {
+            dom.flowchartRealtimeToggle.addEventListener('click', function () {
+                state.flowchartDrawer.realtimeEnabled = !state.flowchartDrawer.realtimeEnabled;
+                updateFlowchartRealtimeToggleUi();
+                if (state.flowchartDrawer.realtimeEnabled) {
+                    scheduleFlowchartRealtimeApply();
+                } else if (flowchartRealtimeTimer) {
+                    clearTimeout(flowchartRealtimeTimer);
+                    flowchartRealtimeTimer = 0;
+                }
+                setStatus(state.flowchartDrawer.realtimeEnabled ? '已开启流程图实时写入' : '已暂停流程图实时写入');
+            });
+        }
+
+        if (dom.flowchartDirection) {
+            dom.flowchartDirection.addEventListener('change', function () {
+                ensureFlowchartStateInitialized();
+                state.flowchartDrawer.model.direction = dom.flowchartDirection.value === 'LR' ? 'LR' : 'TD';
+                syncFlowchartGeneratedSource(true);
+            });
+        }
+
+        if (dom.flowchartAddNode) {
+            dom.flowchartAddNode.addEventListener('click', addFlowchartNode);
+        }
+
+        if (dom.flowchartAddEdge) {
+            dom.flowchartAddEdge.addEventListener('click', addFlowchartEdge);
+        }
+
+        if (dom.flowchartCopySource) {
+            dom.flowchartCopySource.addEventListener('click', async function () {
+                const text = state.flowchartDrawer.generatedSource || '';
+                const ok = await copyText(text);
+                setStatus(ok ? '已复制流程图源码' : '流程图源码复制失败');
+            });
+        }
+
+        if (dom.flowchartApply) {
+            dom.flowchartApply.addEventListener('click', function () {
+                const source = state.flowchartDrawer.generatedSource || buildMermaidFlowchartFromModel(state.flowchartDrawer.model);
+                applyFlowchartSourceToMarkdown(source, '已应用流程图到当前块');
+            });
+        }
+
+        if (dom.flowchartSourceEditor) {
+            dom.flowchartSourceEditor.addEventListener('input', function () {
+                state.flowchartDrawer.sourceDraft = String(dom.flowchartSourceEditor.value || '');
+            });
+        }
+
+        if (dom.flowchartSourceApply) {
+            dom.flowchartSourceApply.addEventListener('click', function () {
+                applyFlowchartSourceToMarkdown(state.flowchartDrawer.sourceDraft, '已应用源码模式流程图');
+            });
+        }
+
+        if (dom.flowchartTryVisual) {
+            dom.flowchartTryVisual.addEventListener('click', function () {
+                const parsed = parseMermaidFlowchartToModel(state.flowchartDrawer.sourceDraft);
+                if (!parsed.ok) {
+                    setStatus(`当前源码超出可视化支持范围：${parsed.message || '请继续使用源码模式'}`);
+                    setFlowchartMode('source');
+                    renderFlowchartDrawer();
+                    return;
+                }
+
+                state.flowchartDrawer.model = cloneFlowchartModel(parsed.model);
+                state.flowchartDrawer.nextNodeSeq = Math.max(Number(parsed.nextNodeSeq || 1), Number(state.flowchartDrawer.nextNodeSeq || 1));
+                state.flowchartDrawer.generatedSource = buildMermaidFlowchartFromModel(state.flowchartDrawer.model);
+                state.flowchartDrawer.parseStatus = 'ok';
+                setFlowchartMode('visual');
+                renderFlowchartDrawer();
+                setStatus('已切换回可视化流程图模式');
+            });
+        }
+
+        if (dom.flowchartSourceReset) {
+            dom.flowchartSourceReset.addEventListener('click', function () {
+                state.flowchartDrawer.sourceDraft = state.flowchartDrawer.generatedSource || '';
+                renderFlowchartDrawer();
+                setStatus('已放弃源码模式的临时修改');
             });
         }
 
