@@ -2767,6 +2767,19 @@ div.flowchart > svg {
     border: 1px solid var(--code-border);
 }
 
+/* 列表里的行内代码做轻量颜色补全，避免全部同色 */
+.markdown-content li:nth-child(3n + 1) > code {
+    color: #f59ec9;
+}
+
+.markdown-content li:nth-child(3n + 2) > code {
+    color: #8fd3ff;
+}
+
+.markdown-content li:nth-child(3n) > code {
+    color: #b7e287;
+}
+
 .markdown-content pre {
     background-color: var(--code-bg);
     border: 1px solid var(--code-border);
