@@ -17,6 +17,7 @@
 
     <!-- 样式和图标 -->
     <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/workbench-phase.css">
     <link rel="stylesheet" href="/site/assets/css/prism.min.css">
     <link rel="stylesheet" href="/site/assets/css/vs2022-theme.css">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
@@ -998,7 +999,7 @@
 	    </style>
 	</head>
 
-<body>
+<body class="ui-workbench-page search-workbench-page">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <!-- 网站头部导航区域 -->
     <header class="site-header">
@@ -1048,9 +1049,9 @@
     </header>
 
 	    <!-- 搜索页面主要内容区域 -->
-	    <main class="search-page" id="main-content" tabindex="-1">
+	    <main class="search-page ui-workbench-main" id="main-content" tabindex="-1">
 	        <div class="search-shell-container">
-	            <div class="search-shell">
+	            <div class="search-shell ui-workbench-shell">
 	                <aside class="search-sidebar">
 	                    <div class="search-page-header compact">
 	                        <h1 class="search-page-title compact">引导学习与内容查找</h1>
@@ -1196,6 +1197,13 @@
 	    </main>
 
     <!-- 网站底部区域 -->
+    <section class="ui-workbench-status" aria-label="页面状态">
+        <div class="container">
+            <strong>WORKBENCH</strong>
+            <span>Swiss Style x Developer Functionalism · 仅样式层改造（No JS Changes）</span>
+        </div>
+    </section>
+
     <footer class="site-footer">
         <div class="container">
             <!-- 底部内容容器 -->

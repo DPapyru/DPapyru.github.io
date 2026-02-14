@@ -32,7 +32,8 @@
     <link rel="canonical" href="https://dpapyru.github.io/site/pages/viewer.html">
 
     <!-- 加载CSS样式文件 -->
-    <link rel="stylesheet" href="/site/assets/css/style.css"> <!-- 主样式文件 -->
+    <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/workbench-phase.css"> <!-- 主样式文件 -->
     <link rel="stylesheet" href="/site/assets/css/prism.min.css"> <!-- 代码高亮样式 -->
     <link rel="stylesheet" href="/site/assets/css/rider-dark-theme.css"> <!-- Rider Dark代码高亮主题 -->
     <link rel="stylesheet" href="/site/assets/css/animts-runtime.css"> <!-- 动画运行时样式 -->
@@ -356,7 +357,7 @@
 
 </head>
 
-<body class="viewer-page">
+<body class="viewer-page ui-workbench-page docs-workbench-page">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <!-- 网站头部导航区域 -->
     <header class="site-header">
@@ -422,7 +423,7 @@
     </div>
 
     <!-- 网站主体容器：包含侧边栏和主内容区 -->
-    <div class="site-container">
+    <div class="site-container ui-workbench-shell">
 	        <!-- 左侧边栏：文档导航和相关链接 -->
 	        <aside class="sidebar">
 	            <div class="sidebar-content">
@@ -456,7 +457,7 @@
         </aside>
 
         <!-- 主内容区域：显示Markdown文档内容 -->
-        <main class="main-content" id="main-content" tabindex="-1">
+        <main class="main-content ui-workbench-main" id="main-content" tabindex="-1">
             <div class="content-wrapper">
                 <!-- 教程头部区域：包含面包屑导航和文档元信息 -->
                 <div class="tutorial-header">
@@ -557,6 +558,13 @@
     </div>
 
     <!-- 网站底部区域 -->
+    <section class="ui-workbench-status" aria-label="页面状态">
+        <div class="container">
+            <strong>WORKBENCH</strong>
+            <span>Swiss Style x Developer Functionalism · 仅样式层改造（No JS Changes）</span>
+        </div>
+    </section>
+
     <footer class="site-footer">
         <div class="container">
             <!-- 底部内容容器 -->

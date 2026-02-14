@@ -1,0 +1,212 @@
+/* Phase 3+4+5 workbench visual layer (HTML/CSS only, no JS dependency). */
+:root {
+    --workbench-max-width: 1320px;
+    --workbench-gap: 14px;
+    --workbench-rail-height: 34px;
+}
+
+.ui-workbench-page {
+    background-color: var(--bg-color);
+}
+
+.ui-workbench-page .site-header {
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: none;
+}
+
+.ui-workbench-page .header-content {
+    min-height: 64px;
+}
+
+.ui-workbench-main {
+    padding: 18px 0 28px !important;
+    background-image: linear-gradient(to bottom, transparent 31px, rgba(255, 255, 255, 0.02) 32px);
+    background-size: 100% 32px;
+}
+
+.ui-workbench-main > .container {
+    max-width: var(--workbench-max-width);
+}
+
+.ui-workbench-main.container {
+    max-width: var(--workbench-max-width);
+}
+
+.ui-workbench-page .content-wrapper,
+.ui-workbench-page .qa-card,
+.ui-workbench-page .search-shell,
+.ui-workbench-page .search-sidebar,
+.ui-workbench-page .search-workbench,
+.ui-workbench-page .shaderpg-shell,
+.ui-workbench-page .shader-gallery-shell,
+.ui-workbench-page .shader-contribute-shell,
+.ui-workbench-page .studio-lazy-workspace,
+.ui-workbench-page .studio-shell,
+.ui-workbench-page .animts-embed,
+.ui-workbench-page .animcs-embed {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.ui-workbench-page .content-wrapper {
+    padding: 28px 30px;
+    background: var(--bg-content);
+}
+
+.ui-workbench-page .hero,
+.ui-workbench-page .qa-hero,
+.ui-workbench-page .folder-hero {
+    background: var(--bg-secondary);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin: 0 auto 14px;
+    padding: 32px 0;
+}
+
+.ui-workbench-page .hero-search .search-box {
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+    border-radius: 10px;
+}
+
+.ui-workbench-page .hero-search .search-input {
+    padding: 16px 66px 16px 18px;
+}
+
+.ui-workbench-page .hero-buttons,
+.ui-workbench-page .tutorial-topbar,
+.ui-workbench-page .qa-list-controls,
+.ui-workbench-page .search-history-title {
+    gap: 10px;
+}
+
+.ui-workbench-page .section-title,
+.ui-workbench-page .tutorial-title,
+.ui-workbench-page .qa-hero-title {
+    letter-spacing: 0.01em;
+}
+
+.ui-workbench-page .folder-header,
+.ui-workbench-page .folder-tools,
+.ui-workbench-page .search-section,
+.ui-workbench-page .doc-grid,
+.ui-workbench-page .no-docs,
+.ui-workbench-page .back-to-docs {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-content);
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+.ui-workbench-page .doc-grid {
+    display: grid;
+}
+
+.ui-workbench-page .site-container.ui-workbench-shell {
+    max-width: var(--workbench-max-width);
+    margin: 0 auto 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.ui-workbench-page .site-container.ui-workbench-shell .sidebar {
+    border-right: 1px solid var(--border-color);
+}
+
+.ui-workbench-page .site-container.ui-workbench-shell .main-content.ui-workbench-main {
+    padding: 0;
+    background-image: none;
+}
+
+.ui-workbench-page .site-container.ui-workbench-shell .main-content.ui-workbench-main .content-wrapper {
+    border: 0;
+    border-radius: 0;
+    min-height: 100%;
+}
+
+.ui-workbench-page .qa-layout {
+    gap: var(--workbench-gap);
+}
+
+.ui-workbench-page .search-shell {
+    overflow: hidden;
+}
+
+.ui-workbench-page .search-sidebar {
+    border-right: 1px solid var(--border-color);
+    border-radius: 0;
+}
+
+.ui-workbench-page .search-workbench {
+    border-radius: 0;
+}
+
+.ui-workbench-page .workbench-pane,
+.ui-workbench-page .workbench-composer,
+.ui-workbench-page .shaderpg-panel,
+.ui-workbench-page .shader-contribute-card,
+.ui-workbench-page .shader-gallery-contribute {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-content);
+    box-shadow: none;
+}
+
+.ui-workbench-page .shaderpg-main,
+.ui-workbench-page .shaderpg-bottom,
+.ui-workbench-page .shader-contribute-grid,
+.ui-workbench-page .shader-gallery-grid {
+    gap: var(--workbench-gap);
+}
+
+.ui-workbench-status {
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    min-height: var(--workbench-rail-height);
+}
+
+.ui-workbench-status .container {
+    max-width: var(--workbench-max-width);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.ui-workbench-status strong {
+    color: var(--text-color);
+    font-weight: 700;
+}
+
+.ui-workbench-page .site-footer {
+    border-top: 1px solid var(--border-color);
+    box-shadow: none;
+    background: var(--bg-secondary);
+}
+
+@media (max-width: 960px) {
+    .ui-workbench-main {
+        padding: 10px 0 18px !important;
+    }
+
+    .ui-workbench-page .content-wrapper {
+        padding: 18px;
+    }
+
+    .ui-workbench-status .container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ui-workbench-page .site-container.ui-workbench-shell {
+        margin: 0 10px 14px;
+    }
+}

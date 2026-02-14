@@ -7,13 +7,14 @@
     <meta name="description" content="在线 HLSL Shader 编辑器，支持实时预览、多 Pass 渲染，适用于 tModLoader Mod 开发。">
     <meta name="keywords" content="HLSL,Shader,tModLoader,泰拉瑞亚,Mod,WebGL">
     <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/workbench-phase.css">
     <link rel="stylesheet" href="/site/assets/css/shader-playground.css">
     <link rel="stylesheet" href="/site/assets/css/shader-contribute.css">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
     <script src="/site/assets/js/theme-init.js"></script>
 </head>
 
-<body class="viewer-page shaderpg-page">
+<body class="viewer-page shaderpg-page ui-workbench-page tool-workbench-page">
     <!-- 顶部导航栏 -->
     <header class="site-header">
         <div class="container">
@@ -59,7 +60,7 @@
     </header>
 
     <!-- 主内容区 -->
-    <main class="main-content">
+    <main class="main-content ui-workbench-main">
         <div class="container">
             <div class="content-wrapper">
                 <!-- 面包屑导航 -->
@@ -669,6 +670,13 @@ float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0 {
     <div class="shaderpg-drawer-overlay" id="shaderpg-drawer-overlay" aria-hidden="true"></div>
 
     <!-- 网站底部 -->
+    <section class="ui-workbench-status" aria-label="页面状态">
+        <div class="container">
+            <strong>WORKBENCH</strong>
+            <span>Swiss Style x Developer Functionalism · 仅样式层改造（No JS Changes）</span>
+        </div>
+    </section>
+
     <footer class="site-footer">
         <div class="container">
             <div class="footer-content">

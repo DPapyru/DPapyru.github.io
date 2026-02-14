@@ -62,4 +62,15 @@
 
 **备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次 UI 修复无直接关系；本次按用户要求在 `main` 工作区直接修改（未使用工作树）。
 
+### 验证记录 [2026-02-14 14:12]：UI 架构改造第 3+4+5+6 阶段（仅 HTML/CSS）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/page-common-alignment.test.js`：通过
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`（`gallery-check` 阶段失败），属于既有数据问题；本次改造严格未修改 `site/assets/js/*.js`。
+
 *最后更新：2026-02-14*

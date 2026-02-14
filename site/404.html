@@ -7,9 +7,10 @@
     <meta name="robots" content="noindex, follow">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
     <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/site/assets/css/workbench-phase.css">
     <script src="/site/assets/js/theme-init.js"></script>
 </head>
-<body>
+<body class="ui-workbench-page notfound-workbench-page">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
     <header class="site-header">
         <div class="container">
@@ -52,7 +53,7 @@
             </div>
         </div>
     </header>
-    <main id="main-content" class="container" style="padding: 60px 20px;" tabindex="-1">
+    <main id="main-content" class="container ui-workbench-main" style="padding: 60px 20px;" tabindex="-1">
         <h1 style="margin-bottom: 12px;">页面未找到</h1>
         <p style="margin-bottom: 18px;">如果这是一个教程文档链接，系统会尝试为你跳转到文档查看器。</p>
         <p style="margin-bottom: 18px;">
@@ -61,6 +62,12 @@
         </p>
         <p id="redirect-hint" style="color: var(--text-secondary);"></p>
     </main>
+    <section class="ui-workbench-status" aria-label="页面状态">
+        <div class="container">
+            <strong>WORKBENCH</strong>
+            <span>Swiss Style x Developer Functionalism · 仅样式层改造（No JS Changes）</span>
+        </div>
+    </section>
 
     <script src="/shared/assets/js/site-core.js"></script>
     <script>
