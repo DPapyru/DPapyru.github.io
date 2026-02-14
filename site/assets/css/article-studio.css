@@ -399,17 +399,34 @@
     background: var(--bg-secondary);
 }
 
-.studio-flowchart-drawer {
+.studio-flowchart-modal-content {
+    width: min(1100px, 95vw);
+    max-width: 1100px;
+    max-height: 92vh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+}
+
+.studio-flowchart-modal-header {
+    padding: 10px 12px;
+}
+
+.studio-flowchart-modal-body {
     display: grid;
     gap: 10px;
-    padding: 10px;
-    border-bottom: 1px solid var(--border-color);
+    min-height: 0;
+    overflow: auto;
+    padding: 12px;
     background: var(--bg-secondary);
 }
 
 .studio-flowchart-toolbar {
     display: grid;
     gap: 8px;
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 8px;
+    background: var(--bg-color);
 }
 
 .studio-flowchart-toolbar-head {
@@ -418,11 +435,6 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-}
-
-.studio-flowchart-title {
-    font-size: 12px;
-    letter-spacing: 0.04em;
 }
 
 .studio-flowchart-binding-status {
@@ -475,7 +487,7 @@
 .studio-flowchart-list {
     display: grid;
     gap: 6px;
-    max-height: 220px;
+    max-height: 180px;
     overflow: auto;
     padding-right: 2px;
 }
@@ -496,8 +508,8 @@
 }
 
 .studio-flowchart-source {
-    min-height: 150px;
-    height: 150px;
+    min-height: 140px;
+    height: 140px;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     resize: vertical;
@@ -726,6 +738,15 @@
     .studio-csharp-editor-modal-content {
         width: min(96vw, 96vw);
         max-height: 94vh;
+    }
+
+    .studio-flowchart-modal-content {
+        width: min(96vw, 96vw);
+        max-height: 94vh;
+    }
+
+    .studio-flowchart-modal-body {
+        padding: 10px;
     }
 
     .studio-csharp-editor-modal-body {

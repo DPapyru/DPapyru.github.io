@@ -19,8 +19,8 @@
         previewFrame: document.getElementById('studio-preview-frame'),
         openViewerPreview: document.getElementById('studio-open-viewer-preview'),
         flowchartToggle: document.getElementById('studio-flowchart-toggle'),
-        flowchartDrawer: document.getElementById('studio-flowchart-drawer'),
-        flowchartClose: document.getElementById('studio-flowchart-close'),
+        flowchartModal: document.getElementById('studio-flowchart-modal'),
+        flowchartModalClose: document.getElementById('studio-flowchart-modal-close'),
         flowchartModeVisual: document.getElementById('studio-flowchart-mode-visual'),
         flowchartModeSource: document.getElementById('studio-flowchart-mode-source'),
         flowchartBindingStatus: document.getElementById('studio-flowchart-binding-status'),
@@ -1100,6 +1100,15 @@
         return !!(dom.csharpEditorModal && dom.csharpEditorModal.classList.contains('active'));
     }
 
+    function isFlowchartModalOpen() {
+        return !!(dom.flowchartModal && dom.flowchartModal.classList.contains('active'));
+    }
+
+    function syncModalBodyLock() {
+        const shouldLock = isCsharpEditorModalOpen() || isFlowchartModalOpen();
+        document.body.classList.toggle('article-studio-modal-open', shouldLock);
+    }
+
     function renderCsharpEditorPreviewHighlight() {
         if (!dom.csharpEditorPreviewCode) return;
 
@@ -1120,7 +1129,7 @@
             dom.csharpEditorModal.classList.remove('active');
             dom.csharpEditorModal.setAttribute('aria-hidden', 'true');
         }
-        document.body.classList.remove('article-studio-modal-open');
+        syncModalBodyLock();
 
         if (keepDraft) {
             return;
@@ -1159,7 +1168,7 @@
             dom.csharpEditorModal.classList.add('active');
             dom.csharpEditorModal.setAttribute('aria-hidden', 'false');
         }
-        document.body.classList.add('article-studio-modal-open');
+        syncModalBodyLock();
 
         if (dom.csharpEditorText) {
             dom.csharpEditorText.focus();
@@ -3208,13 +3217,15 @@
         updateFlowchartModeUi();
     }
 
-    function setFlowchartDrawerOpen(open) {
-        if (!dom.flowchartDrawer) return;
+    function setFlowchartModalOpen(open) {
+        if (!dom.flowchartModal) return;
         state.flowchartDrawer.open = !!open;
-        dom.flowchartDrawer.hidden = !state.flowchartDrawer.open;
+        dom.flowchartModal.classList.toggle('active', state.flowchartDrawer.open);
+        dom.flowchartModal.setAttribute('aria-hidden', state.flowchartDrawer.open ? 'false' : 'true');
         if (dom.flowchartToggle) {
             dom.flowchartToggle.setAttribute('aria-expanded', state.flowchartDrawer.open ? 'true' : 'false');
         }
+        syncModalBodyLock();
 
         if (!state.flowchartDrawer.open) return;
         bindFlowchartAtCursor({ createIfMissing: true });
@@ -3913,17 +3924,25 @@
 
         if (dom.flowchartToggle) {
             dom.flowchartToggle.addEventListener('click', function () {
-                setFlowchartDrawerOpen(!state.flowchartDrawer.open);
+                setFlowchartModalOpen(!state.flowchartDrawer.open);
                 if (state.flowchartDrawer.open) {
-                    setStatus('流程图工作台已展开');
+                    setStatus('流程图工作台弹窗已打开');
                 }
             });
         }
 
-        if (dom.flowchartClose) {
-            dom.flowchartClose.addEventListener('click', function () {
-                setFlowchartDrawerOpen(false);
-                setStatus('流程图工作台已收起');
+        if (dom.flowchartModalClose) {
+            dom.flowchartModalClose.addEventListener('click', function () {
+                setFlowchartModalOpen(false);
+                setStatus('流程图工作台弹窗已关闭');
+            });
+        }
+
+        if (dom.flowchartModal) {
+            dom.flowchartModal.addEventListener('click', function (event) {
+                if (event.target !== dom.flowchartModal) return;
+                setFlowchartModalOpen(false);
+                setStatus('流程图工作台弹窗已关闭');
             });
         }
 
@@ -4468,6 +4487,13 @@
                 event.preventDefault();
                 closeCsharpEditorModal();
                 setStatus('已取消 C# 编辑');
+                return;
+            }
+
+            if (event.key === 'Escape' && state.flowchartDrawer.open) {
+                event.preventDefault();
+                setFlowchartModalOpen(false);
+                setStatus('流程图工作台弹窗已关闭');
                 return;
             }
 
