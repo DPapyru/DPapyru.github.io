@@ -85,3 +85,4 @@ git worktree remove .worktrees/<worktree-name>
 - PR 描述至少包含：改了什么、为什么改、如何验证。
 - 在 PR 中引用 `ERRORS.md` 对应验证记录。
 - 以可复现验证为准，不以“本地看起来正常”为准。
+- git合并与提交的内容必须以中文为主。

@@ -3205,10 +3205,12 @@
             dom.flowchartModeSource.classList.toggle('studio-flowchart-mode-btn--active', state.flowchartDrawer.mode === 'source');
         }
         if (dom.flowchartVisualPanel) {
-            dom.flowchartVisualPanel.hidden = state.flowchartDrawer.mode !== 'visual';
+            dom.flowchartVisualPanel.hidden = false;
+            dom.flowchartVisualPanel.classList.toggle('studio-flowchart-panel--active', state.flowchartDrawer.mode === 'visual');
         }
         if (dom.flowchartSourcePanel) {
-            dom.flowchartSourcePanel.hidden = state.flowchartDrawer.mode !== 'source';
+            dom.flowchartSourcePanel.hidden = false;
+            dom.flowchartSourcePanel.classList.toggle('studio-flowchart-panel--active', state.flowchartDrawer.mode === 'source');
         }
     }
 

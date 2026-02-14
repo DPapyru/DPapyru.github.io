@@ -52,4 +52,14 @@
 
 ---
 
+### 验证记录 [2026-02-14 09:02]：Article Studio 预览上下对齐修复
+
+**级别**：L3
+
+**命令与结果**：
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次 UI 修复无直接关系；本次按用户要求在 `main` 工作区直接修改（未使用工作树）。
+
 *最后更新：2026-02-14*

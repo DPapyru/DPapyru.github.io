@@ -331,7 +331,7 @@
 
 .studio-editor-area {
     display: grid;
-    grid-template-rows: auto auto auto minmax(0, 1fr) minmax(34px, auto);
+    grid-template-rows: auto auto minmax(0, 1fr) minmax(34px, auto);
     min-height: 0;
     height: 100%;
 }
@@ -413,7 +413,9 @@
 
 .studio-flowchart-modal-body {
     display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     gap: 10px;
+    align-items: start;
     min-height: 0;
     overflow: auto;
     padding: 12px;
@@ -422,6 +424,7 @@
 
 .studio-flowchart-toolbar {
     display: grid;
+    grid-column: 1 / -1;
     gap: 8px;
     border: 1px dashed var(--border-color);
     border-radius: 8px;
@@ -457,6 +460,22 @@
 .studio-flowchart-panel {
     display: grid;
     gap: 10px;
+    min-height: 0;
+    align-self: start;
+    align-content: start;
+}
+
+#studio-flowchart-visual-panel {
+    grid-column: 1;
+}
+
+#studio-flowchart-source-panel {
+    grid-column: 2;
+    overflow: hidden;
+}
+
+.studio-flowchart-panel--active .studio-flowchart-section:first-child {
+    border-color: var(--primary-color);
 }
 
 .studio-flowchart-section {
@@ -514,6 +533,23 @@
     border-radius: 6px;
     resize: vertical;
     padding: 10px;
+}
+
+@media (min-width: 901px) {
+    #studio-flowchart-source-panel {
+        height: 100%;
+        grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    #studio-flowchart-source-panel .studio-flowchart-section {
+        min-height: 0;
+        grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    #studio-flowchart-source-panel .studio-flowchart-source {
+        min-height: 120px;
+        height: 100%;
+    }
 }
 
 .studio-flowchart-empty {
@@ -583,6 +619,7 @@
     height: 100%;
     min-height: 0;
     border: 0;
+    display: block;
     background: var(--bg-color);
 }
 
@@ -747,6 +784,13 @@
 
     .studio-flowchart-modal-body {
         padding: 10px;
+        grid-template-columns: 1fr;
+    }
+
+    .studio-flowchart-toolbar,
+    #studio-flowchart-visual-panel,
+    #studio-flowchart-source-panel {
+        grid-column: 1;
     }
 
     .studio-csharp-editor-modal-body {
