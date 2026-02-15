@@ -232,7 +232,84 @@
   --primary-light: rgba(40, 167, 69, 0.2);
 }
 
-/* 深色主题配色预设（仍为深色模式，仅调整强调色与部分背景风格） */
+/* 亮色主题配色预设 */
+[data-theme="light"][data-accent="green"] {
+  --primary-color: #28a745;
+  --primary-hover: #1e7e34;
+  --link-color: #28a745;
+  --link-hover: #1e7e34;
+  --search-focus: rgba(40, 167, 69, 0.15);
+  --sidebar-scrollbar-thumb: #28a745;
+  --sidebar-scrollbar-thumb-hover: #1e7e34;
+  --primary-light: rgba(40, 167, 69, 0.1);
+}
+
+[data-theme="light"][data-accent="blue"] {
+  --primary-color: #0d6efd;
+  --primary-hover: #0b5ed7;
+  --link-color: #0b63d1;
+  --link-hover: #084fa7;
+  --search-focus: rgba(13, 110, 253, 0.18);
+  --sidebar-scrollbar-thumb: #0d6efd;
+  --sidebar-scrollbar-thumb-hover: #0b5ed7;
+  --sidebar-active: rgba(13, 110, 253, 0.10);
+  --table-hover: rgba(13, 110, 253, 0.08);
+  --primary-light: rgba(13, 110, 253, 0.1);
+}
+
+[data-theme="light"][data-accent="purple"] {
+  --primary-color: #9333ea;
+  --primary-hover: #7e22ce;
+  --link-color: #7e22ce;
+  --link-hover: #6b21a8;
+  --search-focus: rgba(147, 51, 234, 0.2);
+  --sidebar-scrollbar-thumb: #9333ea;
+  --sidebar-scrollbar-thumb-hover: #7e22ce;
+  --sidebar-active: rgba(147, 51, 234, 0.10);
+  --table-hover: rgba(147, 51, 234, 0.08);
+  --primary-light: rgba(147, 51, 234, 0.12);
+}
+
+[data-theme="light"][data-accent="orange"] {
+  --primary-color: #ea7b14;
+  --primary-hover: #c76000;
+  --link-color: #c76000;
+  --link-hover: #a54f00;
+  --search-focus: rgba(234, 123, 20, 0.2);
+  --sidebar-scrollbar-thumb: #ea7b14;
+  --sidebar-scrollbar-thumb-hover: #c76000;
+  --sidebar-active: rgba(234, 123, 20, 0.1);
+  --table-hover: rgba(234, 123, 20, 0.08);
+  --primary-light: rgba(234, 123, 20, 0.12);
+}
+
+[data-theme="light"][data-accent="red"] {
+  --primary-color: #dc3545;
+  --primary-hover: #bb2d3b;
+  --link-color: #c82333;
+  --link-hover: #a71d2a;
+  --search-focus: rgba(220, 53, 69, 0.2);
+  --sidebar-scrollbar-thumb: #dc3545;
+  --sidebar-scrollbar-thumb-hover: #bb2d3b;
+  --sidebar-active: rgba(220, 53, 69, 0.1);
+  --table-hover: rgba(220, 53, 69, 0.08);
+  --primary-light: rgba(220, 53, 69, 0.12);
+}
+
+[data-theme="light"][data-accent="cyan"] {
+  --primary-color: #0ea5a4;
+  --primary-hover: #0d8f8e;
+  --link-color: #0d8f8e;
+  --link-hover: #0b7877;
+  --search-focus: rgba(14, 165, 164, 0.2);
+  --sidebar-scrollbar-thumb: #0ea5a4;
+  --sidebar-scrollbar-thumb-hover: #0d8f8e;
+  --sidebar-active: rgba(14, 165, 164, 0.1);
+  --table-hover: rgba(14, 165, 164, 0.08);
+  --primary-light: rgba(14, 165, 164, 0.12);
+}
+
+/* 暗色主题常规配色预设 */
 [data-theme="dark"][data-accent="green"] {
   --primary-color: #28a745;
   --primary-hover: #1e7e34;
@@ -392,7 +469,7 @@
   --table-stripe: var(--bg-tertiary);
 }
 
-[data-theme="dark"][data-accent="vs"] {
+[data-theme="dark"][data-theme-mode="special"][data-accent="vs"] {
   --primary-color: #8f5cc7;
   --primary-hover: #a77bd8;
   --link-color: #c5a3f0;
@@ -422,7 +499,7 @@
   --table-stripe: var(--bg-tertiary);
 }
 
-[data-theme="dark"][data-accent="git"] {
+[data-theme="dark"][data-theme-mode="special"][data-accent="git"] {
   --primary-color: #f05133;
   --primary-hover: #ff6a47;
   --link-color: #ff8a65;
@@ -452,7 +529,7 @@
   --table-stripe: var(--bg-tertiary);
 }
 
-[data-theme="dark"][data-accent="black"] {
+[data-theme="dark"][data-theme-mode="special"][data-accent="black"] {
   --primary-color: #bdbdbd;
   --primary-hover: #e6e6e6;
   --link-color: #cfcfcf;
@@ -482,7 +559,7 @@
   --table-stripe: var(--bg-tertiary);
 }
 
-[data-theme="dark"][data-accent="white"] {
+[data-theme="dark"][data-theme-mode="special"][data-accent="white"] {
   --primary-color: #111;
   --primary-hover: #000;
   --secondary-color: #6c757d;

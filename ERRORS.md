@@ -234,4 +234,19 @@
 
 **备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，为已有环境问题，与本次 `folder.html` 的页面内搜索/网格视图移除改动无直接关系。浏览器调试截图产物：`/tmp/folder-page.png`。
 
-*最后更新：2026-02-14*
+### 验证记录 [2026-02-15 09:24]：主题三模式（亮色/暗色/特殊）与教程页可切换验证
+
+**级别**：L3
+
+**命令与结果**：
+- `node site/assets/js/theme-mode.test.js`：通过（3 tests, 0 failures）
+- `npm test`：失败（4 个现有失败文件：`site/tooling/scripts/folder-learning-filter.test.js`、`site/tooling/scripts/gallery-check.test.js`、`site/tooling/scripts/gallery-normalize.test.js`、`site/tooling/scripts/generate-shader-gallery.test.js`）
+- `npm run build --silent`：通过
+- `node site/tooling/scripts/check-accent-theme.js`：通过
+- `python3 -m http.server 4173`：通过（本地调试服务启动）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=6000 --dump-dom` 批量检查 `site/index.html`、`site/content/index.html`、`site/pages/*.html`（教程相关页）及 `site/search-results.html`、`site/qa.html`、`site/404.html`：通过（12/12 均存在 `theme-mode-select` + `accent-select`，且有 `data-theme-mode`）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=9000 --dump-dom "http://127.0.0.1:4173/site/tmp-theme-e2e.html" > /tmp/theme_e2e_dom.html`：通过（结果 `{"ok":true,"mode":"special","theme":"dark","accent":"git","storedMode":"special","storedTheme":"dark","storedAccent":"git"}`）
+
+**备注**：浏览器验证中出现的 `dbus` 日志为无头环境常见输出，不影响 DOM 校验结论；临时调试页 `site/tmp-theme-e2e.html` 已在验证后删除。`npm test` 的 4 个失败为当前仓库既有失败项，本次主题改动相关新增测试已通过。
+
+*最后更新：2026-02-15*
