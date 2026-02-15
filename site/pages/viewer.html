@@ -732,6 +732,18 @@
                         return item.assetPath && item.dataUrl;
                     })
                     : [];
+                const uploadedMedia = Array.isArray(parsed.uploadedMedia)
+                    ? parsed.uploadedMedia.map(function (item) {
+                        return {
+                            assetPath: normalizeStudioPreviewPath(item && item.assetPath || ''),
+                            dataUrl: String(item && item.dataUrl || ''),
+                            name: String(item && item.name || ''),
+                            type: String(item && item.type || '')
+                        };
+                    }).filter(function (item) {
+                        return item.assetPath && item.dataUrl;
+                    })
+                    : [];
                 const uploadedCsharpFiles = Array.isArray(parsed.uploadedCsharpFiles)
                     ? parsed.uploadedCsharpFiles.map(function (item) {
                         return {
@@ -747,6 +759,7 @@
                     targetPath: targetPath,
                     markdown: String(parsed.markdown || ''),
                     uploadedImages: uploadedImages,
+                    uploadedMedia: uploadedMedia,
                     uploadedCsharpFiles: uploadedCsharpFiles,
                     updatedAt: String(parsed.updatedAt || '')
                 };
@@ -858,6 +871,42 @@
 	            return '';
 	        }
 
+            function resolveStudioPreviewMediaDataUrl(rawPath) {
+                if (!STUDIO_PREVIEW_MODE) return '';
+
+                const payload = readStudioPreviewPayloadFromStorage();
+                if (!payload || !Array.isArray(payload.uploadedMedia) || payload.uploadedMedia.length === 0) {
+                    return '';
+                }
+
+                let normalized = String(rawPath || '').trim();
+                if (!normalized) return '';
+
+                normalized = normalized.split('#')[0].split('?')[0];
+                try {
+                    normalized = decodeURIComponent(normalized);
+                } catch (_) {
+                    normalized = normalized;
+                }
+                normalized = normalized.replace(/^https?:\/\/[^/]+/i, '');
+                normalized = normalized.replace(/^\/site\/content\//i, '');
+                normalized = normalized.replace(/^site\/content\//i, '');
+                normalized = normalized.replace(/^content\//i, '');
+                normalized = normalizeStudioPreviewPath(normalized);
+
+                if (!normalized) return '';
+
+                const item = payload.uploadedMedia.find(function (media) {
+                    return normalizeStudioPreviewPath(media && media.assetPath || '') === normalized;
+                });
+
+                if (item && item.dataUrl) {
+                    return String(item.dataUrl);
+                }
+
+                return '';
+            }
+
         function installStudioPreviewFetchBridge() {
 	            if (!STUDIO_PREVIEW_MODE) return;
 	            if (window.__STUDIO_PREVIEW_FETCH_PATCHED) return;
@@ -892,11 +941,18 @@
 	                                }));
 	                            }
 
-	                            const imageMatch = (payload.uploadedImages || []).find(function (item) {
+                            const imageMatch = (payload.uploadedImages || []).find(function (item) {
                                 return normalizeStudioPreviewPath(item.assetPath || '') === requestPath;
                             });
                             if (imageMatch && imageMatch.dataUrl) {
                                 return nativeFetch(imageMatch.dataUrl, init);
+                            }
+
+                            const mediaMatch = (payload.uploadedMedia || []).find(function (item) {
+                                return normalizeStudioPreviewPath(item.assetPath || '') === requestPath;
+                            });
+                            if (mediaMatch && mediaMatch.dataUrl) {
+                                return nativeFetch(mediaMatch.dataUrl, init);
                             }
 
                             const csharpMatch = (payload.uploadedCsharpFiles || []).find(function (item) {
@@ -965,6 +1021,7 @@
                         targetPath: targetPath,
                         markdown: String(payload.markdown || ''),
                         uploadedImages: Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [],
+                        uploadedMedia: Array.isArray(payload.uploadedMedia) ? payload.uploadedMedia : [],
                         uploadedCsharpFiles: Array.isArray(payload.uploadedCsharpFiles) ? payload.uploadedCsharpFiles : [],
                         updatedAt: String(payload.updatedAt || new Date().toISOString())
                     }));
@@ -1296,19 +1353,15 @@
 	                return { href, title, text };
 	            };
 
-		            const isSafeUrl = function (href) {
-		                if (!href) return true;
-		                const trimmed = String(href).trim().toLowerCase();
-		                return !(
-		                    trimmed.startsWith('javascript:') ||
-		                    trimmed.startsWith('data:') ||
-		                    trimmed.startsWith('vbscript:')
-		                );
-		            };
-
-                    function isVideoAssetPath(pathValue) {
-                        return /\.(mp4|webm)(?:$|[?#])/i.test(String(pathValue || '').trim());
-                    }
+	            const isSafeUrl = function (href) {
+	                if (!href) return true;
+	                const trimmed = String(href).trim().toLowerCase();
+	                return !(
+	                    trimmed.startsWith('javascript:') ||
+	                    trimmed.startsWith('data:') ||
+	                    trimmed.startsWith('vbscript:')
+	                );
+	            };
 
 	            try {
 	                const renderer = (marked.Renderer && typeof marked.Renderer === 'function')
@@ -1359,19 +1412,26 @@
 	                        return `<a href="${escapeHtml(finalHref)}"${safeTitle}>${safeText}</a>`;
 	                    };
 
-			                    renderer.image = (href, title, text) => {
-		                        const normalized = normalizeMarkedArgs(href, title, text);
-		                        if (!isSafeUrl(normalized.href)) return '';
-		                        const resolvedSrc = resolveRelativeHref(normalized.href, CURRENT_DOC_PATH);
-		                        const previewDataUrl = resolveStudioPreviewImageDataUrl(resolvedSrc);
-		                        const safeSrc = escapeHtml(previewDataUrl || resolvedSrc);
-		                        const safeAlt = escapeHtml(normalized.text || '');
-		                        const safeTitle = normalized.title ? ` title="${escapeHtml(normalized.title)}"` : '';
-                                if (isVideoAssetPath(resolvedSrc) || isVideoAssetPath(normalized.href)) {
-                                    return `<video src="${safeSrc}" controls preload="metadata"${safeTitle}></video>`;
-                                }
-		                        return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} loading="lazy" decoding="async" />`;
-			                    };
+		                    renderer.image = (href, title, text) => {
+	                        const normalized = normalizeMarkedArgs(href, title, text);
+	                        if (!isSafeUrl(normalized.href)) return '';
+	                        const resolvedSrc = resolveRelativeHref(normalized.href, CURRENT_DOC_PATH);
+	                        const rawHrefNoQuery = String(normalized.href || '').split('#')[0].split('?')[0];
+	                        const resolvedSrcNoQuery = String(resolvedSrc || '').split('#')[0].split('?')[0];
+	                        const isVideo = /\.(mp4|webm)$/i.test(rawHrefNoQuery) || /\.(mp4|webm)$/i.test(resolvedSrcNoQuery);
+	                        if (isVideo) {
+	                            const previewMediaDataUrl = resolveStudioPreviewMediaDataUrl(resolvedSrc);
+	                            const safeVideoSrc = escapeHtml(previewMediaDataUrl || resolvedSrc);
+	                            const safeTitle = normalized.title ? ` title="${escapeHtml(normalized.title)}"` : '';
+	                            const mimeType = /\.webm$/i.test(rawHrefNoQuery) || /\.webm$/i.test(resolvedSrcNoQuery) ? 'video/webm' : 'video/mp4';
+	                            return `<video controls preload="metadata" playsinline${safeTitle}><source src="${safeVideoSrc}" type="${mimeType}" />您的浏览器不支持视频播放。</video>`;
+	                        }
+	                        const previewDataUrl = resolveStudioPreviewImageDataUrl(resolvedSrc);
+	                        const safeSrc = escapeHtml(previewDataUrl || resolvedSrc);
+	                        const safeAlt = escapeHtml(normalized.text || '');
+	                        const safeTitle = normalized.title ? ` title="${escapeHtml(normalized.title)}"` : '';
+	                        return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} loading="lazy" decoding="async" />`;
+		                    };
 
 		                    renderer.code = (code, lang) => {
 		                        // marked 版本差异兼容：有的版本传入 (code, lang)，有的版本传入 token 对象
