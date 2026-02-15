@@ -10,7 +10,10 @@
     var MODE_ACCENTS = {
         light: ['green', 'blue', 'purple', 'orange', 'red', 'cyan'],
         dark: ['green', 'blue', 'purple', 'orange', 'red', 'cyan'],
-        special: ['vs', 'git', 'black', 'white']
+        special: [
+            'vs', 'git', 'black', 'white',
+            'terraria-crimson', 'terraria-corruption', 'terraria-hallow', 'terraria-tundra', 'terraria-desert'
+        ]
     };
 
     var DEFAULT_MODE = 'dark';
@@ -33,7 +36,12 @@
         vs: true,
         git: true,
         black: true,
-        white: true
+        white: true,
+        'terraria-crimson': true,
+        'terraria-corruption': true,
+        'terraria-hallow': true,
+        'terraria-tundra': true,
+        'terraria-desert': true
     };
 
     function normalizeMode(value) {
