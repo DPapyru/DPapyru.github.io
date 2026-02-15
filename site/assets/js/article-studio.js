@@ -9,6 +9,7 @@
     const PREVIEW_SYNC_DEBOUNCE_MS = 120;
     const DEFAULT_PR_WORKER_API_URL = 'https://greenhome-pr.3577415213.workers.dev/api/create-pr';
     const MAX_IMAGE_FILE_SIZE = 2 * 1024 * 1024;
+    const MAX_MEDIA_FILE_SIZE = 10 * 1024 * 1024;
     const MAX_IMAGE_COUNT = 12;
     const MAX_CSHARP_FILE_SIZE = 200 * 1024;
     const MAX_CSHARP_COUNT = 5;
@@ -1055,22 +1056,116 @@
         return String(name || '').replace(/\.[a-z0-9]+$/i, '');
     }
 
+    function fileExtensionFromName(name) {
+        const match = String(name || '').trim().toLowerCase().match(/\.([a-z0-9]+)$/);
+        return match ? String(match[1] || '').toLowerCase() : '';
+    }
+
+    function imageExtFromMime(type) {
+        const mime = String(type || '').trim().toLowerCase();
+        if (mime === 'image/jpeg') return 'jpg';
+        if (mime === 'image/png') return 'png';
+        if (mime === 'image/gif') return 'gif';
+        if (mime === 'image/webp') return 'webp';
+        if (mime === 'image/svg+xml') return 'svg';
+        if (mime === 'image/bmp') return 'bmp';
+        if (mime === 'image/avif') return 'avif';
+        return '';
+    }
+
+    function videoExtFromMime(type) {
+        const mime = String(type || '').trim().toLowerCase();
+        if (mime === 'video/mp4') return 'mp4';
+        if (mime === 'video/webm') return 'webm';
+        return '';
+    }
+
+    function isSupportedImageExtension(extension) {
+        const ext = String(extension || '').trim().toLowerCase();
+        return ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'avif'].includes(ext);
+    }
+
+    function isSupportedVideoExtension(extension) {
+        const ext = String(extension || '').trim().toLowerCase();
+        return ext === 'mp4' || ext === 'webm';
+    }
+
+    function inferImageExtension(file) {
+        const fromName = fileExtensionFromName(file && file.name || '');
+        if (isSupportedImageExtension(fromName)) {
+            return fromName === 'jpeg' ? 'jpg' : fromName;
+        }
+
+        const fromMime = imageExtFromMime(file && file.type || '');
+        if (isSupportedImageExtension(fromMime)) {
+            return fromMime === 'jpeg' ? 'jpg' : fromMime;
+        }
+
+        return 'png';
+    }
+
+    function inferVideoExtension(file) {
+        const fromName = fileExtensionFromName(file && file.name || '');
+        if (isSupportedVideoExtension(fromName)) {
+            return fromName;
+        }
+
+        const fromMime = videoExtFromMime(file && file.type || '');
+        if (isSupportedVideoExtension(fromMime)) {
+            return fromMime;
+        }
+
+        return 'mp4';
+    }
+
+    function isImageFile(file) {
+        if (!file) return false;
+        const type = String(file.type || '').trim().toLowerCase();
+        const ext = fileExtensionFromName(file.name || '');
+        return type.startsWith('image/') || isSupportedImageExtension(ext);
+    }
+
+    function isVideoFile(file) {
+        if (!file) return false;
+        const type = String(file.type || '').trim().toLowerCase();
+        const ext = fileExtensionFromName(file.name || '');
+        return type === 'video/mp4' || type === 'video/webm' || isSupportedVideoExtension(ext);
+    }
+
+    function isVideoAssetPath(pathValue) {
+        return /\.(mp4|webm)(?:$|[?#])/i.test(String(pathValue || '').trim());
+    }
+
     function slugifyImageName(name) {
         const base = stripImageExt(name).trim().toLowerCase();
         const safe = base.replace(/[^a-z0-9\u4e00-\u9fa5_-]+/g, '-').replace(/-{2,}/g, '-').replace(/^-+|-+$/g, '');
         return safe || `image-${Date.now().toString(36)}`;
     }
 
-    function imageAssetPathFromTarget(targetPath, imageName) {
+    function imageAssetPathFromTarget(targetPath, imageName, extension) {
         const markdownPath = ensureMarkdownPath(targetPath || state.targetPath);
         const dir = getDirectoryFromPath(markdownPath);
         const safeImage = slugifyImageName(imageName);
+        const safeExtension = String(extension || fileExtensionFromName(imageName) || 'png').trim().toLowerCase();
         const uniqueSuffix = Math.random().toString(36).slice(2, 7);
         if (dir) {
-            return `${dir}/imgs/${safeImage}-${uniqueSuffix}.png`;
+            return `${dir}/imgs/${safeImage}-${uniqueSuffix}.${safeExtension}`;
         }
 
-        return `imgs/${safeImage}-${uniqueSuffix}.png`;
+        return `imgs/${safeImage}-${uniqueSuffix}.${safeExtension}`;
+    }
+
+    function videoAssetPathFromTarget(targetPath, videoName, extension) {
+        const markdownPath = ensureMarkdownPath(targetPath || state.targetPath);
+        const dir = getDirectoryFromPath(markdownPath);
+        const safeBase = slugifyImageName(videoName);
+        const safeExtension = String(extension || fileExtensionFromName(videoName) || 'mp4').trim().toLowerCase();
+        const uniqueSuffix = Math.random().toString(36).slice(2, 7);
+        if (dir) {
+            return `${dir}/media/${safeBase}-${uniqueSuffix}.${safeExtension}`;
+        }
+
+        return `media/${safeBase}-${uniqueSuffix}.${safeExtension}`;
     }
 
     function fileToDataUrl(file) {
@@ -1418,7 +1513,7 @@
         if (list.length === 0) {
             const empty = document.createElement('span');
             empty.className = 'studio-help';
-            empty.textContent = '当前没有已上传图片';
+            empty.textContent = '当前没有已上传媒体';
             dom.imageList.appendChild(empty);
             return;
         }
@@ -1445,7 +1540,7 @@
                 });
                 renderUploadedImages();
                 scheduleSave();
-                setStatus(`已移除图片：${item.name}`);
+                setStatus(`已移除附件：${item.name}`);
             });
 
             const insertRef = document.createElement('button');
@@ -1454,7 +1549,7 @@
             insertRef.textContent = '插入引用';
             insertRef.addEventListener('click', function () {
                 insertBlockSnippet(imageInsertionText(item));
-                setStatus(`已插入图片引用：${item.name}`);
+                setStatus(`已插入附件引用：${item.name}`);
             });
 
             const actions = document.createElement('div');
@@ -1467,10 +1562,19 @@
             meta.className = 'studio-image-item-meta';
             meta.textContent = `${formatBytes(item.size)} · /site/content/${item.assetPath || ''}`;
 
-            const preview = document.createElement('img');
-            preview.className = 'studio-image-item-preview';
-            preview.src = item.dataUrl || '';
-            preview.alt = item.name || 'uploaded image';
+            let preview = null;
+            if (isVideoAssetPath(item.assetPath)) {
+                preview = document.createElement('video');
+                preview.className = 'studio-image-item-preview';
+                preview.src = item.dataUrl || '';
+                preview.preload = 'metadata';
+                preview.controls = true;
+            } else {
+                preview = document.createElement('img');
+                preview.className = 'studio-image-item-preview';
+                preview.src = item.dataUrl || '';
+                preview.alt = item.name || 'uploaded image';
+            }
 
             row.appendChild(head);
             row.appendChild(meta);
@@ -1484,6 +1588,7 @@
         if (files.length === 0) return;
 
         const imageFiles = [];
+        const videoFiles = [];
         const csharpFiles = [];
         let skipped = 0;
 
@@ -1492,11 +1597,16 @@
 
             const name = String(file.name || '');
             const type = String(file.type || '').toLowerCase();
-            const isImage = type.startsWith('image/') || /\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(name);
+            const isImage = isImageFile(file) || type.startsWith('image/') || /\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(name);
+            const isVideo = isVideoFile(file) || type === 'video/mp4' || type === 'video/webm' || /\.(?:mp4|webm)$/i.test(name);
             const isCsharp = /\.cs$/i.test(name) || type.indexOf('csharp') >= 0;
 
             if (isImage) {
                 imageFiles.push(file);
+                return;
+            }
+            if (isVideo) {
+                videoFiles.push(file);
                 return;
             }
             if (isCsharp) {
@@ -1507,67 +1617,86 @@
             skipped += 1;
         });
 
-        if (imageFiles.length > 0) {
-            await insertImagesFromFiles(imageFiles);
+        const mediaFiles = imageFiles.concat(videoFiles);
+        if (mediaFiles.length > 0) {
+            await insertMediaFromFiles(mediaFiles);
         }
         if (csharpFiles.length > 0) {
             await insertCsharpFilesFromUpload(csharpFiles);
         }
 
-        if (imageFiles.length === 0 && csharpFiles.length === 0) {
-            setStatus('未发现可上传的图片或 C# 文件');
+        if (mediaFiles.length === 0 && csharpFiles.length === 0) {
+            setStatus('未发现可上传的媒体或 C# 文件');
             return;
         }
 
         if (skipped > 0) {
-            setStatus(`已处理图片 ${imageFiles.length} 个、C# ${csharpFiles.length} 个，跳过 ${skipped} 个不支持文件`);
+            setStatus(`已处理媒体 ${mediaFiles.length} 个（图片 ${imageFiles.length}、视频 ${videoFiles.length}）、C# ${csharpFiles.length} 个，跳过 ${skipped} 个不支持文件`);
         }
     }
 
-    async function insertImagesFromFiles(fileList) {
+    async function insertMediaFromFiles(fileList) {
         const files = Array.from(fileList || []);
         if (files.length === 0) return;
 
         if (state.uploadedImages.length >= MAX_IMAGE_COUNT) {
-            setStatus(`最多保留 ${MAX_IMAGE_COUNT} 张图片，请先移除旧图片`);
+            setStatus(`最多保留 ${MAX_IMAGE_COUNT} 个媒体文件，请先移除旧文件`);
             return;
         }
 
         const accepted = [];
+        let acceptedImageCount = 0;
+        let acceptedVideoCount = 0;
         for (const file of files) {
-            if (!file || !String(file.type || '').startsWith('image/')) {
-                setStatus(`已跳过非图片文件：${file && file.name ? file.name : '未知文件'}`);
+            const mediaFile = file || null;
+            if (!mediaFile || (!isImageFile(mediaFile) && !isVideoFile(mediaFile))) {
+                setStatus(`已跳过非媒体文件：${mediaFile && mediaFile.name ? mediaFile.name : '未知文件'}`);
                 continue;
             }
-            if (file.size > MAX_IMAGE_FILE_SIZE) {
-                setStatus(`图片过大（>${formatBytes(MAX_IMAGE_FILE_SIZE)}）：${file.name}`);
+
+            const treatAsVideo = isVideoFile(mediaFile);
+            const maxSize = treatAsVideo ? MAX_MEDIA_FILE_SIZE : MAX_IMAGE_FILE_SIZE;
+            if (Number(mediaFile.size || 0) > maxSize) {
+                setStatus(`${treatAsVideo ? '视频' : '图片'}过大（>${formatBytes(maxSize)}）：${mediaFile.name}`);
                 continue;
             }
+
             if (state.uploadedImages.length + accepted.length >= MAX_IMAGE_COUNT) {
-                setStatus(`最多保留 ${MAX_IMAGE_COUNT} 张图片，其余已跳过`);
+                setStatus(`最多保留 ${MAX_IMAGE_COUNT} 个媒体文件，其余已跳过`);
                 break;
             }
 
-            const dataUrl = await fileToDataUrl(file);
+            const dataUrl = await fileToDataUrl(mediaFile);
             const base64 = dataUrlToBase64(dataUrl);
             if (!base64) {
-                setStatus(`图片编码失败，已跳过：${file.name}`);
+                setStatus(`媒体编码失败，已跳过：${mediaFile.name}`);
                 continue;
             }
 
-            const assetPath = imageAssetPathFromTarget(state.targetPath, file.name);
+            const extension = treatAsVideo ? inferVideoExtension(mediaFile) : inferImageExtension(mediaFile);
+            const assetPath = treatAsVideo
+                ? videoAssetPathFromTarget(state.targetPath, mediaFile.name, extension)
+                : imageAssetPathFromTarget(state.targetPath, mediaFile.name, extension);
             const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+            const fallbackType = treatAsVideo
+                ? (extension === 'webm' ? 'video/webm' : 'video/mp4')
+                : `image/${extension}`;
             const item = {
                 id: id,
-                name: String(file.name || `image-${id}.png`),
-                type: String(file.type || 'image/png'),
-                size: Number(file.size || 0),
+                name: String(mediaFile.name || `${treatAsVideo ? 'video' : 'image'}-${id}.${extension}`),
+                type: String(mediaFile.type || fallbackType),
+                size: Number(mediaFile.size || 0),
                 assetPath: assetPath,
                 dataUrl: dataUrl,
                 base64: base64,
                 insertedAt: new Date().toISOString()
             };
             accepted.push(item);
+            if (treatAsVideo) {
+                acceptedVideoCount += 1;
+            } else {
+                acceptedImageCount += 1;
+            }
         }
 
         if (accepted.length === 0) {
@@ -1581,7 +1710,19 @@
 
         renderUploadedImages();
         scheduleSave();
-        setStatus(`已插入 ${accepted.length} 张图片并写入 Markdown`);
+        setStatus(`已插入媒体 ${accepted.length} 个（图片 ${acceptedImageCount}、视频 ${acceptedVideoCount}）并写入 Markdown`);
+    }
+
+    async function insertImagesFromFiles(fileList) {
+        const files = Array.from(fileList || []).filter(function (file) {
+            return isImageFile(file);
+        });
+        if (files.length === 0) {
+            setStatus('未发现可插入的图片文件');
+            return;
+        }
+
+        await insertMediaFromFiles(files);
     }
 
     function csharpFileConflictInLocal(assetPath) {
@@ -2777,16 +2918,16 @@
         const embedQuery = embedMode ? '&studio_embed=1' : '';
         return `/site/pages/viewer.html?studio_preview=1${embedQuery}&file=${encodeURIComponent(target)}`;
     }
-    function collectPastedImageFiles(clipboardData) {
+    function collectPastedMediaFiles(clipboardData) {
         if (!clipboardData) return [];
 
         const files = [];
         const items = Array.from(clipboardData.items || []);
         items.forEach(function (item) {
             if (!item || item.kind !== 'file') return;
-            if (!String(item.type || '').startsWith('image/')) return;
             const file = item.getAsFile();
             if (!file) return;
+            if (!isImageFile(file) && !isVideoFile(file)) return;
             files.push(file);
         });
 
@@ -2795,7 +2936,13 @@
         }
 
         return Array.from(clipboardData.files || []).filter(function (file) {
-            return file && String(file.type || '').startsWith('image/');
+            return file && (isImageFile(file) || isVideoFile(file));
+        });
+    }
+
+    function collectPastedImageFiles(clipboardData) {
+        return collectPastedMediaFiles(clipboardData).filter(function (file) {
+            return isImageFile(file);
         });
     }
 
@@ -4006,15 +4153,15 @@
 
             dom.markdown.addEventListener('paste', async function (event) {
                 const clipboardData = event && event.clipboardData ? event.clipboardData : null;
-                const imageFiles = collectPastedImageFiles(clipboardData);
-                if (imageFiles.length === 0) return;
+                const mediaFiles = collectPastedMediaFiles(clipboardData);
+                if (mediaFiles.length === 0) return;
 
                 event.preventDefault();
 
                 try {
-                    await insertImagesFromFiles(imageFiles);
+                    await insertMediaFromFiles(mediaFiles);
                 } catch (err) {
-                    setStatus(`粘贴图片失败：${err && err.message ? err.message : String(err)}`);
+                    setStatus(`粘贴媒体失败：${err && err.message ? err.message : String(err)}`);
                 }
             });
         }
@@ -4280,9 +4427,9 @@
         if (dom.imageUpload) {
             dom.imageUpload.addEventListener('change', async function () {
                 try {
-                    await insertImagesFromFiles(dom.imageUpload.files);
+                    await insertMediaFromFiles(dom.imageUpload.files);
                 } catch (err) {
-                    setStatus(`插入图片失败：${err && err.message ? err.message : String(err)}`);
+                    setStatus(`插入媒体失败：${err && err.message ? err.message : String(err)}`);
                 } finally {
                     dom.imageUpload.value = '';
                 }

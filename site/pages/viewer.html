@@ -1296,15 +1296,19 @@
 	                return { href, title, text };
 	            };
 
-	            const isSafeUrl = function (href) {
-	                if (!href) return true;
-	                const trimmed = String(href).trim().toLowerCase();
-	                return !(
-	                    trimmed.startsWith('javascript:') ||
-	                    trimmed.startsWith('data:') ||
-	                    trimmed.startsWith('vbscript:')
-	                );
-	            };
+		            const isSafeUrl = function (href) {
+		                if (!href) return true;
+		                const trimmed = String(href).trim().toLowerCase();
+		                return !(
+		                    trimmed.startsWith('javascript:') ||
+		                    trimmed.startsWith('data:') ||
+		                    trimmed.startsWith('vbscript:')
+		                );
+		            };
+
+                    function isVideoAssetPath(pathValue) {
+                        return /\.(mp4|webm)(?:$|[?#])/i.test(String(pathValue || '').trim());
+                    }
 
 	            try {
 	                const renderer = (marked.Renderer && typeof marked.Renderer === 'function')
@@ -1355,16 +1359,19 @@
 	                        return `<a href="${escapeHtml(finalHref)}"${safeTitle}>${safeText}</a>`;
 	                    };
 
-		                    renderer.image = (href, title, text) => {
-	                        const normalized = normalizeMarkedArgs(href, title, text);
-	                        if (!isSafeUrl(normalized.href)) return '';
-	                        const resolvedSrc = resolveRelativeHref(normalized.href, CURRENT_DOC_PATH);
-	                        const previewDataUrl = resolveStudioPreviewImageDataUrl(resolvedSrc);
-	                        const safeSrc = escapeHtml(previewDataUrl || resolvedSrc);
-	                        const safeAlt = escapeHtml(normalized.text || '');
-	                        const safeTitle = normalized.title ? ` title="${escapeHtml(normalized.title)}"` : '';
-	                        return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} loading="lazy" decoding="async" />`;
-		                    };
+			                    renderer.image = (href, title, text) => {
+		                        const normalized = normalizeMarkedArgs(href, title, text);
+		                        if (!isSafeUrl(normalized.href)) return '';
+		                        const resolvedSrc = resolveRelativeHref(normalized.href, CURRENT_DOC_PATH);
+		                        const previewDataUrl = resolveStudioPreviewImageDataUrl(resolvedSrc);
+		                        const safeSrc = escapeHtml(previewDataUrl || resolvedSrc);
+		                        const safeAlt = escapeHtml(normalized.text || '');
+		                        const safeTitle = normalized.title ? ` title="${escapeHtml(normalized.title)}"` : '';
+                                if (isVideoAssetPath(resolvedSrc) || isVideoAssetPath(normalized.href)) {
+                                    return `<video src="${safeSrc}" controls preload="metadata"${safeTitle}></video>`;
+                                }
+		                        return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} loading="lazy" decoding="async" />`;
+			                    };
 
 		                    renderer.code = (code, lang) => {
 		                        // marked 版本差异兼容：有的版本传入 (code, lang)，有的版本传入 token 对象
