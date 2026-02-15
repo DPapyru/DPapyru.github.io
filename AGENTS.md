@@ -87,73 +87,9 @@ git worktree remove .worktrees/<worktree-name>
 - 以可复现验证为准，不以“本地看起来正常”为准。
 - git合并与提交的内容必须以中文为主。
 
-## 8. 多Agent协作（纯文档协议）
+## 8. 多Agent协作（已迁移到项目特化 Skill）
 
-**此章节为强制协议：创建工作树后立刻执行，且全程仅通过文档记录协作状态。**
+多Agent协作协议已迁移到本项目特化 Skill：
 
-### 8.1 协作总则
-
-1. 开工前必须先阅读每个工作树的 `./Agents_Tell.md` 与 `./Agents_Down.md`，确认无重复任务、无冲突范围。
-2. `Agents_Tell.md` 与 `Agents_Down.md` 只能“末尾追加”，禁止覆盖他人记录或重排历史记录。
-3. 每个工作树只做一个目标任务；出现额外需求时，必须新建记录或新建工作树。
-4. 任何任务都必须具备可追踪字段：任务编号、负责人、工作树、影响范围、状态、时间戳。
-
-### 8.2 `Agents_Tell.md` 任务申领规范
-
-申领任务时，在 `Agents_Tell.md` 末尾追加如下模板：
-
-```md
-## [task_id] <任务标题>
-- original_request: <原始需求>
-- owner: <Agent或负责人>
-- worktree: <.worktrees/...>
-- branch: <分支名>
-- status: claimed
-- started_at: <YYYY-MM-DD HH:mm>
-- eta: <预计完成时间，可空>
-- depends_on: <依赖任务ID，无则写 none>
-- scope: <将要修改的文件或目录，多个用逗号分隔>
-- overlap_check: <与现有任务是否冲突：none / task_id>
-- own_scope: <自己明确负责的子任务>
-- progress_log: <首条日志，格式“YYYY-MM-DD HH:mm | claimed | 备注”>
-```
-
-状态仅允许使用以下值：
-
-- `claimed`：已认领，尚未开始改动。
-- `in_progress`：正在开发。
-- `blocked`：被依赖或冲突阻塞。
-- `done`：开发完成，等待合并。
-- `merged`：已进入主分支。
-
-### 8.3 冲突协调与接管规则
-
-1. 若 `scope` 与他人任务重叠，后申领者必须先标记 `blocked`，并在 `progress_log` 记录冲突任务ID和协调结论。
-2. 协调未完成前，不得在冲突范围内改动文件。
-3. 任一任务连续 24 小时未更新 `progress_log` 且未标记 `blocked`，其他 Agent 可接管。
-4. 接管时必须在 `Agents_Tell.md` 新增一条记录，`depends_on` 指向原任务ID，并在 `progress_log` 写明接管原因与时间。
-
-### 8.4 `Agents_Down.md` 完成登记规范
-
-任务完成后，在 `Agents_Down.md` 末尾追加如下模板：
-
-```md
-## [task_id] <任务标题>
-- owner: <Agent或负责人>
-- worktree: <.worktrees/...>
-- branch: <分支名>
-- finished_at: <YYYY-MM-DD HH:mm>
-- changed_files: <实际修改文件，多个用逗号分隔>
-- verification: <执行过的命令与结果；若未执行写明原因>
-- merge_ready: <yes/no>
-- note: <风险、遗留问题、给 main 合并者的说明>
-```
-
-`Agents_Down.md` 未登记完成信息的任务，不得进入合并流程。
-
-### 8.5 main 合并者核对清单
-
-1. `Agents_Tell.md` 中任务状态已到 `done`，且有完整 `progress_log`。
-2. `Agents_Down.md` 中存在同 `task_id` 的完成记录。
-3. `changed_files` 与实际改动范围一致，无越界修改。
-4. 验证结果与 `ERRORS.md` 记录一致（如任务涉及构建与校验）。
+- `local-skills/agents-tell-down-collab/SKILL.md`
+- 调用方式：`$agents-tell-down-collab`
