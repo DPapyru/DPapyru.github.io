@@ -261,4 +261,18 @@
 
 **备注**：浏览器验证中出现的 `dbus` 日志为无头环境常见输出，不影响 DOM 校验结论；临时调试页 `site/tmp-theme-e2e.html` 已在验证后删除。`npm test` 的 4 个失败为当前仓库既有失败项，本次主题改动相关新增测试已通过。
 
+### 验证记录 [2026-02-15 10:12]：新增泰拉瑞亚主题（猩红/腐化/神圣/冰原/沙漠）
+
+**级别**：L3
+
+**命令与结果**：
+- `node site/assets/js/theme-mode.test.js`：通过（4 tests, 0 failures）
+- `node site/tooling/scripts/check-accent-theme.js`：通过
+- `node --test site/tooling/scripts/page-common-alignment.test.js`：通过
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`）
+- `npm test`：失败（4 个现有失败文件：`site/tooling/scripts/folder-learning-filter.test.js`、`site/tooling/scripts/gallery-check.test.js`、`site/tooling/scripts/gallery-normalize.test.js`、`site/tooling/scripts/generate-shader-gallery.test.js`）
+
+**备注**：本次改动覆盖 `site/index.html`、`site/content/index.html`、`site/search-results.html`、`site/qa.html`、`site/404.html`、`site/pages/*.html` 中带 `accent-select` 的 12 个界面，统一新增 5 个泰拉瑞亚主题选项；`check-generated` 与 `npm test` 的失败项均为仓库既有问题。
+
 *最后更新：2026-02-15*

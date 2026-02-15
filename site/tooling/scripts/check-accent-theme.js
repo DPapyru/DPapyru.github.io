@@ -14,6 +14,14 @@ function assert(condition, message) {
     }
 }
 
+const TERRARIA_ACCENTS = [
+    'terraria-crimson',
+    'terraria-corruption',
+    'terraria-hallow',
+    'terraria-tundra',
+    'terraria-desert'
+];
+
 function checkHtmlFile(relativePath, expectedScriptPath) {
     const html = readText(relativePath);
 
@@ -26,6 +34,13 @@ function checkHtmlFile(relativePath, expectedScriptPath) {
         html.includes(`src="${expectedScriptPath}"`),
         `${relativePath}: missing script include ${expectedScriptPath}`
     );
+
+    for (const accent of TERRARIA_ACCENTS) {
+        assert(
+            html.includes(`value="${accent}"`),
+            `${relativePath}: missing accent option ${accent}`
+        );
+    }
 }
 
 function main() {
@@ -33,8 +48,15 @@ function main() {
         { file: 'site/index.html', script: '/site/assets/js/accent-theme.js' },
         { file: 'site/qa.html', script: '/site/assets/js/accent-theme.js' },
         { file: 'site/search-results.html', script: '/site/assets/js/accent-theme.js' },
-        { file: 'site/404.html', script: '/site/assets/js/accent-theme.js' },        { file: 'site/pages/viewer.html', script: '/site/assets/js/accent-theme.js' },
-        { file: 'site/pages/folder.html', script: '/site/assets/js/accent-theme.js' }
+        { file: 'site/404.html', script: '/site/assets/js/accent-theme.js' },
+        { file: 'site/content/index.html', script: '../assets/js/accent-theme.js' },
+        { file: 'site/pages/viewer.html', script: '/site/assets/js/accent-theme.js' },
+        { file: 'site/pages/folder.html', script: '/site/assets/js/accent-theme.js' },
+        { file: 'site/pages/article-studio.html', script: '/site/assets/js/accent-theme.js' },
+        { file: 'site/pages/anim-renderer.html', script: '/site/assets/js/accent-theme.js' },
+        { file: 'site/pages/shader-playground.html', script: '/site/assets/js/accent-theme.js' },
+        { file: 'site/pages/shader-gallery.html', script: '/site/assets/js/accent-theme.js' },
+        { file: 'site/pages/shader-contribute.html', script: '/site/assets/js/accent-theme.js' }
     ];
 
     for (const entry of htmlFiles) {
@@ -60,6 +82,12 @@ function main() {
         accentTheme.includes('MODE_ACCENTS') && accentTheme.includes('special'),
         'site/assets/js/accent-theme.js: expected mode-based accent map'
     );
+    for (const accent of TERRARIA_ACCENTS) {
+        assert(
+            accentTheme.includes(accent),
+            `site/assets/js/accent-theme.js: expected accent ${accent}`
+        );
+    }
 
     const variablesCss = readText('site/assets/css/variables.css');
     assert(
@@ -70,6 +98,12 @@ function main() {
         variablesCss.includes('[data-theme="dark"][data-theme-mode="special"][data-accent="vs"]'),
         'site/assets/css/variables.css: expected special mode accent overrides'
     );
+    for (const accent of TERRARIA_ACCENTS) {
+        assert(
+            variablesCss.includes(`[data-theme="dark"][data-theme-mode="special"][data-accent="${accent}"]`),
+            `site/assets/css/variables.css: expected special accent overrides for ${accent}`
+        );
+    }
 
     console.log('OK: theme mode + accent wiring detected');
 }

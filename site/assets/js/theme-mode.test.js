@@ -156,7 +156,11 @@ function setupAccentSelect(document) {
     const accentSelect = document.createElement('select');
     accentSelect.id = 'accent-select';
 
-    const optionValues = ['green', 'blue', 'purple', 'orange', 'red', 'cyan', 'vs', 'git', 'black', 'white'];
+    const optionValues = [
+        'green', 'blue', 'purple', 'orange', 'red', 'cyan',
+        'vs', 'git', 'black', 'white',
+        'terraria-crimson', 'terraria-corruption', 'terraria-hallow', 'terraria-tundra', 'terraria-desert'
+    ];
     for (const value of optionValues) {
         const option = document.createElement('option');
         option.value = value;
@@ -212,6 +216,23 @@ test('theme-init infers special mode from existing special accent', () => {
     assert.equal(document.documentElement.getAttribute('data-accent'), 'git');
 });
 
+test('theme-init keeps terraria accent in special mode', () => {
+    const document = createDocument();
+    const localStorage = createLocalStorage({
+        'theme-mode': 'special',
+        accent: 'terraria-corruption'
+    });
+
+    runScript('site/assets/js/theme-init.js', {
+        document,
+        localStorage
+    });
+
+    assert.equal(document.documentElement.getAttribute('data-theme-mode'), 'special');
+    assert.equal(document.documentElement.getAttribute('data-theme'), 'dark');
+    assert.equal(document.documentElement.getAttribute('data-accent'), 'terraria-corruption');
+});
+
 test('accent-theme injects mode select and syncs accent options by mode', () => {
     const document = createDocument();
     const localStorage = createLocalStorage({
@@ -246,11 +267,11 @@ test('accent-theme injects mode select and syncs accent options by mode', () => 
     assert.equal(document.documentElement.getAttribute('data-accent'), 'vs');
     assert.deepEqual(
         optionValues(setup.accentSelect),
-        ['vs', 'git', 'black', 'white']
+        ['vs', 'git', 'black', 'white', 'terraria-crimson', 'terraria-corruption', 'terraria-hallow', 'terraria-tundra', 'terraria-desert']
     );
 
-    setup.accentSelect.value = 'git';
+    setup.accentSelect.value = 'terraria-hallow';
     setup.accentSelect.dispatchEvent({ type: 'change' });
 
-    assert.equal(document.documentElement.getAttribute('data-accent'), 'git');
+    assert.equal(document.documentElement.getAttribute('data-accent'), 'terraria-hallow');
 });

@@ -623,3 +623,153 @@
 
   --primary-light: rgba(17, 17, 17, 0.08);
 }
+
+[data-theme="dark"][data-theme-mode="special"][data-accent="terraria-crimson"] {
+  --primary-color: #d94f5f;
+  --primary-hover: #bf3647;
+  --link-color: #ff8a96;
+  --link-hover: #ffb4bc;
+  --search-focus: rgba(217, 79, 95, 0.36);
+  --primary-light: rgba(217, 79, 95, 0.2);
+
+  --bg-color: #17080c;
+  --bg-secondary: #210b10;
+  --bg-tertiary: #2a0f16;
+  --bg-content: #17080c;
+
+  --header-bg: #210b10;
+  --sidebar-bg: #210b10;
+
+  --border-color: #4f1a26;
+  --border-light: #5f2230;
+  --border-dark: #702a3a;
+
+  --code-bg: #210b10;
+  --code-border: #4f1a26;
+
+  --search-bg: var(--bg-tertiary);
+  --search-border: var(--border-color);
+
+  --import-color: rgba(217, 79, 95, 0.1);
+  --table-stripe: var(--bg-tertiary);
+}
+
+[data-theme="dark"][data-theme-mode="special"][data-accent="terraria-corruption"] {
+  --primary-color: #9468ff;
+  --primary-hover: #8253f0;
+  --link-color: #c4adff;
+  --link-hover: #ddd0ff;
+  --search-focus: rgba(148, 104, 255, 0.36);
+  --primary-light: rgba(148, 104, 255, 0.2);
+
+  --bg-color: #120b1e;
+  --bg-secondary: #181029;
+  --bg-tertiary: #221639;
+  --bg-content: #120b1e;
+
+  --header-bg: #181029;
+  --sidebar-bg: #181029;
+
+  --border-color: #3f2a67;
+  --border-light: #4d3480;
+  --border-dark: #5b3d97;
+
+  --code-bg: #181029;
+  --code-border: #3f2a67;
+
+  --search-bg: var(--bg-tertiary);
+  --search-border: var(--border-color);
+
+  --import-color: rgba(148, 104, 255, 0.1);
+  --table-stripe: var(--bg-tertiary);
+}
+
+[data-theme="dark"][data-theme-mode="special"][data-accent="terraria-hallow"] {
+  --primary-color: #ff7bd2;
+  --primary-hover: #ff5fc5;
+  --link-color: #ffd46f;
+  --link-hover: #ffe7a6;
+  --search-focus: rgba(255, 123, 210, 0.36);
+  --primary-light: rgba(255, 123, 210, 0.2);
+
+  --bg-color: #1a1024;
+  --bg-secondary: #211430;
+  --bg-tertiary: #2d1b40;
+  --bg-content: #1a1024;
+
+  --header-bg: #211430;
+  --sidebar-bg: #211430;
+
+  --border-color: #573677;
+  --border-light: #6a4490;
+  --border-dark: #7f54a8;
+
+  --code-bg: #211430;
+  --code-border: #573677;
+
+  --search-bg: var(--bg-tertiary);
+  --search-border: var(--border-color);
+
+  --import-color: rgba(255, 123, 210, 0.1);
+  --table-stripe: var(--bg-tertiary);
+}
+
+[data-theme="dark"][data-theme-mode="special"][data-accent="terraria-tundra"] {
+  --primary-color: #6fd8ff;
+  --primary-hover: #4dc9f5;
+  --link-color: #b5ecff;
+  --link-hover: #d8f6ff;
+  --search-focus: rgba(111, 216, 255, 0.36);
+  --primary-light: rgba(111, 216, 255, 0.2);
+
+  --bg-color: #08131b;
+  --bg-secondary: #0d1923;
+  --bg-tertiary: #132332;
+  --bg-content: #08131b;
+
+  --header-bg: #0d1923;
+  --sidebar-bg: #0d1923;
+
+  --border-color: #1f4158;
+  --border-light: #27506b;
+  --border-dark: #306280;
+
+  --code-bg: #0d1923;
+  --code-border: #1f4158;
+
+  --search-bg: var(--bg-tertiary);
+  --search-border: var(--border-color);
+
+  --import-color: rgba(111, 216, 255, 0.09);
+  --table-stripe: var(--bg-tertiary);
+}
+
+[data-theme="dark"][data-theme-mode="special"][data-accent="terraria-desert"] {
+  --primary-color: #e6b25a;
+  --primary-hover: #d1963d;
+  --link-color: #ffd38f;
+  --link-hover: #ffe7be;
+  --search-focus: rgba(230, 178, 90, 0.34);
+  --primary-light: rgba(230, 178, 90, 0.2);
+
+  --bg-color: #161005;
+  --bg-secondary: #211708;
+  --bg-tertiary: #2c200b;
+  --bg-content: #161005;
+
+  --header-bg: #211708;
+  --sidebar-bg: #211708;
+
+  --border-color: #5a4319;
+  --border-light: #6d5220;
+  --border-dark: #826227;
+
+  --code-bg: #211708;
+  --code-border: #5a4319;
+
+  --search-bg: var(--bg-tertiary);
+  --search-border: var(--border-color);
+
+  --import-color: rgba(230, 178, 90, 0.1);
+  --table-stripe: var(--bg-tertiary);
+}
