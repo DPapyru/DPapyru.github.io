@@ -84,9 +84,13 @@
                 </section>
 
                 <section class="studio-lazy-workspace" aria-label="LazyVim 风格工作台">
-                    <aside class="studio-lazy-column studio-lazy-column--left" aria-label="左栏：Explorer">
-                        <section class="studio-lazy-panel" aria-label="文章文件控制">
-                            <h2 class="studio-panel-title">Explorer</h2>
+                    <aside id="studio-left-panel-modal" class="studio-lazy-column studio-lazy-column--left modal studio-side-panel-modal" aria-label="左栏：Explorer" aria-hidden="true">
+                        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-left-panel-title">
+                            <section class="studio-lazy-panel studio-side-panel-shell" aria-label="文章文件控制">
+                                <div class="studio-side-panel-header">
+                                    <h2 id="studio-left-panel-title" class="studio-panel-title">Explorer</h2>
+                                    <button id="studio-left-panel-close" class="modal-close" type="button" aria-label="关闭 Explorer">×</button>
+                                </div>
 
                             <div class="studio-panel-section">
                                 <label for="studio-existing-select">已有文章</label>
@@ -217,8 +221,8 @@
                                 </div>
                             </details>
 
-                        </section>
-
+                            </section>
+                        </div>
                     </aside>
 
                     <section class="studio-lazy-column studio-lazy-column--center" aria-label="中栏：Editor">
@@ -229,6 +233,8 @@
                                     <div class="studio-commandbars">
                                         <section class="studio-toolbar studio-toolbar--embedded">
                                             <div class="studio-quick-actions">
+                                                <button id="studio-open-explorer" class="btn btn-small btn-outline" type="button" aria-expanded="false" aria-controls="studio-left-panel-modal">Explorer</button>
+                                                <button id="studio-open-publish" class="btn btn-small btn-outline" type="button" aria-expanded="false" aria-controls="studio-right-panel-modal">Publish</button>
                                                 <button id="studio-insert-template" class="btn btn-small" type="button">插入模板</button>
                                                 <button id="studio-insert-image" class="btn btn-small btn-outline" type="button">插入图片</button>
                                                 <button id="studio-format-markdown" class="btn btn-small btn-outline" type="button">快速格式化</button>
@@ -298,9 +304,13 @@
                         </section>
                     </section>
 
-                    <aside class="studio-lazy-column studio-lazy-column--right" aria-label="右栏：Publish">
-                        <section class="studio-lazy-panel" aria-label="页面选项与 PR 发布">
-                            <h2 class="studio-panel-title">Publish</h2>
+                    <aside id="studio-right-panel-modal" class="studio-lazy-column studio-lazy-column--right modal studio-side-panel-modal" aria-label="右栏：Publish" aria-hidden="true">
+                        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-right-panel-title">
+                            <section class="studio-lazy-panel studio-side-panel-shell" aria-label="页面选项与 PR 发布">
+                                <div class="studio-side-panel-header">
+                                    <h2 id="studio-right-panel-title" class="studio-panel-title">Publish</h2>
+                                    <button id="studio-right-panel-close" class="modal-close" type="button" aria-label="关闭 Publish">×</button>
+                                </div>
 
                             <div class="studio-panel-section">
                                 <label for="studio-pr-worker-url">Worker API 地址</label>
@@ -383,7 +393,8 @@
                                     <span class="studio-help">优先使用 GitHub 登录；仅在 Worker 仍启用密钥模式时填写。</span>
                                 </div>
                             </details>
-                        </section>
+                            </section>
+                        </div>
                     </aside>
                 </section>
             </div>

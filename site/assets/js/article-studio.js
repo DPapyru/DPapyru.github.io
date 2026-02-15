@@ -18,6 +18,12 @@
         markdown: document.getElementById('studio-markdown'),
         previewFrame: document.getElementById('studio-preview-frame'),
         openViewerPreview: document.getElementById('studio-open-viewer-preview'),
+        openExplorer: document.getElementById('studio-open-explorer'),
+        openPublish: document.getElementById('studio-open-publish'),
+        leftPanelModal: document.getElementById('studio-left-panel-modal'),
+        leftPanelClose: document.getElementById('studio-left-panel-close'),
+        rightPanelModal: document.getElementById('studio-right-panel-modal'),
+        rightPanelClose: document.getElementById('studio-right-panel-close'),
         flowchartToggle: document.getElementById('studio-flowchart-toggle'),
         flowchartModal: document.getElementById('studio-flowchart-modal'),
         flowchartModalClose: document.getElementById('studio-flowchart-modal-close'),
@@ -1130,8 +1136,46 @@
         return !!(dom.flowchartModal && dom.flowchartModal.classList.contains('active'));
     }
 
+    function isSidePanelModalOpen(panel) {
+        const key = panel === 'right' ? 'right' : 'left';
+        const modal = key === 'right' ? dom.rightPanelModal : dom.leftPanelModal;
+        return !!(modal && modal.classList.contains('active'));
+    }
+
+    function setSidePanelModalOpen(panel, open, options) {
+        const key = panel === 'right' ? 'right' : 'left';
+        const modal = key === 'right' ? dom.rightPanelModal : dom.leftPanelModal;
+        const trigger = key === 'right' ? dom.openPublish : dom.openExplorer;
+        const otherKey = key === 'right' ? 'left' : 'right';
+        const shouldOpen = !!open;
+        if (!modal) return;
+
+        if (shouldOpen && isSidePanelModalOpen(otherKey)) {
+            setSidePanelModalOpen(otherKey, false, { silent: true });
+        }
+
+        modal.classList.toggle('active', shouldOpen);
+        modal.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+        if (trigger) {
+            trigger.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        }
+        syncModalBodyLock();
+
+        if (!shouldOpen || (options && options.skipFocus)) {
+            return;
+        }
+
+        const focusTarget = modal.querySelector('input, textarea, select, button');
+        if (focusTarget && typeof focusTarget.focus === 'function') {
+            focusTarget.focus();
+        }
+    }
+
     function syncModalBodyLock() {
-        const shouldLock = isCsharpEditorModalOpen() || isFlowchartModalOpen();
+        const shouldLock = isCsharpEditorModalOpen()
+            || isFlowchartModalOpen()
+            || isSidePanelModalOpen('left')
+            || isSidePanelModalOpen('right');
         document.body.classList.toggle('article-studio-modal-open', shouldLock);
     }
 
@@ -3269,6 +3313,10 @@
     function setFlowchartModalOpen(open) {
         if (!dom.flowchartModal) return;
         state.flowchartDrawer.open = !!open;
+        if (state.flowchartDrawer.open) {
+            setSidePanelModalOpen('left', false, { silent: true });
+            setSidePanelModalOpen('right', false, { silent: true });
+        }
         dom.flowchartModal.classList.toggle('active', state.flowchartDrawer.open);
         dom.flowchartModal.setAttribute('aria-hidden', state.flowchartDrawer.open ? 'false' : 'true');
         if (dom.flowchartToggle) {
@@ -3971,6 +4019,52 @@
             });
         }
 
+        if (dom.openExplorer) {
+            dom.openExplorer.addEventListener('click', function () {
+                const nextOpen = !isSidePanelModalOpen('left');
+                setSidePanelModalOpen('left', nextOpen);
+                setStatus(nextOpen ? 'Explorer 面板已打开' : 'Explorer 面板已关闭');
+            });
+        }
+
+        if (dom.openPublish) {
+            dom.openPublish.addEventListener('click', function () {
+                const nextOpen = !isSidePanelModalOpen('right');
+                setSidePanelModalOpen('right', nextOpen);
+                setStatus(nextOpen ? 'Publish 面板已打开' : 'Publish 面板已关闭');
+            });
+        }
+
+        if (dom.leftPanelClose) {
+            dom.leftPanelClose.addEventListener('click', function () {
+                setSidePanelModalOpen('left', false);
+                setStatus('Explorer 面板已关闭');
+            });
+        }
+
+        if (dom.rightPanelClose) {
+            dom.rightPanelClose.addEventListener('click', function () {
+                setSidePanelModalOpen('right', false);
+                setStatus('Publish 面板已关闭');
+            });
+        }
+
+        if (dom.leftPanelModal) {
+            dom.leftPanelModal.addEventListener('click', function (event) {
+                if (event.target !== dom.leftPanelModal) return;
+                setSidePanelModalOpen('left', false);
+                setStatus('Explorer 面板已关闭');
+            });
+        }
+
+        if (dom.rightPanelModal) {
+            dom.rightPanelModal.addEventListener('click', function (event) {
+                if (event.target !== dom.rightPanelModal) return;
+                setSidePanelModalOpen('right', false);
+                setStatus('Publish 面板已关闭');
+            });
+        }
+
         if (dom.flowchartToggle) {
             dom.flowchartToggle.addEventListener('click', function () {
                 setFlowchartModalOpen(!state.flowchartDrawer.open);
@@ -4556,6 +4650,20 @@
                 event.preventDefault();
                 setFlowchartModalOpen(false);
                 setStatus('流程图工作台弹窗已关闭');
+                return;
+            }
+
+            if (event.key === 'Escape' && isSidePanelModalOpen('left')) {
+                event.preventDefault();
+                setSidePanelModalOpen('left', false);
+                setStatus('Explorer 面板已关闭');
+                return;
+            }
+
+            if (event.key === 'Escape' && isSidePanelModalOpen('right')) {
+                event.preventDefault();
+                setSidePanelModalOpen('right', false);
+                setStatus('Publish 面板已关闭');
                 return;
             }
 
