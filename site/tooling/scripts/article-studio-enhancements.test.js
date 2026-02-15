@@ -196,6 +196,33 @@ test('article studio js supports unified mixed asset upload', () => {
     assert.match(js, /insertAssetsFromUpload\(dom\.assetUpload\.files\)/);
 });
 
+test('article studio html upload controls accept mp4 and webm', () => {
+    const html = read('site/pages/article-studio.html');
+
+    assert.match(html, /id="studio-asset-upload"/);
+    assert.match(html, /video\/mp4/);
+    assert.match(html, /video\/webm/);
+});
+
+test('article studio js supports pasted and uploaded video media files', () => {
+    const js = read('site/assets/js/article-studio.js');
+
+    assert.match(js, /function\s+collectPastedMediaFiles\s*\(/);
+    assert.match(js, /function\s+insertMediaFromFiles\s*\(/);
+    assert.match(js, /video\/mp4/);
+    assert.match(js, /video\/webm/);
+    assert.match(js, /MAX_MEDIA_FILE_SIZE/);
+});
+
+test('article studio image asset path keeps original file extension', () => {
+    const js = read('site/assets/js/article-studio.js');
+    const fn = getFunctionBody(js, 'imageAssetPathFromTarget');
+
+    assert.ok(fn, 'imageAssetPathFromTarget should exist');
+    assert.doesNotMatch(fn, /return\s+`[^`]*\.png`/);
+    assert.match(fn, /extension/);
+});
+
 test('article studio preview url supports embed and full viewer modes', () => {
     const js = read('site/assets/js/article-studio.js');
     const fn = getFunctionBody(js, 'buildViewerPreviewUrl');
@@ -212,7 +239,7 @@ test('article studio markdown editor paste handler only intercepts pasted images
     assert.match(js, /dom\.markdown\.addEventListener\('paste'/);
     assert.match(js, /event\.clipboardData/);
     assert.match(js, /preventDefault\(/);
-    assert.match(js, /insertImagesFromFiles\(/);
+    assert.match(js, /insertMediaFromFiles\(/);
 });
 
 test('viewer studio preview bridge supports uploaded csharp files', () => {
@@ -225,6 +252,17 @@ test('viewer studio preview bridge supports uploaded csharp files', () => {
     assert.match(readFn, /uploadedCsharpFiles/);
     assert.match(bridgeFn, /payload\.uploadedCsharpFiles/);
     assert.match(bridgeFn, /text\/x-csharp/);
+});
+
+test('viewer markdown renderer maps ![](.mp4/.webm) to video tag', () => {
+    const viewer = read('site/pages/viewer.html');
+    const initFn = getFunctionBody(viewer, 'initializeMarkedRender');
+
+    assert.ok(initFn, 'initializeMarkedRender should exist');
+    assert.match(initFn, /function\s+isVideoAssetPath\s*\(/);
+    assert.match(initFn, /mp4\|webm/);
+    assert.match(initFn, /<video\s+src=/);
+    assert.match(initFn, /preload="metadata"/);
 });
 
 test('viewer studio preview image notice can post from full-page iframe mode', () => {

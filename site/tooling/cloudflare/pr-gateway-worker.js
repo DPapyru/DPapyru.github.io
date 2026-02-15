@@ -236,9 +236,10 @@ function sanitizeExtraFilePath(input) {
 
   const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(p);
   const isArticleImageFile = /^site\/content\/.+\/imgs\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(p);
+  const isArticleMediaFile = /^site\/content\/.+\/media\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:mp4|webm)$/i.test(p);
   const isArticleCsharpFile = /^site\/content\/.+\/code\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(p);
-  if (!isShaderGalleryFile && !isArticleImageFile && !isArticleCsharpFile) {
-    throw new Error("extra file 只允许 site/content/shader-gallery/<slug>/(entry|shader).json、site/content/**/imgs/*.{png,jpg,jpeg,gif,webp,svg,bmp,avif} 或 site/content/**/code/*.cs");
+  if (!isShaderGalleryFile && !isArticleImageFile && !isArticleMediaFile && !isArticleCsharpFile) {
+    throw new Error("extra file 只允许 site/content/shader-gallery/<slug>/(entry|shader).json、site/content/**/imgs/*.{png,jpg,jpeg,gif,webp,svg,bmp,avif}、site/content/**/media/*.{mp4,webm} 或 site/content/**/code/*.cs");
   }
 
   return p;
@@ -246,7 +247,7 @@ function sanitizeExtraFilePath(input) {
 
 function normalizeExtraFiles(input) {
   if (!Array.isArray(input)) return [];
-  if (input.length > 5) throw new Error("extraFiles 数量不能超过 5");
+  if (input.length > 8) throw new Error("extraFiles 数量不能超过 8");
 
   return input.map((item, index) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) {
@@ -266,11 +267,19 @@ function normalizeExtraFiles(input) {
       throw new Error(`extraFiles[${index}] content 不能为空`);
     }
 
+    const isVideoMediaFile = /^site\/content\/.+\/media\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:mp4|webm)$/i.test(path);
+
     if (isBase64) {
       if (!/^[A-Za-z0-9+/=\s]+$/.test(content)) {
         throw new Error(`extraFiles[${index}] base64 content 非法`);
       }
-      if (content.length > 3200000) {
+      const maxBase64Length = isVideoMediaFile
+        ? Math.ceil((10 * 1024 * 1024 * 4) / 3)
+        : 3200000;
+      if (content.length > maxBase64Length) {
+        if (isVideoMediaFile) {
+          throw new Error(`extraFiles[${index}] base64 content 过大（>10MB 原始视频）`);
+        }
         throw new Error(`extraFiles[${index}] base64 content 过大（>3.2MB）`);
       }
     } else if (content.length > 200000) {
