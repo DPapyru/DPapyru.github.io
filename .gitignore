@@ -106,3 +106,5 @@ site/content/*.pp.csproj
 site/content/anims/bin/
 site/content/anims/obj/
 .codex/config.toml
+Agents_Tell.md
+Agents_Down.md
