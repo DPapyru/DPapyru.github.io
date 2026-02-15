@@ -234,4 +234,16 @@
 
 **备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，为已有环境问题，与本次 `folder.html` 的页面内搜索/网格视图移除改动无直接关系。浏览器调试截图产物：`/tmp/folder-page.png`。
 
-*最后更新：2026-02-14*
+### 验证记录 [2026-02-15 09:10]：article-studio 新建 PR 前附件清理规则落地
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-enhancements.test.js`：通过
+- `node --test site/tooling/scripts/article-studio-*.test.js`：通过（6 files, 0 failures）
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`（`gallery-check` 报错），属于仓库既有问题，与本次 `article-studio` 的新 PR 附件清理规则改动无直接关系。
+
+*最后更新：2026-02-15*

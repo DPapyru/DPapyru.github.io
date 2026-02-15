@@ -105,6 +105,7 @@
         prTitle: document.getElementById('studio-pr-title'),
         prChainSelect: document.getElementById('studio-pr-chain-select'),
         refreshMyPrs: document.getElementById('studio-refresh-my-prs'),
+        clearAssets: document.getElementById('studio-clear-assets'),
         togglePreviewImageNotice: document.getElementById('studio-toggle-preview-image-notice'),
         authLogin: document.getElementById('studio-auth-login'),
         authLogout: document.getElementById('studio-auth-logout'),
@@ -817,6 +818,31 @@
         }).filter(function (item) {
             return !!item.content;
         });
+    }
+
+    function hasUploadedAssets() {
+        const imageCount = Array.isArray(state.uploadedImages) ? state.uploadedImages.length : 0;
+        const csharpCount = Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles.length : 0;
+        return imageCount + csharpCount > 0;
+    }
+
+    function clearUploadedAssets(options) {
+        const silent = !!(options && options.silent);
+        const reason = String(options && options.reason || '').trim();
+
+        state.uploadedImages = [];
+        state.uploadedCsharpFiles = [];
+        state.csharpSymbolEntries = [];
+        closeCsharpEditorModal();
+
+        renderUploadedImages();
+        refreshCsharpSymbolOptions();
+        renderUploadedCsharpFiles();
+        scheduleSave();
+
+        if (!silent) {
+            setStatus(reason ? `已清空已上传附件（${reason}）` : '已清空已上传附件');
+        }
     }
 
     function formatMarkdownForStudio(markdownText) {
@@ -2472,9 +2498,30 @@
             markdown: String(state.markdown || ''),
             prTitle: titleInput || defaultPrTitle()
         };
-        const imageExtraFiles = buildImageExtraFiles();
-        const csharpExtraFiles = buildCSharpExtraFiles();
-        const extraFiles = imageExtraFiles.concat(csharpExtraFiles);
+        let imageExtraFiles = buildImageExtraFiles();
+        let csharpExtraFiles = buildCSharpExtraFiles();
+        let extraFiles = imageExtraFiles.concat(csharpExtraFiles);
+
+        if (!linkedPrNumber && extraFiles.length > 0) {
+            const shouldClear = window.confirm(
+                '当前将创建新 PR，但检测到已上传附件。\n' +
+                '为避免重复提交同路径文件，是否先一键清空附件并继续提交？\n\n' +
+                '确定：清空附件后继续创建新 PR（仅提交 Markdown）\n' +
+                '取消：终止提交，改为继续到同一 PR 或手动清理附件'
+            );
+
+            if (!shouldClear) {
+                setStatus('请选择“PR 链”继续到已有 PR，或先清空附件再创建新 PR');
+                return;
+            }
+
+            clearUploadedAssets({ silent: true, reason: '新 PR 提交前自动清理' });
+            imageExtraFiles = [];
+            csharpExtraFiles = [];
+            extraFiles = [];
+            setStatus('已在新 PR 提交前清空附件，将继续提交 Markdown');
+        }
+
         if (extraFiles.length > 0) {
             payload.extraFiles = extraFiles;
         }
@@ -4387,6 +4434,19 @@
 
         if (dom.reset) {
             dom.reset.addEventListener('click', resetAll);
+        }
+
+        if (dom.clearAssets) {
+            dom.clearAssets.addEventListener('click', function () {
+                if (!hasUploadedAssets()) {
+                    setStatus('当前没有可清空的已上传附件');
+                    return;
+                }
+                if (!window.confirm('确认清空所有已上传图片与 C# 文件吗？')) {
+                    return;
+                }
+                clearUploadedAssets({ reason: '手动清理' });
+            });
         }
 
         if (dom.insertTemplate) {

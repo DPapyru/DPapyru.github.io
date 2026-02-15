@@ -67,6 +67,13 @@ test('article studio html includes pr chain controls', () => {
     assert.match(html, /id="studio-refresh-my-prs"/);
 });
 
+test('article studio html includes one-click clear action for uploaded assets', () => {
+    const html = read('site/pages/article-studio.html');
+
+    assert.match(html, /id="studio-clear-assets"/);
+    assert.match(html, /清空已上传附件/);
+});
+
 test('article studio html includes hierarchy navigation and create-directory controls', () => {
     const html = read('site/pages/article-studio.html');
 
@@ -88,6 +95,25 @@ test('article studio js supports image upload and linked pr submit', () => {
     assert.match(js, /existingPrNumber/);
     assert.match(js, /my-open-prs/);
     assert.match(js, /article-studio-preview-image-mapped/);
+});
+
+test('article studio js enforces uploaded asset cleanup before creating a new pr', () => {
+    const js = read('site/assets/js/article-studio.js');
+    const submitFn = getFunctionBody(js, 'submitPullRequest');
+
+    assert.ok(submitFn, 'submitPullRequest should exist');
+    assert.match(js, /function\s+hasUploadedAssets\s*\(/);
+    assert.match(js, /function\s+clearUploadedAssets\s*\(/);
+    assert.match(submitFn, /!linkedPrNumber\s*&&\s*extraFiles\.length\s*>\s*0/);
+    assert.match(submitFn, /clearUploadedAssets\(/);
+    assert.match(submitFn, /请选择“PR 链”继续到已有 PR，或先清空附件再创建新 PR/);
+});
+
+test('article studio js wires one-click clear action for uploaded assets', () => {
+    const js = read('site/assets/js/article-studio.js');
+
+    assert.match(js, /clearAssets:\s*document\.getElementById\('studio-clear-assets'\)/);
+    assert.match(js, /dom\.clearAssets\.addEventListener\('click'/);
 });
 
 test('article studio js supports draft import, editor formatting and tab indent', () => {
