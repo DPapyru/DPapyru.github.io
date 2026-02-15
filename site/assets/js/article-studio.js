@@ -10,6 +10,8 @@
     const DEFAULT_PR_WORKER_API_URL = 'https://greenhome-pr.3577415213.workers.dev/api/create-pr';
     const MAX_IMAGE_FILE_SIZE = 2 * 1024 * 1024;
     const MAX_IMAGE_COUNT = 12;
+    const MAX_MEDIA_FILE_SIZE = 10 * 1024 * 1024;
+    const MAX_MEDIA_COUNT = 8;
     const MAX_CSHARP_FILE_SIZE = 200 * 1024;
     const MAX_CSHARP_COUNT = 5;
     const FLOWCHART_REALTIME_DEBOUNCE_MS = 500;
@@ -74,6 +76,8 @@
         assetUpload: document.getElementById('studio-asset-upload'),
         imageUpload: document.getElementById('studio-image-upload'),
         imageList: document.getElementById('studio-image-list'),
+        mediaUpload: document.getElementById('studio-media-upload'),
+        mediaList: document.getElementById('studio-media-list'),
         csharpUpload: document.getElementById('studio-csharp-upload'),
         csharpList: document.getElementById('studio-csharp-list'),
         csharpSymbolSelect: document.getElementById('studio-csharp-symbol-select'),
@@ -130,6 +134,7 @@
         linkedPrNumber: '',
         myOpenPrs: [],
         uploadedImages: [],
+        uploadedMedia: [],
         uploadedCsharpFiles: [],
         csharpSymbolEntries: [],
         csharpEditorTargetId: '',
@@ -828,8 +833,9 @@
 
     function hasUploadedAssets() {
         const imageCount = Array.isArray(state.uploadedImages) ? state.uploadedImages.length : 0;
+        const mediaCount = Array.isArray(state.uploadedMedia) ? state.uploadedMedia.length : 0;
         const csharpCount = Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles.length : 0;
-        return imageCount + csharpCount > 0;
+        return imageCount + mediaCount + csharpCount > 0;
     }
 
     function clearUploadedAssets(options) {
@@ -837,11 +843,13 @@
         const reason = String(options && options.reason || '').trim();
 
         state.uploadedImages = [];
+        state.uploadedMedia = [];
         state.uploadedCsharpFiles = [];
         state.csharpSymbolEntries = [];
         closeCsharpEditorModal();
 
         renderUploadedImages();
+        renderUploadedMedia();
         refreshCsharpSymbolOptions();
         renderUploadedCsharpFiles();
         scheduleSave();
@@ -992,6 +1000,7 @@
             markdown: String(state.markdown || ''),
             extraFiles: [
                 ...buildImageExtraFiles(),
+                ...buildMediaExtraFiles(),
                 ...buildCSharpExtraFiles()
             ]
         };
@@ -1051,26 +1060,71 @@
         }
     }
 
-    function stripImageExt(name) {
+    function stripFileExt(name) {
         return String(name || '').replace(/\.[a-z0-9]+$/i, '');
     }
 
-    function slugifyImageName(name) {
-        const base = stripImageExt(name).trim().toLowerCase();
+    function slugifyAssetName(name) {
+        const base = stripFileExt(name).trim().toLowerCase();
         const safe = base.replace(/[^a-z0-9\u4e00-\u9fa5_-]+/g, '-').replace(/-{2,}/g, '-').replace(/^-+|-+$/g, '');
         return safe || `image-${Date.now().toString(36)}`;
     }
 
-    function imageAssetPathFromTarget(targetPath, imageName) {
+    function extensionFromFilename(name, fallback) {
+        const text = String(name || '').trim().toLowerCase();
+        const match = text.match(/\.([a-z0-9]+)$/);
+        if (match && match[1]) return match[1];
+        return String(fallback || '').trim().toLowerCase() || 'bin';
+    }
+
+    function imageExtensionFromFile(file) {
+        const type = String(file && file.type || '').toLowerCase();
+        const fallbackByType = type.startsWith('image/') ? type.slice('image/'.length) : 'png';
+        const ext = extensionFromFilename(file && file.name || '', fallbackByType);
+        if (/^(png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(ext)) return ext.toLowerCase();
+        return 'png';
+    }
+
+    function mediaExtensionFromFile(file) {
+        const type = String(file && file.type || '').toLowerCase();
+        const fallbackByType = type === 'video/webm' ? 'webm' : 'mp4';
+        const ext = extensionFromFilename(file && file.name || '', fallbackByType);
+        if (/^(mp4|webm)$/i.test(ext)) return ext.toLowerCase();
+        return fallbackByType;
+    }
+
+    function isSupportedVideoFile(file) {
+        if (!file) return false;
+        const type = String(file.type || '').toLowerCase();
+        const name = String(file.name || '');
+        return type === 'video/mp4'
+            || type === 'video/webm'
+            || /\.(?:mp4|webm)$/i.test(name);
+    }
+
+    function imageAssetPathFromTarget(targetPath, imageFile) {
         const markdownPath = ensureMarkdownPath(targetPath || state.targetPath);
         const dir = getDirectoryFromPath(markdownPath);
-        const safeImage = slugifyImageName(imageName);
+        const safeImage = slugifyAssetName(imageFile && imageFile.name || imageFile);
+        const ext = imageExtensionFromFile(imageFile);
         const uniqueSuffix = Math.random().toString(36).slice(2, 7);
         if (dir) {
-            return `${dir}/imgs/${safeImage}-${uniqueSuffix}.png`;
+            return `${dir}/imgs/${safeImage}-${uniqueSuffix}.${ext}`;
         }
 
-        return `imgs/${safeImage}-${uniqueSuffix}.png`;
+        return `imgs/${safeImage}-${uniqueSuffix}.${ext}`;
+    }
+
+    function mediaAssetPathFromTarget(targetPath, mediaFile) {
+        const markdownPath = ensureMarkdownPath(targetPath || state.targetPath);
+        const dir = getDirectoryFromPath(markdownPath);
+        const safeName = slugifyAssetName(mediaFile && mediaFile.name || mediaFile);
+        const ext = mediaExtensionFromFile(mediaFile);
+        const uniqueSuffix = Math.random().toString(36).slice(2, 7);
+        if (dir) {
+            return `${dir}/media/${safeName}-${uniqueSuffix}.${ext}`;
+        }
+        return `media/${safeName}-${uniqueSuffix}.${ext}`;
     }
 
     function fileToDataUrl(file) {
@@ -1095,7 +1149,7 @@
 
     function imageMarkdownText(item) {
         if (!item) return '';
-        const alt = stripImageExt(item.name || 'image') || 'image';
+        const alt = stripFileExt(item.name || 'image') || 'image';
         return `![${alt}](/site/content/${encodePathForUrl(item.assetPath || '')})`;
     }
 
@@ -1105,8 +1159,33 @@
         return `\n${md}\n`;
     }
 
+    function mediaMarkdownText(item) {
+        if (!item) return '';
+        const label = stripFileExt(item.name || 'video') || 'video';
+        return `![${label}](/site/content/${encodePathForUrl(item.assetPath || '')})`;
+    }
+
+    function mediaInsertionText(item) {
+        const md = mediaMarkdownText(item);
+        if (!md) return '';
+        return `\n${md}\n`;
+    }
+
     function buildImageExtraFiles() {
         const list = Array.isArray(state.uploadedImages) ? state.uploadedImages : [];
+        return list.map(function (item) {
+            return {
+                path: `site/content/${item.assetPath}`,
+                content: String(item.base64 || ''),
+                encoding: 'base64'
+            };
+        }).filter(function (item) {
+            return !!item.content;
+        });
+    }
+
+    function buildMediaExtraFiles() {
+        const list = Array.isArray(state.uploadedMedia) ? state.uploadedMedia : [];
         return list.map(function (item) {
             return {
                 path: `site/content/${item.assetPath}`,
@@ -1479,11 +1558,83 @@
         });
     }
 
+    function renderUploadedMedia() {
+        if (!dom.mediaList) return;
+
+        dom.mediaList.innerHTML = '';
+        const list = Array.isArray(state.uploadedMedia) ? state.uploadedMedia : [];
+        if (list.length === 0) {
+            const empty = document.createElement('span');
+            empty.className = 'studio-help';
+            empty.textContent = '当前没有已上传视频';
+            dom.mediaList.appendChild(empty);
+            return;
+        }
+
+        list.forEach(function (item) {
+            const row = document.createElement('div');
+            row.className = 'studio-image-item';
+
+            const head = document.createElement('div');
+            head.className = 'studio-image-item-head';
+
+            const name = document.createElement('span');
+            name.className = 'studio-image-item-name';
+            name.textContent = item.name || 'video.mp4';
+            head.appendChild(name);
+
+            const remove = document.createElement('button');
+            remove.className = 'btn btn-small btn-outline';
+            remove.type = 'button';
+            remove.textContent = '移除';
+            remove.addEventListener('click', function () {
+                state.uploadedMedia = state.uploadedMedia.filter(function (it) {
+                    return it.id !== item.id;
+                });
+                renderUploadedMedia();
+                scheduleSave();
+                setStatus(`已移除视频：${item.name}`);
+            });
+
+            const insertRef = document.createElement('button');
+            insertRef.className = 'btn btn-small btn-outline';
+            insertRef.type = 'button';
+            insertRef.textContent = '插入引用';
+            insertRef.addEventListener('click', function () {
+                insertBlockSnippet(mediaInsertionText(item));
+                setStatus(`已插入视频引用：${item.name}`);
+            });
+
+            const actions = document.createElement('div');
+            actions.className = 'studio-image-item-actions';
+            actions.appendChild(insertRef);
+            actions.appendChild(remove);
+            head.appendChild(actions);
+
+            const meta = document.createElement('span');
+            meta.className = 'studio-image-item-meta';
+            meta.textContent = `${formatBytes(item.size)} · /site/content/${item.assetPath || ''}`;
+
+            const preview = document.createElement('video');
+            preview.className = 'studio-image-item-preview';
+            preview.src = item.dataUrl || '';
+            preview.controls = true;
+            preview.preload = 'metadata';
+            preview.muted = true;
+
+            row.appendChild(head);
+            row.appendChild(meta);
+            row.appendChild(preview);
+            dom.mediaList.appendChild(row);
+        });
+    }
+
     async function insertAssetsFromUpload(fileList) {
         const files = Array.from(fileList || []);
         if (files.length === 0) return;
 
         const imageFiles = [];
+        const mediaFiles = [];
         const csharpFiles = [];
         let skipped = 0;
 
@@ -1493,10 +1644,15 @@
             const name = String(file.name || '');
             const type = String(file.type || '').toLowerCase();
             const isImage = type.startsWith('image/') || /\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(name);
+            const isMedia = isSupportedVideoFile(file);
             const isCsharp = /\.cs$/i.test(name) || type.indexOf('csharp') >= 0;
 
             if (isImage) {
                 imageFiles.push(file);
+                return;
+            }
+            if (isMedia) {
+                mediaFiles.push(file);
                 return;
             }
             if (isCsharp) {
@@ -1510,17 +1666,20 @@
         if (imageFiles.length > 0) {
             await insertImagesFromFiles(imageFiles);
         }
+        if (mediaFiles.length > 0) {
+            await insertMediaFromFiles(mediaFiles);
+        }
         if (csharpFiles.length > 0) {
             await insertCsharpFilesFromUpload(csharpFiles);
         }
 
-        if (imageFiles.length === 0 && csharpFiles.length === 0) {
-            setStatus('未发现可上传的图片或 C# 文件');
+        if (imageFiles.length === 0 && mediaFiles.length === 0 && csharpFiles.length === 0) {
+            setStatus('未发现可上传的图片、视频或 C# 文件');
             return;
         }
 
         if (skipped > 0) {
-            setStatus(`已处理图片 ${imageFiles.length} 个、C# ${csharpFiles.length} 个，跳过 ${skipped} 个不支持文件`);
+            setStatus(`已处理图片 ${imageFiles.length} 个、视频 ${mediaFiles.length} 个、C# ${csharpFiles.length} 个，跳过 ${skipped} 个不支持文件`);
         }
     }
 
@@ -1535,7 +1694,10 @@
 
         const accepted = [];
         for (const file of files) {
-            if (!file || !String(file.type || '').startsWith('image/')) {
+            const name = String(file && file.name || '');
+            const type = String(file && file.type || '').toLowerCase();
+            const isImage = type.startsWith('image/') || /\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(name);
+            if (!file || !isImage) {
                 setStatus(`已跳过非图片文件：${file && file.name ? file.name : '未知文件'}`);
                 continue;
             }
@@ -1555,7 +1717,7 @@
                 continue;
             }
 
-            const assetPath = imageAssetPathFromTarget(state.targetPath, file.name);
+            const assetPath = imageAssetPathFromTarget(state.targetPath, file);
             const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
             const item = {
                 id: id,
@@ -1582,6 +1744,66 @@
         renderUploadedImages();
         scheduleSave();
         setStatus(`已插入 ${accepted.length} 张图片并写入 Markdown`);
+    }
+
+    async function insertMediaFromFiles(fileList) {
+        const files = Array.from(fileList || []);
+        if (files.length === 0) return;
+
+        if (state.uploadedMedia.length >= MAX_MEDIA_COUNT) {
+            setStatus(`最多保留 ${MAX_MEDIA_COUNT} 个视频，请先移除旧视频`);
+            return;
+        }
+
+        const accepted = [];
+        for (const file of files) {
+            if (!isSupportedVideoFile(file)) {
+                setStatus(`已跳过非视频文件：${file && file.name ? file.name : '未知文件'}`);
+                continue;
+            }
+            if (Number(file.size || 0) > MAX_MEDIA_FILE_SIZE) {
+                setStatus(`视频过大（>${formatBytes(MAX_MEDIA_FILE_SIZE)}）：${file.name}`);
+                continue;
+            }
+            if (state.uploadedMedia.length + accepted.length >= MAX_MEDIA_COUNT) {
+                setStatus(`最多保留 ${MAX_MEDIA_COUNT} 个视频，其余已跳过`);
+                break;
+            }
+
+            const dataUrl = await fileToDataUrl(file);
+            const base64 = dataUrlToBase64(dataUrl);
+            if (!base64) {
+                setStatus(`视频编码失败，已跳过：${file.name}`);
+                continue;
+            }
+
+            const assetPath = mediaAssetPathFromTarget(state.targetPath, file);
+            const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+            const item = {
+                id: id,
+                name: String(file.name || `video-${id}.mp4`),
+                type: String(file.type || 'video/mp4'),
+                size: Number(file.size || 0),
+                assetPath: assetPath,
+                dataUrl: dataUrl,
+                base64: base64,
+                insertedAt: new Date().toISOString()
+            };
+            accepted.push(item);
+        }
+
+        if (accepted.length === 0) {
+            return;
+        }
+
+        accepted.forEach(function (item) {
+            state.uploadedMedia.push(item);
+            insertBlockSnippet(mediaInsertionText(item));
+        });
+
+        renderUploadedMedia();
+        scheduleSave();
+        setStatus(`已插入 ${accepted.length} 个视频并写入 Markdown`);
     }
 
     function csharpFileConflictInLocal(assetPath) {
@@ -2406,18 +2628,21 @@
         const current = {
             markdown: String(state.markdown || ''),
             uploadedImages: Array.isArray(state.uploadedImages) ? state.uploadedImages : [],
+            uploadedMedia: Array.isArray(state.uploadedMedia) ? state.uploadedMedia : [],
             uploadedCsharpFiles: Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [],
             metadata: applyMetadataDefaults(state.metadata)
         };
 
         const importedMarkdown = String(parsed.markdown || '');
         const importedImages = Array.isArray(parsed.uploadedImages) ? parsed.uploadedImages : [];
+        const importedMedia = Array.isArray(parsed.uploadedMedia) ? parsed.uploadedMedia : [];
         const importedCsharp = Array.isArray(parsed.uploadedCsharpFiles) ? parsed.uploadedCsharpFiles : [];
         const importedMetadata = applyMetadataDefaults(parsed.metadata || {});
 
         if (mode === 'merge') {
             state.markdown = [current.markdown.trim(), importedMarkdown.trim()].filter(Boolean).join('\n\n');
             state.uploadedImages = current.uploadedImages.concat(importedImages);
+            state.uploadedMedia = current.uploadedMedia.concat(importedMedia);
             state.uploadedCsharpFiles = current.uploadedCsharpFiles.concat(importedCsharp);
             state.metadata = applyMetadataDefaults({
                 ...current.metadata,
@@ -2434,6 +2659,7 @@
         } else {
             state.markdown = importedMarkdown;
             state.uploadedImages = importedImages;
+            state.uploadedMedia = importedMedia;
             state.uploadedCsharpFiles = importedCsharp;
             state.metadata = importedMetadata;
             try {
@@ -2457,6 +2683,7 @@
 
         updateFileIdentity();
         renderUploadedImages();
+        renderUploadedMedia();
         refreshCsharpSymbolOptions();
         renderUploadedCsharpFiles();
         renderMetadataFormFromState();
@@ -2474,7 +2701,7 @@
 
         const text = await file.text();
         const parsed = parseImportedDraftPayload(text);
-        const summary = `目标: ${parsed.targetPath || '(未指定)'}\n长度: ${String(parsed.markdown || '').length} 字\n图片: ${Array.isArray(parsed.uploadedImages) ? parsed.uploadedImages.length : 0}\nC#: ${Array.isArray(parsed.uploadedCsharpFiles) ? parsed.uploadedCsharpFiles.length : 0}`;
+        const summary = `目标: ${parsed.targetPath || '(未指定)'}\n长度: ${String(parsed.markdown || '').length} 字\n图片: ${Array.isArray(parsed.uploadedImages) ? parsed.uploadedImages.length : 0}\n视频: ${Array.isArray(parsed.uploadedMedia) ? parsed.uploadedMedia.length : 0}\nC#: ${Array.isArray(parsed.uploadedCsharpFiles) ? parsed.uploadedCsharpFiles.length : 0}`;
 
         const merge = window.confirm(`导入草稿摘要：\n${summary}\n\n点击“确定”执行覆盖导入，点击“取消”进入合并/取消选择。`);
         if (merge) {
@@ -2543,8 +2770,9 @@
             prTitle: titleInput || defaultPrTitle()
         };
         let imageExtraFiles = buildImageExtraFiles();
+        let mediaExtraFiles = buildMediaExtraFiles();
         let csharpExtraFiles = buildCSharpExtraFiles();
-        let extraFiles = imageExtraFiles.concat(csharpExtraFiles);
+        let extraFiles = imageExtraFiles.concat(mediaExtraFiles, csharpExtraFiles);
 
         if (!linkedPrNumber && extraFiles.length > 0) {
             const shouldClear = window.confirm(
@@ -2561,6 +2789,7 @@
 
             clearUploadedAssets({ silent: true, reason: '新 PR 提交前自动清理' });
             imageExtraFiles = [];
+            mediaExtraFiles = [];
             csharpExtraFiles = [];
             extraFiles = [];
             setStatus('已在新 PR 提交前清空附件，将继续提交 Markdown');
@@ -2712,6 +2941,22 @@
                     return item.id && item.assetPath && item.base64 && item.dataUrl;
                 })
                 : [];
+            state.uploadedMedia = Array.isArray(parsed.uploadedMedia)
+                ? parsed.uploadedMedia.map(function (item) {
+                    return {
+                        id: String(item && item.id || ''),
+                        name: String(item && item.name || ''),
+                        type: String(item && item.type || 'video/mp4'),
+                        size: Number(item && item.size || 0),
+                        assetPath: normalizePath(item && item.assetPath || ''),
+                        dataUrl: String(item && item.dataUrl || ''),
+                        base64: String(item && item.base64 || ''),
+                        insertedAt: String(item && item.insertedAt || '')
+                    };
+                }).filter(function (item) {
+                    return item.id && item.assetPath && item.base64 && item.dataUrl;
+                })
+                : [];
             state.uploadedCsharpFiles = Array.isArray(parsed.uploadedCsharpFiles)
                 ? parsed.uploadedCsharpFiles.map(function (item) {
                     const normalizedAssetPath = normalizePath(item && item.assetPath || '');
@@ -2754,13 +2999,20 @@
                 linkedPrNumber: String(state.linkedPrNumber || ''),
                 myOpenPrs: Array.isArray(state.myOpenPrs) ? state.myOpenPrs : [],
                 uploadedImages: Array.isArray(state.uploadedImages) ? state.uploadedImages : [],
+                uploadedMedia: Array.isArray(state.uploadedMedia) ? state.uploadedMedia : [],
                 uploadedCsharpFiles: Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [],
                 metadata: applyMetadataDefaults(state.metadata),
                 previewImageNoticeEnabled: !!state.previewImageNoticeEnabled
             }));
             setStatus('Markdown 草稿已自动保存');
         } catch (err) {
-            setStatus(`保存失败：${err && err.message ? err.message : String(err)}`);
+            const message = err && err.message ? err.message : String(err);
+            const isQuota = err && (err.name === 'QuotaExceededError' || /quota|配额|storage/i.test(message));
+            if (isQuota) {
+                setStatus('自动保存失败：草稿已超出浏览器存储上限，请先导出 JSON 或清理附件');
+                return;
+            }
+            setStatus(`保存失败：${message}`);
         }
     }
 
@@ -2799,6 +3051,194 @@
         });
     }
 
+    function collectPastedMediaFiles(clipboardData) {
+        if (!clipboardData) return [];
+
+        const files = [];
+        const items = Array.from(clipboardData.items || []);
+        items.forEach(function (item) {
+            if (!item || item.kind !== 'file') return;
+            const file = item.getAsFile();
+            if (!isSupportedVideoFile(file)) return;
+            files.push(file);
+        });
+
+        if (files.length > 0) {
+            return files;
+        }
+
+        return Array.from(clipboardData.files || []).filter(function (file) {
+            return isSupportedVideoFile(file);
+        });
+    }
+
+    function escapeMarkdownInline(text) {
+        return String(text || '')
+            .replace(/\\/g, '\\\\')
+            .replace(/`/g, '\\`')
+            .replace(/\*/g, '\\*')
+            .replace(/_/g, '\\_')
+            .replace(/\[/g, '\\[')
+            .replace(/\]/g, '\\]')
+            .replace(/\|/g, '\\|');
+    }
+
+    function normalizeInlineWhitespace(text) {
+        return String(text || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function markdownInlineFromNodes(nodes) {
+        return Array.from(nodes || []).map(function (node) {
+            if (!node) return '';
+            if (node.nodeType === Node.TEXT_NODE) {
+                return escapeMarkdownInline(normalizeInlineWhitespace(node.nodeValue || ''));
+            }
+            if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+            const tag = String(node.tagName || '').toLowerCase();
+            if (tag === 'br') return '\n';
+            if (tag === 'img' || tag === 'video') return '';
+
+            if (tag === 'code' && String(node.parentElement && node.parentElement.tagName || '').toLowerCase() !== 'pre') {
+                const raw = normalizeInlineWhitespace(node.textContent || '');
+                if (!raw) return '';
+                return `\`${raw}\``;
+            }
+            if (tag === 'strong' || tag === 'b') {
+                const innerStrong = markdownInlineFromNodes(node.childNodes);
+                return innerStrong ? `**${innerStrong}**` : '';
+            }
+            if (tag === 'em' || tag === 'i') {
+                const innerEm = markdownInlineFromNodes(node.childNodes);
+                return innerEm ? `*${innerEm}*` : '';
+            }
+            if (tag === 'a') {
+                const href = String(node.getAttribute('href') || '').trim();
+                const text = normalizeInlineWhitespace(markdownInlineFromNodes(node.childNodes) || node.textContent || href);
+                if (!href) return text;
+                return `[${text || href}](${href})`;
+            }
+
+            return markdownInlineFromNodes(node.childNodes);
+        }).filter(Boolean).join('').replace(/[ \t]+\n/g, '\n').replace(/\n[ \t]+/g, '\n');
+    }
+
+    function normalizePastedHtmlToMarkdown(rawHtml) {
+        const html = String(rawHtml || '').trim();
+        if (!html) return '';
+
+        let doc = null;
+        try {
+            doc = new DOMParser().parseFromString(html, 'text/html');
+        } catch (_) {
+            doc = null;
+        }
+        if (!doc || !doc.body) return '';
+
+        const blockFromNode = function (node) {
+            if (!node) return '';
+            if (node.nodeType === Node.TEXT_NODE) {
+                return escapeMarkdownInline(normalizeInlineWhitespace(node.nodeValue || ''));
+            }
+            if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+            const tag = String(node.tagName || '').toLowerCase();
+            if (tag === 'img' || tag === 'video') return '';
+            if (tag === 'br') return '\n';
+            if (tag === 'hr') return '---\n\n';
+            if (/^h[1-6]$/.test(tag)) {
+                const level = Number.parseInt(tag.slice(1), 10) || 1;
+                const headingText = normalizeInlineWhitespace(markdownInlineFromNodes(node.childNodes));
+                return headingText ? `${'#'.repeat(level)} ${headingText}\n\n` : '';
+            }
+            if (tag === 'pre') {
+                const codeEl = node.querySelector('code');
+                const codeText = String(codeEl ? codeEl.textContent : node.textContent || '').replace(/\r\n/g, '\n').trimEnd();
+                if (!codeText) return '';
+                let language = '';
+                if (codeEl && codeEl.className) {
+                    const match = String(codeEl.className).match(/language-([a-z0-9_+-]+)/i);
+                    if (match && match[1]) {
+                        language = String(match[1]).toLowerCase();
+                    }
+                }
+                return `\`\`\`${language}\n${codeText}\n\`\`\`\n\n`;
+            }
+            if (tag === 'blockquote') {
+                const content = normalizeInlineWhitespace(markdownInlineFromNodes(node.childNodes));
+                if (!content) return '';
+                return content.split('\n').map(function (line) {
+                    return line ? `> ${line}` : '>';
+                }).join('\n') + '\n\n';
+            }
+            if (tag === 'ul' || tag === 'ol') {
+                const ordered = tag === 'ol';
+                const listItems = Array.from(node.children || []).filter(function (child) {
+                    return String(child.tagName || '').toLowerCase() === 'li';
+                });
+                if (listItems.length === 0) return '';
+                return listItems.map(function (item, index) {
+                    const prefix = ordered ? `${index + 1}. ` : '- ';
+                    const text = normalizeInlineWhitespace(markdownInlineFromNodes(item.childNodes));
+                    return `${prefix}${text || '内容'}`;
+                }).join('\n') + '\n\n';
+            }
+            if (tag === 'table') {
+                const rows = Array.from(node.querySelectorAll('tr')).map(function (tr) {
+                    return Array.from(tr.querySelectorAll('th,td')).map(function (cell) {
+                        return escapeMarkdownInline(normalizeInlineWhitespace(cell.textContent || ''));
+                    });
+                }).filter(function (row) {
+                    return row.length > 0;
+                });
+                if (rows.length === 0) return '';
+                const width = Math.max.apply(null, rows.map(function (row) { return row.length; }));
+                const normalizedRows = rows.map(function (row) {
+                    const next = row.slice();
+                    while (next.length < width) next.push('');
+                    return next;
+                });
+                const header = normalizedRows[0];
+                const divider = new Array(width).fill('---');
+                const bodyRows = normalizedRows.slice(1);
+                const lines = [];
+                lines.push(`| ${header.join(' | ')} |`);
+                lines.push(`| ${divider.join(' | ')} |`);
+                bodyRows.forEach(function (row) {
+                    lines.push(`| ${row.join(' | ')} |`);
+                });
+                return `${lines.join('\n')}\n\n`;
+            }
+            if (tag === 'p' || tag === 'div' || tag === 'section' || tag === 'article' || tag === 'li') {
+                const paragraph = normalizeInlineWhitespace(markdownInlineFromNodes(node.childNodes));
+                return paragraph ? `${paragraph}\n\n` : '';
+            }
+
+            const childBlocks = Array.from(node.childNodes || []).map(blockFromNode).join('');
+            if (childBlocks.trim()) return childBlocks;
+            const inline = normalizeInlineWhitespace(markdownInlineFromNodes(node.childNodes));
+            return inline ? `${inline}\n\n` : '';
+        };
+
+        const markdown = Array.from(doc.body.childNodes || []).map(blockFromNode).join('');
+        return String(markdown || '')
+            .replace(/\r\n/g, '\n')
+            .replace(/[ \t]+\n/g, '\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+    }
+
+    function insertTextAtSelection(insertedText) {
+        if (!dom.markdown) return;
+        const value = String(dom.markdown.value || '');
+        const start = Number(dom.markdown.selectionStart || 0);
+        const end = Number(dom.markdown.selectionEnd || 0);
+        const text = String(insertedText || '');
+        const next = value.slice(0, start) + text + value.slice(end);
+        const caret = start + text.length;
+        updateEditorContent(next, caret, caret);
+    }
+
     function buildViewerPreviewPayload() {
         let safeTargetPath = '怎么贡献/新文章.md';
         try {
@@ -2812,6 +3252,17 @@
             metadata: applyMetadataDefaults(state.metadata),
             uploadedImages: Array.isArray(state.uploadedImages)
                 ? state.uploadedImages.map(function (item) {
+                    return {
+                        assetPath: normalizePath(item && item.assetPath || ''),
+                        dataUrl: String(item && item.dataUrl || ''),
+                        name: String(item && item.name || '')
+                    };
+                }).filter(function (item) {
+                    return item.assetPath && item.dataUrl;
+                })
+                : [],
+            uploadedMedia: Array.isArray(state.uploadedMedia)
+                ? state.uploadedMedia.map(function (item) {
                     return {
                         assetPath: normalizePath(item && item.assetPath || ''),
                         dataUrl: String(item && item.dataUrl || ''),
@@ -3908,6 +4359,7 @@
             linkedPrNumber: String(state.linkedPrNumber || ''),
             myOpenPrs: Array.isArray(state.myOpenPrs) ? state.myOpenPrs : [],
             uploadedImages: Array.isArray(state.uploadedImages) ? state.uploadedImages : [],
+            uploadedMedia: Array.isArray(state.uploadedMedia) ? state.uploadedMedia : [],
             uploadedCsharpFiles: Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [],
             metadata: applyMetadataDefaults(state.metadata),
             previewImageNoticeEnabled: !!state.previewImageNoticeEnabled
@@ -3980,6 +4432,7 @@
             setTargetPath('怎么贡献/新文章.md', true);
         }
         renderUploadedImages();
+        renderUploadedMedia();
         renderUploadedCsharpFiles();
         refreshCsharpSymbolOptions();
         updatePrChainSelectOptions();
@@ -4006,15 +4459,51 @@
 
             dom.markdown.addEventListener('paste', async function (event) {
                 const clipboardData = event && event.clipboardData ? event.clipboardData : null;
+                if (!clipboardData) return;
+
+                const htmlText = String(clipboardData.getData('text/html') || '').trim();
+                if (htmlText) {
+                    event.preventDefault();
+
+                    try {
+                        const markdownText = normalizePastedHtmlToMarkdown(htmlText);
+                        if (!markdownText) {
+                            setStatus('粘贴内容中未识别到可转换的文本结构');
+                            return;
+                        }
+
+                        const snippet = `${markdownText}\n`;
+                        insertTextAtSelection(snippet);
+                        const formatted = formatMarkdownForStudio(state.markdown);
+                        updateEditorContent(formatted);
+                        setStatus('已将 HTML 粘贴内容转换为 Markdown');
+                    } catch (err) {
+                        setStatus(`HTML 粘贴转换失败：${err && err.message ? err.message : String(err)}`);
+                    }
+                    return;
+                }
+
                 const imageFiles = collectPastedImageFiles(clipboardData);
-                if (imageFiles.length === 0) return;
+                if (imageFiles.length > 0) {
+                    event.preventDefault();
+
+                    try {
+                        await insertImagesFromFiles(imageFiles);
+                    } catch (err) {
+                        setStatus(`粘贴图片失败：${err && err.message ? err.message : String(err)}`);
+                    }
+                    return;
+                }
+
+                const mediaFiles = collectPastedMediaFiles(clipboardData);
+                if (mediaFiles.length === 0) return;
 
                 event.preventDefault();
 
                 try {
-                    await insertImagesFromFiles(imageFiles);
+                    await insertMediaFromFiles(mediaFiles);
                 } catch (err) {
-                    setStatus(`粘贴图片失败：${err && err.message ? err.message : String(err)}`);
+                    setStatus(`粘贴视频失败：${err && err.message ? err.message : String(err)}`);
                 }
             });
         }
@@ -4285,6 +4774,18 @@
                     setStatus(`插入图片失败：${err && err.message ? err.message : String(err)}`);
                 } finally {
                     dom.imageUpload.value = '';
+                }
+            });
+        }
+
+        if (dom.mediaUpload) {
+            dom.mediaUpload.addEventListener('change', async function () {
+                try {
+                    await insertMediaFromFiles(dom.mediaUpload.files);
+                } catch (err) {
+                    setStatus(`插入视频失败：${err && err.message ? err.message : String(err)}`);
+                } finally {
+                    dom.mediaUpload.value = '';
                 }
             });
         }
