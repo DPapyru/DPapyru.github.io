@@ -1,12 +1,12 @@
 {
   "slug": "pass-1",
   "title": "Pass 1",
-  "author": "你的名字",
+  "author": "loguhan",
   "description": "由 Shader Playground 草稿生成，请补充详细说明。",
   "shader": "shader.json",
   "cover": "cover.webp",
   "tags": [
     "playground"
   ],
-  "updated_at": "2026-02-09"
+  "updated_at": "2026-02-15"
 }
