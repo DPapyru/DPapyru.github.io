@@ -43,7 +43,7 @@ git worktree remove .worktrees/<worktree-name>
    - `npm run generate-structure`
    - `npm run generate-search`
    - 或 `npm run generate-index`
-5. 执行验证：
+5. 与目录修改强挂钩时，执行验证：
    - 必跑：`npm run build`
    - 条件允许时：`npm run check-generated`
 6. 记录验证结果到 `ERRORS.md`（命令、是否通过、备注、时间）。
