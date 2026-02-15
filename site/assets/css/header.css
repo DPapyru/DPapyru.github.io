@@ -68,6 +68,11 @@
     align-items: center;
 }
 
+.nav-theme-mode {
+    display: flex;
+    align-items: center;
+}
+
 .nav-accent-select {
     background-color: var(--bg-secondary);
     color: var(--text-color);
@@ -139,6 +144,10 @@
     }
 
     .nav-accent {
+        padding: 12px 0;
+    }
+
+    .nav-theme-mode {
         padding: 12px 0;
     }
 

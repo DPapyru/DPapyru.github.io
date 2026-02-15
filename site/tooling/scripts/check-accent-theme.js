@@ -26,14 +26,6 @@ function checkHtmlFile(relativePath, expectedScriptPath) {
         html.includes(`src="${expectedScriptPath}"`),
         `${relativePath}: missing script include ${expectedScriptPath}`
     );
-
-    const expectedValues = ['green', 'blue', 'purple', 'orange', 'red', 'cyan', 'black', 'white'];
-    for (const value of expectedValues) {
-        assert(
-            html.includes(`value="${value}"`),
-            `${relativePath}: missing accent option value="${value}"`
-        );
-    }
 }
 
 function main() {
@@ -51,27 +43,35 @@ function main() {
 
     const themeInit = readText('site/assets/js/theme-init.js');
     assert(
-        /data-accent|dataset\.accent/.test(themeInit),
-        'site/assets/js/theme-init.js: expected early data-accent initialization'
+        /data-theme-mode/.test(themeInit),
+        'site/assets/js/theme-init.js: expected early data-theme-mode initialization'
     );
     assert(
-        themeInit.includes('black') && themeInit.includes('white'),
-        'site/assets/js/theme-init.js: expected black/white in allowed accents'
+        themeInit.includes('special') && themeInit.includes('light') && themeInit.includes('dark'),
+        'site/assets/js/theme-init.js: expected light/dark/special mode wiring'
+    );
+
+    const accentTheme = readText('site/assets/js/accent-theme.js');
+    assert(
+        accentTheme.includes('theme-mode-select'),
+        'site/assets/js/accent-theme.js: expected theme-mode-select wiring'
+    );
+    assert(
+        accentTheme.includes('MODE_ACCENTS') && accentTheme.includes('special'),
+        'site/assets/js/accent-theme.js: expected mode-based accent map'
     );
 
     const variablesCss = readText('site/assets/css/variables.css');
     assert(
-        /\[data-theme="dark"\]\[data-accent="/.test(variablesCss),
-        'site/assets/css/variables.css: expected [data-theme="dark"][data-accent="..."] overrides'
+        variablesCss.includes('[data-theme="light"][data-accent="blue"]'),
+        'site/assets/css/variables.css: expected light theme accent overrides'
     );
-    for (const value of ['green', 'blue', 'purple', 'orange', 'red', 'cyan', 'black', 'white']) {
-        assert(
-            variablesCss.includes(`[data-theme="dark"][data-accent="${value}"]`),
-            `site/assets/css/variables.css: missing accent block for ${value}`
-        );
-    }
+    assert(
+        variablesCss.includes('[data-theme="dark"][data-theme-mode="special"][data-accent="vs"]'),
+        'site/assets/css/variables.css: expected special mode accent overrides'
+    );
 
-    console.log('OK: accent preset wiring detected');
+    console.log('OK: theme mode + accent wiring detected');
 }
 
 try {
