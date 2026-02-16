@@ -22,10 +22,18 @@
         openViewerPreview: document.getElementById('studio-open-viewer-preview'),
         openExplorer: document.getElementById('studio-open-explorer'),
         openPublish: document.getElementById('studio-open-publish'),
+        openMarkdownGuide: document.getElementById('studio-open-markdown-guide'),
+        runDraftCheck: document.getElementById('studio-run-draft-check'),
         leftPanelModal: document.getElementById('studio-left-panel-modal'),
         leftPanelClose: document.getElementById('studio-left-panel-close'),
         rightPanelModal: document.getElementById('studio-right-panel-modal'),
         rightPanelClose: document.getElementById('studio-right-panel-close'),
+        markdownGuideModal: document.getElementById('studio-markdown-guide-modal'),
+        markdownGuideClose: document.getElementById('studio-markdown-guide-close'),
+        draftCheckModal: document.getElementById('studio-draft-check-modal'),
+        draftCheckClose: document.getElementById('studio-draft-check-close'),
+        draftCheckSummary: document.getElementById('studio-draft-check-summary'),
+        draftCheckList: document.getElementById('studio-draft-check-list'),
         flowchartToggle: document.getElementById('studio-flowchart-toggle'),
         flowchartModal: document.getElementById('studio-flowchart-modal'),
         flowchartModalClose: document.getElementById('studio-flowchart-modal-close'),
@@ -179,6 +187,18 @@
     let lastPreviewImageNoticeAt = 0;
     let metaSyncLock = false;
     let knownMarkdownEntries = [];
+    const BUILTIN_COLOR_NAMES = new Set([
+        'primary', 'secondary', 'accent', 'success', 'warning', 'error', 'info', 'link',
+        'red', 'green', 'blue', 'yellow', 'purple', 'orange', 'cyan', 'pink'
+    ]);
+    /**
+     * @typedef {{
+     *   level: 'error' | 'warn',
+     *   code: string,
+     *   title: string,
+     *   detail: string
+     * }} DraftCheckIssue
+     */
 
     function nowStamp() {
         return new Date().toLocaleString('zh-CN', { hour12: false });
@@ -1216,6 +1236,58 @@
         return !!(dom.flowchartModal && dom.flowchartModal.classList.contains('active'));
     }
 
+    function isGuideModalOpen() {
+        return !!(dom.markdownGuideModal && dom.markdownGuideModal.classList.contains('active'));
+    }
+
+    function setGuideModalOpen(open) {
+        if (!dom.markdownGuideModal) return;
+        const shouldOpen = !!open;
+
+        if (shouldOpen && isDraftCheckModalOpen()) {
+            setDraftCheckModalOpen(false);
+        }
+
+        dom.markdownGuideModal.classList.toggle('active', shouldOpen);
+        dom.markdownGuideModal.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+        if (dom.openMarkdownGuide) {
+            dom.openMarkdownGuide.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        }
+        syncModalBodyLock();
+
+        if (!shouldOpen) return;
+        const focusTarget = dom.markdownGuideModal.querySelector('button, [href], input, textarea, select');
+        if (focusTarget && typeof focusTarget.focus === 'function') {
+            focusTarget.focus();
+        }
+    }
+
+    function isDraftCheckModalOpen() {
+        return !!(dom.draftCheckModal && dom.draftCheckModal.classList.contains('active'));
+    }
+
+    function setDraftCheckModalOpen(open) {
+        if (!dom.draftCheckModal) return;
+        const shouldOpen = !!open;
+
+        if (shouldOpen && isGuideModalOpen()) {
+            setGuideModalOpen(false);
+        }
+
+        dom.draftCheckModal.classList.toggle('active', shouldOpen);
+        dom.draftCheckModal.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+        if (dom.runDraftCheck) {
+            dom.runDraftCheck.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        }
+        syncModalBodyLock();
+
+        if (!shouldOpen) return;
+        const focusTarget = dom.draftCheckModal.querySelector('button, [href], input, textarea, select');
+        if (focusTarget && typeof focusTarget.focus === 'function') {
+            focusTarget.focus();
+        }
+    }
+
     function isSidePanelModalOpen(panel) {
         const key = panel === 'right' ? 'right' : 'left';
         const modal = key === 'right' ? dom.rightPanelModal : dom.leftPanelModal;
@@ -1253,6 +1325,8 @@
 
     function syncModalBodyLock() {
         const shouldLock = isCsharpEditorModalOpen()
+            || isGuideModalOpen()
+            || isDraftCheckModalOpen()
             || isFlowchartModalOpen()
             || isSidePanelModalOpen('left')
             || isSidePanelModalOpen('right');
@@ -4210,6 +4284,406 @@
         return String(fallback || '').trim();
     }
 
+    function pushDraftIssue(issues, level, code, title, detail) {
+        issues.push({
+            level: level === 'error' ? 'error' : 'warn',
+            code: String(code || '').trim() || 'unknown',
+            title: String(title || '').trim() || '未命名问题',
+            detail: String(detail || '').trim() || '请检查对应内容'
+        });
+    }
+
+    function resolveRelativeMarkdownPath(baseDir, rawPath) {
+        const baseSegments = String(baseDir || '').split('/').filter(Boolean);
+        const rawSegments = String(rawPath || '').split('/').filter(function (segment) {
+            return segment !== '';
+        });
+
+        rawSegments.forEach(function (segment) {
+            if (segment === '.') return;
+            if (segment === '..') {
+                if (baseSegments.length > 0) {
+                    baseSegments.pop();
+                }
+                return;
+            }
+            baseSegments.push(segment);
+        });
+
+        return baseSegments.join('/');
+    }
+
+    function normalizeMarkdownLinkPath(rawHref) {
+        const href = String(rawHref || '').trim();
+        if (!href) return '';
+        if (/^(?:https?:|mailto:|tel:|javascript:|#)/i.test(href)) return '';
+
+        const stripped = href.split('#')[0].split('?')[0].trim();
+        if (!stripped || !/\.md$/i.test(stripped)) return '';
+
+        let normalized = '';
+        if (stripped.startsWith('/')) {
+            normalized = normalizePath(stripped);
+        } else if (stripped.startsWith('./') || stripped.startsWith('../')) {
+            normalized = resolveRelativeMarkdownPath(getDirectoryFromPath(state.targetPath), stripped);
+        } else {
+            normalized = resolveRelativeMarkdownPath(getDirectoryFromPath(state.targetPath), `./${stripped}`);
+        }
+
+        if (!normalized || /\.{1,2}(?:\/|$)/.test(normalized) || /\0/.test(normalized)) {
+            return '';
+        }
+
+        return normalized;
+    }
+
+    function parseCsDirective(rawDirective) {
+        const text = String(rawDirective || '').trim();
+        if (!text) return null;
+
+        const core = text.split('|')[0].trim();
+        const hashIndex = core.indexOf('#');
+        const pathPart = hashIndex >= 0 ? core.slice(0, hashIndex).trim() : core;
+        const selectorPart = hashIndex >= 0 ? core.slice(hashIndex + 1).trim() : '';
+        return {
+            pathPart: pathPart,
+            selectorPart: selectorPart
+        };
+    }
+
+    function extractDocLinks(markdownText) {
+        const links = [];
+        const regex = /(!?)\[[^\]]*]\(([^)]+)\)/g;
+        const source = String(markdownText || '');
+        let match = null;
+        while ((match = regex.exec(source)) !== null) {
+            if (match[1] === '!') continue;
+            const targetRaw = String(match[2] || '').trim();
+            if (!targetRaw) continue;
+            const target = targetRaw.split(/\s+/)[0];
+            if (!target || !/\.md$/i.test(target)) continue;
+            links.push(target);
+        }
+        return links;
+    }
+
+    function extractColorReferences(markdownText, tokenName) {
+        const refs = [];
+        const name = tokenName === 'colorChange' ? 'colorChange' : 'color';
+        const regex = new RegExp(`\\{${name}:([^}\\n]+)\\}\\{`, 'g');
+        const source = String(markdownText || '');
+        let match = null;
+        while ((match = regex.exec(source)) !== null) {
+            const value = String(match[1] || '').trim();
+            if (value) refs.push(value);
+        }
+        return refs;
+    }
+
+    function collectDraftCheckIssues() {
+        const issues = [];
+        const markdown = String(state.markdown || '');
+        const parsed = parseFrontMatterFromMarkdown(markdown);
+        const metadata = parsed && parsed.metadata ? parsed.metadata : {};
+        const requiredMetaKeys = ['title', 'description', 'topic', 'difficulty', 'time'];
+
+        if (!parsed.hasFrontMatter) {
+            pushDraftIssue(
+                issues,
+                'error',
+                'front-matter-missing',
+                '缺少 Front Matter',
+                '文档顶部应包含 `---` 开始与结束的元数据区块。'
+            );
+        }
+
+        requiredMetaKeys.forEach(function (key) {
+            const value = String(metadata[key] || '').trim();
+            if (value) return;
+            pushDraftIssue(
+                issues,
+                'error',
+                `meta-${key}-missing`,
+                `缺少必填字段：${key}`,
+                `请在 front matter 中补齐 \`${key}\`。`
+            );
+        });
+
+        const difficulty = String(metadata.difficulty || '').trim();
+        if (difficulty && !['beginner', 'intermediate', 'advanced'].includes(difficulty)) {
+            pushDraftIssue(
+                issues,
+                'error',
+                'meta-difficulty-invalid',
+                'difficulty 不在允许范围',
+                'difficulty 仅允许 beginner / intermediate / advanced。'
+            );
+        }
+
+        const body = String(parsed.body || markdown || '');
+        if (!/(^|\n)#{1,2}\s+\S+/m.test(body)) {
+            pushDraftIssue(
+                issues,
+                'warn',
+                'heading-structure-missing',
+                '缺少基础标题结构',
+                '建议至少包含一个 H1/H2 标题，便于目录与阅读。'
+            );
+        }
+
+        const knownEntriesReady = Array.isArray(knownMarkdownEntries) && knownMarkdownEntries.length > 0;
+        if (!knownEntriesReady) {
+            pushDraftIssue(
+                issues,
+                'warn',
+                'known-entry-empty',
+                '文档索引未加载',
+                '暂时无法校验 Markdown 链接是否真实存在。'
+            );
+        }
+
+        const knownPathSet = new Set((knownMarkdownEntries || []).map(function (entry) {
+            return normalizePath(entry && entry.path || '');
+        }).filter(Boolean));
+        const docLinks = extractDocLinks(markdown);
+        docLinks.forEach(function (href) {
+            const resolved = normalizeMarkdownLinkPath(href);
+            if (!resolved) {
+                pushDraftIssue(
+                    issues,
+                    'warn',
+                    'doc-link-invalid',
+                    `链接格式可疑：${href}`,
+                    '建议使用相对路径并以 .md 结尾。'
+                );
+                return;
+            }
+
+            if (knownEntriesReady && !knownPathSet.has(resolved)) {
+                pushDraftIssue(
+                    issues,
+                    'warn',
+                    'doc-link-missing',
+                    `链接目标未命中：${href}`,
+                    `按当前 config 索引未找到：${resolved}`
+                );
+            }
+        });
+
+        const csRegex = /\{\{cs:([^}\n]+)\}\}/g;
+        let csMatch = null;
+        while ((csMatch = csRegex.exec(markdown)) !== null) {
+            const parsedCs = parseCsDirective(csMatch[1]);
+            if (!parsedCs || !parsedCs.pathPart) {
+                pushDraftIssue(
+                    issues,
+                    'error',
+                    'cs-path-missing',
+                    'C# 引用缺少路径',
+                    '语法示例：{{cs:./code/Demo.cs}}'
+                );
+                continue;
+            }
+
+            if (!/\.cs$/i.test(parsedCs.pathPart)) {
+                pushDraftIssue(
+                    issues,
+                    'error',
+                    'cs-path-ext-invalid',
+                    `C# 引用扩展名错误：${parsedCs.pathPart}`,
+                    'C# 引用路径必须以 .cs 结尾。'
+                );
+            }
+
+            if (parsedCs.selectorPart && !/^cs:(?:t|m|p|f|c|e):.+$/.test(parsedCs.selectorPart)) {
+                pushDraftIssue(
+                    issues,
+                    'warn',
+                    'cs-selector-invalid',
+                    `C# 选择器格式可疑：${parsedCs.selectorPart}`,
+                    '建议使用 #cs:t: / #cs:m: / #cs:p: / #cs:f: / #cs:c: / #cs:e:。'
+                );
+            }
+
+            const localCsharp = Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [];
+            if (localCsharp.length > 0) {
+                const normalizedPath = normalizePath(parsedCs.pathPart).replace(/^\.\//, '');
+                const pathName = normalizedPath.split('/').filter(Boolean).pop() || '';
+                const hitLocal = localCsharp.some(function (item) {
+                    const assetPath = normalizePath(item && item.assetPath || '');
+                    const fileName = String(item && item.name || '').trim();
+                    return assetPath.endsWith(normalizedPath) || fileName === pathName;
+                });
+                if (!hitLocal) {
+                    pushDraftIssue(
+                        issues,
+                        'warn',
+                        'cs-local-unmatched',
+                        `当前附件未命中 C# 引用：${parsedCs.pathPart}`,
+                        '若本次提交包含该文件，请确认路径与文件名大小写一致。'
+                    );
+                }
+            }
+        }
+
+        const animRegex = /\{\{anim:([^}\n]+)\}\}/g;
+        let animMatch = null;
+        while ((animMatch = animRegex.exec(markdown)) !== null) {
+            const animPathRaw = String(animMatch[1] || '').trim();
+            const animPath = normalizePath(animPathRaw).replace(/^\.\//, '');
+            if (!/^anims\//i.test(animPath)) {
+                pushDraftIssue(
+                    issues,
+                    'error',
+                    'anim-path-prefix-invalid',
+                    `动画路径必须以 anims/ 开头：${animPathRaw}`,
+                    '示例：{{anim:anims/demo-basic.cs}}'
+                );
+            }
+            if (!/\.cs$/i.test(animPath)) {
+                pushDraftIssue(
+                    issues,
+                    'error',
+                    'anim-path-ext-invalid',
+                    `动画路径扩展名错误：${animPathRaw}`,
+                    '动画引用路径必须以 .cs 结尾。'
+                );
+            }
+        }
+
+        const metadataColors = new Set(Object.keys(ensureObject(state.metadata.colors)));
+        const metadataColorChanges = new Set(Object.keys(ensureObject(state.metadata.colorChange)));
+
+        extractColorReferences(markdown, 'color').forEach(function (name) {
+            if (BUILTIN_COLOR_NAMES.has(name) || metadataColors.has(name)) return;
+            pushDraftIssue(
+                issues,
+                'warn',
+                'color-name-undefined',
+                `未定义的颜色名：${name}`,
+                '请在 front matter 的 colors 中定义，或改用内置颜色名。'
+            );
+        });
+
+        extractColorReferences(markdown, 'colorChange').forEach(function (name) {
+            if (metadataColorChanges.has(name)) return;
+            pushDraftIssue(
+                issues,
+                'warn',
+                'color-change-undefined',
+                `未定义的颜色动画：${name}`,
+                '请在 front matter 的 colorChange 中定义对应动画。'
+            );
+        });
+
+        const quizRegex = /```quiz\s*([\s\S]*?)```/g;
+        let quizMatch = null;
+        while ((quizMatch = quizRegex.exec(markdown)) !== null) {
+            const quizBody = String(quizMatch[1] || '');
+            const typeMatch = quizBody.match(/^\s*type\s*:\s*([a-zA-Z_-]+)\s*$/m);
+            const idMatch = quizBody.match(/^\s*id\s*:\s*(.+)\s*$/m);
+            const questionMatch = quizBody.match(/^\s*question\s*:\s*(.+)\s*$/m) || /^\s*question\s*:\s*\|/m.exec(quizBody);
+            const quizType = typeMatch ? String(typeMatch[1] || '').trim().toLowerCase() : '';
+
+            if (!quizType) {
+                pushDraftIssue(
+                    issues,
+                    'warn',
+                    'quiz-type-missing',
+                    'Quiz 缺少 type 字段',
+                    '建议使用 tf / single / multiple / choice。'
+                );
+            } else if (!['tf', 'single', 'multiple', 'choice'].includes(quizType)) {
+                pushDraftIssue(
+                    issues,
+                    'warn',
+                    'quiz-type-invalid',
+                    `Quiz type 可疑：${quizType}`,
+                    'type 建议使用 tf / single / multiple / choice。'
+                );
+            }
+
+            if (!idMatch || !String(idMatch[1] || '').trim()) {
+                pushDraftIssue(
+                    issues,
+                    'warn',
+                    'quiz-id-missing',
+                    'Quiz 缺少 id 字段',
+                    '建议为每道题提供稳定 id，方便后续维护。'
+                );
+            }
+
+            if (!questionMatch) {
+                pushDraftIssue(
+                    issues,
+                    'warn',
+                    'quiz-question-missing',
+                    'Quiz 缺少 question 字段',
+                    '请补充题干文本。'
+                );
+            }
+
+            if (quizType === 'tf') {
+                const answerMatch = quizBody.match(/^\s*answer\s*:\s*(.+)\s*$/m);
+                const answerText = answerMatch ? String(answerMatch[1] || '').trim().toLowerCase() : '';
+                if (!answerText || !['true', 'false'].includes(answerText)) {
+                    pushDraftIssue(
+                        issues,
+                        'warn',
+                        'quiz-tf-answer-invalid',
+                        '判断题 answer 需为布尔值',
+                        '判断题请使用 answer: true 或 answer: false。'
+                    );
+                }
+            }
+        }
+
+        return issues;
+    }
+
+    function renderDraftCheckResults(issues) {
+        if (!dom.draftCheckSummary || !dom.draftCheckList) return;
+
+        const list = Array.isArray(issues) ? issues : [];
+        const errorCount = list.filter(function (item) { return item.level === 'error'; }).length;
+        const warnCount = list.filter(function (item) { return item.level === 'warn'; }).length;
+
+        dom.draftCheckSummary.textContent = `检查完成：${errorCount} 个错误，${warnCount} 个警告。`;
+        dom.draftCheckList.innerHTML = '';
+
+        if (list.length === 0) {
+            const okItem = document.createElement('li');
+            okItem.className = 'studio-draft-check-item studio-draft-check-item--ok';
+            okItem.textContent = '未发现问题，可以继续预览与提交。';
+            dom.draftCheckList.appendChild(okItem);
+            return;
+        }
+
+        list.forEach(function (issue) {
+            const item = document.createElement('li');
+            item.className = `studio-draft-check-item studio-draft-check-item--${issue.level === 'error' ? 'error' : 'warn'}`;
+
+            const head = document.createElement('strong');
+            head.textContent = `[${issue.code}] ${issue.title}`;
+            const detail = document.createElement('span');
+            detail.textContent = issue.detail;
+
+            item.appendChild(head);
+            item.appendChild(detail);
+            dom.draftCheckList.appendChild(item);
+        });
+    }
+
+    function runDraftCheck() {
+        const issues = collectDraftCheckIssues();
+        renderDraftCheckResults(issues);
+        setDraftCheckModalOpen(true);
+
+        const errorCount = issues.filter(function (item) { return item.level === 'error'; }).length;
+        const warnCount = issues.filter(function (item) { return item.level === 'warn'; }).length;
+        setStatus(`草稿自检完成：${errorCount} 个错误，${warnCount} 个警告`);
+    }
+
     function createQuizId(prefix) {
         const safePrefix = String(prefix || 'quiz').trim() || 'quiz';
         return `${safePrefix}-${Date.now().toString(36).slice(-6)}`;
@@ -4258,6 +4732,37 @@
 
         if (key === 'anim') {
             insertBlockSnippet('{{anim:anims/你的动画文件.cs}}\n', 'anims/你的动画文件.cs');
+            return;
+        }
+
+        if (key === 'source-cs') {
+            insertBlockSnippet([
+                'source_cs:',
+                '  - code/你的文件.cs',
+                ''
+            ].join('\n'), 'code/你的文件.cs');
+            return;
+        }
+
+        if (key === 'mermaid-flowchart') {
+            insertBlockSnippet([
+                '```mermaid',
+                'flowchart TD',
+                '    Start[开始] --> Step[编写内容]',
+                '    Step --> End[提交 PR]',
+                '```',
+                ''
+            ].join('\n'), 'Start[开始] --> Step[编写内容]');
+            return;
+        }
+
+        if (key === 'color-inline') {
+            insertBlockSnippet('{color:primary}{这里是强调文本}\n', 'primary');
+            return;
+        }
+
+        if (key === 'color-change-inline') {
+            insertBlockSnippet('{colorChange:rainbow}{这里是颜色动画文本}\n', 'rainbow');
             return;
         }
 
@@ -4401,22 +4906,66 @@
             `time: ${m.time || '25分钟'}`,
             (m.prev_chapter ? `prev_chapter: ${m.prev_chapter}` : '').trim(),
             (m.next_chapter ? `next_chapter: ${m.next_chapter}` : '').trim(),
+            'source_cs:',
+            '  - code/你的文件.cs',
+            'colors:',
+            '  Mad: "#ff4d4f"',
+            'colorChange:',
+            '  rainbow:',
+            '    - "#ff0000"',
+            '    - "#00ff00"',
+            '    - "#0000ff"',
             '---',
             '',
             '# 本章目标',
             '',
-            '- 目标 1',
-            '- 目标 2',
+            '- 说明本章要解决的问题',
+            '- 给出可验证的完成标准',
             '',
-            '# 最小示例',
+            '## 前置阅读',
+            '',
+            '[上一章节](./上一篇.md)',
+            '',
+            '## 最小示例（C#）',
             '',
             '```csharp',
             '// 在本地 Clone 仓库后补全可运行 C# 示例',
             '```',
             '',
+            '{{cs:./code/你的文件.cs#cs:t:命名空间.类型名|核心类型示例}}',
+            '',
+            '## 动画与流程图',
+            '',
+            '{{anim:anims/demo-basic.cs}}',
+            '',
+            '```mermaid',
+            'flowchart TD',
+            '    Start[开始] --> Edit[编写]',
+            '    Edit --> Verify[预览检查]',
+            '    Verify --> Submit[提交 PR]',
+            '```',
+            '',
+            '## 自测题',
+            '',
+            '```quiz',
+            'type: tf',
+            `id: ${createQuizId('quiz-tf')}`,
+            'question: |',
+            '  这里填写判断题题干。',
+            'answer: true',
+            'explain: |',
+            '  这里填写解析。',
+            '```',
+            '',
+            '## 高亮文本',
+            '',
+            '{color:Mad}{这是单色强调文本}',
+            '',
+            '{colorChange:rainbow}{这是颜色动画文本}',
+            '',
             '# 小结',
             '',
-            '这里写本章总结。',
+            '总结本章关键结论，并说明下一步阅读建议。',
             ''
         ].filter(function (line) {
             return String(line || '').length > 0;
@@ -4532,6 +5081,48 @@
                 const nextOpen = !isSidePanelModalOpen('right');
                 setSidePanelModalOpen('right', nextOpen);
                 setStatus(nextOpen ? 'Publish 面板已打开' : 'Publish 面板已关闭');
+            });
+        }
+
+        if (dom.openMarkdownGuide) {
+            dom.openMarkdownGuide.addEventListener('click', function () {
+                const nextOpen = !isGuideModalOpen();
+                setGuideModalOpen(nextOpen);
+                setStatus(nextOpen ? '项目 Markdown 教程已打开' : '项目 Markdown 教程已关闭');
+            });
+        }
+
+        if (dom.markdownGuideClose) {
+            dom.markdownGuideClose.addEventListener('click', function () {
+                setGuideModalOpen(false);
+                setStatus('项目 Markdown 教程已关闭');
+            });
+        }
+
+        if (dom.markdownGuideModal) {
+            dom.markdownGuideModal.addEventListener('click', function (event) {
+                if (event.target !== dom.markdownGuideModal) return;
+                setGuideModalOpen(false);
+                setStatus('项目 Markdown 教程已关闭');
+            });
+        }
+
+        if (dom.runDraftCheck) {
+            dom.runDraftCheck.addEventListener('click', runDraftCheck);
+        }
+
+        if (dom.draftCheckClose) {
+            dom.draftCheckClose.addEventListener('click', function () {
+                setDraftCheckModalOpen(false);
+                setStatus('已关闭草稿自检结果');
+            });
+        }
+
+        if (dom.draftCheckModal) {
+            dom.draftCheckModal.addEventListener('click', function (event) {
+                if (event.target !== dom.draftCheckModal) return;
+                setDraftCheckModalOpen(false);
+                setStatus('已关闭草稿自检结果');
             });
         }
 
@@ -5151,6 +5742,20 @@
         }
 
         document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && isDraftCheckModalOpen()) {
+                event.preventDefault();
+                setDraftCheckModalOpen(false);
+                setStatus('已关闭草稿自检结果');
+                return;
+            }
+
+            if (event.key === 'Escape' && isGuideModalOpen()) {
+                event.preventDefault();
+                setGuideModalOpen(false);
+                setStatus('项目 Markdown 教程已关闭');
+                return;
+            }
+
             if (event.key === 'Escape' && isCsharpEditorModalOpen()) {
                 event.preventDefault();
                 closeCsharpEditorModal();

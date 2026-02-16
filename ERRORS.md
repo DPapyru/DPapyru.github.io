@@ -334,4 +334,15 @@
 
 **备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题；本次冲突合并相关脚本与页面验证已通过。
 
+### 验证记录 [2026-02-16 15:05]：article-studio 项目 Markdown 教程 + 发布前自检 + 扩展语法按钮补齐
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-guide-check.test.js site/tooling/scripts/article-studio-template-guide.test.js site/tooling/scripts/article-studio-routing.test.js site/tooling/scripts/article-studio-compose-mode.test.js site/tooling/scripts/article-studio-flowchart-drawer.test.js site/tooling/scripts/article-studio-enhancements.test.js`：通过（6 files, 0 failures）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次 `article-studio` 教程弹窗、自检弹窗、扩展语法按钮与模板升级改动无直接关系。
+
 *最后更新：2026-02-16*
