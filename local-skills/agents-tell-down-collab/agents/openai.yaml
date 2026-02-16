@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agents Tell/Down Collab"
+  short_description: "Project-specific append-only worktree protocol"
+  default_prompt: "Use $agents-tell-down-collab to execute this repository's collaboration workflow with Agents_Tell.md, Agents_Down.md, and ERRORS.md."

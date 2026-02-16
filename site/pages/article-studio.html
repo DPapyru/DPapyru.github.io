@@ -84,9 +84,13 @@
                 </section>
 
                 <section class="studio-lazy-workspace" aria-label="LazyVim 风格工作台">
-                    <aside class="studio-lazy-column studio-lazy-column--left" aria-label="左栏：Explorer">
-                        <section class="studio-lazy-panel" aria-label="文章文件控制">
-                            <h2 class="studio-panel-title">Explorer</h2>
+                    <aside id="studio-left-panel-modal" class="studio-lazy-column studio-lazy-column--left modal studio-side-panel-modal" aria-label="左栏：Explorer" aria-hidden="true">
+                        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-left-panel-title">
+                            <section class="studio-lazy-panel studio-side-panel-shell" aria-label="文章文件控制">
+                                <div class="studio-side-panel-header">
+                                    <h2 id="studio-left-panel-title" class="studio-panel-title">Explorer</h2>
+                                    <button id="studio-left-panel-close" class="modal-close" type="button" aria-label="关闭 Explorer">×</button>
+                                </div>
 
                             <div class="studio-panel-section">
                                 <label for="studio-existing-select">已有文章</label>
@@ -217,8 +221,8 @@
                                 </div>
                             </details>
 
-                        </section>
-
+                            </section>
+                        </div>
                     </aside>
 
                     <section class="studio-lazy-column studio-lazy-column--center" aria-label="中栏：Editor">
@@ -229,12 +233,14 @@
                                     <div class="studio-commandbars">
                                         <section class="studio-toolbar studio-toolbar--embedded">
                                             <div class="studio-quick-actions">
+                                                <button id="studio-open-explorer" class="btn btn-small btn-outline" type="button" aria-expanded="false" aria-controls="studio-left-panel-modal">Explorer</button>
+                                                <button id="studio-open-publish" class="btn btn-small btn-outline" type="button" aria-expanded="false" aria-controls="studio-right-panel-modal">Publish</button>
                                                 <button id="studio-insert-template" class="btn btn-small" type="button">插入模板</button>
                                                 <button id="studio-insert-image" class="btn btn-small btn-outline" type="button">插入图片</button>
                                                 <button id="studio-format-markdown" class="btn btn-small btn-outline" type="button">快速格式化</button>
                                                 <button id="studio-toggle-fullscreen" class="btn btn-small btn-outline" type="button">专注模式</button>
                                                 <button id="studio-open-viewer-preview" class="btn btn-small btn-outline" type="button">新标签预览</button>
-                                                <button id="studio-flowchart-toggle" class="btn btn-small btn-outline" type="button" aria-expanded="false" aria-controls="studio-flowchart-modal">流程图工作台</button>
+                                                <button id="studio-flowchart-toggle" class="btn btn-small btn-outline studio-focus-only" type="button" aria-expanded="false" aria-controls="studio-flowchart-modal">流程图工作台</button>
                                             </div>
                                             <details class="studio-advanced-panel">
                                                 <summary>更多操作</summary>
@@ -298,9 +304,13 @@
                         </section>
                     </section>
 
-                    <aside class="studio-lazy-column studio-lazy-column--right" aria-label="右栏：Publish">
-                        <section class="studio-lazy-panel" aria-label="页面选项与 PR 发布">
-                            <h2 class="studio-panel-title">Publish</h2>
+                    <aside id="studio-right-panel-modal" class="studio-lazy-column studio-lazy-column--right modal studio-side-panel-modal" aria-label="右栏：Publish" aria-hidden="true">
+                        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-right-panel-title">
+                            <section class="studio-lazy-panel studio-side-panel-shell" aria-label="页面选项与 PR 发布">
+                                <div class="studio-side-panel-header">
+                                    <h2 id="studio-right-panel-title" class="studio-panel-title">Publish</h2>
+                                    <button id="studio-right-panel-close" class="modal-close" type="button" aria-label="关闭 Publish">×</button>
+                                </div>
 
                             <div class="studio-panel-section">
                                 <label for="studio-pr-worker-url">Worker API 地址</label>
@@ -323,9 +333,9 @@
                             </div>
 
                             <div class="studio-panel-section">
-                                <label for="studio-asset-upload">上传附件（图片 + C#）</label>
-                                <input id="studio-asset-upload" class="studio-input studio-input--file" type="file" accept="image/*,.cs,text/x-csharp" multiple>
-                                <span class="studio-help">可从本地任意目录选择文件。图片与 C# 文件会自动分流并随提交一起上传。</span>
+                                <label for="studio-asset-upload">上传附件（图片/GIF/视频 + C#）</label>
+                                <input id="studio-asset-upload" class="studio-input studio-input--file" type="file" accept="image/*,video/mp4,video/webm,.mp4,.webm,.cs,text/x-csharp" multiple>
+                                <span class="studio-help">可从本地任意目录选择文件。图片、视频与 C# 文件会自动分流并随提交一起上传。</span>
                             </div>
 
                             <div class="studio-panel-section">
@@ -333,6 +343,13 @@
                                 <input id="studio-image-upload" class="studio-input studio-input--file" type="file" accept="image/*" multiple>
                                 <span class="studio-help">上传后会插入 Markdown 图片语法，并在右侧保存预览。图片信息会随草稿自动保存。</span>
                                 <div id="studio-image-list" class="studio-image-list" aria-live="polite"></div>
+                            </div>
+
+                            <div class="studio-panel-section">
+                                <label for="studio-media-upload">插入视频（mp4/webm）</label>
+                                <input id="studio-media-upload" class="studio-input studio-input--file" type="file" accept="video/mp4,video/webm,.mp4,.webm" multiple>
+                                <span class="studio-help">上传后会插入 Markdown 引用语法。视频信息会随草稿自动保存。</span>
+                                <div id="studio-media-list" class="studio-image-list" aria-live="polite"></div>
                             </div>
 
                             <div class="studio-panel-section">
@@ -383,7 +400,8 @@
                                     <span class="studio-help">优先使用 GitHub 登录；仅在 Worker 仍启用密钥模式时填写。</span>
                                 </div>
                             </details>
-                        </section>
+                            </section>
+                        </div>
                     </aside>
                 </section>
             </div>

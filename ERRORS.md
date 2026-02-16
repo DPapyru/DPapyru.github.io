@@ -275,4 +275,63 @@
 
 **备注**：本次改动覆盖 `site/index.html`、`site/content/index.html`、`site/search-results.html`、`site/qa.html`、`site/404.html`、`site/pages/*.html` 中带 `accent-select` 的 12 个界面，统一新增 5 个泰拉瑞亚主题选项；`check-generated` 与 `npm test` 的失败项均为仓库既有问题。
 
-*最后更新：2026-02-15*
+### 验证记录 [2026-02-15 21:00]：article-studio 左右栏改按钮弹窗 + 中间区扩展
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-*.test.js`：通过（6 files, 0 failures）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次 `article-studio` 左右栏弹窗化与中间区扩展改造无直接关系。`npm run build` 触发的无关生成文件已回退，仅保留本任务相关页面与样式脚本改动。
+
+### 验证记录 [2026-02-16 07:25]：article-studio 粘贴增强（HTML 转 Markdown + GIF/MP4/WEBM）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-enhancements.test.js`：通过
+- `node --test site/tooling/scripts/article-studio-*.test.js`：通过（6 files, 0 failures）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次 `article-studio` 粘贴/媒体上传能力增强无直接关系。本次构建产物中 `site/assets/shader-gallery/index.json` 与 `site/sitemap.xml` 仅有生成时间/日期变更。
+
+### 验证记录 [2026-02-16 07:26]：article-studio 媒体粘贴/渲染扩展（3+4+5+6）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-enhancements.test.js`：通过
+- `node --test site/tooling/scripts/pr-worker-extra-files.test.js`：通过
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次 `article-studio` 媒体能力扩展改动无直接关系。`npm run build` 产生的无关生成文件（如 `site/assets/shader-gallery/index.json`、`site/sitemap.xml`）已回退。
+
+### 验证记录 [2026-02-16 07:31]：viewer Markdown 渲染补齐（mp4/webm）+ studio 预览媒体桥接
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-enhancements.test.js`：通过
+- `node --test site/tooling/scripts/article-studio-*.test.js`：通过（6 files, 0 failures）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次 `viewer` 的 `mp4/webm` Markdown 渲染和 `studio_preview` 媒体数据映射改动无直接关系。
+
+### 验证记录 [2026-02-16 07:47]：合并两个工作树到 main（最大化冲突合并）
+
+**级别**：L3
+
+**命令与结果**：
+- `node site/tooling/scripts/article-studio-enhancements.test.js`：通过（32 tests, 0 failures）
+- `node --test site/tooling/scripts/pr-worker-extra-files.test.js`：通过（1 test, 0 failures）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题；本次冲突合并相关脚本与页面验证已通过。
+
+*最后更新：2026-02-16*

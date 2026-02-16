@@ -39,10 +39,12 @@ test('oauth worker restricts extraFiles path and count', () => {
     assert.doesNotMatch(text, /site\/content\/routes\/\*\.route\.json/);
     assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
     assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
+    assert.match(text, /site\/content\/\*\*\/media\/\*\.\{mp4,webm\}/);
     assert.match(text, /site\/content\/\*\*\/code\/\*\.cs/);
-    assert.match(text, /extraFiles\s*数量不能超过\s*5/);
+    assert.match(text, /extraFiles\s*数量不能超过\s*8/);
     assert.match(text, /content\s*过大/);
     assert.match(text, /base64\s*content\s*过大/);
+    assert.match(text, /10MB/);
 });
 
 test('shared-key worker defines extraFiles sanitizer helpers', () => {
@@ -61,10 +63,12 @@ test('shared-key worker supports shader gallery extra files', () => {
     assert.doesNotMatch(text, /site\/content\/routes\/\*\.route\.json/);
     assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
     assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
+    assert.match(text, /site\/content\/\*\*\/media\/\*\.\{mp4,webm\}/);
     assert.match(text, /site\/content\/\*\*\/code\/\*\.cs/);
-    assert.match(text, /extraFiles\s*数量不能超过\s*5/);
+    assert.match(text, /extraFiles\s*数量不能超过\s*8/);
     assert.match(text, /content\s*过大/);
     assert.match(text, /base64\s*content\s*过大/);
+    assert.match(text, /10MB/);
 });
 
 test('workers accept base64 encoded extra files', () => {

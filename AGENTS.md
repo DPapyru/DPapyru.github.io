@@ -86,3 +86,10 @@ git worktree remove .worktrees/<worktree-name>
 - 在 PR 中引用 `ERRORS.md` 对应验证记录。
 - 以可复现验证为准，不以“本地看起来正常”为准。
 - git合并与提交的内容必须以中文为主。
+
+## 8. 多Agent协作（已迁移到项目特化 Skill）
+
+多Agent协作协议已迁移到本项目特化 Skill：
+
+- `local-skills/agents-tell-down-collab/SKILL.md`
+- 调用方式：`$agents-tell-down-collab`
