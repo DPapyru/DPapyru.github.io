@@ -39,6 +39,11 @@ test('article studio html includes markdown guide and draft check controls', () 
     assert.match(html, /id="studio-draft-check-list"/);
     assert.match(html, /id="studio-markdown-guide-modal"[^>]*studio-side-panel-modal/);
     assert.match(html, /id="studio-draft-check-modal"[^>]*studio-side-panel-modal/);
+    assert.match(html, /id="studio-pr-asset-decision-modal"/);
+    assert.match(html, /id="studio-pr-asset-decision-close"/);
+    assert.match(html, /id="studio-pr-asset-decision-choice-stage"/);
+    assert.match(html, /id="studio-pr-asset-decision-continue-stage"/);
+    assert.match(html, /id="studio-pr-asset-decision-clear-stage"/);
 });
 
 test('article studio html keeps only requested actions in more snippets', () => {
@@ -94,11 +99,15 @@ test('article studio js wires guide and draft panel through shared side-panel mo
     assert.match(js, /draftCheckClose:\s*document\.getElementById\('studio-draft-check-close'\)/);
     assert.match(js, /draftCheckSummary:\s*document\.getElementById\('studio-draft-check-summary'\)/);
     assert.match(js, /draftCheckList:\s*document\.getElementById\('studio-draft-check-list'\)/);
+    assert.match(js, /prAssetDecisionModal:\s*document\.getElementById\('studio-pr-asset-decision-modal'\)/);
+    assert.match(js, /prAssetDecisionClose:\s*document\.getElementById\('studio-pr-asset-decision-close'\)/);
+    assert.match(js, /prAssetContinueSelect:\s*document\.getElementById\('studio-pr-asset-continue-select'\)/);
 
-    assert.match(js, /const\s+SIDE_PANEL_KEYS\s*=\s*\['left',\s*'right',\s*'guide',\s*'draft'\]/);
+    assert.match(js, /const\s+SIDE_PANEL_KEYS\s*=\s*\['left',\s*'right',\s*'guide',\s*'draft',\s*'asset'\]/);
     assert.match(js, /function\s+getSidePanelModalRef\s*\(/);
     assert.match(js, /setSidePanelModalOpen\('guide'/);
     assert.match(js, /setSidePanelModalOpen\('draft'/);
+    assert.match(js, /setSidePanelModalOpen\('asset'/);
 });
 
 test('article studio js supports draft check and keeps it warning-only', () => {
@@ -154,5 +163,8 @@ test('article studio css includes guide and draft check modal styles', () => {
     assert.match(css, /\.studio-draft-check-list\s*\{/);
     assert.match(css, /\.studio-draft-check-item--error\s*\{/);
     assert.match(css, /\.studio-draft-check-item--warn\s*\{/);
+    assert.match(css, /#studio-pr-asset-decision-modal\s+\.studio-side-panel-modal-content\s*\{/);
+    assert.match(css, /\.studio-pr-asset-decision-content\s*\{/);
+    assert.match(css, /\.studio-pr-asset-decision-actions\s*\{/);
     assert.doesNotMatch(css, /\.studio-extension-panel\s*\{/);
 });

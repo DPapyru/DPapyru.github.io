@@ -378,4 +378,18 @@
 
 **备注**：根因是 `site/assets/css/layout.css` 中 `body.workbench-page > :where(:not(.skip-link):not(.viewer-ai-fab-wrap))` 将 `position: relative` 施加到 `body` 的直接子元素，覆盖了弹窗 `.modal` 的 `position: fixed`。已改为排除 `.modal`：`body.workbench-page > :where(:not(.skip-link):not(.viewer-ai-fab-wrap):not(.modal))`。截图证据：修复前 `/tmp/article-studio-guide-modal-fixed.png`、`/tmp/article-studio-draft-modal-fixed.png`；修复后 `/tmp/article-studio-guide-modal-after-layout-fix.png`、`/tmp/article-studio-draft-modal-after-layout-fix.png`。`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次定位修复无直接关系。
 
+### 验证记录 [2026-02-16 16:45]：article-studio 附件提交流程三选弹窗 + 浏览器交互验收
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-*.test.js`：通过（7 files, 0 failures）
+- `timeout 300s npm run build --silent > /tmp/build_article_modal_fix.log 2>&1; echo BUILD_EXIT:$?`：通过（`BUILD_EXIT:0`）
+- `timeout 300s npm run check-generated --silent > /tmp/check_generated_article_modal_fix.log 2>&1; echo CHECK_GENERATED_EXIT:$?`：失败（`CHECK_GENERATED_EXIT:1`）
+- `python3 -m http.server 4174 --bind 127.0.0.1`：通过（本地浏览器调试服务启动）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=45000 --dump-dom "http://127.0.0.1:4174/site/tmp-article-studio-pr-assets-browser-check.html" > /tmp/article_studio_pr_assets_browser_check_dom.html`：通过
+- `rg -n "BROWSER_CHECK_RESULT" /tmp/article_studio_pr_assets_browser_check_dom.html`：通过（结果 `ok: true, passed: 3, failed: 0`）
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`（`gallery-check` 报错），属于仓库既有问题，与本次 `article-studio` 附件提交流程改造无直接关系。浏览器调试覆盖 3 条交互路径：`取消并返回编辑`（不发起 create-pr 且附件保留）、`清空附件并新建 PR`（二次确认后提交且不携带 `extraFiles`）、`继续已有 PR`（请求体携带 `existingPrNumber` 且附件保留）。临时调试页 `site/tmp-article-studio-pr-assets-browser-check.html` 已在验证后删除。
+
 *最后更新：2026-02-16*
