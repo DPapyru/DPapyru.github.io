@@ -5255,7 +5255,15 @@
         }
 
         if (dom.runDraftCheck) {
-            dom.runDraftCheck.addEventListener('click', runDraftCheck);
+            dom.runDraftCheck.addEventListener('click', function () {
+                const nextOpen = !isSidePanelModalOpen('draft');
+                if (!nextOpen) {
+                    setSidePanelModalOpen('draft', false);
+                    setStatus('已关闭草稿自检结果');
+                    return;
+                }
+                runDraftCheck();
+            });
         }
 
         if (dom.draftCheckClose) {

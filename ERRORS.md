@@ -345,4 +345,15 @@
 
 **备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次 `article-studio` 教程弹窗、自检弹窗、扩展语法按钮与模板升级改动无直接关系。
 
+### 验证记录 [2026-02-16 16:02]：article-studio 教程/自检弹窗切换逻辑修复
+
+**级别**：L3
+
+**命令与结果**：
+- `node`（Headless Chrome CDP 点击脚本，依次点击“项目Markdown教程”“发布前自检”按钮并读取弹窗状态）：通过（修复前可稳定复现“自检按钮二次点击不关闭”，修复后已可二次点击关闭）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次 `article-studio` 弹窗切换逻辑修复无直接关系。
+
 *最后更新：2026-02-16*
