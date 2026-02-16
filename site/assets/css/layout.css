@@ -277,7 +277,7 @@ body.workbench-page::before {
     z-index: 0;
 }
 
-body.workbench-page > :where(:not(.skip-link):not(.viewer-ai-fab-wrap)) {
+body.workbench-page > :where(:not(.skip-link):not(.viewer-ai-fab-wrap):not(.modal)) {
     position: relative;
     z-index: 1;
 }

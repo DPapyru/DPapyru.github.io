@@ -367,4 +367,15 @@
 
 **备注**：根因是打开侧栏弹窗时对内部首个可聚焦元素执行 `focus()`，浏览器会将文档滚动到该元素在 DOM 中的静态位置；已改为无滚动聚焦（`focus({ preventScroll: true })` + 兼容回退）。`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次修复无直接关系。
 
+### 验证记录 [2026-02-16 16:39]：article-studio 教程/自检弹窗位置错乱修复（带截图调试）
+
+**级别**：L3
+
+**命令与结果**：
+- `node`（Headless Chrome CDP + 截图：打开“项目Markdown教程”“发布前自检”弹窗并采集 `computedStyle.position`、`getBoundingClientRect`）：通过（修复前弹窗 `position` 被覆盖为 `relative` 且内容落在视口外；修复后恢复为 `fixed` 并覆盖视口）
+- `npm run build --silent`：失败（当前执行环境中命令在工具层被提前终止，日志止于 `generate-structure`，未得到完整退出）
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：根因是 `site/assets/css/layout.css` 中 `body.workbench-page > :where(:not(.skip-link):not(.viewer-ai-fab-wrap))` 将 `position: relative` 施加到 `body` 的直接子元素，覆盖了弹窗 `.modal` 的 `position: fixed`。已改为排除 `.modal`：`body.workbench-page > :where(:not(.skip-link):not(.viewer-ai-fab-wrap):not(.modal))`。截图证据：修复前 `/tmp/article-studio-guide-modal-fixed.png`、`/tmp/article-studio-draft-modal-fixed.png`；修复后 `/tmp/article-studio-guide-modal-after-layout-fix.png`、`/tmp/article-studio-draft-modal-after-layout-fix.png`。`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次定位修复无直接关系。
+
 *最后更新：2026-02-16*
