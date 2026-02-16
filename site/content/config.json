@@ -170,6 +170,29 @@
           "title": "物品系统",
           "description": "物品、武器和装备的开发",
           "files": []
+        },
+        "article-contribution": {
+          "title": "文章贡献",
+          "description": "如何为教程网站贡献文章",
+          "files": [
+            {
+              "filename": "第一个配置-可调开关.md",
+              "path": "Modder入门/第一个配置-可调开关.md",
+              "originalPath": "Modder入门/第一个配置-可调开关.md",
+              "title": "配置：给你的 Mod 加一个可调开关",
+              "author": "loguhan",
+              "order": 100,
+              "description": "这篇实操教程将带你从零完成第一个 ModConfig，配置输入框、开关、滑条和 Vector2 参数",
+              "time": 60,
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            }
+          ]
         }
       }
     },
@@ -196,6 +219,37 @@
               "min_c": null,
               "min_t": null,
               "colors": null,
+              "colorChange": null
+            }
+          ]
+        }
+      }
+    },
+    "和小善的MiniTips": {
+      "title": "和小善的MiniTips",
+      "description": "和小善的MiniTips相关的教程",
+      "topics": {
+        "article-contribution": {
+          "title": "文章贡献",
+          "description": "如何为教程网站贡献文章",
+          "files": [
+            {
+              "filename": "FirstTip.md",
+              "path": "和小善的MiniTips/视觉效果篇/FirstTip.md",
+              "originalPath": "和小善的MiniTips/视觉效果篇/FirstTip.md",
+              "title": "护盾与冲击波",
+              "author": "和小善",
+              "order": 100,
+              "description": "关于原版天界柱护盾Shader的多种用途",
+              "time": "5分钟",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": 0,
+              "min_t": 0,
+              "colors": {
+                "Pink": "#ffc0cb"
+              },
               "colorChange": null
             }
           ]
@@ -2712,6 +2766,18 @@
         "在线写作IDE使用教程.md",
         "教学文章写作指南.md",
         "站点Markdown扩展语法说明.md"
+      ]
+    },
+    "loguhan": {
+      "name": "loguhan",
+      "files": [
+        "第一个配置-可调开关.md"
+      ]
+    },
+    "和小善": {
+      "name": "和小善",
+      "files": [
+        "FirstTip.md"
       ]
     },
     "DPapyru": {
@@ -5396,6 +5462,44 @@
       "min_t": null,
       "colors": {
         "Mad": "#f00"
+      },
+      "colorChange": null
+    },
+    {
+      "filename": "第一个配置-可调开关.md",
+      "path": "Modder入门/第一个配置-可调开关.md",
+      "originalPath": "Modder入门/第一个配置-可调开关.md",
+      "title": "配置：给你的 Mod 加一个可调开关",
+      "author": "loguhan",
+      "category": "Modder入门",
+      "topic": "article-contribution",
+      "order": 100,
+      "time": 60,
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
+      "colorChange": null
+    },
+    {
+      "filename": "FirstTip.md",
+      "path": "和小善的MiniTips/视觉效果篇/FirstTip.md",
+      "originalPath": "和小善的MiniTips/视觉效果篇/FirstTip.md",
+      "title": "护盾与冲击波",
+      "author": "和小善",
+      "category": "和小善的MiniTips",
+      "topic": "article-contribution",
+      "order": 100,
+      "time": "5分钟",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": 0,
+      "min_t": 0,
+      "colors": {
+        "Pink": "#ffc0cb"
       },
       "colorChange": null
     },

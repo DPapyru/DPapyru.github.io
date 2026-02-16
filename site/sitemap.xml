@@ -19,6 +19,12 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://dpapyru.github.io/site/pages/folder.html?path=%E5%92%8C%E5%B0%8F%E5%96%84%E7%9A%84MiniTips</loc>
+    <lastmod>2026-02-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://dpapyru.github.io/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE</loc>
     <lastmod>2026-02-15</lastmod>
     <changefreq>weekly</changefreq>
@@ -53,6 +59,12 @@
     <lastmod>2026-02-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/site/pages/viewer.html?file=%E5%92%8C%E5%B0%8F%E5%96%84%E7%9A%84MiniTips%2F%E8%A7%86%E8%A7%89%E6%95%88%E6%9E%9C%E7%AF%87%2FFirstTip.md</loc>
+    <lastmod>2026-02-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://dpapyru.github.io/site/pages/viewer.html?file=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE%2F%E4%BD%BF%E7%94%A8%E7%BD%91%E9%A1%B5%E7%89%B9%E6%AE%8A%E5%8A%A8%E7%94%BB%E6%A8%A1%E5%9D%97.md</loc>
@@ -915,6 +927,12 @@
   <url>
     <loc>https://dpapyru.github.io/site/pages/viewer.html?file=Modder%E5%85%A5%E9%97%A8%2F%E5%88%B6%E4%BD%9C%E7%AC%AC%E4%B8%80%E6%8A%8A%E6%AD%A6%E5%99%A8.md</loc>
     <lastmod>2026-02-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/site/pages/viewer.html?file=Modder%E5%85%A5%E9%97%A8%2F%E7%AC%AC%E4%B8%80%E4%B8%AA%E9%85%8D%E7%BD%AE-%E5%8F%AF%E8%B0%83%E5%BC%80%E5%85%B3.md</loc>
+    <lastmod>2026-02-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
