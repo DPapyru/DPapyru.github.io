@@ -445,14 +445,6 @@
     align-items: center;
 }
 
-.studio-extension-panel {
-    min-width: 200px;
-}
-
-.studio-extension-panel summary {
-    font-weight: 600;
-}
-
 .studio-focus-only {
     display: none;
 }
@@ -744,30 +736,23 @@
     overflow: hidden;
 }
 
-.studio-markdown-guide-modal,
-.studio-draft-check-modal {
-    box-sizing: border-box;
-    padding: 12px;
-}
-
-.studio-markdown-guide-modal-content {
+#studio-markdown-guide-modal .studio-side-panel-modal-content {
     width: min(980px, 96vw);
     max-height: 92vh;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
 }
 
-.studio-markdown-guide-modal-header {
-    padding: 10px 12px;
+#studio-draft-check-modal .studio-side-panel-modal-content {
+    width: min(760px, 96vw);
+    max-height: 92vh;
 }
 
 .studio-markdown-guide-content {
     display: grid;
     gap: 10px;
-    padding: 12px;
+    padding: 2px 0 4px;
     min-height: 0;
+    max-height: calc(92vh - 120px);
     overflow: auto;
-    background: var(--bg-secondary);
 }
 
 .studio-guide-section {
@@ -814,23 +799,12 @@
     word-break: break-word;
 }
 
-.studio-draft-check-modal-content {
-    width: min(760px, 96vw);
-    max-height: 92vh;
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-}
-
-.studio-draft-check-modal-header {
-    padding: 10px 12px;
-}
-
 .studio-draft-check-content {
     display: grid;
     gap: 10px;
-    padding: 12px;
-    background: var(--bg-secondary);
+    padding: 2px 0 4px;
     min-height: 0;
+    max-height: calc(92vh - 120px);
 }
 
 .studio-draft-check-summary {
@@ -1002,10 +976,15 @@
         max-height: 94vh;
     }
 
-    .studio-markdown-guide-modal-content,
-    .studio-draft-check-modal-content {
+    #studio-markdown-guide-modal .studio-side-panel-modal-content,
+    #studio-draft-check-modal .studio-side-panel-modal-content {
         width: min(96vw, 96vw);
         max-height: 94vh;
+    }
+
+    .studio-markdown-guide-content,
+    .studio-draft-check-content {
+        max-height: calc(94vh - 120px);
     }
 
     .studio-flowchart-modal-content {

@@ -1236,74 +1236,41 @@
         return !!(dom.flowchartModal && dom.flowchartModal.classList.contains('active'));
     }
 
-    function isGuideModalOpen() {
-        return !!(dom.markdownGuideModal && dom.markdownGuideModal.classList.contains('active'));
-    }
+    const SIDE_PANEL_KEYS = ['left', 'right', 'guide', 'draft'];
 
-    function setGuideModalOpen(open) {
-        if (!dom.markdownGuideModal) return;
-        const shouldOpen = !!open;
-
-        if (shouldOpen && isDraftCheckModalOpen()) {
-            setDraftCheckModalOpen(false);
+    function getSidePanelModalRef(panel) {
+        const key = String(panel || '').trim().toLowerCase();
+        if (key === 'right') {
+            return { key: 'right', modal: dom.rightPanelModal, trigger: dom.openPublish };
         }
-
-        dom.markdownGuideModal.classList.toggle('active', shouldOpen);
-        dom.markdownGuideModal.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
-        if (dom.openMarkdownGuide) {
-            dom.openMarkdownGuide.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        if (key === 'guide') {
+            return { key: 'guide', modal: dom.markdownGuideModal, trigger: dom.openMarkdownGuide };
         }
-        syncModalBodyLock();
-
-        if (!shouldOpen) return;
-        const focusTarget = dom.markdownGuideModal.querySelector('button, [href], input, textarea, select');
-        if (focusTarget && typeof focusTarget.focus === 'function') {
-            focusTarget.focus();
+        if (key === 'draft') {
+            return { key: 'draft', modal: dom.draftCheckModal, trigger: dom.runDraftCheck };
         }
-    }
-
-    function isDraftCheckModalOpen() {
-        return !!(dom.draftCheckModal && dom.draftCheckModal.classList.contains('active'));
-    }
-
-    function setDraftCheckModalOpen(open) {
-        if (!dom.draftCheckModal) return;
-        const shouldOpen = !!open;
-
-        if (shouldOpen && isGuideModalOpen()) {
-            setGuideModalOpen(false);
-        }
-
-        dom.draftCheckModal.classList.toggle('active', shouldOpen);
-        dom.draftCheckModal.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
-        if (dom.runDraftCheck) {
-            dom.runDraftCheck.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
-        }
-        syncModalBodyLock();
-
-        if (!shouldOpen) return;
-        const focusTarget = dom.draftCheckModal.querySelector('button, [href], input, textarea, select');
-        if (focusTarget && typeof focusTarget.focus === 'function') {
-            focusTarget.focus();
-        }
+        return { key: 'left', modal: dom.leftPanelModal, trigger: dom.openExplorer };
     }
 
     function isSidePanelModalOpen(panel) {
-        const key = panel === 'right' ? 'right' : 'left';
-        const modal = key === 'right' ? dom.rightPanelModal : dom.leftPanelModal;
-        return !!(modal && modal.classList.contains('active'));
+        const ref = getSidePanelModalRef(panel);
+        return !!(ref.modal && ref.modal.classList.contains('active'));
     }
 
     function setSidePanelModalOpen(panel, open, options) {
-        const key = panel === 'right' ? 'right' : 'left';
-        const modal = key === 'right' ? dom.rightPanelModal : dom.leftPanelModal;
-        const trigger = key === 'right' ? dom.openPublish : dom.openExplorer;
-        const otherKey = key === 'right' ? 'left' : 'right';
+        const ref = getSidePanelModalRef(panel);
+        const key = ref.key;
+        const modal = ref.modal;
+        const trigger = ref.trigger;
         const shouldOpen = !!open;
         if (!modal) return;
 
-        if (shouldOpen && isSidePanelModalOpen(otherKey)) {
-            setSidePanelModalOpen(otherKey, false, { silent: true });
+        if (shouldOpen) {
+            SIDE_PANEL_KEYS.forEach(function (otherKey) {
+                if (otherKey === key) return;
+                if (!isSidePanelModalOpen(otherKey)) return;
+                setSidePanelModalOpen(otherKey, false, { skipFocus: true, silent: true });
+            });
         }
 
         modal.classList.toggle('active', shouldOpen);
@@ -1317,7 +1284,7 @@
             return;
         }
 
-        const focusTarget = modal.querySelector('input, textarea, select, button');
+        const focusTarget = modal.querySelector('input, textarea, select, button, [href]');
         if (focusTarget && typeof focusTarget.focus === 'function') {
             focusTarget.focus();
         }
@@ -1325,11 +1292,8 @@
 
     function syncModalBodyLock() {
         const shouldLock = isCsharpEditorModalOpen()
-            || isGuideModalOpen()
-            || isDraftCheckModalOpen()
             || isFlowchartModalOpen()
-            || isSidePanelModalOpen('left')
-            || isSidePanelModalOpen('right');
+            || SIDE_PANEL_KEYS.some(function (panelKey) { return isSidePanelModalOpen(panelKey); });
         document.body.classList.toggle('article-studio-modal-open', shouldLock);
     }
 
@@ -2851,6 +2815,8 @@
 
         if (!linkedPrNumber && extraFiles.length > 0) {
             const shouldClear = window.confirm(
+                '提交PR前自检：第一次提交PR应该只提交markdown文件\n' +
+                '后续需要使用PR链，上传额外附件，或者修改文件内容\n'+
                 '当前将创建新 PR，但检测到已上传附件。\n' +
                 '为避免重复提交同路径文件，是否先一键清空附件并继续提交？\n\n' +
                 '确定：清空附件后继续创建新 PR（仅提交 Markdown）\n' +
@@ -4551,6 +4517,46 @@
             }
         }
 
+        const animcsRegex = /```animcs\s*([\s\S]*?)```/g;
+        let animcsMatch = null;
+        while ((animcsMatch = animcsRegex.exec(markdown)) !== null) {
+            const rawBody = String(animcsMatch[1] || '');
+            const firstLine = rawBody.split(/\r?\n/).map(function (line) {
+                return String(line || '').trim();
+            }).find(Boolean) || '';
+
+            if (!firstLine) {
+                pushDraftIssue(
+                    issues,
+                    'error',
+                    'animcs-path-missing',
+                    'animcs 代码块缺少动画路径',
+                    'animcs 代码块第一行必须填写 anims/*.cs 路径。'
+                );
+                continue;
+            }
+
+            const animcsPath = normalizePath(firstLine).replace(/^\.\//, '');
+            if (!/^anims\//i.test(animcsPath)) {
+                pushDraftIssue(
+                    issues,
+                    'error',
+                    'animcs-path-prefix-invalid',
+                    `animcs 路径必须以 anims/ 开头：${firstLine}`,
+                    '示例：```animcs\\nanims/demo-basic.cs\\n```'
+                );
+            }
+            if (!/\.cs$/i.test(animcsPath)) {
+                pushDraftIssue(
+                    issues,
+                    'error',
+                    'animcs-path-ext-invalid',
+                    `animcs 路径扩展名错误：${firstLine}`,
+                    'animcs 路径必须以 .cs 结尾。'
+                );
+            }
+        }
+
         const metadataColors = new Set(Object.keys(ensureObject(state.metadata.colors)));
         const metadataColorChanges = new Set(Object.keys(ensureObject(state.metadata.colorChange)));
 
@@ -4677,7 +4683,7 @@
     function runDraftCheck() {
         const issues = collectDraftCheckIssues();
         renderDraftCheckResults(issues);
-        setDraftCheckModalOpen(true);
+        setSidePanelModalOpen('draft', true);
 
         const errorCount = issues.filter(function (item) { return item.level === 'error'; }).length;
         const warnCount = issues.filter(function (item) { return item.level === 'warn'; }).length;
@@ -4687,6 +4693,31 @@
     function createQuizId(prefix) {
         const safePrefix = String(prefix || 'quiz').trim() || 'quiz';
         return `${safePrefix}-${Date.now().toString(36).slice(-6)}`;
+    }
+
+    function firstUploadedCsharpRelativePath() {
+        const list = Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [];
+        if (list.length <= 0) return '';
+        const normalized = normalizePath(list[0] && list[0].assetPath || '');
+        if (!normalized) return '';
+        return `./${normalized.split('/').slice(-2).join('/')}`;
+    }
+
+    function preferredColorName() {
+        const names = Object.keys(ensureObject(state.metadata.colors));
+        return names.length > 0 ? names[0] : 'primary';
+    }
+
+    function preferredColorChangeName() {
+        const names = Object.keys(ensureObject(state.metadata.colorChange));
+        return names.length > 0 ? names[0] : 'rainbow';
+    }
+
+    function insertCsharpSelectorSnippet(kind, selectorTemplate, titleFallback) {
+        const selectedTitle = toSingleLineText(readCurrentSelectionText(), titleFallback);
+        const pathPart = firstUploadedCsharpRelativePath() || './code/你的文件.cs';
+        const snippet = `{{cs:${pathPart}#cs:${kind}:${selectorTemplate}|${selectedTitle}}}\n`;
+        insertBlockSnippet(snippet, `#cs:${kind}:${selectorTemplate}`);
     }
 
     function applyInsertAction(action) {
@@ -4726,7 +4757,33 @@
 
         if (key === 'cs') {
             const selectedTitle = toSingleLineText(readCurrentSelectionText(), '代码片段标题');
-            insertBlockSnippet(`{{cs:你的文件.cs#cs:t:命名空间.类型名|${selectedTitle}}}\n`, '你的文件.cs#cs:t:命名空间.类型名');
+            const pathPart = firstUploadedCsharpRelativePath() || './code/你的文件.cs';
+            insertBlockSnippet(`{{cs:${pathPart}#cs:t:命名空间.类型名|${selectedTitle}}}\n`, '#cs:t:命名空间.类型名');
+            return;
+        }
+
+        if (key === 'cs-method') {
+            insertCsharpSelectorSnippet('m', '命名空间.类型名.方法名(int,string)', '方法片段标题');
+            return;
+        }
+
+        if (key === 'cs-property') {
+            insertCsharpSelectorSnippet('p', '命名空间.类型名.属性名', '属性片段标题');
+            return;
+        }
+
+        if (key === 'cs-field') {
+            insertCsharpSelectorSnippet('f', '命名空间.类型名.字段名', '字段片段标题');
+            return;
+        }
+
+        if (key === 'cs-constant') {
+            insertCsharpSelectorSnippet('c', '命名空间.类型名.常量名', '常量片段标题');
+            return;
+        }
+
+        if (key === 'cs-enum') {
+            insertCsharpSelectorSnippet('e', '命名空间.枚举类型.成员名', '枚举成员标题');
             return;
         }
 
@@ -4735,34 +4792,49 @@
             return;
         }
 
+        if (key === 'animcs-block') {
+            insertBlockSnippet([
+                '```animcs',
+                'anims/demo-basic.cs',
+                '```',
+                ''
+            ].join('\n'), 'anims/demo-basic.cs');
+            return;
+        }
+
         if (key === 'source-cs') {
+            const sourcePath = firstUploadedCsharpRelativePath() || './code/你的文件.cs';
             insertBlockSnippet([
                 'source_cs:',
-                '  - code/你的文件.cs',
+                `  - ${sourcePath}`,
                 ''
-            ].join('\n'), 'code/你的文件.cs');
+            ].join('\n'), sourcePath);
+            return;
+        }
+
+        if (key === 'min-gate') {
+            insertBlockSnippet([
+                'min_c: 1',
+                'min_t: 1',
+                ''
+            ].join('\n'), '1');
             return;
         }
 
         if (key === 'mermaid-flowchart') {
-            insertBlockSnippet([
-                '```mermaid',
-                'flowchart TD',
-                '    Start[开始] --> Step[编写内容]',
-                '    Step --> End[提交 PR]',
-                '```',
-                ''
-            ].join('\n'), 'Start[开始] --> Step[编写内容]');
+            setFlowchartModalOpen(true);
             return;
         }
 
         if (key === 'color-inline') {
-            insertBlockSnippet('{color:primary}{这里是强调文本}\n', 'primary');
+            const colorName = preferredColorName();
+            insertBlockSnippet(`{color:${colorName}}{这里是强调文本}\n`, colorName);
             return;
         }
 
         if (key === 'color-change-inline') {
-            insertBlockSnippet('{colorChange:rainbow}{这里是颜色动画文本}\n', 'rainbow');
+            const colorName = preferredColorChangeName();
+            insertBlockSnippet(`{colorChange:${colorName}}{这里是颜色动画文本}\n`, colorName);
             return;
         }
 
@@ -4808,6 +4880,31 @@
                 '```',
                 ''
             ].join('\n'), '选项 A');
+            return;
+        }
+
+        if (key === 'quiz-choice') {
+            const quizId = createQuizId('quiz-choice');
+            const question = toSingleLineText(readCurrentSelectionText(), '这里填写选择题题干。');
+            insertBlockSnippet([
+                '```quiz',
+                'type: choice',
+                `id: ${quizId}`,
+                'question: |',
+                `  ${question}`,
+                'options:',
+                '  - id: A',
+                '    text: 选项 A',
+                '  - id: B',
+                '    text: 选项 B',
+                '  - id: C',
+                '    text: 选项 C',
+                'answer: B',
+                'explain: |',
+                '  这里填写解析。',
+                '```',
+                ''
+            ].join('\n'), '选项 B');
             return;
         }
 
@@ -4895,6 +4992,9 @@
 
     function defaultTemplate() {
         const m = applyMetadataDefaults(state.metadata);
+        const sourcePath = firstUploadedCsharpRelativePath() || './code/你的文件.cs';
+        const quizTfId = createQuizId('quiz-tf');
+        const quizChoiceId = createQuizId('quiz-choice');
         return [
             '---',
             `title: ${m.title || '教程标题'}`,
@@ -4904,10 +5004,12 @@
             `order: ${m.order || '100'}`,
             `difficulty: ${m.difficulty || 'beginner'}`,
             `time: ${m.time || '25分钟'}`,
-            (m.prev_chapter ? `prev_chapter: ${m.prev_chapter}` : '').trim(),
-            (m.next_chapter ? `next_chapter: ${m.next_chapter}` : '').trim(),
+            (m.prev_chapter ? `prev_chapter: ${m.prev_chapter}` : null),
+            (m.next_chapter ? `next_chapter: ${m.next_chapter}` : null),
+            'min_c: 1',
+            'min_t: 1',
             'source_cs:',
-            '  - code/你的文件.cs',
+            `  - ${sourcePath}`,
             'colors:',
             '  Mad: "#ff4d4f"',
             'colorChange:',
@@ -4917,26 +5019,52 @@
             '    - "#0000ff"',
             '---',
             '',
-            '# 本章目标',
+            '# 教程标题',
             '',
-            '- 说明本章要解决的问题',
-            '- 给出可验证的完成标准',
+            '一句话说明本文读完后能做什么。',
             '',
-            '## 前置阅读',
+            '## 标准 Markdown 示例',
             '',
-            '[上一章节](./上一篇.md)',
+            '### 基础排版',
             '',
-            '## 最小示例（C#）',
+            '- 无序列表项 A',
+            '- 无序列表项 B',
+            '1. 有序步骤 1',
+            '2. 有序步骤 2',
+            '> 这里是引用块。',
+            '',
+            '| 列1 | 列2 |',
+            '| --- | --- |',
+            '| A   | B   |',
+            '',
+            '### 链接与媒体',
+            '',
+            '[阅读上一篇](./上一篇.md)',
+            '',
+            '![图片示例](./images/demo.png)',
+            '![视频示例](./media/demo.mp4)',
+            '',
+            '## C# 引用语法',
             '',
             '```csharp',
             '// 在本地 Clone 仓库后补全可运行 C# 示例',
             '```',
             '',
-            '{{cs:./code/你的文件.cs#cs:t:命名空间.类型名|核心类型示例}}',
+            `{{cs:${sourcePath}}}`,
+            `{{cs:${sourcePath}#cs:t:命名空间.类型名|核心类型示例}}`,
+            `{{cs:${sourcePath}#cs:m:命名空间.类型名.方法名(int,string)|核心方法示例}}`,
+            `{{cs:${sourcePath}#cs:p:命名空间.类型名.属性名|属性示例}}`,
+            `{{cs:${sourcePath}#cs:f:命名空间.类型名.字段名|字段示例}}`,
+            `{{cs:${sourcePath}#cs:c:命名空间.类型名.常量名|常量示例}}`,
+            `{{cs:${sourcePath}#cs:e:命名空间.枚举类型.成员名|枚举成员示例}}`,
             '',
             '## 动画与流程图',
             '',
             '{{anim:anims/demo-basic.cs}}',
+            '',
+            '```animcs',
+            'anims/demo-basic.cs',
+            '```',
             '',
             '```mermaid',
             'flowchart TD',
@@ -4945,11 +5073,11 @@
             '    Verify --> Submit[提交 PR]',
             '```',
             '',
-            '## 自测题',
+            '## Quiz 自测题',
             '',
             '```quiz',
             'type: tf',
-            `id: ${createQuizId('quiz-tf')}`,
+            `id: ${quizTfId}`,
             'question: |',
             '  这里填写判断题题干。',
             'answer: true',
@@ -4957,18 +5085,37 @@
             '  这里填写解析。',
             '```',
             '',
-            '## 高亮文本',
+            '```quiz',
+            'type: choice',
+            `id: ${quizChoiceId}`,
+            'question: |',
+            '  这里填写选择题题干。',
+            'options:',
+            '  - id: A',
+            '    text: 选项 A',
+            '  - id: B',
+            '    text: 选项 B',
+            '  - id: C',
+            '    text: 选项 C',
+            'answer: B',
+            'explain: |',
+            '  这里填写解析。',
+            '```',
+            '',
+            '## 颜色文本',
             '',
             '{color:Mad}{这是单色强调文本}',
             '',
             '{colorChange:rainbow}{这是颜色动画文本}',
             '',
-            '# 小结',
+            '{color:primary}{这是内置主题色示例}',
+            '',
+            '## 小结',
             '',
             '总结本章关键结论，并说明下一步阅读建议。',
             ''
         ].filter(function (line) {
-            return String(line || '').length > 0;
+            return line !== null && typeof line !== 'undefined';
         }).join('\n');
     }
 
@@ -5086,15 +5233,15 @@
 
         if (dom.openMarkdownGuide) {
             dom.openMarkdownGuide.addEventListener('click', function () {
-                const nextOpen = !isGuideModalOpen();
-                setGuideModalOpen(nextOpen);
+                const nextOpen = !isSidePanelModalOpen('guide');
+                setSidePanelModalOpen('guide', nextOpen);
                 setStatus(nextOpen ? '项目 Markdown 教程已打开' : '项目 Markdown 教程已关闭');
             });
         }
 
         if (dom.markdownGuideClose) {
             dom.markdownGuideClose.addEventListener('click', function () {
-                setGuideModalOpen(false);
+                setSidePanelModalOpen('guide', false);
                 setStatus('项目 Markdown 教程已关闭');
             });
         }
@@ -5102,7 +5249,7 @@
         if (dom.markdownGuideModal) {
             dom.markdownGuideModal.addEventListener('click', function (event) {
                 if (event.target !== dom.markdownGuideModal) return;
-                setGuideModalOpen(false);
+                setSidePanelModalOpen('guide', false);
                 setStatus('项目 Markdown 教程已关闭');
             });
         }
@@ -5113,7 +5260,7 @@
 
         if (dom.draftCheckClose) {
             dom.draftCheckClose.addEventListener('click', function () {
-                setDraftCheckModalOpen(false);
+                setSidePanelModalOpen('draft', false);
                 setStatus('已关闭草稿自检结果');
             });
         }
@@ -5121,7 +5268,7 @@
         if (dom.draftCheckModal) {
             dom.draftCheckModal.addEventListener('click', function (event) {
                 if (event.target !== dom.draftCheckModal) return;
-                setDraftCheckModalOpen(false);
+                setSidePanelModalOpen('draft', false);
                 setStatus('已关闭草稿自检结果');
             });
         }
@@ -5742,16 +5889,16 @@
         }
 
         document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape' && isDraftCheckModalOpen()) {
+            if (event.key === 'Escape' && isSidePanelModalOpen('draft')) {
                 event.preventDefault();
-                setDraftCheckModalOpen(false);
+                setSidePanelModalOpen('draft', false);
                 setStatus('已关闭草稿自检结果');
                 return;
             }
 
-            if (event.key === 'Escape' && isGuideModalOpen()) {
+            if (event.key === 'Escape' && isSidePanelModalOpen('guide')) {
                 event.preventDefault();
-                setGuideModalOpen(false);
+                setSidePanelModalOpen('guide', false);
                 setStatus('项目 Markdown 教程已关闭');
                 return;
             }

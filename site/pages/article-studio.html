@@ -244,15 +244,6 @@
                                                 <button id="studio-open-viewer-preview" class="btn btn-small btn-outline" type="button">新标签预览</button>
                                                 <button id="studio-flowchart-toggle" class="btn btn-small btn-outline studio-focus-only" type="button" aria-expanded="false" aria-controls="studio-flowchart-modal">流程图工作台</button>
                                             </div>
-                                            <details class="studio-advanced-panel studio-extension-panel">
-                                                <summary>扩展语法</summary>
-                                                <div class="studio-advanced-actions">
-                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="source-cs" title="插入 front matter 的 source_cs 示例">source_cs 字段</button>
-                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="mermaid-flowchart" title="插入 Mermaid flowchart 模板">Mermaid 流程图</button>
-                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="color-inline" title="插入单色文本语法">单色文本</button>
-                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="color-change-inline" title="插入颜色动画文本语法">颜色动画文本</button>
-                                                </div>
-                                            </details>
                                             <details class="studio-advanced-panel">
                                                 <summary>更多操作</summary>
                                                 <div class="studio-advanced-actions">
@@ -274,12 +265,13 @@
                                             <details class="studio-advanced-panel">
                                                 <summary>更多片段</summary>
                                                 <div class="studio-advanced-actions">
-                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="h1">大标题</button>
                                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="ref" title="插入 Markdown 链接">引用文档</button>
-                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="cs" title="插入 C# 片段语法">代码片段</button>
                                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="anim" title="插入动画片段语法">动画片段</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="animcs-block" title="插入 animcs 代码块（第一行是 anims/*.cs）">animcs 代码块</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="color-inline" title="插入单色文本语法">单色文本</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="color-change-inline" title="插入颜色动画文本语法">颜色动画文本</button>
                                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-tf" title="插入判断题模板">判断题</button>
-                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-single" title="插入单选题模板">单选题</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-choice" title="插入 choice 类型题目模板">选择题</button>
                                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-multi" title="插入多选题模板">多选题</button>
                                                 </div>
                                             </details>
@@ -516,17 +508,50 @@
         </div>
     </div>
 
-    <div id="studio-markdown-guide-modal" class="modal studio-markdown-guide-modal" aria-hidden="true">
-        <div class="modal-content studio-markdown-guide-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-markdown-guide-title">
-            <div class="modal-header studio-markdown-guide-modal-header">
-                <h3 id="studio-markdown-guide-title" class="modal-title">项目特有 Markdown 教程</h3>
-                <button id="studio-markdown-guide-close" class="modal-close" type="button" aria-label="关闭">×</button>
-            </div>
-            <div class="modal-body studio-markdown-guide-content">
-                <section class="studio-guide-section">
-                    <h4>1. Front Matter 最小规范</h4>
-                    <p>建议每篇教程开头都包含以下字段：<code>title</code>、<code>description</code>、<code>topic</code>、<code>difficulty</code>、<code>time</code>。在左侧 Metadata 面板填写后会自动写回正文。</p>
-                    <pre><code>---
+    <aside id="studio-markdown-guide-modal" class="studio-lazy-column studio-lazy-column--right modal studio-side-panel-modal" aria-label="项目 Markdown 完整手册" aria-hidden="true">
+        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-markdown-guide-title">
+            <section class="studio-lazy-panel studio-side-panel-shell">
+                <header class="studio-side-panel-header">
+                    <h2 id="studio-markdown-guide-title" class="studio-panel-title">项目 Markdown 完整手册</h2>
+                    <button id="studio-markdown-guide-close" class="modal-close" type="button" aria-label="关闭">×</button>
+                </header>
+                <div class="studio-panel-section studio-markdown-guide-content">
+                    <section class="studio-guide-section">
+                        <h4>1. 标准 Markdown（建议全部掌握）</h4>
+                        <pre><code># 一级标题
+## 二级标题
+
+普通段落，支持 **加粗**、*斜体*、`行内代码`、~~删除线~~。
+
+- 无序列表
+1. 有序列表
+> 引用块
+---
+
+| 列1 | 列2 |
+| --- | --- |
+| A   | B   |
+
+```csharp
+// 代码块
+```</code></pre>
+                        <p>项目文章不使用任务清单语法（<code>- [ ]</code> / <code>- [x]</code>）。</p>
+                    </section>
+
+                    <section class="studio-guide-section">
+                        <h4>2. 文档链接与媒体引用</h4>
+                        <pre><code>[上一篇](./上一篇.md)
+
+![普通图片](./images/demo.png)
+![动图](./images/demo.gif)
+![MP4 视频](./media/demo.mp4)
+![WEBM 视频](./media/demo.webm)</code></pre>
+                        <p>文档链接建议使用相对路径并以 <code>.md</code> 结尾。</p>
+                    </section>
+
+                    <section class="studio-guide-section">
+                        <h4>3. Front Matter（项目字段全集）</h4>
+                        <pre><code>---
 title: 教程标题
 author: 你的名字
 topic: article-contribution
@@ -534,94 +559,130 @@ description: 一句话说明本文内容
 order: 100
 difficulty: beginner
 time: 25分钟
----</code></pre>
-                </section>
-
-                <section class="studio-guide-section">
-                    <h4>2. 文档链接与 C# 引用</h4>
-                    <p>普通文档跳转用标准 Markdown 链接。C# 引用推荐先上传文件，再用符号引用按钮自动插入。</p>
-                    <pre><code>[阅读上一篇](./上一篇.md)
-
-{{cs:./code/Demo.cs}}
-{{cs:./code/Demo.cs#cs:t:命名空间.类型名|类型示例}}
-{{cs:./code/Demo.cs#cs:m:命名空间.类型名.方法名(参数类型)|方法示例}}</code></pre>
-                </section>
-
-                <section class="studio-guide-section">
-                    <h4>3. 动画与流程图</h4>
-                    <p>动画路径必须是 <code>anims/*.cs</code>。流程图推荐使用 Mermaid <code>flowchart</code> 语法，并配合“流程图工作台”快速编辑。</p>
-                    <pre><code>{{anim:anims/demo-basic.cs}}
-
-```mermaid
-flowchart TD
-    Start[开始] --> Edit[编写内容]
-    Edit --> Preview[预览检查]
-    Preview --> Submit[提交 PR]
-```</code></pre>
-                </section>
-
-                <section class="studio-guide-section">
-                    <h4>4. Quiz 题目块</h4>
-                    <p>Quiz 代码块需要稳定的 <code>id</code> 与清晰题干。判断题的 <code>answer</code> 必须为布尔值。</p>
-                    <pre><code>```quiz
-type: tf
-id: quiz-tf-demo
-question: |
-  Item.damage 可以设置武器伤害。
-answer: true
-explain: |
-  在 SetDefaults 中配置 Item.damage。
-```</code></pre>
-                </section>
-
-                <section class="studio-guide-section">
-                    <h4>5. 颜色扩展语法</h4>
-                    <p>先在 front matter 定义 <code>colors</code> 或 <code>colorChange</code>，再在正文引用。内置颜色名可直接使用（例如 <code>primary</code>、<code>warning</code>）。</p>
-                    <pre><code>colors:
+prev_chapter: 上一章.md
+next_chapter: 下一章.md
+source_cs:
+  - code/Demo.cs
+min_c: 1
+min_t: 1
+colors:
   Mad: "#ff4d4f"
 colorChange:
   rainbow:
     - "#ff0000"
     - "#00ff00"
     - "#0000ff"
+---</code></pre>
+                        <p>必填建议：<code>title</code>、<code>description</code>、<code>topic</code>、<code>difficulty</code>、<code>time</code>。</p>
+                    </section>
 
-{color:Mad}{单色强调文本}
-{colorChange:rainbow}{颜色动画文本}</code></pre>
-                </section>
+                    <section class="studio-guide-section">
+                        <h4>4. C# 引用指令（完整）</h4>
+                        <pre><code>{{cs:./code/Demo.cs}}
+{{cs:./code/Demo.cs#cs:t:命名空间.类型名|类型示例}}
+{{cs:./code/Demo.cs#cs:m:命名空间.类型名.方法名(参数类型)|方法示例}}
+{{cs:./code/Demo.cs#cs:p:命名空间.类型名.属性名|属性示例}}
+{{cs:./code/Demo.cs#cs:f:命名空间.类型名.字段名|字段示例}}
+{{cs:./code/Demo.cs#cs:c:命名空间.类型名.常量名|常量示例}}
+{{cs:./code/Demo.cs#cs:e:命名空间.枚举类型.成员名|枚举成员示例}}</code></pre>
+                        <p>推荐先上传 C# 文件，再用“插入符号引用”按钮生成精确选择器。</p>
+                    </section>
 
-                <section class="studio-guide-section">
-                    <h4>6. 发布前建议流程</h4>
-                    <ol>
-                        <li>先点“发布前自检”查看错误与警告。</li>
-                        <li>确认预览无明显排版问题，必要时打开“新标签预览”。</li>
-                        <li>在 Publish 面板确认 Worker API、账号与 PR 目标后再提交。</li>
-                    </ol>
-                </section>
+                    <section class="studio-guide-section">
+                        <h4>5. 动画语法（两种）</h4>
+                        <pre><code>{{anim:anims/demo-basic.cs}}
 
-                <section class="studio-guide-section">
-                    <h4>7. 常见问题</h4>
-                    <ul>
-                        <li>链接失效：检查相对路径是否基于当前文档目录。</li>
-                        <li>动画不显示：确认路径是 <code>anims/*.cs</code> 且已完成构建产物更新。</li>
-                        <li>C# 片段不命中：优先使用“插入符号引用”生成精确选择器。</li>
-                    </ul>
-                </section>
-            </div>
+```animcs
+anims/demo-basic.cs
+```</code></pre>
+                        <p><code>anims/*.cs</code> 是硬性要求，路径与大小写必须正确。</p>
+                    </section>
+
+                    <section class="studio-guide-section">
+                        <h4>6. Mermaid 与流程图工作台</h4>
+                        <pre><code>```mermaid
+flowchart TD
+    Start[开始] --> Edit[编写]
+    Edit --> Check[自检]
+    Check --> Submit[提交]
+```</code></pre>
+                        <p>优先用“流程图工作台”生成和维护 Mermaid，减少手写错误。</p>
+                    </section>
+
+                    <section class="studio-guide-section">
+                        <h4>7. Quiz 题目语法（完整）</h4>
+                        <pre><code>```quiz
+type: tf
+id: quiz-tf-demo
+question: |
+  Item.damage 可以设置武器伤害。
+answer: true
+explain: |
+  在 SetDefaults 中设置 Item.damage。
+```
+
+```quiz
+type: choice
+id: quiz-choice-demo
+question: |
+  2 + 2 等于几？
+options:
+  - id: A
+    text: 3
+  - id: B
+    text: 4
+answer: B
+```</code></pre>
+                        <p>支持 <code>tf</code> / <code>single</code> / <code>multiple</code> / <code>choice</code>；判断题 <code>answer</code> 必须是布尔值。</p>
+                    </section>
+
+                    <section class="studio-guide-section">
+                        <h4>8. 颜色语法（单色 + 动画）</h4>
+                        <pre><code>{color:Mad}{单色强调文本}
+{colorChange:rainbow}{颜色动画文本}
+
+{color:primary}{可直接使用内置主题色}
+{color:warning}{可直接使用内置警告色}</code></pre>
+                        <p>内置颜色可直接用；自定义颜色和动画请在 front matter 里声明。</p>
+                    </section>
+
+                    <section class="studio-guide-section">
+                        <h4>9. 提交前流程</h4>
+                        <ol>
+                            <li>点“发布前自检”，先看 error / warn。</li>
+                            <li>检查预览，必要时用“新标签预览”复核。</li>
+                            <li>确认路径、附件、PR 信息后再提交。</li>
+                        </ol>
+                    </section>
+
+                    <section class="studio-guide-section">
+                        <h4>10. 常见错误</h4>
+                        <ul>
+                            <li>链接失效：目标路径未被索引或相对路径写错。</li>
+                            <li>C# 片段不命中：选择器签名与源码不一致。</li>
+                            <li>动画不显示：路径不是 <code>anims/*.cs</code> 或未构建。</li>
+                            <li>颜色不生效：<code>colors</code>/<code>colorChange</code> 未定义对应键。</li>
+                        </ul>
+                    </section>
+                </div>
+            </section>
         </div>
-    </div>
+    </aside>
 
-    <div id="studio-draft-check-modal" class="modal studio-draft-check-modal" aria-hidden="true">
-        <div class="modal-content studio-draft-check-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-draft-check-title">
-            <div class="modal-header studio-draft-check-modal-header">
-                <h3 id="studio-draft-check-title" class="modal-title">发布前自检结果</h3>
-                <button id="studio-draft-check-close" class="modal-close" type="button" aria-label="关闭">×</button>
-            </div>
-            <div class="modal-body studio-draft-check-content">
-                <div id="studio-draft-check-summary" class="studio-draft-check-summary">检查尚未开始。</div>
-                <ul id="studio-draft-check-list" class="studio-draft-check-list" aria-live="polite"></ul>
-            </div>
+    <aside id="studio-draft-check-modal" class="studio-lazy-column studio-lazy-column--right modal studio-side-panel-modal" aria-label="发布前自检结果" aria-hidden="true">
+        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-draft-check-title">
+            <section class="studio-lazy-panel studio-side-panel-shell">
+                <header class="studio-side-panel-header">
+                    <h2 id="studio-draft-check-title" class="studio-panel-title">发布前自检结果</h2>
+                    <button id="studio-draft-check-close" class="modal-close" type="button" aria-label="关闭">×</button>
+                </header>
+                <div class="studio-panel-section studio-draft-check-content">
+                    <div id="studio-draft-check-summary" class="studio-draft-check-summary">检查尚未开始。</div>
+                    <ul id="studio-draft-check-list" class="studio-draft-check-list" aria-live="polite"></ul>
+                </div>
+            </section>
         </div>
-    </div>
+    </aside>
 
     <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: IDE</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
 

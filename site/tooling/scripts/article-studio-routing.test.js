@@ -56,9 +56,11 @@ test('article-studio keeps inline quiz snippets and removes routing snippets', (
     assert.doesNotMatch(js, /R_FAST/);
     assert.doesNotMatch(js, /R_DEEP/);
     assert.match(html, /data-studio-insert="quiz-tf"/);
-    assert.match(html, /data-studio-insert="quiz-single"/);
+    assert.match(html, /data-studio-insert="quiz-choice"/);
     assert.match(html, /data-studio-insert="quiz-multi"/);
+    assert.doesNotMatch(html, /data-studio-insert="quiz-single"/);
     assert.match(js, /key\s*===\s*'quiz-tf'/);
+    assert.match(js, /key\s*===\s*'quiz-choice'/);
     assert.match(js, /key\s*===\s*'quiz-single'/);
     assert.match(js, /key\s*===\s*'quiz-multi'/);
 });
