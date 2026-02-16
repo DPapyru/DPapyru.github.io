@@ -652,6 +652,7 @@ answer: B
                             <li>点“发布前自检”，先看 error / warn。</li>
                             <li>检查预览，必要时用“新标签预览”复核。</li>
                             <li>确认路径、附件、PR 信息后再提交。</li>
+                            <li>若“创建新 PR”且检测到附件，会弹出三选引导：清空并新建 / 继续已有 PR / 取消返回编辑。</li>
                         </ol>
                     </section>
 
@@ -679,6 +680,46 @@ answer: B
                 <div class="studio-panel-section studio-draft-check-content">
                     <div id="studio-draft-check-summary" class="studio-draft-check-summary">检查尚未开始。</div>
                     <ul id="studio-draft-check-list" class="studio-draft-check-list" aria-live="polite"></ul>
+                </div>
+            </section>
+        </div>
+    </aside>
+
+    <aside id="studio-pr-asset-decision-modal" class="studio-lazy-column studio-lazy-column--right modal studio-side-panel-modal" aria-label="附件提交流程选择" aria-hidden="true">
+        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-pr-asset-decision-title">
+            <section class="studio-lazy-panel studio-side-panel-shell">
+                <header class="studio-side-panel-header">
+                    <h2 id="studio-pr-asset-decision-title" class="studio-panel-title">检测到已上传附件</h2>
+                    <button id="studio-pr-asset-decision-close" class="modal-close" type="button" aria-label="关闭附件提交流程选择">×</button>
+                </header>
+                <div class="studio-panel-section studio-pr-asset-decision-content">
+                    <section id="studio-pr-asset-decision-choice-stage" class="studio-pr-asset-decision-stage" aria-label="附件提交流程三选">
+                        <p class="studio-help">当前将创建新 PR，但检测到已上传附件。请选择后续策略：</p>
+                        <div class="studio-pr-asset-decision-actions">
+                            <button id="studio-pr-asset-action-clear-new" class="btn btn-small studio-btn-primary" type="button">清空附件并新建 PR</button>
+                            <button id="studio-pr-asset-action-continue-pr" class="btn btn-small btn-outline" type="button">继续已有 PR</button>
+                            <button id="studio-pr-asset-action-cancel" class="btn btn-small btn-outline" type="button">取消并返回编辑</button>
+                        </div>
+                    </section>
+                    <section id="studio-pr-asset-decision-continue-stage" class="studio-pr-asset-decision-stage" aria-label="继续提交到已有 PR" hidden>
+                        <label for="studio-pr-asset-continue-select">选择目标 PR</label>
+                        <select id="studio-pr-asset-continue-select" class="studio-select">
+                            <option value="">请选择一个未关闭 PR...</option>
+                        </select>
+                        <div class="studio-pr-asset-decision-actions">
+                            <button id="studio-pr-asset-continue-refresh" class="btn btn-small btn-outline" type="button">刷新我的未关闭 PR</button>
+                            <button id="studio-pr-asset-continue-back" class="btn btn-small btn-outline" type="button">返回三选</button>
+                            <button id="studio-pr-asset-continue-submit" class="btn btn-small studio-btn-primary" type="button" disabled>继续并提交</button>
+                        </div>
+                        <span id="studio-pr-asset-continue-hint" class="studio-help">请先选择一个 PR，再继续提交。</span>
+                    </section>
+                    <section id="studio-pr-asset-decision-clear-stage" class="studio-pr-asset-decision-stage" aria-label="清空附件后新建 PR" hidden>
+                        <p class="studio-help">确认后会清空本地已上传附件（图片 / 视频 / C#），然后按“仅 Markdown”继续创建新 PR。</p>
+                        <div class="studio-pr-asset-decision-actions">
+                            <button id="studio-pr-asset-clear-back" class="btn btn-small btn-outline" type="button">返回三选</button>
+                            <button id="studio-pr-asset-clear-confirm" class="btn btn-small studio-btn-primary" type="button">确认清空并提交</button>
+                        </div>
+                    </section>
                 </div>
             </section>
         </div>

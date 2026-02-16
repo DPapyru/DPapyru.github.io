@@ -34,6 +34,21 @@
         draftCheckClose: document.getElementById('studio-draft-check-close'),
         draftCheckSummary: document.getElementById('studio-draft-check-summary'),
         draftCheckList: document.getElementById('studio-draft-check-list'),
+        prAssetDecisionModal: document.getElementById('studio-pr-asset-decision-modal'),
+        prAssetDecisionClose: document.getElementById('studio-pr-asset-decision-close'),
+        prAssetDecisionChoiceStage: document.getElementById('studio-pr-asset-decision-choice-stage'),
+        prAssetDecisionContinueStage: document.getElementById('studio-pr-asset-decision-continue-stage'),
+        prAssetDecisionClearStage: document.getElementById('studio-pr-asset-decision-clear-stage'),
+        prAssetActionClearNew: document.getElementById('studio-pr-asset-action-clear-new'),
+        prAssetActionContinuePr: document.getElementById('studio-pr-asset-action-continue-pr'),
+        prAssetActionCancel: document.getElementById('studio-pr-asset-action-cancel'),
+        prAssetContinueSelect: document.getElementById('studio-pr-asset-continue-select'),
+        prAssetContinueRefresh: document.getElementById('studio-pr-asset-continue-refresh'),
+        prAssetContinueSubmit: document.getElementById('studio-pr-asset-continue-submit'),
+        prAssetContinueBack: document.getElementById('studio-pr-asset-continue-back'),
+        prAssetContinueHint: document.getElementById('studio-pr-asset-continue-hint'),
+        prAssetClearBack: document.getElementById('studio-pr-asset-clear-back'),
+        prAssetClearConfirm: document.getElementById('studio-pr-asset-clear-confirm'),
         flowchartToggle: document.getElementById('studio-flowchart-toggle'),
         flowchartModal: document.getElementById('studio-flowchart-modal'),
         flowchartModalClose: document.getElementById('studio-flowchart-modal-close'),
@@ -167,6 +182,8 @@
         authToken: '',
         githubUser: '',
         isFullscreen: false,
+        prAssetDecisionStage: 'choice',
+        prAssetDecisionResolver: null,
         flowchartDrawer: {
             open: false,
             mode: 'visual',
@@ -1236,10 +1253,13 @@
         return !!(dom.flowchartModal && dom.flowchartModal.classList.contains('active'));
     }
 
-    const SIDE_PANEL_KEYS = ['left', 'right', 'guide', 'draft'];
+    const SIDE_PANEL_KEYS = ['left', 'right', 'guide', 'draft', 'asset'];
 
     function getSidePanelModalRef(panel) {
         const key = String(panel || '').trim().toLowerCase();
+        if (key === 'asset') {
+            return { key: 'asset', modal: dom.prAssetDecisionModal, trigger: null };
+        }
         if (key === 'right') {
             return { key: 'right', modal: dom.rightPanelModal, trigger: dom.openPublish };
         }
@@ -1289,6 +1309,10 @@
                 if (!isSidePanelModalOpen(otherKey)) return;
                 setSidePanelModalOpen(otherKey, false, { skipFocus: true, silent: true });
             });
+        } else if (key === 'asset' && state.prAssetDecisionResolver) {
+            const resolver = state.prAssetDecisionResolver;
+            state.prAssetDecisionResolver = null;
+            resolver({ action: 'cancel' });
         }
 
         modal.classList.toggle('active', shouldOpen);
@@ -1304,6 +1328,120 @@
 
         const focusTarget = modal.querySelector('input, textarea, select, button, [href]');
         focusElementWithoutScroll(focusTarget);
+    }
+
+    function setPrAssetContinueHint(text, isWarn) {
+        if (!dom.prAssetContinueHint) return;
+        dom.prAssetContinueHint.textContent = String(text || '').trim();
+        dom.prAssetContinueHint.classList.toggle('studio-pr-asset-continue-hint--warn', !!isWarn);
+    }
+
+    function refreshPrAssetContinueSelectOptions(preferredValue) {
+        if (!dom.prAssetContinueSelect) return 0;
+
+        const previous = String(preferredValue || dom.prAssetContinueSelect.value || '').trim();
+        const list = Array.isArray(state.myOpenPrs) ? state.myOpenPrs : [];
+        dom.prAssetContinueSelect.innerHTML = '';
+
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = '请选择一个未关闭 PR...';
+        dom.prAssetContinueSelect.appendChild(emptyOption);
+
+        list.forEach(function (pr) {
+            if (!pr || !pr.number) return;
+            const option = document.createElement('option');
+            option.value = String(pr.number);
+            option.textContent = `#${pr.number} · ${String(pr.title || '').trim() || '(无标题)'}`;
+            dom.prAssetContinueSelect.appendChild(option);
+        });
+
+        if (previous && list.some(function (pr) { return String(pr.number) === previous; })) {
+            dom.prAssetContinueSelect.value = previous;
+        } else {
+            dom.prAssetContinueSelect.value = '';
+        }
+
+        if (dom.prAssetContinueSubmit) {
+            dom.prAssetContinueSubmit.disabled = !String(dom.prAssetContinueSelect.value || '').trim();
+        }
+
+        if (!state.authToken) {
+            setPrAssetContinueHint('请先完成 GitHub 登录，再刷新未关闭 PR 列表。', true);
+        } else if (list.length === 0) {
+            setPrAssetContinueHint('当前没有可继续的未关闭 PR，请先刷新列表。', true);
+        } else {
+            setPrAssetContinueHint('请选择一个未关闭 PR，再继续提交。', false);
+        }
+
+        return list.length;
+    }
+
+    function setPrAssetDecisionStage(stage) {
+        const normalized = String(stage || 'choice').trim().toLowerCase();
+        state.prAssetDecisionStage = ['choice', 'continue', 'clear'].includes(normalized) ? normalized : 'choice';
+
+        if (dom.prAssetDecisionChoiceStage) {
+            dom.prAssetDecisionChoiceStage.hidden = state.prAssetDecisionStage !== 'choice';
+        }
+        if (dom.prAssetDecisionContinueStage) {
+            dom.prAssetDecisionContinueStage.hidden = state.prAssetDecisionStage !== 'continue';
+        }
+        if (dom.prAssetDecisionClearStage) {
+            dom.prAssetDecisionClearStage.hidden = state.prAssetDecisionStage !== 'clear';
+        }
+
+        if (state.prAssetDecisionStage === 'continue') {
+            refreshPrAssetContinueSelectOptions(String(state.linkedPrNumber || '').trim());
+        }
+    }
+
+    function closePrAssetDecisionModal(result) {
+        const resolver = state.prAssetDecisionResolver;
+        state.prAssetDecisionResolver = null;
+        setPrAssetDecisionStage('choice');
+        setSidePanelModalOpen('asset', false, { skipFocus: true, silent: true });
+        if (typeof resolver === 'function') {
+            resolver(result || { action: 'cancel' });
+        }
+    }
+
+    function openPrAssetDecisionModal() {
+        if (state.prAssetDecisionResolver) {
+            const pendingResolver = state.prAssetDecisionResolver;
+            state.prAssetDecisionResolver = null;
+            pendingResolver({ action: 'cancel' });
+        }
+
+        setPrAssetDecisionStage('choice');
+        setSidePanelModalOpen('asset', true);
+        return new Promise(function (resolve) {
+            state.prAssetDecisionResolver = resolve;
+        });
+    }
+
+    function applyLinkedPrSelection(prNumber) {
+        const value = String(prNumber || '').trim();
+        state.linkedPrNumber = value;
+
+        if (dom.prChainSelect) {
+            if (value) {
+                const exists = Array.from(dom.prChainSelect.options).some(function (option) {
+                    return String(option.value || '').trim() === value;
+                });
+                if (!exists) {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = `#${value} · (本次选择)`;
+                    dom.prChainSelect.appendChild(option);
+                }
+                dom.prChainSelect.value = value;
+            } else {
+                dom.prChainSelect.value = '';
+            }
+        }
+
+        scheduleSave();
     }
 
     function syncModalBodyLock() {
@@ -1542,6 +1680,8 @@
             }
             state.linkedPrNumber = '';
         }
+
+        refreshPrAssetContinueSelectOptions(String(state.linkedPrNumber || '').trim());
     }
 
     function renderUploadedImages() {
@@ -2000,28 +2140,35 @@
         }
     }
 
+    function setMyOpenPrsLoading(isLoading) {
+        const loading = !!isLoading;
+        if (dom.refreshMyPrs) dom.refreshMyPrs.disabled = loading;
+        if (dom.prAssetContinueRefresh) dom.prAssetContinueRefresh.disabled = loading;
+    }
+
     async function loadMyOpenPrs() {
         const apiUrl = normalizeWorkerApiUrl(dom.prWorkerUrl ? dom.prWorkerUrl.value : state.workerApiUrl);
         const authToken = String(state.authToken || '').trim();
 
         if (!apiUrl) {
             setStatus('请先填写 Worker API 地址');
-            return;
+            return false;
         }
 
         if (!authToken) {
             setStatus('请先完成 GitHub 登录，再刷新未关闭 PR 列表');
-            return;
+            refreshPrAssetContinueSelectOptions(String(state.linkedPrNumber || '').trim());
+            return false;
         }
 
         const listUrl = myOpenPrsUrlFromApiUrl(apiUrl);
         if (!listUrl) {
             setStatus('Worker 地址无效，无法读取未关闭 PR 列表');
-            return;
+            return false;
         }
 
         try {
-            if (dom.refreshMyPrs) dom.refreshMyPrs.disabled = true;
+            setMyOpenPrsLoading(true);
             setStatus('正在读取你的未关闭 PR 列表...');
 
             const response = await fetch(listUrl, {
@@ -2056,10 +2203,13 @@
             updatePrChainSelectOptions();
             scheduleSave();
             setStatus(`已加载 ${state.myOpenPrs.length} 个未关闭 PR`);
+            return true;
         } catch (err) {
             setStatus(`读取未关闭 PR 失败：${err && err.message ? err.message : String(err)}`);
+            refreshPrAssetContinueSelectOptions(String(state.linkedPrNumber || '').trim());
+            return false;
         } finally {
-            if (dom.refreshMyPrs) dom.refreshMyPrs.disabled = false;
+            setMyOpenPrsLoading(false);
         }
     }
 
@@ -2775,89 +2925,29 @@
         setStatus('草稿 JSON 导入完成（合并模式）');
     }
 
-    async function submitPullRequest() {
+    function buildPrSubmitContext() {
         const apiUrl = normalizeWorkerApiUrl(dom.prWorkerUrl ? dom.prWorkerUrl.value : state.workerApiUrl);
         const sharedKey = String(dom.prSharedKey ? dom.prSharedKey.value : '').trim();
         const titleInput = String(dom.prTitle ? dom.prTitle.value : '').trim();
         const linkedPrNumber = String(state.linkedPrNumber || '').trim();
         const authToken = String(state.authToken || '').trim();
 
-        if (!apiUrl) {
-            setStatus('请先填写 Worker API 地址');
-            if (dom.prWorkerUrl) dom.prWorkerUrl.focus();
-            return;
-        }
-
-        if (!authToken && !sharedKey) {
-            setStatus('请先点击“GitHub 登录”，或填写兼容密钥');
-            if (dom.authLogin) dom.authLogin.focus();
-            return;
-        }
-
-        const hardPreflight = await runPreflightCheck({
-            mode: 'hard',
+        return {
             apiUrl: apiUrl,
             sharedKey: sharedKey,
+            titleInput: titleInput,
+            linkedPrNumber: linkedPrNumber,
             authToken: authToken,
-            throwOnError: false
-        });
-        if (!hardPreflight.ok) {
-            setStatus(`提交前复检失败，已阻止提交：${hardPreflight.error || '请稍后重试'}`);
-            renderUploadedCsharpFiles();
-            return;
-        }
-
-        const effectiveMarkdown = String(state.markdown || '');
-
-        if (!effectiveMarkdown.trim()) {
-            setStatus('当前 Markdown 内容为空，无法提交 PR');
-            return;
-        }
-
-        state.workerApiUrl = apiUrl;
-        state.prTitle = titleInput;
-        if (dom.prWorkerUrl) dom.prWorkerUrl.value = apiUrl;
-        scheduleSave();
-
-        const payload = {
-            targetPath: state.targetPath,
-            markdown: String(state.markdown || ''),
-            prTitle: titleInput || defaultPrTitle()
+            payload: {
+                targetPath: state.targetPath,
+                markdown: String(state.markdown || ''),
+                prTitle: titleInput || defaultPrTitle()
+            },
+            extraFiles: buildImageExtraFiles().concat(buildMediaExtraFiles(), buildCSharpExtraFiles())
         };
-        let imageExtraFiles = buildImageExtraFiles();
-        let mediaExtraFiles = buildMediaExtraFiles();
-        let csharpExtraFiles = buildCSharpExtraFiles();
-        let extraFiles = imageExtraFiles.concat(mediaExtraFiles, csharpExtraFiles);
+    }
 
-        if (!linkedPrNumber && extraFiles.length > 0) {
-            const shouldClear = window.confirm(
-                '提交PR前自检：第一次提交PR应该只提交markdown文件\n' +
-                '后续需要使用PR链，上传额外附件，或者修改文件内容\n' +
-                '当前将创建新 PR，但检测到已上传附件。\n' +
-                '为避免重复提交同路径文件，是否先一键清空附件并继续提交？\n\n' +
-                '确定：清空附件后继续创建新 PR（仅提交 Markdown）\n' +
-                '取消：终止提交，改为继续到同一 PR 或手动清理附件'
-            );
-
-            if (!shouldClear) {
-                setStatus('请选择“PR 链”继续到已有 PR，或先清空附件再创建新 PR');
-                return;
-            }
-
-            clearUploadedAssets({ silent: true, reason: '新 PR 提交前自动清理' });
-            imageExtraFiles = [];
-            mediaExtraFiles = [];
-            csharpExtraFiles = [];
-            extraFiles = [];
-            setStatus('已在新 PR 提交前清空附件，将继续提交 Markdown');
-        }
-
-        if (extraFiles.length > 0) {
-            payload.extraFiles = extraFiles;
-        }
-        if (linkedPrNumber) {
-            payload.existingPrNumber = linkedPrNumber;
-        }
+    function buildPrSubmitHeaders(sharedKey, authToken) {
         const headers = {
             'content-type': 'application/json'
         };
@@ -2868,13 +2958,48 @@
             headers['x-studio-key'] = sharedKey;
         }
 
+        return headers;
+    }
+
+    function buildPrSubmitPayload(context) {
+        const payload = {
+            targetPath: String(context && context.payload && context.payload.targetPath || ''),
+            markdown: String(context && context.payload && context.payload.markdown || ''),
+            prTitle: String(context && context.payload && context.payload.prTitle || '')
+        };
+
+        const files = Array.isArray(context && context.extraFiles) ? context.extraFiles : [];
+        if (files.length > 0) {
+            payload.extraFiles = files;
+        }
+
+        const linkedPrNumber = String(context && context.linkedPrNumber || '').trim();
+        if (linkedPrNumber) {
+            payload.existingPrNumber = linkedPrNumber;
+        }
+
+        return payload;
+    }
+
+    function persistSubmitDraftSettings(context) {
+        state.workerApiUrl = String(context && context.apiUrl || '');
+        state.prTitle = String(context && context.titleInput || '');
+        if (dom.prWorkerUrl) dom.prWorkerUrl.value = state.workerApiUrl;
+        scheduleSave();
+    }
+
+    async function executePrSubmitRequest(context) {
+        const linkedPrNumber = String(context && context.linkedPrNumber || '').trim();
+        const payload = buildPrSubmitPayload(context);
+        const headers = buildPrSubmitHeaders(context && context.sharedKey, context && context.authToken);
+
         setPrSubmitBusy(true);
         setStatus(linkedPrNumber
             ? `正在提交到 Worker 并追加到 PR #${linkedPrNumber}...`
             : '正在提交到 Worker 并创建 PR，请稍候...');
 
         try {
-            const response = await fetch(apiUrl, {
+            const response = await fetch(String(context && context.apiUrl || ''), {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(payload)
@@ -2888,7 +3013,7 @@
                 responseData = null;
             }
 
-            if (response.status === 401 && authToken) {
+            if (response.status === 401 && context && context.authToken) {
                 clearAuthSession();
                 updateAuthUi();
                 throw new Error('GitHub 登录已过期，请重新登录');
@@ -2910,9 +3035,7 @@
             const prUrl = String(responseData.prUrl || '').trim();
             updatePrLink(prUrl);
             if (responseData.prNumber) {
-                const prNumberText = String(responseData.prNumber);
-                state.linkedPrNumber = prNumberText;
-                updatePrChainSelectOptions();
+                applyLinkedPrSelection(String(responseData.prNumber || ''));
             }
             persistState();
 
@@ -2930,6 +3053,82 @@
         } finally {
             setPrSubmitBusy(false);
         }
+    }
+
+    async function handlePrAssetDecisionBeforeSubmit(context) {
+        const decision = await openPrAssetDecisionModal();
+        const action = String(decision && decision.action || 'cancel');
+        if (action === 'cancel') {
+            setStatus('已取消提交，附件已保留');
+            return false;
+        }
+
+        if (action === 'clear-new') {
+            clearUploadedAssets({ silent: true, reason: '新 PR 提交前自动清理' });
+            context.extraFiles = [];
+            context.linkedPrNumber = '';
+            applyLinkedPrSelection('');
+            setStatus('已在新 PR 提交前清空附件，将继续提交 Markdown');
+            return true;
+        }
+
+        if (action === 'continue') {
+            const selectedPr = String(decision && decision.prNumber || '').trim();
+            if (!selectedPr) {
+                setStatus('未选择可继续的 PR，已取消提交');
+                return false;
+            }
+            context.linkedPrNumber = selectedPr;
+            applyLinkedPrSelection(selectedPr);
+            setStatus(`将继续提交到 PR #${selectedPr}`);
+            return true;
+        }
+
+        setStatus('未识别的提交策略，已取消本次提交');
+        return false;
+    }
+
+    async function submitPullRequest() {
+        const context = buildPrSubmitContext();
+
+        if (!context.apiUrl) {
+            setStatus('请先填写 Worker API 地址');
+            if (dom.prWorkerUrl) dom.prWorkerUrl.focus();
+            return;
+        }
+
+        if (!context.authToken && !context.sharedKey) {
+            setStatus('请先点击“GitHub 登录”，或填写兼容密钥');
+            if (dom.authLogin) dom.authLogin.focus();
+            return;
+        }
+
+        const hardPreflight = await runPreflightCheck({
+            mode: 'hard',
+            apiUrl: context.apiUrl,
+            sharedKey: context.sharedKey,
+            authToken: context.authToken,
+            throwOnError: false
+        });
+        if (!hardPreflight.ok) {
+            setStatus(`提交前复检失败，已阻止提交：${hardPreflight.error || '请稍后重试'}`);
+            renderUploadedCsharpFiles();
+            return;
+        }
+
+        if (!String(context.payload.markdown || '').trim()) {
+            setStatus('当前 Markdown 内容为空，无法提交 PR');
+            return;
+        }
+
+        persistSubmitDraftSettings(context);
+
+        if (!context.linkedPrNumber && context.extraFiles.length > 0) {
+            const proceed = await handlePrAssetDecisionBeforeSubmit(context);
+            if (!proceed) return;
+        }
+
+        await executePrSubmitRequest(context);
     }
 
     function setFullscreenMode(enabled, silent) {
@@ -5297,6 +5496,98 @@
             });
         }
 
+        if (dom.prAssetActionClearNew) {
+            dom.prAssetActionClearNew.addEventListener('click', function () {
+                setPrAssetDecisionStage('clear');
+                setStatus('请确认：是否清空附件后继续创建新 PR');
+            });
+        }
+
+        if (dom.prAssetActionContinuePr) {
+            dom.prAssetActionContinuePr.addEventListener('click', function () {
+                setPrAssetDecisionStage('continue');
+                setStatus('请选择要继续提交的 PR');
+            });
+        }
+
+        if (dom.prAssetActionCancel) {
+            dom.prAssetActionCancel.addEventListener('click', function () {
+                closePrAssetDecisionModal({ action: 'cancel' });
+                setStatus('已取消提交，附件已保留');
+            });
+        }
+
+        if (dom.prAssetContinueSelect) {
+            dom.prAssetContinueSelect.addEventListener('change', function () {
+                const selected = String(dom.prAssetContinueSelect.value || '').trim();
+                if (dom.prAssetContinueSubmit) {
+                    dom.prAssetContinueSubmit.disabled = !selected;
+                }
+                if (selected) {
+                    setPrAssetContinueHint(`已选择 PR #${selected}，可继续提交。`, false);
+                } else {
+                    setPrAssetContinueHint('请先选择一个未关闭 PR，再继续提交。', true);
+                }
+            });
+        }
+
+        if (dom.prAssetContinueRefresh) {
+            dom.prAssetContinueRefresh.addEventListener('click', async function () {
+                const loaded = await loadMyOpenPrs();
+                refreshPrAssetContinueSelectOptions(String(state.linkedPrNumber || '').trim());
+                if (loaded) {
+                    setStatus('请选择要继续提交的 PR');
+                }
+            });
+        }
+
+        if (dom.prAssetContinueBack) {
+            dom.prAssetContinueBack.addEventListener('click', function () {
+                setPrAssetDecisionStage('choice');
+                setStatus('已返回附件提交流程三选入口');
+            });
+        }
+
+        if (dom.prAssetContinueSubmit) {
+            dom.prAssetContinueSubmit.addEventListener('click', function () {
+                const selected = String(dom.prAssetContinueSelect ? dom.prAssetContinueSelect.value : '').trim();
+                if (!selected) {
+                    setPrAssetContinueHint('请先选择一个未关闭 PR，再继续提交。', true);
+                    setStatus('请先选择一个未关闭 PR');
+                    return;
+                }
+                closePrAssetDecisionModal({ action: 'continue', prNumber: selected });
+            });
+        }
+
+        if (dom.prAssetClearBack) {
+            dom.prAssetClearBack.addEventListener('click', function () {
+                setPrAssetDecisionStage('choice');
+                setStatus('已返回附件提交流程三选入口');
+            });
+        }
+
+        if (dom.prAssetClearConfirm) {
+            dom.prAssetClearConfirm.addEventListener('click', function () {
+                closePrAssetDecisionModal({ action: 'clear-new' });
+            });
+        }
+
+        if (dom.prAssetDecisionClose) {
+            dom.prAssetDecisionClose.addEventListener('click', function () {
+                closePrAssetDecisionModal({ action: 'cancel' });
+                setStatus('已取消提交，附件已保留');
+            });
+        }
+
+        if (dom.prAssetDecisionModal) {
+            dom.prAssetDecisionModal.addEventListener('click', function (event) {
+                if (event.target !== dom.prAssetDecisionModal) return;
+                closePrAssetDecisionModal({ action: 'cancel' });
+                setStatus('已取消提交，附件已保留');
+            });
+        }
+
         if (dom.leftPanelClose) {
             dom.leftPanelClose.addEventListener('click', function () {
                 setSidePanelModalOpen('left', false);
@@ -5913,6 +6204,13 @@
         }
 
         document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && isSidePanelModalOpen('asset')) {
+                event.preventDefault();
+                closePrAssetDecisionModal({ action: 'cancel' });
+                setStatus('已取消提交，附件已保留');
+                return;
+            }
+
             if (event.key === 'Escape' && isSidePanelModalOpen('draft')) {
                 event.preventDefault();
                 setSidePanelModalOpen('draft', false);
