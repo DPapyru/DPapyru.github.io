@@ -356,4 +356,15 @@
 
 **备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次 `article-studio` 弹窗切换逻辑修复无直接关系。
 
+### 验证记录 [2026-02-16 16:19]：article-studio 非专注模式弹窗点击导致页面下滑修复
+
+**级别**：L3
+
+**命令与结果**：
+- `node`（Headless Chrome CDP：记录点击“项目Markdown教程”“发布前自检”前后 `window.scrollY`）：通过（修复前点击后会跳到 1300~2000；修复后保持原滚动位置）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：根因是打开侧栏弹窗时对内部首个可聚焦元素执行 `focus()`，浏览器会将文档滚动到该元素在 DOM 中的静态位置；已改为无滚动聚焦（`focus({ preventScroll: true })` + 兼容回退）。`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，属于仓库既有问题，与本次修复无直接关系。
+
 *最后更新：2026-02-16*

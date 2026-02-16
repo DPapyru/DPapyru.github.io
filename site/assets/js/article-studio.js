@@ -1257,6 +1257,24 @@
         return !!(ref.modal && ref.modal.classList.contains('active'));
     }
 
+    function focusElementWithoutScroll(target) {
+        if (!target || typeof target.focus !== 'function') return;
+
+        try {
+            target.focus({ preventScroll: true });
+            return;
+        } catch (_) {
+            // Fallback for browsers that do not support focus options.
+        }
+
+        const scrollX = window.scrollX;
+        const scrollY = window.scrollY;
+        target.focus();
+        if (window.scrollX !== scrollX || window.scrollY !== scrollY) {
+            window.scrollTo(scrollX, scrollY);
+        }
+    }
+
     function setSidePanelModalOpen(panel, open, options) {
         const ref = getSidePanelModalRef(panel);
         const key = ref.key;
@@ -1285,9 +1303,7 @@
         }
 
         const focusTarget = modal.querySelector('input, textarea, select, button, [href]');
-        if (focusTarget && typeof focusTarget.focus === 'function') {
-            focusTarget.focus();
-        }
+        focusElementWithoutScroll(focusTarget);
     }
 
     function syncModalBodyLock() {
