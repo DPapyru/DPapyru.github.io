@@ -11,8 +11,6 @@ min_t: 0
 colors:
   Pink: "#ffc0cb"
 ---
-> 正在施工
-
 # 前言
 你是否也想制作一个护盾或者冲击波？
 这个Tips或许可以帮到你
@@ -43,7 +41,7 @@ DrawData shieldDrawData = new(
 ```
  - **Q:为什么数据类型是```DrawData```
 A: 我们设置具体参数后，需要传参**
-> ![屏幕截图 2026-02-14 143642](/site/content/%E5%92%8C%E5%B0%8F%E5%96%84%E7%9A%84MiniTips/%E8%A7%86%E8%A7%89%E6%95%88%E6%9E%9C%E7%AF%87/imgs/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE-2026-02-14-143642-t92jz.png)
+>![屏幕截图 2026-02-14 143642](/site/content/%E5%92%8C%E5%B0%8F%E5%96%84%E7%9A%84MiniTips/%E8%A7%86%E8%A7%89%E6%95%88%E6%9E%9C%E7%AF%87/imgs/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE-2026-02-14-143642-0xujc.png)
 这是```Apply```需要的数据类型
 
  ### 2.1 参数详解
@@ -130,7 +128,10 @@ shieldDrawData.Draw(Main.spriteBatch);
 Main.spriteBatch.End();
 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.LinearClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 ```
-> -如果我们稍稍发挥主观能动性，就可以得到:![image](/site/content/shader-gallery/pass-1/imgs/image-ldv5y.png)
+> - 如果我们稍稍发挥主观能动性，就可以得到:
+![屏幕截图 2026-02-15 191911](/site/content/%E5%92%8C%E5%B0%8F%E5%96%84%E7%9A%84MiniTips/%E8%A7%86%E8%A7%89%E6%95%88%E6%9E%9C%E7%AF%87/imgs/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE-2026-02-15-191911-uo1xe.png)
+
+
 
 # 番外 (护盾爆改冲击波)
 - 冲击波的实现，其实就是一个**逐渐变大**的护盾
