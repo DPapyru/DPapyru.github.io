@@ -928,12 +928,14 @@
 }
 
 .article-studio-page--fullscreen .studio-flowchart-modal {
+    --studio-flowchart-focus-top-offset: 56px;
     align-items: flex-start;
+    padding-top: var(--studio-flowchart-focus-top-offset);
 }
 
 .article-studio-page--fullscreen .studio-flowchart-modal-content {
     margin: 0 auto;
-    max-height: calc(100vh - 24px);
+    max-height: calc(100vh - var(--studio-flowchart-focus-top-offset) - 12px);
 }
 
 .article-studio-page--fullscreen .studio-workbench,

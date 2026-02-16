@@ -102,8 +102,8 @@ test('article studio css keeps focus-only actions hidden until fullscreen mode',
 test('article studio css repositions flowchart modal for fullscreen mode', () => {
     const css = read('site/assets/css/article-studio.css');
 
-    assert.match(css, /\.article-studio-page--fullscreen\s+\.studio-flowchart-modal\s*\{\s*align-items:\s*flex-start;/);
-    assert.match(css, /\.article-studio-page--fullscreen\s+\.studio-flowchart-modal-content\s*\{[^}]*max-height:\s*calc\(100vh - 24px\)/);
+    assert.match(css, /\.article-studio-page--fullscreen\s+\.studio-flowchart-modal\s*\{[^}]*--studio-flowchart-focus-top-offset:\s*56px;[^}]*align-items:\s*flex-start;[^}]*padding-top:\s*var\(--studio-flowchart-focus-top-offset\);/);
+    assert.match(css, /\.article-studio-page--fullscreen\s+\.studio-flowchart-modal-content\s*\{[^}]*max-height:\s*calc\(100vh - var\(--studio-flowchart-focus-top-offset\) - 12px\)/);
 });
 
 test('article studio js supports image upload and linked pr submit', () => {
