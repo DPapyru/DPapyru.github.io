@@ -2880,6 +2880,10 @@
         state.isFullscreen = !!enabled;
         document.body.classList.toggle('article-studio-page--fullscreen', state.isFullscreen);
 
+        if (!state.isFullscreen && state.flowchartDrawer.open) {
+            setFlowchartModalOpen(false);
+        }
+
         if (dom.toggleFullscreen) {
             dom.toggleFullscreen.textContent = state.isFullscreen ? '退出专注模式 (Esc)' : '专注模式';
         }
@@ -3764,7 +3768,13 @@
 
     function setFlowchartModalOpen(open) {
         if (!dom.flowchartModal) return;
-        state.flowchartDrawer.open = !!open;
+        const nextOpen = !!open;
+        if (nextOpen && !state.isFullscreen) {
+            setStatus('请先进入专注模式再打开流程图工作台');
+            return;
+        }
+
+        state.flowchartDrawer.open = nextOpen;
         if (state.flowchartDrawer.open) {
             setSidePanelModalOpen('left', false, { silent: true });
             setSidePanelModalOpen('right', false, { silent: true });

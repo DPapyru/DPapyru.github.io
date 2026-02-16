@@ -445,10 +445,23 @@
     align-items: center;
 }
 
+.studio-focus-only {
+    display: none;
+}
+
+.article-studio-page--fullscreen .studio-focus-only {
+    display: inline-flex;
+}
+
 .studio-tabs {
     display: flex;
     border-bottom: 1px solid var(--border-color);
     background: var(--bg-secondary);
+}
+
+.studio-flowchart-modal {
+    box-sizing: border-box;
+    padding: 12px;
 }
 
 .studio-flowchart-modal-content {
@@ -912,6 +925,15 @@
     border: 0;
     border-radius: 0;
     z-index: 300;
+}
+
+.article-studio-page--fullscreen .studio-flowchart-modal {
+    align-items: flex-start;
+}
+
+.article-studio-page--fullscreen .studio-flowchart-modal-content {
+    margin: 0 auto;
+    max-height: calc(100vh - 24px);
 }
 
 .article-studio-page--fullscreen .studio-workbench,

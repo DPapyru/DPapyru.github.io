@@ -86,6 +86,26 @@ test('article studio html includes hierarchy navigation and create-directory con
     assert.match(html, /id="studio-create-directory"/);
 });
 
+test('article studio html marks flowchart workbench as focus-only action', () => {
+    const html = read('site/pages/article-studio.html');
+
+    assert.match(html, /id="studio-flowchart-toggle"[^>]*studio-focus-only/);
+});
+
+test('article studio css keeps focus-only actions hidden until fullscreen mode', () => {
+    const css = read('site/assets/css/article-studio.css');
+
+    assert.match(css, /\.studio-focus-only\s*\{\s*display:\s*none;/);
+    assert.match(css, /\.article-studio-page--fullscreen\s+\.studio-focus-only\s*\{\s*display:\s*inline-flex;/);
+});
+
+test('article studio css repositions flowchart modal for fullscreen mode', () => {
+    const css = read('site/assets/css/article-studio.css');
+
+    assert.match(css, /\.article-studio-page--fullscreen\s+\.studio-flowchart-modal\s*\{\s*align-items:\s*flex-start;/);
+    assert.match(css, /\.article-studio-page--fullscreen\s+\.studio-flowchart-modal-content\s*\{[^}]*max-height:\s*calc\(100vh - 24px\)/);
+});
+
 test('article studio js supports image upload and linked pr submit', () => {
     const js = read('site/assets/js/article-studio.js');
 
@@ -95,6 +115,19 @@ test('article studio js supports image upload and linked pr submit', () => {
     assert.match(js, /existingPrNumber/);
     assert.match(js, /my-open-prs/);
     assert.match(js, /article-studio-preview-image-mapped/);
+});
+
+test('article studio flowchart modal only opens in fullscreen and closes on exit', () => {
+    const js = read('site/assets/js/article-studio.js');
+    const fullscreenFn = getFunctionBody(js, 'setFullscreenMode');
+    const flowchartFn = getFunctionBody(js, 'setFlowchartModalOpen');
+
+    assert.ok(fullscreenFn, 'setFullscreenMode should exist');
+    assert.ok(flowchartFn, 'setFlowchartModalOpen should exist');
+    assert.match(flowchartFn, /nextOpen\s*&&\s*!state\.isFullscreen/);
+    assert.match(flowchartFn, /请先进入专注模式再打开流程图工作台/);
+    assert.match(fullscreenFn, /!state\.isFullscreen\s*&&\s*state\.flowchartDrawer\.open/);
+    assert.match(fullscreenFn, /setFlowchartModalOpen\(false\)/);
 });
 
 test('article studio js enforces uploaded asset cleanup before creating a new pr', () => {
