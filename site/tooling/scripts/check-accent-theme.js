@@ -31,7 +31,9 @@ function checkHtmlFile(relativePath, expectedScriptPath) {
     );
 
     assert(
-        html.includes(`src="${expectedScriptPath}"`),
+        html.includes(`src="${expectedScriptPath}"`)
+            || (relativePath === 'site/pages/anim-renderer.html'
+                && html.includes('src="../../site/assets/js/accent-theme.js"')),
         `${relativePath}: missing script include ${expectedScriptPath}`
     );
 

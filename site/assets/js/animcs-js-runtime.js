@@ -12,17 +12,88 @@
     const DEFAULT_STAGE_HEIGHT = 240;
     const manifestCache = new Map();
 
-    function getAssetsRoot() {
-        if (typeof window !== 'undefined' && window.SITE && window.SITE.assetsRoot) {
-            return window.SITE.assetsRoot;
+    function normalizeAssetsRoot(input) {
+        const raw = String(input || '').trim().replace(/\\/g, '/');
+        if (!raw) return '';
+        return raw.endsWith('/') ? raw.slice(0, -1) : raw;
+    }
+
+    function inferAssetsRootFromScriptSrc(src) {
+        const raw = String(src || '').trim().replace(/\\/g, '/');
+        if (!raw) return '';
+        const siteAssets = raw.replace(/\/site\/assets\/js\/animcs-js-runtime\.js(?:\?.*)?$/i, '/site/assets');
+        if (siteAssets !== raw) return siteAssets;
+        const assets = raw.replace(/\/assets\/js\/animcs-js-runtime\.js(?:\?.*)?$/i, '/assets');
+        if (assets !== raw) return assets;
+        return '';
+    }
+
+    function findRuntimeScriptSrc() {
+        if (typeof document === 'undefined') return '';
+        const current = document.currentScript;
+        if (current && current.src) return current.src;
+        const scripts = document.getElementsByTagName('script');
+        for (let i = scripts.length - 1; i >= 0; i -= 1) {
+            const src = scripts[i].src || '';
+            if (src.includes('animcs-js-runtime.js')) return src;
         }
+        return '';
+    }
+
+    function detectAssetsRoot() {
+        if (typeof window !== 'undefined' && window.SITE && window.SITE.assetsRoot) {
+            const explicit = normalizeAssetsRoot(window.SITE.assetsRoot);
+            if (explicit) return explicit;
+        }
+        const inferred = normalizeAssetsRoot(inferAssetsRootFromScriptSrc(findRuntimeScriptSrc()));
+        if (inferred) return inferred;
         return '/site/assets';
+    }
+
+    function getAssetsRoot() {
+        return detectAssetsRoot();
     }
 
     function normalizeAnimPath(input) {
         const rel = String(input || '').replace(/\\/g, '/');
         const match = rel.match(/(?:^|\/)(?:site\/content\/|content\/)?(anims\/[^\s]+\.cs)$/i);
         return match ? match[1] : '';
+    }
+
+    function createFallbackEntry(normalized) {
+        const rel = String(normalized || '').trim();
+        if (!rel) return null;
+        const match = rel.match(/^anims\/(.+)\.cs$/i);
+        if (!match || !match[1]) return null;
+        const stem = match[1];
+        return {
+            js: `${stem}.js`,
+            entry: stem
+        };
+    }
+
+    function resolveEntryForSource(manifest, normalized) {
+        const rel = String(normalized || '').trim();
+        if (!rel) return null;
+
+        const entries = manifest && manifest.entries ? manifest.entries : null;
+        if (entries && typeof entries === 'object') {
+            if (entries[rel]) return entries[rel];
+            const lower = rel.toLowerCase();
+            const matchedKey = Object.keys(entries).find((key) => String(key || '').toLowerCase() === lower);
+            if (matchedKey) return entries[matchedKey];
+        }
+
+        return createFallbackEntry(rel);
+    }
+
+    async function resolveCustomEntry(embed, normalized, rawSource) {
+        if (!embed || typeof embed.__ANIMCS_RESOLVE_ENTRY !== 'function') return null;
+        return embed.__ANIMCS_RESOLVE_ENTRY({
+            normalized,
+            rawSource,
+            assetsRoot: getAssetsRoot()
+        });
     }
 
     function applyEmbedDefaults(embed, normalized) {
@@ -494,13 +565,19 @@
 
     async function mountEmbed(embed, srcOverride) {
         if (!embed) return;
+        const rawSource = String(srcOverride || embed.getAttribute('data-animcs-src') || '').trim();
+        if (!rawSource) {
+            clearError(embed);
+            disposeEmbed(embed);
+            embed.__ANIMCS_LAST_SRC = '';
+            return;
+        }
         if (embed.__ANIMCS_MOUNTING) {
             embed.__ANIMCS_PENDING_RESTART = true;
             return;
         }
         embed.__ANIMCS_MOUNTING = true;
-
-        const rawSource = srcOverride || embed.getAttribute('data-animcs-src') || '';
+        embed.__ANIMCS_LAST_SRC = rawSource;
         const normalized = normalizeAnimPath(rawSource);
         applyEmbedDefaults(embed, normalized);
         ensureEmbedShell(embed, normalized || rawSource || 'C# 动画');
@@ -508,12 +585,33 @@
         disposeEmbed(embed);
 
         try {
-            const manifest = await loadManifest();
-            const entry = manifest && manifest.entries ? manifest.entries[normalized] : null;
-            if (!entry) {
-                throw new Error(`未找到动画条目：${normalized || rawSource}`);
+            const custom = await resolveCustomEntry(embed, normalized, rawSource);
+            let entry = custom && custom.entry ? custom.entry : null;
+            let moduleUrl = custom && typeof custom.moduleUrl === 'string' ? String(custom.moduleUrl).trim() : '';
+
+            if (!moduleUrl) {
+                let manifest = null;
+                let manifestError = null;
+                try {
+                    manifest = await loadManifest();
+                } catch (e) {
+                    manifestError = e;
+                }
+
+                if (!entry) {
+                    entry = resolveEntryForSource(manifest, normalized);
+                }
+
+                if (!entry) {
+                    if (manifestError) {
+                        throw manifestError;
+                    }
+                    throw new Error(`未找到动画条目：${normalized || rawSource}`);
+                }
+
+                moduleUrl = resolveAnimModulePath(entry);
             }
-            const moduleUrl = resolveAnimModulePath(entry);
+
             if (!moduleUrl) {
                 throw new Error(`动画缺少 JS 产物：${normalized}`);
             }
@@ -562,9 +660,20 @@
         if (typeof document === 'undefined') return;
         const scope = root && root.querySelectorAll ? root : document;
         scope.querySelectorAll(EMBED_SELECTOR).forEach((embed) => {
-            if (embed.__ANIMCS_AUTO_MOUNTED) return;
+            const rawSource = String(embed.getAttribute('data-animcs-src') || '').trim();
+            if (!rawSource) {
+                clearError(embed);
+                disposeEmbed(embed);
+                embed.__ANIMCS_AUTO_MOUNTED = false;
+                embed.__ANIMCS_LAST_SRC = '';
+                return;
+            }
+
+            if (embed.__ANIMCS_AUTO_MOUNTED && embed.__ANIMCS_LAST_SRC === rawSource) return;
+
             embed.__ANIMCS_AUTO_MOUNTED = true;
-            mountEmbed(embed);
+            embed.__ANIMCS_LAST_SRC = rawSource;
+            mountEmbed(embed, rawSource);
         });
     }
 
@@ -584,6 +693,7 @@
 
     return {
         normalizeAnimPath,
+        resolveEntryForSource,
         resolveAnimModulePath,
         createPlayer,
         runModule,

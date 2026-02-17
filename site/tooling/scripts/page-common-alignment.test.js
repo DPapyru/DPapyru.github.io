@@ -65,7 +65,7 @@ test('pages with accent selector include accent-theme script', () => {
 
         assert.match(
             html,
-            /<script\s+src="\/site\/assets\/js\/accent-theme\.js"><\/script>/,
+            /<script\s+src="[^"]*accent-theme\.js"><\/script>/,
             fileName + ' should include accent-theme.js when accent selector exists'
         );
     }

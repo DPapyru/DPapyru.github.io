@@ -393,3 +393,16 @@
 **备注**：`check-generated` 失败原因为 `site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`（`gallery-check` 报错），属于仓库既有问题，与本次 `article-studio` 附件提交流程改造无直接关系。浏览器调试覆盖 3 条交互路径：`取消并返回编辑`（不发起 create-pr 且附件保留）、`清空附件并新建 PR`（二次确认后提交且不携带 `extraFiles`）、`继续已有 PR`（请求体携带 `existingPrNumber` 且附件保留）。临时调试页 `site/tmp-article-studio-pr-assets-browser-check.html` 已在验证后删除。
 
 *最后更新：2026-02-16*
+
+### 验证记录 [2026-02-18 07:04]：anim-renderer `file://` 加载 C# 动画修复
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/animcs-js-runtime-file-fallback.test.js`：通过
+- `node --test site/tooling/scripts/page-common-alignment.test.js`：通过
+- `node --test site/tooling/scripts/workbench-shell.test.js`：通过
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 失败原因仍为既有内容问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`。本次修复已额外通过 headless Chrome 在 `http://` 与 `file://` 场景截图复核（`file://` 初始态不再报 `Failed to fetch`，并支持通过本地 resolver 载入动画模块）。

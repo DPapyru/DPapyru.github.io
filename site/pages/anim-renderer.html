@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>C# 动画渲染器（开发用）</title>
-    <link rel="stylesheet" href="/site/assets/css/style.css">
-    <link rel="stylesheet" href="/site/assets/css/workbench-phase.css">
-    <link rel="stylesheet" href="/site/assets/css/animts-runtime.css">
-    <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
-    <script src="/site/assets/js/theme-init.js"></script>
+    <link rel="stylesheet" href="../../site/assets/css/style.css">
+    <link rel="stylesheet" href="../../site/assets/css/workbench-phase.css">
+    <link rel="stylesheet" href="../../site/assets/css/animts-runtime.css">
+    <link rel="icon" type="image/png" href="../../site/assets/imgs/Green_tModLoader.png">
+    <script src="../../site/assets/js/theme-init.js"></script>
 
 </head>
 <body class="workbench-page viewer-page">
@@ -17,7 +17,7 @@
             <div class="header-content">
                 <div class="logo">
                     <a href="../index.html">
-                        <img src="/site/assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
+                        <img src="../../site/assets/imgs/Green_tModLoader.png" alt="泰拉瑞亚Mod制作教程" class="logo-image">
                         <h1 class="site-title">C# 动画渲染器（开发用）</h1>
                     </a>
                 </div>
@@ -113,13 +113,13 @@
 
     
 
-    <script src="/shared/assets/js/site-core.js"></script>
-    <script src="/site/assets/js/navigation.js"></script>
+    <script src="../../shared/assets/js/site-core.js"></script>
+    <script src="../../site/assets/js/navigation.js"></script>
     <script>
         if (window.SITE) window.SITE.bootstrapPage('anim-renderer');
     </script>
-    <script src="/site/assets/js/accent-theme.js"></script>
-    <script src="/site/assets/js/animcs-js-runtime.js"></script>
+    <script src="../../site/assets/js/accent-theme.js"></script>
+    <script src="../../site/assets/js/animcs-js-runtime.js"></script>
     <script>
         (function () {
             const fileInput = document.getElementById('anim-file');
@@ -136,6 +136,52 @@
             let currentFile = null;
             let currentPath = '';
             let pathToFile = new Map();
+            let localJsByName = new Map();
+            let manifestJsBySource = new Map();
+            let localModuleUrlByName = new Map();
+
+            function isFileProtocol() {
+                return typeof location !== 'undefined' && location.protocol === 'file:';
+            }
+
+            function revokeLocalModuleUrls() {
+                localModuleUrlByName.forEach((url) => {
+                    try {
+                        URL.revokeObjectURL(url);
+                    } catch (_) { }
+                });
+                localModuleUrlByName = new Map();
+            }
+
+            function sourceToDefaultJsName(sourcePath) {
+                const normalized = String(sourcePath || '').replace(/\\/g, '/').trim();
+                const m = normalized.match(/^anims\/(.+)\.cs$/i);
+                if (!m || !m[1]) return '';
+                return `${m[1]}.js`;
+            }
+
+            function updateLocalResolver() {
+                embed.__ANIMCS_RESOLVE_ENTRY = function (payload) {
+                    const normalized = String(payload && payload.normalized ? payload.normalized : '').trim();
+                    if (!normalized) return null;
+
+                    const normalizedKey = normalized.toLowerCase();
+                    const byManifest = manifestJsBySource.get(normalizedKey) || '';
+                    const jsName = byManifest || sourceToDefaultJsName(normalized);
+                    if (!jsName) return null;
+
+                    const jsFile = localJsByName.get(jsName.toLowerCase());
+                    if (!jsFile) return null;
+
+                    let moduleUrl = localModuleUrlByName.get(jsName.toLowerCase());
+                    if (!moduleUrl) {
+                        moduleUrl = URL.createObjectURL(jsFile);
+                        localModuleUrlByName.set(jsName.toLowerCase(), moduleUrl);
+                    }
+
+                    return { moduleUrl };
+                };
+            }
 
             function setStatus(text) {
                 status.textContent = text || '';
@@ -210,8 +256,11 @@
                 mountPath('anims/demo-eoc-ai.cs', '预览：anims/demo-eoc-ai.cs');
             });
 
-            dirInput.addEventListener('change', function () {
+            dirInput.addEventListener('change', async function () {
                 pathToFile = new Map();
+                localJsByName = new Map();
+                manifestJsBySource = new Map();
+                revokeLocalModuleUrls();
                 currentPath = '';
                 copySnippetBtn.disabled = true;
 
@@ -224,18 +273,50 @@
                     return;
                 }
 
+                let manifestFile = null;
+
                 // Expect selecting repo root or site/content directory. We keep paths like anims/xxx.cs (same as viewer).
-	                files.forEach((file) => {
-	                    const rel = String(file.webkitRelativePath || file.name).replace(/\\/g, '/');
-	                    // Match site/content/anims/*.cs or content/anims/*.cs or anims/*.cs
-	                    const m = rel.match(/(?:^|\/)site\/content\/(anims\/.+\.cs)$/i)
-	                        || rel.match(/(?:^|\/)content\/(anims\/.+\.cs)$/i)
-	                        || rel.match(/(?:^|\/)(anims\/.+\.cs)$/i);
-	                    if (!m) return;
-	                    const key = m[1].replace(/^\.?\//, '').replace(/\\\\/g, '/');
-                    if (key.startsWith('anims/_lib/')) return;
-                    pathToFile.set(key, file);
+                files.forEach((file) => {
+                    const rel = String(file.webkitRelativePath || file.name).replace(/\\/g, '/');
+                    // Match site/content/anims/*.cs or content/anims/*.cs or anims/*.cs
+                    const m = rel.match(/(?:^|\/)site\/content\/(anims\/.+\.cs)$/i)
+                        || rel.match(/(?:^|\/)content\/(anims\/.+\.cs)$/i)
+                        || rel.match(/(?:^|\/)(anims\/.+\.cs)$/i);
+                    if (m) {
+                        const key = m[1].replace(/^\.?\//, '').replace(/\\\\/g, '/');
+                        if (!key.startsWith('anims/_lib/')) {
+                            pathToFile.set(key, file);
+                        }
+                    }
+
+                    const jsMatch = rel.match(/(?:^|\/)site\/assets\/anims\/(.+\.js)$/i)
+                        || rel.match(/(?:^|\/)assets\/anims\/(.+\.js)$/i);
+                    if (jsMatch && jsMatch[1] && !jsMatch[1].toLowerCase().startsWith('runtime/')) {
+                        localJsByName.set(jsMatch[1].toLowerCase(), file);
+                    }
+
+                    const isManifest = /(?:^|\/)site\/assets\/anims\/manifest\.json$/i.test(rel)
+                        || /(?:^|\/)assets\/anims\/manifest\.json$/i.test(rel);
+                    if (isManifest) {
+                        manifestFile = file;
+                    }
                 });
+
+                if (manifestFile) {
+                    try {
+                        const manifestText = await manifestFile.text();
+                        const parsed = JSON.parse(manifestText);
+                        const entries = parsed && parsed.entries ? parsed.entries : {};
+                        Object.keys(entries || {}).forEach((sourcePath) => {
+                            const sourceKey = String(sourcePath || '').replace(/\\/g, '/').trim().toLowerCase();
+                            const entry = entries[sourcePath];
+                            if (!sourceKey || !entry || typeof entry.js !== 'string' || !entry.js.trim()) return;
+                            manifestJsBySource.set(sourceKey, entry.js.trim());
+                        });
+                    } catch (_) { }
+                }
+
+                updateLocalResolver();
 
                 const paths = Array.from(pathToFile.keys()).sort((a, b) => a.localeCompare(b, 'en'));
                 pathSelect.replaceChildren();
@@ -253,7 +334,21 @@
 
                 pathSelect.disabled = paths.length === 0;
                 runSelectedBtn.disabled = paths.length === 0;
-                setStatus(paths.length ? `已发现 ${paths.length} 个动画脚本` : '目录中未找到 site/content/anims/*.cs');
+
+                if (!paths.length) {
+                    setStatus('目录中未找到 site/content/anims/*.cs');
+                    return;
+                }
+
+                let statusText = `已发现 ${paths.length} 个动画脚本`;
+                if (isFileProtocol()) {
+                    if (localJsByName.size) {
+                        statusText += `，离线可读取 ${localJsByName.size} 个编译文件`;
+                    } else {
+                        statusText += '；file:// 场景请确保目录包含 site/assets/anims/*.js';
+                    }
+                }
+                setStatus(statusText);
             });
 
             runSelectedBtn.addEventListener('click', function () {
@@ -283,9 +378,18 @@
                 }
             });
 
+            window.addEventListener('beforeunload', function () {
+                revokeLocalModuleUrls();
+            });
+
             (function init() {
                 try {
-                    setStatus('就绪：请选择一个 site/content/anims/*.cs 文件');
+                    updateLocalResolver();
+                    if (isFileProtocol()) {
+                        setStatus('就绪：file:// 直开请先选择仓库目录（需包含 site/assets/anims/*.js）');
+                    } else {
+                        setStatus('就绪：请选择一个 site/content/anims/*.cs 文件');
+                    }
                 } catch (e) {
                     setStatus(`初始化失败：${e && e.message ? e.message : String(e)}`);
                 }
