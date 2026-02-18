@@ -6,17 +6,6 @@ description: 制作一个类似MC的工作台
 order: 100
 difficulty: intermediate
 time: 35分钟
-min_c: 1
-min_t: 1
-source_cs:
-  - ./code/你的文件.cs
-colors:
-  Mad: "#ff4d4f"
-colorChange:
-  rainbow:
-    - "#ff0000"
-    - "#00ff00"
-    - "#0000ff"
 ---
 
 # 制作一个类似MC的工作台
