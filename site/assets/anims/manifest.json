@@ -4,6 +4,7 @@
     "anims/demo-basic.cs",
     "anims/demo-eoc-ai.cs",
     "anims/demo-math-transform.cs",
+    "anims/vector-add-resolution.cs",
     "anims/vector-basic.cs"
   ],
   "entries": {
@@ -18,6 +19,10 @@
     "anims/demo-math-transform.cs": {
       "js": "demo-math-transform.js",
       "entry": "demo-math-transform"
+    },
+    "anims/vector-add-resolution.cs": {
+      "js": "vector-add-resolution.js",
+      "entry": "vector-add-resolution"
     },
     "anims/vector-basic.cs": {
       "js": "vector-basic.js",

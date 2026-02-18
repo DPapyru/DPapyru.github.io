@@ -3,12 +3,13 @@ using AnimRuntime.Math;
 
 namespace AnimScripts.Dev;
 
-//
-[AnimEntry("vector-basic")]
-public sealed class VectorBasic : IAnimScript
+// 向量加法说明
+[AnimEntry("vector_add_resolution")]
+public sealed class vector_add_resolution : IAnimScript
 {
     private AnimContext? _ctx;
     private Vec2 _mousePos;
+    private Vec2 _center;
 
     public void OnInit(AnimContext ctx)
     {
@@ -20,14 +21,19 @@ public sealed class VectorBasic : IAnimScript
         if (_ctx is null)
             return;
 
-        if (_ctx.Input.IsInside)
+        // 如果在范围内按下左键
+        if (_ctx.Input.IsInside && _ctx.Input.WasPressed)
             _mousePos = new Vec2(_ctx.Input.X, _ctx.Input.Y);
+        
+        if (_mousePos.X != 0 || _mousePos.Y != 0)
+            _center = new Vec2((_mousePos.X * 0.2f + _center.X * 1.8f) * 0.5f,(_mousePos.Y * 0.2f + _center.Y * 1.8f) * 0.5f); 
     }
 
     public void OnRender(ICanvas2D g)
     {
         if (_ctx is null)
             return;
+        // 定义内容 
         g.Clear(new Color(8, 12, 16));
         var width = _ctx.Width;
         var height = _ctx.Height;
@@ -35,12 +41,22 @@ public sealed class VectorBasic : IAnimScript
         var scale = MathF.Min(width, height) * 0.52f;
         var vec2 = new Vec2(0.3f, 0.5f);
 
-        if (_mousePos.X != 0 || _mousePos.Y != 0)
-            vec2 = new Vec2((_mousePos.X - center.X) / width * 4, -(_mousePos.Y - center.Y) / height * 2);
-
+        if (_center.X != 0 || _center.Y != 0)
+            vec2 = new Vec2((_center.X - center.X) / width * 4, -(_center.Y - center.Y) / height * 2);
+        // 绘制坐标系
         DrawAxes(g, center, scale);
 
-        DrawArrow(g, center, ToScreen(vec2, center, scale), new Color(255, 255, 255, 200), 2f, 10);
+        var center_x = new Vec2(center.X, center.Y - vec2.Y * height / 2);
+        var center_y = new Vec2(center.X + vec2.X * width / 4, center.Y);
+        
+        // 绘制X轴
+        DrawArrow(g,center,ToScreen(new Vec2(vec2.X,0),center, scale),new Color(231,234,20,255),1.5f,8f);
+        DrawArrow(g,center_x,ToScreen(new Vec2(vec2.X,0),center_x, scale),new Color(231,234,20,150),1.5f,8f);
+        // 绘制Y轴
+        DrawArrow(g,center,ToScreen(new Vec2(0,vec2.Y),center, scale),new Color(231,24,230,255),1.5f,8f);
+        DrawArrow(g,center_y,ToScreen(new Vec2(0,vec2.Y),center_y, scale),new Color(231,24,230,150),1.5f,8f);
+        // 绘制原向量
+        DrawArrow(g,center,ToScreen(vec2,center, scale),new Color(231,234,220,255),1.5f,8f);
     }
 
     public void OnDispose()
