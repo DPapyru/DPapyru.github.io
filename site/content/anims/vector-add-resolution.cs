@@ -3,8 +3,9 @@ using AnimRuntime.Math;
 
 namespace AnimScripts.Dev;
 
-// 向量加法说明
+// 向量的加法和分解说明
 [AnimEntry("vector_add_resolution")]
+[AnimProfile(HeightScale = 3f)]
 public sealed class vector_add_resolution : IAnimScript
 {
     private AnimContext? _ctx;

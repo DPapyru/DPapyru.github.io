@@ -6,7 +6,8 @@
     "anims/demo-math-transform.cs",
     "anims/demo-mode-state.cs",
     "anims/vector-add-resolution.cs",
-    "anims/vector-basic.cs"
+    "anims/vector-basic.cs",
+    "anims/vector-move.cs"
   ],
   "entries": {
     "anims/demo-basic.cs": {
@@ -84,6 +85,14 @@
     "anims/vector-basic.cs": {
       "js": "vector-basic.js",
       "entry": "vector-basic"
+    },
+    "anims/vector-move.cs": {
+      "js": "vector-move.js",
+      "entry": "vector-move",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 1.5
+      }
     }
   }
 }
