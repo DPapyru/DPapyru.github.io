@@ -3,7 +3,8 @@
   "sources": [
     "anims/demo-basic.cs",
     "anims/demo-eoc-ai.cs",
-    "anims/demo-math-transform.cs"
+    "anims/demo-math-transform.cs",
+    "anims/vector-basic.cs"
   ],
   "entries": {
     "anims/demo-basic.cs": {
@@ -17,6 +18,10 @@
     "anims/demo-math-transform.cs": {
       "js": "demo-math-transform.js",
       "entry": "demo-math-transform"
+    },
+    "anims/vector-basic.cs": {
+      "js": "vector-basic.js",
+      "entry": "vector-basic"
     }
   }
 }
