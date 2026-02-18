@@ -2,6 +2,7 @@ using AnimRuntime;
 using AnimRuntime.Math;
 
 [AnimEntry("demo-eoc-ai")]
+[AnimProfile(Controls = "mode-select", HeightScale = 2.3f, ModeOptions = "0:自动|1:一阶-徘徊|2:一阶-冲刺|3:二阶-变形|4:二阶-徘徊|5:二阶-冲刺")]
 public sealed class DemoEocAi : IAnimScript
 {
     private AnimContext? _ctx;

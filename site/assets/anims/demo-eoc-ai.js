@@ -1,6 +1,6 @@
 // Generated from anims/demo-eoc-ai.cs
 export function create(runtime) {
-    const { Vec2, Color, MathF } = runtime;
+    const { Vec2, Color, MathF, AnimGeom } = runtime;
     class DemoEocAi {
         constructor() {
             this._ctx = null;

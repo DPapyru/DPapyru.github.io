@@ -1,6 +1,6 @@
 // Generated from anims/demo-math-transform.cs
 export function create(runtime) {
-    const { Vec2, Color, MathF } = runtime;
+    const { Vec2, Color, MathF, AnimGeom } = runtime;
     class DemoMathTransform {
         constructor() {
             this._ctx = null;

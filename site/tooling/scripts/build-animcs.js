@@ -32,6 +32,9 @@ function buildManifest(items) {
         const key = String(item.source || '').replace(/.*?(anims\/[^\/]+\.cs)$/i, '$1');
         if (!key) continue;
         entries[key] = { js: `${item.entry}.js`, entry: item.entry };
+        if (item.profile && typeof item.profile === 'object') {
+            entries[key].profile = item.profile;
+        }
     }
     return { schemaVersion: 1, entries };
 }
@@ -224,6 +227,61 @@ function buildAnimDlls(projectRoot, items) {
     });
 }
 
+function parseModeOptionsDsl(text) {
+    const raw = String(text || '').trim();
+    if (!raw) return [];
+    const results = [];
+    raw.split('|').forEach((chunk) => {
+        const part = String(chunk || '').trim();
+        if (!part) return;
+        const sep = part.indexOf(':');
+        if (sep <= 0) return;
+        const valueText = part.slice(0, sep).trim();
+        const label = part.slice(sep + 1).trim();
+        if (!label) return;
+        const value = Number(valueText);
+        if (!Number.isFinite(value)) return;
+        results.push({
+            value,
+            text: label
+        });
+    });
+    return results;
+}
+
+function parseAnimProfile(source) {
+    const text = String(source || '');
+    const attr = text.match(/\[\s*AnimProfile\s*\(([\s\S]*?)\)\s*\]/m);
+    if (!attr || !attr[1]) return null;
+
+    const body = attr[1];
+    const profile = {};
+
+    const controlsMatch = body.match(/\bControls\s*=\s*"([^"]*)"/);
+    if (controlsMatch && controlsMatch[1]) {
+        const controls = String(controlsMatch[1]).trim();
+        if (controls) profile.controls = controls;
+    }
+
+    const heightMatch = body.match(/\bHeightScale\s*=\s*([+-]?(?:\d+(?:\.\d+)?|\.\d+))\s*[fFdD]?/);
+    if (heightMatch && heightMatch[1]) {
+        const heightScale = Number(heightMatch[1]);
+        if (Number.isFinite(heightScale) && heightScale > 0) {
+            profile.heightScale = heightScale;
+        }
+    }
+
+    const modeOptionsMatch = body.match(/\bModeOptions\s*=\s*"([^"]*)"/);
+    if (modeOptionsMatch && modeOptionsMatch[1] != null) {
+        const modeOptions = parseModeOptionsDsl(modeOptionsMatch[1]);
+        if (modeOptions.length) {
+            profile.modeOptions = modeOptions;
+        }
+    }
+
+    return Object.keys(profile).length ? profile : null;
+}
+
 function main() {
     const projectRoot = path.resolve(__dirname, '..', '..', '..');
     const items = scanAnimScripts(projectRoot);
@@ -238,6 +296,7 @@ function buildAnimJs(projectRoot, items) {
     items.forEach((item) => {
         const sourceAbs = path.join(projectRoot, 'site', 'content', item.source);
         const source = fs.readFileSync(sourceAbs, 'utf8');
+        item.profile = parseAnimProfile(source);
         const errors = validateFeatures(source);
         if (errors.length) {
             throw new Error(`[animcs] ${item.source}: ${errors.join('; ')}`);
@@ -262,5 +321,7 @@ module.exports = {
     buildAnimJs,
     writeBootConfig,
     writeManifest,
+    parseAnimProfile,
+    parseModeOptionsDsl,
     main
 };
