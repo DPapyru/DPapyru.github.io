@@ -406,3 +406,22 @@
 - `npm run check-generated`：失败
 
 **备注**：`check-generated` 失败原因仍为既有内容问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`。本次修复已额外通过 headless Chrome 在 `http://` 与 `file://` 场景截图复核（`file://` 初始态不再报 `Failed to fetch`，并支持通过本地 resolver 载入动画模块）。
+
+### 验证记录 [2026-02-18 17:53]：animcs Profile + 通用几何库（含浏览器点击与截图验收）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/build-animcs-profile.test.js`：通过
+- `node --test site/tooling/scripts/animcs-js-runtime-profile.test.js`：通过
+- `node --test site/tooling/scripts/animcs-js-runtime-file-fallback.test.js`：通过
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+- `python3 -m http.server 4173 --bind 127.0.0.1`：通过（本地浏览器调试服务启动）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=60000 --dump-dom "http://127.0.0.1:4173/site/tmp-animcs-profile-browser-check.html" > /tmp/animcs-acceptance/animcs_profile_browser_check_dom.html`：通过
+- `rg -n "BROWSER_CHECK_RESULT" /tmp/animcs-acceptance/animcs_profile_browser_check_dom.html`：通过（结果 `ok: true, passed: 5, failed: 0`）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,2200 --virtual-time-budget=65000 --screenshot=/tmp/animcs-acceptance/animcs_profile_browser_check.png "http://127.0.0.1:4173/site/tmp-animcs-profile-browser-check.html"`：通过
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1200 --virtual-time-budget=15000 --screenshot=/tmp/animcs-acceptance/anim-renderer-page.png "http://127.0.0.1:4173/site/pages/anim-renderer.html"`：通过
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1400 --virtual-time-budget=30000 --screenshot=/tmp/animcs-acceptance/viewer-anim-page.png "http://127.0.0.1:4173/site/pages/viewer.html?file=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE%2F%E4%BD%BF%E7%94%A8%E7%BD%91%E9%A1%B5%E7%89%B9%E6%AE%8A%E5%8A%A8%E7%94%BB%E6%A8%A1%E5%9D%97.md"`：通过
+
+**备注**：`check-generated` 失败原因仍为既有内容问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`。本次浏览器验收覆盖 `anim-renderer + viewer` 两条主链路，执行了按钮点击与重载交互，截图证据位于 `/tmp/animcs-acceptance/animcs_profile_browser_check.png`、`/tmp/animcs-acceptance/anim-renderer-page.png`、`/tmp/animcs-acceptance/viewer-anim-page.png`。临时检查页 `site/tmp-animcs-profile-browser-check.html` 已在验收后删除。

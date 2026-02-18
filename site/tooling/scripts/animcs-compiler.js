@@ -200,7 +200,7 @@ function compileAnimToJs(source) {
 
     const lines = [];
     lines.push('export function create(runtime) {');
-    lines.push('    const { Vec2, Color, MathF } = runtime;');
+    lines.push('    const { Vec2, Color, MathF, AnimGeom } = runtime;');
     lines.push(`    class ${className} {`);
     lines.push('        constructor() {');
     if (fields.length === 0) {

@@ -11,6 +11,14 @@
     const EMBED_SELECTOR = '.animcs-embed[data-animcs-src]';
     const DEFAULT_STAGE_HEIGHT = 240;
     const manifestCache = new Map();
+    const LEGACY_EOC_MODE_OPTIONS = [
+        { value: 0, text: '自动' },
+        { value: 1, text: '一阶-徘徊' },
+        { value: 2, text: '一阶-冲刺' },
+        { value: 3, text: '二阶-变形' },
+        { value: 4, text: '二阶-徘徊' },
+        { value: 5, text: '二阶-冲刺' }
+    ];
 
     function normalizeAssetsRoot(input) {
         const raw = String(input || '').trim().replace(/\\/g, '/');
@@ -87,6 +95,102 @@
         return createFallbackEntry(rel);
     }
 
+    function parseModeOptionsDsl(input) {
+        const raw = String(input || '').trim();
+        if (!raw) return [];
+        const result = [];
+        raw.split('|').forEach((segment) => {
+            const part = String(segment || '').trim();
+            if (!part) return;
+            const sep = part.indexOf(':');
+            if (sep <= 0) return;
+            const valueText = part.slice(0, sep).trim();
+            const label = part.slice(sep + 1).trim();
+            if (!label) return;
+            const value = Number(valueText);
+            if (!Number.isFinite(value)) return;
+            result.push({
+                value,
+                text: label
+            });
+        });
+        return result;
+    }
+
+    function normalizeModeOptions(modeOptions) {
+        if (!Array.isArray(modeOptions)) return [];
+        const normalized = [];
+        modeOptions.forEach((item) => {
+            if (!item || typeof item !== 'object') return;
+            const value = Number(item.value);
+            const text = String(item.text || '').trim();
+            if (!Number.isFinite(value) || !text) return;
+            normalized.push({ value, text });
+        });
+        return normalized;
+    }
+
+    function normalizeAnimProfile(input) {
+        if (!input || typeof input !== 'object') return null;
+        const profile = {};
+
+        if (typeof input.controls === 'string') {
+            const controls = input.controls.trim();
+            if (controls) profile.controls = controls;
+        }
+
+        if (input.heightScale != null) {
+            const heightScale = Number(input.heightScale);
+            if (Number.isFinite(heightScale) && heightScale > 0) {
+                profile.heightScale = heightScale;
+            }
+        }
+
+        let modeOptions = [];
+        if (Array.isArray(input.modeOptions)) {
+            modeOptions = normalizeModeOptions(input.modeOptions);
+        } else if (typeof input.modeOptions === 'string') {
+            modeOptions = parseModeOptionsDsl(input.modeOptions);
+        }
+        if (modeOptions.length) {
+            profile.modeOptions = modeOptions;
+        }
+
+        return Object.keys(profile).length ? profile : null;
+    }
+
+    function parseEmbedProfileData(embed) {
+        if (!embed || typeof embed.getAttribute !== 'function') return null;
+        const profile = {};
+
+        const controls = String(embed.getAttribute('data-animcs-controls') || '').trim();
+        if (controls) profile.controls = controls;
+
+        const heightScale = String(embed.getAttribute('data-animcs-height-scale') || '').trim();
+        if (heightScale) profile.heightScale = heightScale;
+
+        const modeOptions = String(embed.getAttribute('data-animcs-mode-options') || '').trim();
+        if (modeOptions) profile.modeOptions = modeOptions;
+
+        return Object.keys(profile).length ? profile : null;
+    }
+
+    function resolveEmbedProfile(baseProfile, embedProfileData) {
+        const base = normalizeAnimProfile(baseProfile) || {};
+        const override = normalizeAnimProfile(embedProfileData) || {};
+        const merged = {};
+
+        if (base.controls) merged.controls = base.controls;
+        if (typeof base.heightScale === 'number') merged.heightScale = base.heightScale;
+        if (Array.isArray(base.modeOptions) && base.modeOptions.length) merged.modeOptions = base.modeOptions;
+
+        if (override.controls) merged.controls = override.controls;
+        if (typeof override.heightScale === 'number') merged.heightScale = override.heightScale;
+        if (Array.isArray(override.modeOptions) && override.modeOptions.length) merged.modeOptions = override.modeOptions;
+
+        return Object.keys(merged).length ? merged : null;
+    }
+
     async function resolveCustomEntry(embed, normalized, rawSource) {
         if (!embed || typeof embed.__ANIMCS_RESOLVE_ENTRY !== 'function') return null;
         return embed.__ANIMCS_RESOLVE_ENTRY({
@@ -96,14 +200,34 @@
         });
     }
 
-    function applyEmbedDefaults(embed, normalized) {
-        if (!embed || !normalized) return;
+    function applyEmbedDefaults(embed, normalized, profile) {
+        if (!embed) return;
+
+        const resolvedProfile = normalizeAnimProfile(profile);
+        embed.__ANIMCS_PROFILE = resolvedProfile;
+        if (resolvedProfile && !embed.getAttribute('data-animcs-controls') && resolvedProfile.controls) {
+            embed.setAttribute('data-animcs-controls', resolvedProfile.controls);
+        }
+        if (resolvedProfile && !embed.getAttribute('data-animcs-height-scale') && typeof resolvedProfile.heightScale === 'number') {
+            embed.setAttribute('data-animcs-height-scale', String(resolvedProfile.heightScale));
+        }
+
+        if (resolvedProfile && Array.isArray(resolvedProfile.modeOptions) && resolvedProfile.modeOptions.length) {
+            embed.__ANIMCS_MODE_OPTIONS = resolvedProfile.modeOptions;
+        } else {
+            embed.__ANIMCS_MODE_OPTIONS = null;
+        }
+
+        if (!normalized) return;
         if (normalized === 'anims/demo-eoc-ai.cs') {
             if (!embed.getAttribute('data-animcs-height-scale')) {
                 embed.setAttribute('data-animcs-height-scale', '2.3');
             }
             if (!embed.getAttribute('data-animcs-controls')) {
-                embed.setAttribute('data-animcs-controls', 'eoc');
+                embed.setAttribute('data-animcs-controls', 'mode-select');
+            }
+            if (!embed.__ANIMCS_MODE_OPTIONS || !embed.__ANIMCS_MODE_OPTIONS.length) {
+                embed.__ANIMCS_MODE_OPTIONS = LEGACY_EOC_MODE_OPTIONS;
             }
         }
     }
@@ -139,7 +263,6 @@
             const title = embed.querySelector('.animts-title');
             if (title && label) title.textContent = label;
             applyStageHeight(embed);
-            ensureControls(embed);
             return;
         }
         embed.__ANIMCS_SHELL_READY = true;
@@ -177,7 +300,6 @@
         embed.__ANIMCS_ERROR = error;
         embed.__ANIMCS_BTN_RESTART = btnRestart;
         applyStageHeight(embed);
-        ensureControls(embed);
     }
 
     function applyStageHeight(embed) {
@@ -199,35 +321,60 @@
         }
     }
 
+    function resolveControlOptions(embed, controlType) {
+        if (embed && Array.isArray(embed.__ANIMCS_MODE_OPTIONS) && embed.__ANIMCS_MODE_OPTIONS.length) {
+            return embed.__ANIMCS_MODE_OPTIONS;
+        }
+        if (controlType === 'eoc') return LEGACY_EOC_MODE_OPTIONS;
+        return [];
+    }
+
     function ensureControls(embed) {
-        if (!embed || embed.__ANIMCS_CONTROL_STATE) return embed && embed.__ANIMCS_CONTROL_STATE;
-        const controlType = embed.getAttribute('data-animcs-controls');
-        if (controlType !== 'eoc') return null;
+        if (!embed) return null;
+        const controlType = String(embed.getAttribute('data-animcs-controls') || '').trim();
         const header = embed.querySelector('.animts-controls');
         if (!header) return null;
+        const existingState = embed.__ANIMCS_CONTROL_STATE || null;
+
+        if (!controlType) {
+            if (existingState && existingState.wrapper && existingState.wrapper.parentNode) {
+                existingState.wrapper.parentNode.removeChild(existingState.wrapper);
+            }
+            embed.__ANIMCS_CONTROL_STATE = null;
+            return null;
+        }
+
+        const options = resolveControlOptions(embed, controlType);
+        if (!options.length) {
+            if (existingState && existingState.wrapper && existingState.wrapper.parentNode) {
+                existingState.wrapper.parentNode.removeChild(existingState.wrapper);
+            }
+            embed.__ANIMCS_CONTROL_STATE = null;
+            return null;
+        }
+
+        const signature = `${controlType}|${JSON.stringify(options)}`;
+        if (existingState && existingState.signature === signature) {
+            return existingState;
+        }
+        if (existingState && existingState.wrapper && existingState.wrapper.parentNode) {
+            existingState.wrapper.parentNode.removeChild(existingState.wrapper);
+        }
 
         const label = document.createElement('span');
         label.className = 'animts-control-label';
-        label.textContent = 'AI';
+        label.textContent = controlType === 'eoc' ? 'AI' : '模式';
 
         const select = document.createElement('select');
         select.className = 'animts-select';
-        const options = [
-            { value: '0', text: '自动' },
-            { value: '1', text: '一阶-徘徊' },
-            { value: '2', text: '一阶-冲刺' },
-            { value: '3', text: '二阶-变形' },
-            { value: '4', text: '二阶-徘徊' },
-            { value: '5', text: '二阶-冲刺' }
-        ];
         options.forEach((opt) => {
             const option = document.createElement('option');
-            option.value = opt.value;
+            option.value = String(opt.value);
             option.textContent = opt.text;
             select.appendChild(option);
         });
 
-        const state = { mode: 0, locked: false };
+        const state = { mode: 0, locked: false, signature };
         select.addEventListener('change', () => {
             const value = Number(select.value);
             state.mode = Number.isFinite(value) ? value : 0;
@@ -238,7 +385,13 @@
         wrapper.className = 'animts-control-group';
         wrapper.appendChild(label);
         wrapper.appendChild(select);
+        state.wrapper = wrapper;
         header.insertBefore(wrapper, header.firstChild);
+        {
+            const value = Number(select.value);
+            state.mode = Number.isFinite(value) ? value : 0;
+            state.locked = state.mode !== 0;
+        }
 
         embed.__ANIMCS_CONTROL_STATE = state;
         return state;
@@ -464,6 +617,62 @@
         return api;
     }
 
+    function createAnimGeomApi(Vec2Ctor, ColorCtor, MathApi) {
+        const defaults = {
+            axisColor: new ColorCtor(90, 100, 120, 200),
+            gridColor: new ColorCtor(40, 50, 70, 120)
+        };
+
+        function toScreen(v, center, scale) {
+            return new Vec2Ctor(center.X + v.X * scale, center.Y - v.Y * scale);
+        }
+
+        function drawAxes(g, center, scale, axisColor, gridColor) {
+            if (!g || !center || !scale) return;
+            const useAxis = axisColor || defaults.axisColor;
+            const useGrid = gridColor || defaults.gridColor;
+            const axisLength = scale * 1.2;
+
+            g.Line(new Vec2Ctor(center.X - axisLength, center.Y), new Vec2Ctor(center.X + axisLength, center.Y), useAxis, 1.5);
+            g.Line(new Vec2Ctor(center.X, center.Y - axisLength), new Vec2Ctor(center.X, center.Y + axisLength), useAxis, 1.5);
+
+            for (let i = 1; i <= 4; i += 1) {
+                const offset = i * scale * 0.25;
+                g.Line(new Vec2Ctor(center.X - axisLength, center.Y - offset), new Vec2Ctor(center.X + axisLength, center.Y - offset), useGrid, 1);
+                g.Line(new Vec2Ctor(center.X - axisLength, center.Y + offset), new Vec2Ctor(center.X + axisLength, center.Y + offset), useGrid, 1);
+                g.Line(new Vec2Ctor(center.X - offset, center.Y - axisLength), new Vec2Ctor(center.X - offset, center.Y + axisLength), useGrid, 1);
+                g.Line(new Vec2Ctor(center.X + offset, center.Y - axisLength), new Vec2Ctor(center.X + offset, center.Y + axisLength), useGrid, 1);
+            }
+        }
+
+        function drawArrow(g, from, to, color, width, headSize) {
+            if (!g || !from || !to) return;
+            const lineWidth = width == null ? 1 : width;
+            const arrowHead = headSize == null ? 8 : headSize;
+            g.Line(from, to, color, lineWidth);
+
+            const dir = new Vec2Ctor(to.X - from.X, to.Y - from.Y);
+            const len = MathApi.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
+            if (len <= 0.001) return;
+
+            const ux = dir.X / len;
+            const uy = dir.Y / len;
+            const left = new Vec2Ctor(-uy, ux);
+            const basePoint = new Vec2Ctor(to.X - ux * arrowHead, to.Y - uy * arrowHead);
+            const leftPoint = new Vec2Ctor(basePoint.X + left.X * arrowHead * 0.55, basePoint.Y + left.Y * arrowHead * 0.55);
+            const rightPoint = new Vec2Ctor(basePoint.X - left.X * arrowHead * 0.55, basePoint.Y - left.Y * arrowHead * 0.55);
+
+            g.Line(to, leftPoint, color, lineWidth);
+            g.Line(to, rightPoint, color, lineWidth);
+        }
+
+        return {
+            ToScreen: toScreen,
+            DrawAxes: drawAxes,
+            DrawArrow: drawArrow
+        };
+    }
+
     function createPlayer(mod, options) {
         const opts = options || {};
         const canvas = opts.canvas || (opts.embed ? document.createElement('canvas') : null);
@@ -471,7 +680,12 @@
         const width = canvas ? canvas.width : (opts.width || 1);
         const height = canvas ? canvas.height : (opts.height || 1);
         const context = new AnimContext(width, height);
-        const runtimeApi = { Vec2, Color, MathF };
+        const runtimeApi = {
+            Vec2,
+            Color,
+            MathF,
+            AnimGeom: createAnimGeomApi(Vec2, Color, MathF)
+        };
         const canvasApi = createCanvasApi(canvas, ctx);
         const controlState = opts.controlState || null;
         let detachPointer = null;
@@ -579,8 +793,10 @@
         embed.__ANIMCS_MOUNTING = true;
         embed.__ANIMCS_LAST_SRC = rawSource;
         const normalized = normalizeAnimPath(rawSource);
-        applyEmbedDefaults(embed, normalized);
+        const embedProfileData = parseEmbedProfileData(embed);
+        applyEmbedDefaults(embed, normalized, resolveEmbedProfile(null, embedProfileData));
         ensureEmbedShell(embed, normalized || rawSource || 'C# 动画');
+        ensureControls(embed);
         clearError(embed);
         disposeEmbed(embed);
 
@@ -611,6 +827,12 @@
 
                 moduleUrl = resolveAnimModulePath(entry);
             }
+
+            const customProfile = custom && custom.profile ? custom.profile : null;
+            const entryProfile = entry && typeof entry === 'object' && entry.profile ? entry.profile : customProfile;
+            applyEmbedDefaults(embed, normalized, resolveEmbedProfile(entryProfile, embedProfileData));
+            applyStageHeight(embed);
+            ensureControls(embed);
 
             if (!moduleUrl) {
                 throw new Error(`动画缺少 JS 产物：${normalized}`);
@@ -693,6 +915,9 @@
 
     return {
         normalizeAnimPath,
+        parseModeOptionsDsl,
+        normalizeAnimProfile,
+        resolveEmbedProfile,
         resolveEntryForSource,
         resolveAnimModulePath,
         createPlayer,

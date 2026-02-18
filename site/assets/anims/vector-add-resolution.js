@@ -1,6 +1,6 @@
 // Generated from anims/vector-add-resolution.cs
 export function create(runtime) {
-    const { Vec2, Color, MathF } = runtime;
+    const { Vec2, Color, MathF, AnimGeom } = runtime;
     class vector_add_resolution {
         constructor() {
             this._ctx = null;

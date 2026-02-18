@@ -1,6 +1,6 @@
 // Generated from anims/vector-basic.cs
 export function create(runtime) {
-    const { Vec2, Color, MathF } = runtime;
+    const { Vec2, Color, MathF, AnimGeom } = runtime;
     class VectorBasic {
         constructor() {
             this._ctx = null;

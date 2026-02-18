@@ -4,6 +4,7 @@
     "anims/demo-basic.cs",
     "anims/demo-eoc-ai.cs",
     "anims/demo-math-transform.cs",
+    "anims/demo-mode-state.cs",
     "anims/vector-add-resolution.cs",
     "anims/vector-basic.cs"
   ],
@@ -14,11 +15,67 @@
     },
     "anims/demo-eoc-ai.cs": {
       "js": "demo-eoc-ai.js",
-      "entry": "demo-eoc-ai"
+      "entry": "demo-eoc-ai",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 2.3,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "自动"
+          },
+          {
+            "value": 1,
+            "text": "一阶-徘徊"
+          },
+          {
+            "value": 2,
+            "text": "一阶-冲刺"
+          },
+          {
+            "value": 3,
+            "text": "二阶-变形"
+          },
+          {
+            "value": 4,
+            "text": "二阶-徘徊"
+          },
+          {
+            "value": 5,
+            "text": "二阶-冲刺"
+          }
+        ]
+      }
     },
     "anims/demo-math-transform.cs": {
       "js": "demo-math-transform.js",
       "entry": "demo-math-transform"
+    },
+    "anims/demo-mode-state.cs": {
+      "js": "demo-mode-state.js",
+      "entry": "demo-mode-state",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 1.25,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "自动"
+          },
+          {
+            "value": 1,
+            "text": "静止"
+          },
+          {
+            "value": 2,
+            "text": "顺时针"
+          },
+          {
+            "value": 3,
+            "text": "逆时针"
+          }
+        ]
+      }
     },
     "anims/vector-add-resolution.cs": {
       "js": "vector-add-resolution.js",
