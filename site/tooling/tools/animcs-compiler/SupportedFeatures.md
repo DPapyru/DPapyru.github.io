@@ -20,9 +20,13 @@
 
 - `Vec2 + Vec2` / `Vec2 - Vec2` / `Vec2 * float` / `float * Vec2` / `Vec2 / float`
 - `Vec3 + Vec3` / `Vec3 - Vec3` / `Vec3 * float` / `float * Vec3` / `Vec3 / float`
-- `Mat4 * Mat4` / `Mat4 * Vec3`
+- `Mat4 * Mat4` / `Mat4 * Vec2` / `Mat4 * Vec3`
 
 上述表达式在编译阶段会降级为 JS 运行时帮助方法调用，不会保留对象直接 `*` 的不合法语义。
+
+## 常用方法降级
+
+- `ToString()`（无参数）会降级为 JS 的 `.toString()` 调用。
 
 ## 不支持的语法
 

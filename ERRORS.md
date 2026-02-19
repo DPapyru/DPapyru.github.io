@@ -454,3 +454,31 @@
 - `animcs-compiler-ast` 测试采用显式环境变量 `ANIMCS_AST_INTEGRATION=1` 触发，避免默认全量并发测试中的环境抖动；开启后已验证通过。
 - `dotnet test` 在沙箱内会因 VSTest 本地 socket 权限受限而中止，已在提权模式下完成验证。
 - `npm run check-generated` 失败原因为既有内容问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次 animcs Vec3/Mat4 能力升级无直接关系。
+
+### 验证记录 [2026-02-19 13:10]：animcs Vec3/Mat4 交互修复 + 其它示例回归复测
+
+**级别**：L3
+
+**命令与结果**：
+- `npm run build:animcs`：通过
+- `ANIMCS_AST_INTEGRATION=1 node --test site/tooling/scripts/animcs-compiler-ast.test.js`：通过（2 tests, 0 failures）
+- `node --test site/tooling/scripts/animcs-js-runtime-profile.test.js`：通过（5 tests, 0 failures）
+- `DOTNET_ROLL_FORWARD=Major dotnet test site/tooling/tools/animcs/AnimRuntime.Tests/AnimRuntime.Tests.csproj -v minimal`：通过（Passed: 9）
+- `timeout 420s npm run build --silent > /tmp/fix_animcs_interaction_build.log 2>&1; echo BUILD_EXIT:$?`：通过（`BUILD_EXIT:0`）
+- `timeout 420s npm run check-generated --silent > /tmp/fix_animcs_interaction_check_generated.log 2>&1; echo CHECK_GENERATED_EXIT:$?`：失败（`CHECK_GENERATED_EXIT:1`）
+- `python3 -m http.server 4173 --bind 127.0.0.1`：通过（本地浏览器调试服务启动）
+- `google-chrome --headless --disable-gpu --virtual-time-budget=20000 --dump-dom "http://127.0.0.1:4173/site/tmp-animcs-input-check.html?src=anims/vec3-axis-orbit.cs" > /tmp/animcs_input_vec3_dom.html`：通过（`ok: true`，`drag_changes: true`，`wheel_changes: true`）
+- `google-chrome --headless --disable-gpu --virtual-time-budget=20000 --dump-dom "http://127.0.0.1:4173/site/tmp-animcs-input-check.html?src=anims/matrix-mat4-transform.cs" > /tmp/animcs_input_mat4_dom.html`：通过（`ok: true`，`drag_changes: true`，`wheel_changes: true`）
+- `google-chrome --headless --disable-gpu --virtual-time-budget=20000 --dump-dom "http://127.0.0.1:4173/site/tmp-animcs-mount-check.html?src=anims/demo-basic.cs" > /tmp/animcs_mount_demo_basic_dom.html`：通过（`ok: true`）
+- `google-chrome --headless --disable-gpu --virtual-time-budget=20000 --dump-dom "http://127.0.0.1:4173/site/tmp-animcs-mount-check.html?src=anims/demo-eoc-ai.cs" > /tmp/animcs_mount_demo_eoc_dom.html`：通过（`ok: true`）
+- `google-chrome --headless --disable-gpu --virtual-time-budget=20000 --dump-dom "http://127.0.0.1:4173/site/tmp-animcs-mount-check.html?src=anims/demo-math-transform.cs" > /tmp/animcs_mount_demo_math_transform_dom.html`：通过（`ok: true`）
+- `google-chrome --headless --disable-gpu --virtual-time-budget=20000 --dump-dom "http://127.0.0.1:4173/site/tmp-animcs-mount-check.html?src=anims/demo-mode-state.cs" > /tmp/animcs_mount_demo_mode_state_dom.html`：通过（`ok: true`）
+- `google-chrome --headless --disable-gpu --virtual-time-budget=20000 --dump-dom "http://127.0.0.1:4173/site/tmp-animcs-mount-check.html?src=anims/vector-basic.cs" > /tmp/animcs_mount_vector_basic_dom.html`：通过（`ok: true`）
+- `google-chrome --headless --disable-gpu --virtual-time-budget=20000 --dump-dom "http://127.0.0.1:4173/site/tmp-animcs-mount-check.html?src=anims/vector-move.cs" > /tmp/animcs_mount_vector_move_dom.html`：通过（`ok: true`）
+- `google-chrome --headless --disable-gpu --virtual-time-budget=20000 --dump-dom "http://127.0.0.1:4173/site/tmp-animcs-mount-check.html?src=anims/vector-add-resolution.cs" > /tmp/animcs_mount_vector_add_resolution_dom.html`：通过（`ok: true`）
+
+**备注**：
+- 本轮浏览器验证采用“真实 pointer/wheel 事件 + 状态对比”确认 `Vec3/Mat4` 两个新动画都可拖拽旋转并可滚轮缩放。
+- “其它示例内容”回归检查覆盖 `demo-*` 与 `vector-*`，结果均为 player/canvas 正常、无运行时错误面板、无全局异常。
+- `check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次交互修复无直接关系。
+- 临时浏览器检查页 `site/tmp-animcs-*.html` 已在验证后删除。

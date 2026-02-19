@@ -27,6 +27,9 @@ public sealed class Vec3Mat4Ops : IAnimScript
         var sum = a + b;
         var scaled = 2f * a;
         var transformed = m * sum;
+        var point2 = m * new Vec2(1f, 2f);
+        var label = (MathF.Round(1.25f)).ToString();
+        g.Text(label, point2, new Color(255, 255, 255));
         g.Clear(new Color(0, 0, 0));
     }
 
@@ -108,6 +111,8 @@ maybeTest('compileAnimToJs lowers Vec3/Mat4 operators to runtime helpers', { tim
     assert.match(js, /Vec3\.Add\(/);
     assert.match(js, /Vec3\.MulScalar\(/);
     assert.match(js, /Mat4\.MulVec3\(/);
+    assert.match(js, /Mat4\.MulVec2\(/);
+    assert.match(js, /\.toString\(\)/);
 });
 
 maybeTest('compileAnimBatch compiles all entries in one pass', { timeout: 30_000 }, () => {

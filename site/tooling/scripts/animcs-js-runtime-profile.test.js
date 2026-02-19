@@ -57,7 +57,7 @@ test('resolveEmbedProfile gives precedence to explicit embed data', () => {
     });
 });
 
-test('createPlayer exposes Vec3 and Mat4 runtime APIs', () => {
+test('createPlayer exposes Vec2/Vec3 and Mat4 runtime APIs', () => {
     const seen = {};
     const mod = {
         create(runtimeApi) {
@@ -77,13 +77,17 @@ test('createPlayer exposes Vec3 and Mat4 runtime APIs', () => {
     player.start();
     player.stop();
 
+    assert.equal(typeof seen.runtimeApi.Vec2, 'function');
     assert.equal(typeof seen.runtimeApi.Vec3, 'function');
     assert.equal(typeof seen.runtimeApi.Mat4, 'function');
     assert.equal(typeof seen.ctx.Input.WheelDelta, 'number');
 
+    const Vec2Ctor = seen.runtimeApi.Vec2;
     const Vec3Ctor = seen.runtimeApi.Vec3;
     const Mat4Ctor = seen.runtimeApi.Mat4;
+    const moved2 = Mat4Ctor.MulVec2(Mat4Ctor.Translation(1, 2, 0), new Vec2Ctor(4, 5));
     const moved = Mat4Ctor.MulVec3(Mat4Ctor.Translation(1, 2, 3), new Vec3Ctor(4, 5, 6));
+    assert.deepEqual({ x: moved2.X, y: moved2.Y }, { x: 5, y: 7 });
     assert.deepEqual({ x: moved.X, y: moved.Y, z: moved.Z }, { x: 5, y: 7, z: 9 });
 });
 
