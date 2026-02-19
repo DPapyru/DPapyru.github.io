@@ -34,7 +34,7 @@ export function create(runtime) {
                     let width = this._ctx.Width;
                     let height = this._ctx.Height;
                     let center = new Vec2(width * 0.5, height * 0.5);
-                    let scale = MathF.Min(width, height) * 0.52;
+                    let scale = MathF.Min(width, height) / 4;
                     let vec2 = new Vec2(0.3, 0.5);
             
                     if (this._center.X != 0 || this._center.Y != 0)

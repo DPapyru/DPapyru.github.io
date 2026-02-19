@@ -5,7 +5,7 @@ namespace AnimScripts.Dev;
 
 // 向量的加法和分解说明
 [AnimEntry("vector_add_resolution")]
-[AnimProfile(HeightScale = 3f)]
+[AnimProfile(HeightScale = 4f)]
 public sealed class vector_add_resolution : IAnimScript
 {
     private AnimContext? _ctx;
@@ -39,7 +39,7 @@ public sealed class vector_add_resolution : IAnimScript
         var width = _ctx.Width;
         var height = _ctx.Height;
         var center = new Vec2(width * 0.5f, height * 0.5f);
-        var scale = MathF.Min(width, height) * 0.52f;
+        var scale = MathF.Min(width, height) / 4f;
         var vec2 = new Vec2(0.3f, 0.5f);
 
         if (_center.X != 0 || _center.Y != 0)

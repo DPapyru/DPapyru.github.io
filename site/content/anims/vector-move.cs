@@ -2,7 +2,7 @@ using AnimRuntime;
 using AnimRuntime.Math;
 
 [AnimEntry("vector_move")]
-[AnimProfile(Controls = "mode-select", HeightScale = 1.5f)]
+[AnimProfile(Controls = "mode-select", HeightScale = 2.5f,ModeOptions = "0:初始状态|1:分离为X-Y向量|2:向量合成")]
 public sealed class vector_move : IAnimScript
 {
     private AnimContext? _ctx;

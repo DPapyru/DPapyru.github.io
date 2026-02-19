@@ -80,7 +80,10 @@
     },
     "anims/vector-add-resolution.cs": {
       "js": "vector-add-resolution.js",
-      "entry": "vector-add-resolution"
+      "entry": "vector-add-resolution",
+      "profile": {
+        "heightScale": 4
+      }
     },
     "anims/vector-basic.cs": {
       "js": "vector-basic.js",
@@ -91,7 +94,7 @@
       "entry": "vector-move",
       "profile": {
         "controls": "mode-select",
-        "heightScale": 1.5
+        "heightScale": 2.5
       }
     }
   }
