@@ -31,4 +31,14 @@ public sealed class Mat4Tests
         Assert.InRange(rotated.Y, 0.9999f, 1.0001f);
         Assert.InRange(rotated.Z, -0.0001f, 0.0001f);
     }
+
+    [Fact]
+    public void Mat4_Transforms_Vec2_Point_Works()
+    {
+        var translated = Mat4.Translation(3f, -2f, 0f) * new Vec2(1f, 2f);
+        Assert.Equal(new Vec2(4f, 0f), translated);
+
+        var scaled = Mat4.Scale(2f, 3f, 1f) * new Vec2(1f, 2f);
+        Assert.Equal(new Vec2(2f, 6f), scaled);
+    }
 }

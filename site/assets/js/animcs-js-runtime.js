@@ -610,6 +610,15 @@
             a.M30 * b.M03 + a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33
         );
     };
+    Mat4.MulVec2 = function (m, v) {
+        const x = m.M00 * v.X + m.M01 * v.Y + m.M03;
+        const y = m.M10 * v.X + m.M11 * v.Y + m.M13;
+        const w = m.M30 * v.X + m.M31 * v.Y + m.M33;
+        if (Math.abs(w) > 1e-6 && Math.abs(w - 1) > 1e-6) {
+            return new Vec2(x / w, y / w);
+        }
+        return new Vec2(x, y);
+    };
     Mat4.MulVec3 = function (m, v) {
         const x = m.M00 * v.X + m.M01 * v.Y + m.M02 * v.Z + m.M03;
         const y = m.M10 * v.X + m.M11 * v.Y + m.M12 * v.Z + m.M13;

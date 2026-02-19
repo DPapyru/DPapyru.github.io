@@ -58,7 +58,7 @@ export function create(runtime) {
         OnDispose() {
         }
         static Fmt(value) {
-            return (MathF.Round(value * 100) / 100).ToString();
+            return (MathF.Round(value * 100) / 100).toString();
         }
         static DrawSegment3(g, from, to, color, width, center, scale) {
             g.Line(Vec3AxisOrbit.Project(from, center, scale), Vec3AxisOrbit.Project(to, center, scale), color, width);

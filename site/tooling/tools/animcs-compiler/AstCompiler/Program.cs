@@ -320,6 +320,7 @@ namespace AnimRuntime.Math
         public static Mat4 RotationZ(float radians) => default;
         public static Mat4 PerspectiveFovRh(float fov, float aspect, float near, float far) => default;
         public static Mat4 operator *(Mat4 a, Mat4 b) => default;
+        public static Vec2 operator *(Mat4 m, Vec2 v) => default;
         public static Vec3 operator *(Mat4 m, Vec3 v) => default;
     }
 }
@@ -653,6 +654,13 @@ internal sealed class JsEmitter
 
     private string EmitInvocation(InvocationExpressionSyntax invocation)
     {
+        if (invocation.Expression is MemberAccessExpressionSyntax memberAccess &&
+            memberAccess.Name.Identifier.ValueText == "ToString" &&
+            invocation.ArgumentList.Arguments.Count == 0)
+        {
+            return $"{EmitExpression(memberAccess.Expression)}.toString()";
+        }
+
         var target = EmitExpression(invocation.Expression);
         var args = string.Join(", ", invocation.ArgumentList.Arguments.Select(arg => EmitExpression(arg.Expression)));
         return $"{target}({args})";
@@ -794,6 +802,11 @@ internal sealed class JsEmitter
             if (IsType(leftType, "AnimRuntime.Math.Mat4") && IsType(rightType, "AnimRuntime.Math.Mat4"))
             {
                 return $"Mat4.Mul({left}, {right})";
+            }
+
+            if (IsType(leftType, "AnimRuntime.Math.Mat4") && IsType(rightType, "AnimRuntime.Math.Vec2"))
+            {
+                return $"Mat4.MulVec2({left}, {right})";
             }
 
             if (IsType(leftType, "AnimRuntime.Math.Mat4") && IsType(rightType, "AnimRuntime.Math.Vec3"))

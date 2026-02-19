@@ -104,7 +104,7 @@ export function create(runtime) {
             return "\u590D\u5408";
         }
         static Fmt(value) {
-            return (MathF.Round(value * 100) / 100).ToString();
+            return (MathF.Round(value * 100) / 100).toString();
         }
         static DrawCube(g, m, color, width, center, scale) {
             let p000 = Mat4.MulVec3(m, new Vec3(-0.5, -0.5, -0.5));

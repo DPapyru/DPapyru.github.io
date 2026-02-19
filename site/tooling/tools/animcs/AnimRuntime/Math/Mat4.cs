@@ -139,6 +139,20 @@ public readonly struct Mat4 : IEquatable<Mat4>
         return new Vec3(x, y, z);
     }
 
+    public static Vec2 operator *(Mat4 m, Vec2 v)
+    {
+        var x = m.M00 * v.X + m.M01 * v.Y + m.M03;
+        var y = m.M10 * v.X + m.M11 * v.Y + m.M13;
+        var w = m.M30 * v.X + m.M31 * v.Y + m.M33;
+
+        if (MathF.Abs(w) > 0.000001f && MathF.Abs(w - 1f) > 0.000001f)
+        {
+            return new Vec2(x / w, y / w);
+        }
+
+        return new Vec2(x, y);
+    }
+
     public bool Equals(Mat4 other)
     {
         return
