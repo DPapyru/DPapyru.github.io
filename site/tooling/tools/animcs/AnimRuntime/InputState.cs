@@ -12,4 +12,5 @@ public sealed class InputState
     public bool IsInside { get; set; }
     public int Mode { get; set; }
     public bool ModeLocked { get; set; }
+    public float WheelDelta { get; set; }
 }

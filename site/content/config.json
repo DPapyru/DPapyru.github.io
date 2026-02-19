@@ -353,6 +353,35 @@
         }
       }
     },
+    "群友进阶内容": {
+      "title": "群友进阶内容",
+      "description": "群友进阶内容相关的教程",
+      "topics": {
+        "article-contribution": {
+          "title": "文章贡献",
+          "description": "如何为教程网站贡献文章",
+          "files": [
+            {
+              "filename": "MoKou-制作类似MC的工作台.md",
+              "path": "群友进阶内容/休闲篇/MoKou-制作类似MC的工作台.md",
+              "originalPath": "群友进阶内容/休闲篇/MoKou-制作类似MC的工作台.md",
+              "title": "制作一个类似MC的工作台",
+              "author": "MoKou",
+              "order": 100,
+              "description": "制作一个类似MC的工作台",
+              "time": "35分钟",
+              "difficulty": "intermediate",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": null,
+              "min_t": null,
+              "colors": null,
+              "colorChange": null
+            }
+          ]
+        }
+      }
+    },
     "螺线翻译tml教程": {
       "title": "螺线翻译tml教程",
       "description": "螺线翻译tml教程相关的教程",
@@ -2790,6 +2819,12 @@
         "DPapyru-如何用好AI.md",
         "DPapyru-学会搜索自己需要的内容.md",
         "DPapyru-掌握编程的逻辑和思想.md"
+      ]
+    },
+    "MoKou": {
+      "name": "MoKou",
+      "files": [
+        "MoKou-制作类似MC的工作台.md"
       ]
     },
     "错数螺线": {
@@ -5501,6 +5536,24 @@
       "colors": {
         "Pink": "#ffc0cb"
       },
+      "colorChange": null
+    },
+    {
+      "filename": "MoKou-制作类似MC的工作台.md",
+      "path": "群友进阶内容/休闲篇/MoKou-制作类似MC的工作台.md",
+      "originalPath": "群友进阶内容/休闲篇/MoKou-制作类似MC的工作台.md",
+      "title": "制作一个类似MC的工作台",
+      "author": "MoKou",
+      "category": "群友进阶内容",
+      "topic": "article-contribution",
+      "order": 100,
+      "time": "35分钟",
+      "difficulty": "intermediate",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": null,
+      "min_t": null,
+      "colors": null,
       "colorChange": null
     },
     {

@@ -163,6 +163,11 @@ internal sealed class Canvas2DProxy : ICanvas2D
     {
         CanvasInterop.FillCircle(_canvasId, center.X, center.Y, radius, color.R, color.G, color.B, color.A);
     }
+
+    public void Text(string text, Vec2 position, Color color, float size = 12f)
+    {
+        CanvasInterop.Text(_canvasId, text ?? string.Empty, position.X, position.Y, color.R, color.G, color.B, color.A, size);
+    }
 }
 
 internal static partial class CanvasInterop
@@ -178,4 +183,7 @@ internal static partial class CanvasInterop
 
     [JSImport("fillCircle", "animcs")]
     internal static partial void FillCircle(int canvasId, float cx, float cy, float radius, byte r, byte g, byte b, byte a);
+
+    [JSImport("text", "animcs")]
+    internal static partial void Text(int canvasId, string text, float x, float y, byte r, byte g, byte b, byte a, float size);
 }

@@ -425,3 +425,32 @@
 - `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1400 --virtual-time-budget=30000 --screenshot=/tmp/animcs-acceptance/viewer-anim-page.png "http://127.0.0.1:4173/site/pages/viewer.html?file=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE%2F%E4%BD%BF%E7%94%A8%E7%BD%91%E9%A1%B5%E7%89%B9%E6%AE%8A%E5%8A%A8%E7%94%BB%E6%A8%A1%E5%9D%97.md"`：通过
 
 **备注**：`check-generated` 失败原因仍为既有内容问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`。本次浏览器验收覆盖 `anim-renderer + viewer` 两条主链路，执行了按钮点击与重载交互，截图证据位于 `/tmp/animcs-acceptance/animcs_profile_browser_check.png`、`/tmp/animcs-acceptance/anim-renderer-page.png`、`/tmp/animcs-acceptance/viewer-anim-page.png`。临时检查页 `site/tmp-animcs-profile-browser-check.html` 已在验收后删除。
+
+### 验证记录 [2026-02-19 11:09]：feat-animcs-vec3-mat4 开发基线
+
+**级别**：L3
+
+**命令与结果**：
+- `npm ci`：通过
+- `npm run test`：失败（32 files 中 4 files 失败）
+- `timeout 300s npm run build --silent > /tmp/feat_animcs_vec3_mat4_baseline_build.log 2>&1; echo BUILD_EXIT:$?`：通过（`BUILD_EXIT:0`）
+
+**备注**：`npm run test` 的失败为仓库现存失败项，包含：`site/tooling/scripts/folder-learning-filter.test.js`、`site/tooling/scripts/gallery-check.test.js`、`site/tooling/scripts/gallery-normalize.test.js`、`site/tooling/scripts/generate-shader-gallery.test.js`。本条记录用于确认本次开发起点基线。
+
+### 验证记录 [2026-02-19 12:32]：feat-animcs-vec3-mat4 实施完成验收
+
+**级别**：L3
+
+**命令与结果**：
+- `npm run test`：失败（33 files 中 4 files 失败）
+- `ANIMCS_AST_INTEGRATION=1 node --test site/tooling/scripts/animcs-compiler-ast.test.js`：通过（2 tests, 0 failures）
+- `DOTNET_ROLL_FORWARD=Major dotnet test site/tooling/tools/animcs/AnimRuntime.Tests/AnimRuntime.Tests.csproj -v minimal`：通过（Passed: 8）
+- `DOTNET_ROLL_FORWARD=Major dotnet test site/tooling/tools/animcs/AnimHost.Tests/AnimHost.Tests.csproj -v minimal`：通过（Passed: 1）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：
+- `npm run test` 当前失败项仍为仓库既有失败：`site/tooling/scripts/folder-learning-filter.test.js`、`site/tooling/scripts/gallery-check.test.js`、`site/tooling/scripts/gallery-normalize.test.js`、`site/tooling/scripts/generate-shader-gallery.test.js`。
+- `animcs-compiler-ast` 测试采用显式环境变量 `ANIMCS_AST_INTEGRATION=1` 触发，避免默认全量并发测试中的环境抖动；开启后已验证通过。
+- `dotnet test` 在沙箱内会因 VSTest 本地 socket 权限受限而中止，已在提权模式下完成验证。
+- `npm run check-generated` 失败原因为既有内容问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次 animcs Vec3/Mat4 能力升级无直接关系。

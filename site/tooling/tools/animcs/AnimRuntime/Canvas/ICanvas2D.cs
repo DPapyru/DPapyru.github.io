@@ -8,4 +8,5 @@ public interface ICanvas2D
     void Line(Vec2 from, Vec2 to, Color color, float width = 1f);
     void Circle(Vec2 center, float radius, Color color, float width = 1f);
     void FillCircle(Vec2 center, float radius, Color color);
+    void Text(string text, Vec2 position, Color color, float size = 12f);
 }

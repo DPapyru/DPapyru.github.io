@@ -5,6 +5,8 @@
     "anims/demo-eoc-ai.cs",
     "anims/demo-math-transform.cs",
     "anims/demo-mode-state.cs",
+    "anims/matrix-mat4-transform.cs",
+    "anims/vec3-axis-orbit.cs",
     "anims/vector-add-resolution.cs",
     "anims/vector-basic.cs",
     "anims/vector-move.cs"
@@ -78,6 +80,39 @@
         ]
       }
     },
+    "anims/matrix-mat4-transform.cs": {
+      "js": "matrix-mat4-transform.js",
+      "entry": "matrix-mat4-transform",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 2.05,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "复合"
+          },
+          {
+            "value": 1,
+            "text": "平移"
+          },
+          {
+            "value": 2,
+            "text": "旋转"
+          },
+          {
+            "value": 3,
+            "text": "缩放"
+          }
+        ]
+      }
+    },
+    "anims/vec3-axis-orbit.cs": {
+      "js": "vec3-axis-orbit.js",
+      "entry": "vec3-axis-orbit",
+      "profile": {
+        "heightScale": 1.9
+      }
+    },
     "anims/vector-add-resolution.cs": {
       "js": "vector-add-resolution.js",
       "entry": "vector-add-resolution",
@@ -94,7 +129,21 @@
       "entry": "vector-move",
       "profile": {
         "controls": "mode-select",
-        "heightScale": 2.5
+        "heightScale": 2.5,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "初始状态"
+          },
+          {
+            "value": 1,
+            "text": "分离为X-Y向量"
+          },
+          {
+            "value": 2,
+            "text": "向量合成"
+          }
+        ]
       }
     }
   }

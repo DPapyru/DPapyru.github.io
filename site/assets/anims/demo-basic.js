@@ -1,6 +1,6 @@
 // Generated from anims/demo-basic.cs
 export function create(runtime) {
-    const { Vec2, Color, MathF, AnimGeom } = runtime;
+    const { Vec2, Vec3, Mat4, Color, MathF, AnimGeom } = runtime;
     class DemoBasic {
         constructor() {
         }
@@ -9,12 +9,11 @@ export function create(runtime) {
         OnUpdate(dt) {
         }
         OnRender(g) {
-            
-                    g.Clear(new Color(8, 12, 16));
-            
+            g.Clear(new Color(8, 12, 16));
         }
         OnDispose() {
         }
     }
     return new DemoBasic();
 }
+

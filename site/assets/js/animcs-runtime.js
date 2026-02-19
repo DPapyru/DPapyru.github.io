@@ -136,6 +136,19 @@
         ctx.restore();
     }
 
+    function drawText(canvasId, text, x, y, r, g, b, a, size) {
+        const entry = canvasRegistry.get(canvasId);
+        if (!entry || !entry.ctx) return;
+        const ctx = entry.ctx;
+        const fontSize = Math.max(1, Number(size) || 12);
+        ctx.save();
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+        ctx.font = `${fontSize}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+        ctx.textBaseline = 'top';
+        ctx.fillText(String(text == null ? '' : text), Number(x) || 0, Number(y) || 0);
+        ctx.restore();
+    }
+
     async function defaultLoadDotnetModule(urls) {
         if (!urls || !urls.dotnetJs) {
             throw new Error('dotnetJs required');
@@ -192,7 +205,8 @@
                 clear: clearCanvas,
                 line: drawLine,
                 circle: strokeCircle,
-                fillCircle: fillCircle
+                fillCircle: fillCircle,
+                text: drawText
             });
             const rawExports = await dotnetRuntime.getAssemblyExports('AnimHost.dll');
             const exports = findAnimHostExports(rawExports);

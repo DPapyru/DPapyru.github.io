@@ -4,6 +4,7 @@
 
 目标：前端只运行 JS，不加载 WASM / dotnet runtime。
 
+- 当前实现为 **Roslyn AST 转译**（批处理 JSON 输入/输出），构建机需要安装 `dotnet`。
 - 编译器只支持 **受限的 C# 子集**，详见 `SupportedFeatures.md`。
 - 如果脚本使用了不支持的语法，编译会失败并给出错误提示。
 

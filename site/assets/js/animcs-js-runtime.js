@@ -434,6 +434,193 @@
         this.Y = Number(y || 0);
     }
 
+    Vec2.Add = function (a, b) {
+        return new Vec2(((a && a.X) || 0) + ((b && b.X) || 0), ((a && a.Y) || 0) + ((b && b.Y) || 0));
+    };
+    Vec2.Sub = function (a, b) {
+        return new Vec2(((a && a.X) || 0) - ((b && b.X) || 0), ((a && a.Y) || 0) - ((b && b.Y) || 0));
+    };
+    Vec2.MulScalar = function (v, scalar) {
+        const s = Number(scalar || 0);
+        return new Vec2(((v && v.X) || 0) * s, ((v && v.Y) || 0) * s);
+    };
+    Vec2.DivScalar = function (v, scalar) {
+        const s = Number(scalar || 0);
+        if (Math.abs(s) <= 1e-6) return new Vec2(0, 0);
+        return new Vec2(((v && v.X) || 0) / s, ((v && v.Y) || 0) / s);
+    };
+
+    function Vec3(x, y, z) {
+        this.X = Number(x || 0);
+        this.Y = Number(y || 0);
+        this.Z = Number(z || 0);
+    }
+
+    Vec3.Add = function (a, b) {
+        return new Vec3(
+            ((a && a.X) || 0) + ((b && b.X) || 0),
+            ((a && a.Y) || 0) + ((b && b.Y) || 0),
+            ((a && a.Z) || 0) + ((b && b.Z) || 0)
+        );
+    };
+    Vec3.Sub = function (a, b) {
+        return new Vec3(
+            ((a && a.X) || 0) - ((b && b.X) || 0),
+            ((a && a.Y) || 0) - ((b && b.Y) || 0),
+            ((a && a.Z) || 0) - ((b && b.Z) || 0)
+        );
+    };
+    Vec3.MulScalar = function (v, scalar) {
+        const s = Number(scalar || 0);
+        return new Vec3(((v && v.X) || 0) * s, ((v && v.Y) || 0) * s, ((v && v.Z) || 0) * s);
+    };
+    Vec3.DivScalar = function (v, scalar) {
+        const s = Number(scalar || 0);
+        if (Math.abs(s) <= 1e-6) return new Vec3(0, 0, 0);
+        return new Vec3(((v && v.X) || 0) / s, ((v && v.Y) || 0) / s, ((v && v.Z) || 0) / s);
+    };
+    Vec3.Length = function (v) {
+        const x = (v && v.X) || 0;
+        const y = (v && v.Y) || 0;
+        const z = (v && v.Z) || 0;
+        return Math.sqrt(x * x + y * y + z * z);
+    };
+    Vec3.Normalize = function (v) {
+        const len = Vec3.Length(v);
+        if (len <= 1e-6) return new Vec3(0, 0, 0);
+        return Vec3.DivScalar(v, len);
+    };
+    Vec3.prototype.Length = function () {
+        return Vec3.Length(this);
+    };
+    Vec3.prototype.Normalize = function () {
+        return Vec3.Normalize(this);
+    };
+
+    function Mat4(
+        m00, m01, m02, m03,
+        m10, m11, m12, m13,
+        m20, m21, m22, m23,
+        m30, m31, m32, m33
+    ) {
+        this.M00 = Number(m00 == null ? 1 : m00);
+        this.M01 = Number(m01 || 0);
+        this.M02 = Number(m02 || 0);
+        this.M03 = Number(m03 || 0);
+        this.M10 = Number(m10 || 0);
+        this.M11 = Number(m11 == null ? 1 : m11);
+        this.M12 = Number(m12 || 0);
+        this.M13 = Number(m13 || 0);
+        this.M20 = Number(m20 || 0);
+        this.M21 = Number(m21 || 0);
+        this.M22 = Number(m22 == null ? 1 : m22);
+        this.M23 = Number(m23 || 0);
+        this.M30 = Number(m30 || 0);
+        this.M31 = Number(m31 || 0);
+        this.M32 = Number(m32 || 0);
+        this.M33 = Number(m33 == null ? 1 : m33);
+    }
+
+    Mat4.Identity = function () {
+        return new Mat4(
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        );
+    };
+    Mat4.Translation = function (x, y, z) {
+        return new Mat4(
+            1, 0, 0, Number(x || 0),
+            0, 1, 0, Number(y || 0),
+            0, 0, 1, Number(z || 0),
+            0, 0, 0, 1
+        );
+    };
+    Mat4.Scale = function (x, y, z) {
+        return new Mat4(
+            Number(x || 0), 0, 0, 0,
+            0, Number(y || 0), 0, 0,
+            0, 0, Number(z || 0), 0,
+            0, 0, 0, 1
+        );
+    };
+    Mat4.RotationX = function (radians) {
+        const c = Math.cos(Number(radians || 0));
+        const s = Math.sin(Number(radians || 0));
+        return new Mat4(
+            1, 0, 0, 0,
+            0, c, -s, 0,
+            0, s, c, 0,
+            0, 0, 0, 1
+        );
+    };
+    Mat4.RotationY = function (radians) {
+        const c = Math.cos(Number(radians || 0));
+        const s = Math.sin(Number(radians || 0));
+        return new Mat4(
+            c, 0, s, 0,
+            0, 1, 0, 0,
+            -s, 0, c, 0,
+            0, 0, 0, 1
+        );
+    };
+    Mat4.RotationZ = function (radians) {
+        const c = Math.cos(Number(radians || 0));
+        const s = Math.sin(Number(radians || 0));
+        return new Mat4(
+            c, -s, 0, 0,
+            s, c, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        );
+    };
+    Mat4.PerspectiveFovRh = function (fov, aspect, near, far) {
+        const f = 1 / Math.tan(Number(fov || 0) * 0.5);
+        const a = Number(aspect || 1);
+        const n = Number(near || 0.1);
+        const fr = Number(far || 1000);
+        return new Mat4(
+            f / a, 0, 0, 0,
+            0, f, 0, 0,
+            0, 0, fr / (n - fr), (fr * n) / (n - fr),
+            0, 0, -1, 0
+        );
+    };
+    Mat4.Mul = function (a, b) {
+        return new Mat4(
+            a.M00 * b.M00 + a.M01 * b.M10 + a.M02 * b.M20 + a.M03 * b.M30,
+            a.M00 * b.M01 + a.M01 * b.M11 + a.M02 * b.M21 + a.M03 * b.M31,
+            a.M00 * b.M02 + a.M01 * b.M12 + a.M02 * b.M22 + a.M03 * b.M32,
+            a.M00 * b.M03 + a.M01 * b.M13 + a.M02 * b.M23 + a.M03 * b.M33,
+
+            a.M10 * b.M00 + a.M11 * b.M10 + a.M12 * b.M20 + a.M13 * b.M30,
+            a.M10 * b.M01 + a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31,
+            a.M10 * b.M02 + a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32,
+            a.M10 * b.M03 + a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33,
+
+            a.M20 * b.M00 + a.M21 * b.M10 + a.M22 * b.M20 + a.M23 * b.M30,
+            a.M20 * b.M01 + a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31,
+            a.M20 * b.M02 + a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32,
+            a.M20 * b.M03 + a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33,
+
+            a.M30 * b.M00 + a.M31 * b.M10 + a.M32 * b.M20 + a.M33 * b.M30,
+            a.M30 * b.M01 + a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31,
+            a.M30 * b.M02 + a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32,
+            a.M30 * b.M03 + a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33
+        );
+    };
+    Mat4.MulVec3 = function (m, v) {
+        const x = m.M00 * v.X + m.M01 * v.Y + m.M02 * v.Z + m.M03;
+        const y = m.M10 * v.X + m.M11 * v.Y + m.M12 * v.Z + m.M13;
+        const z = m.M20 * v.X + m.M21 * v.Y + m.M22 * v.Z + m.M23;
+        const w = m.M30 * v.X + m.M31 * v.Y + m.M32 * v.Z + m.M33;
+        if (Math.abs(w) > 1e-6 && Math.abs(w - 1) > 1e-6) {
+            return new Vec3(x / w, y / w, z / w);
+        }
+        return new Vec3(x, y, z);
+    };
+
     function Color(r, g, b, a) {
         this.R = Math.round(Number(r || 0));
         this.G = Math.round(Number(g || 0));
@@ -459,7 +646,8 @@
             WasReleased: false,
             IsInside: false,
             Mode: 0,
-            ModeLocked: false
+            ModeLocked: false,
+            WheelDelta: 0
         };
     }
 
@@ -469,6 +657,7 @@
         input.WasReleased = false;
         input.DeltaX = 0;
         input.DeltaY = 0;
+        input.WheelDelta = 0;
     }
 
     function applyControlState(input, controlState) {
@@ -543,12 +732,19 @@
             updatePointer(input, input.IsDown, pos.x, pos.y);
             input.IsInside = false;
         };
+        const onWheel = (event) => {
+            if (!event) return;
+            const delta = typeof event.deltaY === 'number' ? event.deltaY : 0;
+            input.WheelDelta += -delta * 0.01;
+            if (event.preventDefault) event.preventDefault();
+        };
 
         canvas.addEventListener('pointerdown', onDown);
         canvas.addEventListener('pointermove', onMove);
         canvas.addEventListener('pointerup', onUp);
         canvas.addEventListener('pointerenter', onEnter);
         canvas.addEventListener('pointerleave', onLeave);
+        canvas.addEventListener('wheel', onWheel, { passive: false });
 
         return () => {
             canvas.removeEventListener('pointerdown', onDown);
@@ -556,16 +752,19 @@
             canvas.removeEventListener('pointerup', onUp);
             canvas.removeEventListener('pointerenter', onEnter);
             canvas.removeEventListener('pointerleave', onLeave);
+            canvas.removeEventListener('wheel', onWheel);
         };
     }
 
     const MathF = {
         Sin: Math.sin,
         Cos: Math.cos,
+        Tan: Math.tan,
         Min: Math.min,
         Max: Math.max,
         Sqrt: Math.sqrt,
-        Abs: Math.abs
+        Abs: Math.abs,
+        Round: Math.round
     };
 
     function colorToRgba(color) {
@@ -611,6 +810,17 @@
                 ctx.beginPath();
                 ctx.arc(center.X, center.Y, Math.max(0, radius), 0, Math.PI * 2);
                 ctx.fill();
+                ctx.restore();
+            },
+            Text: function (text, position, color, size) {
+                if (!ctx || !position) return;
+                const textValue = String(text == null ? '' : text);
+                const fontSize = Number(size == null ? 12 : size);
+                ctx.save();
+                ctx.fillStyle = colorToRgba(color);
+                ctx.font = `${Math.max(1, fontSize)}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+                ctx.textBaseline = 'top';
+                ctx.fillText(textValue, Number(position.X || 0), Number(position.Y || 0));
                 ctx.restore();
             }
         };
@@ -682,6 +892,8 @@
         const context = new AnimContext(width, height);
         const runtimeApi = {
             Vec2,
+            Vec3,
+            Mat4,
             Color,
             MathF,
             AnimGeom: createAnimGeomApi(Vec2, Color, MathF)

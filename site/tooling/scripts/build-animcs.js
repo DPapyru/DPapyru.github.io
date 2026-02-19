@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const childProcess = require('node:child_process');
-const { compileAnimToJs, validateFeatures } = require('./animcs-compiler');
+const { compileAnimBatch, validateFeatures } = require('./animcs-compiler');
 
 function toPosixPath(filePath) {
     return String(filePath || '').replace(/\\/g, '/');
@@ -293,7 +293,7 @@ function buildAnimJs(projectRoot, items) {
     if (!items.length) return;
     const outDir = path.join(projectRoot, 'site', 'assets', 'anims');
     fs.mkdirSync(outDir, { recursive: true });
-    items.forEach((item) => {
+    const compileInputs = items.map((item) => {
         const sourceAbs = path.join(projectRoot, 'site', 'content', item.source);
         const source = fs.readFileSync(sourceAbs, 'utf8');
         item.profile = parseAnimProfile(source);
@@ -301,7 +301,20 @@ function buildAnimJs(projectRoot, items) {
         if (errors.length) {
             throw new Error(`[animcs] ${item.source}: ${errors.join('; ')}`);
         }
-        const js = compileAnimToJs(source);
+        return {
+            sourcePath: item.source,
+            sourceText: source
+        };
+    });
+
+    const outputs = compileAnimBatch(compileInputs);
+    const jsBySource = new Map(outputs.map((item) => [item.sourcePath, item.js]));
+
+    items.forEach((item) => {
+        const js = jsBySource.get(item.source);
+        if (!js) {
+            throw new Error(`[animcs] compile output missing for ${item.source}`);
+        }
         const target = path.join(outDir, `${item.entry}.js`);
         const banner = `// Generated from ${item.source}\n`;
         fs.writeFileSync(target, banner + js, 'utf8');

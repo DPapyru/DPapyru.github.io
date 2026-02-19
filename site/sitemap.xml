@@ -37,6 +37,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://dpapyru.github.io/site/pages/folder.html?path=%E7%BE%A4%E5%8F%8B%E8%BF%9B%E9%98%B6%E5%86%85%E5%AE%B9</loc>
+    <lastmod>2026-02-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://dpapyru.github.io/site/pages/folder.html?path=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B</loc>
     <lastmod>2026-02-18</lastmod>
     <changefreq>weekly</changefreq>
@@ -68,7 +74,7 @@
   </url>
   <url>
     <loc>https://dpapyru.github.io/site/pages/viewer.html?file=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE%2F%E4%BD%BF%E7%94%A8%E7%BD%91%E9%A1%B5%E7%89%B9%E6%AE%8A%E5%8A%A8%E7%94%BB%E6%A8%A1%E5%9D%97.md</loc>
-    <lastmod>2026-02-08</lastmod>
+    <lastmod>2026-02-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -123,6 +129,12 @@
   <url>
     <loc>https://dpapyru.github.io/site/pages/viewer.html?file=%E6%96%B9%E5%90%91%E6%80%A7%E6%8C%87%E5%AF%BC%2FDPapyru-AI%20Agent%E7%9A%84%E4%BD%BF%E7%94%A8-%E5%9C%A8%E6%8B%A5%E6%9C%89%E6%B0%B4%E5%B9%B3%E5%90%8E%E4%BD%BF%E7%94%A8Agent%E6%8F%90%E9%AB%98%E5%BC%80%E5%8F%91%E9%80%9F%E5%BA%A6.md</loc>
     <lastmod>2026-02-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dpapyru.github.io/site/pages/viewer.html?file=%E7%BE%A4%E5%8F%8B%E8%BF%9B%E9%98%B6%E5%86%85%E5%AE%B9%2F%E4%BC%91%E9%97%B2%E7%AF%87%2FMoKou-%E5%88%B6%E4%BD%9C%E7%B1%BB%E4%BC%BCMC%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8F%B0.md</loc>
+    <lastmod>2026-02-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -932,7 +944,7 @@
   </url>
   <url>
     <loc>https://dpapyru.github.io/site/pages/viewer.html?file=Modder%E5%85%A5%E9%97%A8%2F%E7%AC%AC%E4%B8%80%E4%B8%AA%E9%85%8D%E7%BD%AE-%E5%8F%AF%E8%B0%83%E5%BC%80%E5%85%B3.md</loc>
-    <lastmod>2026-02-17</lastmod>
+    <lastmod>2026-02-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
