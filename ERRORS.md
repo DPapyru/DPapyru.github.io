@@ -1130,3 +1130,26 @@
 **备注**：
 - 本轮把 UI 壳层继续向 VSCode 靠拢：新增活动栏（Activity Bar）、蓝色状态栏（Status Bar）、更扁平的标题栏与控件密度。
 - 为避免 Monaco 焦点波动导致误判，验收脚本中的“输入”步骤改为稳定的表单输入路径，点击和截图流程保持不变。
+
+### 验证记录 [2026-02-21 07:41]：`tml-ide` 补全弹窗修复（Suggest Controller）+ 点击/输入/截图验收
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && npm test`：失败（3 项失败，均位于 `tests/language-core.test.js`，为当前分支既有断言不匹配）
+- `node --test tml-ide-app/tests/suggest-controller.test.js`：通过（新增回归测试，先失败后通过）
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4174`：通过（端口占用后自动使用 `4175`）
+- `node --input-type=module -e "...playwright acceptance script..."`：通过（点击编辑器、模拟输入 `.`、补全弹窗可见）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**截图**：
+- `test-results/tml-ide-completion-popup/01-ready.png`
+- `test-results/tml-ide-completion-popup/02-popup-after-dot.png`
+- `test-results/tml-ide-completion-popup/03-popup-filtered.png`
+
+**备注**：
+- 根因为 Monaco 未装载建议弹窗控制器，浏览器中出现 `command 'editor.action.triggerSuggest' not found`。
+- 修复后，点击编辑器并输入 `.` 可稳定出现 `suggest-widget`，验收时列表项数量为 13。
+- `check-generated` 失败与仓库既有问题一致：`site/content/shader-gallery/pass-1/entry.json` 引用缺失的 `cover.webp`。
