@@ -1,0 +1,518 @@
+:root {
+    --vscode-bg-editor: #1e1e1e;
+    --vscode-bg-sidebar: #252526;
+    --vscode-bg-titlebar: #3c3c3c;
+    --vscode-bg-toolbar: #2d2d30;
+    --vscode-bg-input: #3c3c3c;
+    --vscode-bg-hover: #2a2d2e;
+    --vscode-bg-selection: #094771;
+    --vscode-bg-activity: #333333;
+    --vscode-bg-statusbar: #007acc;
+    --vscode-bg-statusbar-hover: #006bb3;
+    --vscode-border: #3f3f46;
+    --vscode-border-soft: #2a2a2d;
+    --vscode-text: #d4d4d4;
+    --vscode-muted: #9da2a6;
+    --vscode-accent: #007acc;
+    --vscode-accent-hover: #1593e5;
+    --vscode-danger: #f48771;
+    --radius-sm: 2px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--vscode-bg-editor);
+    color: var(--vscode-text);
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 13px;
+}
+
+body {
+    overflow: hidden;
+}
+
+.app-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: 32px minmax(0, 1fr) 22px;
+    background: var(--vscode-bg-editor);
+}
+
+.app-header {
+    background: var(--vscode-bg-titlebar);
+    border-bottom: 1px solid #474747;
+    padding: 0 10px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+}
+
+.window-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.window-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: #7a7a7a;
+    border: 1px solid #676767;
+}
+
+.app-title-wrap {
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+}
+
+.app-title {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: #ededed;
+    letter-spacing: 0.02em;
+}
+
+.app-subtitle {
+    margin: 0;
+    color: #b3b3b3;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+button,
+.file-btn {
+    border: 1px solid var(--vscode-border);
+    border-radius: var(--radius-sm);
+    background: var(--vscode-bg-toolbar);
+    color: var(--vscode-text);
+    padding: 3px 8px;
+    min-height: 24px;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1.3;
+}
+
+button:hover,
+.file-btn:hover {
+    background: var(--vscode-bg-hover);
+}
+
+button:focus-visible,
+.file-btn:focus-visible {
+    outline: 1px solid var(--vscode-accent);
+    outline-offset: 0;
+}
+
+button:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+}
+
+.app-main {
+    display: grid;
+    grid-template-columns: 48px 240px minmax(0, 1fr) 360px;
+    min-height: 0;
+}
+
+.activity-bar {
+    border-right: 1px solid var(--vscode-border);
+    background: var(--vscode-bg-activity);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 6px 0;
+}
+
+.activity-btn {
+    border: 0;
+    border-left: 2px solid transparent;
+    border-radius: 0;
+    min-height: 42px;
+    width: 100%;
+    background: transparent;
+    color: #8f8f8f;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.activity-btn:hover {
+    color: #d7d7d7;
+    background: #3a3a3a;
+}
+
+.activity-btn-active,
+.activity-btn-active:hover {
+    color: #ffffff;
+    border-left-color: #ffffff;
+    background: #2f2f2f;
+}
+
+.panel {
+    border-right: 1px solid var(--vscode-border-soft);
+    background: var(--vscode-bg-sidebar);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.panel-files {
+    border-right: 1px solid var(--vscode-border);
+}
+
+.panel-editor {
+    background: var(--vscode-bg-editor);
+}
+
+.panel-tools {
+    border-left: 1px solid var(--vscode-border);
+    border-right: 0;
+}
+
+.panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--vscode-border-soft);
+    padding: 6px 10px;
+    background: #252526;
+    min-height: 31px;
+}
+
+.panel-head h2 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #c8c8c8;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+#active-file-name {
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.panel-head-right {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.panel-actions {
+    padding: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border-bottom: 1px solid var(--vscode-border-soft);
+}
+
+.file-list {
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+    overflow: auto;
+    flex: 1;
+}
+
+.file-item {
+    display: block;
+    width: calc(100% - 8px);
+    margin: 0 4px;
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: #cccccc;
+    text-align: left;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.file-item:hover {
+    background: #2a2d2e;
+}
+
+.file-item[aria-current="true"] {
+    background: var(--vscode-bg-selection);
+    border-color: #0e639c;
+    color: #ffffff;
+}
+
+.panel-tip {
+    margin: 0;
+    color: #9e9e9e;
+    padding: 6px 10px;
+    border-top: 1px solid var(--vscode-border-soft);
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.editor {
+    flex: 1;
+    min-height: 0;
+}
+
+.tool-group {
+    border-bottom: 1px solid var(--vscode-border-soft);
+    padding: 8px 10px;
+}
+
+.tool-group h3 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #c6c6c6;
+    letter-spacing: 0.02em;
+}
+
+.checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+}
+
+.tool-group label {
+    display: block;
+    margin-bottom: 4px;
+    color: #adadad;
+    font-size: 11px;
+}
+
+.tool-group input[type="file"],
+.tool-group input[type="text"] {
+    width: 100%;
+    margin-bottom: 8px;
+    border: 1px solid var(--vscode-border);
+    border-radius: var(--radius-sm);
+    background: var(--vscode-bg-input);
+    color: var(--vscode-text);
+    min-height: 24px;
+    padding: 4px 7px;
+    font: inherit;
+    font-size: 11px;
+}
+
+.tool-group input[type="file"] {
+    padding: 2px 4px;
+}
+
+.tool-group input[type="text"]:focus,
+.tool-group input[type="file"]:focus {
+    outline: 1px solid var(--vscode-accent);
+    outline-offset: 0;
+}
+
+.cmd-preview {
+    margin: 0 0 8px;
+    border: 1px solid var(--vscode-border);
+    border-radius: var(--radius-sm);
+    background: #1f1f1f;
+    color: #cecece;
+    padding: 6px 7px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.event-log {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 5px;
+    max-height: 240px;
+    overflow: auto;
+}
+
+.event-log-item {
+    border: 1px solid var(--vscode-border-soft);
+    border-radius: var(--radius-sm);
+    padding: 5px 6px;
+    font-size: 10px;
+    line-height: 1.35;
+    background: #1f1f1f;
+}
+
+.event-log-item[data-level="error"] {
+    border-color: #5a2f2f;
+    color: #ffb5a8;
+    background: #2a1d1d;
+}
+
+.pill {
+    display: inline-flex;
+    border: 1px solid var(--vscode-border);
+    border-radius: 999px;
+    padding: 1px 6px;
+    font-size: 10px;
+    color: #a8a8a8;
+    background: #2b2b2b;
+}
+
+.app-statusbar {
+    background: var(--vscode-bg-statusbar);
+    border-top: 1px solid #0065a8;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0;
+    overflow-x: auto;
+}
+
+.status-item {
+    display: inline-flex;
+    align-items: center;
+    min-height: 100%;
+    padding: 0 9px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.status-item:hover {
+    background: var(--vscode-bg-statusbar-hover);
+}
+
+.status-item-main {
+    margin-right: auto;
+    font-weight: 400;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1f1f1f;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4c4c4c;
+    border-radius: 999px;
+    border: 2px solid #1f1f1f;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #606060;
+}
+
+@media (max-width: 1460px) {
+    .app-main {
+        grid-template-columns: 44px 220px minmax(0, 1fr) 320px;
+    }
+}
+
+@media (max-width: 1200px) {
+    body {
+        overflow: auto;
+    }
+
+    .app-shell {
+        grid-template-rows: 32px minmax(0, auto) 22px;
+    }
+
+    .app-main {
+        grid-template-columns: 44px 220px minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) minmax(260px, auto);
+    }
+
+    .panel-tools {
+        grid-column: 2 / -1;
+        grid-row: 2;
+        border-left: 0;
+        border-top: 1px solid var(--vscode-border);
+    }
+}
+
+@media (max-width: 860px) {
+    .app-shell {
+        grid-template-rows: auto minmax(0, auto) 22px;
+    }
+
+    .app-header {
+        grid-template-columns: 1fr;
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .window-controls {
+        display: none;
+    }
+
+    .app-title-wrap {
+        justify-content: flex-start;
+    }
+
+    .app-header-actions {
+        flex-wrap: wrap;
+    }
+
+    .app-main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+
+    .activity-bar {
+        flex-direction: row;
+        border-right: 0;
+        border-bottom: 1px solid var(--vscode-border);
+        padding: 0;
+    }
+
+    .activity-btn {
+        border-left: 0;
+        border-bottom: 2px solid transparent;
+        min-height: 34px;
+    }
+
+    .activity-btn-active,
+    .activity-btn-active:hover {
+        border-left-color: transparent;
+        border-bottom-color: #ffffff;
+    }
+
+    .panel {
+        min-height: 280px;
+        border-right: 0;
+        border-bottom: 1px solid var(--vscode-border);
+    }
+
+    .panel-tools {
+        border-top: 0;
+    }
+
+    .panel-editor {
+        min-height: 56vh;
+    }
+}

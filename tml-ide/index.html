@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tML IDE Playground</title>
+    <meta name="description" content="独立 tModLoader C# IDE Playground，支持补全、悬停文档与双层诊断。">
+    <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
+  <script type="module" crossorigin src="/tml-ide/assets/index-CJ1MnSCL.js"></script>
+  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-B952K-tc.css">
+</head>
+<body>
+    <div id="app" class="app-shell">
+        <header class="app-header">
+            <div class="window-controls" aria-hidden="true">
+                <span class="window-dot"></span>
+                <span class="window-dot"></span>
+                <span class="window-dot"></span>
+            </div>
+            <div class="app-title-wrap">
+                <h1 class="app-title">tML IDE Playground</h1>
+                <p class="app-subtitle">workspace: tml-ide · C# API 补全</p>
+            </div>
+            <div class="app-header-actions">
+                <button id="btn-save-workspace" type="button">保存工作区</button>
+                <button id="btn-export-workspace" type="button">导出 workspace.v1.json</button>
+                <label class="file-btn" for="input-import-workspace">导入工作区</label>
+                <input id="input-import-workspace" type="file" accept="application/json,.json" hidden>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <aside class="activity-bar" aria-label="主活动栏">
+                <button class="activity-btn activity-btn-active" type="button" aria-label="资源管理器">EX</button>
+                <button class="activity-btn" type="button" aria-label="搜索">SR</button>
+                <button class="activity-btn" type="button" aria-label="运行">RN</button>
+                <button class="activity-btn" type="button" aria-label="诊断">DG</button>
+            </aside>
+
+            <aside class="panel panel-files">
+                <div class="panel-head">
+                    <h2>EXPLORER</h2>
+                    <span id="workspace-version" class="pill">workspace.v1</span>
+                </div>
+                <div class="panel-actions">
+                    <button id="btn-add-file" type="button">新增 .cs</button>
+                    <button id="btn-rename-file" type="button">重命名</button>
+                    <button id="btn-delete-file" type="button">删除</button>
+                </div>
+                <ul id="file-list" class="file-list" aria-label="工程文件列表"></ul>
+                <p class="panel-tip">支持多文件 C# 虚拟工程。内容自动保存到浏览器 IndexedDB。</p>
+            </aside>
+
+            <section class="panel panel-editor">
+                <div class="panel-head">
+                    <h2 id="active-file-name">Program.cs</h2>
+                    <div class="panel-head-right">
+                        <span id="index-info" class="pill">api-index.v2</span>
+                        <button id="btn-run-diagnostics" type="button">运行诊断</button>
+                    </div>
+                </div>
+                <div id="editor" class="editor" aria-label="C# 编辑器"></div>
+            </section>
+
+            <aside class="panel panel-tools">
+                <div class="panel-head">
+                    <h2>SECONDARY SIDEBAR</h2>
+                </div>
+                <div class="tool-group">
+                    <label class="checkbox-row">
+                        <input id="toggle-roslyn" type="checkbox">
+                        <span>开启增强诊断（diagnostics.roslyn）</span>
+                    </label>
+                    <p class="panel-tip">默认启用规则诊断（diagnostics.rule）。增强诊断按需懒加载 Worker。</p>
+                </div>
+
+                <div class="tool-group">
+                    <h3>追加程序集（assembly.import）</h3>
+                    <label for="input-extra-dll">选择 DLL</label>
+                    <input id="input-extra-dll" type="file" accept=".dll,application/octet-stream">
+                    <label for="input-extra-xml">选择 XML 文档</label>
+                    <input id="input-extra-xml" type="file" accept=".xml,text/xml,application/xml">
+                    <button id="btn-import-assembly" type="button">导入并合并</button>
+                    <p class="panel-tip">导入会话级扩展符号，不修改基础 api-index.v2.json。</p>
+                </div>
+
+                <div class="tool-group">
+                    <h3>离线索引生成（编译 DLL）</h3>
+                    <p class="panel-tip">使用本地 dotnet CLI 反射 DLL 并生成 `api-index.v2.json`，示例默认指向 `after/tModLoader.dll`。</p>
+                    <label for="input-indexer-dll-path">基础 DLL 路径（必填）</label>
+                    <input id="input-indexer-dll-path" type="text" value="/mnt/f/DPapyru.github.io/after/tModLoader.dll" spellcheck="false">
+                    <label for="input-indexer-xml-path">基础 XML 路径（可选，留空将自动尝试同名 .xml）</label>
+                    <input id="input-indexer-xml-path" type="text" value="" spellcheck="false">
+                    <label for="input-indexer-terraria-dll-path">Terraria.dll 路径（可选）</label>
+                    <input id="input-indexer-terraria-dll-path" type="text" value="" spellcheck="false">
+                    <label for="input-indexer-terraria-xml-path">Terraria.xml 路径（可选）</label>
+                    <input id="input-indexer-terraria-xml-path" type="text" value="" spellcheck="false">
+                    <label for="input-indexer-out-path">输出 JSON（必填）</label>
+                    <input id="input-indexer-out-path" type="text" value="tml-ide-app/public/data/api-index.v2.json" spellcheck="false">
+                    <label for="index-command-preview">基础索引命令</label>
+                    <pre id="index-command-preview" class="cmd-preview"></pre>
+                    <button id="btn-copy-index-command" type="button">复制基础索引命令</button>
+                    <label for="input-append-dll-path">追加 DLL 路径（必填）</label>
+                    <input id="input-append-dll-path" type="text" value="/path/to/extra-mod.dll" spellcheck="false">
+                    <label for="input-append-xml-path">追加 XML 路径（可选）</label>
+                    <input id="input-append-xml-path" type="text" value="" spellcheck="false">
+                    <label for="input-append-out-path">输出 session pack（必填）</label>
+                    <input id="input-append-out-path" type="text" value="tml-ide-app/public/data/session-pack.v1.json" spellcheck="false">
+                    <label for="append-command-preview">追加会话命令</label>
+                    <pre id="append-command-preview" class="cmd-preview"></pre>
+                    <button id="btn-copy-append-command" type="button">复制追加命令</button>
+                </div>
+
+                <div class="tool-group">
+                    <h3>导入生成索引（api-index.v2）</h3>
+                    <label for="input-import-index">选择索引 JSON</label>
+                    <input id="input-import-index" type="file" accept="application/json,.json">
+                    <button id="btn-import-index" type="button">导入并替换当前索引</button>
+                    <p class="panel-tip">用于加载你离线编译出的 `api-index.v2.json`，导入后立即参与补全/悬停/诊断。</p>
+                </div>
+
+                <div class="tool-group">
+                    <h3>最近事件</h3>
+                    <ul id="event-log" class="event-log" aria-live="polite"></ul>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="app-statusbar">
+            <span class="status-item status-item-main" id="editor-status" role="status" aria-live="polite"></span>
+            <span class="status-item">C#</span>
+            <span class="status-item">UTF-8</span>
+            <span class="status-item">LF</span>
+            <span class="status-item">Spaces: 4</span>
+        </footer>
+    </div>
+</body>
+</html>
