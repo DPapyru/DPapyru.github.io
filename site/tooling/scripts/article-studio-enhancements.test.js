@@ -67,17 +67,22 @@ test('article studio html includes pr chain controls', () => {
     assert.match(html, /id="studio-refresh-my-prs"/);
 });
 
-test('article studio html includes asset decision modal controls', () => {
+test('article studio html includes pr manifest and decision modal controls', () => {
     const html = read('site/pages/article-studio.html');
 
+    assert.match(html, /id="studio-pr-manifest-summary"/);
+    assert.match(html, /id="studio-pr-manifest-article-list"/);
+    assert.match(html, /id="studio-pr-manifest-texture-list"/);
+    assert.match(html, /id="studio-pr-manifest-csharp-list"/);
     assert.match(html, /id="studio-pr-asset-decision-modal"/);
+    assert.match(html, /id="studio-pr-asset-decision-summary"/);
     assert.match(html, /id="studio-pr-asset-action-clear-new"/);
     assert.match(html, /id="studio-pr-asset-action-continue-pr"/);
     assert.match(html, /id="studio-pr-asset-action-cancel"/);
     assert.match(html, /id="studio-pr-asset-continue-select"/);
     assert.match(html, /id="studio-pr-asset-continue-refresh"/);
     assert.match(html, /id="studio-pr-asset-continue-submit"/);
-    assert.match(html, /id="studio-pr-asset-clear-confirm"/);
+    assert.match(html, /创建新 PR（提交全部文件）/);
 });
 
 test('article studio html includes one-click clear action for uploaded assets', () => {
@@ -143,20 +148,27 @@ test('article studio flowchart modal only opens in fullscreen and closes on exit
     assert.match(fullscreenFn, /setFlowchartModalOpen\(false\)/);
 });
 
-test('article studio js uses a three-way modal flow before creating a new pr with assets', () => {
+test('article studio js builds article texture csharp manifest for PR flow', () => {
     const js = read('site/assets/js/article-studio.js');
     const submitFn = getFunctionBody(js, 'submitPullRequest');
+    const handleDecisionFn = getFunctionBody(js, 'handlePrAssetDecisionBeforeSubmit');
 
     assert.ok(submitFn, 'submitPullRequest should exist');
+    assert.ok(handleDecisionFn, 'handlePrAssetDecisionBeforeSubmit should exist');
+    assert.match(js, /function\s+buildPrFileManifest\s*\(/);
+    assert.match(js, /function\s+renderPrSubmitManifest\s*\(/);
+    assert.match(js, /function\s+renderPrManifestList\s*\(/);
     assert.match(js, /function\s+hasUploadedAssets\s*\(/);
     assert.match(js, /function\s+clearUploadedAssets\s*\(/);
     assert.match(js, /function\s+openPrAssetDecisionModal\s*\(/);
-    assert.match(js, /function\s+handlePrAssetDecisionBeforeSubmit\s*\(/);
+    assert.match(submitFn, /context\.manifest\.total\s*<=\s*0/);
+    assert.match(submitFn, /renderPrSubmitManifest\(/);
     assert.match(submitFn, /!context\.linkedPrNumber\s*&&\s*context\.extraFiles\.length\s*>\s*0/);
     assert.match(submitFn, /await\s+handlePrAssetDecisionBeforeSubmit\(/);
-    assert.match(js, /action:\s*'clear-new'/);
+    assert.match(handleDecisionFn, /action\s*===\s*'new-pr'/);
     assert.match(js, /action:\s*'continue'/);
     assert.match(js, /action:\s*'cancel'/);
+    assert.doesNotMatch(handleDecisionFn, /context\.extraFiles\s*=\s*\[\]/);
 });
 
 test('article studio js wires one-click clear action for uploaded assets', () => {
