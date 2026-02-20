@@ -28,15 +28,13 @@ test('folder page removes grid/list toggle controls', () => {
     assert.doesNotMatch(html, /function\s+syncDocViewToggleState\s*\(/);
 });
 
-test('folder page renders filtered docs in list tree only', () => {
+test('folder page renders filtered docs through svg map only', () => {
     const html = readFolderPageHtml();
 
-    const fnStart = html.indexOf('function updateDocumentGridWithFilteredDocs(filteredDocs)');
-    const fnEnd = html.indexOf('function renderDocTree(docGrid, docs, basePath)', fnStart);
-    const fnBody = fnStart >= 0 && fnEnd > fnStart ? html.slice(fnStart, fnEnd) : '';
-
-    assert.notEqual(fnBody, '', 'updateDocumentGridWithFilteredDocs should exist');
-    assert.match(fnBody, /docGrid\.classList\.add\('tree-view'\)/);
-    assert.match(fnBody, /renderDocTree\s*\(/);
-    assert.doesNotMatch(fnBody, /renderDocCardGrid\s*\(/);
+    assert.match(html, /id="folder-map-svg"/);
+    assert.match(html, /function\s+renderMap\s*\(/);
+    assert.match(html, /function\s+drawNode\s*\(/);
+    assert.doesNotMatch(html, /function\s+updateDocumentGridWithFilteredDocs\s*\(/);
+    assert.doesNotMatch(html, /function\s+renderDocCardGrid\s*\(/);
+    assert.doesNotMatch(html, /function\s+renderDocTree\s*\(/);
 });

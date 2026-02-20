@@ -1,544 +1,179 @@
 <!DOCTYPE html>
-<!-- 文件夹内容显示页面 -->
+<!-- 目录可视化页面（SVG） -->
 <html lang="zh-CN" data-theme="dark">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文件夹内容 - 泰拉瑞亚Mod制作教程</title>
 
-    <!-- SEO优化标签 -->
-    <meta name="description" content="泰拉瑞亚Mod制作教程文档文件夹内容，提供特定文件夹下的所有文档列表">
+    <meta name="description" content="泰拉瑞亚Mod制作教程文档目录可视化页面，支持按目录下钻和章节关系查看。">
     <meta name="keywords" content="泰拉瑞亚,Mod,教程,文档,文件夹,tModLoader">
     <meta name="author" content="泰拉瑞亚Mod社区">
     <meta name="robots" content="index, follow">
 
-    <!-- Open Graph标签 -->
     <meta property="og:title" content="文件夹内容 - 泰拉瑞亚Mod制作教程">
-    <meta property="og:description" content="泰拉瑞亚Mod制作教程文档文件夹内容，提供特定文件夹下的所有文档列表">
+    <meta property="og:description" content="泰拉瑞亚Mod制作教程文档目录可视化页面，支持按目录下钻和章节关系查看。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://dpapyru.github.io/site/pages/folder.html">
     <meta property="og:image" content="https://dpapyru.github.io/site/assets/imgs/Green_tModLoader.png">
     <meta property="og:site_name" content="泰拉瑞亚Mod制作教程">
     <meta property="og:locale" content="zh_CN">
 
-    <!-- Twitter Card标签 -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="文件夹内容 - 泰拉瑞亚Mod制作教程">
-    <meta name="twitter:description" content="泰拉瑞亚Mod制作教程文档文件夹内容，提供特定文件夹下的所有文档列表">
+    <meta name="twitter:description" content="泰拉瑞亚Mod制作教程文档目录可视化页面，支持按目录下钻和章节关系查看。">
     <meta name="twitter:image" content="https://dpapyru.github.io/site/assets/imgs/Green_tModLoader.png">
 
-    <!-- 规范URL（实际值会在脚本中根据 ?path 更新） -->
     <link rel="canonical" href="https://dpapyru.github.io/site/pages/folder.html">
 
-    <!-- 样式和图标 -->
     <link rel="stylesheet" href="/site/assets/css/style.css">
     <link rel="stylesheet" href="/site/assets/css/workbench-phase.css">
     <link rel="stylesheet" href="/site/assets/css/prism.min.css">
     <link rel="stylesheet" href="/site/assets/css/vs2022-theme.css">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
 
-    <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
     <script src="/site/assets/js/theme-init.js"></script>
 
-    <!-- 自定义样式 -->
     <style>
-        /* 文件夹页面特定样式 */
-        .folder-hero {
-            background: linear-gradient(0deg, #155724, #28a745, #155724);
-            color: white;
-            padding: 40px 0;
-            text-align: center;
+        .folder-map-page {
+            padding: 5px 0 8px;
+            min-height: calc(100vh - 86px);
         }
 
-        .folder-hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-
-        .folder-hero p {
-            font-size: 1.2rem;
-            max-width: 800px;
-            margin: 0 auto 30px;
-            line-height: 1.6;
-        }
-
-	        .breadcrumb {
-	            background-color: var(--bg-secondary);
-	            padding: 15px 0;
-	            border-bottom: 1px solid var(--border-color);
-	        }
-
-        .breadcrumb-nav {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            font-size: 0.9rem;
-        }
-
-        .breadcrumb-item {
-            display: flex;
-            align-items: center;
-        }
-
-	        .breadcrumb-item:not(:last-child)::after {
-	            content: "›";
-	            margin: 0 10px;
-	            color: var(--text-muted);
-	        }
-
-	        .breadcrumb-item a {
-	            color: var(--link-color);
-	            text-decoration: none;
-	            transition: color 0.2s ease;
-	        }
-
-	        .breadcrumb-item a:hover {
-	            color: var(--link-hover);
-	            text-decoration: underline;
-	        }
-
-	        .breadcrumb-item.active {
-	            color: var(--text-muted);
-	            font-weight: 500;
-	        }
-
-        .folder-content {
-            padding: 40px 0;
-        }
-
-        .folder-header {
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-	        .folder-title {
-	            font-size: 2rem;
-	            margin-bottom: 15px;
-	            color: var(--text-color);
-	        }
-
-        .folder-description {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .subfolder-section {
-            margin: 0 0 20px;
-            text-align: left;
-            border-top: 1px solid var(--border-color);
-            padding-top: 10px;
-        }
-
-        .subfolder-title {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin: 0 0 8px;
-        }
-
-        .subfolder-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .subfolder-item {
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .subfolder-item:last-child {
-            border-bottom: none;
-        }
-
-        .subfolder-link {
-            display: block;
-            padding: 10px 0;
-            color: var(--text-color);
-            text-decoration: none;
-            transition: color 0.2s ease, background-color 0.2s ease;
-        }
-
-        .subfolder-link:hover {
-            color: var(--link-color);
-            background-color: var(--bg-secondary);
-        }
-
-        .doc-grid.tree-view {
-            display: block;
-        }
-
-        .doc-tree {
-            display: block;
+        .folder-map-panel {
             border: 1px solid var(--border-color);
+            background: var(--bg-content);
             border-radius: 10px;
-            background-color: var(--bg-content);
-            padding: 12px 10px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            margin: 0 5px;
         }
 
-        .doc-tree-folder {
-            margin: 4px 0;
-        }
-
-        .doc-tree-summary {
-            list-style: none;
-            cursor: pointer;
-            padding: 6px 12px;
-            border-radius: 8px;
-            background-color: var(--bg-secondary);
-            color: var(--text-color);
+        .folder-map-toolbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
-        }
-
-        .doc-tree-summary::-webkit-details-marker {
-            display: none;
-        }
-
-        .doc-tree-summary::marker {
-            display: none;
-        }
-
-        .doc-tree-summary:hover {
-            background-color: var(--sidebar-hover);
-        }
-
-        .doc-tree-folder-name {
-            font-weight: 600;
-        }
-
-        .doc-tree-count {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .doc-tree-children {
-            margin-top: 6px;
-        }
-
-        .doc-tree-category {
-            margin: 8px 0 4px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .doc-tree-file {
-            padding: 6px 12px;
-            border-radius: 6px;
-            margin: 2px 0;
-        }
-
-        .doc-tree-file:hover {
-            background-color: var(--bg-secondary);
-        }
-
-        .doc-tree-file-link {
-            color: var(--link-color);
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .doc-tree-file-link:hover {
-            text-decoration: underline;
-        }
-
-        .doc-tree-meta {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }
-
-        .filter-container {
-            display: flex;
+            gap: 8px;
             flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding: 20px;
-	            background-color: var(--bg-secondary);
-	            border-radius: 8px;
-	        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            min-width: 150px;
-        }
-
-	        .filter-group label {
-	            font-weight: 600;
-	            margin-bottom: 5px;
-	            color: var(--text-color);
-	        }
-
-	        .filter-select {
-	            padding: 8px 12px;
-	            border: 1px solid var(--border-color);
-	            border-radius: 4px;
-	            background-color: var(--bg-color);
-	            color: var(--text-color);
-	            font-size: 0.9rem;
-	            outline: none;
-	            transition: border-color 0.3s ease;
-	        }
-
-	        .filter-select:focus {
-	            border-color: var(--primary-color);
-	            box-shadow: 0 0 0 2px var(--search-focus);
-	        }
-
-	        .search-section {
-	            background-color: var(--bg-secondary);
-	            padding: 30px 0;
-	            border-radius: 8px;
-	            margin-bottom: 40px;
-	        }
-
-        .doc-grid {
-            display: block;
-            margin-bottom: 40px;
-        }
-
-	        .doc-card {
-	            background-color: var(--bg-content);
-	            border-radius: 8px;
-	            box-shadow: var(--shadow-md);
-	            overflow: hidden;
-	            transition: transform 0.3s ease, box-shadow 0.3s ease;
-	        }
-
-	        .doc-card:hover {
-	            transform: translateY(-5px);
-	            box-shadow: var(--shadow-xl);
-	        }
-
-	        .doc-card-header {
-	            padding: 20px;
-	            border-bottom: 1px solid var(--border-light);
-	        }
-
-	        .doc-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-	            color: var(--text-color);
-	        }
-
-	        .doc-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            font-size: 0.85rem;
-	            color: var(--text-secondary);
-	        }
-
-        .doc-meta-item {
-            display: flex;
-            align-items: center;
-        }
-
-        .difficulty-badge {
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-	        .difficulty-badge.beginner {
-	            background-color: rgba(40, 167, 69, 0.18);
-	            color: #b7f5c5;
-	        }
-
-	        .difficulty-badge.intermediate {
-	            background-color: rgba(255, 193, 7, 0.18);
-	            color: #ffe8a6;
-	        }
-
-	        .difficulty-badge.advanced {
-	            background-color: rgba(220, 53, 69, 0.18);
-	            color: #ffc1c7;
-	        }
-
-        .doc-card-body {
-            padding: 20px;
-        }
-
-		        .doc-description {
-		            font-size: 0.95rem;
-		            color: var(--text-secondary);
-		            margin-bottom: 15px;
-		            line-height: 1.5;
-		        }
-
-		        .doc-card-footer {
-		            padding: 15px 20px;
-		            background-color: var(--bg-secondary);
-		            display: flex;
-		            justify-content: space-between;
-	            align-items: center;
-	        }
-
-	        .doc-author {
-	            font-size: 0.9rem;
-	            color: var(--text-secondary);
-	        }
-
-	        .doc-link {
-	            display: inline-block;
-	            background-color: var(--primary-color);
-	            color: white;
-	            padding: 8px 15px;
-	            border-radius: 4px;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: background-color 0.2s ease;
-        }
-
-	        .doc-link:hover {
-	            background-color: var(--primary-hover);
-	        }
-
-	        .no-docs {
-	            text-align: center;
-	            padding: 60px 20px;
-	            color: var(--text-secondary);
-	        }
-
-        .no-docs-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        .no-docs h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-        }
-
-        .no-docs p {
-            font-size: 1rem;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .back-to-docs {
-            text-align: center;
-            margin-top: 40px;
-        }
-
-	        .back-to-docs .btn {
-	            display: inline-block;
-	            background-color: var(--secondary-color);
-	            color: white;
-	            padding: 12px 25px;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 1rem;
-            transition: background-color 0.2s ease;
-        }
-
-	        .back-to-docs .btn:hover {
-	            background-color: var(--secondary-hover);
-	        }
-
-        /* 工具入口 */
-        .folder-tools {
-            margin: 18px 0 8px;
-            padding: 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
             background: var(--bg-secondary);
         }
 
-        .folder-tools-header {
+        .folder-map-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .folder-map-meta {
             display: flex;
-            flex-direction: column;
-            gap: 6px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 12px;
-        }
-
-        .folder-tools-title {
-            margin: 0;
-            font-size: 1.1rem;
-            color: var(--text-color);
-        }
-
-        .folder-tools-meta {
-            font-size: 0.9rem;
+            align-items: center;
+            gap: 10px;
             color: var(--text-secondary);
+            font-size: 0.8rem;
+            flex-wrap: wrap;
         }
 
-        .folder-tools-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .folder-tool-card {
-            display: block;
-            padding: 12px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+        .folder-map-stage {
+            position: relative;
+            width: 100%;
+            overflow: auto;
             background: var(--bg-color);
-            color: var(--text-color);
-            text-decoration: none;
-            transition: border-color 0.2s ease, transform 0.2s ease;
+            min-height: 420px;
+            height: clamp(420px, calc(100vh - 210px), 820px);
         }
 
-        .folder-tool-card:hover {
-            border-color: var(--primary-color);
-            transform: translateY(-1px);
+        .folder-map-svg {
+            display: block;
+            width: 100%;
+            min-width: 700px;
+            height: auto;
         }
 
-        .folder-tool-name {
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .folder-tool-desc {
-            font-size: 0.9rem;
+        .folder-map-empty {
+            padding: 12px 10px;
+            text-align: center;
             color: var(--text-secondary);
-            line-height: 1.55;
+            border-top: 1px solid var(--border-color);
         }
 
-        /* 响应式设计 */
+        .folder-map-legend {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            padding: 8px 10px 10px;
+        }
+
+        .legend-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-line {
+            display: inline-block;
+            width: 24px;
+            height: 0;
+            border-top-width: 2px;
+            border-top-style: solid;
+        }
+
+        #legend-prev-line {
+            border-top-style: solid;
+        }
+
+        #legend-next-line {
+            border-top-style: solid;
+        }
+
+        .map-clickable {
+            cursor: pointer;
+            outline: none;
+        }
+
+        .map-clickable rect {
+            transition: transform 0.18s ease, stroke-width 0.18s ease;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        .map-clickable:hover rect,
+        .map-clickable:focus rect {
+            transform: scale(1.03);
+            stroke-width: 2.5;
+        }
+
         @media (max-width: 768px) {
-            .folder-hero h1 {
-                font-size: 2rem;
+            .folder-map-page {
+                padding: 4px 0 6px;
             }
 
-            .folder-hero p {
-                font-size: 1rem;
+            .folder-map-panel {
+                margin: 0 4px;
             }
 
-            .doc-grid {
-                grid-template-columns: 1fr;
+            .folder-map-stage {
+                min-height: 360px;
+                height: clamp(360px, calc(100vh - 190px), 700px);
             }
 
-            .folder-title {
-                font-size: 1.5rem;
+            .folder-map-svg {
+                min-width: 620px;
             }
 
-            .folder-tools-grid {
-                grid-template-columns: 1fr;
+            .folder-map-toolbar {
+                align-items: flex-start;
             }
         }
-
-        /* 文件夹页面特定样式已移至 theme-base.css，使用CSS变量系统 */
     </style>
 </head>
 
 <body class="workbench-page">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
-    <!-- 网站头部导航区域 -->
+
     <header class="site-header">
         <div class="container">
             <div class="header-content">
@@ -595,1119 +230,1012 @@
         </div>
     </header>
 
-    <!-- 文件夹页面主要内容区域 -->
     <main class="workbench-main" id="main-content" tabindex="-1">
-        <!-- 面包屑导航 -->
-        <section class="breadcrumb">
-            <div class="container">
-                <nav class="breadcrumb-nav" id="breadcrumb">
-                    <!-- 面包屑导航将通过JavaScript动态生成 -->
-                </nav>
-            </div>
-        </section>
-
-        <!-- 文件夹英雄区域 -->
-        <section class="folder-hero">
-            <div class="container">
-                <h1>文件夹内容</h1>
-                <p>浏览特定文件夹下的所有文档，快速找到您需要的学习资源</p>
-            </div>
-        </section>
-
-        <!-- 文件夹内容区域 -->
-        <section class="folder-content">
-            <div class="container">
-                <!-- 文件夹标题和描述 -->
-                <div class="folder-header" id="folder-header">
-                    <!-- 文件夹标题和描述将通过JavaScript动态生成 -->
-                </div>
-
-                <!-- 工具入口（静态） -->
-                <section class="folder-tools" aria-label="工具">
-                    <div class="folder-tools-header">
-                        <h2 class="folder-tools-title">工具</h2>
-                        <div class="folder-tools-meta">一些辅助页面不属于 Markdown 文档，但可直接使用。</div>
+        <section class="folder-map-page">
+            <div class="folder-map-panel">
+                <div class="folder-map-toolbar">
+                    <button class="btn btn-outline" id="go-parent-btn" type="button">返回上一级</button>
+                    <div class="folder-map-title" id="folder-map-title">目录可视化</div>
+                    <div class="folder-map-meta">
+                        <span id="folder-count-meta">目录 0</span>
+                        <span id="doc-count-meta">文章 0</span>
                     </div>
-                    <div class="folder-tools-grid">
-                        <a class="folder-tool-card" href="/site/pages/shader-playground.html">
-                            <div class="folder-tool-name">HLSL Shader Playground</div>
-                            <div class="folder-tool-desc">实时 Toy-HLSL（HLSL3 子集）多 pass + ping-pong 预览</div>
-                        </a>
-                        <a class="folder-tool-card" href="/site/pages/anim-renderer.html">
-                            <div class="folder-tool-name">C# 动画渲染器</div>
-                            <div class="folder-tool-desc">开发预览 anims/*.cs（需先 npm run build）</div>
-                        </a>
-                    </div>
-                </section>
-
-                <!-- 过滤器区域 -->
-                <div class="search-section">
-                    <div class="filter-container">
-                        <div class="filter-group">
-                            <label for="difficulty-filter">难度:</label>
-                            <select id="difficulty-filter" class="filter-select">
-                                <option value="all">全部级别</option>
-                                <option value="beginner">初级</option>
-                                <option value="intermediate">中级</option>
-                                <option value="advanced">高级</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="category-filter">分类:</label>
-                            <select id="category-filter" class="filter-select">
-                                <option value="all">全部分类</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="author-filter">作者:</label>
-                            <select id="author-filter" class="filter-select">
-                                <option value="all">全部作者</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label for="sort-filter">排序:</label>
-                            <select id="sort-filter" class="filter-select">
-                                <option value="order">按顺序</option>
-                                <option value="title">按标题</option>
-                                <option value="author">按作者</option>
-                                <option value="last_updated">按更新时间</option>
-                            </select>
-                        </div>
-                    </div>
-	                </div>
-
-                <!-- 文档列表 -->
-                <div class="doc-grid" id="doc-grid">
-                    <!-- 文档卡片将通过JavaScript动态生成 -->
                 </div>
 
-                <!-- 无文档提示 -->
-                <div class="no-docs" id="no-docs" style="display: none;">
-                    <h3>该文件夹下暂无文档</h3>
-                    <p>当前文件夹下没有找到任何文档，或者该文件夹不存在。</p>
+                <div class="folder-map-stage">
+                    <svg class="folder-map-svg" id="folder-map-svg" viewBox="0 0 1200 860" role="img" aria-label="文档目录结构"></svg>
                 </div>
 
-                <!-- 返回文档首页链接 -->
-                <div class="back-to-docs">
-                    <a href="folder.html" class="btn">返回文档首页</a>
+                <div class="folder-map-legend">
+                    <span class="legend-chip"><span class="legend-line" id="legend-prev-line"></span>左侧箭头（橙色）</span>
+                    <span class="legend-chip"><span class="legend-line" id="legend-next-line"></span>右侧箭头（蓝色）</span>
+                    <span>点击目录节点进入目录，点击文章节点打开文章</span>
                 </div>
+
+                <div class="folder-map-empty" id="folder-map-empty" hidden>当前目录暂无子目录与文章。</div>
             </div>
         </section>
     </main>
-
-    <!-- 网站底部区域 -->
     <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: IDE</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
 
-    <footer class="site-footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h4>关于项目</h4>
-                    <p>这是一个面向泰拉瑞亚Mod开发者的协作教程项目，旨在降低Mod制作门槛。</p>
-                </div>
-	                <div class="footer-section">
-	                    <h4>快速链接</h4>
-	                    <ul>
-	                        <li><a href="../index.html">首页</a></li>
-	                        <li><a href="folder.html">文档</a></li>
-	                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-	                    </ul>
-	                </div>
-                <div class="footer-section">
-                    <h4>联系我们</h4>
-                    <ul>
-                        <li><a href="https://github.com/DPapyru/DPapyru.github.io" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-                        <li><a href="mailto:contact@example.com">邮箱</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2023 泰拉瑞亚Mod制作教程. 采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC
-                        BY 4.0</a> 许可协议。</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- 加载JavaScript文件 -->
     <script src="/shared/assets/js/site-core.js"></script>
     <script>
         if (window.SITE) window.SITE.bootstrapPage('folder');
     </script>
     <script src="/site/assets/js/site-config.js"></script>
     <script src="/site/assets/js/accent-theme.js"></script>
-    <script src="/site/assets/js/folder-filter.js"></script>
     <script src="/site/assets/js/main.js"></script>
-    <script src="/site/assets/js/search-index-loader.js"></script>
-    <script src="/site/assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
-    <script src="/site/assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
-	    <script src="/site/assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
-	    <script src="/site/assets/js/navigation.js"></script>
+    <script src="/site/assets/js/navigation.js"></script>
 
-	    <script>
-	        // 文档配置和元数据管理 - 使用页面级变量避免冲突
-        let FOLDER_DOC_CONFIG = null;
-        let ALL_DOCS = [];
-        let VISIBLE_DOCS = [];
-        let FOLDER_DOCS = [];
-        let CURRENT_FOLDER = '';
+    <script>
+        (function () {
+            // 文章列表不做分流
+            var ROOT_LABEL = '绿群教程';
+            var SAFE_SCALE = 0.2;
+            var SVG_NS = 'http://www.w3.org/2000/svg';
 
-	        function escapeHtml(text) {
-	            return String(text)
-	                .replace(/&/g, '&amp;')
-	                .replace(/</g, '&lt;')
-	                .replace(/>/g, '&gt;')
-	                .replace(/"/g, '&quot;')
-	                .replace(/'/g, '&#39;');
-	        }
-
-        // 页面加载完成后执行
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('=== site/pages/folder.html: 页面加载完成 ===');
-
-            // 获取URL参数中的文件夹路径
-            const folderPath = getFolderPathFromURL();
-            CURRENT_FOLDER = folderPath;
-            updateFolderSeoMeta(folderPath);
-
-            // 初始化文档配置
-            initializeDocumentConfig().then(() => {
-                VISIBLE_DOCS = ALL_DOCS.slice();
-
-                // 筛选当前文件夹的文档（基于当前可见列表）
-                filterDocumentsByFolder(folderPath);
-
-                // 生成面包屑导航
-                generateBreadcrumb(folderPath);
-
-                // 生成文件夹标题和描述
-                generateFolderHeader(folderPath);
-
-
-                // 生成文档列表
-                // 注意：这里不调用 generateDocumentGrid，因为 initFilterAndSortFunctionality 会处理
-                // generateDocumentGrid();
-
-                // 初始化过滤器和排序功能
-                initFilterAndSortFunctionality();
-            });
-        });
-
-        // 从URL参数获取文件夹路径
-        function getFolderPathFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('path') || '';
-        }
-
-        function setMetaContent(selector, content) {
-            const el = document.querySelector(selector);
-            if (el && content) el.setAttribute('content', content);
-        }
-
-        function setCanonical(href) {
-            let link = document.querySelector('link[rel="canonical"]');
-            if (!link) {
-                link = document.createElement('link');
-                link.setAttribute('rel', 'canonical');
-                document.head.appendChild(link);
-            }
-            link.setAttribute('href', href);
-        }
-
-        function updateFolderSeoMeta(folderPath) {
-            const baseUrl = 'https://dpapyru.github.io/site/pages/folder.html';
-            const url = folderPath ? `${baseUrl}?path=${encodeURIComponent(folderPath)}` : baseUrl;
-            const title = folderPath ? `${folderPath} - 文件夹内容 - 泰拉瑞亚Mod制作教程` : '全部文档 - 泰拉瑞亚Mod制作教程';
-            const description = folderPath
-                ? `泰拉瑞亚Mod制作教程：浏览 "${folderPath}" 下的文档列表。`
-                : '泰拉瑞亚Mod制作教程：浏览 site/content 下的全部文章。';
-
-            document.title = title;
-            setCanonical(url);
-            setMetaContent('meta[name="description"]', description);
-            setMetaContent('meta[property="og:title"]', title);
-            setMetaContent('meta[property="og:description"]', description);
-            setMetaContent('meta[property="og:url"]', url);
-            setMetaContent('meta[name="twitter:title"]', title);
-            setMetaContent('meta[name="twitter:description"]', description);
-        }
-
-        // 初始化文档配置
-        async function initializeDocumentConfig() {
-            try {
-                console.log('folder.html: 正在加载配置文件，当前路径:', window.location.pathname);
-                if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
-                    FOLDER_DOC_CONFIG = await window.SiteConfig.load();
-                } else {
-                    const configResponse = await fetch('./config.json');
-                    if (!configResponse.ok) throw new Error('无法加载config.json: ' + configResponse.status);
-                    FOLDER_DOC_CONFIG = await configResponse.json();
-                }
-                console.log('成功加载配置文件:', FOLDER_DOC_CONFIG);
-            } catch (error) {
-                console.warn('加载配置文件失败，使用默认配置:', error);
-                FOLDER_DOC_CONFIG = generateDefaultConfig();
-            }
-
-            // 从配置文件加载文档列表
-            await loadDocumentsFromConfig();
-        }
-
-        // 获取分类图标 - 优先从配置文件读取，否则使用默认值
-        function getCategoryIcon(categoryKey) {
-            return '';
-        }
-
-        // 获取分类颜色 - 优先从配置文件读取，否则使用默认值
-        function getCategoryColor(categoryKey) {
-            // 首先尝试从配置文件中获取颜色
-            if (FOLDER_DOC_CONFIG && FOLDER_DOC_CONFIG.categories && FOLDER_DOC_CONFIG.categories[categoryKey] && FOLDER_DOC_CONFIG.categories[categoryKey].color) {
-                return FOLDER_DOC_CONFIG.categories[categoryKey].color;
-            }
-
-            // 默认颜色映射
-            const colorMap = {
-                '入门': '#4CAF50',
-                '进阶': '#2196F3',
-                '高级': '#FF5722',
-                '个人分享': '#FFC107',
-                '怎么贡献': '#9C27B0',
-                'Modder入门': '#00BCD4'
-            };
-            return colorMap[categoryKey] || '#28a745';
-        }
-
-        // 获取分类排序 - 优先从配置文件读取，否则使用默认值
-        function getCategoryOrder(categoryKey) {
-            // 首先尝试从配置文件中获取排序
-            if (FOLDER_DOC_CONFIG && FOLDER_DOC_CONFIG.categories && FOLDER_DOC_CONFIG.categories[categoryKey] && FOLDER_DOC_CONFIG.categories[categoryKey].order !== undefined) {
-                return FOLDER_DOC_CONFIG.categories[categoryKey].order;
-            }
-
-            // 默认排序映射
-            const orderMap = {
-                '入门': 1,
-                '进阶': 2,
-                '高级': 3,
-                '个人分享': 4,
-                '怎么贡献': 5,
-                'Modder入门': 6
-            };
-            return orderMap[categoryKey] || 999;
-        }
-
-        // 获取默认分类配置
-        function getDefaultCategories() {
-            return {
-                "入门": {
-                    "title": "入门",
-                    "description": "适合初学者的基础教程",
-                    "icon": "",
-                    "color": "#4CAF50",
-                    "order": 1
-                },
-                "进阶": {
-                    "title": "进阶",
-                    "description": "有一定基础后的进阶教程",
-                    "icon": "",
-                    "color": "#2196F3",
-                    "order": 2
-                },
-                "高级": {
-                    "title": "高级",
-                    "description": "面向有经验开发者的高级教程",
-                    "icon": "",
-                    "color": "#FF5722",
-                    "order": 3
-                },
-                "个人分享": {
-                    "title": "个人分享",
-                    "description": "社区成员的个人经验和技巧分享",
-                    "icon": "",
-                    "color": "#FFC107",
-                    "order": 4
-                },
-                "怎么贡献": {
-                    "title": "怎么贡献",
-                    "description": "介绍贡献者应该怎么贡献文章",
-                    "icon": "",
-                    "color": "#9C27B0",
-                    "order": 5,
-                    "special": true
-                },
-                "Modder入门": {
-                    "title": "Modder入门",
-                    "description": "Modder入门相关的教程",
-                    "icon": "",
-                    "color": "#00BCD4",
-                    "order": 6,
-                    "special": true
-                }
-            };
-        }
-
-        // 获取默认主题配置
-        function getDefaultTopics() {
-            return {
-                "mod-basics": {
-                    "title": "Mod基础",
-                    "description": "Mod开发的基础概念和核心API",
-                    "icon": "",
-                    "order": 1
-                },
-                "env": {
-                    "title": "环境配置",
-                    "description": "开发环境搭建和配置",
-                    "icon": "",
-                    "order": 2
-                },
-                "items": {
-                    "title": "物品系统",
-                    "description": "物品、武器和装备的开发",
-                    "icon": "",
-                    "order": 3
-                },
-                "npcs": {
-                    "title": "NPC系统",
-                    "description": "NPC的创建和行为定制",
-                    "icon": "",
-                    "order": 4
-                },
-                "world-gen": {
-                    "title": "世界生成",
-                    "description": "世界生成和地形修改",
-                    "icon": "",
-                    "order": 5
-                },
-                "ui": {
-                    "title": "UI界面",
-                    "description": "用户界面和交互设计",
-                    "icon": "",
-                    "order": 6
-                },
-                "networking": {
-                    "title": "网络功能",
-                    "description": "多人游戏和网络通信",
-                    "icon": "",
-                    "order": 7
-                },
-                "advanced": {
-                    "title": "高级功能",
-                    "description": "高级开发技巧和优化",
-                    "icon": "",
-                    "order": 8
-                }
-            };
-        }
-
-        // 生成默认配置（当config.json不存在时）
-        function generateDefaultConfig() {
-            const config = {
-                _metadata: {
-                    version: "2.0.0",
-                    schema: "tmodloader-docs-v2",
-                    created: new Date().toISOString().split('T')[0],
-                    lastUpdated: new Date().toISOString().split('T')[0],
-                    description: "泰拉瑞亚Mod制作教程配置文件 - 默认配置"
-                },
-                globalSettings: {
-                    language: "zh",
-                    theme: "default",
-                    siteName: "泰拉瑞亚Mod制作教程",
-                    siteDescription: "全面的泰拉瑞亚Mod开发教程资源",
-                    baseUrl: "",
-                    enableSearch: true,
-                    enableDarkMode: true,
-                    defaultOrder: 999,
-                    dateFormat: "YYYY-MM-DD"
-                },
-                categories: {},
-                topics: {},
-                authors: {},
-                all_files: [],
-                pathMappings: {},
-                settings: {
-                    defaultCategory: "入门",
-                    defaultTopic: "mod-basics",
-                    specialCategories: ["怎么贡献", "Modder入门"]
-                },
-                extensions: {
-                    customFields: {
-                        difficulty: {
-                            type: "select",
-                            options: ["beginner", "intermediate", "advanced"],
-                            default: "beginner",
-                            required: false
-                        }
-                    }
-                }
+            var state = {
+                allDocs: [],
+                docByPath: new Map(),
+                tree: null,
+                currentPath: ''
             };
 
-            // 初始化分类结构
-            const defaultCategories = getDefaultCategories();
-            Object.keys(defaultCategories).forEach(categoryKey => {
-                const category = defaultCategories[categoryKey];
-                config.categories[categoryKey] = {
-                    ...category,
-                    topics: {
-                        "mod-basics": {
-                            title: "Mod基础",
-                            description: "Mod开发的基础概念和核心API",
-                            files: []
-                        }
-                    }
-                };
-            });
+            function escapeHtml(text) {
+                return String(text == null ? '' : text)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
 
-            // 初始化主题结构
-            const defaultTopics = getDefaultTopics();
-            Object.keys(defaultTopics).forEach(topicKey => {
-                const topic = defaultTopics[topicKey];
-                config.topics[topicKey] = {
-                    ...topic,
-                    display_names: {
-                        "zh": topic.title,
-                        "en": topic.title
-                    },
-                    aliases: [topic.title]
-                };
-            });
+            function normalizePath(value) {
+                return String(value || '')
+                    .replace(/\\/g, '/')
+                    .replace(/^\/+|\/+$/g, '');
+            }
 
-            return config;
-        }
+            function splitFolderPath(path) {
+                var normalized = normalizePath(path);
+                return normalized ? normalized.split('/').filter(Boolean) : [];
+            }
 
-        // 从配置文件加载文档列表
-        async function loadDocumentsFromConfig() {
-            try {
-                // 首先尝试从配置文件加载文档列表
-                if (FOLDER_DOC_CONFIG && FOLDER_DOC_CONFIG.all_files && FOLDER_DOC_CONFIG.all_files.length > 0) {
-                    console.log('从配置文件加载文档列表');
-                    ALL_DOCS = [...FOLDER_DOC_CONFIG.all_files];
+            function getFolderPathFromURL() {
+                var params = new URLSearchParams(window.location.search);
+                return normalizePath(params.get('path') || '');
+            }
 
-	                    // 确保每个文档都有必要的字段
-	                    ALL_DOCS = ALL_DOCS.map(doc => {
-	                        // 尝试从分类的topics中获取description
-	                        let description = doc.description || '';
-	                        if (!description && doc.category && doc.topic && FOLDER_DOC_CONFIG.categories &&
-	                            FOLDER_DOC_CONFIG.categories[doc.category] &&
-                            FOLDER_DOC_CONFIG.categories[doc.category].topics &&
-                            FOLDER_DOC_CONFIG.categories[doc.category].topics[doc.topic] &&
-                            FOLDER_DOC_CONFIG.categories[doc.category].topics[doc.topic].files) {
-                            
-                            const topicFiles = FOLDER_DOC_CONFIG.categories[doc.category].topics[doc.topic].files;
-                            const matchingFile = topicFiles.find(file => file.filename === doc.filename);
-                            if (matchingFile && matchingFile.description) {
-                                description = matchingFile.description;
-                            }
-                        }
+            function setMetaContent(selector, content) {
+                var el = document.querySelector(selector);
+                if (el && content) el.setAttribute('content', content);
+            }
 
-                        return {
-                            filename: doc.filename,
-                            path: doc.path || doc.filename,
-                            title: doc.title || doc.filename.replace('.md', ''),
-                            author: doc.author || '未知',
-                            category: doc.category || '入门',
-                            topic: doc.topic || 'mod-basics',
-	                            order: parseInt(doc.order) || 999,
-	                            description: description,
-	                            last_updated: doc.last_updated || '未知',
-	                            difficulty: doc.difficulty || 'beginner'
-	                        };
-	                    });
-
-                    console.log('从配置文件加载的文档:', ALL_DOCS);
-                    return;
+            function setCanonical(href) {
+                var link = document.querySelector('link[rel="canonical"]');
+                if (!link) {
+                    link = document.createElement('link');
+                    link.setAttribute('rel', 'canonical');
+                    document.head.appendChild(link);
                 }
-            } catch (error) {
-                console.error('从配置文件加载文档失败:', error);
-                ALL_DOCS = [];
-            }
-        }
-
-        // 根据文件夹路径筛选文档
-        function filterDocumentsByFolder(folderPath) {
-            if (!folderPath) {
-                console.log('未提供文件夹路径，默认显示全部文档');
-                FOLDER_DOCS = VISIBLE_DOCS.slice();
-                return;
+                link.setAttribute('href', href);
             }
 
-            console.log(`筛选文件夹 "${folderPath}" 下的文档`);
+            function updateSeo(folderPath) {
+                var baseUrl = 'https://dpapyru.github.io/site/pages/folder.html';
+                var displayPath = folderPath || ROOT_LABEL;
+                var canonical = folderPath ? (baseUrl + '?path=' + encodeURIComponent(folderPath)) : baseUrl;
+                var title = displayPath + ' - 目录可视化 - 泰拉瑞亚Mod制作教程';
+                var description = '泰拉瑞亚Mod制作教程目录视图：浏览“' + displayPath + '”的子目录与文章关系。';
 
-            // 筛选路径匹配指定文件夹的文档
-            FOLDER_DOCS = VISIBLE_DOCS.filter(doc => {
-                if (!doc.path) return false;
-                return FolderFilter.matchesFolderPath(doc.path, folderPath);
-            });
-
-            console.log(`找到 ${FOLDER_DOCS.length} 个文档:`, FOLDER_DOCS);
-        }
-
-        // 生成面包屑导航
-        function generateBreadcrumb(folderPath) {
-            const breadcrumb = document.getElementById('breadcrumb');
-
-            if (!breadcrumb) return;
-
-            breadcrumb.innerHTML = '';
-
-            // 首页链接
-            const homeItem = document.createElement('div');
-            homeItem.className = 'breadcrumb-item';
-            homeItem.innerHTML = '<a href="../index.html">首页</a>';
-            breadcrumb.appendChild(homeItem);
-
-            // 文档首页链接
-            const docsItem = document.createElement('div');
-            docsItem.className = 'breadcrumb-item';
-            docsItem.innerHTML = '<a href="folder.html">文档</a>';
-            breadcrumb.appendChild(docsItem);
-
-            // 当前文件夹
-            if (folderPath) {
-                const folderItem = document.createElement('div');
-                folderItem.className = 'breadcrumb-item active';
-                folderItem.textContent = folderPath;
-                breadcrumb.appendChild(folderItem);
-            }
-        }
-
-        // 生成文件夹标题和描述
-	        function generateFolderHeader(folderPath) {
-	            const folderHeader = document.getElementById('folder-header');
-
-            if (!folderHeader) return;
-
-            if (!folderPath) {
-                folderHeader.innerHTML = `
-                    <h2 class="folder-title">全部文档</h2>
-                    <p class="folder-description">默认展示 site/content 下的全部文章。可通过 URL 参数指定目录，例如：folder.html?path=Modder入门</p>
-                `;
-                return;
+                document.title = title;
+                setCanonical(canonical);
+                setMetaContent('meta[name="description"]', description);
+                setMetaContent('meta[property="og:title"]', title);
+                setMetaContent('meta[property="og:description"]', description);
+                setMetaContent('meta[property="og:url"]', canonical);
+                setMetaContent('meta[name="twitter:title"]', title);
+                setMetaContent('meta[name="twitter:description"]', description);
             }
 
-            // 尝试从配置中获取文件夹信息
-            let folderDescription = '';
-
-            // 检查是否是分类名称
-            if (FOLDER_DOC_CONFIG.categories && FOLDER_DOC_CONFIG.categories[folderPath]) {
-                folderDescription = FOLDER_DOC_CONFIG.categories[folderPath].description || '';
-            }
-
-	            // 生成文件夹标题和描述
-	            folderHeader.innerHTML = `
-	                <h2 class="folder-title">${escapeHtml(folderPath)}</h2>
-	                <p class="folder-description">${escapeHtml(folderDescription || `浏览 "${folderPath}" 文件夹下的所有文档`)}</p>
-	            `;
-	        }
-
-        function buildSubfolderSection(folderPath) {
-            const existingSection = document.getElementById('subfolder-section');
-            const container = existingSection || document.createElement('div');
-
-            container.id = 'subfolder-section';
-            container.className = 'subfolder-section';
-            container.innerHTML = '';
-
-            if (container.parentNode) {
-                container.parentNode.removeChild(container);
-            }
-
-            if (!folderPath || !window.FolderFilter ||
-                typeof window.FolderFilter.buildSubfolderEntries !== 'function') {
-                return null;
-            }
-
-            const docPaths = FOLDER_DOCS.map(doc => doc.path || doc.filename).filter(Boolean);
-            const entries = window.FolderFilter.buildSubfolderEntries(docPaths, folderPath);
-            if (entries.length === 0) return null;
-
-            const list = document.createElement('ul');
-            list.className = 'subfolder-list';
-
-            entries.forEach(entry => {
-                const item = document.createElement('li');
-                item.className = 'subfolder-item';
-
-                const link = document.createElement('a');
-                link.className = 'subfolder-link';
-                link.href = `folder.html?path=${encodeURIComponent(entry.path)}`;
-                link.textContent = entry.label;
-
-                item.appendChild(link);
-                list.appendChild(item);
-            });
-
-            container.appendChild(list);
-            container.style.gridColumn = '1 / -1';
-
-            return container;
-        }
-
-        // 生成文档列表
-        function generateDocumentGrid() {
-            applyAllFiltersAndSort();
-        }
-
-        // 获取难度文本 - 优先从配置文件读取，否则使用默认值
-        function getDifficultyText(difficulty) {
-            // 首先尝试从配置文件中获取难度映射
-            if (FOLDER_DOC_CONFIG && FOLDER_DOC_CONFIG.extensions && FOLDER_DOC_CONFIG.extensions.customFields &&
-                FOLDER_DOC_CONFIG.extensions.customFields.difficulty && FOLDER_DOC_CONFIG.extensions.customFields.difficulty.options) {
-                const difficultyOptions = FOLDER_DOC_CONFIG.extensions.customFields.difficulty.options;
-                const difficultyMap = {
-                    'beginner': '初级',
-                    'intermediate': '中级',
-                    'advanced': '高级',
-                    'all': '全部级别'
-                };
-
-                // 如果配置中有自定义映射，使用配置中的映射
-                if (difficultyOptions.includes(difficulty)) {
-                    return difficultyMap[difficulty] || difficulty;
-                }
-            }
-
-            // 默认难度映射
-            const defaultDifficultyMap = {
-                'beginner': '初级',
-                'intermediate': '中级',
-                'advanced': '高级',
-                'all': '全部级别'
-            };
-            return defaultDifficultyMap[difficulty] || difficulty;
-        }
-
-        // 初始化过滤器
-        function initializeFilters() {
-            // 填充分类过滤器选项
-            if (categoryFilter && FOLDER_DOC_CONFIG && FOLDER_DOC_CONFIG.categories) {
-                categoryFilter.innerHTML = '<option value="all">全部分类</option>';
-                Object.keys(FOLDER_DOC_CONFIG.categories).forEach(categoryKey => {
-                    const category = FOLDER_DOC_CONFIG.categories[categoryKey];
-                    const option = document.createElement('option');
-                    option.value = categoryKey;
-                    option.textContent = category.title || categoryKey;
-                    categoryFilter.appendChild(option);
-                });
-            }
-
-            // 填充作者过滤器选项
-            if (authorFilter && ALL_DOCS.length > 0) {
-                const authors = [...new Set(ALL_DOCS.map(doc => doc.author))].sort();
-                authorFilter.innerHTML = '<option value="all">全部作者</option>';
-                authors.forEach(author => {
-                    const option = document.createElement('option');
-                    option.value = author;
-                    option.textContent = author;
-                    authorFilter.appendChild(option);
-                });
-            }
-
-            // 添加过滤器事件监听器
-            if (difficultyFilter) {
-                difficultyFilter.addEventListener('change', applyFiltersAndSort);
-            }
-
-            if (categoryFilter) {
-                categoryFilter.addEventListener('change', applyFiltersAndSort);
-            }
-
-            if (authorFilter) {
-                authorFilter.addEventListener('change', applyFiltersAndSort);
-            }
-
-            if (sortFilter) {
-                sortFilter.addEventListener('change', applyFiltersAndSort);
-            }
-        }
-
-        // 应用过滤器和排序
-        function applyFiltersAndSort() {
-            let filteredDocs = [...FOLDER_DOCS];
-
-            // 应用难度过滤器
-            if (difficultyFilter && difficultyFilter.value !== 'all') {
-                filteredDocs = filteredDocs.filter(doc => doc.difficulty === difficultyFilter.value);
-            }
-
-            // 应用分类过滤器
-            if (categoryFilter && categoryFilter.value !== 'all') {
-                filteredDocs = filteredDocs.filter(doc => doc.category === categoryFilter.value);
-            }
-
-            // 应用作者过滤器
-            if (authorFilter && authorFilter.value !== 'all') {
-                filteredDocs = filteredDocs.filter(doc => doc.author === authorFilter.value);
-            }
-
-            // 应用排序
-            if (sortFilter) {
-                const sortBy = sortFilter.value;
-                filteredDocs.sort((a, b) => {
-                    switch (sortBy) {
-                        case 'title':
-                            return a.title.localeCompare(b.title, 'zh-CN');
-                        case 'author':
-                            return a.author.localeCompare(b.author, 'zh-CN');
-                        case 'last_updated':
-                            return new Date(b.last_updated || 0) - new Date(a.last_updated || 0);
-                        case 'order':
-                        default:
-                            return (a.order || 999) - (b.order || 999);
-                    }
-                });
-            }
-
-            // 更新文档网格
-            updateDocumentGrid(filteredDocs);
-        }
-
-        // 应用所有过滤器和排序
-        function applyAllFiltersAndSort() {
-            const sortFilter = document.getElementById('sort-filter');
-            const sortValue = sortFilter ? sortFilter.value : 'order';
-
-            let filteredDocs = applyCurrentFilters();
-            filteredDocs = sortDocuments(filteredDocs, sortValue);
-
-            updateDocumentGridWithFilteredDocs(filteredDocs);
-        }
-
-        // 应用当前过滤器（不应用排序）
-        function applyCurrentFilters() {
-            let filteredDocs = [...FOLDER_DOCS];
-
-            const difficultyFilter = document.getElementById('difficulty-filter');
-            const categoryFilter = document.getElementById('category-filter');
-            const authorFilter = document.getElementById('author-filter');
-
-            // 应用难度过滤器
-            if (difficultyFilter && difficultyFilter.value !== 'all') {
-                filteredDocs = filteredDocs.filter(doc => doc.difficulty === difficultyFilter.value);
-            }
-
-            // 应用分类过滤器
-            if (categoryFilter && categoryFilter.value !== 'all') {
-                filteredDocs = filteredDocs.filter(doc => doc.category === categoryFilter.value);
-            }
-
-            // 应用作者过滤器
-            if (authorFilter && authorFilter.value !== 'all') {
-                filteredDocs = filteredDocs.filter(doc => doc.author === authorFilter.value);
-            }
-
-            return filteredDocs;
-        }
-
-        // 初始化过滤器和排序功能
-        function initFilterAndSortFunctionality() {
-            const difficultyFilter = document.getElementById('difficulty-filter');
-            const categoryFilter = document.getElementById('category-filter');
-            const authorFilter = document.getElementById('author-filter');
-            const sortFilter = document.getElementById('sort-filter');
-            const docGrid = document.getElementById('doc-grid');
-
-            if (!difficultyFilter || !categoryFilter || !authorFilter || !sortFilter || !docGrid) {
-                console.error('无法找到过滤器和排序控件');
-                return;
-            }
-
-            // 填充分类过滤器选项
-            populateCategoryFilter();
-
-            // 填充作者过滤器选项
-            populateAuthorFilter();
-
-            // 难度过滤器事件
-            difficultyFilter.addEventListener('change', applyAllFiltersAndSort);
-
-            // 分类过滤器事件
-            categoryFilter.addEventListener('change', applyAllFiltersAndSort);
-
-            // 作者过滤器事件
-            authorFilter.addEventListener('change', applyAllFiltersAndSort);
-
-            // 排序过滤器事件
-            sortFilter.addEventListener('change', applyAllFiltersAndSort);
-
-            // 初始应用过滤器和排序
-            applyAllFiltersAndSort();
-        }
-
-        // 填充分类过滤器选项
-        function populateCategoryFilter() {
-            const categoryFilter = document.getElementById('category-filter');
-            if (!categoryFilter) return;
-
-            // 获取所有唯一的分类
-            const categories = [...new Set(FOLDER_DOCS.map(doc => doc.category))];
-
-            // 清空现有选项（保留"全部分类"）
-            categoryFilter.innerHTML = '<option value="all">全部分类</option>';
-
-            // 添加分类选项
-            categories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category;
-                option.textContent = category;
-                categoryFilter.appendChild(option);
-            });
-        }
-
-        // 填充作者过滤器选项
-        function populateAuthorFilter() {
-            const authorFilter = document.getElementById('author-filter');
-            if (!authorFilter) return;
-
-            // 获取所有唯一的作者
-            const authors = [...new Set(FOLDER_DOCS.map(doc => doc.author))];
-
-            // 清空现有选项（保留"全部作者"）
-            authorFilter.innerHTML = '<option value="all">全部作者</option>';
-
-            // 添加作者选项
-            authors.forEach(author => {
-                const option = document.createElement('option');
-                option.value = author;
-                option.textContent = author;
-                authorFilter.appendChild(option);
-            });
-        }
-
-        // 排序文档
-        function sortDocuments(docs, sortType) {
-            const sortedDocs = [...docs];
-
-            switch (sortType) {
-                case 'order':
-                    sortedDocs.sort((a, b) => a.order - b.order);
-                    break;
-                case 'title':
-                    sortedDocs.sort((a, b) => a.title.localeCompare(b.title, 'zh-CN'));
-                    break;
-                case 'author':
-                    sortedDocs.sort((a, b) => a.author.localeCompare(b.author, 'zh-CN'));
-                    break;
-                case 'last_updated':
-                    sortedDocs.sort((a, b) => {
-                        // 尝试将日期字符串转换为Date对象进行比较
-                        const dateA = new Date(a.last_updated);
-                        const dateB = new Date(b.last_updated);
-
-                        // 如果日期无效，则按字符串比较
-                        if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
-                            return b.last_updated.localeCompare(a.last_updated);
-                        }
-
-                        return dateB.getTime() - dateA.getTime(); // 降序排列，最新的在前
-                    });
-                    break;
-                default:
-                    // 默认按顺序排序
-                    sortedDocs.sort((a, b) => a.order - b.order);
-            }
-
-            return sortedDocs;
-        }
-
-        // 使用过滤后的文档更新文档网格
-        function updateDocumentGridWithFilteredDocs(filteredDocs) {
-            const docGrid = document.getElementById('doc-grid');
-            const noDocs = document.getElementById('no-docs');
-
-            if (!docGrid || !noDocs) return;
-
-            // 清空现有内容
-            docGrid.innerHTML = '';
-
-            if (filteredDocs.length === 0) {
-                // 显示无文档提示
-                docGrid.style.display = 'none';
-                noDocs.style.display = 'block';
-                noDocs.innerHTML = `
-                    <h3>没有找到匹配的文档</h3>
-                    <p>没有找到与过滤条件匹配的文档，请尝试调整过滤条件。</p>
-                `;
-                return;
-            }
-
-            noDocs.style.display = 'none';
-            docGrid.style.display = 'block';
-            docGrid.classList.add('tree-view');
-            renderDocTree(docGrid, filteredDocs, CURRENT_FOLDER);
-        }
-
-        function renderDocTree(docGrid, docs, basePath) {
-            const tree = buildDocTree(docs, basePath);
-            const container = document.createElement('div');
-            container.className = 'doc-tree';
-
-            appendCategoryGroups(container, tree.docs, 0);
-
-            const folderNodes = Array.from(tree.children.values())
-                .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
-
-            folderNodes.forEach(node => {
-                container.appendChild(renderFolderNode(node, 0));
-            });
-
-            docGrid.appendChild(container);
-        }
-
-        const TREE_INDENT = 18;
-        const TREE_BASE_PADDING = 12;
-
-        function renderFolderNode(node, depth) {
-            const details = document.createElement('details');
-            details.className = 'doc-tree-folder';
-            details.open = false;
-
-            const summary = document.createElement('summary');
-            summary.className = 'doc-tree-summary';
-            summary.style.paddingLeft = `${TREE_BASE_PADDING + depth * TREE_INDENT}px`;
-            summary.innerHTML = `
-                <span class="doc-tree-folder-name">${escapeHtml(node.name)}</span>
-                <span class="doc-tree-count">${node.totalDocs} 篇</span>
-            `;
-
-            const children = document.createElement('div');
-            children.className = 'doc-tree-children';
-
-            const subfolders = Array.from(node.children.values())
-                .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
-            subfolders.forEach(child => {
-                children.appendChild(renderFolderNode(child, depth + 1));
-            });
-
-            appendCategoryGroups(children, node.docs, depth + 1);
-
-            details.appendChild(summary);
-            details.appendChild(children);
-            return details;
-        }
-
-        function appendCategoryGroups(container, docs, depth) {
-            const groups = groupDocsByCategory(docs);
-            groups.forEach(group => {
-                const category = document.createElement('div');
-                category.className = 'doc-tree-category';
-                category.style.paddingLeft = `${TREE_BASE_PADDING + depth * TREE_INDENT}px`;
-                category.textContent = `分类：${group.name}`;
-                container.appendChild(category);
-
-                group.docs.forEach(doc => {
-                    container.appendChild(renderDocItem(doc, depth + 1));
-                });
-            });
-        }
-
-	    function renderDocItem(doc, depth) {
-	        const item = document.createElement('div');
-	        item.className = 'doc-tree-file';
-	        item.style.paddingLeft = `${TREE_BASE_PADDING + depth * TREE_INDENT}px`;
-
-	        const difficultyText = getDifficultyText(doc.difficulty);
-	        const meta = [
-	            `作者: ${escapeHtml(doc.author || '未知')}`,
-	            `难度: ${escapeHtml(difficultyText)}`
-	        ].join(' · ');
-
-            item.innerHTML = `
-                <a class="doc-tree-file-link" href="/site/pages/viewer.html?file=${encodeURIComponent(doc.path)}">${escapeHtml(doc.title || doc.filename || '未命名')}</a>
-                <span class="doc-tree-meta">${meta}</span>
-            `;
-
-            return item;
-        }
-
-        function groupDocsByCategory(docs) {
-            const map = new Map();
-
-            docs.forEach(doc => {
-                const name = doc.category || '未分类';
-                if (!map.has(name)) map.set(name, []);
-                map.get(name).push(doc);
-            });
-
-            return Array.from(map.keys()).sort((a, b) => a.localeCompare(b, 'zh-CN'))
-                .map(name => ({
+            function createFolderNode(name, path, parent) {
+                return {
                     name: name,
-                    docs: sortDocsByOrder(map.get(name) || [])
-                }));
-        }
+                    path: path,
+                    parent: parent,
+                    children: new Map(),
+                    docs: []
+                };
+            }
 
-        function sortDocsByOrder(docs) {
-            return [...docs].sort((a, b) => {
-                const orderDelta = (a.order || 0) - (b.order || 0);
+            function normalizeDoc(raw) {
+                var path = normalizePath(raw && raw.path ? raw.path : raw && raw.filename ? raw.filename : '');
+                if (!path || !/\.md$/i.test(path)) return null;
+
+                return {
+                    filename: raw.filename || path.split('/').pop() || '',
+                    path: path,
+                    title: raw.title || path.split('/').pop().replace(/\.md$/i, ''),
+                    author: raw.author || '未知',
+                    category: raw.category || '未分类',
+                    order: Number(raw.order || 999) || 999,
+                    prev_chapter: raw.prev_chapter || '',
+                    next_chapter: raw.next_chapter || ''
+                };
+            }
+
+            function compareFolder(a, b) {
+                return String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN');
+            }
+
+            function compareDoc(a, b) {
+                var orderDelta = (a.order || 999) - (b.order || 999);
                 if (orderDelta !== 0) return orderDelta;
                 return String(a.title || '').localeCompare(String(b.title || ''), 'zh-CN');
-            });
-        }
+            }
 
-        function buildDocTree(docs, basePath) {
-            const root = { name: '', path: '', children: new Map(), docs: [], totalDocs: 0 };
-            const base = normalizeDocPath(basePath);
+            function buildDocFlowOrder(docs) {
+                var sorted = docs.slice().sort(compareDoc);
+                var pathSet = new Set(sorted.map(function (doc) { return doc.path; }));
+                var byPath = new Map(sorted.map(function (doc) { return [doc.path, doc]; }));
+                var nextMap = new Map();
+                var indegree = new Map();
+                var ordered = [];
+                var visited = new Set();
 
-            docs.forEach(doc => {
-                const fullPath = normalizeDocPath(doc.path || doc.filename);
-                if (!fullPath) return;
-
-                let relPath = fullPath;
-                if (base) {
-                    if (fullPath === base) {
-                        relPath = '';
-                    } else if (fullPath.indexOf(base + '/') === 0) {
-                        relPath = fullPath.slice(base.length + 1);
-                    } else {
-                        return;
-                    }
-                }
-
-                const parts = relPath.split('/').filter(Boolean);
-                const fileName = parts.pop();
-                if (!fileName) {
-                    root.docs.push(doc);
-                    return;
-                }
-
-                let current = root;
-                let currentPath = base;
-                parts.forEach(part => {
-                    currentPath = currentPath ? currentPath + '/' + part : part;
-                    if (!current.children.has(part)) {
-                        current.children.set(part, {
-                            name: part,
-                            path: currentPath,
-                            children: new Map(),
-                            docs: [],
-                            totalDocs: 0
-                        });
-                    }
-                    current = current.children.get(part);
+                sorted.forEach(function (doc) {
+                    indegree.set(doc.path, 0);
                 });
 
-                current.docs.push(doc);
+                sorted.forEach(function (doc) {
+                    var nextPath = resolveChapterPath(doc.path, doc.next_chapter);
+                    if (!nextPath || !pathSet.has(nextPath) || nextPath === doc.path) return;
+                    if (nextMap.has(doc.path)) return;
+                    nextMap.set(doc.path, nextPath);
+                    indegree.set(nextPath, (indegree.get(nextPath) || 0) + 1);
+                });
+
+                function walk(startDoc) {
+                    var current = startDoc;
+                    while (current && !visited.has(current.path)) {
+                        visited.add(current.path);
+                        ordered.push(current);
+                        var nextPath = nextMap.get(current.path);
+                        current = nextPath ? byPath.get(nextPath) : null;
+                    }
+                }
+
+                sorted.filter(function (doc) {
+                    return (indegree.get(doc.path) || 0) === 0;
+                }).forEach(walk);
+
+                sorted.forEach(walk);
+                return ordered;
+            }
+
+            function buildTree(docs) {
+                var root = createFolderNode(ROOT_LABEL, '', null);
+
+                docs.forEach(function (doc) {
+                    var parts = splitFolderPath(doc.path);
+                    var fileName = parts.pop();
+                    if (!fileName) return;
+
+                    var current = root;
+                    var currentPath = '';
+
+                    parts.forEach(function (part) {
+                        currentPath = currentPath ? currentPath + '/' + part : part;
+                        if (!current.children.has(part)) {
+                            current.children.set(part, createFolderNode(part, currentPath, current));
+                        }
+                        current = current.children.get(part);
+                    });
+
+                    current.docs.push(doc);
+                });
+
+                return root;
+            }
+
+            function getFolderNode(path) {
+                var normalized = normalizePath(path);
+                if (!normalized) return state.tree;
+
+                var parts = splitFolderPath(normalized);
+                var current = state.tree;
+                var i;
+                for (i = 0; i < parts.length; i += 1) {
+                    if (!current || !current.children.has(parts[i])) return null;
+                    current = current.children.get(parts[i]);
+                }
+                return current;
+            }
+
+            function getParentPath(path) {
+                var parts = splitFolderPath(path);
+                parts.pop();
+                return parts.join('/');
+            }
+
+            function resolveChapterPath(sourcePath, chapterRef) {
+                var ref = normalizePath(chapterRef || '');
+                if (!ref) return '';
+
+                if (state.docByPath.has(ref)) return ref;
+
+                var sourceParts = splitFolderPath(sourcePath);
+                sourceParts.pop();
+
+                ref.split('/').forEach(function (part) {
+                    if (!part || part === '.') return;
+                    if (part === '..') {
+                        if (sourceParts.length > 0) sourceParts.pop();
+                    } else {
+                        sourceParts.push(part);
+                    }
+                });
+
+                var resolved = sourceParts.join('/');
+                if (state.docByPath.has(resolved)) return resolved;
+                return '';
+            }
+
+            function getCssVar(name, fallback) {
+                var value = getComputedStyle(document.documentElement).getPropertyValue(name);
+                value = String(value || '').trim();
+                return value || fallback;
+            }
+
+            function getPalette() {
+                return {
+                    bg: getCssVar('--bg-color', '#121212'),
+                    surface: getCssVar('--bg-secondary', '#1c1f26'),
+                    text: getCssVar('--text-color', '#f0f0f0'),
+                    muted: getCssVar('--text-secondary', '#9aa4b2'),
+                    border: getCssVar('--border-color', '#2f3b4f'),
+                    primary: getCssVar('--primary-color', '#3fb950'),
+                    folder: getCssVar('--link-color', '#4dabf7'),
+                    doc: getCssVar('--text-color', '#f0f0f0'),
+                    prev: '#4dabf7',
+                    next: '#ff922b',
+                    line: getCssVar('--border-color', '#3a4557')
+                };
+            }
+
+            function createSvgEl(tag, attrs) {
+                var el = document.createElementNS(SVG_NS, tag);
+                Object.keys(attrs || {}).forEach(function (key) {
+                    el.setAttribute(key, attrs[key]);
+                });
+                return el;
+            }
+
+            function polylinePath(points) {
+                return points.map(function (point, index) {
+                    return (index === 0 ? 'M ' : 'L ') + point.x + ' ' + point.y;
+                }).join(' ');
+            }
+
+            function getAlternatingOffset(index, step) {
+                if (index === 0) return 0;
+                var level = Math.ceil(index / 2);
+                return index % 2 === 1 ? (-level * step) : (level * step);
+            }
+
+            function clamp(value, min, max) {
+                return Math.max(min, Math.min(max, value));
+            }
+
+            function truncateText(text, maxLen) {
+                var value = String(text || '');
+                if (value.length <= maxLen) return value;
+                return value.slice(0, Math.max(1, maxLen - 1)) + '…';
+            }
+
+            function wrapTextLines(text, maxCharsPerLine, maxLines) {
+                var value = String(text || '').replace(/\s+/g, ' ').trim();
+                var chars = Array.from(value);
+                var lineLimit = Math.max(1, maxLines || 1);
+                var lineChars = Math.max(1, maxCharsPerLine || 10);
+                var lines = [];
+                var i;
+
+                if (!chars.length) return [''];
+
+                for (i = 0; i < lineLimit && chars.length > 0; i += 1) {
+                    lines.push(chars.splice(0, lineChars).join(''));
+                }
+
+                if (chars.length > 0) {
+                    lines[lineLimit - 1] = truncateText(lines[lineLimit - 1] + chars.join(''), lineChars);
+                }
+                return lines;
+            }
+
+            function addInteractiveNode(group, onClick) {
+                group.classList.add('map-clickable');
+                group.setAttribute('tabindex', '0');
+                group.setAttribute('role', 'button');
+                group.addEventListener('click', onClick);
+                group.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        onClick();
+                    }
+                });
+            }
+
+            function drawNode(layer, options) {
+                var x = options.cx - options.width / 2;
+                var y = options.cy - options.height / 2;
+                var titleLines = Array.isArray(options.titleLines) && options.titleLines.length > 0
+                    ? options.titleLines
+                    : [truncateText(options.title || '', options.titleMax || 14)];
+                var titleSize = options.titleSize || 16;
+                var titleLineHeight = options.titleLineHeight || Math.round(titleSize * 1.24);
+                var hasSubtitle = !!options.subtitle;
+                var titleStartY = options.cy - ((titleLines.length - 1) * titleLineHeight) / 2 - (hasSubtitle ? 9 : 0);
+
+                var group = createSvgEl('g', {
+                    'aria-label': options.label || ''
+                });
+                layer.appendChild(group);
+
+                var rect = createSvgEl('rect', {
+                    x: String(x),
+                    y: String(y),
+                    width: String(options.width),
+                    height: String(options.height),
+                    rx: String(options.radius || 10),
+                    ry: String(options.radius || 10),
+                    fill: options.fill,
+                    stroke: options.stroke,
+                    'stroke-width': String(options.strokeWidth || 2)
+                });
+                group.appendChild(rect);
+
+                titleLines.forEach(function (lineText, lineIndex) {
+                    var title = createSvgEl('text', {
+                        x: String(options.cx),
+                        y: String(titleStartY + lineIndex * titleLineHeight),
+                        'text-anchor': 'middle',
+                        'font-size': String(titleSize),
+                        'font-weight': String(options.titleWeight || 700),
+                        fill: options.textColor
+                    });
+                    title.textContent = lineText;
+                    group.appendChild(title);
+                });
+
+                if (hasSubtitle) {
+                    var subtitle = createSvgEl('text', {
+                        x: String(options.cx),
+                        y: String(titleStartY + titleLines.length * titleLineHeight + 9),
+                        'text-anchor': 'middle',
+                        'font-size': String(options.subtitleSize || 12),
+                        fill: options.subTextColor || options.textColor,
+                        opacity: '0.92'
+                    });
+                    subtitle.textContent = truncateText(options.subtitle, options.subtitleMax || 20);
+                    group.appendChild(subtitle);
+                }
+
+                if (options.tooltip) {
+                    var tip = createSvgEl('title', {});
+                    tip.textContent = options.tooltip;
+                    group.appendChild(tip);
+                }
+
+                if (typeof options.onClick === 'function') {
+                    addInteractiveNode(group, options.onClick);
+                }
+
+                return group;
+            }
+
+            function updateLegendColors(palette) {
+                var prevLine = document.getElementById('legend-prev-line');
+                var nextLine = document.getElementById('legend-next-line');
+                if (prevLine) prevLine.style.borderTopColor = palette.next;
+                if (nextLine) nextLine.style.borderTopColor = palette.prev;
+            }
+
+            function updateToolbar(folderNode) {
+                var title = document.getElementById('folder-map-title');
+                var folderCount = document.getElementById('folder-count-meta');
+                var docCount = document.getElementById('doc-count-meta');
+                var goParentBtn = document.getElementById('go-parent-btn');
+
+                var folderPath = state.currentPath;
+                var displayName = folderPath || ROOT_LABEL;
+                var children = Array.from(folderNode.children.values()).sort(compareFolder);
+                var docs = folderNode.docs.slice().sort(compareDoc);
+
+                if (title) {
+                    title.textContent = '当前目录：' + displayName;
+                }
+                if (folderCount) {
+                    folderCount.textContent = '目录 ' + children.length;
+                }
+                if (docCount) {
+                    docCount.textContent = '文章 ' + docs.length;
+                }
+
+                if (goParentBtn) {
+                    var parentPath = getParentPath(folderPath);
+                    var isRoot = !folderPath;
+                    goParentBtn.disabled = isRoot;
+                    goParentBtn.setAttribute('aria-disabled', isRoot ? 'true' : 'false');
+                    goParentBtn.onclick = function () {
+                        if (isRoot) return;
+                        navigateTo(parentPath, false);
+                    };
+                }
+            }
+
+            function setMapEmpty(visible) {
+                var empty = document.getElementById('folder-map-empty');
+                if (!empty) return;
+                empty.hidden = !visible;
+            }
+
+            function renderMap(folderNode) {
+                var svg = document.getElementById('folder-map-svg');
+                if (!svg) return;
+
+                var palette = getPalette();
+                updateLegendColors(palette);
+
+                var folders = Array.from(folderNode.children.values()).sort(compareFolder);
+                var docs = buildDocFlowOrder(folderNode.docs.slice());
+
+                var center = {
+                    x: 600,
+                    y: docs.length > 0 ? 198 : 220
+                };
+
+                var docPathSet = new Set(docs.map(function (doc) { return doc.path; }));
+                var flowEdgeCount = 0;
+                docs.forEach(function (doc) {
+                    var nextPath = resolveChapterPath(doc.path, doc.next_chapter);
+                    if (nextPath && docPathSet.has(nextPath) && nextPath !== doc.path) {
+                        flowEdgeCount += 1;
+                    }
+                });
+
+                var flowLayout = flowEdgeCount > 0 && docs.length > 0 && docs.length <= 8;
+                var sequenceLayout = flowLayout;
+                var cardWidth = flowLayout ? 252 : 232;
+                var cardHeight = flowLayout ? 84 : 68;
+                var gapX = flowLayout ? 24 : 16;
+                var gapY = flowLayout ? 112 : 90;
+                var docColumnCount;
+                if (sequenceLayout) {
+                    docColumnCount = 1;
+                } else {
+                    docColumnCount = Math.min(4, Math.max(1, Math.ceil(Math.sqrt(Math.max(1, docs.length)))));
+                }
+                var docRows = docs.length > 0 ? Math.ceil(docs.length / docColumnCount) : 0;
+
+                var folderLayout = [];
+                var folderNodeHeight = 58;
+                var maxFolderBottom = center.y + 43;
+
+                if (folders.length > 0) {
+                    var startDeg = -170;
+                    var endDeg = 140;
+                    var folderOrbitSafePadding = Math.round(170 * SAFE_SCALE);
+                    var orbitRadiusX = 600 - folderOrbitSafePadding - 105;
+                    var orbitRadiusY = Math.max(120, Math.round(130 + 120 * SAFE_SCALE));
+                    var step = folders.length === 1 ? 0 : (endDeg - startDeg) / (folders.length - 1);
+                    var folderStrokePalette = ['#4dabf7', '#51cf66', '#9775fa', '#ff922b', '#22b8cf', '#f06595'];
+
+                    folders.forEach(function (folder, index) {
+                        var deg = folders.length === 1 ? -90 : (startDeg + step * index);
+                        var rad = deg * (Math.PI / 180);
+                        var folderColor = folderStrokePalette[index % folderStrokePalette.length];
+                        var point = folders.length === 1
+                            ? { x: center.x, y: center.y - 138 }
+                            : {
+                                x: center.x + orbitRadiusX * Math.cos(rad),
+                                y: center.y + orbitRadiusY * Math.sin(rad)
+                            };
+
+                        folderLayout.push({ folder: folder, point: point, color: folderColor });
+                        maxFolderBottom = Math.max(maxFolderBottom, point.y + folderNodeHeight / 2);
+                    });
+                }
+
+                var docStartY = Math.max(322, maxFolderBottom + Math.max(30, Math.round(72 * SAFE_SCALE)));
+                var bottomSafePadding = Math.max(20, Math.round(90 * SAFE_SCALE));
+                var viewHeight = docs.length > 0
+                    ? Math.max(
+                        flowLayout ? 660 : 600,
+                        docStartY + Math.max(0, docRows - 1) * gapY + cardHeight / 2 + bottomSafePadding
+                    )
+                    : Math.max(440, maxFolderBottom + 84);
+
+                svg.setAttribute('viewBox', '0 0 1200 ' + viewHeight);
+                svg.innerHTML = '';
+
+                var defs = createSvgEl('defs', {});
+                var markerPrev = createSvgEl('marker', {
+                    id: 'arrow-prev',
+                    viewBox: '0 0 10 10',
+                    refX: '8',
+                    refY: '5',
+                    markerWidth: '7',
+                    markerHeight: '7',
+                    orient: 'auto'
+                });
+                markerPrev.appendChild(createSvgEl('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: palette.prev }));
+
+                var markerPrevStart = createSvgEl('marker', {
+                    id: 'arrow-prev-start',
+                    viewBox: '0 0 10 10',
+                    refX: '8',
+                    refY: '5',
+                    markerWidth: '6',
+                    markerHeight: '6',
+                    orient: 'auto-start-reverse'
+                });
+                markerPrevStart.appendChild(createSvgEl('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: palette.prev }));
+
+                var markerNext = createSvgEl('marker', {
+                    id: 'arrow-next',
+                    viewBox: '0 0 10 10',
+                    refX: '8',
+                    refY: '5',
+                    markerWidth: '7',
+                    markerHeight: '7',
+                    orient: 'auto'
+                });
+                markerNext.appendChild(createSvgEl('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: palette.next }));
+
+                defs.appendChild(markerPrev);
+                defs.appendChild(markerPrevStart);
+                defs.appendChild(markerNext);
+                svg.appendChild(defs);
+
+                svg.appendChild(createSvgEl('rect', {
+                    x: '0',
+                    y: '0',
+                    width: '1200',
+                    height: String(viewHeight),
+                    fill: palette.bg
+                }));
+
+                var branchLayer = createSvgEl('g', { 'pointer-events': 'none' });
+                var relationLayer = createSvgEl('g', { 'pointer-events': 'none' });
+                var nodeLayer = createSvgEl('g', {});
+                svg.appendChild(branchLayer);
+                svg.appendChild(relationLayer);
+                svg.appendChild(nodeLayer);
+
+                drawNode(nodeLayer, {
+                    cx: center.x,
+                    cy: center.y,
+                    width: 290,
+                    height: 86,
+                    radius: 14,
+                    fill: palette.primary,
+                    stroke: palette.primary,
+                    textColor: palette.bg,
+                    title: folderNode.path ? folderNode.name : ROOT_LABEL,
+                    subtitle: folderNode.path || '站点顶层目录',
+                    subtitleSize: 13,
+                    subtitleMax: 28,
+                    titleMax: 18,
+                    titleSize: 21,
+                    titleWeight: 800,
+                    tooltip: folderNode.path || ROOT_LABEL
+                });
+
+                if (folderLayout.length > 0) {
+                    folderLayout.forEach(function (item) {
+                        var folder = item.folder;
+                        var point = item.point;
+                        var midY = point.y < center.y ? (center.y - 34) : (center.y + 30);
+                        var midX = Math.round((center.x + point.x) / 2);
+                        var path = createSvgEl('path', {
+                            d: polylinePath([
+                                { x: center.x, y: center.y },
+                                { x: midX, y: midY },
+                                { x: point.x, y: point.y }
+                            ]),
+                            fill: 'none',
+                            stroke: item.color,
+                            'stroke-width': '2',
+                            'stroke-opacity': '0.45'
+                        });
+                        branchLayer.appendChild(path);
+
+                        drawNode(nodeLayer, {
+                            cx: point.x,
+                            cy: point.y,
+                            width: 200,
+                            height: 58,
+                            radius: 10,
+                            fill: palette.surface,
+                            stroke: item.color,
+                            textColor: palette.text,
+                            title: folder.name,
+                            titleMax: 14,
+                            titleSize: 15,
+                            subtitle: '目录',
+                            subtitleSize: 12,
+                            subtitleMax: 10,
+                            tooltip: folder.path,
+                            onClick: function () {
+                                navigateTo(folder.path, false);
+                            }
+                        });
+                    });
+                }
+
+                var docPointByPath = new Map();
+                var docIndexByPath = new Map();
+                var docHalfHeight = cardHeight / 2;
+                var totalWidth = docColumnCount * cardWidth + (docColumnCount - 1) * gapX;
+                var docStartX = (1200 - totalWidth) / 2 + cardWidth / 2;
+
+                docs.forEach(function (doc, index) {
+                    docIndexByPath.set(doc.path, index);
+                    var col = index % docColumnCount;
+                    var row = Math.floor(index / docColumnCount);
+                    var point = {
+                        x: docStartX + col * (cardWidth + gapX),
+                        y: docStartY + row * gapY
+                    };
+                    docPointByPath.set(doc.path, point);
+
+                    var docBranchStartY = center.y + 44;
+                    var docTopY = point.y - docHalfHeight - 5;
+                    var docMidY = Math.min(docTopY - 18, center.y + 154);
+                    var branch = createSvgEl('path', {
+                        d: polylinePath([
+                            { x: center.x, y: docBranchStartY },
+                            { x: center.x, y: docMidY },
+                            { x: point.x, y: docMidY },
+                            { x: point.x, y: docTopY }
+                        ]),
+                        fill: 'none',
+                        stroke: palette.line,
+                        'stroke-width': '1.8',
+                        'stroke-opacity': '0.78'
+                    });
+                    branchLayer.appendChild(branch);
+
+                    drawNode(nodeLayer, {
+                        cx: point.x,
+                        cy: point.y,
+                        width: cardWidth,
+                        height: cardHeight,
+                        radius: 8,
+                        fill: palette.surface,
+                        stroke: palette.border,
+                        textColor: palette.doc,
+                        title: doc.title,
+                        titleLines: wrapTextLines(doc.title, flowLayout ? 12 : 14, 2),
+                        titleLineHeight: flowLayout ? 18 : 17,
+                        titleSize: flowLayout ? 15 : 14,
+                        tooltip: doc.path,
+                        onClick: function () {
+                            window.location.href = '/site/pages/viewer.html?file=' + encodeURIComponent(doc.path);
+                        }
+                    });
+                });
+
+                var prevEdges = [];
+                var nextEdges = [];
+
+                docs.forEach(function (doc) {
+                    var source = docPointByPath.get(doc.path);
+                    if (!source) return;
+                    var sourceIndex = docIndexByPath.get(doc.path) || 0;
+
+                    var prevPath = resolveChapterPath(doc.path, doc.prev_chapter);
+                    var prevPoint = docPointByPath.get(prevPath);
+                    if (prevPath && prevPoint && prevPath !== doc.path) {
+                        var prevTargetIndex = docIndexByPath.get(prevPath) || 0;
+                        prevEdges.push({
+                            sourcePath: doc.path,
+                            targetPath: prevPath,
+                            source: source,
+                            target: prevPoint,
+                            sourceIndex: sourceIndex,
+                            targetIndex: prevTargetIndex,
+                            distance: Math.max(1, Math.abs(prevTargetIndex - sourceIndex))
+                        });
+                    }
+
+                    var nextPath = resolveChapterPath(doc.path, doc.next_chapter);
+                    var nextPoint = docPointByPath.get(nextPath);
+                    if (nextPath && nextPoint && nextPath !== doc.path) {
+                        var nextTargetIndex = docIndexByPath.get(nextPath) || 0;
+                        nextEdges.push({
+                            sourcePath: doc.path,
+                            targetPath: nextPath,
+                            source: source,
+                            target: nextPoint,
+                            sourceIndex: sourceIndex,
+                            targetIndex: nextTargetIndex,
+                            distance: Math.max(1, Math.abs(nextTargetIndex - sourceIndex))
+                        });
+                    }
+                });
+
+                function compareEdge(a, b) {
+                    var distanceDelta = (b.distance || 0) - (a.distance || 0);
+                    if (distanceDelta !== 0) return distanceDelta;
+                    var sourceDelta = (a.sourceIndex || 0) - (b.sourceIndex || 0);
+                    if (sourceDelta !== 0) return sourceDelta;
+                    return (a.targetIndex || 0) - (b.targetIndex || 0);
+                }
+
+                prevEdges.sort(compareEdge);
+                nextEdges.sort(compareEdge);
+                var flowEdgeMap = new Map();
+                nextEdges.forEach(function (edge) {
+                    var key = edge.sourcePath + '->' + edge.targetPath;
+                    flowEdgeMap.set(key, {
+                        sourcePath: edge.sourcePath,
+                        targetPath: edge.targetPath,
+                        source: edge.source,
+                        target: edge.target,
+                        sourceIndex: edge.sourceIndex,
+                        targetIndex: edge.targetIndex,
+                        distance: edge.distance
+                    });
+                });
+
+                prevEdges.forEach(function (edge) {
+                    var reverseKey = edge.targetPath + '->' + edge.sourcePath;
+                    if (flowEdgeMap.has(reverseKey)) return;
+                    flowEdgeMap.set(reverseKey, {
+                        sourcePath: edge.targetPath,
+                        targetPath: edge.sourcePath,
+                        source: edge.target,
+                        target: edge.source,
+                        sourceIndex: edge.targetIndex,
+                        targetIndex: edge.sourceIndex,
+                        distance: edge.distance
+                    });
+                });
+
+                var flowEdges = Array.from(flowEdgeMap.values()).sort(compareEdge);
+
+                if (sequenceLayout) {
+                    var downwardLaneCount = 0;
+                    var upwardLaneCount = 0;
+                    var rightBaseX = center.x + cardWidth / 2 + 30;
+                    var leftBaseX = center.x - cardWidth / 2 - 30;
+                    var laneStep = 20;
+                    var sidePortOffsets = new Map();
+                    var minPortGap = 12;
+                    var portOffsetStep = 12;
+
+                    var reservePortOffset = function (sideKey, preferredOffset) {
+                        var offsets = sidePortOffsets.get(sideKey);
+                        if (!offsets) {
+                            offsets = [];
+                            sidePortOffsets.set(sideKey, offsets);
+                        }
+
+                        var candidate = preferredOffset;
+                        var guard = 0;
+                        while (guard < 40 && offsets.some(function (offset) {
+                            return Math.abs(offset - candidate) < minPortGap;
+                        })) {
+                            var delta = (Math.floor(guard / 2) + 1) * portOffsetStep;
+                            candidate = preferredOffset + (guard % 2 === 0 ? delta : -delta);
+                            guard += 1;
+                        }
+
+                        offsets.push(candidate);
+                        return candidate;
+                    };
+
+                    flowEdges.forEach(function (edge) {
+                        var forward = edge.targetIndex >= edge.sourceIndex;
+                        var laneIndex = forward ? downwardLaneCount++ : upwardLaneCount++;
+                        var leftLaneX = leftBaseX - laneIndex * laneStep;
+                        var rightLaneX = rightBaseX + laneIndex * laneStep;
+                        var sourceLeftX = edge.source.x - cardWidth / 2 - 10;
+                        var sourceRightX = edge.source.x + cardWidth / 2 + 10;
+                        var targetLeftX = edge.target.x - cardWidth / 2 - 10;
+                        var targetRightX = edge.target.x + cardWidth / 2 + 10;
+
+                        var sourceLeftY = edge.source.y + reservePortOffset(
+                            edge.sourcePath + ':left-out',
+                            forward ? 18 : -18
+                        );
+                        var targetLeftY = edge.target.y + reservePortOffset(
+                            edge.targetPath + ':left-in',
+                            forward ? -18 : 18
+                        );
+                        var targetRightY = edge.target.y + reservePortOffset(
+                            edge.targetPath + ':right-out',
+                            forward ? -18 : 18
+                        );
+                        var sourceRightY = edge.source.y + reservePortOffset(
+                            edge.sourcePath + ':right-in',
+                            forward ? 18 : -18
+                        );
+
+                        relationLayer.appendChild(createSvgEl('path', {
+                            d: polylinePath([
+                                { x: sourceLeftX, y: sourceLeftY },
+                                { x: leftLaneX, y: sourceLeftY },
+                                { x: leftLaneX, y: targetLeftY },
+                                { x: targetLeftX, y: targetLeftY }
+                            ]),
+                            fill: 'none',
+                            stroke: palette.next,
+                            'stroke-width': '2.1',
+                            'stroke-opacity': '0.9',
+                            'stroke-linecap': 'round',
+                            'marker-end': 'url(#arrow-next)'
+                        }));
+
+                        relationLayer.appendChild(createSvgEl('path', {
+                            d: polylinePath([
+                                { x: targetRightX, y: targetRightY },
+                                { x: rightLaneX, y: targetRightY },
+                                { x: rightLaneX, y: sourceRightY },
+                                { x: sourceRightX, y: sourceRightY }
+                            ]),
+                            fill: 'none',
+                            stroke: palette.prev,
+                            'stroke-width': '2.1',
+                            'stroke-opacity': '0.9',
+                            'stroke-linecap': 'round',
+                            'marker-end': 'url(#arrow-prev)'
+                        }));
+                    });
+                } else {
+                    var flowBaseLane = flowEdges.length > 0
+                        ? Math.round(Math.max.apply(null, flowEdges.map(function (edge) {
+                            return Math.max(edge.source.y + docHalfHeight + 4, edge.target.y + docHalfHeight + 4);
+                        })) + 64)
+                        : 0;
+                    var usedFlowColumns = [];
+
+                    function reserveFlowColumn(preferredX) {
+                        var candidate = clamp(Math.round(preferredX), 20, 1180);
+                        var guard = 0;
+                        while (guard < 80 && usedFlowColumns.some(function (col) {
+                            return Math.abs(col - candidate) < 18;
+                        })) {
+                            var step = (Math.floor(guard / 2) + 1) * 18;
+                            candidate = clamp(
+                                preferredX + (guard % 2 === 0 ? step : -step),
+                                20,
+                                1180
+                            );
+                            guard += 1;
+                        }
+                        usedFlowColumns.push(candidate);
+                        return candidate;
+                    }
+
+                    flowEdges.forEach(function (edge, edgeOrder) {
+                        var sourceAnchorY = edge.source.y + docHalfHeight + 4;
+                        var targetAnchorY = edge.target.y + docHalfHeight + 4;
+                        var direction = edge.target.x >= edge.source.x ? 1 : -1;
+                        var laneOffset = (Math.floor(edgeOrder / 2) + 1) * 16;
+                        var sourcePortX = reserveFlowColumn(edge.source.x + direction * (24 + laneOffset));
+                        var targetPortX = reserveFlowColumn(edge.target.x - direction * (28 + laneOffset));
+                        var laneY = flowBaseLane + edgeOrder * 30;
+
+                        relationLayer.appendChild(createSvgEl('path', {
+                            d: polylinePath([
+                                { x: edge.source.x, y: sourceAnchorY },
+                                { x: sourcePortX, y: sourceAnchorY },
+                                { x: sourcePortX, y: laneY },
+                                { x: targetPortX, y: laneY },
+                                { x: targetPortX, y: targetAnchorY },
+                                { x: edge.target.x, y: targetAnchorY }
+                            ]),
+                            fill: 'none',
+                            stroke: palette.next,
+                            'stroke-width': '2.2',
+                            'stroke-opacity': '0.9',
+                            'stroke-linecap': 'round',
+                            'marker-start': 'url(#arrow-prev-start)',
+                            'marker-end': 'url(#arrow-next)'
+                        }));
+                    });
+                }
+
+                setMapEmpty(folders.length === 0 && docs.length === 0);
+            }
+
+            function applyPathToUrl(path, replace) {
+                var normalized = normalizePath(path);
+                var url = new URL(window.location.href);
+                if (normalized) {
+                    url.searchParams.set('path', normalized);
+                } else {
+                    url.searchParams.delete('path');
+                }
+
+                if (replace) {
+                    window.history.replaceState({ path: normalized }, '', url.toString());
+                } else {
+                    window.history.pushState({ path: normalized }, '', url.toString());
+                }
+            }
+
+            function navigateTo(path, replaceState) {
+                var normalized = normalizePath(path);
+                var node = getFolderNode(normalized);
+                if (!node) {
+                    normalized = '';
+                    node = state.tree;
+                }
+
+                state.currentPath = normalized;
+                updateSeo(normalized);
+                applyPathToUrl(normalized, !!replaceState);
+                updateToolbar(node);
+                renderMap(node);
+            }
+
+            async function loadConfig() {
+                var config;
+                if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
+                    config = await window.SiteConfig.load();
+                } else {
+                    var response = await fetch('/site/content/config.json');
+                    if (!response.ok) throw new Error('无法加载配置文件: ' + response.status);
+                    config = await response.json();
+                }
+
+                var rawDocs = Array.isArray(config && config.all_files) ? config.all_files : [];
+                var docs = rawDocs.map(normalizeDoc).filter(Boolean);
+
+                state.allDocs = docs;
+                state.docByPath = new Map();
+                docs.forEach(function (doc) {
+                    state.docByPath.set(doc.path, doc);
+                });
+                state.tree = buildTree(docs);
+            }
+
+            function bindEvents() {
+                window.addEventListener('popstate', function () {
+                    var path = getFolderPathFromURL();
+                    var node = getFolderNode(path);
+                    if (!node) path = '';
+                    state.currentPath = path;
+                    updateSeo(path);
+                    updateToolbar(getFolderNode(path));
+                    renderMap(getFolderNode(path));
+                });
+
+                window.addEventListener('themechange', function () {
+                    var node = getFolderNode(state.currentPath || '');
+                    if (node) renderMap(node);
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                loadConfig().then(function () {
+                    bindEvents();
+                    navigateTo(getFolderPathFromURL(), true);
+                }).catch(function (error) {
+                    console.error('folder.html 初始化失败:', error);
+                    setMapEmpty(true);
+                    var empty = document.getElementById('folder-map-empty');
+                    if (empty) {
+                        empty.hidden = false;
+                        empty.textContent = '加载目录数据失败，请稍后重试。';
+                    }
+                });
             });
-
-            computeTotals(root);
-            return root;
-        }
-
-        function computeTotals(node) {
-            let total = node.docs.length;
-            node.children.forEach(child => {
-                total += computeTotals(child);
-            });
-            node.totalDocs = total;
-            return total;
-        }
-
-        function normalizeDocPath(value) {
-            return String(value || '')
-                .replace(/\\/g, '/')
-                .replace(/^\/+|\/+$/g, '');
-        }
+        })();
     </script>
 </body>
-
 </html>

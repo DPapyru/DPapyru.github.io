@@ -158,6 +158,25 @@
               "min_t": null,
               "colors": null,
               "colorChange": null
+            },
+            {
+              "filename": "第一个Mod弹幕.md",
+              "path": "Modder入门/第一个Mod弹幕.md",
+              "originalPath": "Modder入门/第一个Mod弹幕.md",
+              "title": "让我们动起来-Mod弹幕与AI指南",
+              "author": "小天使",
+              "order": 3,
+              "description": "一句话说明本文内容",
+              "time": "25分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "Modder入门/第一把远程武器.md",
+              "next_chapter": "Modder入门/第一个配置-可调开关.md",
+              "min_c": null,
+              "min_t": null,
+              "colors": {
+                "Mad": "#ff5430"
+              },
+              "colorChange": null
             }
           ]
         },
@@ -219,37 +238,6 @@
               "min_c": null,
               "min_t": null,
               "colors": null,
-              "colorChange": null
-            }
-          ]
-        }
-      }
-    },
-    "和小善的MiniTips": {
-      "title": "和小善的MiniTips",
-      "description": "和小善的MiniTips相关的教程",
-      "topics": {
-        "article-contribution": {
-          "title": "文章贡献",
-          "description": "如何为教程网站贡献文章",
-          "files": [
-            {
-              "filename": "FirstTip.md",
-              "path": "和小善的MiniTips/视觉效果篇/FirstTip.md",
-              "originalPath": "和小善的MiniTips/视觉效果篇/FirstTip.md",
-              "title": "护盾与冲击波",
-              "author": "和小善",
-              "order": 100,
-              "description": "关于原版天界柱护盾Shader的多种用途",
-              "time": "5分钟",
-              "difficulty": "beginner",
-              "prev_chapter": null,
-              "next_chapter": null,
-              "min_c": 0,
-              "min_t": 0,
-              "colors": {
-                "Pink": "#ffc0cb"
-              },
               "colorChange": null
             }
           ]
@@ -376,6 +364,25 @@
               "min_c": null,
               "min_t": null,
               "colors": null,
+              "colorChange": null
+            },
+            {
+              "filename": "FirstTip.md",
+              "path": "群友进阶内容/和小善的MiniTips/视觉效果篇/FirstTip.md",
+              "originalPath": "群友进阶内容/和小善的MiniTips/视觉效果篇/FirstTip.md",
+              "title": "护盾与冲击波",
+              "author": "和小善",
+              "order": 100,
+              "description": "关于原版天界柱护盾Shader的多种用途",
+              "time": "5分钟",
+              "difficulty": "beginner",
+              "prev_chapter": null,
+              "next_chapter": null,
+              "min_c": 0,
+              "min_t": 0,
+              "colors": {
+                "Pink": "#ffc0cb"
+              },
               "colorChange": null
             }
           ]
@@ -2791,6 +2798,7 @@
       "name": "小天使",
       "files": [
         "制作第一把武器.md",
+        "第一个Mod弹幕.md",
         "第一把远程武器.md",
         "在线写作IDE使用教程.md",
         "教学文章写作指南.md",
@@ -2801,12 +2809,6 @@
       "name": "loguhan",
       "files": [
         "第一个配置-可调开关.md"
-      ]
-    },
-    "和小善": {
-      "name": "和小善",
-      "files": [
-        "FirstTip.md"
       ]
     },
     "DPapyru": {
@@ -2825,6 +2827,12 @@
       "name": "MoKou",
       "files": [
         "MoKou-制作类似MC的工作台.md"
+      ]
+    },
+    "和小善": {
+      "name": "和小善",
+      "files": [
+        "FirstTip.md"
       ]
     },
     "错数螺线": {
@@ -5367,6 +5375,26 @@
       "colorChange": null
     },
     {
+      "filename": "第一个Mod弹幕.md",
+      "path": "Modder入门/第一个Mod弹幕.md",
+      "originalPath": "Modder入门/第一个Mod弹幕.md",
+      "title": "让我们动起来-Mod弹幕与AI指南",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 3,
+      "time": "25分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "Modder入门/第一把远程武器.md",
+      "next_chapter": "Modder入门/第一个配置-可调开关.md",
+      "min_c": null,
+      "min_t": null,
+      "colors": {
+        "Mad": "#ff5430"
+      },
+      "colorChange": null
+    },
+    {
       "filename": "在线写作IDE使用教程.md",
       "path": "怎么贡献/在线写作IDE使用教程.md",
       "originalPath": "怎么贡献/在线写作IDE使用教程.md",
@@ -5519,26 +5547,6 @@
       "colorChange": null
     },
     {
-      "filename": "FirstTip.md",
-      "path": "和小善的MiniTips/视觉效果篇/FirstTip.md",
-      "originalPath": "和小善的MiniTips/视觉效果篇/FirstTip.md",
-      "title": "护盾与冲击波",
-      "author": "和小善",
-      "category": "和小善的MiniTips",
-      "topic": "article-contribution",
-      "order": 100,
-      "time": "5分钟",
-      "difficulty": "beginner",
-      "prev_chapter": null,
-      "next_chapter": null,
-      "min_c": 0,
-      "min_t": 0,
-      "colors": {
-        "Pink": "#ffc0cb"
-      },
-      "colorChange": null
-    },
-    {
       "filename": "MoKou-制作类似MC的工作台.md",
       "path": "群友进阶内容/休闲篇/MoKou-制作类似MC的工作台.md",
       "originalPath": "群友进阶内容/休闲篇/MoKou-制作类似MC的工作台.md",
@@ -5554,6 +5562,26 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
+      "colorChange": null
+    },
+    {
+      "filename": "FirstTip.md",
+      "path": "群友进阶内容/和小善的MiniTips/视觉效果篇/FirstTip.md",
+      "originalPath": "群友进阶内容/和小善的MiniTips/视觉效果篇/FirstTip.md",
+      "title": "护盾与冲击波",
+      "author": "和小善",
+      "category": "群友进阶内容",
+      "topic": "article-contribution",
+      "order": 100,
+      "time": "5分钟",
+      "difficulty": "beginner",
+      "prev_chapter": null,
+      "next_chapter": null,
+      "min_c": 0,
+      "min_t": 0,
+      "colors": {
+        "Pink": "#ffc0cb"
+      },
       "colorChange": null
     },
     {

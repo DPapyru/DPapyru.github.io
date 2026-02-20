@@ -482,3 +482,236 @@
 - “其它示例内容”回归检查覆盖 `demo-*` 与 `vector-*`，结果均为 player/canvas 正常、无运行时错误面板、无全局异常。
 - `check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次交互修复无直接关系。
 - 临时浏览器检查页 `site/tmp-animcs-*.html` 已在验证后删除。
+
+### 验证记录 [2026-02-19 22:44]：folder 页面 SVG 目录可视化改造（点击验收）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `npm ci`：通过
+- `python3 -m http.server 4176 --bind 127.0.0.1`：通过（本地浏览器调试服务启动）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=70000 --dump-dom "http://127.0.0.1:4176/site/tmp-folder-svg-browser-check.html" > /tmp/folder_svg_browser_check_dom.html`：通过（结果 `ok: true, passed: 5, failed: 0`）
+- `rg -n "\"ok\"|\"passed\"|\"failed\"|点击目录后进入子目录|上一章/下一章箭头颜色不同" /tmp/folder_svg_browser_check_dom.html`：通过
+
+**备注**：
+- 点击验收覆盖 5 条关键路径：目录下钻、返回上一级、上一章连线、下一章连线、两类箭头颜色区分。
+- 自动验收中使用的临时页面 `site/tmp-folder-svg-browser-check.html` 已在验证后删除。
+- Headless Chrome 输出的 DBus 连接报错为当前环境常见噪声，不影响页面功能验证结果。
+
+### 验证记录 [2026-02-19 23:00]：folder 页面“仅保留顶部 + 安全距离缩小 80%”改造（含截图调试）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `python3 -m http.server 4176 --bind 127.0.0.1`：通过（本地调试服务启动）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1680,1120 --virtual-time-budget=25000 --screenshot=/tmp/folder_root_after_safe80_v3.png "http://127.0.0.1:4176/site/pages/folder.html"`：通过（根目录布局截图）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1680,1120 --virtual-time-budget=25000 --screenshot=/tmp/folder_gongxian_after_safe80_v2.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（文章连线截图）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=70000 --dump-dom "http://127.0.0.1:4176/site/tmp-folder-svg-browser-check.html" > /tmp/folder_svg_browser_check_dom_latest.html`：通过（结果 `ok: true, passed: 5, failed: 0`）
+
+**备注**：
+- 页面结构已调整为“仅保留顶部导航”，其余区域全部替换为 SVG 目录视图。
+- 安全距离按照要求缩小约 80%：页面外边距、工具栏/图例内边距、以及目录环绕轨道安全边距均已同步压缩。
+- 截图调试中发现根目录节点被裁切，已通过“椭圆轨道 + 双轨道错层”修正，可见性恢复。
+- 临时验收页 `site/tmp-folder-svg-browser-check.html` 已在验收后删除。
+
+### 验证记录 [2026-02-19 23:12]：folder 可视化可读性修复（截图调试驱动）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `python3 -m http.server 4176 --bind 127.0.0.1`：通过（本地调试服务启动）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1680,1120 --virtual-time-budget=25000 --screenshot=/tmp/folder_root_human_v2.png "http://127.0.0.1:4176/site/pages/folder.html"`：通过
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1680,1120 --virtual-time-budget=25000 --screenshot=/tmp/folder_gongxian_human_v2.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=70000 --dump-dom "http://127.0.0.1:4176/site/tmp-folder-human-check.html" > /tmp/folder_human_check_dom.html`：通过（结果 `ok: true, passed: 5, failed: 0`）
+
+**备注**：
+- 通过截图识别到的人因问题：根目录目录节点密集导致重叠、阅读路径不清晰。
+- 修复方式：目录节点改为大角度椭圆环绕分布，取消拥挤错层策略，改为按角度均匀排布；文章区域 Y 起点改为跟随目录区底部自适应。
+- 页面结构保持“仅顶部栏保留，以下均为重构区域”。
+- 验收后已删除临时检查页 `site/tmp-folder-human-check.html`。
+
+### 验证记录 [2026-02-19 23:31]：folder 思维导图人因可视化二次优化（截图调试 + 箭头强化）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1600 --virtual-time-budget=7000 --screenshot=/tmp/folder_root_after_v6.png "http://127.0.0.1:4176/site/pages/folder.html"`：通过（根目录视觉验收）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=8000 --screenshot=/tmp/folder_gongxian_after_v6.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（文章关系箭头验收）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --dump-dom "http://127.0.0.1:4176/site/tmp-folder-human-check.html" | rg -n "\"ok\"|\"passed\"|\"failed\"|上一章连线|下一章连线|箭头颜色差异"`：通过（结果 `ok: true, passed: 5, failed: 0`）
+
+**备注**：
+- 本轮根据截图定位的人因问题为：目录名称断裂阅读困难、文章关系箭头辨识度不足、信息密度与空白比例不协调。
+- 已完成优化：文章卡片改为双行标题优先、上一章/下一章箭头改为蓝色虚线与橙色实线并放大箭头、连线控制点按章节距离分离以降低重叠。
+- 页面继续保持“仅顶部栏保留，其余区域重构”的约束；安全距离缩放参数保持 `SAFE_SCALE = 0.2`（较原方案缩小约 80%）。
+- 临时检查页 `site/tmp-folder-human-check.html` 已在本轮验收后删除。
+
+### 验证记录 [2026-02-19 23:43]：folder 连线折线化 + 箭头缩小（浏览器截图调试）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1600 --virtual-time-budget=7000 --screenshot=/tmp/folder_root_polyline_v1.png "http://127.0.0.1:4176/site/pages/folder.html"`：通过（根目录截图）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=8000 --screenshot=/tmp/folder_gongxian_polyline_v1.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（文章关系截图）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --dump-dom "http://127.0.0.1:4176/site/tmp-folder-polyline-check.html" | rg -n "\"ok\"|\"passed\"|\"failed\"|上一章连线|下一章连线|箭头颜色差异"`：通过（结果 `ok: true, passed: 5, failed: 0`）
+
+**备注**：
+- 根据截图反馈完成两项改造：箭头 marker 尺寸下调、目录与章节关系连线由贝塞尔曲线改为折线。
+- 当前页面中连线构建已不再使用 `Q` 曲线命令（统一使用折线路径）。
+- 临时验收页 `site/tmp-folder-polyline-check.html` 已在本轮验证后删除。
+
+### 验证记录 [2026-02-19 23:50]：folder 章节箭头避让防重叠（折线通道）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=9000 --screenshot=/tmp/folder_gongxian_no_overlap_v1.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（关系线重叠检查）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1600 --virtual-time-budget=8000 --screenshot=/tmp/folder_root_no_overlap_v1.png "http://127.0.0.1:4176/site/pages/folder.html"`：通过（根目录回归）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --dump-dom "http://127.0.0.1:4176/site/tmp-folder-no-overlap-check.html" | rg -n "\"ok\"|\"passed\"|\"failed\"|上一章连线|下一章连线|箭头颜色差异"`：通过（结果 `ok: true, passed: 5, failed: 0`）
+
+**备注**：
+- 已为上一章/下一章关系线增加“折线通道避让 + 节点端口错位”机制：同层通道冲突时自动升/降层，避免线段与箭头重叠。
+- 目录/文章交互逻辑不变：目录下钻、返回上一级、文章跳转保持正常。
+- 临时验收页 `site/tmp-folder-no-overlap-check.html` 已在本轮验证后删除。
+
+### 验证记录 [2026-02-20 00:07]：folder 箭头“零叠线”改造（单路径双箭头）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=9000 --screenshot=/tmp/folder_gongxian_no_overlap_v5.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（关系箭头可视化复核）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1600 --virtual-time-budget=8000 --screenshot=/tmp/folder_root_no_overlap_v5.png "http://127.0.0.1:4176/site/pages/folder.html"`：通过（根目录回归）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --dump-dom "http://127.0.0.1:4176/site/tmp-folder-final-check.html" | rg -n "\"ok\"|\"passed\"|\"failed\"|章节关系连线|双向箭头标记|箭头颜色差异"`：通过（结果 `ok: true, passed: 5, failed: 0`）
+
+**备注**：
+- 本轮将“上一章/下一章”从两套独立折线改为**单条关系线**，并使用 `marker-start(蓝色)` + `marker-end(橙色)` 表示双向语义，消除正反向叠线。
+- 关系线路由统一在节点下方独立通道绘制，避免与根节点及上排文章区域重叠。
+- 临时验收页 `site/tmp-folder-final-check.html` 已在本轮验证后删除。
+
+### 验证记录 [2026-02-20 00:16]：folder 箭头重叠持续修复（截图调试 v9）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=9000 --screenshot=/tmp/folder_gongxian_no_overlap_v9.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（关系线与箭头可视化复核）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1600 --virtual-time-budget=8000 --screenshot=/tmp/folder_root_no_overlap_v8.png "http://127.0.0.1:4176/site/pages/folder.html"`：通过（根目录回归）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --dump-dom "http://127.0.0.1:4176/site/tmp-folder-v9-check.html" | rg -n "\"ok\"|\"passed\"|\"failed\"|章节关系连线|双端箭头标记|箭头颜色差异"`：通过（结果 `ok: true, passed: 5, failed: 0`）
+
+**备注**：
+- 本轮继续基于截图做避让优化：增加“节点统一端口分配 + 全局列占位”以减少竖向通道重叠；并将起点蓝色箭头改为更小的专用 marker（`arrow-prev-start`）。
+- 页面保持“顶部栏保留，其余区域重构”不变。
+- 临时验收页 `site/tmp-folder-v9-check.html` 已在本轮验证后删除。
+
+### 验证记录 [2026-02-20 07:37]：folder 蓝色起点箭头方向修复（浏览器截图调试）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=10000 --screenshot=/tmp/folder_blue_arrow_issue_before_fix.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（问题复现截图）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=10000 --screenshot=/tmp/folder_blue_arrow_issue_after_fix.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（修复后截图）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1600 --virtual-time-budget=8000 --screenshot=/tmp/folder_blue_arrow_root_regression_after_fix.png "http://127.0.0.1:4176/site/pages/folder.html"`：通过（根目录回归）
+- `npm run build`：通过（`BUILD_EXIT:0`）
+- `npm run check-generated`：失败（既有问题：`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`）
+
+**备注**：
+- 根因：蓝色起点 marker 使用 `orient: auto`，视觉上与主路径同向，导致“上一章”箭头语义不清。
+- 修复：`arrow-prev-start` 调整为 `orient: auto-start-reverse`，并微调 `refX/markerWidth/markerHeight` 以提升可读性。
+- 本轮仅调整蓝色起点箭头定义，不改动顶部栏与页面结构。
+
+### 验证记录 [2026-02-20 07:42]：folder 蓝箭头避重叠细化（端口间距调整）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=10000 --screenshot=/tmp/folder_blue_arrow_no_overlap_after_spacing.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（蓝/橙箭头间距复核）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,2200 --virtual-time-budget=10000 --screenshot=/tmp/folder_blue_arrow_no_overlap_fangxiang_after_spacing.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%96%B9%E5%90%91%E6%80%A7%E6%8C%87%E5%AF%BC"`：通过（另一目录回归）
+
+**备注**：
+- 为避免蓝色起点箭头与邻近箭头/线段贴近，调整序列布局端口偏移：`±12` -> `±16`，步进 `7` -> `9`。
+- 本轮仅调整关系线锚点间距，不改变导航与页面结构。
+
+### 验证记录 [2026-02-20 07:48]：folder 箭头朝向修复（Modder入门截图调试）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=10000 --screenshot=/tmp/folder_modder_arrow_issue_before.png "http://127.0.0.1:4176/site/pages/folder.html?path=Modder%E5%85%A5%E9%97%A8"`：通过（问题复现）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=10000 --screenshot=/tmp/folder_modder_arrow_issue_after_v2.png "http://127.0.0.1:4176/site/pages/folder.html?path=Modder%E5%85%A5%E9%97%A8"`：通过（朝向修复后）
+- `google-chrome --headless --disable-gpu --no-sandbox --force-device-scale-factor=2 --window-size=1200,900 --virtual-time-budget=10000 --screenshot=/tmp/folder_modder_arrow_issue_after_v2_zoom.png "http://127.0.0.1:4176/site/pages/folder.html?path=Modder%E5%85%A5%E9%97%A8"`：通过（放大复核）
+- `google-chrome --headless --disable-gpu --no-sandbox --window-size=1600,1800 --virtual-time-budget=10000 --screenshot=/tmp/folder_gongxian_arrow_after_v2.png "http://127.0.0.1:4176/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（相关页回归）
+
+**备注**：
+- 根因：非序列布局下关系线起始端口采用固定交替偏移，首段可能先朝反方向拐折，导致蓝色起点箭头视觉朝向异常。
+- 修复：在非序列布局中改为“按目标相对方向分配起终端口”，保证关系线首段先朝目标方向，再由 `marker-start` 呈现反向语义。
+- 页面结构与顶部栏保持不变。
+
+### 验证记录 [2026-02-20 08:14]：folder 箭头重叠避让修复（浏览器截图复核）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --window-size=1600,2200 --screenshot=/tmp/folder-before-2-e9fd2a9b.png "http://127.0.0.1:4173/site/pages/folder.html?path=%E6%96%B9%E5%90%91%E6%80%A7%E6%8C%87%E5%AF%BC"`：通过（修复前截图）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --window-size=1600,2200 --screenshot=/tmp/folder-after-direction.png "http://127.0.0.1:4173/site/pages/folder.html?path=%E6%96%B9%E5%90%91%E6%80%A7%E6%8C%87%E5%AF%BC"`：通过（修复后截图）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --window-size=1600,2200 --screenshot=/tmp/folder-before-1-a5e2c066.png "http://127.0.0.1:4173/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（修复前截图）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --window-size=1600,2200 --screenshot=/tmp/folder-after-contrib.png "http://127.0.0.1:4173/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（修复后截图）
+- `npm run build`：通过
+- `npm run check-generated`：失败（既有问题：`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`）
+
+**备注**：
+- 修复点：顺序布局关系线端口由“入/出独立计数”改为“同侧统一避让分配”，并将关系线锚点与卡片边缘水平距离从 `7` 提升到 `10`，降低蓝/橙箭头贴边与视觉重叠。
+- 本轮仅改动 `site/pages/folder.html` 的关系线布局算法，不涉及导航结构与页面主框架。
+
+### 验证记录 [2026-02-20 08:26]：folder 蓝橘箭头左右分离显示（浏览器截图复核）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --window-size=1600,2200 --screenshot=/tmp/folder-split-arrows-direction.png "http://127.0.0.1:4180/site/pages/folder.html?path=%E6%96%B9%E5%90%91%E6%80%A7%E6%8C%87%E5%AF%BC"`：通过（蓝箭头左侧 / 橘箭头右侧）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --window-size=1600,2200 --screenshot=/tmp/folder-split-arrows-contrib.png "http://127.0.0.1:4180/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（另一目录回归）
+- `npm run build`：通过
+- `npm run check-generated`：失败（既有问题：`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`）
+
+**备注**：
+- 顺序布局关系线改为左右双通道：起点端口固定左侧（蓝色 `marker-start`），终点端口固定右侧（橘色 `marker-end`）。
+- 路由调整为“左通道纵向 -> 中段横向 -> 右通道纵向”，以实现两色箭头分边展示并减少重叠。
+
+### 验证记录 [2026-02-20 08:35]：folder 橘左蓝右双箭头调整（浏览器截图复核）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --window-size=1600,2200 --screenshot=/tmp/folder-orange-left-blue-right-direction.png "http://127.0.0.1:4180/site/pages/folder.html?path=%E6%96%B9%E5%90%91%E6%80%A7%E6%8C%87%E5%AF%BC"`：通过（橘左蓝右，双箭头）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --window-size=1600,2200 --screenshot=/tmp/folder-orange-left-blue-right-contrib.png "http://127.0.0.1:4180/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE"`：通过（另一目录回归）
+- `npm run build`：通过
+- `npm run check-generated`：失败（既有问题：`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`）
+
+**备注**：
+- 顺序布局关系线保留双端箭头，改为左端 `arrow-next-start`（橙色）+ 右端 `arrow-prev`（蓝色）。
+- 图例同步更新为“左侧箭头（橙色）/右侧箭头（蓝色）”，避免语义与显示不一致。
+
+### 验证记录 [2026-02-20 08:48]：folder 双箭头分离起点修复（两条独立关系线）
+
+**级别**：功能验收
+
+**命令与结果**：
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --window-size=1600,2200 --screenshot=/tmp/folder-two-paths-modder.png "http://127.0.0.1:4180/site/pages/folder.html?path=Modder%E5%85%A5%E9%97%A8"`：通过（两个箭头，起点不同）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=12000 --window-size=1600,2200 --screenshot=/tmp/folder-two-paths-direction.png "http://127.0.0.1:4180/site/pages/folder.html?path=%E6%96%B9%E5%90%91%E6%80%A7%E6%8C%87%E5%AF%BC"`：通过（另一目录回归）
+- `npm run build`：通过
+- `npm run check-generated`：失败（既有问题：`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`）
+
+**备注**：
+- 顺序布局关系线从“单条线双端 marker”改为“两条独立路径”：
+  - 左侧橙线：源节点 -> 目标节点（橙色箭头）
+  - 右侧蓝线：目标节点 -> 源节点（蓝色箭头）
+- 该调整确保两个箭头的出发点分别附着在不同节点，不再共享同一条路径起终点。
+
+### 验证记录 [2026-02-20 09:00]：feat-folder-svg-view 提交前回归
+
+**级别**：L3 合并前验收
+
+**命令与结果**：
+- `npm test`：通过（158 tests，156 passed，2 skipped，0 failed）
+- `npm run build`：通过
+
+**备注**：
+- 修复 `folder-view-toggle.test.js` 与当前 SVG 目录视图不一致的断言，避免继续校验已移除的列表渲染函数。
+- `site/pages/folder.html` 补回 `workbench-statusbar`，满足统一模板约束。
