@@ -158,6 +158,25 @@
               "min_t": null,
               "colors": null,
               "colorChange": null
+            },
+            {
+              "filename": "第一个Mod弹幕.md",
+              "path": "Modder入门/第一个Mod弹幕.md",
+              "originalPath": "Modder入门/第一个Mod弹幕.md",
+              "title": "让我们动起来-Mod弹幕与AI指南",
+              "author": "小天使",
+              "order": 3,
+              "description": "一句话说明本文内容",
+              "time": "25分钟",
+              "difficulty": "beginner",
+              "prev_chapter": "Modder入门/第一把远程武器.md",
+              "next_chapter": "Modder入门/第一个配置-可调开关.md",
+              "min_c": null,
+              "min_t": null,
+              "colors": {
+                "Mad": "#ff5430"
+              },
+              "colorChange": null
             }
           ]
         },
@@ -2791,6 +2810,7 @@
       "name": "小天使",
       "files": [
         "制作第一把武器.md",
+        "第一个Mod弹幕.md",
         "第一把远程武器.md",
         "在线写作IDE使用教程.md",
         "教学文章写作指南.md",
@@ -5364,6 +5384,26 @@
       "min_c": null,
       "min_t": null,
       "colors": null,
+      "colorChange": null
+    },
+    {
+      "filename": "第一个Mod弹幕.md",
+      "path": "Modder入门/第一个Mod弹幕.md",
+      "originalPath": "Modder入门/第一个Mod弹幕.md",
+      "title": "让我们动起来-Mod弹幕与AI指南",
+      "author": "小天使",
+      "category": "Modder入门",
+      "topic": "mod-basics",
+      "order": 3,
+      "time": "25分钟",
+      "difficulty": "beginner",
+      "prev_chapter": "Modder入门/第一把远程武器.md",
+      "next_chapter": "Modder入门/第一个配置-可调开关.md",
+      "min_c": null,
+      "min_t": null,
+      "colors": {
+        "Mad": "#ff5430"
+      },
       "colorChange": null
     },
     {

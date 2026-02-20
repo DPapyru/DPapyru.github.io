@@ -83,14 +83,60 @@
                     <span class="studio-help">现代写作流：选文章 -> 编写 -> 预览 -> 发布</span>
                 </section>
 
-                <section class="studio-lazy-workspace" aria-label="LazyVim 风格工作台">
-                    <aside id="studio-left-panel-modal" class="studio-lazy-column studio-lazy-column--left modal studio-side-panel-modal" aria-label="左栏：Explorer" aria-hidden="true">
-                        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-left-panel-title">
+                <section class="studio-lazy-workspace" aria-label="VSCode 风格工作台">
+                    <aside class="studio-activity-rail" aria-label="工作区活动栏">
+                        <button class="studio-activity-btn is-active" type="button" data-studio-rail="explorer" aria-label="资源管理器">EXPLORER</button>
+                        <button class="studio-activity-btn" type="button" data-studio-rail="search" aria-label="搜索">SEARCH</button>
+                        <button class="studio-activity-btn" type="button" data-studio-rail="preview" aria-label="直接预览">PREVIEW</button>
+                        <button class="studio-activity-btn" type="button" data-studio-rail="publish" aria-label="发布区域">RELEASE</button>
+                        <div class="studio-activity-spacer" aria-hidden="true"></div>
+                        <button class="studio-activity-btn" type="button" data-studio-rail="settings" aria-label="设置">SETTINGS</button>
+                    </aside>
+                    <aside id="studio-left-panel-modal" class="studio-lazy-column studio-lazy-column--left modal studio-side-panel-modal studio-side-panel-modal--dock" aria-label="左栏：Explorer" aria-hidden="false">
+                        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="false" aria-labelledby="studio-left-panel-title">
                             <section class="studio-lazy-panel studio-side-panel-shell" aria-label="文章文件控制">
                                 <div class="studio-side-panel-header">
                                     <h2 id="studio-left-panel-title" class="studio-panel-title">Explorer</h2>
                                     <button id="studio-left-panel-close" class="modal-close" type="button" aria-label="关闭 Explorer">×</button>
                                 </div>
+
+                            <div class="studio-panel-section studio-explorer-section">
+                                <div class="studio-panel-inline-head">
+                                    <span class="studio-panel-mini-title">全部文章导航</span>
+                                    <button id="studio-explorer-context-trigger" class="btn btn-small btn-outline" type="button" aria-haspopup="menu" aria-controls="studio-explorer-context-menu" aria-expanded="false">菜单</button>
+                                </div>
+                                <div class="studio-panel-inline-actions">
+                                    <input id="studio-explorer-filter" class="studio-input" type="text" placeholder="筛选文章...">
+                                    <button id="studio-explorer-refresh" class="btn btn-small btn-outline" type="button">刷新</button>
+                                </div>
+                                <div id="studio-explorer-tree" class="studio-explorer-tree" aria-live="polite">
+                                    <span class="studio-help">加载中...</span>
+                                </div>
+                            </div>
+
+                            <div class="studio-panel-section studio-explorer-section">
+                                <div class="studio-panel-inline-head">
+                                    <span class="studio-panel-mini-title">已暂存改动（ADD/MOD/DEL）</span>
+                                    <button id="studio-stage-clear" class="btn btn-small btn-outline" type="button">清空暂存</button>
+                                </div>
+                                <div id="studio-stage-list" class="studio-stage-list" aria-live="polite">
+                                    <span class="studio-help">暂无暂存改动</span>
+                                </div>
+                            </div>
+
+                            <div id="studio-explorer-context-menu" class="studio-explorer-context-menu" role="menu" aria-label="文件与资源操作菜单" hidden>
+                                <button class="studio-explorer-context-item" type="button" data-context-action="open-file" role="menuitem">打开文件</button>
+                                <button class="studio-explorer-context-item" type="button" data-context-action="insert-resource" role="menuitem">插入资源引用</button>
+                                <button class="studio-explorer-context-item" type="button" data-context-action="preview-resource" role="menuitem">预览资源</button>
+                                <button class="studio-explorer-context-item" type="button" data-context-action="edit-csharp" role="menuitem">编辑 C# 文件</button>
+                                <button class="studio-explorer-context-item" type="button" data-context-action="remove-resource" role="menuitem">移除资源</button>
+                                <button class="studio-explorer-context-item" type="button" data-context-action="new-file" role="menuitem">新建文章</button>
+                                <button class="studio-explorer-context-item" type="button" data-context-action="toggle-delete" role="menuitem">标记删除 / 取消删除</button>
+                                <button class="studio-explorer-context-item" type="button" data-context-action="discard-file" role="menuitem">丢弃本地改动</button>
+                            </div>
+
+                            <details class="studio-left-extra-panel">
+                                <summary>路径与元数据（高级）</summary>
 
                             <div class="studio-panel-section">
                                 <label for="studio-existing-select">已有文章</label>
@@ -221,16 +267,29 @@
                                 </div>
                             </details>
 
+                            </details>
+
                             </section>
                         </div>
                     </aside>
+                    <div class="studio-resizer studio-resizer--column" data-studio-resize="left" role="separator" aria-orientation="vertical" aria-label="调整左侧宽度"></div>
 
                     <section class="studio-lazy-column studio-lazy-column--center" aria-label="中栏：Editor">
                         <section class="studio-shell" aria-label="在线写作IDE">
-                            <div class="studio-titlebar">article-studio · modern writer mode</div>
+                            <div class="studio-titlebar">
+                                <div class="studio-titlebar-menu">文件 编辑 选择 查看 转到 运行 终端 帮助</div>
+                                <div class="studio-titlebar-title">article-studio · vscode inspired mode</div>
+                                <div class="studio-titlebar-actions">- □ ×</div>
+                            </div>
+                            <div class="studio-commandline">
+                                <span class="studio-commandline-item">●</span>
+                                <span class="studio-commandline-item">○</span>
+                                <span class="studio-commandline-item">△</span>
+                                <span class="studio-commandline-path">site › content › <span id="studio-breadcrumb-path">怎么贡献/新文章.md</span></span>
+                            </div>
                             <div class="studio-workbench">
                                 <section class="studio-editor-area">
-                                    <div class="studio-commandbars">
+                                    <div class="studio-commandbars studio-commandbars--legacy" aria-hidden="true">
                                         <section class="studio-toolbar studio-toolbar--embedded">
                                             <div class="studio-quick-actions">
                                                 <button id="studio-open-explorer" class="btn btn-small btn-outline" type="button" aria-expanded="false" aria-controls="studio-left-panel-modal">文章额外内容</button>
@@ -241,7 +300,6 @@
                                                 <button id="studio-insert-image" class="btn btn-small btn-outline" type="button">插入图片</button>
                                                 <button id="studio-format-markdown" class="btn btn-small btn-outline" type="button">快速格式化</button>
                                                 <button id="studio-toggle-fullscreen" class="btn btn-small btn-outline" type="button">专注模式</button>
-                                                <button id="studio-open-viewer-preview" class="btn btn-small btn-outline" type="button">新标签预览</button>
                                                 <button id="studio-flowchart-toggle" class="btn btn-small btn-outline studio-focus-only" type="button" aria-expanded="false" aria-controls="studio-flowchart-modal">流程图工作台</button>
                                             </div>
                                             <details class="studio-advanced-panel">
@@ -252,7 +310,6 @@
                                                     <button id="studio-import" class="btn btn-small btn-outline" type="button">导入草稿 JSON</button>
                                                     <input id="studio-import-file" type="file" accept="application/json" hidden>
                                                     <button id="studio-reset" class="btn btn-small btn-outline" type="button">清空草稿</button>
-                                                    <a id="studio-last-pr-link" class="btn btn-small btn-outline" href="#" target="_blank" rel="noopener noreferrer" hidden>打开最新 PR</a>
                                                 </div>
                                             </details>
                                         </section>
@@ -278,12 +335,22 @@
                                         </section>
                                     </div>
 
-                                    <div class="studio-tabs">
-                                        <button id="studio-active-tab" class="studio-tab studio-tab--active" type="button" aria-current="page">新文章.md</button>
+                                    <div class="studio-editor-head">
+                                        <div class="studio-tabs" id="studio-tabs-strip">
+                                            <button id="studio-active-tab" class="studio-tab studio-tab--active" type="button" aria-current="page">新文章.md</button>
+                                        </div>
+                                        <div class="studio-editor-head-actions">
+                                            <button id="studio-toggle-direct-preview" class="btn btn-small btn-outline" type="button">直接预览</button>
+                                            <button id="studio-open-viewer-preview" class="btn btn-small btn-outline" type="button">新标签预览</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="studio-editor-breadcrumb">
+                                        <span class="studio-editor-breadcrumb-path">site/content/<span id="studio-editor-path">怎么贡献/新文章.md</span></span>
                                     </div>
 
                                     <div class="studio-panes">
-                                        <div class="studio-pane">
+                                        <div class="studio-pane studio-pane--editor">
                                             <div class="studio-pane-title">Markdown Editor</div>
                                             <textarea id="studio-markdown" class="studio-editor" spellcheck="false" placeholder="在这里编写 Markdown 教程内容...
 
@@ -291,7 +358,7 @@
 // C# 代码会在右侧预览中高亮
 ```"></textarea>
                                         </div>
-                                        <div class="studio-pane">
+                                        <div class="studio-pane studio-pane--preview">
                                             <div class="studio-pane-title">Preview（viewer.html 同级渲染）</div>
                                             <iframe id="studio-preview-frame" class="studio-preview-frame" title="Article Studio Viewer Preview" loading="lazy"></iframe>
                                         </div>
@@ -306,14 +373,101 @@
                             </div>
                         </section>
                     </section>
+                    <div class="studio-resizer studio-resizer--column" data-studio-resize="right" role="separator" aria-orientation="vertical" aria-label="调整右侧宽度"></div>
 
-                    <aside id="studio-right-panel-modal" class="studio-lazy-column studio-lazy-column--right modal studio-side-panel-modal" aria-label="右栏：Publish" aria-hidden="true">
-                        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-right-panel-title">
+                    <aside id="studio-right-panel-modal" class="studio-lazy-column studio-lazy-column--right modal studio-side-panel-modal studio-side-panel-modal--dock" aria-label="右栏：Publish" aria-hidden="false">
+                        <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="false" aria-labelledby="studio-right-panel-title">
                             <section class="studio-lazy-panel studio-side-panel-shell" aria-label="页面选项与 PR 发布">
                                 <div class="studio-side-panel-header">
-                                    <h2 id="studio-right-panel-title" class="studio-panel-title">Publish</h2>
+                                    <h2 id="studio-right-panel-title" class="studio-panel-title">命令面板</h2>
                                     <button id="studio-right-panel-close" class="modal-close" type="button" aria-label="关闭 Publish">×</button>
                                 </div>
+
+                            <div class="studio-right-tabs" role="tablist" aria-label="右栏命令分类">
+                                <button class="studio-right-tab is-active" type="button" role="tab" aria-selected="true" data-right-tab="command">编辑</button>
+                                <button class="studio-right-tab" type="button" role="tab" aria-selected="false" data-right-tab="style">样式</button>
+                                <button class="studio-right-tab" type="button" role="tab" aria-selected="false" data-right-tab="publish">发布</button>
+                            </div>
+
+                            <div class="studio-panel-section" data-right-tab-panel="command">
+                                <label>编辑命令（VSCode）</label>
+                                <div class="studio-quick-actions studio-command-grid">
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-insert-template">插入模板</button>
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-insert-image">插入图片</button>
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-format-markdown">快速格式化</button>
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-copy-markdown">复制 Markdown</button>
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-export">导出草稿 JSON</button>
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-import">导入草稿 JSON</button>
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-reset">清空草稿</button>
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-toggle-fullscreen">专注模式</button>
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-open-markdown-guide">项目Markdown教程</button>
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-run-draft-check">发布前自检</button>
+                                    <button class="btn btn-small btn-outline studio-command-proxy" type="button" data-proxy-target="studio-flowchart-toggle">流程图工作台</button>
+                                </div>
+                                <a id="studio-last-pr-link" class="btn btn-small btn-outline" href="#" target="_blank" rel="noopener noreferrer" hidden>打开最新 PR</a>
+                            </div>
+
+                            <div class="studio-panel-section" data-right-tab-panel="style">
+                                <label>样式命令（即时效果）</label>
+                                <div class="studio-syntaxbar studio-style-command-list" aria-label="常用语法快捷按钮">
+                                    <button class="btn btn-small btn-outline studio-style-command" type="button" data-studio-insert="bold">
+                                        <span class="studio-style-command-name">加粗</span>
+                                        <span class="studio-style-command-preview"><strong>这是加粗效果</strong></span>
+                                    </button>
+                                    <button class="btn btn-small btn-outline studio-style-command" type="button" data-studio-insert="h2">
+                                        <span class="studio-style-command-name">二级标题</span>
+                                        <span class="studio-style-command-preview"><strong>## 标题示例</strong></span>
+                                    </button>
+                                    <button class="btn btn-small btn-outline studio-style-command" type="button" data-studio-insert="list">
+                                        <span class="studio-style-command-name">列表</span>
+                                        <span class="studio-style-command-preview">- 条目 A / - 条目 B</span>
+                                    </button>
+                                    <button class="btn btn-small btn-outline studio-style-command" type="button" data-studio-insert="quote">
+                                        <span class="studio-style-command-name">&gt; 引用</span>
+                                        <span class="studio-style-command-preview">&gt; 这里是引用内容</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="studio-panel-section studio-pr-manifest-panel" data-right-tab-panel="publish">
+                                <label>PR 文件总览（文章 / 贴图 / C#）</label>
+                                <div id="studio-pr-manifest-summary" class="studio-pr-manifest-summary">文章 0 · 贴图 0 · C# 0</div>
+                                <div class="studio-pr-manifest-groups">
+                                    <section class="studio-pr-manifest-group" aria-label="文章文件">
+                                        <h3>文章</h3>
+                                        <ul id="studio-pr-manifest-article-list" class="studio-pr-manifest-list" aria-live="polite"></ul>
+                                    </section>
+                                    <section class="studio-pr-manifest-group" aria-label="贴图与媒体文件">
+                                        <h3>贴图/媒体</h3>
+                                        <ul id="studio-pr-manifest-texture-list" class="studio-pr-manifest-list" aria-live="polite"></ul>
+                                    </section>
+                                    <section class="studio-pr-manifest-group" aria-label="C# 文件">
+                                        <h3>C#</h3>
+                                        <ul id="studio-pr-manifest-csharp-list" class="studio-pr-manifest-list" aria-live="polite"></ul>
+                                    </section>
+                                </div>
+                            </div>
+
+                            <div class="studio-panel-section studio-panel-section--primary" data-right-tab-panel="publish">
+                                <button id="studio-submit-pr" class="btn btn-small studio-btn-primary" type="button">提交 <code>PR</code></button>
+                            </div>
+
+                            <details class="studio-advanced-panel" data-right-tab-panel="command">
+                                <summary>高级区（无法直接渲染效果）</summary>
+                                <div class="studio-advanced-actions studio-command-grid">
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="ref" title="插入 Markdown 链接">引用文档</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="anim" title="插入动画片段语法">动画片段</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="animcs-block" title="插入 animcs 代码块（第一行是 anims/*.cs）">animcs 代码块</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="color-inline" title="插入单色文本语法">单色文本</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="color-change-inline" title="插入颜色动画文本语法">颜色动画文本</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-tf" title="插入判断题模板">判断题</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-choice" title="插入 choice 类型题目模板">选择题</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-multi" title="插入多选题模板">多选题</button>
+                                </div>
+                            </details>
+
+                            <details class="studio-right-publish-panel" data-right-tab-panel="publish">
+                                <summary>发布与附件（高级）</summary>
 
                             <div class="studio-panel-section">
                                 <label for="studio-pr-worker-url">Worker API 地址</label>
@@ -391,10 +545,6 @@
                                 <span class="studio-help">开启后，当右侧预览命中本地草稿图片时，会在底部状态栏提示。</span>
                             </div>
 
-                            <div class="studio-panel-section">
-                                <button id="studio-submit-pr" class="btn btn-small studio-btn-primary" type="button">提交 PR</button>
-                            </div>
-
                             <details class="studio-advanced-panel">
                                 <summary>高级发布选项</summary>
                                 <div class="studio-panel-section">
@@ -402,6 +552,8 @@
                                     <input id="studio-pr-shared-key" class="studio-input" type="password" placeholder="仅兼容旧版 Worker 的 STUDIO_SHARED_KEY" autocomplete="current-password">
                                     <span class="studio-help">优先使用 GitHub 登录；仅在 Worker 仍启用密钥模式时填写。</span>
                                 </div>
+                            </details>
+
                             </details>
                             </section>
                         </div>
@@ -652,7 +804,7 @@ answer: B
                             <li>点“发布前自检”，先看 error / warn。</li>
                             <li>检查预览，必要时用“新标签预览”复核。</li>
                             <li>确认路径、附件、PR 信息后再提交。</li>
-                            <li>若“创建新 PR”且检测到附件，会弹出三选引导：清空并新建 / 继续已有 PR / 取消返回编辑。</li>
+                            <li>若检测到多文件改动，会弹出提交流程确认：创建新 PR（提交全部）/ 继续已有 PR / 取消返回编辑。</li>
                         </ol>
                     </section>
 
@@ -689,14 +841,15 @@ answer: B
         <div class="modal-content studio-side-panel-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-pr-asset-decision-title">
             <section class="studio-lazy-panel studio-side-panel-shell">
                 <header class="studio-side-panel-header">
-                    <h2 id="studio-pr-asset-decision-title" class="studio-panel-title">检测到已上传附件</h2>
+                    <h2 id="studio-pr-asset-decision-title" class="studio-panel-title">PR 提交流程确认</h2>
                     <button id="studio-pr-asset-decision-close" class="modal-close" type="button" aria-label="关闭附件提交流程选择">×</button>
                 </header>
                 <div class="studio-panel-section studio-pr-asset-decision-content">
                     <section id="studio-pr-asset-decision-choice-stage" class="studio-pr-asset-decision-stage" aria-label="附件提交流程三选">
-                        <p class="studio-help">当前将创建新 PR，但检测到已上传附件。请选择后续策略：</p>
+                        <p class="studio-help">当前检测到多文件改动，请确认提交流程：</p>
+                        <div id="studio-pr-asset-decision-summary" class="studio-pr-manifest-summary">文章 0 · 贴图 0 · C# 0</div>
                         <div class="studio-pr-asset-decision-actions">
-                            <button id="studio-pr-asset-action-clear-new" class="btn btn-small studio-btn-primary" type="button">清空附件并新建 PR</button>
+                            <button id="studio-pr-asset-action-clear-new" class="btn btn-small studio-btn-primary" type="button">创建新 PR（提交全部文件）</button>
                             <button id="studio-pr-asset-action-continue-pr" class="btn btn-small btn-outline" type="button">继续已有 PR</button>
                             <button id="studio-pr-asset-action-cancel" class="btn btn-small btn-outline" type="button">取消并返回编辑</button>
                         </div>
@@ -712,13 +865,6 @@ answer: B
                             <button id="studio-pr-asset-continue-submit" class="btn btn-small studio-btn-primary" type="button" disabled>继续并提交</button>
                         </div>
                         <span id="studio-pr-asset-continue-hint" class="studio-help">请先选择一个 PR，再继续提交。</span>
-                    </section>
-                    <section id="studio-pr-asset-decision-clear-stage" class="studio-pr-asset-decision-stage" aria-label="清空附件后新建 PR" hidden>
-                        <p class="studio-help">确认后会清空本地已上传附件（图片 / 视频 / C#），然后按“仅 Markdown”继续创建新 PR。</p>
-                        <div class="studio-pr-asset-decision-actions">
-                            <button id="studio-pr-asset-clear-back" class="btn btn-small btn-outline" type="button">返回三选</button>
-                            <button id="studio-pr-asset-clear-confirm" class="btn btn-small studio-btn-primary" type="button">确认清空并提交</button>
-                        </div>
                     </section>
                 </div>
             </section>

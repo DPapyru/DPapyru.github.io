@@ -482,3 +482,272 @@
 - “其它示例内容”回归检查覆盖 `demo-*` 与 `vector-*`，结果均为 player/canvas 正常、无运行时错误面板、无全局异常。
 - `check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次交互修复无直接关系。
 - 临时浏览器检查页 `site/tmp-animcs-*.html` 已在验证后删除。
+
+### 验证记录 [2026-02-19 22:53]：article-studio VSCode 三栏重构 + 贴边 IDE 布局 + 浏览器交互截图验收
+
+**级别**：L3
+
+**命令与结果**：
+- `node --check site/assets/js/article-studio.js`：通过
+- `node --test site/tooling/scripts/article-studio-*.test.js`：通过（71 tests, 0 failures）
+- `npm run build`：通过（`EXIT:0`）
+- `npm run check-generated`：失败（`gallery-check` 报错）
+- `NODE_PATH=... STUDIO_E2E_OUT=/tmp/article-studio-e2e node /tmp/article-studio-e2e-run.js`（配合 `python3 -m http.server 4311`）：通过（`errors: []`）
+
+**备注**：
+- `check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次 `article-studio` 三栏布局/交互改造无直接关系。
+- 浏览器验收覆盖左栏（筛选、菜单替代右键、新建、多文件暂存 A/M/D）、中栏（标签切换、直接预览 + Esc、新标签预览）、右栏（代理命令、样式命令、高级区、提交流程按钮）以及键盘输入（文本输入、Tab、Esc）。
+- 截图产物：`/tmp/article-studio-e2e/01-initial-layout.png`、`/tmp/article-studio-e2e/02-left-context-menu.png`、`/tmp/article-studio-e2e/03-left-stage-multi-file.png`、`/tmp/article-studio-e2e/04-middle-direct-preview.png`、`/tmp/article-studio-e2e/05-right-flowchart-modal.png`、`/tmp/article-studio-e2e/06-right-command-and-style.png`。
+
+### 验证记录 [2026-02-19 22:59]：article-studio 边框贴边（导航栏外无外边距）追加验收
+
+**级别**：L3
+
+**命令与结果**：
+- `NODE_PATH=... node <playwright几何检查脚本>`：通过（`main/container/wrapper/workspace` 的 `x=0`，已贴边）
+- `NODE_PATH=... STUDIO_E2E_OUT=/tmp/article-studio-e2e node /tmp/article-studio-e2e-run.js`（配合 `python3 -m http.server 4311`）：通过（`errors: []`）
+
+**备注**：
+- 本次针对“页面与浏览器边框无边距（顶部导航栏除外）”要求追加了样式覆盖，修正了全局 `workbench` 限宽与 `viewer-page` 内容容器的 `max-width/padding` 继承问题。
+- 复测截图仍输出到 `/tmp/article-studio-e2e/*.png`，并保持左/中/右交互链路通过。
+
+### 验证记录 [2026-02-19 23:26]：article-studio IDE 对齐二次大改（结构重排 + 风格收敛 + 交互复测）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --check site/assets/js/article-studio.js`：通过
+- `node --test site/tooling/scripts/article-studio-*.test.js`：通过（71 tests, 0 failures）
+- `python3 -m http.server 4311 >/tmp/studio-http.log 2>&1 & SERVER_PID=$!; NODE_PATH=... node /tmp/article-studio-e2e-run.js; kill $SERVER_PID`：通过（`errors: []`）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：
+- 本轮针对“更接近 `IDE.png` 且不保留旧页面元素感”进行了二次大改：右栏 `提交 PR` 提升为常显主按钮、Explorer/Stage 行样式改为更扁平 IDE 密度、标题栏/标签栏/命令条/终端区与按钮体系继续向 VSCode 风格收敛，并保持主题色联动。
+- 浏览器自动化验收仍覆盖点击与键盘链路：左栏筛选与菜单替代右键、新建与多文件暂存（A/M/D）、中栏直接预览+Esc 与新标签预览、右栏代理命令/样式命令/高级区/提交流程按钮。
+- 截图产物：`/tmp/article-studio-e2e/01-initial-layout.png`、`/tmp/article-studio-e2e/02-left-context-menu.png`、`/tmp/article-studio-e2e/03-left-stage-multi-file.png`、`/tmp/article-studio-e2e/04-middle-direct-preview.png`、`/tmp/article-studio-e2e/05-right-flowchart-modal.png`、`/tmp/article-studio-e2e/06-right-command-and-style.png`。
+- `npm run check-generated` 失败原因为仓库既有内容问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次 `article-studio` 改造无直接关系。
+
+### 验证记录 [2026-02-19 23:46]：article-studio 标签页关闭能力修复
+
+**级别**：L3
+
+**命令与结果**：
+- `node --check site/assets/js/article-studio.js`：通过
+- `node --test site/tooling/scripts/article-studio-template-guide.test.js`：通过（6 tests, 0 failures）
+- `node --test site/tooling/scripts/article-studio-*.test.js`：通过（73 tests, 0 failures）
+- `python3 -m http.server 4311 >/tmp/studio-http.log 2>&1 & SERVER_PID=$!; NODE_PATH=... node /tmp/article-studio-tab-close-check.js; kill $SERVER_PID`：通过（`before: 4`, `after: 3`, `closed: true`）
+- `python3 -m http.server 4311 >/tmp/studio-http.log 2>&1 & SERVER_PID=$!; NODE_PATH=... node /tmp/article-studio-e2e-run.js; kill $SERVER_PID`：通过（`errors: []`）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：
+- 根因：中栏标签仅有“打开/切换”逻辑，缺少关闭控件与关闭事件处理，导致文件可打开不可关闭。
+- 修复：在标签内新增 `x` 关闭控件（`data-tab-close-path`），新增 `closeTabByPath()` 根因修复逻辑，并补充中键关闭（`auxclick`）支持。
+- 浏览器截图与结果：`/tmp/article-studio-e2e/07-tab-close.png`、`/tmp/article-studio-e2e/tab-close-result.json`、`/tmp/article-studio-e2e/result.json`。
+- `npm run check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次标签关闭修复无直接关系。
+
+### 验证记录 [2026-02-20 00:04]：article-studio 左侧区域放大（Explorer 可读性提升）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-template-guide.test.js`：通过（7 tests, 0 failures）
+- `node --test site/tooling/scripts/article-studio-*.test.js`：通过（74 tests, 0 failures）
+- `npm run build >/tmp/build.log 2>&1; echo EXIT:$?; tail -n 60 /tmp/build.log`：通过（`EXIT:0`）
+- `npm run check-generated >/tmp/check-generated.log 2>&1; echo EXIT:$?; tail -n 80 /tmp/check-generated.log`：失败（`EXIT:1`，`gallery-check` 报错）
+- `python3 -m http.server 4311 >/tmp/studio-http.log 2>&1 & SERVER_PID=$!; NODE_PATH=... node /tmp/article-studio-e2e-run.js; CODE=$?; kill $SERVER_PID; wait $SERVER_PID 2>/dev/null; exit $CODE`：通过（`errors: []`）
+
+**备注**：
+- 左栏放大已覆盖活动栏、Explorer 标题、树节点、暂存列表、筛选输入与按钮交互密度；布局列宽同步上调为 `112px 300px`（响应式断点同步调整）。
+- 浏览器自动化验收已复测点击与键盘链路，截图更新为：`/tmp/article-studio-e2e/01-initial-layout.png`、`/tmp/article-studio-e2e/02-left-context-menu.png`、`/tmp/article-studio-e2e/03-left-stage-multi-file.png`、`/tmp/article-studio-e2e/04-middle-direct-preview.png`、`/tmp/article-studio-e2e/05-right-flowchart-modal.png`、`/tmp/article-studio-e2e/06-right-command-and-style.png`。
+- `npm run check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次左栏可读性放大改造无直接关系。
+
+### 验证记录 [2026-02-20 00:32]：article-studio IDE 字体对齐项目双字体
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-template-guide.test.js`：通过（8 tests, 0 failures）
+- `node --check site/assets/js/article-studio.js && node --test site/tooling/scripts/article-studio-*.test.js`：通过（75 tests, 0 failures）
+- `python3 -m http.server 4311 >/tmp/studio-http.log 2>&1 & SERVER_PID=$!; NODE_PATH=... node /tmp/article-studio-e2e-run.js; CODE=$?; kill $SERVER_PID; wait $SERVER_PID 2>/dev/null; exit $CODE`：通过（`errors: []`）
+- `npm run build >/tmp/build-font.log 2>&1; echo EXIT:$?; tail -n 50 /tmp/build-font.log`：通过（`EXIT:0`）
+- `npm run check-generated >/tmp/check-generated-font.log 2>&1; echo EXIT:$?; tail -n 80 /tmp/check-generated-font.log`：失败（`EXIT:1`，`gallery-check` 报错）
+
+**备注**：
+- 已将 `site/assets/css/article-studio.css` 中 IDE 区域的 `ui-monospace` 直接字体栈统一替换为项目字体变量 `var(--font-family-tutorial)`，与项目内 `JetBrainsMonoNerdFontBold` + `HarmonyOSSansSCRegular` 保持一致。
+- 浏览器自动化点击/键盘验收截图已更新：`/tmp/article-studio-e2e/01-initial-layout.png`、`/tmp/article-studio-e2e/02-left-context-menu.png`、`/tmp/article-studio-e2e/03-left-stage-multi-file.png`、`/tmp/article-studio-e2e/04-middle-direct-preview.png`、`/tmp/article-studio-e2e/05-right-flowchart-modal.png`、`/tmp/article-studio-e2e/06-right-command-and-style.png`。
+- `npm run check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次字体统一改造无直接关系。
+
+### 验证记录 [2026-02-20 07:45]：article-studio PR 流程重构（文章/贴图/C# 三类清单）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-enhancements.test.js site/tooling/scripts/article-studio-guide-check.test.js`：通过（45 tests, 0 failures）
+- `node --check site/assets/js/article-studio.js && node --test site/tooling/scripts/article-studio-*.test.js`：通过（75 tests, 0 failures）
+- `python3 -m http.server 4311 >/tmp/studio-http.log 2>&1 & SERVER_PID=$!; NODE_PATH=... node /tmp/article-studio-e2e-run.js; CODE=$?; kill $SERVER_PID; wait $SERVER_PID 2>/dev/null; exit $CODE`：通过（`errors: []`）
+- `npm run build >/tmp/build-prflow.log 2>&1; echo EXIT:$?; tail -n 60 /tmp/build-prflow.log`：通过（`EXIT:0`）
+- `npm run check-generated >/tmp/check-generated-prflow.log 2>&1; echo EXIT:$?; tail -n 80 /tmp/check-generated-prflow.log`：失败（`EXIT:1`，`gallery-check` 报错）
+
+**备注**：
+- 右侧发布区新增 PR 文件总览，按 `文章 / 贴图(含媒体) / C#` 三类实时展示将提交路径；提交逻辑改为基于清单计数判断，删除“清空附件后提交 Markdown”的强制分支。
+- 提交流程弹窗重构为“创建新 PR（提交全部文件）/ 继续已有 PR / 取消”，并显示与右侧一致的三类清单摘要，满足 IDE 内直接可见三类文件的要求。
+- 浏览器自动化验收截图已更新：`/tmp/article-studio-e2e/01-initial-layout.png`、`/tmp/article-studio-e2e/02-left-context-menu.png`、`/tmp/article-studio-e2e/03-left-stage-multi-file.png`、`/tmp/article-studio-e2e/04-middle-direct-preview.png`、`/tmp/article-studio-e2e/05-right-flowchart-modal.png`、`/tmp/article-studio-e2e/06-right-command-and-style.png`。
+- `npm run check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次 PR 流程改造无直接关系。
+
+### 验证记录 [2026-02-20 08:15]：article-studio IDE 三栏可拖拽 + 目录树折叠 + 右栏顶部切换
+
+**级别**：L3（按需求采用浏览器点击测试与截图验收）
+
+**命令与结果**：
+- `node --check site/assets/js/article-studio.js`：通过
+- `python3 -m http.server 4173` + Playwright 点击脚本：通过（包含文件夹展开/收起、左右分栏拖拽、右栏 Tab 切换）
+- 产出截图：`test-results/article-studio-click-acceptance.png`
+
+**备注**：
+- 已移除右栏顶部 `CODEX` 大标题文本，改为“命令面板 + 顶部分类 Tab（编辑/样式/发布）”。
+- 左侧 Explorer 已改为文件夹树结构，支持目录展开与收起；文件项采用上下信息排布（文件名 + 路径）。
+- 页面主工作区新增左右可拖拽边界（鼠标调整左栏/右栏宽度），并持久化到本地草稿状态。
+
+### 验证记录 [2026-02-20 08:24]：article-studio 文件夹折叠失效修复（ASCII 图标）
+
+**级别**：L3（浏览器点击测试 + 截图验收）
+
+**命令与结果**：
+- `node --check site/assets/js/article-studio.js`：通过
+- Playwright 复现脚本（点击前后状态采样）：通过
+  - 修复前复现：`hiddenAttr=true` 但 `computedDisplay=grid`
+  - 修复后验证：`hiddenAttr=true` 且 `computedDisplay=none`
+- Playwright 点击验收脚本：通过（文件夹展开/收起、左右分栏拖拽、右栏 Tab 切换）
+- 产出截图：
+  - `test-results/article-studio-folder-expanded.png`
+  - `test-results/article-studio-folder-collapsed.png`
+  - `test-results/article-studio-click-acceptance-fixed.png`
+
+**备注**：
+- 根因是样式覆盖：`.studio-tree-folder-children { display: grid; }` 覆盖了 `hidden` 属性效果。
+- 已增加强制隐藏规则：`.studio-tree-folder-children[hidden] { display: none !important; }`，并同步修复右栏 Tab 面板的 `[hidden]` 覆盖问题。
+- 将本次新增树图标由 Unicode 改为 ASCII：文件 `[F]`、目录 `[D]`、折叠 `>`、展开 `v`。
+
+### 验证记录 [2026-02-20 08:53]：article-studio 资源树管理 + JetBrains Mono 图标验收
+
+**级别**：L3（按需求采用浏览器点击测试与截图验收）
+
+**命令与结果**：
+- `node --check site/assets/js/article-studio.js`：通过
+- `NODE_PATH=/mnt/f/DPapyru.github.io/node_modules node <<'NODE' ...`（Playwright 点击脚本，种子资源 + 点击折叠/右键移除 + 截图）：通过
+  - `collapseAfter`: `expanded=false`, `hidden=true`, `display=none`
+  - `beforeRemove`: `image=2, media=1, csharp=1`
+  - `afterRemove`: `image=1, media=1, csharp=1`
+  - 结果文件：`test-results/article-studio-resource-management-final-2.json`
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：
+- Explorer 已展示并管理 Markdown 与资源文件（`png/mp4/cs`），接近 IDE 资源管理方式；文件夹支持展开/收起。
+- 树节点图标改为 JetBrainsMono Nerd Font 特殊字符（通过代码点转义输出），不再使用 ASCII 的 `[D]/[F]/>/v`。
+- 资源节点右键菜单已支持：`插入资源引用`、`预览资源`、`编辑 C# 文件`、`移除资源`。
+- 点击验收与截图：
+  - `test-results/article-studio-explorer-resources.png`
+  - `test-results/article-studio-resource-context-menu.png`
+  - `test-results/article-studio-resource-management-final.png`
+  - `test-results/article-studio-resource-management-final-2.png`
+- `npm run check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次 `article-studio` 资源树改造无直接关系。
+
+### 验证记录 [2026-02-20 09:01]：article-studio 左栏关键按钮放大
+
+**级别**：L3（按需求采用浏览器点击测试与截图验收）
+
+**命令与结果**：
+- `NODE_PATH=/mnt/f/DPapyru.github.io/node_modules node <<'NODE' ...`（Playwright 打开页面并截图 + 采样按钮尺寸）：通过
+  - `studio-explorer-context-trigger`: `68x40`, `fontSize=15px`
+  - `studio-explorer-refresh`: `68x40`, `fontSize=15px`
+  - `studio-stage-clear`: `96x40`, `fontSize=15px`
+- 截图：`test-results/article-studio-left-buttons-larger.png`
+
+**备注**：
+- 本次仅放大左栏 Explorer 区块中的三个按钮（`菜单 / 刷新 / 清空暂存`），不影响右栏命令区与中栏编辑区按钮密度。
+
+### 验证记录 [2026-02-20 09:06]：article-studio 左栏“路径与元数据（高级）”折叠条放大
+
+**级别**：L3（按需求采用浏览器点击测试与截图验收）
+
+**命令与结果**：
+- `NODE_PATH=/mnt/f/DPapyru.github.io/node_modules node <<'NODE' ...`（Playwright 打开页面并截图 + 采样左栏折叠条尺寸）：通过
+  - `.studio-left-extra-panel > summary`: `961x38`, `fontSize=14px`, `fontWeight=700`
+- 截图：`test-results/article-studio-left-summary-larger.png`
+
+**备注**：
+- 本次仅放大左栏 `路径与元数据（高级）` 折叠条，提升点击面积与可读性；未修改右栏和中栏其它折叠条尺寸。
+
+### 验证记录 [2026-02-20 09:52]：article-studio 右栏提交区（提交 PR + 发布与附件）放大
+
+**级别**：L3（按需求采用浏览器点击测试与截图验收）
+
+**命令与结果**：
+- `NODE_PATH=/mnt/f/DPapyru.github.io/node_modules node <<'NODE' ...`（Playwright 切换到发布 Tab 并截图 + 采样尺寸）：通过
+  - `#studio-submit-pr`: `314x48`, `fontSize=22px`, `fontWeight=800`
+  - `#studio-right-panel-modal .studio-right-publish-panel > summary`: `304x40`, `fontSize=15px`, `fontWeight=700`
+- 截图：`test-results/article-studio-right-publish-larger.png`
+
+**备注**：
+- 本次放大右栏发布区的“提交 PR”主按钮与“发布与附件（高级）”折叠条，提升可读性与点击面积。
+- 未调整左栏 Explorer 和中栏编辑区其它控件尺寸。
+
+### 验证记录 [2026-02-20 10:23]：article-studio Explorer 自动展示全站资源（png/mp4/cs 引用）
+
+**级别**：L3（按需求采用浏览器点击测试与截图验收）
+
+**命令与结果**：
+- `node --check site/assets/js/article-studio.js`：通过
+- `NODE_PATH=/mnt/f/DPapyru.github.io/node_modules node <<'NODE' ...`（Playwright：清空本地草稿缓存后打开页面，等待资源索引完成并截图）：通过
+  - `foundResourcesWithin45s=true`
+  - `counts`: `markdown=150`, `image=3`, `media=0`, `csharp=4`
+  - `firstResourcePath`: `和小善的MiniTips/视觉效果篇/imgs/屏幕截图-2026-02-14-143642-t92jz.png`
+  - 截图：`test-results/article-studio-explorer-autoload-resources.png`
+- `NODE_PATH=/mnt/f/DPapyru.github.io/node_modules node <<'NODE' ...`（Playwright：筛选 `imgs`，验证资源显示与右键菜单）：通过
+  - `counts`: `image=3`, `media=0`, `csharp=0`
+  - 右键菜单可见项：`insert-resource`, `preview-resource`
+  - 截图：`test-results/article-studio-explorer-autoload-resources-filtered.png`
+  - 截图：`test-results/article-studio-indexed-resource-menu.png`
+
+**备注**：
+- Explorer 资源来源扩展为“全站 Markdown 内容中的资源引用索引 + 本地上传资源 + 当前草稿引用”，资源会出现在与文章同一棵树中。
+- 对 URL 编码路径增加了解码显示，避免出现 `%E5%...` 目录名。
+- 对索引资源（非本地上传）右键菜单保留“插入资源引用/预览资源”，隐藏“移除资源/编辑 C# 文件”。
+
+### 验证记录 [2026-02-20 10:32]：article-studio Explorer 改为图2风格紧凑树行（文件名优先）
+
+**级别**：L3（按需求采用浏览器点击测试与截图验收）
+
+**命令与结果**：
+- `node --check site/assets/js/article-studio.js`：通过
+- `NODE_PATH=/mnt/f/DPapyru.github.io/node_modules node <<'NODE' ...`（Playwright：清空本地缓存后打开 Explorer，并展开 `Modder入门` + `code/imgs/media`）：通过
+  - `stats`: `totalRows=7`, `csharpRows=2`, `imageRows=1`, `markdownRows=4`
+  - 截图：`test-results/article-studio-modder-folder-ide-compact.png`
+- `NODE_PATH=/mnt/f/DPapyru.github.io/node_modules node <<'NODE' ...`（Playwright：筛选 `imgs`，验证资源在同树中紧凑显示）：通过
+  - `counts`: `image=3`, `csharp=0`, `markdown=0`
+  - 截图：`test-results/article-studio-explorer-autoload-resources-filtered-compact.png`
+
+**备注**：
+- Explorer 文件行改为更接近 IDE：单行紧凑展示、隐藏第二行路径、缩小行高与操作按钮尺寸。
+- 文件主显示改为真实文件名（如 `*.md/*.png/*.cs`），不再优先显示文章标题。
+- 资源节点仍在同一棵树中展示（按目录层级出现），并保留资源右键插入/预览能力。
+
+### 验证记录 [2026-02-20 10:54]：article-studio Explorer 文字横向排布 + 目录缩进层次增强
+
+**级别**：L3（按需求采用浏览器点击测试与截图验收）
+
+**命令与结果**：
+- `node --check site/assets/js/article-studio.js`：通过
+- `NODE_PATH=/mnt/f/DPapyru.github.io/node_modules node <<'NODE' ...`（Playwright：筛选 `Modder入门`，展开目录并截图）：通过
+  - `labelDisplay=flex`, `labelAlignItems=center`
+  - `uniqueFilePaddingLeft=["68px","48px"]`
+  - 截图：`test-results/article-studio-tree-horizontal-indent-modder-final.png`
+- `NODE_PATH=/mnt/f/DPapyru.github.io/node_modules node <<'NODE' ...`（Playwright：筛选 `imgs`，验证资源树缩进层次并截图）：通过
+  - 截图：`test-results/article-studio-tree-horizontal-indent-resources-final.png`
+
+**备注**：
+- 文件行文本改为横向排布，避免上下分散感；目录项保留紧凑单行风格。
+- 增强层级缩进：深层目录与文件的左内边距加深，并叠加左侧层级引导线，提升层次可读性。

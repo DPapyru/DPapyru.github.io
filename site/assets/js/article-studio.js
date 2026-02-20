@@ -34,11 +34,15 @@
         draftCheckClose: document.getElementById('studio-draft-check-close'),
         draftCheckSummary: document.getElementById('studio-draft-check-summary'),
         draftCheckList: document.getElementById('studio-draft-check-list'),
+        prManifestSummary: document.getElementById('studio-pr-manifest-summary'),
+        prManifestArticleList: document.getElementById('studio-pr-manifest-article-list'),
+        prManifestTextureList: document.getElementById('studio-pr-manifest-texture-list'),
+        prManifestCsharpList: document.getElementById('studio-pr-manifest-csharp-list'),
         prAssetDecisionModal: document.getElementById('studio-pr-asset-decision-modal'),
         prAssetDecisionClose: document.getElementById('studio-pr-asset-decision-close'),
+        prAssetDecisionSummary: document.getElementById('studio-pr-asset-decision-summary'),
         prAssetDecisionChoiceStage: document.getElementById('studio-pr-asset-decision-choice-stage'),
         prAssetDecisionContinueStage: document.getElementById('studio-pr-asset-decision-continue-stage'),
-        prAssetDecisionClearStage: document.getElementById('studio-pr-asset-decision-clear-stage'),
         prAssetActionClearNew: document.getElementById('studio-pr-asset-action-clear-new'),
         prAssetActionContinuePr: document.getElementById('studio-pr-asset-action-continue-pr'),
         prAssetActionCancel: document.getElementById('studio-pr-asset-action-cancel'),
@@ -47,8 +51,6 @@
         prAssetContinueSubmit: document.getElementById('studio-pr-asset-continue-submit'),
         prAssetContinueBack: document.getElementById('studio-pr-asset-continue-back'),
         prAssetContinueHint: document.getElementById('studio-pr-asset-continue-hint'),
-        prAssetClearBack: document.getElementById('studio-pr-asset-clear-back'),
-        prAssetClearConfirm: document.getElementById('studio-pr-asset-clear-confirm'),
         flowchartToggle: document.getElementById('studio-flowchart-toggle'),
         flowchartModal: document.getElementById('studio-flowchart-modal'),
         flowchartModalClose: document.getElementById('studio-flowchart-modal-close'),
@@ -75,9 +77,20 @@
         status: document.getElementById('studio-status'),
         stats: document.getElementById('studio-stats'),
         currentPath: document.getElementById('studio-current-path'),
+        breadcrumbPath: document.getElementById('studio-breadcrumb-path'),
+        editorPath: document.getElementById('studio-editor-path'),
         activeTab: document.getElementById('studio-active-tab'),
+        tabsStrip: document.getElementById('studio-tabs-strip'),
+        toggleDirectPreview: document.getElementById('studio-toggle-direct-preview'),
         targetPath: document.getElementById('studio-target-path'),
         filename: document.getElementById('studio-filename'),
+        explorerFilter: document.getElementById('studio-explorer-filter'),
+        explorerRefresh: document.getElementById('studio-explorer-refresh'),
+        explorerTree: document.getElementById('studio-explorer-tree'),
+        stageList: document.getElementById('studio-stage-list'),
+        stageClear: document.getElementById('studio-stage-clear'),
+        explorerContextTrigger: document.getElementById('studio-explorer-context-trigger'),
+        explorerContextMenu: document.getElementById('studio-explorer-context-menu'),
         existingSelect: document.getElementById('studio-existing-select'),
         categorySelect: document.getElementById('studio-category-select'),
         topicSelect: document.getElementById('studio-topic-select'),
@@ -144,6 +157,12 @@
         authLogout: document.getElementById('studio-auth-logout'),
         authStatus: document.getElementById('studio-auth-status'),
         lastPrLink: document.getElementById('studio-last-pr-link'),
+        workspace: document.querySelector('.studio-lazy-workspace'),
+        workspaceResizers: Array.from(document.querySelectorAll('[data-studio-resize]')),
+        rightTabButtons: Array.from(document.querySelectorAll('[data-right-tab]')),
+        rightTabPanels: Array.from(document.querySelectorAll('[data-right-tab-panel]')),
+        commandProxyButtons: Array.from(document.querySelectorAll('[data-proxy-target]')),
+        activityButtons: Array.from(document.querySelectorAll('[data-studio-rail]')),
         syntaxButtons: Array.from(document.querySelectorAll('[data-studio-insert]')),
         titlebar: document.querySelector('.studio-titlebar')
     };
@@ -164,6 +183,26 @@
         csharpEditorDraft: '',
         preflightPending: false,
         previewImageNoticeEnabled: true,
+        isDirectPreview: false,
+        openTabs: [],
+        draftFiles: {},
+        fileBaselines: {},
+        explorerFilter: '',
+        explorerFolders: {},
+        rightPanelTab: 'command',
+        layout: {
+            leftWidth: 300,
+            rightWidth: 368
+        },
+        explorerContext: {
+            open: false,
+            path: '',
+            kind: 'markdown',
+            resourceId: '',
+            treeKey: '',
+            x: 0,
+            y: 0
+        },
         metadata: {
             title: '',
             author: '',
@@ -204,10 +243,30 @@
     let lastPreviewImageNoticeAt = 0;
     let metaSyncLock = false;
     let knownMarkdownEntries = [];
+    let indexedExplorerResources = [];
+    let explorerResourceIndexStamp = '';
+    let explorerResourceIndexRunId = 0;
     const BUILTIN_COLOR_NAMES = new Set([
         'primary', 'secondary', 'accent', 'success', 'warning', 'error', 'info', 'link',
         'red', 'green', 'blue', 'yellow', 'purple', 'orange', 'cyan', 'pink'
     ]);
+    const RIGHT_PANEL_TABS = ['command', 'style', 'publish'];
+    const WORKSPACE_LAYOUT_LIMITS = {
+        leftMin: 220,
+        leftMax: 520,
+        rightMin: 260,
+        rightMax: 560
+    };
+    const NERD_TREE_GLYPHS = {
+        caretClosed: '\uf0da',
+        caretOpen: '\uf0d7',
+        folderClosed: '\uf07b',
+        folderOpen: '\uf07c',
+        file: '\uf15b',
+        image: '\uf1c5',
+        video: '\uf1c8',
+        code: '\uf1c9'
+    };
     /**
      * @typedef {{
      *   level: 'error' | 'warn',
@@ -224,6 +283,247 @@
     function setStatus(text) {
         if (!dom.status) return;
         dom.status.textContent = `[${nowStamp()}] ${text}`;
+    }
+
+    function clampNumber(value, min, max, fallback) {
+        const minValue = Number.isFinite(min) ? min : 0;
+        const maxValue = Number.isFinite(max) ? max : minValue;
+        const raw = Number(value);
+        if (!Number.isFinite(raw)) {
+            return Number.isFinite(fallback) ? fallback : minValue;
+        }
+        return Math.min(maxValue, Math.max(minValue, Math.round(raw)));
+    }
+
+    function normalizeRightPanelTab(value) {
+        const key = String(value || '').trim().toLowerCase();
+        return RIGHT_PANEL_TABS.includes(key) ? key : 'command';
+    }
+
+    function normalizeExplorerEntryKind(value) {
+        const kind = String(value || '').trim().toLowerCase();
+        if (kind === 'image' || kind === 'media' || kind === 'csharp') return kind;
+        return 'markdown';
+    }
+
+    function isExplorerResourceKind(kind) {
+        return normalizeExplorerEntryKind(kind) !== 'markdown';
+    }
+
+    function explorerGlyphForKind(kind) {
+        const normalized = normalizeExplorerEntryKind(kind);
+        if (normalized === 'image') return NERD_TREE_GLYPHS.image;
+        if (normalized === 'media') return NERD_TREE_GLYPHS.video;
+        if (normalized === 'csharp') return NERD_TREE_GLYPHS.code;
+        return NERD_TREE_GLYPHS.file;
+    }
+
+    function decodeExplorerPath(pathValue) {
+        const normalized = normalizePath(pathValue || '');
+        if (!normalized) return '';
+        return normalized.split('/').filter(Boolean).map(function (segment) {
+            try {
+                return decodeURIComponent(segment);
+            } catch (_) {
+                return segment;
+            }
+        }).join('/');
+    }
+
+    function normalizeExplorerAssetPathForIndex(rawPath, baseMarkdownPath) {
+        const text = String(rawPath || '').trim();
+        if (!text) return '';
+        if (/^(?:https?:|data:|mailto:|tel:|javascript:|#)/i.test(text)) return '';
+
+        const stripped = text.split('#')[0].split('?')[0].trim();
+        if (!stripped) return '';
+
+        if (stripped.startsWith('/')) {
+            return decodeExplorerPath(stripped);
+        }
+
+        const baseDir = getDirectoryFromPath(ensureMarkdownPath(baseMarkdownPath || state.targetPath));
+        const resolved = (stripped.startsWith('./') || stripped.startsWith('../'))
+            ? resolveRelativeMarkdownPath(baseDir, stripped)
+            : resolveRelativeMarkdownPath(baseDir, `./${stripped}`);
+        return decodeExplorerPath(resolved);
+    }
+
+    function inferExplorerAssetKindForIndex(pathValue) {
+        const path = normalizePath(pathValue || '').toLowerCase();
+        if (!path) return '';
+        if (/\.cs$/i.test(path)) return 'csharp';
+        if (/\.(?:png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(path)) return 'image';
+        if (/\.(?:mp4|webm)$/i.test(path)) return 'media';
+        return '';
+    }
+
+    function collectExplorerAssetRefsFromMarkdown(markdownText, baseMarkdownPath) {
+        const source = String(markdownText || '');
+        if (!source.trim()) return [];
+
+        const refs = [];
+        const seen = new Set();
+        const pushRef = function (kind, path) {
+            const normalizedKind = normalizeExplorerEntryKind(kind);
+            const normalizedPath = normalizePath(path || '');
+            if (!normalizedPath || !isExplorerResourceKind(normalizedKind)) return;
+            const key = `${normalizedKind}:${normalizedPath}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            refs.push({
+                kind: normalizedKind,
+                path: normalizedPath
+            });
+        };
+
+        const linkRegex = /(!?)\[[^\]]*]\(([^)]+)\)/g;
+        let match = null;
+        while ((match = linkRegex.exec(source)) !== null) {
+            const hrefRaw = String(match[2] || '').trim();
+            if (!hrefRaw) continue;
+            const href = hrefRaw.split(/\s+/)[0];
+            const resolvedPath = normalizeExplorerAssetPathForIndex(href, baseMarkdownPath);
+            if (!resolvedPath || /\.md$/i.test(resolvedPath)) continue;
+            const kind = inferExplorerAssetKindForIndex(resolvedPath);
+            if (!kind) continue;
+            pushRef(kind, resolvedPath);
+        }
+
+        const csRegex = /\{\{cs:([^}\n]+)\}\}/g;
+        let csMatch = null;
+        while ((csMatch = csRegex.exec(source)) !== null) {
+            const parsed = parseCsDirective(csMatch[1]);
+            if (!parsed || !parsed.pathPart) continue;
+            const resolvedPath = normalizeExplorerAssetPathForIndex(parsed.pathPart, baseMarkdownPath);
+            if (!resolvedPath || !/\.cs$/i.test(resolvedPath)) continue;
+            pushRef('csharp', resolvedPath);
+        }
+
+        return refs;
+    }
+
+    function buildRelativeResourcePathFromTarget(assetPath) {
+        const targetMarkdownPath = ensureMarkdownPath(state.targetPath || '');
+        const fromDir = getDirectoryFromPath(targetMarkdownPath);
+        const fromSegments = String(fromDir || '').split('/').filter(Boolean);
+        const toSegments = normalizePath(assetPath || '').split('/').filter(Boolean);
+        if (toSegments.length <= 0) return './';
+
+        let shared = 0;
+        while (shared < fromSegments.length
+            && shared < toSegments.length
+            && fromSegments[shared] === toSegments[shared]) {
+            shared += 1;
+        }
+
+        const upCount = Math.max(0, fromSegments.length - shared);
+        const upSegments = new Array(upCount).fill('..');
+        const downSegments = toSegments.slice(shared);
+        const relative = upSegments.concat(downSegments).join('/');
+        if (!relative) return './';
+        if (relative.startsWith('../')) return relative;
+        return `./${relative}`;
+    }
+
+    function panelSupportsRightTab(panel, tab) {
+        if (!panel || !panel.getAttribute) return false;
+        const raw = String(panel.getAttribute('data-right-tab-panel') || '').trim();
+        if (!raw) return false;
+        return raw.split(/\s+/).includes(tab);
+    }
+
+    function setRightPanelTab(tabValue, options) {
+        const tab = normalizeRightPanelTab(tabValue);
+        state.rightPanelTab = tab;
+
+        if (dom.rightTabButtons && dom.rightTabButtons.length > 0) {
+            dom.rightTabButtons.forEach(function (button) {
+                const currentTab = normalizeRightPanelTab(button.getAttribute('data-right-tab'));
+                const isActive = currentTab === tab;
+                button.classList.toggle('is-active', isActive);
+                button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                button.setAttribute('tabindex', isActive ? '0' : '-1');
+            });
+        }
+
+        if (dom.rightTabPanels && dom.rightTabPanels.length > 0) {
+            dom.rightTabPanels.forEach(function (panel) {
+                const visible = panelSupportsRightTab(panel, tab);
+                panel.hidden = !visible;
+            });
+        }
+
+        if (!(options && options.skipSave)) {
+            scheduleSave();
+        }
+    }
+
+    function applyWorkspaceLayout() {
+        if (!dom.workspace) return;
+
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1600;
+        const leftMax = Math.min(WORKSPACE_LAYOUT_LIMITS.leftMax, Math.floor(viewportWidth * 0.45));
+        const rightMax = Math.min(WORKSPACE_LAYOUT_LIMITS.rightMax, Math.floor(viewportWidth * 0.48));
+
+        state.layout.leftWidth = clampNumber(
+            state.layout.leftWidth,
+            WORKSPACE_LAYOUT_LIMITS.leftMin,
+            Math.max(WORKSPACE_LAYOUT_LIMITS.leftMin, leftMax),
+            300
+        );
+        state.layout.rightWidth = clampNumber(
+            state.layout.rightWidth,
+            WORKSPACE_LAYOUT_LIMITS.rightMin,
+            Math.max(WORKSPACE_LAYOUT_LIMITS.rightMin, rightMax),
+            368
+        );
+
+        dom.workspace.style.setProperty('--studio-left-width', `${state.layout.leftWidth}px`);
+        dom.workspace.style.setProperty('--studio-right-width', `${state.layout.rightWidth}px`);
+    }
+
+    function bindWorkspaceResizers() {
+        if (!dom.workspaceResizers || dom.workspaceResizers.length <= 0 || !dom.workspace) return;
+
+        dom.workspaceResizers.forEach(function (handle) {
+            handle.addEventListener('pointerdown', function (event) {
+                const side = String(handle.getAttribute('data-studio-resize') || '').trim().toLowerCase();
+                if (side !== 'left' && side !== 'right') return;
+
+                event.preventDefault();
+                const startX = Number(event.clientX || 0);
+                const startLeft = Number(state.layout.leftWidth || 300);
+                const startRight = Number(state.layout.rightWidth || 368);
+
+                document.body.classList.add('studio-resizing');
+
+                const onMove = function (moveEvent) {
+                    const currentX = Number(moveEvent.clientX || 0);
+                    const delta = currentX - startX;
+
+                    if (side === 'left') {
+                        state.layout.leftWidth = startLeft + delta;
+                    } else {
+                        state.layout.rightWidth = startRight - delta;
+                    }
+
+                    applyWorkspaceLayout();
+                };
+
+                const stop = function () {
+                    document.removeEventListener('pointermove', onMove);
+                    document.removeEventListener('pointerup', stop);
+                    document.removeEventListener('pointercancel', stop);
+                    document.body.classList.remove('studio-resizing');
+                    scheduleSave();
+                };
+
+                document.addEventListener('pointermove', onMove);
+                document.addEventListener('pointerup', stop);
+                document.addEventListener('pointercancel', stop);
+            });
+        });
     }
 
     function normalizePath(input) {
@@ -445,6 +745,259 @@
         if (!text) return '';
         const parsed = Number.parseInt(text, 10);
         return Number.isFinite(parsed) ? String(parsed) : '';
+    }
+
+    function cloneMetadata(metadata) {
+        const safe = applyMetadataDefaults(metadata || {});
+        const colors = {};
+        const colorChange = {};
+
+        Object.keys(ensureObject(safe.colors)).forEach(function (key) {
+            const value = String(ensureObject(safe.colors)[key] || '').trim();
+            if (!key || !value) return;
+            colors[key] = value;
+        });
+
+        Object.keys(ensureObject(safe.colorChange)).forEach(function (key) {
+            const list = Array.isArray(ensureObject(safe.colorChange)[key]) ? ensureObject(safe.colorChange)[key] : [];
+            colorChange[key] = list.map(function (item) {
+                return String(item || '').trim();
+            }).filter(Boolean);
+        });
+
+        return applyMetadataDefaults({
+            ...safe,
+            colors: colors,
+            colorChange: colorChange
+        });
+    }
+
+    function metadataSignature(metadata) {
+        return JSON.stringify(cloneMetadata(metadata));
+    }
+
+    function normalizeDraftStatus(status) {
+        const key = String(status || '').trim().toLowerCase();
+        if (key === 'added' || key === 'modified' || key === 'deleted') return key;
+        return 'modified';
+    }
+
+    function getDraftStatusCode(status) {
+        const key = normalizeDraftStatus(status);
+        if (key === 'added') return 'ADD';
+        if (key === 'deleted') return 'DEL';
+        return 'MOD';
+    }
+
+    function getDraftRecord(pathValue) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return null;
+        const draftMap = ensureObject(state.draftFiles);
+        const record = draftMap[safePath];
+        if (!record || typeof record !== 'object') return null;
+        return {
+            path: safePath,
+            status: normalizeDraftStatus(record.status),
+            markdown: String(record.markdown || ''),
+            metadata: cloneMetadata(record.metadata || {}),
+            updatedAt: String(record.updatedAt || '')
+        };
+    }
+
+    function setDraftRecord(pathValue, record) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return;
+        const draftMap = ensureObject(state.draftFiles);
+        if (!record) {
+            delete draftMap[safePath];
+            state.draftFiles = draftMap;
+            return;
+        }
+
+        draftMap[safePath] = {
+            path: safePath,
+            status: normalizeDraftStatus(record.status),
+            markdown: String(record.markdown || ''),
+            metadata: cloneMetadata(record.metadata || {}),
+            updatedAt: String(record.updatedAt || new Date().toISOString())
+        };
+        state.draftFiles = draftMap;
+    }
+
+    function setFileBaseline(pathValue, baseline) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return;
+        const baselineMap = ensureObject(state.fileBaselines);
+        baselineMap[safePath] = {
+            path: safePath,
+            exists: !!(baseline && baseline.exists),
+            markdown: String(baseline && baseline.markdown || ''),
+            metadata: cloneMetadata(baseline && baseline.metadata || {}),
+            updatedAt: new Date().toISOString()
+        };
+        state.fileBaselines = baselineMap;
+    }
+
+    function getFileBaseline(pathValue) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return null;
+        const baselineMap = ensureObject(state.fileBaselines);
+        const record = baselineMap[safePath];
+        if (!record || typeof record !== 'object') return null;
+        return {
+            path: safePath,
+            exists: !!record.exists,
+            markdown: String(record.markdown || ''),
+            metadata: cloneMetadata(record.metadata || {}),
+            updatedAt: String(record.updatedAt || '')
+        };
+    }
+
+    function syncDraftForPath(pathValue, markdownText, metadataValue) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return '';
+
+        const markdown = String(markdownText || '');
+        const metadata = cloneMetadata(metadataValue || {});
+        const baseline = getFileBaseline(safePath);
+
+        if (baseline && baseline.exists) {
+            const pristine = markdown === String(baseline.markdown || '')
+                && metadataSignature(metadata) === metadataSignature(baseline.metadata);
+            if (pristine) {
+                setDraftRecord(safePath, null);
+                return '';
+            }
+            setDraftRecord(safePath, {
+                status: 'modified',
+                markdown: markdown,
+                metadata: metadata,
+                updatedAt: new Date().toISOString()
+            });
+            return 'modified';
+        }
+
+        setDraftRecord(safePath, {
+            status: 'added',
+            markdown: markdown,
+            metadata: metadata,
+            updatedAt: new Date().toISOString()
+        });
+        return 'added';
+    }
+
+    function syncActiveDraftFromEditor(options) {
+        const opts = options && typeof options === 'object' ? options : {};
+        const safePath = normalizePath(state.targetPath || '');
+        if (!safePath) return '';
+
+        const existing = getDraftRecord(safePath);
+        if (existing && existing.status === 'deleted' && !opts.overrideDeleted) {
+            return 'deleted';
+        }
+        return syncDraftForPath(safePath, state.markdown, state.metadata);
+    }
+
+    function ensureOpenTab(pathValue) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return;
+        const list = Array.isArray(state.openTabs) ? state.openTabs : [];
+        if (list.includes(safePath)) {
+            state.openTabs = list;
+            return;
+        }
+        list.push(safePath);
+        state.openTabs = list;
+    }
+
+    function pruneOpenTabs() {
+        const safeCurrentPath = normalizePath(state.targetPath || '');
+        const list = Array.isArray(state.openTabs) ? state.openTabs : [];
+        const dedup = Array.from(new Set(list.map(function (item) {
+            return normalizePath(item || '');
+        }).filter(Boolean)));
+        if (safeCurrentPath && !dedup.includes(safeCurrentPath)) {
+            dedup.push(safeCurrentPath);
+        }
+        state.openTabs = dedup;
+    }
+
+    function closeTabByPath(pathValue) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return;
+
+        const list = Array.isArray(state.openTabs) ? state.openTabs.slice() : [];
+        const index = list.indexOf(safePath);
+        if (index < 0) return;
+
+        if (list.length <= 1) {
+            setStatus('至少保留一个标签页');
+            return;
+        }
+
+        list.splice(index, 1);
+        state.openTabs = list;
+
+        const currentPath = normalizePath(state.targetPath || '');
+        if (currentPath === safePath) {
+            const fallback = list[Math.min(index, list.length - 1)] || list[0] || '';
+            if (fallback) {
+                openPathFromExplorer(fallback, '标签页');
+            }
+            return;
+        }
+
+        renderExplorerPanels();
+        scheduleSave();
+        setStatus(`已关闭标签页：${getFilenameFromPath(safePath) || safePath}`);
+    }
+
+    function renderTabs() {
+        if (!dom.tabsStrip) return;
+        pruneOpenTabs();
+
+        const current = normalizePath(state.targetPath || '');
+        dom.tabsStrip.innerHTML = '';
+
+        state.openTabs.forEach(function (pathValue) {
+            const path = normalizePath(pathValue || '');
+            if (!path) return;
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'studio-tab';
+            button.dataset.tabPath = path;
+            button.textContent = '';
+
+            const label = document.createElement('span');
+            label.className = 'studio-tab-label';
+            label.textContent = getFilenameFromPath(path) || path;
+            button.appendChild(label);
+
+            const close = document.createElement('span');
+            close.className = 'studio-tab-close';
+            close.dataset.tabClosePath = path;
+            close.setAttribute('aria-hidden', 'true');
+            close.textContent = 'x';
+            button.appendChild(close);
+
+            const draft = getDraftRecord(path);
+            if (draft) {
+                button.classList.add('studio-tab--dirty');
+                button.title = `${getDraftStatusCode(draft.status)} · ${path}`;
+            } else {
+                button.title = path;
+            }
+
+            if (path === current) {
+                button.classList.add('studio-tab--active');
+                button.setAttribute('aria-current', 'page');
+                button.id = 'studio-active-tab';
+                dom.activeTab = button;
+            }
+
+            dom.tabsStrip.appendChild(button);
+        });
     }
 
     function markdownDirectoryFromTargetPath(pathValue) {
@@ -868,6 +1421,195 @@
         });
     }
 
+    function buildStagedMarkdownExtraFiles(activeTargetPath, activeMarkdown) {
+        const activePath = normalizePath(activeTargetPath || state.targetPath || '');
+        const activeContent = String(activeMarkdown || state.markdown || '');
+        const files = [];
+
+        Object.keys(ensureObject(state.draftFiles)).forEach(function (pathKey) {
+            const record = getDraftRecord(pathKey);
+            if (!record || !record.path) return;
+
+            const fullPath = `site/content/${record.path}`;
+            if (record.status === 'deleted') {
+                files.push({
+                    path: fullPath,
+                    delete: true
+                });
+                return;
+            }
+
+            if (record.path === activePath && String(record.markdown || '') === activeContent) {
+                return;
+            }
+
+            files.push({
+                path: fullPath,
+                content: String(record.markdown || ''),
+                encoding: 'utf8'
+            });
+        });
+
+        return files;
+    }
+
+    function classifyPrFileType(filePath) {
+        const pathText = String(filePath || '').trim().toLowerCase();
+        if (!pathText) return 'texture';
+        if (/\.md$/i.test(pathText)) return 'article';
+        if (/\.cs$/i.test(pathText)) return 'csharp';
+        return 'texture';
+    }
+
+    function buildPrFileManifest(activeTargetPath, activeMarkdown, extraFiles) {
+        const manifest = {
+            article: [],
+            texture: [],
+            csharp: [],
+            total: 0
+        };
+
+        const articleMap = new Map();
+        const textureSet = new Set();
+        const csharpSet = new Set();
+
+        const pushArticle = function (pathValue, status) {
+            const path = String(pathValue || '').trim();
+            if (!path) return;
+            const nextStatus = String(status || 'staged').trim().toLowerCase();
+            const prev = articleMap.get(path);
+            const rank = function (value) {
+                if (value === 'deleted') return 3;
+                if (value === 'staged') return 2;
+                return 1;
+            };
+            if (!prev || rank(nextStatus) >= rank(prev.status)) {
+                articleMap.set(path, { path: path, status: nextStatus });
+            }
+        };
+
+        const pushTexture = function (pathValue) {
+            const path = String(pathValue || '').trim();
+            if (!path || textureSet.has(path)) return;
+            textureSet.add(path);
+            manifest.texture.push({ path: path, status: 'upload' });
+        };
+
+        const pushCsharp = function (pathValue) {
+            const path = String(pathValue || '').trim();
+            if (!path || csharpSet.has(path)) return;
+            csharpSet.add(path);
+            manifest.csharp.push({ path: path, status: 'upload' });
+        };
+
+        const safeActiveTarget = normalizePath(activeTargetPath || state.targetPath || '');
+        const activeContent = String(activeMarkdown || state.markdown || '');
+        if (safeActiveTarget && activeContent.trim()) {
+            pushArticle(`site/content/${safeActiveTarget}`, 'active');
+        }
+
+        const list = Array.isArray(extraFiles) ? extraFiles : [];
+        list.forEach(function (file) {
+            const path = String(file && file.path || '').trim();
+            if (!path) return;
+            const kind = classifyPrFileType(path);
+            if (kind === 'article') {
+                pushArticle(path, file && file.delete === true ? 'deleted' : 'staged');
+                return;
+            }
+            if (kind === 'csharp') {
+                pushCsharp(path);
+                return;
+            }
+            pushTexture(path);
+        });
+
+        manifest.article = Array.from(articleMap.values()).sort(function (a, b) {
+            return String(a.path || '').localeCompare(String(b.path || ''), 'zh-CN');
+        });
+        manifest.texture.sort(function (a, b) {
+            return String(a.path || '').localeCompare(String(b.path || ''), 'zh-CN');
+        });
+        manifest.csharp.sort(function (a, b) {
+            return String(a.path || '').localeCompare(String(b.path || ''), 'zh-CN');
+        });
+        manifest.total = manifest.article.length + manifest.texture.length + manifest.csharp.length;
+        return manifest;
+    }
+
+    function prManifestSummaryText(manifest) {
+        const info = manifest && typeof manifest === 'object' ? manifest : { article: [], texture: [], csharp: [] };
+        const articleCount = Array.isArray(info.article) ? info.article.length : 0;
+        const textureCount = Array.isArray(info.texture) ? info.texture.length : 0;
+        const csharpCount = Array.isArray(info.csharp) ? info.csharp.length : 0;
+        return `文章 ${articleCount} · 贴图 ${textureCount} · C# ${csharpCount}`;
+    }
+
+    function renderPrManifestList(container, items, emptyLabel) {
+        if (!container) return;
+        container.innerHTML = '';
+
+        const list = Array.isArray(items) ? items : [];
+        if (list.length <= 0) {
+            const empty = document.createElement('li');
+            empty.className = 'studio-pr-manifest-item studio-pr-manifest-item--empty';
+            empty.textContent = String(emptyLabel || '暂无文件');
+            container.appendChild(empty);
+            return;
+        }
+
+        list.forEach(function (item) {
+            const row = document.createElement('li');
+            row.className = 'studio-pr-manifest-item';
+
+            const badge = document.createElement('span');
+            badge.className = 'studio-pr-manifest-badge';
+            const status = String(item && item.status || 'staged').toLowerCase();
+            if (status === 'deleted') {
+                badge.textContent = 'DEL';
+            } else if (status === 'active') {
+                badge.textContent = 'CUR';
+            } else if (status === 'upload') {
+                badge.textContent = 'BIN';
+            } else {
+                badge.textContent = 'MOD';
+            }
+
+            const path = document.createElement('span');
+            path.className = 'studio-pr-manifest-path';
+            path.textContent = String(item && item.path || '');
+
+            row.appendChild(badge);
+            row.appendChild(path);
+            container.appendChild(row);
+        });
+    }
+
+    function renderPrSubmitManifest(contextOverride) {
+        const context = contextOverride && typeof contextOverride === 'object'
+            ? contextOverride
+            : buildPrSubmitContext();
+        const manifest = context.manifest || buildPrFileManifest(
+            context.payload ? context.payload.targetPath : state.targetPath,
+            context.payload ? context.payload.markdown : state.markdown,
+            context.extraFiles
+        );
+
+        const summaryText = prManifestSummaryText(manifest);
+        if (dom.prManifestSummary) {
+            dom.prManifestSummary.textContent = summaryText;
+        }
+        if (dom.prAssetDecisionSummary) {
+            dom.prAssetDecisionSummary.textContent = summaryText;
+        }
+
+        renderPrManifestList(dom.prManifestArticleList, manifest.article, '暂无文章改动');
+        renderPrManifestList(dom.prManifestTextureList, manifest.texture, '暂无贴图/媒体改动');
+        renderPrManifestList(dom.prManifestCsharpList, manifest.csharp, '暂无 C# 改动');
+
+        return manifest;
+    }
+
     function hasUploadedAssets() {
         const imageCount = Array.isArray(state.uploadedImages) ? state.uploadedImages.length : 0;
         const mediaCount = Array.isArray(state.uploadedMedia) ? state.uploadedMedia.length : 0;
@@ -889,6 +1631,7 @@
         renderUploadedMedia();
         refreshCsharpSymbolOptions();
         renderUploadedCsharpFiles();
+        renderExplorerPanels();
         scheduleSave();
 
         if (!silent) {
@@ -1245,6 +1988,24 @@
         }) || null;
     }
 
+    function getUploadedImageById(fileId) {
+        const id = String(fileId || '').trim();
+        if (!id) return null;
+        const list = Array.isArray(state.uploadedImages) ? state.uploadedImages : [];
+        return list.find(function (item) {
+            return String(item && item.id || '') === id;
+        }) || null;
+    }
+
+    function getUploadedMediaById(fileId) {
+        const id = String(fileId || '').trim();
+        if (!id) return null;
+        const list = Array.isArray(state.uploadedMedia) ? state.uploadedMedia : [];
+        return list.find(function (item) {
+            return String(item && item.id || '') === id;
+        }) || null;
+    }
+
     function isCsharpEditorModalOpen() {
         return !!(dom.csharpEditorModal && dom.csharpEditorModal.classList.contains('active'));
     }
@@ -1379,16 +2140,13 @@
 
     function setPrAssetDecisionStage(stage) {
         const normalized = String(stage || 'choice').trim().toLowerCase();
-        state.prAssetDecisionStage = ['choice', 'continue', 'clear'].includes(normalized) ? normalized : 'choice';
+        state.prAssetDecisionStage = ['choice', 'continue'].includes(normalized) ? normalized : 'choice';
 
         if (dom.prAssetDecisionChoiceStage) {
             dom.prAssetDecisionChoiceStage.hidden = state.prAssetDecisionStage !== 'choice';
         }
         if (dom.prAssetDecisionContinueStage) {
             dom.prAssetDecisionContinueStage.hidden = state.prAssetDecisionStage !== 'continue';
-        }
-        if (dom.prAssetDecisionClearStage) {
-            dom.prAssetDecisionClearStage.hidden = state.prAssetDecisionStage !== 'clear';
         }
 
         if (state.prAssetDecisionStage === 'continue') {
@@ -1406,7 +2164,7 @@
         }
     }
 
-    function openPrAssetDecisionModal() {
+    function openPrAssetDecisionModal(context) {
         if (state.prAssetDecisionResolver) {
             const pendingResolver = state.prAssetDecisionResolver;
             state.prAssetDecisionResolver = null;
@@ -1414,6 +2172,7 @@
         }
 
         setPrAssetDecisionStage('choice');
+        renderPrSubmitManifest(context);
         setSidePanelModalOpen('asset', true);
         return new Promise(function (resolve) {
             state.prAssetDecisionResolver = resolve;
@@ -1598,6 +2357,7 @@
                 });
                 refreshCsharpSymbolOptions();
                 renderUploadedCsharpFiles();
+                renderExplorerPanels();
                 scheduleSave();
                 setStatus(`已移除 C# 文件：${item.name}`);
             });
@@ -1718,6 +2478,7 @@
                     return it.id !== item.id;
                 });
                 renderUploadedImages();
+                renderExplorerPanels();
                 scheduleSave();
                 setStatus(`已移除图片：${item.name}`);
             });
@@ -1787,6 +2548,7 @@
                     return it.id !== item.id;
                 });
                 renderUploadedMedia();
+                renderExplorerPanels();
                 scheduleSave();
                 setStatus(`已移除视频：${item.name}`);
             });
@@ -1937,6 +2699,7 @@
         });
 
         renderUploadedImages();
+        renderExplorerPanels();
         scheduleSave();
         setStatus(`已插入 ${accepted.length} 张图片并写入 Markdown`);
     }
@@ -1997,6 +2760,7 @@
         });
 
         renderUploadedMedia();
+        renderExplorerPanels();
         scheduleSave();
         setStatus(`已插入 ${accepted.length} 个视频并写入 Markdown`);
     }
@@ -2133,6 +2897,7 @@
 
         refreshCsharpSymbolOptions();
         renderUploadedCsharpFiles();
+        renderExplorerPanels();
         scheduleSave();
 
         if (insertedCount > 0) {
@@ -2399,6 +3164,8 @@
 
     function updateFileIdentity() {
         const filename = getFilenameFromPath(state.targetPath) || '新文章.md';
+        ensureOpenTab(state.targetPath);
+        renderTabs();
 
         if (dom.activeTab) {
             dom.activeTab.textContent = filename;
@@ -2406,6 +3173,14 @@
 
         if (dom.currentPath) {
             dom.currentPath.textContent = `目标: ${state.targetPath}`;
+        }
+
+        if (dom.breadcrumbPath) {
+            dom.breadcrumbPath.textContent = state.targetPath;
+        }
+
+        if (dom.editorPath) {
+            dom.editorPath.textContent = state.targetPath;
         }
 
         if (dom.targetPath && dom.targetPath.value !== state.targetPath) {
@@ -2425,6 +3200,7 @@
         }
 
         updatePathBreadcrumb(state.targetPath);
+        renderExplorerPanels();
     }
 
     function findKnownEntryByPath(path) {
@@ -2619,6 +3395,965 @@
         updatePathBreadcrumb(state.targetPath);
     }
 
+    function listExplorerEntries() {
+        const entryMap = new Map();
+        const kindOrder = {
+            markdown: 0,
+            csharp: 1,
+            image: 2,
+            media: 3,
+            asset: 4
+        };
+        const kindLabel = {
+            markdown: '文章',
+            csharp: 'C#',
+            image: '图片',
+            media: '视频',
+            asset: '资源'
+        };
+        const resourcePathKindSet = new Set();
+
+        const normalizeExplorerAssetPath = function (rawPath, baseMarkdownPath) {
+            const text = String(rawPath || '').trim();
+            if (!text) return '';
+            if (/^(?:https?:|data:|mailto:|tel:|javascript:|#)/i.test(text)) return '';
+
+            const stripped = text.split('#')[0].split('?')[0].trim();
+            if (!stripped) return '';
+
+            if (stripped.startsWith('/')) {
+                return decodeExplorerPath(stripped);
+            }
+
+            const baseDir = getDirectoryFromPath(ensureMarkdownPath(baseMarkdownPath || state.targetPath));
+            const resolved = (stripped.startsWith('./') || stripped.startsWith('../'))
+                ? resolveRelativeMarkdownPath(baseDir, stripped)
+                : resolveRelativeMarkdownPath(baseDir, `./${stripped}`);
+            return decodeExplorerPath(resolved);
+        };
+
+        const inferExplorerAssetKind = function (pathValue) {
+            const path = normalizePath(pathValue || '').toLowerCase();
+            if (!path) return 'asset';
+            if (/\.cs$/i.test(path)) return 'csharp';
+            if (/\.(?:png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(path)) return 'image';
+            if (/\.(?:mp4|webm)$/i.test(path)) return 'media';
+            return 'asset';
+        };
+
+        const appendMarkdownAssetReferences = function (markdownText, baseMarkdownPath) {
+            const source = String(markdownText || '');
+            if (!source.trim()) return;
+
+            const imageLinkRegex = /!\[[^\]]*]\(([^)]+)\)/g;
+            let match = null;
+            while ((match = imageLinkRegex.exec(source)) !== null) {
+                const hrefRaw = String(match[1] || '').trim();
+                if (!hrefRaw) continue;
+                const href = hrefRaw.split(/\s+/)[0];
+                const resolvedPath = normalizeExplorerAssetPath(href, baseMarkdownPath);
+                if (!resolvedPath || /\.md$/i.test(resolvedPath)) continue;
+                const kind = inferExplorerAssetKind(resolvedPath);
+                const key = `${kind}:${resolvedPath}`;
+                if (resourcePathKindSet.has(key)) continue;
+                resourcePathKindSet.add(key);
+                upsertEntry({
+                    key: `ref:${kind}:${resolvedPath}`,
+                    path: resolvedPath,
+                    title: getFilenameFromPath(resolvedPath) || resolvedPath,
+                    kind: kind,
+                    resourceId: ''
+                });
+            }
+
+            const csRegex = /\{\{cs:([^}\n]+)\}\}/g;
+            let csMatch = null;
+            while ((csMatch = csRegex.exec(source)) !== null) {
+                const parsed = parseCsDirective(csMatch[1]);
+                if (!parsed || !parsed.pathPart) continue;
+                const resolvedPath = normalizeExplorerAssetPath(parsed.pathPart, baseMarkdownPath);
+                if (!resolvedPath || !/\.cs$/i.test(resolvedPath)) continue;
+                const key = `csharp:${resolvedPath}`;
+                if (resourcePathKindSet.has(key)) continue;
+                resourcePathKindSet.add(key);
+                upsertEntry({
+                    key: `ref:csharp:${resolvedPath}`,
+                    path: resolvedPath,
+                    title: getFilenameFromPath(resolvedPath) || resolvedPath,
+                    kind: 'csharp',
+                    resourceId: ''
+                });
+            }
+        };
+
+        const upsertEntry = function (item) {
+            if (!item || !item.path) return;
+            const normalizedPath = normalizePath(item.path);
+            if (!normalizedPath) return;
+            const kind = String(item.kind || 'markdown').trim().toLowerCase();
+            const id = String(item.resourceId || '').trim();
+            const key = String(item.key || `${kind}:${normalizedPath}${id ? `:${id}` : ''}`);
+            entryMap.set(key, {
+                key: key,
+                path: normalizedPath,
+                title: String(item.title || getFilenameFromPath(normalizedPath) || normalizedPath),
+                directory: getDirectoryFromPath(normalizedPath),
+                kind: kind,
+                kindLabel: kindLabel[kind] || kindLabel.asset,
+                resourceId: id,
+                fromConfig: !!item.fromConfig
+            });
+            if (kind !== 'markdown') {
+                resourcePathKindSet.add(`${kind}:${normalizedPath}`);
+            }
+        };
+
+        (knownMarkdownEntries || []).forEach(function (entry) {
+            if (!entry || !entry.path) return;
+            upsertEntry({
+                key: `markdown:${normalizePath(entry.path)}`,
+                path: entry.path,
+                title: String(entry.title || getFilenameFromPath(entry.path) || entry.path),
+                kind: 'markdown',
+                fromConfig: true
+            });
+        });
+
+        Object.keys(ensureObject(state.draftFiles)).forEach(function (pathKey) {
+            const path = normalizePath(pathKey);
+            if (!path) return;
+            const key = `markdown:${path}`;
+            if (!entryMap.has(key)) {
+                upsertEntry({
+                    key: key,
+                    path: path,
+                    title: getFilenameFromPath(path) || path,
+                    kind: 'markdown',
+                    fromConfig: false
+                });
+            }
+        });
+
+        (Array.isArray(state.uploadedImages) ? state.uploadedImages : []).forEach(function (item) {
+            const path = normalizePath(item && item.assetPath || '');
+            if (!path) return;
+            upsertEntry({
+                key: `image:${path}:${String(item && item.id || '')}`,
+                path: path,
+                title: String(item && item.name || getFilenameFromPath(path) || path),
+                kind: 'image',
+                resourceId: String(item && item.id || '')
+            });
+        });
+
+        (Array.isArray(state.uploadedMedia) ? state.uploadedMedia : []).forEach(function (item) {
+            const path = normalizePath(item && item.assetPath || '');
+            if (!path) return;
+            upsertEntry({
+                key: `media:${path}:${String(item && item.id || '')}`,
+                path: path,
+                title: String(item && item.name || getFilenameFromPath(path) || path),
+                kind: 'media',
+                resourceId: String(item && item.id || '')
+            });
+        });
+
+        (Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : []).forEach(function (item) {
+            const path = normalizePath(item && item.assetPath || '');
+            if (!path) return;
+            upsertEntry({
+                key: `csharp:${path}:${String(item && item.id || '')}`,
+                path: path,
+                title: String(item && item.name || getFilenameFromPath(path) || path),
+                kind: 'csharp',
+                resourceId: String(item && item.id || '')
+            });
+        });
+
+        (Array.isArray(indexedExplorerResources) ? indexedExplorerResources : []).forEach(function (item) {
+            const path = normalizePath(item && item.path || '');
+            const kind = normalizeExplorerEntryKind(item && item.kind || 'markdown');
+            if (!path || !isExplorerResourceKind(kind)) return;
+            const dedupeKey = `${kind}:${path}`;
+            if (resourcePathKindSet.has(dedupeKey)) return;
+            upsertEntry({
+                key: String(item && item.key || `indexed:${dedupeKey}`),
+                path: path,
+                title: String(item && item.title || getFilenameFromPath(path) || path),
+                kind: kind,
+                resourceId: ''
+            });
+        });
+
+        appendMarkdownAssetReferences(state.markdown, state.targetPath);
+        Object.keys(ensureObject(state.draftFiles)).forEach(function (pathKey) {
+            const record = getDraftRecord(pathKey);
+            if (!record || !record.markdown) return;
+            appendMarkdownAssetReferences(record.markdown, record.path || pathKey);
+        });
+
+        const filterText = String(state.explorerFilter || '').trim().toLowerCase();
+        return Array.from(entryMap.values()).filter(function (item) {
+            if (!filterText) return true;
+            return item.path.toLowerCase().includes(filterText)
+                || String(item.title || '').toLowerCase().includes(filterText)
+                || String(item.kindLabel || '').toLowerCase().includes(filterText)
+                || String(item.kind || '').toLowerCase().includes(filterText);
+        }).sort(function (a, b) {
+            const pathCompare = String(a.path || '').localeCompare(String(b.path || ''), 'zh-CN');
+            if (pathCompare !== 0) return pathCompare;
+
+            const orderA = Number(kindOrder[a.kind] || 99);
+            const orderB = Number(kindOrder[b.kind] || 99);
+            if (orderA !== orderB) return orderA - orderB;
+
+            return String(a.title || '').localeCompare(String(b.title || ''), 'zh-CN');
+        });
+    }
+
+    function ensureExplorerFolderMap() {
+        if (!state.explorerFolders || typeof state.explorerFolders !== 'object') {
+            state.explorerFolders = {};
+        }
+        return state.explorerFolders;
+    }
+
+    function isExplorerFolderOpen(pathValue, activePath, filterEnabled) {
+        const folderPath = normalizePath(pathValue || '');
+        if (!folderPath) return true;
+
+        const folders = ensureExplorerFolderMap();
+        if (Object.prototype.hasOwnProperty.call(folders, folderPath)) {
+            return !!folders[folderPath];
+        }
+
+        if (filterEnabled) {
+            return true;
+        }
+
+        if (activePath && (activePath === folderPath || activePath.startsWith(`${folderPath}/`))) {
+            return true;
+        }
+
+        return folderPath.split('/').filter(Boolean).length <= 1;
+    }
+
+    function toggleExplorerFolder(pathValue) {
+        const folderPath = normalizePath(pathValue || '');
+        if (!folderPath) return;
+
+        const activePath = normalizePath(state.targetPath || '');
+        const filterEnabled = !!String(state.explorerFilter || '').trim();
+        const folders = ensureExplorerFolderMap();
+        folders[folderPath] = !isExplorerFolderOpen(folderPath, activePath, filterEnabled);
+        renderExplorerTree();
+        scheduleSave();
+    }
+
+    function buildExplorerFolderTree(entries) {
+        const root = {
+            path: '',
+            name: '',
+            folders: new Map(),
+            files: []
+        };
+
+        (Array.isArray(entries) ? entries : []).forEach(function (entry) {
+            const filePath = normalizePath(entry && entry.path || '');
+            if (!filePath) return;
+
+            const segments = filePath.split('/').filter(Boolean);
+            if (segments.length <= 0) return;
+
+            let node = root;
+            for (let i = 0; i < segments.length - 1; i += 1) {
+                const segment = segments[i];
+                const folderPath = segments.slice(0, i + 1).join('/');
+                if (!node.folders.has(segment)) {
+                    node.folders.set(segment, {
+                        path: folderPath,
+                        name: segment,
+                        folders: new Map(),
+                        files: []
+                    });
+                }
+                node = node.folders.get(segment);
+            }
+
+            node.files.push({
+                ...entry,
+                path: filePath,
+                title: String(entry.title || getFilenameFromPath(filePath) || filePath)
+            });
+        });
+
+        const sortNode = function (node) {
+            node.files.sort(function (a, b) {
+                return String(a.path || '').localeCompare(String(b.path || ''), 'zh-CN');
+            });
+
+            const sortedFolders = Array.from(node.folders.entries()).sort(function (a, b) {
+                return String(a[0] || '').localeCompare(String(b[0] || ''), 'zh-CN');
+            });
+
+            node.folders = new Map(sortedFolders);
+            node.folders.forEach(function (child) {
+                sortNode(child);
+            });
+        };
+
+        sortNode(root);
+        return root;
+    }
+
+    function renderStageList() {
+        if (!dom.stageList) return;
+        const activePath = normalizePath(state.targetPath || '');
+        const items = Object.keys(ensureObject(state.draftFiles)).map(function (pathKey) {
+            const record = getDraftRecord(pathKey);
+            return record;
+        }).filter(Boolean).sort(function (a, b) {
+            return String(a.path || '').localeCompare(String(b.path || ''), 'zh-CN');
+        });
+
+        dom.stageList.innerHTML = '';
+        if (items.length <= 0) {
+            const empty = document.createElement('span');
+            empty.className = 'studio-help';
+            empty.textContent = '暂无暂存改动';
+            dom.stageList.appendChild(empty);
+            return;
+        }
+
+        items.forEach(function (record) {
+            const row = document.createElement('div');
+            row.className = 'studio-stage-item';
+            row.dataset.path = record.path;
+            if (normalizePath(record.path) === activePath) {
+                row.classList.add('is-active');
+            }
+
+            const main = document.createElement('span');
+            main.className = 'studio-tree-main';
+
+            const badge = document.createElement('span');
+            badge.className = `studio-change-badge studio-change-badge--${record.status}`;
+            badge.textContent = getDraftStatusCode(record.status);
+
+            const name = document.createElement('span');
+            name.className = 'studio-tree-name';
+            name.textContent = getFilenameFromPath(record.path) || record.path;
+
+            main.appendChild(badge);
+            main.appendChild(name);
+
+            const path = document.createElement('span');
+            path.className = 'studio-tree-path';
+            path.textContent = record.path;
+
+            row.appendChild(main);
+            row.appendChild(path);
+            dom.stageList.appendChild(row);
+        });
+    }
+
+    function renderExplorerTree() {
+        if (!dom.explorerTree) return;
+        const entries = listExplorerEntries();
+        const activePath = normalizePath(state.targetPath || '');
+        const filterEnabled = !!String(state.explorerFilter || '').trim();
+
+        dom.explorerTree.innerHTML = '';
+        if (entries.length <= 0) {
+            const empty = document.createElement('span');
+            empty.className = 'studio-help';
+            empty.textContent = '没有可显示的文件或资源';
+            dom.explorerTree.appendChild(empty);
+            return;
+        }
+
+        const tree = buildExplorerFolderTree(entries);
+
+        const createFileRow = function (entry, depth) {
+            const kind = normalizeExplorerEntryKind(entry.kind);
+            const rowKey = String(entry.key || `${kind}:${entry.path}`);
+
+            const row = document.createElement('div');
+            row.className = 'studio-tree-item studio-tree-item--file';
+            row.dataset.treeKey = rowKey;
+            row.dataset.treePath = entry.path;
+            row.dataset.treeKind = kind;
+            row.dataset.treeId = String(entry.resourceId || '');
+            row.style.setProperty('--studio-tree-depth', String(Math.max(0, depth)));
+            if (kind === 'markdown' && entry.path === activePath) {
+                row.classList.add('is-active');
+            }
+
+            const left = document.createElement('button');
+            left.type = 'button';
+            left.className = 'btn btn-small btn-outline studio-tree-open studio-tree-open--file';
+            left.dataset.treeKey = rowKey;
+            left.dataset.treePath = entry.path;
+            left.dataset.treeKind = kind;
+            left.dataset.treeId = String(entry.resourceId || '');
+
+            const icon = document.createElement('span');
+            icon.className = 'studio-tree-icon studio-tree-icon--file';
+            icon.textContent = explorerGlyphForKind(kind);
+
+            const labels = document.createElement('span');
+            labels.className = 'studio-tree-label-stack';
+
+            const name = document.createElement('span');
+            name.className = 'studio-tree-name';
+            const displayName = String(getFilenameFromPath(entry.path) || entry.title || entry.path);
+            name.textContent = displayName;
+
+            const path = document.createElement('span');
+            path.className = 'studio-tree-path';
+            const basePath = getDirectoryFromPath(entry.path) || '(root)';
+            path.textContent = kind === 'markdown'
+                ? basePath
+                : `${basePath} · ${String(entry.kindLabel || kind).toUpperCase()}`;
+
+            labels.appendChild(name);
+            labels.appendChild(path);
+            left.appendChild(icon);
+            left.appendChild(labels);
+            left.title = kind === 'markdown'
+                ? entry.path
+                : `${entry.path} (${String(entry.kindLabel || kind).toUpperCase()})`;
+
+            const actions = document.createElement('div');
+            actions.className = 'studio-tree-actions';
+
+            const draft = kind === 'markdown' ? getDraftRecord(entry.path) : null;
+            if (draft && kind === 'markdown') {
+                const badge = document.createElement('span');
+                badge.className = `studio-change-badge studio-change-badge--${draft.status}`;
+                badge.textContent = getDraftStatusCode(draft.status);
+                actions.appendChild(badge);
+            }
+
+            const menuButton = document.createElement('button');
+            menuButton.type = 'button';
+            menuButton.className = 'btn btn-small btn-outline';
+            menuButton.dataset.treeKey = rowKey;
+            menuButton.dataset.treeMenuPath = entry.path;
+            menuButton.dataset.treeMenuKind = kind;
+            menuButton.dataset.treeMenuId = String(entry.resourceId || '');
+            menuButton.setAttribute('aria-label', `打开 ${entry.path} 的操作菜单`);
+            menuButton.textContent = '⋯';
+            actions.appendChild(menuButton);
+
+            row.appendChild(left);
+            row.appendChild(actions);
+            return row;
+        };
+
+        const renderFolder = function (folderNode, depth) {
+            const folderPath = normalizePath(folderNode.path || '');
+            const folderOpen = isExplorerFolderOpen(folderPath, activePath, filterEnabled);
+            const containsActive = !!(activePath && folderPath && activePath.startsWith(`${folderPath}/`));
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'studio-tree-folder';
+            wrapper.dataset.treeFolderPath = folderPath;
+
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'studio-tree-folder-toggle';
+            toggle.dataset.treeFolder = folderPath;
+            toggle.style.setProperty('--studio-tree-depth', String(Math.max(0, depth)));
+            toggle.setAttribute('aria-expanded', folderOpen ? 'true' : 'false');
+            toggle.classList.toggle('is-contains-active', containsActive);
+
+            const caret = document.createElement('span');
+            caret.className = 'studio-tree-icon studio-tree-icon--caret';
+            caret.textContent = folderOpen ? NERD_TREE_GLYPHS.caretOpen : NERD_TREE_GLYPHS.caretClosed;
+
+            const icon = document.createElement('span');
+            icon.className = 'studio-tree-icon studio-tree-icon--folder';
+            icon.textContent = folderOpen ? NERD_TREE_GLYPHS.folderOpen : NERD_TREE_GLYPHS.folderClosed;
+
+            const name = document.createElement('span');
+            name.className = 'studio-tree-folder-name';
+            name.textContent = folderNode.name;
+
+            const count = document.createElement('span');
+            count.className = 'studio-tree-folder-meta';
+            count.textContent = String(folderNode.folders.size + folderNode.files.length);
+
+            toggle.appendChild(caret);
+            toggle.appendChild(icon);
+            toggle.appendChild(name);
+            toggle.appendChild(count);
+
+            const children = document.createElement('div');
+            children.className = 'studio-tree-folder-children';
+            children.hidden = !folderOpen;
+
+            folderNode.folders.forEach(function (childFolder) {
+                children.appendChild(renderFolder(childFolder, depth + 1));
+            });
+            folderNode.files.forEach(function (fileEntry) {
+                children.appendChild(createFileRow(fileEntry, depth + 1));
+            });
+
+            wrapper.appendChild(toggle);
+            wrapper.appendChild(children);
+            return wrapper;
+        };
+
+        tree.folders.forEach(function (folderNode) {
+            dom.explorerTree.appendChild(renderFolder(folderNode, 0));
+        });
+        tree.files.forEach(function (fileEntry) {
+            dom.explorerTree.appendChild(createFileRow(fileEntry, 0));
+        });
+    }
+
+    function renderExplorerPanels() {
+        renderTabs();
+        renderExplorerTree();
+        renderStageList();
+        renderPrSubmitManifest();
+    }
+
+    function syncExplorerContextMenuActions(kindValue, options) {
+        if (!dom.explorerContextMenu) return;
+        const opts = options && typeof options === 'object' ? options : {};
+
+        const kind = normalizeExplorerEntryKind(kindValue);
+        const isMarkdown = kind === 'markdown';
+        const isCsharp = kind === 'csharp';
+        const hasResourceId = !!String(opts.resourceId || '').trim();
+        const actionVisible = {
+            'open-file': isMarkdown,
+            'new-file': isMarkdown,
+            'toggle-delete': isMarkdown,
+            'discard-file': isMarkdown,
+            'insert-resource': !isMarkdown,
+            'preview-resource': !isMarkdown,
+            'edit-csharp': isCsharp && hasResourceId,
+            'remove-resource': !isMarkdown && hasResourceId
+        };
+
+        const items = Array.from(dom.explorerContextMenu.querySelectorAll('[data-context-action]'));
+        items.forEach(function (button) {
+            const action = String(button.getAttribute('data-context-action') || '').trim().toLowerCase();
+            button.hidden = !actionVisible[action];
+        });
+    }
+
+    function hideExplorerContextMenu() {
+        if (!dom.explorerContextMenu) return;
+        dom.explorerContextMenu.hidden = true;
+        if (dom.explorerContextTrigger) {
+            dom.explorerContextTrigger.setAttribute('aria-expanded', 'false');
+        }
+        state.explorerContext.open = false;
+        state.explorerContext.path = '';
+        state.explorerContext.kind = 'markdown';
+        state.explorerContext.resourceId = '';
+        state.explorerContext.treeKey = '';
+    }
+
+    function openExplorerContextMenu(pathValue, x, y, options) {
+        if (!dom.explorerContextMenu) return;
+        const opts = options && typeof options === 'object' ? options : {};
+        const path = normalizePath(pathValue || state.targetPath || '');
+        if (!path) return;
+        const kind = normalizeExplorerEntryKind(opts.kind || 'markdown');
+        const resourceId = String(opts.resourceId || '').trim();
+        const treeKey = String(opts.treeKey || `${kind}:${path}${resourceId ? `:${resourceId}` : ''}`);
+
+        state.explorerContext.open = true;
+        state.explorerContext.path = path;
+        state.explorerContext.kind = kind;
+        state.explorerContext.resourceId = resourceId;
+        state.explorerContext.treeKey = treeKey;
+        state.explorerContext.x = Number(x || 0);
+        state.explorerContext.y = Number(y || 0);
+
+        syncExplorerContextMenuActions(kind, { resourceId: resourceId });
+        dom.explorerContextMenu.hidden = false;
+        dom.explorerContextMenu.style.left = `${Math.max(8, Math.floor(state.explorerContext.x))}px`;
+        dom.explorerContextMenu.style.top = `${Math.max(8, Math.floor(state.explorerContext.y))}px`;
+        if (dom.explorerContextTrigger) {
+            dom.explorerContextTrigger.setAttribute('aria-expanded', 'true');
+        }
+    }
+
+    function applyEditorStateForPath(pathValue, markdownText, metadataValue, options) {
+        const opts = options && typeof options === 'object' ? options : {};
+        const changed = setTargetPath(pathValue, true);
+        if (!changed) return false;
+
+        state.markdown = String(markdownText || '').replace(/\r\n/g, '\n');
+        if (dom.markdown) {
+            dom.markdown.value = state.markdown;
+        }
+
+        setMetadataState(cloneMetadata(metadataValue || {}), { silent: true });
+        renderMetadataFormFromState();
+        renderColorListsFromState();
+        updateChapterSelectOptions();
+        updateStats();
+        renderPreview();
+        ensureOpenTab(state.targetPath);
+        renderExplorerPanels();
+
+        if (!opts.skipSave) {
+            scheduleSave();
+        }
+        if (!opts.silentStatus) {
+            setStatus(`已切换文件：${state.targetPath}`);
+        }
+        return true;
+    }
+
+    function buildNewDraftPath(baseDirectory) {
+        const dir = normalizePath(baseDirectory || '').replace(/\/+$/g, '');
+        const used = new Set();
+
+        (knownMarkdownEntries || []).forEach(function (entry) {
+            if (!entry || !entry.path) return;
+            used.add(normalizePath(entry.path));
+        });
+        Object.keys(ensureObject(state.draftFiles)).forEach(function (pathKey) {
+            used.add(normalizePath(pathKey));
+        });
+
+        let index = 1;
+        while (index < 10000) {
+            const filename = index === 1 ? '新文章.md' : `新文章-${index}.md`;
+            const candidate = normalizePath(dir ? `${dir}/${filename}` : filename);
+            if (candidate && !used.has(candidate)) {
+                return candidate;
+            }
+            index += 1;
+        }
+
+        return normalizePath(`${dir || '怎么贡献'}/新文章-${Date.now().toString(36)}.md`);
+    }
+
+    function createDraftFile(pathValue) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return false;
+
+        const metadata = cloneMetadata(state.metadata);
+        const markdown = mergeFrontMatterIntoMarkdown('');
+        setFileBaseline(safePath, {
+            exists: false,
+            markdown: '',
+            metadata: metadata
+        });
+        setDraftRecord(safePath, {
+            status: 'added',
+            markdown: markdown,
+            metadata: metadata,
+            updatedAt: new Date().toISOString()
+        });
+        ensureOpenTab(safePath);
+        applyEditorStateForPath(safePath, markdown, metadata, { skipSave: false, silentStatus: true });
+        setStatus(`已新建暂存文件：${safePath}`);
+        return true;
+    }
+
+    function toggleDraftDeletion(pathValue) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return;
+
+        const draft = getDraftRecord(safePath);
+        const baseline = getFileBaseline(safePath);
+
+        if (draft && draft.status === 'deleted') {
+            if (baseline && baseline.exists) {
+                syncDraftForPath(safePath, draft.markdown, draft.metadata);
+                setStatus(`已取消删除标记：${safePath}`);
+            } else {
+                setDraftRecord(safePath, null);
+                setStatus(`已移除新建文件：${safePath}`);
+            }
+            renderExplorerPanels();
+            scheduleSave();
+            return;
+        }
+
+        if (baseline && baseline.exists) {
+            const markdown = draft
+                ? draft.markdown
+                : (normalizePath(state.targetPath) === safePath ? String(state.markdown || '') : String(baseline.markdown || ''));
+            const metadata = draft
+                ? draft.metadata
+                : (normalizePath(state.targetPath) === safePath ? cloneMetadata(state.metadata) : cloneMetadata(baseline.metadata));
+            setDraftRecord(safePath, {
+                status: 'deleted',
+                markdown: markdown,
+                metadata: metadata,
+                updatedAt: new Date().toISOString()
+            });
+            setStatus(`已标记删除：${safePath}`);
+        } else {
+            setDraftRecord(safePath, null);
+            setStatus(`已移除新建文件：${safePath}`);
+        }
+
+        renderExplorerPanels();
+        scheduleSave();
+    }
+
+    function discardDraftForPath(pathValue) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return;
+
+        const hadDraft = !!getDraftRecord(safePath);
+        setDraftRecord(safePath, null);
+
+        if (normalizePath(state.targetPath) === safePath) {
+            const baseline = getFileBaseline(safePath);
+            if (baseline && baseline.exists) {
+                applyEditorStateForPath(safePath, baseline.markdown, baseline.metadata, {
+                    skipSave: true,
+                    silentStatus: true
+                });
+            } else {
+                state.markdown = '';
+                if (dom.markdown) dom.markdown.value = '';
+                setMetadataState(cloneMetadata(state.metadata), { silent: true });
+                updateStats();
+                renderPreview();
+            }
+        }
+
+        renderExplorerPanels();
+        scheduleSave();
+        setStatus(hadDraft ? `已丢弃本地改动：${safePath}` : `当前文件无本地改动：${safePath}`);
+    }
+
+    function openPathFromExplorer(pathValue, sourceLabel) {
+        const safePath = normalizePath(pathValue || '');
+        if (!safePath) return;
+
+        const currentPath = normalizePath(state.targetPath || '');
+        if (currentPath === safePath) {
+            renderExplorerPanels();
+            return;
+        }
+
+        if (currentPath && currentPath !== safePath) {
+            syncActiveDraftFromEditor();
+        }
+
+        const draft = getDraftRecord(safePath);
+        if (draft && draft.status === 'deleted') {
+            setStatus(`文件已标记删除，先取消删除再打开：${safePath}`);
+            return;
+        }
+
+        if (draft) {
+            applyEditorStateForPath(safePath, draft.markdown, draft.metadata, {
+                skipSave: false,
+                silentStatus: true
+            });
+            setStatus(`已打开暂存文件${sourceLabel ? `（${sourceLabel}）` : ''}：${safePath}`);
+            return;
+        }
+
+        loadMarkdownFromPath(safePath, sourceLabel || 'Explorer', { skipActiveSync: true });
+    }
+
+    function resolveExplorerResourceContext(contextValue) {
+        const ctx = contextValue && typeof contextValue === 'object' ? contextValue : {};
+        const kind = normalizeExplorerEntryKind(ctx.kind || 'markdown');
+        const path = normalizePath(ctx.path || '');
+        const resourceId = String(ctx.resourceId || '').trim();
+
+        if (!path || !isExplorerResourceKind(kind)) {
+            return null;
+        }
+
+        let item = null;
+        if (kind === 'image') {
+            item = getUploadedImageById(resourceId)
+                || (Array.isArray(state.uploadedImages) ? state.uploadedImages.find(function (entry) {
+                    return normalizePath(entry && entry.assetPath || '') === path;
+                }) : null);
+        } else if (kind === 'media') {
+            item = getUploadedMediaById(resourceId)
+                || (Array.isArray(state.uploadedMedia) ? state.uploadedMedia.find(function (entry) {
+                    return normalizePath(entry && entry.assetPath || '') === path;
+                }) : null);
+        } else if (kind === 'csharp') {
+            item = getUploadedCsharpFileById(resourceId)
+                || (Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles.find(function (entry) {
+                    return normalizePath(entry && entry.assetPath || '') === path;
+                }) : null);
+        }
+
+        if (!item) {
+            item = {
+                id: '',
+                name: getFilenameFromPath(path) || path,
+                assetPath: path,
+                dataUrl: '',
+                content: ''
+            };
+        }
+        return {
+            kind: kind,
+            path: path,
+            item: item
+        };
+    }
+
+    function insertExplorerResourceReference(contextValue) {
+        const resolved = resolveExplorerResourceContext(contextValue);
+        if (!resolved) {
+            setStatus('未找到可插入的资源引用');
+            return;
+        }
+
+        if (resolved.kind === 'image') {
+            insertBlockSnippet(imageInsertionText(resolved.item));
+            setStatus(`已插入图片引用：${resolved.item.name}`);
+            return;
+        }
+
+        if (resolved.kind === 'media') {
+            insertBlockSnippet(mediaInsertionText(resolved.item));
+            setStatus(`已插入视频引用：${resolved.item.name}`);
+            return;
+        }
+
+        if (resolved.kind === 'csharp') {
+            const relPath = buildRelativeResourcePathFromTarget(resolved.item.assetPath || resolved.path || '');
+            insertBlockSnippet(`{{cs:${relPath}}}\n`, relPath);
+            setStatus(`已插入 C# 引用：${resolved.item.name}`);
+        }
+    }
+
+    function previewExplorerResource(contextValue) {
+        const resolved = resolveExplorerResourceContext(contextValue);
+        if (!resolved) {
+            setStatus('未找到可预览资源');
+            return;
+        }
+
+        if (resolved.kind === 'csharp') {
+            const localId = String(resolved.item.id || '').trim();
+            if (localId) {
+                openCsharpEditorModal(localId);
+                setStatus(`已打开 C# 编辑：${resolved.item.name}`);
+                return;
+            }
+            const sourceUrl = `/site/content/${encodePathForUrl(resolved.path)}`;
+            window.open(sourceUrl, '_blank', 'noopener,noreferrer');
+            setStatus(`已打开 C# 源文件：${resolved.item.name}`);
+            return;
+        }
+
+        const fallbackUrl = `/site/content/${encodePathForUrl(resolved.path)}`;
+        const previewUrl = String(resolved.item.dataUrl || fallbackUrl);
+        window.open(previewUrl, '_blank', 'noopener,noreferrer');
+        setStatus(`已打开资源预览：${resolved.item.name}`);
+    }
+
+    function removeExplorerResource(contextValue) {
+        const resolved = resolveExplorerResourceContext(contextValue);
+        if (!resolved) {
+            setStatus('未找到可移除资源');
+            return;
+        }
+
+        const resourceId = String(resolved.item.id || '').trim();
+        if (!resourceId) {
+            setStatus('该资源来自站点内容索引，无法在本地草稿中直接移除');
+            return;
+        }
+
+        const name = String(resolved.item.name || getFilenameFromPath(resolved.path) || resolved.path);
+        if (!window.confirm(`确认从当前草稿资源中移除：${name} ?`)) {
+            return;
+        }
+
+        if (resolved.kind === 'image') {
+            state.uploadedImages = (Array.isArray(state.uploadedImages) ? state.uploadedImages : []).filter(function (it) {
+                return String(it && it.id || '') !== String(resolved.item.id || '');
+            });
+            renderUploadedImages();
+        } else if (resolved.kind === 'media') {
+            state.uploadedMedia = (Array.isArray(state.uploadedMedia) ? state.uploadedMedia : []).filter(function (it) {
+                return String(it && it.id || '') !== String(resolved.item.id || '');
+            });
+            renderUploadedMedia();
+        } else if (resolved.kind === 'csharp') {
+            if (state.csharpEditorTargetId === resolved.item.id) {
+                closeCsharpEditorModal();
+            }
+            state.uploadedCsharpFiles = (Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : []).filter(function (it) {
+                return String(it && it.id || '') !== String(resolved.item.id || '');
+            });
+            refreshCsharpSymbolOptions();
+            renderUploadedCsharpFiles();
+        }
+
+        renderExplorerPanels();
+        scheduleSave();
+        setStatus(`已移除资源：${name}`);
+    }
+
+    function handleExplorerContextAction(action, contextValue) {
+        const context = contextValue && typeof contextValue === 'object'
+            ? contextValue
+            : { path: contextValue || state.targetPath || '', kind: 'markdown', resourceId: '' };
+        const safePath = normalizePath(context.path || state.targetPath || '');
+        const kind = normalizeExplorerEntryKind(context.kind || 'markdown');
+        const key = String(action || '').trim().toLowerCase();
+        if (!key) return;
+
+        if (isExplorerResourceKind(kind)) {
+            if (key === 'insert-resource') {
+                insertExplorerResourceReference(context);
+                return;
+            }
+            if (key === 'preview-resource') {
+                previewExplorerResource(context);
+                return;
+            }
+            if (key === 'edit-csharp') {
+                previewExplorerResource({ ...context, kind: 'csharp' });
+                return;
+            }
+            if (key === 'remove-resource') {
+                removeExplorerResource(context);
+            }
+            return;
+        }
+
+        if (key === 'open-file') {
+            openPathFromExplorer(safePath, '文件树');
+            return;
+        }
+
+        if (key === 'new-file') {
+            const baseDir = getDirectoryFromPath(safePath || state.targetPath || '');
+            const newPath = buildNewDraftPath(baseDir || '怎么贡献');
+            createDraftFile(newPath);
+            return;
+        }
+
+        if (key === 'toggle-delete') {
+            toggleDraftDeletion(safePath);
+            return;
+        }
+
+        if (key === 'discard-file') {
+            discardDraftForPath(safePath);
+        }
+    }
+
     function setTargetPath(nextPath, silent) {
         const previousPath = state.targetPath;
         let normalizedTargetPath = '';
@@ -2655,6 +4390,8 @@
         const nextPath = directory ? `${directory}/${filename}` : filename;
         const changed = setTargetPath(nextPath, true);
         if (!changed) return;
+        syncActiveDraftFromEditor({ overrideDeleted: true });
+        renderExplorerPanels();
         scheduleSave();
         setStatus(`文件名已更新：${filename}`);
     }
@@ -2668,6 +4405,8 @@
             const nextPath = `${nextDirectory}/${filename}`;
             const changed = setTargetPath(nextPath, true);
             if (!changed) return;
+            syncActiveDraftFromEditor({ overrideDeleted: true });
+            renderExplorerPanels();
 
             if (dom.directoryParent) {
                 dom.directoryParent.value = nextDirectory;
@@ -2745,6 +4484,85 @@
         return result;
     }
 
+    function computeExplorerResourceIndexStamp(entries) {
+        return (Array.isArray(entries) ? entries : []).map(function (entry) {
+            return normalizePath(entry && entry.path || '');
+        }).filter(Boolean).sort(function (a, b) {
+            return a.localeCompare(b, 'zh-CN');
+        }).join('|');
+    }
+
+    async function rebuildExplorerIndexedResources(entries) {
+        const list = (Array.isArray(entries) ? entries : []).filter(function (entry) {
+            return !!normalizePath(entry && entry.path || '');
+        });
+        const runId = ++explorerResourceIndexRunId;
+
+        if (list.length <= 0) {
+            indexedExplorerResources = [];
+            renderExplorerPanels();
+            return;
+        }
+
+        const resultMap = new Map();
+        const queue = list.slice();
+        const workerCount = Math.max(1, Math.min(8, queue.length));
+
+        const takeNext = function () {
+            if (queue.length <= 0) return null;
+            return queue.shift();
+        };
+
+        const worker = async function () {
+            while (runId === explorerResourceIndexRunId) {
+                const next = takeNext();
+                if (!next) return;
+                const sourcePath = normalizePath(next.path);
+                if (!sourcePath) continue;
+                try {
+                    const response = await fetch(`/site/content/${encodePathForUrl(sourcePath)}`, { cache: 'no-store' });
+                    if (!response.ok) continue;
+                    const text = await response.text();
+                    if (/^\s*<!doctype html/i.test(text)) continue;
+                    const refs = collectExplorerAssetRefsFromMarkdown(text, sourcePath);
+                    refs.forEach(function (ref) {
+                        const kind = normalizeExplorerEntryKind(ref.kind);
+                        const path = normalizePath(ref.path);
+                        if (!path || !isExplorerResourceKind(kind)) return;
+                        const key = `${kind}:${path}`;
+                        if (resultMap.has(key)) return;
+                        resultMap.set(key, {
+                            key: `indexed:${key}`,
+                            path: path,
+                            title: getFilenameFromPath(path) || path,
+                            kind: kind,
+                            resourceId: ''
+                        });
+                    });
+                } catch (_) {
+                    // Ignore fetch/index failures for single files; keep explorer available.
+                }
+            }
+        };
+
+        const workers = [];
+        for (let i = 0; i < workerCount; i += 1) {
+            workers.push(worker());
+        }
+        await Promise.all(workers);
+
+        if (runId !== explorerResourceIndexRunId) {
+            return;
+        }
+
+        indexedExplorerResources = Array.from(resultMap.values()).sort(function (a, b) {
+            const pathCompare = String(a.path || '').localeCompare(String(b.path || ''), 'zh-CN');
+            if (pathCompare !== 0) return pathCompare;
+            return String(a.kind || '').localeCompare(String(b.kind || ''), 'zh-CN');
+        });
+        renderExplorerPanels();
+    }
+
     async function loadExistingList() {
         if (!dom.existingSelect) return;
 
@@ -2757,20 +4575,56 @@
             const config = await response.json();
             const entries = flattenConfigEntries(config);
             knownMarkdownEntries = entries;
+            const stamp = computeExplorerResourceIndexStamp(entries);
+            if (stamp !== explorerResourceIndexStamp) {
+                explorerResourceIndexStamp = stamp;
+                indexedExplorerResources = [];
+            }
             refreshHierarchySelectors(state.targetPath);
 
             updateChapterSelectOptions();
+            renderExplorerPanels();
+
+            if (stamp && (indexedExplorerResources.length <= 0 || stamp === explorerResourceIndexStamp)) {
+                rebuildExplorerIndexedResources(entries).catch(function () {
+                    // Keep UI responsive if index background scan fails unexpectedly.
+                });
+            }
         } catch (err) {
             setStatus(`读取文章列表失败：${err && err.message ? err.message : String(err)}`);
         }
     }
 
-    async function loadMarkdownFromPath(path, sourceLabel) {
+    async function loadMarkdownFromPath(path, sourceLabel, options) {
+        const opts = options && typeof options === 'object' ? options : {};
         let targetPath = '';
         try {
             targetPath = ensureSafeMarkdownPath(path);
         } catch (err) {
             setStatus(`载入失败：${err && err.message ? err.message : String(err)}`);
+            return;
+        }
+
+        const activePath = normalizePath(state.targetPath || '');
+        if (!opts.skipActiveSync && activePath && activePath !== normalizePath(targetPath)) {
+            syncActiveDraftFromEditor();
+        }
+
+        const localDraft = getDraftRecord(targetPath);
+        if (localDraft && localDraft.status === 'deleted' && !opts.forceRemote) {
+            setStatus(`该文件已标记删除：${targetPath}`);
+            return;
+        }
+
+        if (localDraft && !opts.forceRemote) {
+            applyEditorStateForPath(targetPath, localDraft.markdown, localDraft.metadata, {
+                skipSave: false,
+                silentStatus: true
+            });
+            if (dom.existingSelect) {
+                dom.existingSelect.value = targetPath;
+            }
+            setStatus(`已打开本地暂存${sourceLabel ? `（${sourceLabel}）` : ''}：${targetPath}`);
             return;
         }
 
@@ -2788,20 +4642,20 @@
                 throw new Error('返回的是 HTML 页面，可能该 Markdown 路径不存在');
             }
 
-            state.markdown = String(text || '').replace(/\r\n/g, '\n');
+            const markdown = String(text || '').replace(/\r\n/g, '\n');
+            const parsedFront = parseFrontMatterFromMarkdown(markdown);
+            const metadata = pickMetadataFromParsedFrontMatter(parsedFront);
 
-            if (dom.markdown) {
-                dom.markdown.value = state.markdown;
-            }
+            setFileBaseline(targetPath, {
+                exists: true,
+                markdown: markdown,
+                metadata: metadata
+            });
 
-            const changed = setTargetPath(targetPath, true);
-            if (!changed) {
-                throw new Error('目标路径校验失败');
-            }
-            renderPreview();
-            updateStats();
-            syncMetadataFromMarkdownEditor(state.markdown);
-            persistState();
+            applyEditorStateForPath(targetPath, markdown, metadata, {
+                skipSave: false,
+                silentStatus: true
+            });
 
             if (dom.existingSelect) {
                 dom.existingSelect.value = targetPath;
@@ -2874,6 +4728,25 @@
             }
             state.workerApiUrl = normalizeWorkerApiUrl(parsed.workerApiUrl || state.workerApiUrl);
             state.prTitle = String(parsed.prTitle || state.prTitle || '');
+            state.explorerFilter = String(parsed.explorerFilter || '');
+            const importedFolders = {};
+            Object.keys(ensureObject(parsed.explorerFolders)).forEach(function (folderPath) {
+                const normalized = normalizePath(folderPath);
+                if (!normalized) return;
+                importedFolders[normalized] = !!ensureObject(parsed.explorerFolders)[folderPath];
+            });
+            state.explorerFolders = importedFolders;
+            state.rightPanelTab = normalizeRightPanelTab(parsed.rightPanelTab || state.rightPanelTab);
+            state.layout = {
+                leftWidth: Number(ensureObject(parsed.layout).leftWidth || state.layout.leftWidth || 300),
+                rightWidth: Number(ensureObject(parsed.layout).rightWidth || state.layout.rightWidth || 368)
+            };
+            state.openTabs = Array.isArray(parsed.openTabs) ? parsed.openTabs.map(function (item) {
+                return normalizePath(item || '');
+            }).filter(Boolean) : [];
+            state.draftFiles = ensureObject(parsed.draftFiles);
+            state.fileBaselines = ensureObject(parsed.fileBaselines);
+            state.isDirectPreview = !!parsed.isDirectPreview;
         }
 
         if (dom.markdown) {
@@ -2896,6 +4769,10 @@
         updateChapterSelectOptions();
         updateStats();
         renderPreview();
+        setDirectPreviewMode(!!state.isDirectPreview, true);
+        setRightPanelTab(state.rightPanelTab, { skipSave: true });
+        applyWorkspaceLayout();
+        renderExplorerPanels();
         scheduleSave();
     }
 
@@ -2931,6 +4808,11 @@
         const titleInput = String(dom.prTitle ? dom.prTitle.value : '').trim();
         const linkedPrNumber = String(state.linkedPrNumber || '').trim();
         const authToken = String(state.authToken || '').trim();
+        const targetPath = normalizePath(state.targetPath || '怎么贡献/新文章.md') || '怎么贡献/新文章.md';
+        const markdown = String(state.markdown || '');
+        const stagedMarkdownFiles = buildStagedMarkdownExtraFiles(targetPath, markdown);
+        const extraFiles = stagedMarkdownFiles.concat(buildImageExtraFiles(), buildMediaExtraFiles(), buildCSharpExtraFiles());
+        const manifest = buildPrFileManifest(targetPath, markdown, extraFiles);
 
         return {
             apiUrl: apiUrl,
@@ -2939,11 +4821,12 @@
             linkedPrNumber: linkedPrNumber,
             authToken: authToken,
             payload: {
-                targetPath: state.targetPath,
-                markdown: String(state.markdown || ''),
+                targetPath: targetPath,
+                markdown: markdown,
                 prTitle: titleInput || defaultPrTitle()
             },
-            extraFiles: buildImageExtraFiles().concat(buildMediaExtraFiles(), buildCSharpExtraFiles())
+            extraFiles: extraFiles,
+            manifest: manifest
         };
     }
 
@@ -3056,19 +4939,17 @@
     }
 
     async function handlePrAssetDecisionBeforeSubmit(context) {
-        const decision = await openPrAssetDecisionModal();
+        const decision = await openPrAssetDecisionModal(context);
         const action = String(decision && decision.action || 'cancel');
         if (action === 'cancel') {
-            setStatus('已取消提交，附件已保留');
+            setStatus('已取消提交，本地改动已保留');
             return false;
         }
 
-        if (action === 'clear-new') {
-            clearUploadedAssets({ silent: true, reason: '新 PR 提交前自动清理' });
-            context.extraFiles = [];
+        if (action === 'new-pr') {
             context.linkedPrNumber = '';
             applyLinkedPrSelection('');
-            setStatus('已在新 PR 提交前清空附件，将继续提交 Markdown');
+            setStatus('将创建新 PR，并提交文章/贴图/C# 全部改动');
             return true;
         }
 
@@ -3080,7 +4961,7 @@
             }
             context.linkedPrNumber = selectedPr;
             applyLinkedPrSelection(selectedPr);
-            setStatus(`将继续提交到 PR #${selectedPr}`);
+            setStatus(`将继续提交到 PR #${selectedPr}（包含文章/贴图/C#）`);
             return true;
         }
 
@@ -3116,12 +4997,13 @@
             return;
         }
 
-        if (!String(context.payload.markdown || '').trim()) {
-            setStatus('当前 Markdown 内容为空，无法提交 PR');
+        if (context.manifest.total <= 0) {
+            setStatus('当前没有可提交的文章/贴图/C# 改动');
             return;
         }
 
         persistSubmitDraftSettings(context);
+        renderPrSubmitManifest(context);
 
         if (!context.linkedPrNumber && context.extraFiles.length > 0) {
             const proceed = await handlePrAssetDecisionBeforeSubmit(context);
@@ -3146,7 +5028,7 @@
         if (dom.titlebar) {
             dom.titlebar.textContent = state.isFullscreen
                 ? 'article-studio · focus mode'
-                : 'article-studio · modern writer mode';
+                : 'article-studio · vscode inspired mode';
         }
 
         if (state.isFullscreen && dom.markdown) {
@@ -3158,12 +5040,30 @@
         }
     }
 
+    function setDirectPreviewMode(enabled, silent) {
+        state.isDirectPreview = !!enabled;
+        document.body.classList.toggle('article-studio-page--direct-preview', state.isDirectPreview);
+
+        if (dom.toggleDirectPreview) {
+            dom.toggleDirectPreview.textContent = state.isDirectPreview ? '退出直接预览 (Esc)' : '直接预览';
+        }
+
+        if (state.isDirectPreview) {
+            schedulePreviewSync(true);
+        }
+
+        if (!silent) {
+            setStatus(state.isDirectPreview ? '已进入直接预览模式（Esc 退出）' : '已退出直接预览模式');
+        }
+    }
+
     function updateStats() {
         if (!dom.stats) return;
         const text = String(state.markdown || '');
         const lines = text ? text.split(/\r?\n/).length : 0;
         const chars = text.length;
         dom.stats.textContent = `${lines} 行 · ${chars} 字`;
+        renderPrSubmitManifest();
     }
 
     function loadState() {
@@ -3241,6 +5141,57 @@
             if (typeof parsed.previewImageNoticeEnabled === 'boolean') {
                 state.previewImageNoticeEnabled = parsed.previewImageNoticeEnabled;
             }
+            if (typeof parsed.isDirectPreview === 'boolean') {
+                state.isDirectPreview = parsed.isDirectPreview;
+            }
+            state.explorerFilter = String(parsed.explorerFilter || '');
+            const restoredFolders = {};
+            Object.keys(ensureObject(parsed.explorerFolders)).forEach(function (folderPath) {
+                const normalized = normalizePath(folderPath);
+                if (!normalized) return;
+                restoredFolders[normalized] = !!ensureObject(parsed.explorerFolders)[folderPath];
+            });
+            state.explorerFolders = restoredFolders;
+            state.rightPanelTab = normalizeRightPanelTab(parsed.rightPanelTab || state.rightPanelTab);
+            state.layout = {
+                leftWidth: Number(ensureObject(parsed.layout).leftWidth || state.layout.leftWidth || 300),
+                rightWidth: Number(ensureObject(parsed.layout).rightWidth || state.layout.rightWidth || 368)
+            };
+            state.openTabs = Array.isArray(parsed.openTabs)
+                ? parsed.openTabs.map(function (item) {
+                    return normalizePath(item || '');
+                }).filter(Boolean)
+                : [];
+
+            const restoredDraftMap = {};
+            Object.keys(ensureObject(parsed.draftFiles)).forEach(function (pathKey) {
+                const path = normalizePath(pathKey);
+                if (!path) return;
+                const rawEntry = ensureObject(parsed.draftFiles)[pathKey];
+                restoredDraftMap[path] = {
+                    path: path,
+                    status: normalizeDraftStatus(rawEntry.status),
+                    markdown: String(rawEntry.markdown || ''),
+                    metadata: cloneMetadata(rawEntry.metadata || {}),
+                    updatedAt: String(rawEntry.updatedAt || '')
+                };
+            });
+            state.draftFiles = restoredDraftMap;
+
+            const restoredBaselines = {};
+            Object.keys(ensureObject(parsed.fileBaselines)).forEach(function (pathKey) {
+                const path = normalizePath(pathKey);
+                if (!path) return;
+                const rawBaseline = ensureObject(parsed.fileBaselines)[pathKey];
+                restoredBaselines[path] = {
+                    path: path,
+                    exists: !!rawBaseline.exists,
+                    markdown: String(rawBaseline.markdown || ''),
+                    metadata: cloneMetadata(rawBaseline.metadata || {}),
+                    updatedAt: String(rawBaseline.updatedAt || '')
+                };
+            });
+            state.fileBaselines = restoredBaselines;
         } catch (err) {
             setStatus(`读取本地草稿失败：${err && err.message ? err.message : String(err)}`);
         }
@@ -3262,7 +5213,18 @@
                 uploadedMedia: Array.isArray(state.uploadedMedia) ? state.uploadedMedia : [],
                 uploadedCsharpFiles: Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [],
                 metadata: applyMetadataDefaults(state.metadata),
-                previewImageNoticeEnabled: !!state.previewImageNoticeEnabled
+                previewImageNoticeEnabled: !!state.previewImageNoticeEnabled,
+                isDirectPreview: !!state.isDirectPreview,
+                explorerFilter: String(state.explorerFilter || ''),
+                explorerFolders: ensureObject(state.explorerFolders),
+                rightPanelTab: normalizeRightPanelTab(state.rightPanelTab),
+                layout: {
+                    leftWidth: Number(state.layout && state.layout.leftWidth || 300),
+                    rightWidth: Number(state.layout && state.layout.rightWidth || 368)
+                },
+                openTabs: Array.isArray(state.openTabs) ? state.openTabs : [],
+                draftFiles: ensureObject(state.draftFiles),
+                fileBaselines: ensureObject(state.fileBaselines)
             }));
             setStatus('Markdown 草稿已自动保存');
         } catch (err) {
@@ -3625,9 +5587,11 @@
 
         state.markdown = String(nextText || '');
         dom.markdown.value = state.markdown;
+        syncActiveDraftFromEditor();
         updateStats();
         renderPreview();
         scheduleSave();
+        renderExplorerPanels();
 
         focusEditor();
         if (Number.isFinite(selectionStart) && Number.isFinite(selectionEnd)) {
@@ -5190,7 +7154,18 @@
             uploadedMedia: Array.isArray(state.uploadedMedia) ? state.uploadedMedia : [],
             uploadedCsharpFiles: Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [],
             metadata: applyMetadataDefaults(state.metadata),
-            previewImageNoticeEnabled: !!state.previewImageNoticeEnabled
+            previewImageNoticeEnabled: !!state.previewImageNoticeEnabled,
+            isDirectPreview: !!state.isDirectPreview,
+            explorerFilter: String(state.explorerFilter || ''),
+            explorerFolders: ensureObject(state.explorerFolders),
+            rightPanelTab: normalizeRightPanelTab(state.rightPanelTab),
+            layout: {
+                leftWidth: Number(state.layout && state.layout.leftWidth || 300),
+                rightWidth: Number(state.layout && state.layout.rightWidth || 368)
+            },
+            openTabs: Array.isArray(state.openTabs) ? state.openTabs : [],
+            draftFiles: ensureObject(state.draftFiles),
+            fileBaselines: ensureObject(state.fileBaselines)
         };
 
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -5339,6 +7314,8 @@
         if (!window.confirm('确认清空当前 Markdown 草稿吗？')) return;
         state.markdown = '';
         if (dom.markdown) dom.markdown.value = '';
+        syncActiveDraftFromEditor({ overrideDeleted: true });
+        renderExplorerPanels();
         renderPreview();
         updateStats();
         persistState();
@@ -5349,9 +7326,29 @@
         loadState();
         loadAuthSession();
         const consumedOauthHash = consumeOauthResultFromHash();
+        const leftDocked = !!(dom.leftPanelModal && dom.leftPanelModal.classList.contains('studio-side-panel-modal--dock'));
+        const rightDocked = !!(dom.rightPanelModal && dom.rightPanelModal.classList.contains('studio-side-panel-modal--dock'));
+        state.rightPanelTab = normalizeRightPanelTab(state.rightPanelTab);
+        if (!state.layout || typeof state.layout !== 'object') {
+            state.layout = {
+                leftWidth: 300,
+                rightWidth: 368
+            };
+        }
+        if (!state.explorerFolders || typeof state.explorerFolders !== 'object') {
+            state.explorerFolders = {};
+        }
 
         if (!setTargetPath(state.targetPath, true)) {
             setTargetPath('怎么贡献/新文章.md', true);
+        }
+        if (!getFileBaseline(state.targetPath)) {
+            const knownCurrent = !!findKnownEntryByPath(state.targetPath);
+            setFileBaseline(state.targetPath, {
+                exists: knownCurrent,
+                markdown: knownCurrent ? String(state.markdown || '') : '',
+                metadata: cloneMetadata(state.metadata)
+            });
         }
         renderUploadedImages();
         renderUploadedMedia();
@@ -5364,6 +7361,14 @@
         ensureFlowchartStateInitialized();
         syncFlowchartGeneratedSource(false);
         renderFlowchartDrawer();
+        bindWorkspaceResizers();
+        window.addEventListener('resize', applyWorkspaceLayout);
+        if (dom.explorerFilter) {
+            dom.explorerFilter.value = state.explorerFilter;
+        }
+        ensureOpenTab(state.targetPath);
+        renderExplorerPanels();
+        setDirectPreviewMode(!!state.isDirectPreview, true);
 
         if (dom.markdown) {
             dom.markdown.value = state.markdown;
@@ -5372,6 +7377,8 @@
                 updateStats();
                 renderPreview();
                 syncMetadataFromMarkdownEditor(state.markdown);
+                syncActiveDraftFromEditor();
+                renderExplorerPanels();
                 scheduleSave();
             });
 
@@ -5430,7 +7437,7 @@
             });
         }
 
-        if (dom.openExplorer) {
+        if (dom.openExplorer && !leftDocked) {
             dom.openExplorer.addEventListener('click', function () {
                 const nextOpen = !isSidePanelModalOpen('left');
                 setSidePanelModalOpen('left', nextOpen);
@@ -5438,7 +7445,7 @@
             });
         }
 
-        if (dom.openPublish) {
+        if (dom.openPublish && !rightDocked) {
             dom.openPublish.addEventListener('click', function () {
                 const nextOpen = !isSidePanelModalOpen('right');
                 setSidePanelModalOpen('right', nextOpen);
@@ -5498,8 +7505,7 @@
 
         if (dom.prAssetActionClearNew) {
             dom.prAssetActionClearNew.addEventListener('click', function () {
-                setPrAssetDecisionStage('clear');
-                setStatus('请确认：是否清空附件后继续创建新 PR');
+                closePrAssetDecisionModal({ action: 'new-pr' });
             });
         }
 
@@ -5513,7 +7519,7 @@
         if (dom.prAssetActionCancel) {
             dom.prAssetActionCancel.addEventListener('click', function () {
                 closePrAssetDecisionModal({ action: 'cancel' });
-                setStatus('已取消提交，附件已保留');
+                setStatus('已取消提交，本地改动已保留');
             });
         }
 
@@ -5544,7 +7550,7 @@
         if (dom.prAssetContinueBack) {
             dom.prAssetContinueBack.addEventListener('click', function () {
                 setPrAssetDecisionStage('choice');
-                setStatus('已返回附件提交流程三选入口');
+                setStatus('已返回提交流程选择');
             });
         }
 
@@ -5560,23 +7566,10 @@
             });
         }
 
-        if (dom.prAssetClearBack) {
-            dom.prAssetClearBack.addEventListener('click', function () {
-                setPrAssetDecisionStage('choice');
-                setStatus('已返回附件提交流程三选入口');
-            });
-        }
-
-        if (dom.prAssetClearConfirm) {
-            dom.prAssetClearConfirm.addEventListener('click', function () {
-                closePrAssetDecisionModal({ action: 'clear-new' });
-            });
-        }
-
         if (dom.prAssetDecisionClose) {
             dom.prAssetDecisionClose.addEventListener('click', function () {
                 closePrAssetDecisionModal({ action: 'cancel' });
-                setStatus('已取消提交，附件已保留');
+                setStatus('已取消提交，本地改动已保留');
             });
         }
 
@@ -5584,25 +7577,25 @@
             dom.prAssetDecisionModal.addEventListener('click', function (event) {
                 if (event.target !== dom.prAssetDecisionModal) return;
                 closePrAssetDecisionModal({ action: 'cancel' });
-                setStatus('已取消提交，附件已保留');
+                setStatus('已取消提交，本地改动已保留');
             });
         }
 
-        if (dom.leftPanelClose) {
+        if (dom.leftPanelClose && !leftDocked) {
             dom.leftPanelClose.addEventListener('click', function () {
                 setSidePanelModalOpen('left', false);
                 setStatus('Explorer 面板已关闭');
             });
         }
 
-        if (dom.rightPanelClose) {
+        if (dom.rightPanelClose && !rightDocked) {
             dom.rightPanelClose.addEventListener('click', function () {
                 setSidePanelModalOpen('right', false);
                 setStatus('Publish 面板已关闭');
             });
         }
 
-        if (dom.leftPanelModal) {
+        if (dom.leftPanelModal && !leftDocked) {
             dom.leftPanelModal.addEventListener('click', function (event) {
                 if (event.target !== dom.leftPanelModal) return;
                 setSidePanelModalOpen('left', false);
@@ -5610,7 +7603,7 @@
             });
         }
 
-        if (dom.rightPanelModal) {
+        if (dom.rightPanelModal && !rightDocked) {
             dom.rightPanelModal.addEventListener('click', function (event) {
                 if (event.target !== dom.rightPanelModal) return;
                 setSidePanelModalOpen('right', false);
@@ -5949,6 +7942,8 @@
             dom.targetPath.addEventListener('change', function () {
                 const changed = setTargetPath(dom.targetPath.value, true);
                 if (!changed) return;
+                syncActiveDraftFromEditor({ overrideDeleted: true });
+                renderExplorerPanels();
                 scheduleSave();
                 setStatus('目标路径已更新');
             });
@@ -5995,10 +7990,7 @@
             dom.fileSelect.addEventListener('change', function () {
                 const value = String(dom.fileSelect.value || '').trim();
                 if (!value) return;
-                const changed = setTargetPath(value, true);
-                if (!changed) return;
-                scheduleSave();
-                setStatus('已通过层级导航选择文章');
+                openPathFromExplorer(value, '层级导航');
             });
         }
 
@@ -6023,7 +8015,7 @@
                     return;
                 }
 
-                loadMarkdownFromPath(dom.existingSelect.value, '目录选择');
+                openPathFromExplorer(dom.existingSelect.value, '目录选择');
             });
         }
 
@@ -6034,7 +8026,7 @@
                     return;
                 }
 
-                loadMarkdownFromPath(dom.targetPath.value, '路径输入');
+                openPathFromExplorer(dom.targetPath.value, '路径输入');
             });
         }
 
@@ -6117,6 +8109,8 @@
                 state.markdown = defaultTemplate();
                 if (dom.markdown) dom.markdown.value = state.markdown;
                 syncMetadataFromMarkdownEditor(state.markdown);
+                syncActiveDraftFromEditor({ overrideDeleted: true });
+                renderExplorerPanels();
                 updateStats();
                 renderPreview();
                 persistState();
@@ -6179,12 +8173,239 @@
             });
         }
 
+        if (dom.activityButtons && dom.activityButtons.length > 0) {
+            dom.activityButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const rail = String(button.getAttribute('data-studio-rail') || '').trim().toLowerCase();
+                    dom.activityButtons.forEach(function (other) {
+                        other.classList.toggle('is-active', other === button);
+                    });
+
+                    if (rail === 'explorer' || rail === 'search') {
+                        if (dom.explorerFilter) {
+                            focusElementWithoutScroll(dom.explorerFilter);
+                            if (rail === 'search' && typeof dom.explorerFilter.select === 'function') {
+                                dom.explorerFilter.select();
+                            }
+                        }
+                        return;
+                    }
+
+                    if (rail === 'preview') {
+                        setDirectPreviewMode(!state.isDirectPreview, false);
+                        return;
+                    }
+
+                    if (rail === 'publish') {
+                        setRightPanelTab('publish');
+                        if (dom.rightPanelModal) {
+                            dom.rightPanelModal.scrollTop = 0;
+                        }
+                        if (dom.submitPr) {
+                            focusElementWithoutScroll(dom.submitPr);
+                        }
+                        return;
+                    }
+
+                    if (rail === 'settings' && dom.openMarkdownGuide) {
+                        dom.openMarkdownGuide.click();
+                    }
+                });
+            });
+        }
+
+        if (dom.rightTabButtons && dom.rightTabButtons.length > 0) {
+            dom.rightTabButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const tab = normalizeRightPanelTab(button.getAttribute('data-right-tab'));
+                    setRightPanelTab(tab);
+                });
+            });
+        }
+
+        if (dom.commandProxyButtons && dom.commandProxyButtons.length > 0) {
+            dom.commandProxyButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    const targetId = String(button.getAttribute('data-proxy-target') || '').trim();
+                    if (!targetId) return;
+                    const target = document.getElementById(targetId);
+                    if (!target) {
+                        setStatus(`未找到命令目标：${targetId}`);
+                        return;
+                    }
+                    target.click();
+                });
+            });
+        }
+
+        if (dom.explorerFilter) {
+            dom.explorerFilter.addEventListener('input', function () {
+                state.explorerFilter = String(dom.explorerFilter.value || '');
+                renderExplorerTree();
+                scheduleSave();
+            });
+        }
+
+        if (dom.explorerRefresh) {
+            dom.explorerRefresh.addEventListener('click', function () {
+                loadExistingList();
+                setStatus('已刷新文章导航');
+            });
+        }
+
+        if (dom.explorerTree) {
+            dom.explorerTree.addEventListener('click', function (event) {
+                const folderTrigger = event.target && event.target.closest ? event.target.closest('[data-tree-folder]') : null;
+                if (folderTrigger) {
+                    const folderPath = normalizePath(folderTrigger.getAttribute('data-tree-folder') || '');
+                    if (folderPath) {
+                        toggleExplorerFolder(folderPath);
+                    }
+                    return;
+                }
+
+                const menuTrigger = event.target && event.target.closest ? event.target.closest('[data-tree-menu-path]') : null;
+                if (menuTrigger) {
+                    const menuPath = normalizePath(menuTrigger.getAttribute('data-tree-menu-path') || '');
+                    const menuKind = normalizeExplorerEntryKind(menuTrigger.getAttribute('data-tree-menu-kind') || 'markdown');
+                    const menuId = String(menuTrigger.getAttribute('data-tree-menu-id') || '').trim();
+                    const menuKey = String(menuTrigger.getAttribute('data-tree-key') || '').trim();
+                    const rect = menuTrigger.getBoundingClientRect();
+                    openExplorerContextMenu(menuPath, rect.left, rect.bottom + 4, {
+                        kind: menuKind,
+                        resourceId: menuId,
+                        treeKey: menuKey
+                    });
+                    return;
+                }
+
+                const openTrigger = event.target && event.target.closest ? event.target.closest('[data-tree-path]') : null;
+                if (!openTrigger) return;
+                const openPath = normalizePath(openTrigger.getAttribute('data-tree-path') || '');
+                const openKind = normalizeExplorerEntryKind(openTrigger.getAttribute('data-tree-kind') || 'markdown');
+                const openId = String(openTrigger.getAttribute('data-tree-id') || '').trim();
+                if (!openPath) return;
+                hideExplorerContextMenu();
+                if (openKind === 'markdown') {
+                    openPathFromExplorer(openPath, '文件树');
+                    return;
+                }
+                setStatus(`已选中资源：${openPath}（右键可插入/预览/移除）`);
+                if (openKind === 'csharp' && openId) {
+                    openCsharpEditorModal(openId);
+                }
+            });
+
+            dom.explorerTree.addEventListener('contextmenu', function (event) {
+                const row = event.target && event.target.closest ? event.target.closest('[data-tree-path]') : null;
+                if (!row) return;
+                event.preventDefault();
+                const path = normalizePath(row.getAttribute('data-tree-path') || '');
+                const kind = normalizeExplorerEntryKind(row.getAttribute('data-tree-kind') || 'markdown');
+                const resourceId = String(row.getAttribute('data-tree-id') || '').trim();
+                const treeKey = String(row.getAttribute('data-tree-key') || '').trim();
+                if (!path) return;
+                openExplorerContextMenu(path, event.clientX, event.clientY, {
+                    kind: kind,
+                    resourceId: resourceId,
+                    treeKey: treeKey
+                });
+            });
+        }
+
+        if (dom.stageList) {
+            dom.stageList.addEventListener('click', function (event) {
+                const row = event.target && event.target.closest ? event.target.closest('[data-path]') : null;
+                if (!row) return;
+                const path = normalizePath(row.getAttribute('data-path') || '');
+                if (!path) return;
+                openPathFromExplorer(path, '暂存区');
+            });
+        }
+
+        if (dom.stageClear) {
+            dom.stageClear.addEventListener('click', function () {
+                const keys = Object.keys(ensureObject(state.draftFiles));
+                if (keys.length <= 0) {
+                    setStatus('当前暂无暂存改动');
+                    return;
+                }
+                if (!window.confirm('确认清空全部暂存改动吗？')) return;
+                state.draftFiles = {};
+                renderExplorerPanels();
+                scheduleSave();
+                setStatus('已清空全部暂存改动');
+            });
+        }
+
+        if (dom.explorerContextTrigger) {
+            dom.explorerContextTrigger.addEventListener('click', function (event) {
+                event.preventDefault();
+                if (!state.explorerContext.open) {
+                    const rect = dom.explorerContextTrigger.getBoundingClientRect();
+                    openExplorerContextMenu(state.targetPath, rect.left, rect.bottom + 4, {
+                        kind: 'markdown',
+                        resourceId: '',
+                        treeKey: `markdown:${normalizePath(state.targetPath || '')}`
+                    });
+                    return;
+                }
+                hideExplorerContextMenu();
+            });
+        }
+
+        if (dom.explorerContextMenu) {
+            dom.explorerContextMenu.addEventListener('click', function (event) {
+                const actionButton = event.target && event.target.closest ? event.target.closest('[data-context-action]') : null;
+                if (!actionButton) return;
+                const action = String(actionButton.getAttribute('data-context-action') || '').trim();
+                const context = {
+                    path: normalizePath(state.explorerContext.path || state.targetPath || ''),
+                    kind: normalizeExplorerEntryKind(state.explorerContext.kind || 'markdown'),
+                    resourceId: String(state.explorerContext.resourceId || '').trim(),
+                    treeKey: String(state.explorerContext.treeKey || '').trim()
+                };
+                hideExplorerContextMenu();
+                handleExplorerContextAction(action, context);
+            });
+        }
+
         if (dom.syntaxButtons && dom.syntaxButtons.length > 0) {
             dom.syntaxButtons.forEach(function (button) {
                 button.addEventListener('click', function () {
                     const action = button.getAttribute('data-studio-insert') || '';
                     applyInsertAction(action);
                 });
+            });
+        }
+
+        if (dom.tabsStrip) {
+            dom.tabsStrip.addEventListener('click', function (event) {
+                const closeTrigger = event.target && event.target.closest ? event.target.closest('[data-tab-close-path]') : null;
+                if (closeTrigger) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const closePath = normalizePath(closeTrigger.getAttribute('data-tab-close-path') || '');
+                    if (!closePath) return;
+                    closeTabByPath(closePath);
+                    return;
+                }
+
+                const button = event.target && event.target.closest ? event.target.closest('[data-tab-path]') : null;
+                if (!button) return;
+                const path = normalizePath(button.getAttribute('data-tab-path') || '');
+                if (!path) return;
+                openPathFromExplorer(path, '标签页');
+            });
+
+            dom.tabsStrip.addEventListener('auxclick', function (event) {
+                if (event.button !== 1) return;
+                const button = event.target && event.target.closest ? event.target.closest('[data-tab-path]') : null;
+                if (!button) return;
+                event.preventDefault();
+                const path = normalizePath(button.getAttribute('data-tab-path') || '');
+                if (!path) return;
+                closeTabByPath(path);
             });
         }
 
@@ -6197,6 +8418,12 @@
             });
         }
 
+        if (dom.toggleDirectPreview) {
+            dom.toggleDirectPreview.addEventListener('click', function () {
+                setDirectPreviewMode(!state.isDirectPreview, false);
+            });
+        }
+
         if (dom.toggleFullscreen) {
             dom.toggleFullscreen.addEventListener('click', function () {
                 setFullscreenMode(!state.isFullscreen, false);
@@ -6204,10 +8431,16 @@
         }
 
         document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && state.explorerContext.open) {
+                event.preventDefault();
+                hideExplorerContextMenu();
+                return;
+            }
+
             if (event.key === 'Escape' && isSidePanelModalOpen('asset')) {
                 event.preventDefault();
                 closePrAssetDecisionModal({ action: 'cancel' });
-                setStatus('已取消提交，附件已保留');
+                setStatus('已取消提交，本地改动已保留');
                 return;
             }
 
@@ -6259,6 +8492,12 @@
                 return;
             }
 
+            if (event.key === 'Escape' && state.isDirectPreview) {
+                event.preventDefault();
+                setDirectPreviewMode(false, false);
+                return;
+            }
+
             if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'Enter') {
                 event.preventDefault();
                 setFullscreenMode(!state.isFullscreen, false);
@@ -6273,6 +8512,13 @@
             }
         });
 
+        document.addEventListener('click', function (event) {
+            if (!state.explorerContext.open || !dom.explorerContextMenu) return;
+            if (dom.explorerContextMenu.contains(event.target)) return;
+            if (dom.explorerContextTrigger && dom.explorerContextTrigger.contains(event.target)) return;
+            hideExplorerContextMenu();
+        });
+
         window.addEventListener('message', function (event) {
             if (event.origin !== window.location.origin) return;
             const data = event && event.data ? event.data : null;
@@ -6283,9 +8529,13 @@
         });
 
         setFullscreenMode(false, true);
+        setDirectPreviewMode(!!state.isDirectPreview, true);
+        setRightPanelTab(state.rightPanelTab, { skipSave: true });
+        applyWorkspaceLayout();
         setPrSubmitBusy(false);
         updateStats();
         renderPreview();
+        renderExplorerPanels();
         loadExistingList();
         if (state.authToken) {
             verifyAuthSession();
