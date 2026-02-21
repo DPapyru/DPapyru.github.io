@@ -519,6 +519,63 @@ function pushUnifiedSubmitLog(line) {
     }
 }
 
+function snapshotHasStagedPayload(snapshot) {
+    return !!(snapshot && typeof snapshot === 'object' && (
+        Array.isArray(snapshot.files) ||
+        typeof snapshot.targetPath === 'string' ||
+        typeof snapshot.markdown === 'string' ||
+        typeof snapshot.workspace === 'string'
+    ));
+}
+
+function extractStagedSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') return null;
+    if (snapshot.staged && typeof snapshot.staged === 'object') {
+        return snapshot.staged;
+    }
+    if (snapshotHasStagedPayload(snapshot)) {
+        return snapshot;
+    }
+    return null;
+}
+
+function resolvePluginSnapshotForSave(workspace) {
+    const plugin = getWorkspacePlugin(workspace);
+    let pluginSnapshot = null;
+
+    if (plugin && typeof plugin.getSnapshot === 'function') {
+        pluginSnapshot = plugin.getSnapshot({
+            dom,
+            state,
+            route: state.route
+        });
+    }
+
+    const staged = extractStagedSnapshot(pluginSnapshot) || state.subapps.snapshotByWorkspace[workspace] || null;
+    if (workspace === 'markdown') {
+        if (pluginSnapshot && typeof pluginSnapshot === 'object' && !snapshotHasStagedPayload(pluginSnapshot)) {
+            return {
+                staged,
+                legacyState: pluginSnapshot.legacyState && typeof pluginSnapshot.legacyState === 'object' ? pluginSnapshot.legacyState : null,
+                viewerPreview: pluginSnapshot.viewerPreview && typeof pluginSnapshot.viewerPreview === 'object' ? pluginSnapshot.viewerPreview : null
+            };
+        }
+        return { staged, legacyState: null, viewerPreview: null };
+    }
+    if (workspace === 'shader') {
+        if (pluginSnapshot && typeof pluginSnapshot === 'object' && !snapshotHasStagedPayload(pluginSnapshot)) {
+            return {
+                staged,
+                contributeState: pluginSnapshot.contributeState && typeof pluginSnapshot.contributeState === 'object' ? pluginSnapshot.contributeState : null,
+                playgroundState: pluginSnapshot.playgroundState && typeof pluginSnapshot.playgroundState === 'object' ? pluginSnapshot.playgroundState : null,
+                contributionDraft: pluginSnapshot.contributionDraft && typeof pluginSnapshot.contributionDraft === 'object' ? pluginSnapshot.contributionDraft : null
+            };
+        }
+        return { staged, contributeState: null, playgroundState: null, contributionDraft: null };
+    }
+    return null;
+}
+
 function rememberUnifiedStateSnapshot() {
     if (!state.unifiedWorkspaceState) return;
 
@@ -532,8 +589,8 @@ function rememberUnifiedStateSnapshot() {
                 content: String(file.content || '')
             }))
         },
-        markdown: state.subapps.snapshotByWorkspace.markdown,
-        shader: state.subapps.snapshotByWorkspace.shader
+        markdown: resolvePluginSnapshotForSave('markdown'),
+        shader: resolvePluginSnapshotForSave('shader')
     };
 
     const workerApiUrl = normalizeWorkerApiUrl(dom.unifiedWorkerUrl ? dom.unifiedWorkerUrl.value : DEFAULT_WORKER_API_URL) || DEFAULT_WORKER_API_URL;
@@ -563,7 +620,7 @@ function scheduleUnifiedStateSave() {
         try {
             await saveUnifiedWorkspaceState(state.unifiedWorkspaceState);
         } catch (error) {
-            addEvent('error', `保存 workspace.v2 失败：${error.message}`);
+            addEvent('error', `保存 workspace.v3 失败：${error.message}`);
         }
     }, UNIFIED_STATE_SAVE_DELAY);
 }
@@ -624,14 +681,22 @@ function requestWorkspaceCollect(workspace) {
     if (!plugin || typeof plugin.collectStaged !== 'function') {
         return Promise.resolve(state.subapps.snapshotByWorkspace[safeWorkspace]);
     }
-    const snapshot = plugin.collectStaged({
-        dom,
-        state,
-        route: state.route
-    });
-    state.subapps.snapshotByWorkspace[safeWorkspace] = snapshot && typeof snapshot === 'object' ? snapshot : null;
-    scheduleUnifiedStateSave();
-    return Promise.resolve(state.subapps.snapshotByWorkspace[safeWorkspace]);
+    try {
+        const snapshot = plugin.collectStaged({
+            dom,
+            state,
+            route: state.route
+        });
+        const staged = extractStagedSnapshot(snapshot);
+        if (staged) {
+            state.subapps.snapshotByWorkspace[safeWorkspace] = staged;
+        }
+        scheduleUnifiedStateSave();
+        return Promise.resolve(state.subapps.snapshotByWorkspace[safeWorkspace]);
+    } catch (error) {
+        addEvent('warn', `${safeWorkspace} staged 收集失败，沿用上次快照：${error.message}`);
+        return Promise.resolve(state.subapps.snapshotByWorkspace[safeWorkspace]);
+    }
 }
 
 function dispatchWorkspaceCommand(workspace, commandId) {
@@ -723,9 +788,10 @@ function collectCsharpWorkspaceEntries() {
 }
 
 function collectSubappEntries(snapshot, workspace) {
-    if (!snapshot || typeof snapshot !== 'object') return [];
+    const staged = extractStagedSnapshot(snapshot);
+    if (!staged || typeof staged !== 'object') return [];
     const output = [];
-    const files = Array.isArray(snapshot.files) ? snapshot.files : [];
+    const files = Array.isArray(staged.files) ? staged.files : [];
 
     files.forEach((item) => {
         if (!item || typeof item !== 'object') return;
@@ -740,8 +806,8 @@ function collectSubappEntries(snapshot, workspace) {
         });
     });
 
-    const targetPath = normalizeRepoPath(snapshot.targetPath);
-    const markdown = String(snapshot.markdown || '');
+    const targetPath = normalizeRepoPath(staged.targetPath);
+    const markdown = String(staged.markdown || '');
     if (targetPath && markdown) {
         const exists = output.some((item) => item.path === targetPath);
         if (!exists) {
@@ -873,8 +939,8 @@ function buildAnchorCandidates(collection) {
         appendPath(item.path);
     });
 
-    const markdownSnapshot = state.subapps.snapshotByWorkspace.markdown;
-    const shaderSnapshot = state.subapps.snapshotByWorkspace.shader;
+    const markdownSnapshot = extractStagedSnapshot(state.subapps.snapshotByWorkspace.markdown);
+    const shaderSnapshot = extractStagedSnapshot(state.subapps.snapshotByWorkspace.shader);
     if (markdownSnapshot && markdownSnapshot.targetPath) appendPath(markdownSnapshot.targetPath);
     if (shaderSnapshot && shaderSnapshot.targetPath) appendPath(shaderSnapshot.targetPath);
     MARKDOWN_FALLBACK_ANCHORS.forEach(appendPath);
@@ -935,9 +1001,11 @@ function persistUnifiedCollection(collection) {
 async function collectUnifiedChanges(options) {
     const opts = options || {};
     const silent = !!opts.silent;
-    const activeWorkspace = normalizeWorkspaceName(state.route.workspace);
-    if (opts.requestSubapp !== false && (activeWorkspace === 'markdown' || activeWorkspace === 'shader')) {
-        await requestWorkspaceCollect(activeWorkspace);
+    if (opts.requestSubapp !== false) {
+        await Promise.all([
+            requestWorkspaceCollect('markdown'),
+            requestWorkspaceCollect('shader')
+        ]);
     }
 
     const entries = []
@@ -1223,17 +1291,56 @@ function buildGithubLoginUrl(workerApiUrl) {
     return target.toString();
 }
 
+function restoreWorkspaceSnapshotsFromUnifiedState() {
+    const snapshots = state.unifiedWorkspaceState && state.unifiedWorkspaceState.snapshots
+        ? state.unifiedWorkspaceState.snapshots
+        : {};
+
+    ['markdown', 'shader'].forEach((workspace) => {
+        const plugin = getWorkspacePlugin(workspace);
+        if (!plugin || typeof plugin.restoreSnapshot !== 'function') return;
+        const snapshot = snapshots && typeof snapshots === 'object' ? snapshots[workspace] : null;
+        if (!snapshot || typeof snapshot !== 'object') return;
+        plugin.restoreSnapshot(snapshot, { dom, state, route: state.route });
+    });
+}
+
+function csharpWorkspaceFromUnifiedState() {
+    const snapshots = state.unifiedWorkspaceState && state.unifiedWorkspaceState.snapshots;
+    const csharp = snapshots && snapshots.csharp && typeof snapshots.csharp === 'object'
+        ? snapshots.csharp
+        : null;
+    if (!csharp || !Array.isArray(csharp.files) || csharp.files.length <= 0) {
+        return null;
+    }
+    return {
+        schemaVersion: 1,
+        activeFileId: String(csharp.files[0].id || ''),
+        files: csharp.files.map((item, index) => ({
+            id: String(item && item.id || `file-${index + 1}`),
+            path: String(item && item.path || `File${index + 1}.cs`),
+            content: String(item && item.content || '')
+        }))
+    };
+}
+
 function initializeUnifiedState(loadedState) {
     const initial = loadedState && typeof loadedState === 'object'
         ? loadedState
         : {
             lastWorkspace: 'csharp',
-            snapshots: { csharp: { updatedAt: '', files: [] }, markdown: null, shader: null },
+            snapshots: {
+                csharp: { updatedAt: '', files: [] },
+                markdown: { staged: null, legacyState: null, viewerPreview: null },
+                shader: { staged: null, contributeState: null, playgroundState: null, contributionDraft: null }
+            },
             submit: { workerApiUrl: '', prTitle: '', existingPrNumber: '', anchorPath: '', resume: null, lastCollection: null }
         };
     state.unifiedWorkspaceState = initial;
-    state.subapps.snapshotByWorkspace.markdown = initial.snapshots && initial.snapshots.markdown ? initial.snapshots.markdown : null;
-    state.subapps.snapshotByWorkspace.shader = initial.snapshots && initial.snapshots.shader ? initial.snapshots.shader : null;
+    const markdownSnapshot = initial.snapshots && initial.snapshots.markdown ? initial.snapshots.markdown : null;
+    const shaderSnapshot = initial.snapshots && initial.snapshots.shader ? initial.snapshots.shader : null;
+    state.subapps.snapshotByWorkspace.markdown = extractStagedSnapshot(markdownSnapshot);
+    state.subapps.snapshotByWorkspace.shader = extractStagedSnapshot(shaderSnapshot);
     state.unified.resumeState = initial.submit && initial.submit.resume ? initial.submit.resume : null;
 
     if (dom.unifiedWorkerUrl) {
@@ -2711,7 +2818,7 @@ async function bootstrap() {
     updateWorkspaceButtons();
     applyUnifiedSubmitPanelVisibility();
 
-    dom.workspaceVersion.textContent = 'workspace.v2';
+    dom.workspaceVersion.textContent = 'workspace.v3';
     const enhancedCsharpLanguage = createEnhancedCsharpLanguage(csharpLanguage);
     monaco.languages.setLanguageConfiguration('csharp', csharpConf);
     monaco.languages.setMonarchTokensProvider('csharp', enhancedCsharpLanguage);
@@ -2728,6 +2835,7 @@ async function bootstrap() {
     }
 
     registerWorkspacePlugins();
+    restoreWorkspaceSnapshotsFromUnifiedState();
 
     state.initialized = false;
     setStatus('初始化中...');
@@ -2890,7 +2998,9 @@ async function bootstrap() {
             const safeWorkspace = normalizeWorkspaceName(workspace);
             if (safeWorkspace !== 'markdown' && safeWorkspace !== 'shader') return false;
             if (!snapshot || typeof snapshot !== 'object') return false;
-            state.subapps.snapshotByWorkspace[safeWorkspace] = snapshot;
+            const staged = extractStagedSnapshot(snapshot);
+            if (!staged) return false;
+            state.subapps.snapshotByWorkspace[safeWorkspace] = staged;
             scheduleUnifiedStateSave();
             return true;
         },
@@ -2938,7 +3048,7 @@ async function bootstrap() {
 
     await loadInitialIndex();
 
-    const workspace = await loadWorkspace();
+    const workspace = csharpWorkspaceFromUnifiedState() || await loadWorkspace();
     applyWorkspace(workspace);
     state.initialized = true;
     state.editor.updateOptions({ readOnly: false });

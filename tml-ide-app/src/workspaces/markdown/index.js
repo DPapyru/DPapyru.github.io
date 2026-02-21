@@ -6,6 +6,35 @@ const TEMPLATE_PATH = '/tml-ide/subapps/markdown/index.html';
 const IGNORE_SCRIPT_PATTERN = /(?:\/shared\/assets\/js\/site-core\.js|\/site\/assets\/js\/navigation\.js|\/site\/assets\/js\/accent-theme\.js|\/tml-ide\/subapps\/bridge\/markdown-bridge\.js)$/i;
 
 const STORAGE_KEY = 'articleStudioMarkdown.v9';
+const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
+
+function readJsonStorage(key) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (_err) {
+        return null;
+    }
+}
+
+function writeJsonStorage(key, value) {
+    try {
+        if (!value || typeof value !== 'object') return;
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch (_err) {
+        // Ignore persistence failure.
+    }
+}
+
+function resolveStagedSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') return null;
+    if (snapshot.staged && typeof snapshot.staged === 'object') {
+        return snapshot.staged;
+    }
+    return snapshot;
+}
 
 export function createMarkdownWorkspacePlugin() {
     let root = null;
@@ -42,18 +71,39 @@ export function createMarkdownWorkspacePlugin() {
             }
         },
         getSnapshot() {
-            return lastSnapshot || collectMarkdownWorkspaceSnapshot();
+            const staged = lastSnapshot || (root ? collectMarkdownWorkspaceSnapshot() : null);
+            return {
+                staged,
+                legacyState: readJsonStorage(STORAGE_KEY),
+                viewerPreview: readJsonStorage(VIEWER_PREVIEW_STORAGE_KEY)
+            };
         },
         restoreSnapshot(snapshot) {
             if (!snapshot || typeof snapshot !== 'object') return;
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
-            } catch (_err) {
-                // Ignore persistence failure.
+            const staged = resolveStagedSnapshot(snapshot);
+            if (staged && typeof staged === 'object') {
+                lastSnapshot = staged;
             }
-            lastSnapshot = snapshot;
+            const legacyState = snapshot.legacyState && typeof snapshot.legacyState === 'object'
+                ? snapshot.legacyState
+                : null;
+            const viewerPreview = snapshot.viewerPreview && typeof snapshot.viewerPreview === 'object'
+                ? snapshot.viewerPreview
+                : null;
+
+            if (legacyState) {
+                writeJsonStorage(STORAGE_KEY, legacyState);
+            } else if (staged) {
+                writeJsonStorage(STORAGE_KEY, staged);
+            }
+            if (viewerPreview) {
+                writeJsonStorage(VIEWER_PREVIEW_STORAGE_KEY, viewerPreview);
+            }
         },
         collectStaged() {
+            if (!root) {
+                return lastSnapshot;
+            }
             lastSnapshot = collectMarkdownWorkspaceSnapshot();
             return lastSnapshot;
         },

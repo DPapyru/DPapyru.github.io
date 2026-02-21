@@ -6,6 +6,36 @@ const TEMPLATE_PATH = '/tml-ide/subapps/shader/index.html';
 const IGNORE_SCRIPT_PATTERN = /(?:\/shared\/assets\/js\/site-core\.js|\/site\/assets\/js\/accent-theme\.js|\/tml-ide\/subapps\/bridge\/shader-bridge\.js)$/i;
 
 const STATE_KEY = 'shader-contribute.state.v2';
+const PLAYGROUND_STATE_KEY = 'shader-playground.v1';
+const CONTRIBUTION_DRAFT_KEY = 'shader-playground.contribute-draft.v1';
+
+function readJsonStorage(key) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (_err) {
+        return null;
+    }
+}
+
+function writeJsonStorage(key, value) {
+    try {
+        if (!value || typeof value !== 'object') return;
+        localStorage.setItem(key, JSON.stringify(value));
+    } catch (_err) {
+        // Ignore persistence failure.
+    }
+}
+
+function resolveStagedSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') return null;
+    if (snapshot.staged && typeof snapshot.staged === 'object') {
+        return snapshot.staged;
+    }
+    return snapshot;
+}
 
 export function createShaderWorkspacePlugin() {
     let root = null;
@@ -42,18 +72,46 @@ export function createShaderWorkspacePlugin() {
             }
         },
         getSnapshot() {
-            return lastSnapshot || collectShaderWorkspaceSnapshot();
+            const staged = lastSnapshot || (root ? collectShaderWorkspaceSnapshot() : null);
+            return {
+                staged,
+                contributeState: readJsonStorage(STATE_KEY),
+                playgroundState: readJsonStorage(PLAYGROUND_STATE_KEY),
+                contributionDraft: readJsonStorage(CONTRIBUTION_DRAFT_KEY)
+            };
         },
         restoreSnapshot(snapshot) {
             if (!snapshot || typeof snapshot !== 'object') return;
-            try {
-                localStorage.setItem(STATE_KEY, JSON.stringify(snapshot));
-            } catch (_err) {
-                // Ignore persistence failure.
+            const staged = resolveStagedSnapshot(snapshot);
+            if (staged && typeof staged === 'object') {
+                lastSnapshot = staged;
             }
-            lastSnapshot = snapshot;
+            const contributeState = snapshot.contributeState && typeof snapshot.contributeState === 'object'
+                ? snapshot.contributeState
+                : null;
+            const playgroundState = snapshot.playgroundState && typeof snapshot.playgroundState === 'object'
+                ? snapshot.playgroundState
+                : null;
+            const contributionDraft = snapshot.contributionDraft && typeof snapshot.contributionDraft === 'object'
+                ? snapshot.contributionDraft
+                : null;
+
+            if (contributeState) {
+                writeJsonStorage(STATE_KEY, contributeState);
+            } else if (staged) {
+                writeJsonStorage(STATE_KEY, staged);
+            }
+            if (playgroundState) {
+                writeJsonStorage(PLAYGROUND_STATE_KEY, playgroundState);
+            }
+            if (contributionDraft) {
+                writeJsonStorage(CONTRIBUTION_DRAFT_KEY, contributionDraft);
+            }
         },
         collectStaged() {
+            if (!root) {
+                return lastSnapshot;
+            }
             lastSnapshot = collectShaderWorkspaceSnapshot();
             return lastSnapshot;
         },
@@ -76,4 +134,3 @@ export function createShaderWorkspacePlugin() {
         }
     };
 }
-
