@@ -34,7 +34,7 @@ next_chapter: 使用网页特殊动画模块.md
 1. 只改 Markdown 文案
 2. 只改 Markdown 文案与结构
 
-这两类工作优先用 `/tml-ide/?workspace=markdown` 更快。
+这两类工作优先用 `/tml-ide/` 更快。
 
 ## 当前解决方案包含内容
 

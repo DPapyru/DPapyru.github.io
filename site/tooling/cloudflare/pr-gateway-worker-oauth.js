@@ -309,7 +309,7 @@ async function handleGithubCallback(request, env) {
   const returnTo =
     sanitizeReturnToUrl(statePayload.returnTo, requestUrl.origin, env) ||
     sanitizeReturnToUrl(env.FRONTEND_URL, requestUrl.origin, env) ||
-    `${requestUrl.origin}/site/pages/article-studio.html`;
+    `${requestUrl.origin}/tml-ide/`;
 
   const redirectBack = `${returnTo}#oauth_token=${encodeURIComponent(sessionToken)}&github_user=${encodeURIComponent(login)}`;
   return Response.redirect(redirectBack, 302);
