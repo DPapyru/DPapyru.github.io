@@ -69,14 +69,18 @@ async function main() {
         const frame = document.querySelector('#markdown-preview-frame');
         if (!(frame instanceof HTMLIFrameElement)) return false;
         const src = String(frame.getAttribute('src') || '');
-        return /\/site\/pages\/viewer\.html\?file=/.test(src);
+        return /\/site\/pages\/viewer\.html\?/.test(src)
+            && src.includes('studio_preview=1')
+            && src.includes('file=');
     }, null, { timeout: 10000 });
     await page.waitForFunction(() => {
         const frame = document.querySelector('#markdown-preview-frame');
         if (!(frame instanceof HTMLIFrameElement) || !frame.contentDocument) return false;
         const text = String(frame.contentDocument.body && frame.contentDocument.body.innerText || '');
         if (!text) return false;
-        return !text.includes('public base URL of /tml-ide/') && !text.includes('tML IDE Playground');
+        return !text.includes('public base URL of /tml-ide/')
+            && !text.includes('tML IDE Playground')
+            && text.includes('这是 markdown 预览测试。');
     }, null, { timeout: 10000 });
     await page.screenshot({ path: path.join(outDir, '01a-markdown-preview-frame.png'), fullPage: true });
     await page.click('#btn-markdown-open-viewer');

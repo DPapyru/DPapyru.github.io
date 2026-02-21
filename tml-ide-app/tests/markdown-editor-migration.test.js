@@ -40,6 +40,9 @@ test('main.js wires markdown insert actions and Ctrl+V image paste flow', () => 
     assert.match(source, /function createWorkspaceImageFileFromPaste/);
     assert.match(source, /function imagePreviewSrcFromActiveFile/);
     assert.match(source, /function resolveViewerPagePath/);
+    assert.match(source, /articleStudioViewerPreview\.v1/);
+    assert.match(source, /params\.set\('studio_preview', '1'\)/);
+    assert.match(source, /article-studio-preview-update/);
     assert.match(source, /addEventListener\('paste'/);
     assert.match(source, /已粘贴图片/);
     assert.match(source, /detectFileMode\(pathValue\)[\s\S]*'image'/);

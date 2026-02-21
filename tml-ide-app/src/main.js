@@ -245,6 +245,8 @@ const MARKDOWN_PASTE_EXTENSION_BY_MIME = Object.freeze({
     'image/bmp': '.bmp',
     'image/avif': '.avif'
 });
+const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
+const VIEWER_PREVIEW_MESSAGE_TYPE = 'article-studio-preview-update';
 let viewerPagePathCache = '';
 const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif)$/i;
 const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
@@ -636,10 +638,78 @@ async function resolveViewerPagePath() {
     return viewerPagePathCache;
 }
 
-async function buildViewerPageUrl(pathValue) {
+async function buildViewerPageUrl(pathValue, options) {
+    const opts = options || {};
     const viewerPath = await resolveViewerPagePath();
-    const viewerFile = encodeURIComponent(toViewerFileParam(pathValue));
-    return `${viewerPath}?file=${viewerFile}`;
+    const params = new URLSearchParams();
+    if (opts.studioPreview) {
+        params.set('studio_preview', '1');
+    }
+    if (opts.studioEmbed) {
+        params.set('studio_embed', '1');
+    }
+    params.set('file', toViewerFileParam(pathValue));
+    return `${viewerPath}?${params.toString()}`;
+}
+
+function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
+    const targetPath = toViewerFileParam(markdownPath);
+    const uploadedImages = [];
+    const uploadedMedia = [];
+    const uploadedCsharpFiles = [];
+
+    state.workspace.files.forEach((file) => {
+        if (!file || !file.path) return;
+        const mode = detectFileMode(file.path);
+        const assetPath = toViewerFileParam(file.path);
+        if (!assetPath) return;
+        if (mode === 'image') {
+            const dataUrl = String(file.content || '').trim();
+            if (!dataUrl.startsWith('data:image/')) return;
+            uploadedImages.push({
+                assetPath,
+                dataUrl,
+                name: String(file.path).split('/').pop() || ''
+            });
+            return;
+        }
+        if (mode === 'csharp') {
+            uploadedCsharpFiles.push({
+                assetPath,
+                content: String(file.content || ''),
+                name: String(file.path).split('/').pop() || ''
+            });
+        }
+    });
+
+    return {
+        targetPath,
+        markdown: String(markdownContent || ''),
+        uploadedImages,
+        uploadedMedia,
+        uploadedCsharpFiles,
+        updatedAt: new Date().toISOString()
+    };
+}
+
+function persistMarkdownViewerPreviewPayload(payload) {
+    try {
+        localStorage.setItem(VIEWER_PREVIEW_STORAGE_KEY, JSON.stringify(payload || {}));
+    } catch (_error) {
+        // Ignore storage failures for preview sync.
+    }
+}
+
+function postMarkdownViewerPreviewPayload(payload) {
+    if (!dom.markdownPreviewFrame || !dom.markdownPreviewFrame.contentWindow) return;
+    try {
+        dom.markdownPreviewFrame.contentWindow.postMessage({
+            type: VIEWER_PREVIEW_MESSAGE_TYPE,
+            payload
+        }, globalThis.location.origin);
+    } catch (_error) {
+        // Ignore cross-window message failures for preview sync.
+    }
 }
 
 function sanitizeShaderSlug(value) {
@@ -3491,14 +3561,25 @@ async function openMarkdownViewerPreview(newTab) {
         addEvent('error', 'Markdown 文件路径必须是相对 content 目录的 .md 路径');
         return;
     }
+    const model = ensureModelForFile(active);
+    const markdownContent = model ? model.getValue() : String(active.content || '');
+    const previewPayload = buildMarkdownViewerPreviewPayload(repoPath, markdownContent);
+    persistMarkdownViewerPreviewPayload(previewPayload);
     await saveWorkspaceImmediate();
-    const url = await buildViewerPageUrl(repoPath);
+    const url = await buildViewerPageUrl(repoPath, {
+        studioPreview: true,
+        studioEmbed: !newTab
+    });
     if (newTab) {
         globalThis.open(url, '_blank', 'noopener,noreferrer');
         return;
     }
     if (dom.markdownPreviewFrame) {
-        dom.markdownPreviewFrame.src = url;
+        const current = String(dom.markdownPreviewFrame.getAttribute('src') || '').trim();
+        if (current !== url) {
+            dom.markdownPreviewFrame.src = url;
+        }
+        postMarkdownViewerPreviewPayload(previewPayload);
     }
 }
 

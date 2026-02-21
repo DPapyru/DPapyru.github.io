@@ -1556,3 +1556,17 @@
   1. `tml-ide-app/src/main.js` 新增 `resolveViewerPagePath`，避免硬编码路径导致 iframe 404/错误页。
   2. `tml-ide-app/vite.config.js` 新增 dev 中间件，将仓库 `site/` 映射到 `/site`，确保本地调试时 `site/pages/viewer.html` 真实可访问。
 - Playwright 验收脚本新增 Markdown 预览 iframe 有效性断言，并产出截图：`test-results/tml-ide-unified-acceptance/01a-markdown-preview-frame.png`。
+
+### 验证记录 [2026-02-21 21:18]：修复统一 IDE Markdown 预览不显示当前文章内容
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- markdown-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含截图、模拟输入、模拟点击）
+
+**备注**：
+- 根因：统一 IDE 仅传 `file` 参数给 viewer，未写入 `articleStudioViewerPreview.v1` 草稿 payload，也未启用 `studio_preview` 机制。
+- 修复：`tml-ide-app/src/main.js` 新增并接入 viewer 草稿桥接（payload 存储 + `studio_preview=1` + iframe `postMessage`）。
+- 本轮验收已验证 iframe 包含当前编辑文本“这是 markdown 预览测试。”，并更新截图：`test-results/tml-ide-unified-acceptance/01a-markdown-preview-frame.png`。
