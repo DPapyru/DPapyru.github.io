@@ -222,7 +222,6 @@ async function main() {
     await page.click('#file-list .file-item:has-text("effect.fx")');
     await page.click('button[data-panel-tab="compile"]');
     await page.waitForSelector('#shader-compile-group:not([hidden])', { timeout: 10000 });
-    await page.waitForSelector('#shader-sidepane:not([hidden])', { timeout: 10000 });
     await page.click('#btn-shader-insert-template');
     await page.waitForFunction(() => {
         const text = String(globalThis.__tmlIdeDebug.getEditorText() || '');
@@ -230,6 +229,8 @@ async function main() {
             && text.includes('technique MainTechnique')
             && text.includes('pass P0');
     }, null, { timeout: 10000 });
+    await page.click('#btn-shader-preview-popup');
+    await page.waitForSelector('#shader-preview-modal:not([hidden])', { timeout: 10000 });
     await page.selectOption('#shader-preset-image', 'checker');
     await page.selectOption('#shader-render-mode', 'alpha');
     await page.selectOption('#shader-address-mode', 'clamp');
@@ -278,6 +279,11 @@ async function main() {
             && text.includes('uImage3');
     }, null, { timeout: 10000 });
     await page.screenshot({ path: path.join(outDir, '04a-shader-upload-4-slots.png'), fullPage: true });
+    await page.click('#btn-shader-preview-close');
+    await page.waitForFunction(() => {
+        const node = document.querySelector('#shader-preview-modal');
+        return !!(node instanceof HTMLElement && node.hidden);
+    }, null, { timeout: 10000 });
 
     await page.evaluate(() => {
         globalThis.__tmlIdeDebug.setEditorText([

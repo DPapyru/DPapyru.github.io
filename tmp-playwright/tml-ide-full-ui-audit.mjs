@@ -47,9 +47,13 @@ function verifyLegacyMappings() {
         { source: legacyArticle, legacyId: 'studio-open-viewer-preview', unifiedSelector: '#btn-markdown-open-viewer' },
         { source: legacyShader, legacyId: 'shaderpg-compile', unifiedSelector: '#btn-shader-compile' },
         { source: legacyShader, legacyId: 'shaderpg-export-fx', unifiedSelector: '#btn-shader-export' },
+        { source: legacyShader, legacyId: 'shaderpg-blend-toggle', unifiedSelector: '#shader-render-mode' },
         { source: legacyShader, legacyId: 'shaderpg-address-mode', unifiedSelector: '#shader-address-mode' },
         { source: legacyShader, legacyId: 'shaderpg-bg-mode', unifiedSelector: '#shader-bg-mode' },
         { source: legacyShader, legacyId: 'shaderpg-upload', unifiedSelector: '#shader-upload-0' },
+        { source: legacyShader, legacyId: 'shaderpg-canvas', unifiedSelector: '#shader-preview-canvas' },
+        { source: legacyShader, legacyId: 'shaderpg-status', unifiedSelector: '#shader-preview-status' },
+        { source: legacyShader, legacyId: 'shaderpg-layout-toggle', unifiedSelector: '#btn-shader-preview-popup' },
         { source: legacyShader, legacyId: 'shaderpg-contribute', unifiedSelector: '#btn-open-unified-submit' }
     ];
     mappingChecks.forEach((check) => {
@@ -68,19 +72,22 @@ async function waitIdeReady(page) {
     await page.waitForSelector('#editor .monaco-editor', { timeout: 30000 });
 }
 
-async function clickAndShot(page, selector, shotName) {
-    try {
-        await page.keyboard.press('Escape');
-    } catch (_error) {
-        // Ignore escape dispatch failures.
-    }
-    await page.evaluate(() => {
-        const palette = document.querySelector('#command-palette');
-        const backdrop = document.querySelector('#command-palette-backdrop');
-        if (palette instanceof HTMLElement && !palette.hidden && backdrop instanceof HTMLElement) {
-            backdrop.click();
+async function clickAndShot(page, selector, shotName, options) {
+    const opts = options || {};
+    if (!opts.skipEscape) {
+        try {
+            await page.keyboard.press('Escape');
+        } catch (_error) {
+            // Ignore escape dispatch failures.
         }
-    });
+        await page.evaluate(() => {
+            const palette = document.querySelector('#command-palette');
+            const backdrop = document.querySelector('#command-palette-backdrop');
+            if (palette instanceof HTMLElement && !palette.hidden && backdrop instanceof HTMLElement) {
+                backdrop.click();
+            }
+        });
+    }
     await page.waitForSelector(selector, { timeout: 10000 });
     try {
         await page.click(selector);
@@ -356,16 +363,17 @@ async function main() {
     await clickAndShot(page, '#btn-md-reset', '29-md-reset.png');
 
     await page.click('#file-list .file-item:has-text("audit.fx")');
-    await page.waitForSelector('#shader-sidepane:not([hidden])', { timeout: 10000 });
     await clickAndShot(page, '#btn-shader-insert-template', '30-shader-insert-template.png');
     await clickAndShot(page, '#btn-shader-compile', '31-shader-header-compile.png');
     await clickAndShot(page, '#btn-panel-shader-compile', '32-shader-panel-compile.png');
     await clickAndShot(page, '#btn-shader-export', '33-shader-export.png');
+    await clickAndShot(page, '#btn-shader-preview-popup', '34-shader-popup-open.png');
+    await page.waitForSelector('#shader-preview-modal:not([hidden])', { timeout: 10000 });
     await page.selectOption('#shader-preset-image', 'noise');
     await page.selectOption('#shader-render-mode', 'additive');
     await page.selectOption('#shader-address-mode', 'wrap');
     await page.selectOption('#shader-bg-mode', 'white');
-    await page.screenshot({ path: path.join(outDir, '34-shader-select-controls.png'), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, '35-shader-select-controls.png'), fullPage: true });
 
     for (let i = 0; i < 4; i += 1) {
         await setInputFile(page, `#shader-upload-${i}`, {
@@ -374,12 +382,17 @@ async function main() {
             buffer: tinyPngBuffer
         });
     }
-    await page.screenshot({ path: path.join(outDir, '35-shader-uploaded.png'), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, '36-shader-uploaded.png'), fullPage: true });
     for (let i = 0; i < 4; i += 1) {
-        await clickAndShot(page, `#shader-upload-clear-${i}`, `36-shader-clear-${i}.png`);
+        await clickAndShot(page, `#shader-upload-clear-${i}`, `37-shader-clear-${i}.png`, { skipEscape: true });
     }
+    await clickAndShot(page, '#btn-shader-preview-close', '38-shader-popup-close.png', { skipEscape: true });
+    await page.waitForFunction(() => {
+        const node = document.querySelector('#shader-preview-modal');
+        return !!(node instanceof HTMLElement && node.hidden);
+    }, null, { timeout: 10000 });
 
-    await clickAndShot(page, '#btn-open-unified-submit', '37-open-unified-submit.png');
+    await clickAndShot(page, '#btn-open-unified-submit', '39-open-unified-submit.png');
     await ensureUnifiedPanelOpen(page);
     await page.evaluate(() => {
         const input = document.querySelector('#unified-worker-url');
@@ -387,21 +400,21 @@ async function main() {
             input.value = '';
         }
     });
-    await clickInUnifiedPanel(page, '#btn-unified-auth-login', '38-unified-auth-login-clicked.png');
+    await clickInUnifiedPanel(page, '#btn-unified-auth-login', '40-unified-auth-login-clicked.png');
     if (!page.url().includes('/tml-ide/')) {
         await waitIdeReady(page);
-        await clickAndShot(page, '#btn-open-unified-submit', '38b-unified-reopen-after-login-nav.png');
+        await clickAndShot(page, '#btn-open-unified-submit', '40b-unified-reopen-after-login-nav.png');
     }
     await ensureUnifiedPanelOpen(page);
-    await clickInUnifiedPanel(page, '#btn-unified-auth-logout', '39-unified-auth-logout-clicked.png');
+    await clickInUnifiedPanel(page, '#btn-unified-auth-logout', '41-unified-auth-logout-clicked.png');
     await page.fill('#unified-worker-url', 'http://127.0.0.1:4173/mock-api/create-pr');
     await page.fill('#unified-pr-title', 'ui-audit');
     await page.fill('#unified-existing-pr-number', '');
     await page.fill('#unified-shader-slug', 'audit-shader');
-    await clickInUnifiedPanel(page, '#btn-unified-collect', '40-unified-collect.png');
-    await clickInUnifiedPanel(page, '#btn-unified-submit', '41-unified-submit.png');
-    await clickInUnifiedPanel(page, '#btn-unified-resume', '42-unified-resume.png');
-    await clickInUnifiedPanel(page, '#btn-unified-submit-close', '43-unified-close.png');
+    await clickInUnifiedPanel(page, '#btn-unified-collect', '42-unified-collect.png');
+    await clickInUnifiedPanel(page, '#btn-unified-submit', '43-unified-submit.png');
+    await clickInUnifiedPanel(page, '#btn-unified-resume', '44-unified-resume.png');
+    await clickInUnifiedPanel(page, '#btn-unified-submit-close', '45-unified-close.png');
 
     const openLog = await page.evaluate(() => {
         return Array.isArray(globalThis.__tmlIdeOpenLog) ? globalThis.__tmlIdeOpenLog.slice() : [];
@@ -412,11 +425,11 @@ async function main() {
 
     const legacyMarkdown = await context.newPage();
     await legacyMarkdown.goto('http://127.0.0.1:4173/site/pages/article-studio.html', { waitUntil: 'domcontentloaded' });
-    await legacyMarkdown.screenshot({ path: path.join(outDir, '44-legacy-markdown-redirect.png'), fullPage: true });
+    await legacyMarkdown.screenshot({ path: path.join(outDir, '46-legacy-markdown-redirect.png'), fullPage: true });
 
     const legacyShader = await context.newPage();
     await legacyShader.goto('http://127.0.0.1:4173/site/pages/shader-playground.html', { waitUntil: 'domcontentloaded' });
-    await legacyShader.screenshot({ path: path.join(outDir, '45-legacy-shader-redirect.png'), fullPage: true });
+    await legacyShader.screenshot({ path: path.join(outDir, '47-legacy-shader-redirect.png'), fullPage: true });
 
     await browser.close();
 }

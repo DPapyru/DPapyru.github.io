@@ -44,6 +44,7 @@ const dom = {
     btnMarkdownTogglePreview: document.getElementById('btn-markdown-toggle-preview'),
     btnMarkdownOpenViewer: document.getElementById('btn-markdown-open-viewer'),
     btnShaderCompile: document.getElementById('btn-shader-compile'),
+    btnShaderPreviewPopup: document.getElementById('btn-shader-preview-popup'),
     btnShaderExport: document.getElementById('btn-shader-export'),
     fileList: document.getElementById('file-list'),
     activeFileName: document.getElementById('active-file-name'),
@@ -55,7 +56,9 @@ const dom = {
     imagePreviewImage: document.getElementById('image-preview-image'),
     videoPreviewPane: document.getElementById('video-preview-pane'),
     videoPreviewElement: document.getElementById('video-preview-element'),
-    shaderSidepane: document.getElementById('shader-sidepane'),
+    shaderPreviewModal: document.getElementById('shader-preview-modal'),
+    shaderPreviewModalBackdrop: document.getElementById('shader-preview-modal-backdrop'),
+    btnShaderPreviewClose: document.getElementById('btn-shader-preview-close'),
     shaderPreviewCanvas: document.getElementById('shader-preview-canvas'),
     shaderPreviewStatus: document.getElementById('shader-preview-status'),
     shaderPresetImage: document.getElementById('shader-preset-image'),
@@ -226,6 +229,7 @@ const state = {
         activePanelTab: 'problems',
         markdownPreviewMode: 'edit',
         markdownFocusMode: false,
+        shaderPreviewModalOpen: false,
         paletteOpen: false,
         paletteMode: 'commands',
         paletteItems: [],
@@ -2854,7 +2858,40 @@ function updateHeaderModeActions() {
     if (dom.btnMarkdownTogglePreview) dom.btnMarkdownTogglePreview.hidden = !isMarkdown;
     if (dom.btnMarkdownOpenViewer) dom.btnMarkdownOpenViewer.hidden = !isMarkdown;
     if (dom.btnShaderCompile) dom.btnShaderCompile.hidden = !isShader;
+    if (dom.btnShaderPreviewPopup) {
+        dom.btnShaderPreviewPopup.hidden = !isShader;
+        dom.btnShaderPreviewPopup.textContent = state.ui.shaderPreviewModalOpen ? '关闭预览' : '渲染预览';
+    }
     if (dom.btnShaderExport) dom.btnShaderExport.hidden = !isShader;
+}
+
+function setShaderPreviewModalOpen(open, options) {
+    const opts = options || {};
+    const allowOpen = activeFileMode() === 'shaderfx';
+    const shouldOpen = !!open && allowOpen;
+    state.ui.shaderPreviewModalOpen = shouldOpen;
+    if (dom.shaderPreviewModal) {
+        dom.shaderPreviewModal.hidden = !shouldOpen;
+    }
+    if (dom.appRoot) {
+        dom.appRoot.classList.toggle('shader-preview-modal-open', shouldOpen);
+    }
+    if (dom.btnShaderPreviewPopup && allowOpen) {
+        dom.btnShaderPreviewPopup.textContent = shouldOpen ? '关闭预览' : '渲染预览';
+    }
+    if (!shouldOpen) {
+        if (opts.focusEditor !== false && state.editor) {
+            state.editor.focus();
+        }
+        return;
+    }
+
+    syncShaderPreviewControls();
+    ensureShaderPreviewLoop();
+    drawShaderPreviewCanvas();
+    if (opts.focus !== false && dom.shaderPresetImage) {
+        dom.shaderPresetImage.focus();
+    }
 }
 
 function setMarkdownPreviewMode(mode) {
@@ -3747,7 +3784,7 @@ function ensureShaderPreviewLoop() {
     if (state.shaderPreview.rafId) return;
     const tick = () => {
         state.shaderPreview.rafId = requestAnimationFrame(tick);
-        if (activeFileMode() !== 'shaderfx') {
+        if (activeFileMode() !== 'shaderfx' || !state.ui.shaderPreviewModalOpen) {
             stopShaderPreviewLoop();
             return;
         }
@@ -3786,12 +3823,6 @@ function applyEditorModeUi() {
             openMarkdownViewerPreview(false).catch(() => {});
         }
     }
-    if (dom.panelEditor) {
-        dom.panelEditor.classList.toggle('panel-editor-with-shader-sidepane', isShader);
-    }
-    if (dom.shaderSidepane) {
-        dom.shaderSidepane.hidden = !isShader;
-    }
     if (dom.imagePreviewPane) {
         dom.imagePreviewPane.hidden = !isImage;
         dom.imagePreviewPane.style.display = isImage ? 'flex' : 'none';
@@ -3828,10 +3859,15 @@ function applyEditorModeUi() {
     }
     if (isShader) {
         syncShaderPreviewControls();
-        ensureShaderPreviewLoop();
-        drawShaderPreviewCanvas();
+        if (state.ui.shaderPreviewModalOpen) {
+            ensureShaderPreviewLoop();
+            drawShaderPreviewCanvas();
+        } else {
+            stopShaderPreviewLoop();
+        }
         runShaderCompileForActiveFile({ silent: true });
     } else {
+        setShaderPreviewModalOpen(false, { focusEditor: false, focus: false });
         stopShaderPreviewLoop();
     }
 }
@@ -4717,6 +4753,11 @@ function bindUiEvents() {
             closeCommandPalette();
             return;
         }
+        if (state.ui.shaderPreviewModalOpen && event.key === 'Escape') {
+            event.preventDefault();
+            setShaderPreviewModalOpen(false, { focusEditor: false, focus: false });
+            return;
+        }
         handleGlobalShortcuts(event);
     });
 
@@ -4742,6 +4783,25 @@ function bindUiEvents() {
             } catch (error) {
                 addEvent('error', `新标签预览失败：${error.message}`);
             }
+        });
+    }
+
+    if (dom.btnShaderPreviewPopup) {
+        dom.btnShaderPreviewPopup.addEventListener('click', () => {
+            if (activeFileMode() !== 'shaderfx') return;
+            setShaderPreviewModalOpen(!state.ui.shaderPreviewModalOpen, { focus: true, focusEditor: false });
+        });
+    }
+
+    if (dom.shaderPreviewModalBackdrop) {
+        dom.shaderPreviewModalBackdrop.addEventListener('click', () => {
+            setShaderPreviewModalOpen(false, { focusEditor: false, focus: false });
+        });
+    }
+
+    if (dom.btnShaderPreviewClose) {
+        dom.btnShaderPreviewClose.addEventListener('click', () => {
+            setShaderPreviewModalOpen(false, { focusEditor: false, focus: false });
         });
     }
 
@@ -5034,7 +5094,7 @@ function bindUiEvents() {
     }
 
     window.addEventListener('resize', () => {
-        if (activeFileMode() === 'shaderfx') {
+        if (activeFileMode() === 'shaderfx' && state.ui.shaderPreviewModalOpen) {
             drawShaderPreviewCanvas();
         }
     });
