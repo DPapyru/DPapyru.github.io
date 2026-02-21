@@ -1711,3 +1711,18 @@
 - 变更后索引统计：`types=2764`、`xna=307`、`fna=65`、`sourceCount=2`（`tModLoader.dll` + `FNA.dll`）。
 - FNA 未提供 XML 文档文件（索引器提示 `XML not found for .../FNA.dll`），因此 FNA 类型可补全但文档注释以程序集反射信息为主。
 - 仍有 `Steamworks.NET` 引用程序集告警并显示 `partial type load`，与本次 FNA 提取无直接冲突。
+
+### 验证记录 [2026-02-22 06:26]：Shader 预览改为“左调参 + 右预览（拖动/缩放）”
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/shader-editor-migration.test.js tml-ide-app/tests/vscode-workbench-shell.test.js`：通过（先红后绿，覆盖结构与交互契约）
+- `npm --prefix tml-ide-app run build`：通过
+- `time npm run build >/tmp/feat-shader-preview-build.log 2>&1; echo EXIT:$?`：通过（`EXIT:0`）
+
+**备注**：
+- 本次实现：Shader 预览弹窗改为左右分栏；右侧预览区支持鼠标拖动平移、滚轮缩放、双击重置，以及 `- / 100% / +` 按钮缩放。
+- 编译渲染逻辑保持原有 WebGL2 实时预览链路，仅调整画布尺寸采样基准为预览视口尺寸。
+- 构建日志：`/tmp/feat-shader-preview-build.log`（含 `generate-index`、`build:anims`、`tml-ide-app vite build` 全链路输出）。
+- `npm run build` 触发的与本任务无关生成文件（`site/assets/anims/*`、`site/assets/semantic/*`、`site/content/config.json`、`site/sitemap.xml`）已回退，仅保留 IDE 相关改动与 `tml-ide` 构建产物。

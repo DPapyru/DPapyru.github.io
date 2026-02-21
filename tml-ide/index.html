@@ -6,8 +6,8 @@
     <title>tML IDE Playground</title>
     <meta name="description" content="独立 tModLoader C# IDE Playground，支持补全、悬停文档与双层诊断。">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
-  <script type="module" crossorigin src="/tml-ide/assets/index-D-FhCoii.js"></script>
-  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-SZb8_YG-.css">
+  <script type="module" crossorigin src="/tml-ide/assets/index-BaUur0vX.js"></script>
+  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-CcwcmXXo.css">
 </head>
 <body>
     <div id="app" class="app-shell">
@@ -241,65 +241,77 @@
     <div id="shader-preview-modal" class="shader-preview-modal" hidden>
         <button id="shader-preview-modal-backdrop" class="shader-preview-modal-backdrop" type="button" aria-label="关闭 Shader 预览"></button>
         <section class="shader-preview-dialog" role="dialog" aria-modal="true" aria-label="Shader 渲染预览">
-            <header class="shader-sidepane-head">
+            <header class="shader-preview-head">
                 <span>渲染预览</span>
                 <button id="btn-shader-preview-close" type="button">关闭</button>
             </header>
-            <div class="shader-sidepane-controls">
-                <label for="shader-preset-image">预设图片</label>
-                <select id="shader-preset-image">
-                    <option value="checker">棋盘格（builtin:checker）</option>
-                    <option value="noise">噪声（builtin:noise）</option>
-                    <option value="gradient">渐变</option>
-                    <option value="rings">同心环</option>
-                </select>
-                <label for="shader-render-mode">渲染模式</label>
-                <select id="shader-render-mode">
-                    <option value="alpha">AlphaBlend</option>
-                    <option value="additive">Additive</option>
-                    <option value="multiply">Multiply</option>
-                    <option value="screen">Screen</option>
-                </select>
-                <label for="shader-address-mode">采样模式</label>
-                <select id="shader-address-mode">
-                    <option value="clamp">Clamp</option>
-                    <option value="wrap">Wrap</option>
-                </select>
-                <label for="shader-bg-mode">背景模式</label>
-                <select id="shader-bg-mode">
-                    <option value="transparent">透明棋盘</option>
-                    <option value="black">黑色</option>
-                    <option value="white">白色</option>
-                </select>
-                <div class="shader-upload-grid" aria-label="Shader 纹理通道">
-                    <div class="shader-upload-row">
-                        <label for="shader-upload-0">uImage0</label>
-                        <input id="shader-upload-0" type="file" accept="image/*">
-                        <button id="shader-upload-clear-0" type="button">清空</button>
-                        <span id="shader-upload-name-0" class="shader-upload-name">未上传</span>
+            <div class="shader-preview-body">
+                <aside id="shader-preview-controls" class="shader-preview-controls">
+                    <label for="shader-preset-image">预设图片</label>
+                    <select id="shader-preset-image">
+                        <option value="checker">棋盘格（builtin:checker）</option>
+                        <option value="noise">噪声（builtin:noise）</option>
+                        <option value="gradient">渐变</option>
+                        <option value="rings">同心环</option>
+                    </select>
+                    <label for="shader-render-mode">渲染模式</label>
+                    <select id="shader-render-mode">
+                        <option value="alpha">AlphaBlend</option>
+                        <option value="additive">Additive</option>
+                        <option value="multiply">Multiply</option>
+                        <option value="screen">Screen</option>
+                    </select>
+                    <label for="shader-address-mode">采样模式</label>
+                    <select id="shader-address-mode">
+                        <option value="clamp">Clamp</option>
+                        <option value="wrap">Wrap</option>
+                    </select>
+                    <label for="shader-bg-mode">背景模式</label>
+                    <select id="shader-bg-mode">
+                        <option value="transparent">透明棋盘</option>
+                        <option value="black">黑色</option>
+                        <option value="white">白色</option>
+                    </select>
+                    <div class="shader-upload-grid" aria-label="Shader 纹理通道">
+                        <div class="shader-upload-row">
+                            <label for="shader-upload-0">uImage0</label>
+                            <input id="shader-upload-0" type="file" accept="image/*">
+                            <button id="shader-upload-clear-0" type="button">清空</button>
+                            <span id="shader-upload-name-0" class="shader-upload-name">未上传</span>
+                        </div>
+                        <div class="shader-upload-row">
+                            <label for="shader-upload-1">uImage1</label>
+                            <input id="shader-upload-1" type="file" accept="image/*">
+                            <button id="shader-upload-clear-1" type="button">清空</button>
+                            <span id="shader-upload-name-1" class="shader-upload-name">未上传</span>
+                        </div>
+                        <div class="shader-upload-row">
+                            <label for="shader-upload-2">uImage2</label>
+                            <input id="shader-upload-2" type="file" accept="image/*">
+                            <button id="shader-upload-clear-2" type="button">清空</button>
+                            <span id="shader-upload-name-2" class="shader-upload-name">未上传</span>
+                        </div>
+                        <div class="shader-upload-row">
+                            <label for="shader-upload-3">uImage3</label>
+                            <input id="shader-upload-3" type="file" accept="image/*">
+                            <button id="shader-upload-clear-3" type="button">清空</button>
+                            <span id="shader-upload-name-3" class="shader-upload-name">未上传</span>
+                        </div>
                     </div>
-                    <div class="shader-upload-row">
-                        <label for="shader-upload-1">uImage1</label>
-                        <input id="shader-upload-1" type="file" accept="image/*">
-                        <button id="shader-upload-clear-1" type="button">清空</button>
-                        <span id="shader-upload-name-1" class="shader-upload-name">未上传</span>
+                </aside>
+                <section class="shader-preview-stage">
+                    <header class="shader-preview-stage-head">
+                        <span class="shader-preview-stage-tip">拖动平移，滚轮缩放</span>
+                        <div class="shader-preview-zoom-actions" role="group" aria-label="预览缩放">
+                            <button id="shader-preview-zoom-out" type="button" aria-label="缩小预览">-</button>
+                            <button id="shader-preview-zoom-reset" type="button" aria-label="重置缩放">100%</button>
+                            <button id="shader-preview-zoom-in" type="button" aria-label="放大预览">+</button>
+                        </div>
+                    </header>
+                    <div id="shader-preview-viewport" class="shader-preview-viewport">
+                        <canvas id="shader-preview-canvas" class="shader-preview-canvas" width="720" height="420"></canvas>
                     </div>
-                    <div class="shader-upload-row">
-                        <label for="shader-upload-2">uImage2</label>
-                        <input id="shader-upload-2" type="file" accept="image/*">
-                        <button id="shader-upload-clear-2" type="button">清空</button>
-                        <span id="shader-upload-name-2" class="shader-upload-name">未上传</span>
-                    </div>
-                    <div class="shader-upload-row">
-                        <label for="shader-upload-3">uImage3</label>
-                        <input id="shader-upload-3" type="file" accept="image/*">
-                        <button id="shader-upload-clear-3" type="button">清空</button>
-                        <span id="shader-upload-name-3" class="shader-upload-name">未上传</span>
-                    </div>
-                </div>
-            </div>
-            <div class="shader-preview-canvas-wrap">
-                <canvas id="shader-preview-canvas" class="shader-preview-canvas" width="720" height="420"></canvas>
+                </section>
             </div>
             <div id="shader-preview-status" class="shader-preview-status">预览就绪</div>
         </section>
