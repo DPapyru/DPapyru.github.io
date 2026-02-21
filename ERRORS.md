@@ -1695,3 +1695,19 @@
 - 首次直接 `dotnet run` 失败原因为当前环境仅安装 `Microsoft.NETCore.App 10.x`，而项目默认目标框架为 `net8.0`；本次通过临时覆盖 `TargetFramework/TargetFrameworks=net10.0` 完成生成，未改动项目 `csproj`。
 - 生成时仍存在 `Steamworks.NET` 引用程序集告警，索引器提示 `partial type load`；但 `Terraria.ModLoader.ModItem` 与 `Shoot(...)` 已可解析并用于 override 补全。
 - override 修复点：`tml-ide-app/src/lib/analyze-v2.js` 的 `buildOverrideSnippet` 改为输出“参数类型 + 参数名”，避免生成仅参数名的非法签名。
+
+### 验证记录 [2026-02-22 00:51]：补全索引增加 FNA/XNA 类型提取
+
+**级别**：L3
+
+**命令与结果**：
+- `dotnet run --project tml-ide-app/tooling/indexer -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --dll /mnt/f/steam/steamapps/common/tModLoader/tModLoader.dll --terraria-dll /mnt/f/steam/steamapps/common/tModLoader/Libraries/FNA/1.0.0/FNA.dll --out /mnt/f/DPapyru.github.io/.worktrees/feat-fna-index-extract/tml-ide-app/public/data/api-index.v2.json`：通过
+- `npm --prefix tml-ide-app test -- analyze-v2.test.js`：通过（52/52）
+- `npm --prefix tml-ide-app run build`：通过
+- `node --input-type=module -e "... Vector2. completion check ..."`：通过（`Distance`、`Lerp` 可补全）
+
+**备注**：
+- 变更前索引统计：`types=2208`、`xna=0`、`fna=0`、`sourceCount=1`。
+- 变更后索引统计：`types=2764`、`xna=307`、`fna=65`、`sourceCount=2`（`tModLoader.dll` + `FNA.dll`）。
+- FNA 未提供 XML 文档文件（索引器提示 `XML not found for .../FNA.dll`），因此 FNA 类型可补全但文档注释以程序集反射信息为主。
+- 仍有 `Steamworks.NET` 引用程序集告警并显示 `partial type load`，与本次 FNA 提取无直接冲突。
