@@ -621,6 +621,36 @@ button:disabled {
     background: #111;
 }
 
+.image-preview-pane {
+    position: absolute;
+    inset: 32px 0 0;
+    border-top: 1px solid var(--vscode-border-soft);
+    background:
+        linear-gradient(45deg, #1a1b1d 25%, transparent 25%) 0 0 / 14px 14px,
+        linear-gradient(-45deg, #1a1b1d 25%, transparent 25%) 0 0 / 14px 14px,
+        linear-gradient(45deg, transparent 75%, #1a1b1d 75%) 0 0 / 14px 14px,
+        linear-gradient(-45deg, transparent 75%, #1a1b1d 75%) 0 0 / 14px 14px,
+        #151617;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.image-preview-pane[hidden] {
+    display: none;
+}
+
+.image-preview-image {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border: 1px solid var(--vscode-border);
+    border-radius: 4px;
+    background: #101112;
+}
+
 .shader-pip {
     position: absolute;
     left: 24px;

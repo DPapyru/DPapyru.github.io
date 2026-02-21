@@ -59,7 +59,7 @@
                     <button id="btn-delete-file" type="button">删除</button>
                 </div>
                 <ul id="file-list" class="file-list" aria-label="工程文件列表"></ul>
-                <p class="panel-tip">支持 .cs/.md/.fx 多文件工作区，内容自动保存到浏览器 IndexedDB。</p>
+                <p class="panel-tip">支持 .cs/.md/.fx 以及常见图片文件，内容自动保存到浏览器 IndexedDB。</p>
             </aside>
 
             <section class="panel panel-editor">
@@ -73,6 +73,9 @@
                 <div id="editor" class="editor" aria-label="C# 编辑器"></div>
                 <section id="markdown-preview-pane" class="markdown-preview-pane" hidden>
                     <iframe id="markdown-preview-frame" class="markdown-preview-frame" title="Markdown 预览" loading="lazy"></iframe>
+                </section>
+                <section id="image-preview-pane" class="image-preview-pane" hidden>
+                    <img id="image-preview-image" class="image-preview-image" alt="图片预览">
                 </section>
                 <section id="shader-pip" class="shader-pip" hidden>
                     <div id="shader-pip-head" class="shader-pip-head">画布预览</div>

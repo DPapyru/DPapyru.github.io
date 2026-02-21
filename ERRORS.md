@@ -1514,3 +1514,16 @@
 - 新增 `shaderfx` 语言支持：Monaco 词法高亮（Monarch）与补全词典（参考 shader-playground）。
 - 新增 `.fx` 文件创建默认模板与“插入默认模板”按钮（`btn-shader-insert-template`）。
 - 已执行“截图 + 模拟输入 + 模拟点击”验收，脚本覆盖 Shader 默认模板插入与补全触发输入路径。
+
+### 验证记录 [2026-02-21 19:34]：统一 IDE Markdown 粘贴图片入目录并支持图片预览
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- markdown-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含截图、模拟输入、模拟点击）
+
+**备注**：
+- Playwright 首次执行发现 `#image-preview-pane` 在隐藏态仍拦截点击（样式覆盖问题），已修复为图片面板默认 `display:none` 且由 `applyEditorModeUi` 显式控制显示。
+- 验收截图目录：`test-results/tml-ide-unified-acceptance/`（本次产物含 `01-shell-ready.png`、`02-markdown-toolbox.png`、`03-markdown-insert-paste.png`、`04-markdown-shader-actions.png`）。

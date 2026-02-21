@@ -50,6 +50,8 @@ const dom = {
     editor: document.getElementById('editor'),
     markdownPreviewPane: document.getElementById('markdown-preview-pane'),
     markdownPreviewFrame: document.getElementById('markdown-preview-frame'),
+    imagePreviewPane: document.getElementById('image-preview-pane'),
+    imagePreviewImage: document.getElementById('image-preview-image'),
     shaderPip: document.getElementById('shader-pip'),
     shaderPipHead: document.getElementById('shader-pip-head'),
     shaderPipResize: document.getElementById('shader-pip-resize'),
@@ -222,6 +224,18 @@ const MARKDOWN_FALLBACK_ANCHORS = Object.freeze([
 ]);
 const MARKDOWN_PASTE_MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 const MARKDOWN_PASTE_MAX_IMAGE_COUNT = 8;
+const IMAGE_FILE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.avif']);
+const MARKDOWN_PASTE_EXTENSION_BY_MIME = Object.freeze({
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+    'image/jpg': '.jpg',
+    'image/gif': '.gif',
+    'image/webp': '.webp',
+    'image/svg+xml': '.svg',
+    'image/bmp': '.bmp',
+    'image/avif': '.avif'
+});
+const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif)$/i;
 const SHADER_KEYWORDS = Object.freeze([
     'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'default', 'break', 'continue',
     'return', 'discard', 'struct', 'static', 'const', 'in', 'out', 'inout', 'uniform'
@@ -421,10 +435,74 @@ function fileExt(pathValue) {
     return safe.slice(idx);
 }
 
+function splitRepoPathSegments(pathValue) {
+    const safe = normalizeRepoPath(pathValue);
+    return safe ? safe.split('/').filter(Boolean) : [];
+}
+
+function dirnameRepoPath(pathValue) {
+    const segments = splitRepoPathSegments(pathValue);
+    if (!segments.length) return '';
+    segments.pop();
+    return segments.join('/');
+}
+
+function joinRepoPathParts(...parts) {
+    return normalizeRepoPath(parts.map((part) => String(part || '').trim()).filter(Boolean).join('/'));
+}
+
+function relativeRepoPathFromFile(fromFilePath, targetPath) {
+    const fromSegments = splitRepoPathSegments(fromFilePath);
+    if (fromSegments.length) fromSegments.pop();
+    const targetSegments = splitRepoPathSegments(targetPath);
+    if (!targetSegments.length) return '';
+
+    let shared = 0;
+    const sharedMax = Math.min(fromSegments.length, targetSegments.length);
+    while (shared < sharedMax) {
+        if (fromSegments[shared].toLowerCase() !== targetSegments[shared].toLowerCase()) {
+            break;
+        }
+        shared += 1;
+    }
+
+    const relativeParts = [];
+    for (let i = shared; i < fromSegments.length; i += 1) {
+        relativeParts.push('..');
+    }
+    relativeParts.push(...targetSegments.slice(shared));
+    const relative = relativeParts.join('/');
+    if (!relative) return './';
+    if (relative.startsWith('.') || relative.startsWith('/')) return relative;
+    return `./${relative}`;
+}
+
+function normalizeImageExtension(value) {
+    const ext = String(value || '').trim().toLowerCase();
+    if (!ext) return '.png';
+    const safe = ext.startsWith('.') ? ext : `.${ext}`;
+    return IMAGE_FILE_EXTENSIONS.has(safe) ? safe : '.png';
+}
+
+function ensureUniqueWorkspacePath(pathValue) {
+    const safePath = normalizeRepoPath(pathValue);
+    if (!safePath) return '';
+    const ext = fileExt(safePath);
+    const stem = ext ? safePath.slice(0, -ext.length) : safePath;
+    let nextPath = safePath;
+    let index = 1;
+    while (state.workspace.files.some((entry) => normalizeRepoPath(entry.path).toLowerCase() === nextPath.toLowerCase())) {
+        index += 1;
+        nextPath = `${stem}-${index}${ext}`;
+    }
+    return nextPath;
+}
+
 function detectFileMode(pathValue) {
     const ext = fileExt(pathValue);
     if (ext === '.md' || ext === '.markdown') return 'markdown';
     if (ext === '.fx') return 'shaderfx';
+    if (IMAGE_FILE_EXTENSIONS.has(ext)) return 'image';
     return 'csharp';
 }
 
@@ -432,6 +510,7 @@ function languageForFile(pathValue) {
     const mode = detectFileMode(pathValue);
     if (mode === 'markdown') return 'markdown';
     if (mode === 'shaderfx') return 'shaderfx';
+    if (mode === 'image') return 'plaintext';
     return 'csharp';
 }
 
@@ -2326,6 +2405,19 @@ function activeFileMode() {
     return detectFileMode(active && active.path ? active.path : '');
 }
 
+function imagePreviewSrcFromActiveFile() {
+    const active = getActiveFile();
+    if (!active || detectFileMode(active.path) !== 'image') {
+        return '';
+    }
+    const content = String(active.content || '').trim();
+    if (!content) return '';
+    if (content.startsWith('data:image/')) {
+        return content;
+    }
+    return '';
+}
+
 function updateStatusLanguage() {
     if (!dom.statusLanguage) return;
     const mode = activeFileMode();
@@ -2335,6 +2427,10 @@ function updateStatusLanguage() {
     }
     if (mode === 'shaderfx') {
         dom.statusLanguage.textContent = 'Shader(.fx)';
+        return;
+    }
+    if (mode === 'image') {
+        dom.statusLanguage.textContent = 'Image';
         return;
     }
     dom.statusLanguage.textContent = 'C#';
@@ -2694,6 +2790,14 @@ function pastedImageFileName(file, index) {
     return safe || fallback;
 }
 
+function detectImageExtensionFromPasteFile(file) {
+    const type = String(file && file.type || '').toLowerCase();
+    if (type && MARKDOWN_PASTE_EXTENSION_BY_MIME[type]) {
+        return MARKDOWN_PASTE_EXTENSION_BY_MIME[type];
+    }
+    return normalizeImageExtension(fileExt(String(file && file.name || '')));
+}
+
 function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -2707,7 +2811,41 @@ function readFileAsDataUrl(file) {
     });
 }
 
+function createWorkspaceImageFileFromPaste(file, options) {
+    const opts = options || {};
+    const markdownFile = opts.markdownFile || getActiveFile();
+    if (!markdownFile || detectFileMode(markdownFile.path) !== 'markdown') {
+        return null;
+    }
+    const imageDataUrl = String(opts.dataUrl || '');
+    if (!imageDataUrl.startsWith('data:image/')) {
+        return null;
+    }
+
+    const index = Math.max(0, Number(opts.index || 0));
+    const alt = pastedImageFileName(file, index);
+    const ext = detectImageExtensionFromPasteFile(file);
+    const markdownDir = dirnameRepoPath(markdownFile.path);
+    const imageDir = joinRepoPathParts(markdownDir, 'images');
+    const desiredPath = joinRepoPathParts(imageDir, `${alt}${ext}`);
+    const filePath = ensureUniqueWorkspacePath(desiredPath);
+    if (!filePath) return null;
+
+    return {
+        file: {
+            id: createFileId(),
+            path: filePath,
+            content: imageDataUrl
+        },
+        markdownPath: relativeRepoPathFromFile(markdownFile.path, filePath) || `./${String(filePath).split('/').pop() || 'image'}`,
+        alt
+    };
+}
+
 async function insertPastedMarkdownImages(fileList) {
+    const ctx = getActiveMarkdownContext();
+    if (!ctx) return 0;
+
     const files = Array.from(fileList || []);
     if (!files.length) return 0;
 
@@ -2717,6 +2855,7 @@ async function insertPastedMarkdownImages(fileList) {
     }
 
     const snippets = [];
+    const createdFileIds = [];
     for (let i = 0; i < limited.length; i += 1) {
         const file = limited[i];
         if (!file) continue;
@@ -2729,13 +2868,35 @@ async function insertPastedMarkdownImages(fileList) {
             addEvent('warn', `图片编码失败，已跳过：${file.name || `image-${i + 1}`}`);
             continue;
         }
-        const alt = pastedImageFileName(file, i);
-        snippets.push(`![${alt}](${dataUrl})`);
+        const record = createWorkspaceImageFileFromPaste(file, {
+            index: i,
+            dataUrl,
+            markdownFile: ctx.active
+        });
+        if (!record || !record.file || !record.markdownPath) {
+            addEvent('warn', `图片写入工作区失败，已跳过：${file.name || `image-${i + 1}`}`);
+            continue;
+        }
+        state.workspace.files.push(record.file);
+        ensureModelForFile(record.file);
+        createdFileIds.push(record.file.id);
+        snippets.push(`![${record.alt}](${record.markdownPath})`);
     }
 
     if (!snippets.length) return 0;
+    updateFileListUi();
+    scheduleWorkspaceSave();
+
     const inserted = insertMarkdownBlockSnippet(`\n${snippets.join('\n\n')}\n`);
-    if (!inserted) return 0;
+    if (!inserted) {
+        if (createdFileIds.length) {
+            state.workspace.files = state.workspace.files.filter((file) => !createdFileIds.includes(file.id));
+            createdFileIds.forEach((fileId) => removeModelForFile(fileId));
+            updateFileListUi();
+            scheduleWorkspaceSave();
+        }
+        return 0;
+    }
     addEvent('info', `已粘贴图片 ${snippets.length} 张`);
     return snippets.length;
 }
@@ -2973,6 +3134,7 @@ function applyEditorModeUi() {
     const mode = activeFileMode();
     const isMarkdown = mode === 'markdown';
     const isShader = mode === 'shaderfx';
+    const isImage = mode === 'image';
     updateStatusLanguage();
     updateHeaderModeActions();
     if (dom.markdownToolboxGroup) {
@@ -2998,6 +3160,23 @@ function applyEditorModeUi() {
     }
     if (dom.shaderPip) {
         dom.shaderPip.hidden = !isShader;
+    }
+    if (dom.imagePreviewPane) {
+        dom.imagePreviewPane.hidden = !isImage;
+        dom.imagePreviewPane.style.display = isImage ? 'flex' : 'none';
+    }
+    if (dom.imagePreviewImage) {
+        if (isImage) {
+            dom.imagePreviewImage.src = imagePreviewSrcFromActiveFile();
+            const active = getActiveFile();
+            dom.imagePreviewImage.alt = active ? `${active.path} 预览` : '图片预览';
+        } else {
+            dom.imagePreviewImage.removeAttribute('src');
+            dom.imagePreviewImage.alt = '图片预览';
+        }
+    }
+    if (dom.editor && isImage) {
+        dom.editor.hidden = true;
     }
     if (isShader) {
         drawShaderPipCanvas();
@@ -4153,12 +4332,12 @@ function bindUiEvents() {
     }
 
     dom.btnAddFile.addEventListener('click', function () {
-        const input = globalThis.prompt('请输入新文件名（.cs/.md/.fx）', '新文章.md');
+        const input = globalThis.prompt('请输入新文件名（.cs/.md/.fx/.png）', '新文章.md');
         if (!input) return;
 
         const fileName = input.trim();
-        if (!/\.(?:cs|md|fx)$/i.test(fileName)) {
-            addEvent('error', '文件名必须以 .cs/.md/.fx 结尾');
+        if (!FILE_NAME_ALLOWED_EXT_RE.test(fileName)) {
+            addEvent('error', '文件名必须以 .cs/.md/.fx/.png/.jpg/.jpeg/.gif/.webp/.svg/.bmp/.avif 结尾');
             return;
         }
 
@@ -4187,12 +4366,12 @@ function bindUiEvents() {
         const active = getActiveFile();
         if (!active) return;
 
-        const input = globalThis.prompt('请输入新的文件名（.cs/.md/.fx）', active.path);
+        const input = globalThis.prompt('请输入新的文件名（.cs/.md/.fx/.png）', active.path);
         if (!input) return;
 
         const next = input.trim();
-        if (!/\.(?:cs|md|fx)$/i.test(next)) {
-            addEvent('error', '文件名必须以 .cs/.md/.fx 结尾');
+        if (!FILE_NAME_ALLOWED_EXT_RE.test(next)) {
+            addEvent('error', '文件名必须以 .cs/.md/.fx/.png/.jpg/.jpeg/.gif/.webp/.svg/.bmp/.avif 结尾');
             return;
         }
 

@@ -107,8 +107,17 @@ async function main() {
         target.dispatchEvent(event);
     });
     await page.waitForFunction(() => {
-        return String(globalThis.__tmlIdeDebug.getEditorText() || '').includes('data:image/');
+        return /!\[[^\]]+\]\((?:\.\/)?images\/.+\.(?:png|jpe?g|gif|webp|svg|bmp|avif)\)/i.test(String(globalThis.__tmlIdeDebug.getEditorText() || ''));
     }, null, { timeout: 10000 });
+    await page.waitForSelector('#file-list .file-item:has-text("images/")', { timeout: 10000 });
+    await page.click('#file-list .file-item:has-text("images/")');
+    await page.waitForSelector('#image-preview-pane:not([hidden])', { timeout: 10000 });
+    await page.waitForFunction(() => {
+        const node = document.querySelector('#image-preview-image');
+        return !!(node && String(node.getAttribute('src') || '').startsWith('data:image/'));
+    }, null, { timeout: 10000 });
+    await page.click('#file-list .file-item:has-text("demo.md")');
+    await page.waitForSelector('#editor .monaco-editor', { timeout: 10000 });
     await page.click('#btn-md-focus-mode');
     await page.waitForTimeout(120);
     await page.click('#btn-md-focus-mode');
