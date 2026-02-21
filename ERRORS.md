@@ -1617,3 +1617,17 @@
 - `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图；覆盖动画文件补全）
 
 **备注**：新增截图 `test-results/tml-ide-unified-acceptance/01d-animation-csharp-completion.png`，验证 `.animcs` 文件状态栏为 `C# (动画)` 且补全含 `AddBuff`。
+
+### 验证记录 [2026-02-21 22:33]：统一 IDE 全按钮/全交互审计并对照 main 旧功能映射（第三步）
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-full-ui-audit.mjs`：通过（含模拟输入、模拟点击、截图）
+- `npm --prefix tml-ide-app test -- workspace-explorer-categories.test.js animation-csharp-support.test.js`：通过
+- `npm run check-generated`：失败（`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`，属于当前仓库既有内容问题，未在本任务范围内修改）
+
+**备注**：
+- 全量审计截图目录：`test-results/tml-ide-full-ui-audit/`（共 68 张）。
+- 已覆盖活动栏、底栏标签、工作区文件增删改导入导出、Markdown 工具链、Ctrl+V 贴图、Shader 右侧面板控件与四图上传、统一提交面板、旧页面入口跳转与功能映射存在性校验。
