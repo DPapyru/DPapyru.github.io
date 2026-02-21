@@ -315,7 +315,7 @@ test('Analyze v2 completion provides override snippets with metadata', () => {
     assert.match(String(candidate.insertText || ''), /\{/);
 });
 
-test('Analyze v2 override snippet includes parameter names', () => {
+test('Analyze v2 override snippet includes parameter types and names', () => {
     const index = createAnalyzeIndex();
     const source = [
         'using Terraria;',
@@ -338,7 +338,10 @@ test('Analyze v2 override snippet includes parameter names', () => {
 
     assert.ok(candidate);
     assert.equal(candidate.insertTextMode, 'snippet');
-    assert.match(String(candidate.insertText || ''), /AnglerQuestReward\(rareMultiplier, rewardItems\)/);
+    assert.match(
+        String(candidate.insertText || ''),
+        /AnglerQuestReward\(float rareMultiplier, List<Item> rewardItems\)/
+    );
 });
 
 test('Analyze v2 completion supports more than 200 members for large tML-like types', () => {

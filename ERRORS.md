@@ -1680,3 +1680,18 @@
 - 根因：`vite` 仅声明在 `tml-ide-app/package.json` 的 `devDependencies`，但 deploy workflow 之前只在仓库根目录执行 `npm ci`，未安装 `tml-ide-app` 依赖。
 - 修复：在 `.github/workflows/deploy.yml` 的依赖安装步骤新增 `tml-ide-app` 子项目安装（优先 `npm --prefix tml-ide-app ci`，无锁文件时回退 `npm --prefix tml-ide-app install`）。
 - 本次按用户要求在 `main` 工作区直接修改（未使用工作树）。
+
+### 验证记录 [2026-02-22 00:21]：基于 `tModLoader.dll` 重建 IDE 补全索引 + 修复 override 签名补全
+
+**级别**：L3
+
+**命令与结果**：
+- `dotnet run --project tml-ide-app/tooling/indexer -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 -- --dll /mnt/f/steam/steamapps/common/tModLoader/tModLoader.dll --out /mnt/f/DPapyru.github.io/.worktrees/fix-tml-dll-completion/tml-ide-app/public/data/api-index.v2.json`：通过
+- `npm --prefix tml-ide-app test -- analyze-v2.test.js`：通过（52/52）
+- `npm --prefix tml-ide-app run build`：通过
+
+**备注**：
+- 索引生成输出：`types=2208`、`methods=9878`、`properties=1920`、`fields=21753`。
+- 首次直接 `dotnet run` 失败原因为当前环境仅安装 `Microsoft.NETCore.App 10.x`，而项目默认目标框架为 `net8.0`；本次通过临时覆盖 `TargetFramework/TargetFrameworks=net10.0` 完成生成，未改动项目 `csproj`。
+- 生成时仍存在 `Steamworks.NET` 引用程序集告警，索引器提示 `partial type load`；但 `Terraria.ModLoader.ModItem` 与 `Shoot(...)` 已可解析并用于 override 补全。
+- override 修复点：`tml-ide-app/src/lib/analyze-v2.js` 的 `buildOverrideSnippet` 改为输出“参数类型 + 参数名”，避免生成仅参数名的非法签名。
