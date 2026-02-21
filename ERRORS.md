@@ -1541,3 +1541,18 @@
 - Shader 浮动预览窗口已取消，改为编辑区右侧固定渲染面板。
 - 右侧面板迁移并保留了 shader-playground 风格能力：预设图片、渲染模式、采样模式、背景模式。
 - 验收截图目录：`test-results/tml-ide-unified-acceptance/`（更新 `01-shell-ready.png`、`02-markdown-toolbox.png`、`03-markdown-insert-paste.png`、`04-markdown-shader-actions.png`）。
+
+### 验证记录 [2026-02-21 20:51]：修复统一 IDE Markdown 预览在 dev 基路径下失效
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- markdown-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含截图、模拟输入、模拟点击）
+
+**备注**：
+- 修复点包含两层：
+  1. `tml-ide-app/src/main.js` 新增 `resolveViewerPagePath`，避免硬编码路径导致 iframe 404/错误页。
+  2. `tml-ide-app/vite.config.js` 新增 dev 中间件，将仓库 `site/` 映射到 `/site`，确保本地调试时 `site/pages/viewer.html` 真实可访问。
+- Playwright 验收脚本新增 Markdown 预览 iframe 有效性断言，并产出截图：`test-results/tml-ide-unified-acceptance/01a-markdown-preview-frame.png`。

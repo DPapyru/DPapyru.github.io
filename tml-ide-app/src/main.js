@@ -245,6 +245,7 @@ const MARKDOWN_PASTE_EXTENSION_BY_MIME = Object.freeze({
     'image/bmp': '.bmp',
     'image/avif': '.avif'
 });
+let viewerPagePathCache = '';
 const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif)$/i;
 const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
 const SHADER_PREVIEW_RENDER_MODES = new Set(['alpha', 'additive', 'multiply', 'screen']);
@@ -575,6 +576,70 @@ function normalizeMarkdownRepoPath(pathValue) {
 
 function toViewerFileParam(pathValue) {
     return normalizeRepoPath(pathValue).replace(/^site\/content\//i, '');
+}
+
+function normalizeUrlPath(pathValue) {
+    let safe = String(pathValue || '').trim();
+    if (!safe) return '/';
+    if (!safe.startsWith('/')) safe = `/${safe}`;
+    safe = safe.replace(/\/{2,}/g, '/');
+    if (safe.length > 1 && safe.endsWith('/')) {
+        safe = safe.replace(/\/+$/, '');
+    }
+    return safe || '/';
+}
+
+function buildViewerPagePathCandidates() {
+    const candidates = [];
+    const appendCandidate = (pathValue) => {
+        const safePath = normalizeUrlPath(pathValue);
+        if (candidates.includes(safePath)) return;
+        candidates.push(safePath);
+    };
+    const baseUrl = String(import.meta.env && import.meta.env.BASE_URL || '/');
+    const basePrefix = normalizeUrlPath(baseUrl);
+    const pathname = normalizeUrlPath(globalThis.location && globalThis.location.pathname || '/');
+    const firstPathSegment = pathname.split('/').filter(Boolean)[0] || '';
+    appendCandidate(`${basePrefix}/site/pages/viewer.html`);
+    if (firstPathSegment && firstPathSegment.toLowerCase() !== 'site') {
+        appendCandidate(`/${firstPathSegment}/site/pages/viewer.html`);
+    }
+    appendCandidate('/site/pages/viewer.html');
+    return candidates;
+}
+
+async function resolveViewerPagePath() {
+    if (viewerPagePathCache) return viewerPagePathCache;
+    const candidates = buildViewerPagePathCandidates();
+    for (let i = 0; i < candidates.length; i += 1) {
+        const candidate = candidates[i];
+        const probeUrl = `${candidate}?__tml_ide_probe=1&ts=${Date.now()}`;
+        try {
+            const response = await fetch(probeUrl, { method: 'GET', cache: 'no-store' });
+            if (!(response && response.ok)) {
+                continue;
+            }
+            const bodyText = await response.text();
+            if (/public base url of/i.test(bodyText)) {
+                continue;
+            }
+            if (/<title>\s*tml ide playground/i.test(bodyText)) {
+                continue;
+            }
+            viewerPagePathCache = candidate;
+            return candidate;
+        } catch (_error) {
+            // Ignore probe failures and continue fallback probing.
+        }
+    }
+    viewerPagePathCache = candidates[0] || '/site/pages/viewer.html';
+    return viewerPagePathCache;
+}
+
+async function buildViewerPageUrl(pathValue) {
+    const viewerPath = await resolveViewerPagePath();
+    const viewerFile = encodeURIComponent(toViewerFileParam(pathValue));
+    return `${viewerPath}?file=${viewerFile}`;
 }
 
 function sanitizeShaderSlug(value) {
@@ -3427,8 +3492,7 @@ async function openMarkdownViewerPreview(newTab) {
         return;
     }
     await saveWorkspaceImmediate();
-    const viewerFile = encodeURIComponent(toViewerFileParam(repoPath));
-    const url = `/site/pages/viewer.html?file=${viewerFile}`;
+    const url = await buildViewerPageUrl(repoPath);
     if (newTab) {
         globalThis.open(url, '_blank', 'noopener,noreferrer');
         return;
@@ -4261,16 +4325,20 @@ function bindUiEvents() {
     }
 
     if (dom.btnMdOpenGuide) {
-        dom.btnMdOpenGuide.addEventListener('click', () => {
+        dom.btnMdOpenGuide.addEventListener('click', async () => {
             if (!getMarkdownContextForAction('打开教程')) return;
             const guidePath = MARKDOWN_FALLBACK_ANCHORS[1] || MARKDOWN_FALLBACK_ANCHORS[0] || '';
             if (!guidePath) {
                 addEvent('error', '未配置 Markdown 教程入口');
                 return;
             }
-            const viewerFile = encodeURIComponent(toViewerFileParam(guidePath));
-            globalThis.open(`/site/pages/viewer.html?file=${viewerFile}`, '_blank', 'noopener,noreferrer');
-            addEvent('info', `已打开 Markdown 教程：${toViewerFileParam(guidePath)}`);
+            try {
+                const url = await buildViewerPageUrl(guidePath);
+                globalThis.open(url, '_blank', 'noopener,noreferrer');
+                addEvent('info', `已打开 Markdown 教程：${toViewerFileParam(guidePath)}`);
+            } catch (error) {
+                addEvent('error', `打开 Markdown 教程失败：${error.message}`);
+            }
         });
     }
 

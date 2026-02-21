@@ -65,6 +65,20 @@ async function main() {
     });
     await page.click('#btn-markdown-toggle-preview');
     await page.waitForSelector('#markdown-preview-pane:not([hidden])', { timeout: 10000 });
+    await page.waitForFunction(() => {
+        const frame = document.querySelector('#markdown-preview-frame');
+        if (!(frame instanceof HTMLIFrameElement)) return false;
+        const src = String(frame.getAttribute('src') || '');
+        return /\/site\/pages\/viewer\.html\?file=/.test(src);
+    }, null, { timeout: 10000 });
+    await page.waitForFunction(() => {
+        const frame = document.querySelector('#markdown-preview-frame');
+        if (!(frame instanceof HTMLIFrameElement) || !frame.contentDocument) return false;
+        const text = String(frame.contentDocument.body && frame.contentDocument.body.innerText || '');
+        if (!text) return false;
+        return !text.includes('public base URL of /tml-ide/') && !text.includes('tML IDE Playground');
+    }, null, { timeout: 10000 });
+    await page.screenshot({ path: path.join(outDir, '01a-markdown-preview-frame.png'), fullPage: true });
     await page.click('#btn-markdown-open-viewer');
     await page.click('#btn-markdown-toggle-preview');
     await page.waitForSelector('#editor .monaco-editor', { timeout: 10000 });
