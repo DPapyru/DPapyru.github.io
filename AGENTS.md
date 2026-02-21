@@ -39,14 +39,15 @@ git worktree remove .worktrees/<worktree-name>
 2. 首次进入运行依赖安装：
    - `npm ci`
 3. 实施改动。
-4. 按需更新生成文件：
+4. 改动完成后，在当前工作树提交改动内容，不要使用合并和推送。
+5. 按需更新生成文件：
    - `npm run generate-structure`
    - `npm run generate-search`
    - 或 `npm run generate-index`
-5. 与目录修改强挂钩时，执行验证：
+6. 与目录修改强挂钩时，执行验证：
    - 必跑：`npm run build`
    - 条件允许时：`npm run check-generated`
-6. 记录验证结果到 `ERRORS.md`（命令、是否通过、备注、时间）。
+7. 记录验证结果到 `ERRORS.md`（命令、是否通过、备注、时间）。
 
 ## 4. L3 级统一验收（替代三工作树联合验收）
 
@@ -86,10 +87,3 @@ git worktree remove .worktrees/<worktree-name>
 - 在 PR 中引用 `ERRORS.md` 对应验证记录。
 - 以可复现验证为准，不以“本地看起来正常”为准。
 - git合并与提交的内容必须以中文为主。
-
-## 8. 多Agent协作（已迁移到项目特化 Skill）
-
-多Agent协作协议已迁移到本项目特化 Skill：
-
-- `local-skills/agents-tell-down-collab/SKILL.md`
-- 调用方式：`$agents-tell-down-collab`
