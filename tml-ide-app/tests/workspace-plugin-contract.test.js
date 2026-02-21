@@ -23,11 +23,11 @@ test('shader plugin strips legacy site header and ignores bridge script', () => 
     assert.match(source, /shader-playground\.v1/);
 });
 
-test('main shell dispatches submit-panel command through workspace plugins', () => {
+test('main shell uses split submit channels for docs and shader', () => {
     const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
-    assert.match(source, /dispatchWorkspaceCommand\('markdown',\s*'workspace\.open-submit-panel'\)/);
-    assert.match(source, /dispatchWorkspaceCommand\('shader',\s*'workspace\.open-submit-panel'\)/);
-    assert.match(source, /requestWorkspaceCollect\('markdown'\)/);
-    assert.match(source, /requestWorkspaceCollect\('shader'\)/);
-    assert.doesNotMatch(source, /postMessageToSubapp/);
+    assert.match(source, /function buildSplitSubmitPlan\(/);
+    assert.match(source, /runSubmitChannel\('docs'/);
+    assert.match(source, /runSubmitChannel\('shader'/);
+    assert.match(source, /runSplitUnifiedSubmit\(plan,\s*\{\}\)/);
+    assert.doesNotMatch(source, /runUnifiedSubmitBatches\(/);
 });

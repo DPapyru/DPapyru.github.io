@@ -20,14 +20,12 @@
                 <h1 class="app-title">tML IDE Playground</h1>
                 <p class="app-subtitle">workspace: tml-ide · C# API 补全</p>
             </div>
-            <div class="workspace-switch" role="tablist" aria-label="工作区切换">
-                <button class="workspace-btn workspace-btn-active" id="workspace-btn-csharp" type="button" data-workspace="csharp" role="tab" aria-selected="true">C# IDE</button>
-                <button class="workspace-btn" id="workspace-btn-markdown" type="button" data-workspace="markdown" role="tab" aria-selected="false">Markdown IDE</button>
-                <button class="workspace-btn" id="workspace-btn-shader" type="button" data-workspace="shader" role="tab" aria-selected="false">Shader</button>
-            </div>
             <div class="app-header-actions">
+                <button id="btn-markdown-toggle-preview" type="button">预览</button>
+                <button id="btn-markdown-open-viewer" type="button">新标签预览</button>
+                <button id="btn-shader-compile" type="button">编译 .fx</button>
+                <button id="btn-shader-export" type="button">导出 .fx</button>
                 <button id="btn-open-unified-submit" type="button">统一提交</button>
-                <button id="btn-route-submit-panel" type="button">提交面板</button>
                 <button id="btn-save-workspace" type="button">保存工作区</button>
                 <button id="btn-export-workspace" type="button">导出 workspace.v1.json</button>
                 <label class="file-btn" for="input-import-workspace">导入工作区</label>
@@ -52,16 +50,16 @@
 
             <aside class="side-bar panel panel-files" aria-label="Primary Side Bar">
                 <div class="panel-head">
-                    <h2>EXPLORER</h2>
+                    <h2>文件目录</h2>
                     <span id="workspace-version" class="pill">workspace.v1</span>
                 </div>
                 <div class="panel-actions">
-                    <button id="btn-add-file" type="button">新增 .cs</button>
+                    <button id="btn-add-file" type="button">新增文件</button>
                     <button id="btn-rename-file" type="button">重命名</button>
                     <button id="btn-delete-file" type="button">删除</button>
                 </div>
                 <ul id="file-list" class="file-list" aria-label="工程文件列表"></ul>
-                <p class="panel-tip">支持多文件 C# 虚拟工程。内容自动保存到浏览器 IndexedDB。</p>
+                <p class="panel-tip">支持 .cs/.md/.fx 多文件工作区，内容自动保存到浏览器 IndexedDB。</p>
             </aside>
 
             <section class="panel panel-editor">
@@ -73,15 +71,23 @@
                     </div>
                 </div>
                 <div id="editor" class="editor" aria-label="C# 编辑器"></div>
+                <section id="markdown-preview-pane" class="markdown-preview-pane" hidden>
+                    <iframe id="markdown-preview-frame" class="markdown-preview-frame" title="Markdown 预览" loading="lazy"></iframe>
+                </section>
+                <section id="shader-pip" class="shader-pip" hidden>
+                    <div id="shader-pip-head" class="shader-pip-head">画布预览</div>
+                    <canvas id="shader-pip-canvas" class="shader-pip-canvas" width="640" height="360"></canvas>
+                    <div id="shader-pip-resize" class="shader-pip-resize" aria-label="缩放画布"></div>
+                </section>
             </section>
 
             <aside id="bottom-panel" class="panel panel-tools" aria-label="Panel">
                 <div class="bottom-panel-head">
                     <div class="panel-tab-strip" role="tablist" aria-label="Panel Tabs">
-                        <button class="panel-tab panel-tab-active" type="button" data-panel-tab="problems">Problems</button>
-                        <button class="panel-tab" type="button" data-panel-tab="assembly">Assembly</button>
-                        <button class="panel-tab" type="button" data-panel-tab="indexer">Indexer</button>
-                        <button class="panel-tab" type="button" data-panel-tab="output">Output</button>
+                        <button class="panel-tab panel-tab-active" type="button" data-panel-tab="problems">问题</button>
+                        <button class="panel-tab" type="button" data-panel-tab="output">输出</button>
+                        <button class="panel-tab" type="button" data-panel-tab="compile">编译</button>
+                        <button class="panel-tab" type="button" data-panel-tab="errors">报错</button>
                     </div>
                     <button id="btn-toggle-bottom-panel" class="panel-collapse-btn" type="button" aria-label="隐藏底部面板">
                         <span class="panel-collapse-icon" aria-hidden="true">▾</span>
@@ -103,135 +109,93 @@
                         </div>
                     </section>
 
-                    <section class="panel-view" data-panel-view="assembly">
-                        <div class="tool-group">
-                            <h3>追加程序集（assembly.import）</h3>
-                            <label for="input-extra-dll">选择 DLL</label>
-                            <input id="input-extra-dll" type="file" accept=".dll,application/octet-stream">
-                            <label for="input-extra-xml">选择 XML 文档</label>
-                            <input id="input-extra-xml" type="file" accept=".xml,text/xml,application/xml">
-                            <button id="btn-import-assembly" type="button">导入并合并</button>
-                            <p class="panel-tip">导入会话级扩展符号，不修改基础 api-index.v2.json。</p>
-                        </div>
-                    </section>
-
-                    <section class="panel-view" data-panel-view="indexer">
-                        <div class="tool-group">
-                            <h3>离线索引生成（编译 DLL）</h3>
-                            <p class="panel-tip">使用本地 dotnet CLI 反射 DLL 并生成 `api-index.v2.json`，示例默认指向 `after/tModLoader.dll`。</p>
-                            <label for="input-indexer-dll-path">基础 DLL 路径（必填）</label>
-                            <input id="input-indexer-dll-path" type="text" value="/mnt/f/DPapyru.github.io/after/tModLoader.dll" spellcheck="false">
-                            <label for="input-indexer-xml-path">基础 XML 路径（可选，留空将自动尝试同名 .xml）</label>
-                            <input id="input-indexer-xml-path" type="text" value="" spellcheck="false">
-                            <label for="input-indexer-terraria-dll-path">Terraria.dll 路径（可选）</label>
-                            <input id="input-indexer-terraria-dll-path" type="text" value="" spellcheck="false">
-                            <label for="input-indexer-terraria-xml-path">Terraria.xml 路径（可选）</label>
-                            <input id="input-indexer-terraria-xml-path" type="text" value="" spellcheck="false">
-                            <label for="input-indexer-out-path">输出 JSON（必填）</label>
-                            <input id="input-indexer-out-path" type="text" value="tml-ide-app/public/data/api-index.v2.json" spellcheck="false">
-                            <label for="index-command-preview">基础索引命令</label>
-                            <pre id="index-command-preview" class="cmd-preview"></pre>
-                            <button id="btn-copy-index-command" type="button">复制基础索引命令</button>
-                            <label for="input-append-dll-path">追加 DLL 路径（必填）</label>
-                            <input id="input-append-dll-path" type="text" value="/path/to/extra-mod.dll" spellcheck="false">
-                            <label for="input-append-xml-path">追加 XML 路径（可选）</label>
-                            <input id="input-append-xml-path" type="text" value="" spellcheck="false">
-                            <label for="input-append-out-path">输出 session pack（必填）</label>
-                            <input id="input-append-out-path" type="text" value="tml-ide-app/public/data/session-pack.v1.json" spellcheck="false">
-                            <label for="append-command-preview">追加会话命令</label>
-                            <pre id="append-command-preview" class="cmd-preview"></pre>
-                            <button id="btn-copy-append-command" type="button">复制追加命令</button>
-                        </div>
-
-                        <div class="tool-group">
-                            <h3>导入生成索引（api-index.v2）</h3>
-                            <label for="input-import-index">选择索引 JSON</label>
-                            <input id="input-import-index" type="file" accept="application/json,.json">
-                            <button id="btn-import-index" type="button">导入并替换当前索引</button>
-                            <p class="panel-tip">用于加载你离线编译出的 `api-index.v2.json`，导入后立即参与补全/悬停/诊断。</p>
-                        </div>
-                    </section>
-
                     <section class="panel-view" data-panel-view="output">
                         <div class="tool-group">
                             <h3>最近事件</h3>
                             <ul id="event-log" class="event-log" aria-live="polite"></ul>
                         </div>
                     </section>
+
+                    <section class="panel-view" data-panel-view="compile">
+                        <div class="tool-group">
+                            <h3>.fx 编译</h3>
+                            <button id="btn-panel-shader-compile" type="button">编译当前 .fx</button>
+                            <pre id="shader-compile-log" class="cmd-preview">等待编译...</pre>
+                        </div>
+                    </section>
+
+                    <section class="panel-view" data-panel-view="errors">
+                        <div class="tool-group">
+                            <h3>.fx 报错列表</h3>
+                            <ul id="shader-error-list" class="problems-list" aria-live="polite"></ul>
+                        </div>
+                    </section>
                 </div>
             </aside>
         </main>
 
-        <main id="workspace-subapp-root" class="workspace-subapp" hidden>
-            <section class="subapp-frame-wrap">
-                <div class="subapp-toolbar">
-                    <span class="subapp-title" id="subapp-title">Markdown IDE</span>
-                    <div class="subapp-toolbar-actions">
-                        <button id="btn-subapp-reload" type="button">刷新子应用</button>
-                        <button id="btn-subapp-open-submit" type="button">打开提交面板</button>
-                    </div>
-                </div>
-                <div id="workspace-plugin-host" class="workspace-plugin-host" aria-label="Unified IDE Workspace Host"></div>
+        <aside id="unified-submit-panel" class="unified-submit-panel" aria-hidden="true">
+            <header class="unified-submit-head">
+                <h2>统一提交</h2>
+                <button id="btn-unified-submit-close" type="button">关闭</button>
+            </header>
+            <section class="unified-submit-section">
+                <label for="unified-worker-url">Worker API 地址</label>
+                <input id="unified-worker-url" type="text" value="https://greenhome-pr.3577415213.workers.dev/api/create-pr" spellcheck="false">
             </section>
-            <aside id="unified-submit-panel" class="unified-submit-panel">
-                <header class="unified-submit-head">
-                    <h2>统一提交</h2>
-                    <button id="btn-unified-submit-close" type="button">关闭</button>
-                </header>
-                <section class="unified-submit-section">
-                    <label for="unified-worker-url">Worker API 地址</label>
-                    <input id="unified-worker-url" type="text" value="https://greenhome-pr.3577415213.workers.dev/api/create-pr" spellcheck="false">
-                </section>
-                <section class="unified-submit-section">
-                    <div class="unified-auth-row">
-                        <button id="btn-unified-auth-login" type="button">GitHub 登录</button>
-                        <button id="btn-unified-auth-logout" type="button">退出</button>
-                    </div>
-                    <div id="unified-auth-status" class="unified-auth-status">未登录</div>
-                </section>
-                <section class="unified-submit-section">
-                    <label for="unified-pr-title">PR 标题（可选）</label>
-                    <input id="unified-pr-title" type="text" placeholder="例如：docs: 统一IDE提交">
-                </section>
-                <section class="unified-submit-section">
-                    <label for="unified-existing-pr-number">继续已有 PR（可选）</label>
-                    <input id="unified-existing-pr-number" type="number" min="1" step="1" placeholder="留空=新建 PR">
-                </section>
-                <section class="unified-submit-section">
-                    <label for="unified-anchor-select">Markdown 锚点（无 Markdown 时必选）</label>
-                    <select id="unified-anchor-select">
-                        <option value="">自动选择（若可用）</option>
-                    </select>
-                </section>
-                <section class="unified-submit-section">
-                    <div id="unified-summary" class="unified-summary">待收集 staged 改动。</div>
-                    <div class="unified-submit-actions">
-                        <button id="btn-unified-collect" type="button">收集改动</button>
-                        <button id="btn-unified-submit" type="button">提交全部（自动分批）</button>
-                        <button id="btn-unified-resume" type="button">续传失败批次</button>
-                    </div>
-                </section>
-                <section class="unified-submit-section">
-                    <h3>可提交文件</h3>
-                    <ul id="unified-sendable-list" class="unified-file-list"></ul>
-                </section>
-                <section class="unified-submit-section">
-                    <h3>需手工 PR 文件</h3>
-                    <ul id="unified-blocked-list" class="unified-file-list"></ul>
-                </section>
-                <section class="unified-submit-section">
-                    <h3>批次进度</h3>
-                    <pre id="unified-batch-progress" class="unified-batch-progress">尚未提交。</pre>
-                </section>
-                <section class="unified-submit-section">
-                    <div id="unified-submit-status" class="unified-submit-status">就绪</div>
-                </section>
-            </aside>
-        </main>
+            <section class="unified-submit-section">
+                <div class="unified-auth-row">
+                    <button id="btn-unified-auth-login" type="button">GitHub 登录</button>
+                    <button id="btn-unified-auth-logout" type="button">退出</button>
+                </div>
+                <div id="unified-auth-status" class="unified-auth-status">未登录</div>
+            </section>
+            <section class="unified-submit-section">
+                <label for="unified-pr-title">PR 标题（可选）</label>
+                <input id="unified-pr-title" type="text" placeholder="例如：docs: 统一IDE提交">
+            </section>
+            <section class="unified-submit-section">
+                <label for="unified-existing-pr-number">继续已有 PR（可选）</label>
+                <input id="unified-existing-pr-number" type="number" min="1" step="1" placeholder="留空=新建 PR">
+            </section>
+            <section class="unified-submit-section">
+                <label for="unified-anchor-select">Markdown 锚点（无 Markdown 时必选）</label>
+                <select id="unified-anchor-select">
+                    <option value="">自动选择（若可用）</option>
+                </select>
+            </section>
+            <section class="unified-submit-section">
+                <label for="unified-shader-slug">Shader 投稿 Slug（手动）</label>
+                <input id="unified-shader-slug" type="text" placeholder="例如：my-shader">
+            </section>
+            <section class="unified-submit-section">
+                <div id="unified-summary" class="unified-summary">待收集 staged 改动。</div>
+                <div class="unified-submit-actions">
+                    <button id="btn-unified-collect" type="button">收集改动</button>
+                    <button id="btn-unified-submit" type="button">提交全部（双通道）</button>
+                    <button id="btn-unified-resume" type="button">重试失败通道</button>
+                </div>
+            </section>
+            <section class="unified-submit-section">
+                <h3>可提交文件</h3>
+                <ul id="unified-sendable-list" class="unified-file-list"></ul>
+            </section>
+            <section class="unified-submit-section">
+                <h3>需手工 PR 文件</h3>
+                <ul id="unified-blocked-list" class="unified-file-list"></ul>
+            </section>
+            <section class="unified-submit-section">
+                <h3>批次进度</h3>
+                <pre id="unified-batch-progress" class="unified-batch-progress">尚未提交。</pre>
+            </section>
+            <section class="unified-submit-section">
+                <div id="unified-submit-status" class="unified-submit-status">就绪</div>
+            </section>
+        </aside>
 
         <footer class="app-statusbar">
             <span class="status-item status-item-main" id="editor-status" role="status" aria-live="polite"></span>
-            <span class="status-item">C#</span>
+            <span class="status-item" id="status-language">C#</span>
             <span class="status-item">UTF-8</span>
             <span class="status-item">LF</span>
             <span class="status-item">Spaces: 4</span>

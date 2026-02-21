@@ -3,6 +3,8 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
 import 'monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js';
 import 'monaco-editor/esm/vs/basic-languages/csharp/csharp.contribution';
+import 'monaco-editor/esm/vs/basic-languages/markdown/markdown.contribution';
+import 'monaco-editor/esm/vs/basic-languages/cpp/cpp.contribution';
 import { conf as csharpConf, language as csharpLanguage } from 'monaco-editor/esm/vs/basic-languages/csharp/csharp';
 
 import { DIAGNOSTIC_SEVERITY, MESSAGE_TYPES } from './contracts/messages.js';
@@ -39,10 +41,21 @@ const dom = {
     workspaceButtons: Array.from(document.querySelectorAll('.workspace-btn[data-workspace]')),
     btnOpenUnifiedSubmit: document.getElementById('btn-open-unified-submit'),
     btnRouteSubmitPanel: document.getElementById('btn-route-submit-panel'),
+    btnMarkdownTogglePreview: document.getElementById('btn-markdown-toggle-preview'),
+    btnMarkdownOpenViewer: document.getElementById('btn-markdown-open-viewer'),
+    btnShaderCompile: document.getElementById('btn-shader-compile'),
+    btnShaderExport: document.getElementById('btn-shader-export'),
     fileList: document.getElementById('file-list'),
     activeFileName: document.getElementById('active-file-name'),
     editor: document.getElementById('editor'),
+    markdownPreviewPane: document.getElementById('markdown-preview-pane'),
+    markdownPreviewFrame: document.getElementById('markdown-preview-frame'),
+    shaderPip: document.getElementById('shader-pip'),
+    shaderPipHead: document.getElementById('shader-pip-head'),
+    shaderPipResize: document.getElementById('shader-pip-resize'),
+    shaderPipCanvas: document.getElementById('shader-pip-canvas'),
     editorStatus: document.getElementById('editor-status'),
+    statusLanguage: document.getElementById('status-language'),
     indexInfo: document.getElementById('index-info'),
     workspaceVersion: document.getElementById('workspace-version'),
     eventLog: document.getElementById('event-log'),
@@ -78,6 +91,9 @@ const dom = {
     panelViews: Array.from(document.querySelectorAll('.panel-view[data-panel-view]')),
     bottomPanel: document.getElementById('bottom-panel'),
     btnToggleBottomPanel: document.getElementById('btn-toggle-bottom-panel'),
+    btnPanelShaderCompile: document.getElementById('btn-panel-shader-compile'),
+    shaderCompileLog: document.getElementById('shader-compile-log'),
+    shaderErrorList: document.getElementById('shader-error-list'),
     commandPalette: document.getElementById('command-palette'),
     commandPaletteBackdrop: document.getElementById('command-palette-backdrop'),
     commandPaletteInput: document.getElementById('command-palette-input'),
@@ -95,6 +111,7 @@ const dom = {
     unifiedPrTitle: document.getElementById('unified-pr-title'),
     unifiedExistingPrNumber: document.getElementById('unified-existing-pr-number'),
     unifiedAnchorSelect: document.getElementById('unified-anchor-select'),
+    unifiedShaderSlug: document.getElementById('unified-shader-slug'),
     unifiedSummary: document.getElementById('unified-summary'),
     btnUnifiedCollect: document.getElementById('btn-unified-collect'),
     btnUnifiedSubmit: document.getElementById('btn-unified-submit'),
@@ -118,6 +135,11 @@ const state = {
     roslynWorker: null,
     initialized: false,
     problems: [],
+    shaderCompile: {
+        logs: [],
+        errors: [],
+        pip: { left: 0, top: 0, width: 360, height: 220 }
+    },
     route: {
         workspace: 'csharp',
         panel: ''
@@ -154,6 +176,7 @@ const state = {
         panelVisible: true,
         activeActivity: 'explorer',
         activePanelTab: 'problems',
+        markdownPreviewMode: 'edit',
         paletteOpen: false,
         paletteMode: 'commands',
         paletteItems: [],
@@ -331,6 +354,93 @@ function normalizeRepoPath(pathValue) {
         .replace(/\/{2,}/g, '/');
 }
 
+function fileExt(pathValue) {
+    const safe = String(pathValue || '').trim().toLowerCase();
+    const idx = safe.lastIndexOf('.');
+    if (idx < 0) return '';
+    return safe.slice(idx);
+}
+
+function detectFileMode(pathValue) {
+    const ext = fileExt(pathValue);
+    if (ext === '.md' || ext === '.markdown') return 'markdown';
+    if (ext === '.fx') return 'shaderfx';
+    return 'csharp';
+}
+
+function languageForFile(pathValue) {
+    const mode = detectFileMode(pathValue);
+    if (mode === 'markdown') return 'markdown';
+    if (mode === 'shaderfx') return 'cpp';
+    return 'csharp';
+}
+
+function normalizeMarkdownRepoPath(pathValue) {
+    let safe = normalizeRepoPath(pathValue);
+    if (!safe) return '';
+    safe = safe.replace(/^site\/content\//i, '');
+    if (!/\.md$/i.test(safe)) return '';
+    return `site/content/${safe}`;
+}
+
+function toViewerFileParam(pathValue) {
+    return normalizeRepoPath(pathValue).replace(/^site\/content\//i, '');
+}
+
+function sanitizeShaderSlug(value) {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 63);
+}
+
+function compileFxSource(code) {
+    const text = String(code || '');
+    const errors = [];
+    let depth = 0;
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        for (let j = 0; j < line.length; j += 1) {
+            const ch = line[j];
+            if (ch === '{') depth += 1;
+            if (ch === '}') {
+                depth -= 1;
+                if (depth < 0) {
+                    errors.push({
+                        line: i + 1,
+                        column: j + 1,
+                        message: '多余的右花括号 }'
+                    });
+                    depth = 0;
+                }
+            }
+        }
+        if (/^\s*#include\s+/i.test(line)) {
+            errors.push({
+                line: i + 1,
+                column: 1,
+                message: '当前在线编译不支持 #include'
+            });
+        }
+    }
+    if (depth > 0) {
+        errors.push({ line: lines.length || 1, column: 1, message: '缺少右花括号 }' });
+    }
+    if (!/float4\s+\w+\s*\(/i.test(text)) {
+        errors.push({ line: 1, column: 1, message: '未检测到 float4 像素着色器入口函数' });
+    }
+    return {
+        ok: errors.length === 0,
+        errors,
+        log: errors.length === 0
+            ? '编译成功：语法检查通过。'
+            : `编译失败：${errors.length} 条错误。`
+    };
+}
+
 function normalizeWorkerApiUrl(value) {
     let safe = String(value || '').trim();
     if (!safe) return '';
@@ -422,17 +532,8 @@ function writeLastWorkspacePreference(workspace) {
 
 function parseRouteFromUrl() {
     const url = new URL(globalThis.location.href);
-    const queryWorkspace = normalizeWorkspaceName(url.searchParams.get('workspace'));
     const panel = normalizePanelName(url.searchParams.get('panel'));
-
-    const hasWorkspaceParam = url.searchParams.has('workspace');
-    const storedWorkspace = normalizeWorkspaceName(
-        state.unifiedWorkspaceState && state.unifiedWorkspaceState.lastWorkspace
-            ? state.unifiedWorkspaceState.lastWorkspace
-            : readLastWorkspacePreference()
-    );
-    const workspace = hasWorkspaceParam ? queryWorkspace : storedWorkspace;
-    return { workspace, panel };
+    return { workspace: 'csharp', panel };
 }
 
 function syncRouteToUrl(options) {
@@ -462,15 +563,13 @@ function updateWorkspaceButtons() {
 }
 
 function applyWorkspaceLayout() {
-    const workspace = normalizeWorkspaceName(state.route.workspace);
-    const isCsharp = workspace === 'csharp';
     if (dom.workspaceCsharpRoot) {
-        dom.workspaceCsharpRoot.hidden = !isCsharp;
+        dom.workspaceCsharpRoot.hidden = false;
     }
     if (dom.workspaceSubappRoot) {
-        dom.workspaceSubappRoot.hidden = isCsharp;
+        dom.workspaceSubappRoot.hidden = true;
     }
-    if (isCsharp && state.editor) {
+    if (state.editor) {
         requestAnimationFrame(() => {
             if (state.editor) state.editor.layout();
         });
@@ -597,12 +696,14 @@ function rememberUnifiedStateSnapshot() {
     const prTitle = String(dom.unifiedPrTitle ? dom.unifiedPrTitle.value : '').trim();
     const existingPrNumber = String(dom.unifiedExistingPrNumber ? dom.unifiedExistingPrNumber.value : '').trim();
     const anchorPath = String(dom.unifiedAnchorSelect ? dom.unifiedAnchorSelect.value : '').trim();
+    const shaderSlug = sanitizeShaderSlug(dom.unifiedShaderSlug ? dom.unifiedShaderSlug.value : '');
 
     state.unifiedWorkspaceState.submit = {
         workerApiUrl,
         prTitle,
         existingPrNumber,
         anchorPath,
+        shaderSlug,
         resume: state.unified.resumeState,
         lastCollection: state.unified.collection
     };
@@ -711,20 +812,12 @@ function dispatchWorkspaceCommand(workspace, commandId) {
 
 async function setActiveWorkspace(workspace, options) {
     const opts = options || {};
-    const safeWorkspace = normalizeWorkspaceName(workspace);
+    const safeWorkspace = 'csharp';
     state.route.workspace = safeWorkspace;
     updateWorkspaceButtons();
     applyWorkspaceLayout();
 
-    if (safeWorkspace === 'markdown' || safeWorkspace === 'shader') {
-        await mountWorkspacePlugin(safeWorkspace, { forceReload: !!opts.forceReload });
-    } else {
-        await mountWorkspacePlugin('csharp', { forceReload: false });
-    }
-
-    if (routePanelIsOpen() && safeWorkspace === 'shader') {
-        dispatchWorkspaceCommand('shader', 'workspace.open-submit-panel');
-    }
+    await mountWorkspacePlugin('csharp', { forceReload: false });
 
     if (opts.persist !== false) {
         writeLastWorkspacePreference(safeWorkspace);
@@ -735,8 +828,9 @@ async function setActiveWorkspace(workspace, options) {
         syncRouteToUrl({ replace: !!opts.replaceUrl });
     }
 
-    if (opts.collect !== false && (safeWorkspace === 'markdown' || safeWorkspace === 'shader')) {
-        await requestWorkspaceCollect(safeWorkspace);
+    if (opts.collect !== false) {
+        await requestWorkspaceCollect('markdown');
+        await requestWorkspaceCollect('shader');
     }
 }
 
@@ -752,16 +846,7 @@ function setSubmitPanelRouteState(open, options) {
 
 function openUnifiedSubmitPanel(options) {
     const opts = options || {};
-    if (normalizeWorkspaceName(state.route.workspace) === 'csharp') {
-        setActiveWorkspace('markdown', { syncUrl: false, persist: true, collect: true }).catch(() => {});
-    }
     setSubmitPanelRouteState(true, { syncUrl: opts.syncUrl !== false, replaceUrl: !!opts.replaceUrl });
-    if (state.route.workspace === 'markdown') {
-        dispatchWorkspaceCommand('markdown', 'workspace.open-submit-panel');
-    }
-    if (state.route.workspace === 'shader') {
-        dispatchWorkspaceCommand('shader', 'workspace.open-submit-panel');
-    }
 }
 
 function closeUnifiedSubmitPanel(options) {
@@ -774,56 +859,6 @@ function sanitizeCsharpCodeFileName(filePath) {
     const noExt = fileName.replace(/\.cs$/i, '');
     const safeBase = noExt.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5_-]+/g, '-').replace(/^-+|-+$/g, '') || 'file';
     return `${safeBase}.cs`;
-}
-
-function collectCsharpWorkspaceEntries() {
-    return state.workspace.files.map((file) => ({
-        workspace: 'csharp',
-        path: `site/content/tml-ide-workspace/code/${sanitizeCsharpCodeFileName(file.path)}`,
-        content: String(file.content || ''),
-        encoding: 'utf8',
-        source: 'csharp-workspace',
-        isMainMarkdown: false
-    }));
-}
-
-function collectSubappEntries(snapshot, workspace) {
-    const staged = extractStagedSnapshot(snapshot);
-    if (!staged || typeof staged !== 'object') return [];
-    const output = [];
-    const files = Array.isArray(staged.files) ? staged.files : [];
-
-    files.forEach((item) => {
-        if (!item || typeof item !== 'object') return;
-        output.push({
-            workspace,
-            path: normalizeRepoPath(item.path),
-            content: String(item.content || ''),
-            encoding: String(item.encoding || 'utf8').toLowerCase() === 'base64' ? 'base64' : 'utf8',
-            source: String(item.source || workspace),
-            isMainMarkdown: !!item.isMainMarkdown,
-            op: String(item.op || '')
-        });
-    });
-
-    const targetPath = normalizeRepoPath(staged.targetPath);
-    const markdown = String(staged.markdown || '');
-    if (targetPath && markdown) {
-        const exists = output.some((item) => item.path === targetPath);
-        if (!exists) {
-            output.push({
-                workspace,
-                path: targetPath,
-                content: markdown,
-                encoding: 'utf8',
-                source: `${workspace}-main`,
-                isMainMarkdown: true,
-                op: ''
-            });
-        }
-    }
-
-    return output;
 }
 
 function isAllowedExtraFilePath(pathValue) {
@@ -839,66 +874,116 @@ function isMarkdownContentPath(pathValue) {
     return /^site\/content\/.+\.md$/i.test(normalizeRepoPath(pathValue));
 }
 
-function buildUnifiedCollection(rawEntries) {
-    const dedup = new Map();
-    (Array.isArray(rawEntries) ? rawEntries : []).forEach((item) => {
-        if (!item || typeof item !== 'object') return;
-        const path = normalizeRepoPath(item.path);
-        if (!path) return;
-        dedup.set(path, {
-            workspace: String(item.workspace || ''),
-            path,
-            content: String(item.content || ''),
-            encoding: String(item.encoding || 'utf8').toLowerCase() === 'base64' ? 'base64' : 'utf8',
-            source: String(item.source || ''),
-            isMainMarkdown: !!item.isMainMarkdown,
-            op: String(item.op || '')
-        });
-    });
+function listWorkspaceEntries() {
+    return state.workspace.files.map((file) => ({
+        fileId: String(file.id || ''),
+        path: String(file.path || ''),
+        content: String(file.content || ''),
+        mode: detectFileMode(file.path)
+    }));
+}
 
-    const markdownEntries = [];
-    const extraEntries = [];
+function resolveActiveMarkdownPath(collection) {
+    const active = getActiveFile();
+    const activeRepoPath = active ? normalizeMarkdownRepoPath(active.path) : '';
+    if (activeRepoPath && collection.docs.markdownEntries.some((item) => item.path === activeRepoPath)) {
+        return activeRepoPath;
+    }
+    return collection.docs.markdownEntries[0] ? collection.docs.markdownEntries[0].path : '';
+}
+
+function toCodePathForArticle(articleMarkdownPath, csharpFilePath) {
+    const markdownPath = normalizeMarkdownRepoPath(articleMarkdownPath);
+    if (!markdownPath) return '';
+    const dir = markdownPath.replace(/^site\/content\//i, '').replace(/\/[^/]+$/, '');
+    const codeName = sanitizeCsharpCodeFileName(csharpFilePath);
+    return `site/content/${dir}/code/${codeName}`;
+}
+
+function buildUnifiedCollectionFromWorkspace() {
+    const docs = {
+        markdownEntries: [],
+        extraEntries: [],
+        blockedEntries: []
+    };
+    const shader = {
+        fxEntries: [],
+        blockedEntries: []
+    };
     const blockedEntries = [];
 
-    dedup.forEach((entry) => {
-        if (entry.path.includes('..')) {
-            blockedEntries.push({ ...entry, reason: '路径非法（包含 ..）' });
-            return;
-        }
-
-        if (entry.op === 'delete') {
-            blockedEntries.push({ ...entry, reason: '统一提交暂不支持删除文件' });
-            return;
-        }
-
+    const entries = listWorkspaceEntries();
+    entries.forEach((entry) => {
+        if (!entry.path) return;
         if (!entry.content.trim()) {
             blockedEntries.push({ ...entry, reason: '内容为空' });
             return;
         }
-
-        if (/^site\/assets\//i.test(entry.path)) {
-            blockedEntries.push({ ...entry, reason: 'site/assets/** 需手工 PR' });
+        if (entry.mode === 'markdown') {
+            const repoPath = normalizeMarkdownRepoPath(entry.path);
+            if (!repoPath) {
+                blockedEntries.push({ ...entry, reason: 'Markdown 路径非法' });
+                return;
+            }
+            docs.markdownEntries.push({
+                workspace: 'markdown',
+                path: repoPath,
+                content: entry.content,
+                encoding: 'utf8',
+                source: 'workspace-markdown',
+                isMainMarkdown: true
+            });
             return;
         }
-
-        if (isMarkdownContentPath(entry.path)) {
-            markdownEntries.push(entry);
+        if (entry.mode === 'shaderfx') {
+            shader.fxEntries.push({
+                workspace: 'shader',
+                path: normalizeRepoPath(entry.path),
+                content: entry.content,
+                source: 'workspace-shaderfx'
+            });
             return;
         }
+    });
 
-        if (isAllowedExtraFilePath(entry.path)) {
-            extraEntries.push(entry);
-            return;
+    const csharpFiles = entries.filter((item) => item.mode === 'csharp');
+    if (csharpFiles.length > 0) {
+        let articlePath = resolveActiveMarkdownPath({ docs });
+        const anchorPath = normalizeRepoPath(String(dom.unifiedAnchorSelect ? dom.unifiedAnchorSelect.value : '').trim());
+        if (!articlePath && isMarkdownContentPath(anchorPath)) {
+            articlePath = anchorPath;
         }
+        if (!articlePath) {
+            csharpFiles.forEach((item) => {
+                blockedEntries.push({ ...item, reason: '仅 C# 提交时必须选择目标 Markdown 锚点' });
+            });
+        } else {
+            csharpFiles.forEach((item) => {
+                const path = toCodePathForArticle(articlePath, item.path);
+                if (!isAllowedExtraFilePath(path)) {
+                    blockedEntries.push({ ...item, reason: 'C# 目标路径非法' });
+                    return;
+                }
+                docs.extraEntries.push({
+                    workspace: 'csharp',
+                    path,
+                    content: item.content,
+                    encoding: 'utf8',
+                    source: 'workspace-csharp'
+                });
+            });
+        }
+    }
 
-        blockedEntries.push({ ...entry, reason: '后端不接受该路径类型' });
+    blockedEntries.forEach((item) => {
+        if (item.mode === 'shaderfx') shader.blockedEntries.push(item);
+        else docs.blockedEntries.push(item);
     });
 
     return {
         collectedAt: new Date().toISOString(),
-        rawCount: dedup.size,
-        markdownEntries,
-        extraEntries,
+        docs,
+        shader,
         blockedEntries
     };
 }
@@ -935,14 +1020,12 @@ function buildAnchorCandidates(collection) {
         output.push(path);
     };
 
-    (collection && Array.isArray(collection.markdownEntries) ? collection.markdownEntries : []).forEach((item) => {
+    const markdownEntries = collection && collection.docs && Array.isArray(collection.docs.markdownEntries)
+        ? collection.docs.markdownEntries
+        : [];
+    markdownEntries.forEach((item) => {
         appendPath(item.path);
     });
-
-    const markdownSnapshot = extractStagedSnapshot(state.subapps.snapshotByWorkspace.markdown);
-    const shaderSnapshot = extractStagedSnapshot(state.subapps.snapshotByWorkspace.shader);
-    if (markdownSnapshot && markdownSnapshot.targetPath) appendPath(markdownSnapshot.targetPath);
-    if (shaderSnapshot && shaderSnapshot.targetPath) appendPath(shaderSnapshot.targetPath);
     MARKDOWN_FALLBACK_ANCHORS.forEach(appendPath);
 
     return output;
@@ -978,19 +1061,22 @@ function updateAnchorSelectOptions(collection) {
 
 function updateUnifiedSummary(collection) {
     if (!dom.unifiedSummary) return;
-    const markdownCount = collection && Array.isArray(collection.markdownEntries) ? collection.markdownEntries.length : 0;
-    const extraCount = collection && Array.isArray(collection.extraEntries) ? collection.extraEntries.length : 0;
+    const markdownCount = collection && collection.docs ? collection.docs.markdownEntries.length : 0;
+    const csharpCount = collection && collection.docs ? collection.docs.extraEntries.length : 0;
+    const shaderFxCount = collection && collection.shader ? collection.shader.fxEntries.length : 0;
     const blockedCount = collection && Array.isArray(collection.blockedEntries) ? collection.blockedEntries.length : 0;
-    dom.unifiedSummary.textContent = `Markdown: ${markdownCount} · Extra: ${extraCount} · 需手工 PR: ${blockedCount}`;
+    dom.unifiedSummary.textContent = `文档: md ${markdownCount} + cs ${csharpCount} · Shader(.fx): ${shaderFxCount} · 阻塞: ${blockedCount}`;
 }
 
 function persistUnifiedCollection(collection) {
     state.unified.collection = collection;
-    state.unified.sendableEntries = (collection && Array.isArray(collection.extraEntries) ? collection.extraEntries : []).concat(
-        collection && Array.isArray(collection.markdownEntries) ? collection.markdownEntries : []
-    );
+    const docsEntries = collection && collection.docs
+        ? collection.docs.extraEntries.concat(collection.docs.markdownEntries)
+        : [];
+    const shaderEntries = collection && collection.shader ? collection.shader.fxEntries : [];
+    state.unified.sendableEntries = docsEntries.concat(shaderEntries);
     state.unified.blockedEntries = collection && Array.isArray(collection.blockedEntries) ? collection.blockedEntries : [];
-    state.unified.markdownEntries = collection && Array.isArray(collection.markdownEntries) ? collection.markdownEntries : [];
+    state.unified.markdownEntries = collection && collection.docs ? collection.docs.markdownEntries : [];
     renderUnifiedFileList(dom.unifiedSendableList, state.unified.sendableEntries, '暂无可提交文件。');
     renderUnifiedFileList(dom.unifiedBlockedList, state.unified.blockedEntries, '暂无需手工 PR 文件。');
     updateUnifiedSummary(collection);
@@ -1001,23 +1087,11 @@ function persistUnifiedCollection(collection) {
 async function collectUnifiedChanges(options) {
     const opts = options || {};
     const silent = !!opts.silent;
-    if (opts.requestSubapp !== false) {
-        await Promise.all([
-            requestWorkspaceCollect('markdown'),
-            requestWorkspaceCollect('shader')
-        ]);
-    }
-
-    const entries = []
-        .concat(collectCsharpWorkspaceEntries())
-        .concat(collectSubappEntries(state.subapps.snapshotByWorkspace.markdown, 'markdown'))
-        .concat(collectSubappEntries(state.subapps.snapshotByWorkspace.shader, 'shader'));
-
-    const collection = buildUnifiedCollection(entries);
+    const collection = buildUnifiedCollectionFromWorkspace();
     persistUnifiedCollection(collection);
     if (!silent) {
         setUnifiedSubmitStatus('已收集 staged 改动', 'success');
-        pushUnifiedSubmitLog(`收集完成：Markdown ${collection.markdownEntries.length}，Extra ${collection.extraEntries.length}，需手工 ${collection.blockedEntries.length}`);
+        pushUnifiedSubmitLog(`收集完成：文档 ${collection.docs.markdownEntries.length + collection.docs.extraEntries.length}，Shader ${collection.shader.fxEntries.length}，阻塞 ${collection.blockedEntries.length}`);
     }
     return collection;
 }
@@ -1038,7 +1112,7 @@ async function loadMarkdownContentFromPath(pathValue) {
 async function resolveAnchorMarkdownForBatch(collection, preferredPath) {
     const preferred = normalizeRepoPath(preferredPath);
     if (preferred && isMarkdownContentPath(preferred)) {
-        const fromCollection = (collection.markdownEntries || []).find((item) => item.path === preferred);
+        const fromCollection = (collection.docs.markdownEntries || []).find((item) => item.path === preferred);
         if (fromCollection) {
             return { path: preferred, markdown: fromCollection.content };
         }
@@ -1046,7 +1120,7 @@ async function resolveAnchorMarkdownForBatch(collection, preferredPath) {
         return { path: preferred, markdown: fetched };
     }
 
-    const firstMarkdown = collection && Array.isArray(collection.markdownEntries) ? collection.markdownEntries[0] : null;
+    const firstMarkdown = collection && collection.docs && Array.isArray(collection.docs.markdownEntries) ? collection.docs.markdownEntries[0] : null;
     if (firstMarkdown) {
         return { path: firstMarkdown.path, markdown: firstMarkdown.content };
     }
@@ -1069,12 +1143,12 @@ function relativeTargetPath(pathValue) {
 }
 
 async function buildUnifiedSubmitBatches(collection) {
-    const safeCollection = collection || state.unified.collection || { markdownEntries: [], extraEntries: [], blockedEntries: [] };
-    const markdownEntries = Array.isArray(safeCollection.markdownEntries) ? safeCollection.markdownEntries.slice() : [];
-    const extraEntries = Array.isArray(safeCollection.extraEntries) ? safeCollection.extraEntries.slice() : [];
+    const safeCollection = collection || state.unified.collection || { docs: { markdownEntries: [], extraEntries: [] } };
+    const markdownEntries = Array.isArray(safeCollection.docs.markdownEntries) ? safeCollection.docs.markdownEntries.slice() : [];
+    const extraEntries = Array.isArray(safeCollection.docs.extraEntries) ? safeCollection.docs.extraEntries.slice() : [];
 
     if (!markdownEntries.length && !extraEntries.length) {
-        throw new Error('没有可提交的文件');
+        return { batches: [], anchorPath: '' };
     }
 
     const batches = markdownEntries.map((entry) => ({
@@ -1110,12 +1184,12 @@ async function buildUnifiedSubmitBatches(collection) {
     }
 
     const selectedAnchorPath = String(dom.unifiedAnchorSelect ? dom.unifiedAnchorSelect.value : '').trim();
-    if (!markdownEntries.length && !selectedAnchorPath) {
-        throw new Error('当前无 Markdown 改动，请先选择锚点 Markdown');
-    }
     const needsAnchor = batches.some((batch) => !batch.targetPath || !batch.markdown.trim());
     let anchorInfo = null;
     if (needsAnchor) {
+        if (!selectedAnchorPath) {
+            throw new Error('仅 C# 提交时必须先选择目标 Markdown 锚点');
+        }
         anchorInfo = await resolveAnchorMarkdownForBatch(safeCollection, selectedAnchorPath);
     }
 
@@ -1144,6 +1218,97 @@ async function buildUnifiedSubmitBatches(collection) {
     return {
         batches: normalizedBatches,
         anchorPath: anchorInfo ? anchorInfo.path : ''
+    };
+}
+
+function buildShaderSubmitBatch(collection) {
+    const fxEntries = collection && collection.shader && Array.isArray(collection.shader.fxEntries)
+        ? collection.shader.fxEntries
+        : [];
+    if (!fxEntries.length) return null;
+
+    const slug = sanitizeShaderSlug(dom.unifiedShaderSlug ? dom.unifiedShaderSlug.value : '');
+    if (!slug) {
+        throw new Error('请填写 Shader 投稿 Slug');
+    }
+
+    const active = getActiveFile();
+    const activePath = active && detectFileMode(active.path) === 'shaderfx' ? normalizeRepoPath(active.path) : '';
+    const primary = fxEntries.find((item) => normalizeRepoPath(item.path) === activePath) || fxEntries[0];
+    const secondary = fxEntries.filter((item) => item !== primary);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const title = slug.replace(/-/g, ' ');
+
+    const readmeLines = [
+        `# ${title || slug}`,
+        '',
+        '由统一 IDE 自动生成的 Shader 投稿草稿。',
+        '',
+        '## 主 Shader',
+        '',
+        '```fx',
+        String(primary.content || ''),
+        '```'
+    ];
+    if (secondary.length > 0) {
+        readmeLines.push('', '## 其他 .fx 文件');
+        secondary.forEach((item) => {
+            readmeLines.push('', `### ${String(item.path || '').split('/').pop() || 'shader.fx'}`, '', '```fx', String(item.content || ''), '```');
+        });
+    }
+
+    const entryJson = {
+        slug,
+        title: title || slug,
+        author: normalizeAuthSession().user || 'unknown',
+        description: '由统一 IDE 自动生成，请补充描述。',
+        shader: 'shader.json',
+        cover: 'cover.webp',
+        tags: ['playground'],
+        updated_at: dateStr
+    };
+
+    const shaderJson = {
+        common: '',
+        passes: [
+            {
+                name: 'Pass 1',
+                type: 'image',
+                scale: 1,
+                code: String(primary.content || ''),
+                channels: [{ kind: 'none' }, { kind: 'none' }, { kind: 'none' }, { kind: 'none' }]
+            }
+        ]
+    };
+
+    return {
+        batches: [
+            {
+                targetPath: `shader-gallery/${slug}/README.md`,
+                markdown: readmeLines.join('\n'),
+                extraFiles: [
+                    {
+                        path: `site/content/shader-gallery/${slug}/entry.json`,
+                        content: JSON.stringify(entryJson, null, 2),
+                        encoding: 'utf8'
+                    },
+                    {
+                        path: `site/content/shader-gallery/${slug}/shader.json`,
+                        content: JSON.stringify(shaderJson, null, 2),
+                        encoding: 'utf8'
+                    }
+                ]
+            }
+        ]
+    };
+}
+
+async function buildSplitSubmitPlan(collection) {
+    const docsPlan = await buildUnifiedSubmitBatches(collection);
+    const shaderPlan = buildShaderSubmitBatch(collection);
+    return {
+        docsBatches: docsPlan && Array.isArray(docsPlan.batches) ? docsPlan.batches : [],
+        shaderBatches: shaderPlan && Array.isArray(shaderPlan.batches) ? shaderPlan.batches : []
     };
 }
 
@@ -1195,13 +1360,71 @@ function setUnifiedSubmitting(submitting) {
     if (dom.btnUnifiedCollect) dom.btnUnifiedCollect.disabled = submitting;
 }
 
-async function runUnifiedSubmitBatches(batches, options) {
+function channelPrefix(channel) {
+    return channel === 'shader' ? 'Shader' : '文档';
+}
+
+async function runSubmitChannel(channel, batches, options) {
+    const opts = options || {};
+    if (!Array.isArray(batches) || batches.length === 0) {
+        return { channel, skipped: true, prNumber: '' };
+    }
+    const workerApiUrl = opts.workerApiUrl;
+    const authToken = opts.authToken;
+    let existingPrNumber = String(opts.existingPrNumber || '').trim();
+    const baseTitle = String(dom.unifiedPrTitle ? dom.unifiedPrTitle.value : '').trim();
+    const prTitle = `${channelPrefix(channel)}: ${baseTitle || '统一IDE提交'}`;
+    const startIndex = Math.max(0, Number(opts.startIndex || 0));
+    let nextIndex = startIndex;
+    try {
+        for (let i = startIndex; i < batches.length; i += 1) {
+            nextIndex = i;
+            const batch = batches[i];
+            const payload = {
+                targetPath: String(batch.targetPath || ''),
+                markdown: String(batch.markdown || ''),
+                prTitle
+            };
+            if (existingPrNumber) payload.existingPrNumber = existingPrNumber;
+            if (Array.isArray(batch.extraFiles) && batch.extraFiles.length > 0) {
+                payload.extraFiles = batch.extraFiles.slice(0, 8).map((item) => ({
+                    path: item.path,
+                    content: item.content,
+                    encoding: item.encoding === 'base64' ? 'base64' : 'utf8'
+                }));
+            }
+
+            pushUnifiedSubmitLog(`[${channelPrefix(channel)}] 批次 ${i + 1}/${batches.length} -> ${payload.targetPath}`);
+            const responseData = await submitBatchRequest(workerApiUrl, authToken, payload);
+            if (responseData.prNumber) {
+                existingPrNumber = String(responseData.prNumber);
+            }
+            pushUnifiedSubmitLog(`[${channelPrefix(channel)}] 批次 ${i + 1} 成功：PR #${existingPrNumber || '?'}`);
+            nextIndex = i + 1;
+        }
+        return {
+            channel,
+            skipped: false,
+            prNumber: existingPrNumber,
+            resume: null,
+            nextIndex
+        };
+    } catch (error) {
+        const wrapped = new Error(String(error && error.message ? error.message : error));
+        wrapped.meta = {
+            nextIndex,
+            existingPrNumber
+        };
+        throw wrapped;
+    }
+}
+
+async function runSplitUnifiedSubmit(plan, options) {
     const opts = options || {};
     const auth = normalizeAuthSession();
     if (!auth.token) {
         throw new Error('请先 GitHub 登录');
     }
-
     const workerApiUrl = normalizeWorkerApiUrl(dom.unifiedWorkerUrl ? dom.unifiedWorkerUrl.value : '');
     if (!workerApiUrl) {
         throw new Error('请填写 Worker API 地址');
@@ -1210,62 +1433,68 @@ async function runUnifiedSubmitBatches(batches, options) {
         dom.unifiedWorkerUrl.value = workerApiUrl;
     }
 
-    const prTitle = String(dom.unifiedPrTitle ? dom.unifiedPrTitle.value : '').trim();
-    let existingPrNumber = String(opts.existingPrNumber || (dom.unifiedExistingPrNumber ? dom.unifiedExistingPrNumber.value : '') || '').trim();
-    const startIndex = Math.max(0, Number(opts.startIndex || 0));
-
+    const docsResume = opts.resume && opts.resume.docs ? opts.resume.docs : null;
+    const shaderResume = opts.resume && opts.resume.shader ? opts.resume.shader : null;
     setUnifiedSubmitting(true);
-    setUnifiedSubmitStatus('统一提交进行中...', 'info');
-
-    let nextIndex = startIndex;
+    setUnifiedSubmitStatus('双通道提交进行中...', 'info');
     try {
-        for (let i = startIndex; i < batches.length; i += 1) {
-            nextIndex = i;
-            const batch = batches[i];
-            const payload = {
-                targetPath: String(batch.targetPath || ''),
-                markdown: String(batch.markdown || '')
-            };
-            if (prTitle) {
-                payload.prTitle = prTitle;
-            }
-            if (existingPrNumber) {
-                payload.existingPrNumber = existingPrNumber;
-            }
-            if (Array.isArray(batch.extraFiles) && batch.extraFiles.length > 0) {
-                payload.extraFiles = batch.extraFiles.slice(0, 8).map((entry) => ({
-                    path: entry.path,
-                    content: entry.content,
-                    encoding: entry.encoding === 'base64' ? 'base64' : 'utf8'
-                }));
-            }
+        const docsTask = runSubmitChannel('docs', plan.docsBatches || [], {
+            workerApiUrl,
+            authToken: auth.token,
+            existingPrNumber: docsResume ? docsResume.existingPrNumber : '',
+            startIndex: docsResume ? docsResume.nextIndex : 0
+        });
+        const shaderTask = runSubmitChannel('shader', plan.shaderBatches || [], {
+            workerApiUrl,
+            authToken: auth.token,
+            existingPrNumber: shaderResume ? shaderResume.existingPrNumber : '',
+            startIndex: shaderResume ? shaderResume.nextIndex : 0
+        });
 
-            pushUnifiedSubmitLog(`提交批次 ${i + 1}/${batches.length} -> ${payload.targetPath}（extra=${Array.isArray(payload.extraFiles) ? payload.extraFiles.length : 0}）`);
-            const responseData = await submitBatchRequest(workerApiUrl, auth.token, payload);
-            if (responseData.prNumber) {
-                existingPrNumber = String(responseData.prNumber);
-                if (dom.unifiedExistingPrNumber) {
-                    dom.unifiedExistingPrNumber.value = existingPrNumber;
-                }
+        const [docsResult, shaderResult] = await Promise.allSettled([docsTask, shaderTask]);
+        const nextResume = { docs: null, shader: null };
+        const errors = [];
+
+        if (docsResult.status === 'fulfilled') {
+            if (!docsResult.value.skipped) {
+                pushUnifiedSubmitLog(`[文档] 完成：PR #${docsResult.value.prNumber || '?'}`);
             }
-            pushUnifiedSubmitLog(`批次 ${i + 1} 成功：PR #${existingPrNumber || '?'}${responseData.reusedExistingPr === true ? '（续传）' : ''}`);
-            nextIndex = i + 1;
+        } else {
+            const reason = docsResult.reason;
+            const resume = {
+                batches: plan.docsBatches || [],
+                nextIndex: Number(reason && reason.meta ? reason.meta.nextIndex : 0),
+                existingPrNumber: String(reason && reason.meta ? reason.meta.existingPrNumber : ''),
+                failedAt: new Date().toISOString(),
+                message: String(reason && reason.message ? reason.message : reason)
+            };
+            nextResume.docs = resume;
+            errors.push(`文档通道失败：${resume.message}`);
         }
 
-        state.unified.resumeState = null;
-        setUnifiedSubmitStatus('提交成功', 'success');
-        pushUnifiedSubmitLog('全部批次提交完成。');
-    } catch (error) {
-        state.unified.resumeState = {
-            batches,
-            nextIndex,
-            existingPrNumber: String(dom.unifiedExistingPrNumber ? dom.unifiedExistingPrNumber.value : '').trim(),
-            failedAt: new Date().toISOString(),
-            message: String(error && error.message || error)
-        };
-        setUnifiedSubmitStatus(`提交失败：${error.message}`, 'error');
-        pushUnifiedSubmitLog(`提交中止：${error.message}`);
-        throw error;
+        if (shaderResult.status === 'fulfilled') {
+            if (!shaderResult.value.skipped) {
+                pushUnifiedSubmitLog(`[Shader] 完成：PR #${shaderResult.value.prNumber || '?'}`);
+            }
+        } else {
+            const reason = shaderResult.reason;
+            const resume = {
+                batches: plan.shaderBatches || [],
+                nextIndex: Number(reason && reason.meta ? reason.meta.nextIndex : 0),
+                existingPrNumber: String(reason && reason.meta ? reason.meta.existingPrNumber : ''),
+                failedAt: new Date().toISOString(),
+                message: String(reason && reason.message ? reason.message : reason)
+            };
+            nextResume.shader = resume;
+            errors.push(`Shader 通道失败：${resume.message}`);
+        }
+
+        state.unified.resumeState = nextResume.docs || nextResume.shader ? nextResume : { docs: null, shader: null };
+        if (errors.length > 0) {
+            setUnifiedSubmitStatus(errors.join('；'), 'error');
+            throw new Error(errors.join('；'));
+        }
+        setUnifiedSubmitStatus('双通道提交成功', 'success');
     } finally {
         setUnifiedSubmitting(false);
         scheduleUnifiedStateSave();
@@ -1334,14 +1563,19 @@ function initializeUnifiedState(loadedState) {
                 markdown: { staged: null, legacyState: null, viewerPreview: null },
                 shader: { staged: null, contributeState: null, playgroundState: null, contributionDraft: null }
             },
-            submit: { workerApiUrl: '', prTitle: '', existingPrNumber: '', anchorPath: '', resume: null, lastCollection: null }
+            submit: { workerApiUrl: '', prTitle: '', existingPrNumber: '', anchorPath: '', shaderSlug: '', resume: null, lastCollection: null }
         };
     state.unifiedWorkspaceState = initial;
     const markdownSnapshot = initial.snapshots && initial.snapshots.markdown ? initial.snapshots.markdown : null;
     const shaderSnapshot = initial.snapshots && initial.snapshots.shader ? initial.snapshots.shader : null;
     state.subapps.snapshotByWorkspace.markdown = extractStagedSnapshot(markdownSnapshot);
     state.subapps.snapshotByWorkspace.shader = extractStagedSnapshot(shaderSnapshot);
-    state.unified.resumeState = initial.submit && initial.submit.resume ? initial.submit.resume : null;
+    const resume = initial.submit && initial.submit.resume ? initial.submit.resume : null;
+    if (resume && (resume.docs || resume.shader)) {
+        state.unified.resumeState = resume;
+    } else {
+        state.unified.resumeState = { docs: null, shader: null };
+    }
 
     if (dom.unifiedWorkerUrl) {
         dom.unifiedWorkerUrl.value = normalizeWorkerApiUrl(initial.submit && initial.submit.workerApiUrl || DEFAULT_WORKER_API_URL) || DEFAULT_WORKER_API_URL;
@@ -1351,6 +1585,9 @@ function initializeUnifiedState(loadedState) {
     }
     if (dom.unifiedExistingPrNumber) {
         dom.unifiedExistingPrNumber.value = String(initial.submit && initial.submit.existingPrNumber || '');
+    }
+    if (dom.unifiedShaderSlug) {
+        dom.unifiedShaderSlug.value = sanitizeShaderSlug(initial.submit && initial.submit.shaderSlug || '');
     }
     if (dom.unifiedBatchProgress && state.unified.submitLogs.length === 0) {
         dom.unifiedBatchProgress.textContent = '尚未提交。';
@@ -1392,7 +1629,9 @@ function toggleBottomPanel() {
 }
 
 function setActivePanelTab(panelTab) {
-    const safeTab = String(panelTab || 'problems');
+    const rawTab = String(panelTab || 'problems');
+    const availableTabs = dom.panelTabButtons.map((button) => String(button.dataset.panelTab || ''));
+    const safeTab = availableTabs.includes(rawTab) ? rawTab : 'problems';
     state.ui.activePanelTab = safeTab;
 
     dom.panelTabButtons.forEach((button) => {
@@ -1511,7 +1750,7 @@ function buildCommandPaletteItems(query) {
         {
             id: 'file.new',
             label: 'File: New File',
-            detail: '新建 .cs 文件',
+            detail: '新建 .cs/.md/.fx 文件',
             shortcut: '',
             run() {
                 dom.btnAddFile.click();
@@ -1545,23 +1784,23 @@ function buildCommandPaletteItems(query) {
             }
         },
         {
-            id: 'indexer.panel',
-            label: 'Tools: Open Indexer Panel',
-            detail: '切换到 Indexer 标签',
+            id: 'shader.compile.panel',
+            label: 'Tools: Open Shader Compile Panel',
+            detail: '切换到 编译 标签',
             shortcut: '',
             run() {
                 showBottomPanel(true);
-                setActivePanelTab('indexer');
+                setActivePanelTab('compile');
             }
         },
         {
-            id: 'assembly.panel',
-            label: 'Tools: Open Assembly Panel',
-            detail: '切换到 Assembly 标签',
+            id: 'shader.error.panel',
+            label: 'Tools: Open Shader Error Panel',
+            detail: '切换到 报错 标签',
             shortcut: '',
             run() {
                 showBottomPanel(true);
-                setActivePanelTab('assembly');
+                setActivePanelTab('errors');
             }
         }
     ];
@@ -1749,8 +1988,8 @@ function onActivityClicked(activity) {
 
     if (safeActivity === 'extensions') {
         showBottomPanel(true);
-        setActivePanelTab('assembly');
-        addEvent('info', 'Extensions 视图映射到 Assembly 面板');
+        setActivePanelTab('compile');
+        addEvent('info', 'Extensions 视图映射到编译面板');
         return;
     }
 
@@ -1860,6 +2099,258 @@ function getActiveFile() {
     return state.workspace.files.find((file) => file.id === activeId) || null;
 }
 
+function activeFileMode() {
+    const active = getActiveFile();
+    return detectFileMode(active && active.path ? active.path : '');
+}
+
+function updateStatusLanguage() {
+    if (!dom.statusLanguage) return;
+    const mode = activeFileMode();
+    if (mode === 'markdown') {
+        dom.statusLanguage.textContent = 'Markdown';
+        return;
+    }
+    if (mode === 'shaderfx') {
+        dom.statusLanguage.textContent = 'Shader(.fx)';
+        return;
+    }
+    dom.statusLanguage.textContent = 'C#';
+}
+
+function updateHeaderModeActions() {
+    const mode = activeFileMode();
+    const isMarkdown = mode === 'markdown';
+    const isShader = mode === 'shaderfx';
+    if (dom.btnMarkdownTogglePreview) dom.btnMarkdownTogglePreview.hidden = !isMarkdown;
+    if (dom.btnMarkdownOpenViewer) dom.btnMarkdownOpenViewer.hidden = !isMarkdown;
+    if (dom.btnShaderCompile) dom.btnShaderCompile.hidden = !isShader;
+    if (dom.btnShaderExport) dom.btnShaderExport.hidden = !isShader;
+}
+
+function setMarkdownPreviewMode(mode) {
+    const next = mode === 'preview' ? 'preview' : 'edit';
+    state.ui.markdownPreviewMode = next;
+    const showingPreview = next === 'preview' && activeFileMode() === 'markdown';
+    if (dom.editor) dom.editor.hidden = showingPreview;
+    if (dom.markdownPreviewPane) dom.markdownPreviewPane.hidden = !showingPreview;
+    if (dom.btnMarkdownTogglePreview) {
+        dom.btnMarkdownTogglePreview.textContent = next === 'preview' ? '返回编辑' : '预览';
+    }
+    if (state.editor) {
+        requestAnimationFrame(() => {
+            if (state.editor) state.editor.layout();
+        });
+    }
+}
+
+async function saveWorkspaceImmediate() {
+    await saveWorkspace(workspaceSnapshotForSave());
+    scheduleUnifiedStateSave();
+}
+
+function renderShaderCompilePanel(result) {
+    if (dom.shaderCompileLog) {
+        dom.shaderCompileLog.textContent = String(result && result.log || '等待编译...');
+    }
+    if (!dom.shaderErrorList) return;
+    dom.shaderErrorList.innerHTML = '';
+    const errors = Array.isArray(result && result.errors) ? result.errors : [];
+    if (!errors.length) {
+        const li = document.createElement('li');
+        li.className = 'problems-empty';
+        li.textContent = '暂无编译错误。';
+        dom.shaderErrorList.appendChild(li);
+        return;
+    }
+    errors.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'problem-item';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'problem-jump';
+        btn.textContent = `Ln ${item.line}, Col ${item.column} · ${item.message}`;
+        btn.addEventListener('click', () => {
+            if (!state.editor) return;
+            state.editor.setPosition({ lineNumber: Number(item.line || 1), column: Number(item.column || 1) });
+            state.editor.revealLineInCenter(Number(item.line || 1));
+            state.editor.focus();
+        });
+        li.appendChild(btn);
+        dom.shaderErrorList.appendChild(li);
+    });
+}
+
+function drawShaderPipCanvas() {
+    if (!dom.shaderPipCanvas) return;
+    const ctx = dom.shaderPipCanvas.getContext('2d');
+    if (!ctx) return;
+    const w = dom.shaderPipCanvas.width;
+    const h = dom.shaderPipCanvas.height;
+    const t = performance.now() / 1000;
+    ctx.clearRect(0, 0, w, h);
+    const g = ctx.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, `hsl(${(t * 25) % 360}, 70%, 45%)`);
+    g.addColorStop(1, `hsl(${(t * 25 + 120) % 360}, 70%, 40%)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    for (let i = 0; i < 20; i += 1) {
+        const x = (i / 20) * w + Math.sin(t + i) * 12;
+        const y = h * 0.5 + Math.cos(t * 1.5 + i) * (h * 0.18);
+        ctx.fillRect(x, y, 12, 12);
+    }
+}
+
+function applyEditorModeUi() {
+    const mode = activeFileMode();
+    const isMarkdown = mode === 'markdown';
+    const isShader = mode === 'shaderfx';
+    updateStatusLanguage();
+    updateHeaderModeActions();
+    if (!isMarkdown) {
+        setMarkdownPreviewMode('edit');
+    } else {
+        setMarkdownPreviewMode(state.ui.markdownPreviewMode);
+        if (state.ui.markdownPreviewMode === 'preview') {
+            openMarkdownViewerPreview(false).catch(() => {});
+        }
+    }
+    if (dom.shaderPip) {
+        dom.shaderPip.hidden = !isShader;
+    }
+    if (isShader) {
+        drawShaderPipCanvas();
+        runShaderCompileForActiveFile({ silent: true });
+    }
+}
+
+async function openMarkdownViewerPreview(newTab) {
+    const active = getActiveFile();
+    if (!active || detectFileMode(active.path) !== 'markdown') return;
+    const repoPath = normalizeMarkdownRepoPath(active.path);
+    if (!repoPath) {
+        addEvent('error', 'Markdown 文件路径必须是相对 content 目录的 .md 路径');
+        return;
+    }
+    await saveWorkspaceImmediate();
+    const viewerFile = encodeURIComponent(toViewerFileParam(repoPath));
+    const url = `/site/pages/viewer.html?file=${viewerFile}`;
+    if (newTab) {
+        globalThis.open(url, '_blank', 'noopener,noreferrer');
+        return;
+    }
+    if (dom.markdownPreviewFrame) {
+        dom.markdownPreviewFrame.src = url;
+    }
+}
+
+function runShaderCompileForActiveFile(options) {
+    const opts = options || {};
+    const active = getActiveFile();
+    if (!active || detectFileMode(active.path) !== 'shaderfx') {
+        return;
+    }
+    const result = compileFxSource(active.content || '');
+    state.shaderCompile.logs.push(result.log);
+    state.shaderCompile.errors = result.errors;
+    while (state.shaderCompile.logs.length > 120) {
+        state.shaderCompile.logs.shift();
+    }
+    renderShaderCompilePanel({
+        log: `[${nowStamp()}] ${result.log}\n${state.shaderCompile.logs.join('\n')}`,
+        errors: result.errors
+    });
+    if (!opts.silent) {
+        setActivePanelTab(result.ok ? 'compile' : 'errors');
+        showBottomPanel(true);
+    }
+}
+
+function exportShaderFile() {
+    const active = getActiveFile();
+    if (!active || detectFileMode(active.path) !== 'shaderfx') return;
+    const fileName = String(active.path || 'shader.fx').split('/').pop() || 'shader.fx';
+    downloadTextFile(fileName, String(active.content || ''), 'text/plain;charset=utf-8');
+    addEvent('info', `已导出 ${fileName}`);
+}
+
+function installShaderPipInteractions() {
+    if (!dom.shaderPip || !dom.shaderPipHead || !dom.shaderPipResize || !dom.shaderPipCanvas) return;
+
+    const pip = dom.shaderPip;
+    const setPipSize = (width, height) => {
+        const w = Math.max(220, Math.min(960, Number(width || 360)));
+        const h = Math.max(140, Math.min(540, Number(height || 220)));
+        state.shaderCompile.pip.width = w;
+        state.shaderCompile.pip.height = h;
+        pip.style.width = `${w}px`;
+        pip.style.height = `${h}px`;
+        const renderW = Math.min(1920, Math.round(w * 2));
+        const renderH = Math.min(1080, Math.round(h * 2));
+        dom.shaderPipCanvas.width = renderW;
+        dom.shaderPipCanvas.height = renderH;
+        drawShaderPipCanvas();
+    };
+
+    const moveTo = (left, top) => {
+        const editorRect = dom.editor ? dom.editor.getBoundingClientRect() : null;
+        const containerRect = editorRect || pip.parentElement.getBoundingClientRect();
+        const maxLeft = Math.max(0, containerRect.width - state.shaderCompile.pip.width - 8);
+        const maxTop = Math.max(0, containerRect.height - state.shaderCompile.pip.height - 8);
+        const safeLeft = Math.max(8, Math.min(maxLeft, Number(left || 8)));
+        const safeTop = Math.max(8, Math.min(maxTop, Number(top || 8)));
+        state.shaderCompile.pip.left = safeLeft;
+        state.shaderCompile.pip.top = safeTop;
+        pip.style.left = `${safeLeft}px`;
+        pip.style.top = `${safeTop}px`;
+    };
+
+    setPipSize(state.shaderCompile.pip.width, state.shaderCompile.pip.height);
+    requestAnimationFrame(() => moveTo(24, 24));
+
+    let dragging = null;
+    const onMove = (event) => {
+        if (!dragging) return;
+        if (dragging.type === 'move') {
+            moveTo(event.clientX - dragging.offsetX, event.clientY - dragging.offsetY);
+        } else if (dragging.type === 'resize') {
+            const nextW = dragging.baseW + (event.clientX - dragging.startX);
+            const nextH = dragging.baseH + (event.clientY - dragging.startY);
+            setPipSize(nextW, nextH);
+        }
+    };
+    const onUp = () => {
+        dragging = null;
+        window.removeEventListener('pointermove', onMove, true);
+        window.removeEventListener('pointerup', onUp, true);
+    };
+
+    dom.shaderPipHead.addEventListener('pointerdown', (event) => {
+        const rect = pip.getBoundingClientRect();
+        dragging = {
+            type: 'move',
+            offsetX: event.clientX - rect.left,
+            offsetY: event.clientY - rect.top
+        };
+        window.addEventListener('pointermove', onMove, true);
+        window.addEventListener('pointerup', onUp, true);
+    });
+
+    dom.shaderPipResize.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        dragging = {
+            type: 'resize',
+            startX: event.clientX,
+            startY: event.clientY,
+            baseW: state.shaderCompile.pip.width,
+            baseH: state.shaderCompile.pip.height
+        };
+        window.addEventListener('pointermove', onMove, true);
+        window.addEventListener('pointerup', onUp, true);
+    });
+}
+
 function updateFileListUi() {
     if (!dom.fileList) return;
     dom.fileList.innerHTML = '';
@@ -1914,14 +2405,25 @@ function scheduleWorkspaceSave() {
 
 function ensureModelForFile(file) {
     if (state.modelByFileId.has(file.id)) {
-        return state.modelByFileId.get(file.id);
+        const existing = state.modelByFileId.get(file.id);
+        const lang = languageForFile(file.path);
+        if (existing && existing.getLanguageId && existing.getLanguageId() !== lang) {
+            monaco.editor.setModelLanguage(existing, lang);
+        }
+        return existing;
     }
 
-    const model = monaco.editor.createModel(String(file.content || ''), 'csharp', monaco.Uri.parse(`inmemory://model/${file.id}/${file.path}`));
+    const model = monaco.editor.createModel(
+        String(file.content || ''),
+        languageForFile(file.path),
+        monaco.Uri.parse(`inmemory://model/${file.id}/${file.path}`)
+    );
     model.onDidChangeContent(function () {
         file.content = model.getValue();
         scheduleWorkspaceSave();
-        scheduleDiagnostics();
+        if (detectFileMode(file.path) === 'csharp') {
+            scheduleDiagnostics();
+        }
     });
 
     state.modelByFileId.set(file.id, model);
@@ -1937,7 +2439,13 @@ function switchActiveFile(fileId) {
     state.editor.setModel(model);
     updateFileListUi();
     scheduleWorkspaceSave();
-    runDiagnostics();
+    applyEditorModeUi();
+    if (detectFileMode(target.path) === 'csharp') {
+        runDiagnostics();
+    } else {
+        monaco.editor.setModelMarkers(model, 'tml-ide', []);
+        renderProblems([]);
+    }
 }
 
 function removeModelForFile(fileId) {
@@ -2134,6 +2642,9 @@ async function requestAnalyzeFromModel(model, offset, options) {
 }
 
 async function runDiagnostics() {
+    if (activeFileMode() !== 'csharp') {
+        return;
+    }
     const model = state.editor ? state.editor.getModel() : null;
     if (!model) return;
 
@@ -2228,25 +2739,29 @@ function buildOptionalArg(flag, value) {
     return safe ? `${flag} ${quoteArg(safe)}` : '';
 }
 
+function readInputValue(inputNode) {
+    return inputNode ? String(inputNode.value || '') : '';
+}
+
 function buildIndexCommandText() {
     const parts = ['dotnet run --project tml-ide-app/tooling/indexer --'];
-    parts.push(buildRequiredArg('--dll', dom.inputIndexerDllPath.value, 'tModLoader.dll'));
-    const xmlArg = buildOptionalArg('--xml', dom.inputIndexerXmlPath.value);
+    parts.push(buildRequiredArg('--dll', readInputValue(dom.inputIndexerDllPath), 'tModLoader.dll'));
+    const xmlArg = buildOptionalArg('--xml', readInputValue(dom.inputIndexerXmlPath));
     if (xmlArg) parts.push(xmlArg);
-    const terrariaDllArg = buildOptionalArg('--terraria-dll', dom.inputIndexerTerrariaDllPath.value);
+    const terrariaDllArg = buildOptionalArg('--terraria-dll', readInputValue(dom.inputIndexerTerrariaDllPath));
     if (terrariaDllArg) parts.push(terrariaDllArg);
-    const terrariaXmlArg = buildOptionalArg('--terraria-xml', dom.inputIndexerTerrariaXmlPath.value);
+    const terrariaXmlArg = buildOptionalArg('--terraria-xml', readInputValue(dom.inputIndexerTerrariaXmlPath));
     if (terrariaXmlArg) parts.push(terrariaXmlArg);
-    parts.push(buildRequiredArg('--out', dom.inputIndexerOutPath.value, 'api-index.v2.json'));
+    parts.push(buildRequiredArg('--out', readInputValue(dom.inputIndexerOutPath), 'api-index.v2.json'));
     return parts.join(' ');
 }
 
 function buildAppendCommandText() {
     const parts = ['dotnet run --project tml-ide-app/tooling/indexer --'];
-    parts.push(buildRequiredArg('--dll', dom.inputAppendDllPath.value, 'extra-mod.dll'));
-    const xmlArg = buildOptionalArg('--xml', dom.inputAppendXmlPath.value);
+    parts.push(buildRequiredArg('--dll', readInputValue(dom.inputAppendDllPath), 'extra-mod.dll'));
+    const xmlArg = buildOptionalArg('--xml', readInputValue(dom.inputAppendXmlPath));
     if (xmlArg) parts.push(xmlArg);
-    parts.push(buildRequiredArg('--append', dom.inputAppendOutPath.value, 'session-pack.v1.json'));
+    parts.push(buildRequiredArg('--append', readInputValue(dom.inputAppendOutPath), 'session-pack.v1.json'));
     return parts.join(' ');
 }
 
@@ -2408,32 +2923,12 @@ function bindUiEvents() {
 
     if (dom.btnOpenUnifiedSubmit) {
         dom.btnOpenUnifiedSubmit.addEventListener('click', () => {
-            if (normalizeWorkspaceName(state.route.workspace) === 'csharp') {
-                setActiveWorkspace('markdown', { syncUrl: false, persist: true, collect: true }).catch(() => {});
-            }
             openUnifiedSubmitPanel({ syncUrl: true });
         });
     }
 
     if (dom.btnRouteSubmitPanel) {
         dom.btnRouteSubmitPanel.addEventListener('click', () => {
-            setActiveWorkspace('shader', { syncUrl: false, persist: true, collect: true }).catch(() => {});
-            openUnifiedSubmitPanel({ syncUrl: true });
-            dispatchWorkspaceCommand('shader', 'workspace.open-submit-panel');
-        });
-    }
-
-    if (dom.btnSubappReload) {
-        dom.btnSubappReload.addEventListener('click', () => {
-            const workspace = normalizeWorkspaceName(state.route.workspace);
-            if (workspace === 'markdown' || workspace === 'shader') {
-                setActiveWorkspace(workspace, { syncUrl: false, persist: true, collect: true, forceReload: true }).catch(() => {});
-            }
-        });
-    }
-
-    if (dom.btnSubappOpenSubmit) {
-        dom.btnSubappOpenSubmit.addEventListener('click', () => {
             openUnifiedSubmitPanel({ syncUrl: true });
         });
     }
@@ -2469,6 +2964,13 @@ function bindUiEvents() {
         });
     }
 
+    if (dom.unifiedShaderSlug) {
+        dom.unifiedShaderSlug.addEventListener('input', () => {
+            dom.unifiedShaderSlug.value = sanitizeShaderSlug(dom.unifiedShaderSlug.value);
+            scheduleUnifiedStateSave();
+        });
+    }
+
     if (dom.btnUnifiedAuthLogin) {
         dom.btnUnifiedAuthLogin.addEventListener('click', () => {
             const workerApiUrl = normalizeWorkerApiUrl(dom.unifiedWorkerUrl ? dom.unifiedWorkerUrl.value : '');
@@ -2496,7 +2998,7 @@ function bindUiEvents() {
     if (dom.btnUnifiedCollect) {
         dom.btnUnifiedCollect.addEventListener('click', async () => {
             try {
-                await collectUnifiedChanges({ requestSubapp: true });
+                await collectUnifiedChanges({ requestSubapp: false });
             } catch (error) {
                 setUnifiedSubmitStatus(`收集失败：${error.message}`, 'error');
             }
@@ -2506,13 +3008,16 @@ function bindUiEvents() {
     if (dom.btnUnifiedSubmit) {
         dom.btnUnifiedSubmit.addEventListener('click', async () => {
             try {
-                const collection = await collectUnifiedChanges({ requestSubapp: true });
-                const batchPlan = await buildUnifiedSubmitBatches(collection);
-                pushUnifiedSubmitLog(`批次规划完成：${batchPlan.batches.length} 批`);
-                await runUnifiedSubmitBatches(batchPlan.batches, {
-                    startIndex: 0,
-                    existingPrNumber: String(dom.unifiedExistingPrNumber ? dom.unifiedExistingPrNumber.value : '').trim()
-                });
+                const collection = await collectUnifiedChanges({ requestSubapp: false });
+                const plan = await buildSplitSubmitPlan(collection);
+                const docsCount = Array.isArray(plan.docsBatches) ? plan.docsBatches.length : 0;
+                const shaderCount = Array.isArray(plan.shaderBatches) ? plan.shaderBatches.length : 0;
+                if (docsCount <= 0 && shaderCount <= 0) {
+                    setUnifiedSubmitStatus('没有可提交文件', 'info');
+                    return;
+                }
+                pushUnifiedSubmitLog(`批次规划完成：文档 ${docsCount}，Shader ${shaderCount}`);
+                await runSplitUnifiedSubmit(plan, {});
             } catch (error) {
                 setUnifiedSubmitStatus(`提交失败：${error.message}`, 'error');
             }
@@ -2521,16 +3026,28 @@ function bindUiEvents() {
 
     if (dom.btnUnifiedResume) {
         dom.btnUnifiedResume.addEventListener('click', async () => {
-            const resume = state.unified.resumeState;
-            if (!resume || !Array.isArray(resume.batches) || !resume.batches.length) {
-                setUnifiedSubmitStatus('没有可续传的失败批次', 'info');
+            const resume = state.unified.resumeState || { docs: null, shader: null };
+            const docsResume = resume.docs && Array.isArray(resume.docs.batches) && resume.docs.batches.length
+                ? resume.docs
+                : null;
+            const shaderResume = resume.shader && Array.isArray(resume.shader.batches) && resume.shader.batches.length
+                ? resume.shader
+                : null;
+            if (!docsResume && !shaderResume) {
+                setUnifiedSubmitStatus('没有可重试的失败通道', 'info');
                 return;
             }
             try {
-                pushUnifiedSubmitLog(`从批次 ${Number(resume.nextIndex || 0) + 1} 开始续传`);
-                await runUnifiedSubmitBatches(resume.batches, {
-                    startIndex: Number(resume.nextIndex || 0),
-                    existingPrNumber: String(resume.existingPrNumber || '')
+                pushUnifiedSubmitLog('开始重试失败通道');
+                const plan = {
+                    docsBatches: docsResume ? docsResume.batches : [],
+                    shaderBatches: shaderResume ? shaderResume.batches : []
+                };
+                await runSplitUnifiedSubmit(plan, {
+                    resume: {
+                        docs: docsResume,
+                        shader: shaderResume
+                    }
                 });
             } catch (error) {
                 setUnifiedSubmitStatus(`续传失败：${error.message}`, 'error');
@@ -2600,13 +3117,56 @@ function bindUiEvents() {
         handleGlobalShortcuts(event);
     });
 
+    if (dom.btnMarkdownTogglePreview) {
+        dom.btnMarkdownTogglePreview.addEventListener('click', async () => {
+            if (activeFileMode() !== 'markdown') return;
+            const nextMode = state.ui.markdownPreviewMode === 'preview' ? 'edit' : 'preview';
+            setMarkdownPreviewMode(nextMode);
+            if (nextMode === 'preview') {
+                try {
+                    await openMarkdownViewerPreview(false);
+                } catch (error) {
+                    addEvent('error', `预览失败：${error.message}`);
+                }
+            }
+        });
+    }
+
+    if (dom.btnMarkdownOpenViewer) {
+        dom.btnMarkdownOpenViewer.addEventListener('click', async () => {
+            try {
+                await openMarkdownViewerPreview(true);
+            } catch (error) {
+                addEvent('error', `新标签预览失败：${error.message}`);
+            }
+        });
+    }
+
+    if (dom.btnShaderCompile) {
+        dom.btnShaderCompile.addEventListener('click', () => {
+            runShaderCompileForActiveFile();
+        });
+    }
+
+    if (dom.btnPanelShaderCompile) {
+        dom.btnPanelShaderCompile.addEventListener('click', () => {
+            runShaderCompileForActiveFile();
+        });
+    }
+
+    if (dom.btnShaderExport) {
+        dom.btnShaderExport.addEventListener('click', () => {
+            exportShaderFile();
+        });
+    }
+
     dom.btnAddFile.addEventListener('click', function () {
-        const input = globalThis.prompt('请输入新文件名（.cs）', 'NewFile.cs');
+        const input = globalThis.prompt('请输入新文件名（.cs/.md/.fx）', '新文章.md');
         if (!input) return;
 
         const fileName = input.trim();
-        if (!fileName.toLowerCase().endsWith('.cs')) {
-            addEvent('error', '文件名必须以 .cs 结尾');
+        if (!/\.(?:cs|md|fx)$/i.test(fileName)) {
+            addEvent('error', '文件名必须以 .cs/.md/.fx 结尾');
             return;
         }
 
@@ -2634,12 +3194,12 @@ function bindUiEvents() {
         const active = getActiveFile();
         if (!active) return;
 
-        const input = globalThis.prompt('请输入新的文件名（.cs）', active.path);
+        const input = globalThis.prompt('请输入新的文件名（.cs/.md/.fx）', active.path);
         if (!input) return;
 
         const next = input.trim();
-        if (!next.toLowerCase().endsWith('.cs')) {
-            addEvent('error', '文件名必须以 .cs 结尾');
+        if (!/\.(?:cs|md|fx)$/i.test(next)) {
+            addEvent('error', '文件名必须以 .cs/.md/.fx 结尾');
             return;
         }
 
@@ -2652,7 +3212,9 @@ function bindUiEvents() {
         }
 
         active.path = next;
+        ensureModelForFile(active);
         updateFileListUi();
+        applyEditorModeUi();
         scheduleWorkspaceSave();
         addEvent('info', `已重命名为：${next}`);
     });
@@ -2713,39 +3275,41 @@ function bindUiEvents() {
         runDiagnostics();
     });
 
-    dom.btnImportAssembly.addEventListener('click', async function () {
-        const dllFile = dom.inputExtraDll.files && dom.inputExtraDll.files[0];
-        const xmlFile = dom.inputExtraXml.files && dom.inputExtraXml.files[0];
-        if (!dllFile || !xmlFile) {
-            addEvent('error', '请同时选择 DLL 与 XML 文件');
-            return;
-        }
-
-        try {
-            const xmlText = await xmlFile.text();
-            const result = await languageRpc.call(MESSAGE_TYPES.ASSEMBLY_IMPORT_REQUEST, {
-                dllName: dllFile.name,
-                xmlText
-            });
-
-            const patch = buildPatchIndexFromXml(xmlText, dllFile.name);
-            state.index = mergeApiIndex(state.index, patch);
-            updateIndexInfo(result.stats || null);
-
-            if (roslynRpc) {
-                await roslynRpc.call(MESSAGE_TYPES.INDEX_SET, { index: state.index });
+    if (dom.btnImportAssembly) {
+        dom.btnImportAssembly.addEventListener('click', async function () {
+            const dllFile = dom.inputExtraDll && dom.inputExtraDll.files && dom.inputExtraDll.files[0];
+            const xmlFile = dom.inputExtraXml && dom.inputExtraXml.files && dom.inputExtraXml.files[0];
+            if (!dllFile || !xmlFile) {
+                addEvent('error', '请同时选择 DLL 与 XML 文件');
+                return;
             }
 
-            addEvent(
-                'info',
-                `导入完成：${result.summary.assemblyName}，新增 ${result.summary.importedTypes} types，总计 ${result.summary.totalTypes}`
-            );
+            try {
+                const xmlText = await xmlFile.text();
+                const result = await languageRpc.call(MESSAGE_TYPES.ASSEMBLY_IMPORT_REQUEST, {
+                    dllName: dllFile.name,
+                    xmlText
+                });
 
-            runDiagnostics();
-        } catch (error) {
-            addEvent('error', `程序集导入失败：${error.message}`);
-        }
-    });
+                const patch = buildPatchIndexFromXml(xmlText, dllFile.name);
+                state.index = mergeApiIndex(state.index, patch);
+                updateIndexInfo(result.stats || null);
+
+                if (roslynRpc) {
+                    await roslynRpc.call(MESSAGE_TYPES.INDEX_SET, { index: state.index });
+                }
+
+                addEvent(
+                    'info',
+                    `导入完成：${result.summary.assemblyName}，新增 ${result.summary.importedTypes} types，总计 ${result.summary.totalTypes}`
+                );
+
+                runDiagnostics();
+            } catch (error) {
+                addEvent('error', `程序集导入失败：${error.message}`);
+            }
+        });
+    }
 
     const indexerInputs = [
         dom.inputIndexerDllPath,
@@ -2763,47 +3327,53 @@ function bindUiEvents() {
         input.addEventListener('input', refreshIndexerCommandPreview);
     });
 
-    dom.btnCopyIndexCommand.addEventListener('click', async function () {
-        try {
-            const ok = await copyToClipboard(buildIndexCommandText());
-            if (!ok) {
-                throw new Error('浏览器拒绝复制');
+    if (dom.btnCopyIndexCommand) {
+        dom.btnCopyIndexCommand.addEventListener('click', async function () {
+            try {
+                const ok = await copyToClipboard(buildIndexCommandText());
+                if (!ok) {
+                    throw new Error('浏览器拒绝复制');
+                }
+                addEvent('info', '已复制基础索引命令');
+            } catch (error) {
+                addEvent('error', `复制失败：${error.message}`);
             }
-            addEvent('info', '已复制基础索引命令');
-        } catch (error) {
-            addEvent('error', `复制失败：${error.message}`);
-        }
-    });
+        });
+    }
 
-    dom.btnCopyAppendCommand.addEventListener('click', async function () {
-        try {
-            const ok = await copyToClipboard(buildAppendCommandText());
-            if (!ok) {
-                throw new Error('浏览器拒绝复制');
+    if (dom.btnCopyAppendCommand) {
+        dom.btnCopyAppendCommand.addEventListener('click', async function () {
+            try {
+                const ok = await copyToClipboard(buildAppendCommandText());
+                if (!ok) {
+                    throw new Error('浏览器拒绝复制');
+                }
+                addEvent('info', '已复制追加命令');
+            } catch (error) {
+                addEvent('error', `复制失败：${error.message}`);
             }
-            addEvent('info', '已复制追加命令');
-        } catch (error) {
-            addEvent('error', `复制失败：${error.message}`);
-        }
-    });
+        });
+    }
 
-    dom.btnImportIndex.addEventListener('click', async function () {
-        const file = dom.inputImportIndex.files && dom.inputImportIndex.files[0];
-        if (!file) {
-            addEvent('error', '请先选择 api-index.v2.json 文件');
-            return;
-        }
+    if (dom.btnImportIndex) {
+        dom.btnImportIndex.addEventListener('click', async function () {
+            const file = dom.inputImportIndex && dom.inputImportIndex.files && dom.inputImportIndex.files[0];
+            if (!file) {
+                addEvent('error', '请先选择 api-index.v2.json 文件');
+                return;
+            }
 
-        try {
-            const text = await file.text();
-            const json = JSON.parse(text);
-            await applyIndex(json, `导入索引 ${file.name}`);
-        } catch (error) {
-            addEvent('error', `导入索引失败：${error.message}`);
-        } finally {
-            dom.inputImportIndex.value = '';
-        }
-    });
+            try {
+                const text = await file.text();
+                const json = JSON.parse(text);
+                await applyIndex(json, `导入索引 ${file.name}`);
+            } catch (error) {
+                addEvent('error', `导入索引失败：${error.message}`);
+            } finally {
+                if (dom.inputImportIndex) dom.inputImportIndex.value = '';
+            }
+        });
+    }
 }
 
 async function bootstrap() {
@@ -2970,8 +3540,9 @@ async function bootstrap() {
                 silent: true
             });
             return {
-                markdown: collection.markdownEntries.length,
-                extra: collection.extraEntries.length,
+                docsMarkdown: collection.docs.markdownEntries.length,
+                docsCode: collection.docs.extraEntries.length,
+                shaderFx: collection.shader.fxEntries.length,
                 blocked: collection.blockedEntries.length
             };
         },
@@ -3005,15 +3576,17 @@ async function bootstrap() {
             return true;
         },
         getUnifiedSnapshot() {
-            const collection = state.unified.collection || { markdownEntries: [], extraEntries: [], blockedEntries: [] };
+            const collection = state.unified.collection || {
+                docs: { markdownEntries: [], extraEntries: [] },
+                shader: { fxEntries: [] },
+                blockedEntries: []
+            };
             return {
-                markdown: collection.markdownEntries.length,
-                extra: collection.extraEntries.length,
+                docsMarkdown: collection.docs.markdownEntries.length,
+                docsCode: collection.docs.extraEntries.length,
+                shaderFx: collection.shader.fxEntries.length,
                 blocked: collection.blockedEntries.length,
-                resume: state.unified.resumeState ? {
-                    nextIndex: Number(state.unified.resumeState.nextIndex || 0),
-                    existingPrNumber: String(state.unified.resumeState.existingPrNumber || '')
-                } : null
+                resume: state.unified.resumeState
             };
         },
         async submitUnified(options) {
@@ -3022,21 +3595,29 @@ async function bootstrap() {
                 requestSubapp: opts.requestSubapp !== false,
                 silent: true
             });
-            const plan = await buildUnifiedSubmitBatches(collection);
-            await runUnifiedSubmitBatches(plan.batches, {
-                startIndex: Number(opts.startIndex || 0),
-                existingPrNumber: String(opts.existingPrNumber || '')
-            });
+            const plan = await buildSplitSubmitPlan(collection);
+            await runSplitUnifiedSubmit(plan, {});
             return this.getUnifiedSnapshot();
         },
         async resumeUnified() {
-            const resume = state.unified.resumeState;
-            if (!resume || !Array.isArray(resume.batches) || !resume.batches.length) {
-                throw new Error('没有可续传批次');
+            const resume = state.unified.resumeState || { docs: null, shader: null };
+            const docsResume = resume.docs && Array.isArray(resume.docs.batches) && resume.docs.batches.length
+                ? resume.docs
+                : null;
+            const shaderResume = resume.shader && Array.isArray(resume.shader.batches) && resume.shader.batches.length
+                ? resume.shader
+                : null;
+            if (!docsResume && !shaderResume) {
+                throw new Error('没有可重试通道');
             }
-            await runUnifiedSubmitBatches(resume.batches, {
-                startIndex: Number(resume.nextIndex || 0),
-                existingPrNumber: String(resume.existingPrNumber || '')
+            await runSplitUnifiedSubmit({
+                docsBatches: docsResume ? docsResume.batches : [],
+                shaderBatches: shaderResume ? shaderResume.batches : []
+            }, {
+                resume: {
+                    docs: docsResume,
+                    shader: shaderResume
+                }
             });
             return this.getUnifiedSnapshot();
         }
@@ -3044,7 +3625,11 @@ async function bootstrap() {
 
     installEditorProviders();
     bindUiEvents();
-    refreshIndexerCommandPreview();
+    installShaderPipInteractions();
+    renderShaderCompilePanel({ log: '等待编译...', errors: [] });
+    if (dom.indexCommandPreview || dom.appendCommandPreview) {
+        refreshIndexerCommandPreview();
+    }
 
     await loadInitialIndex();
 

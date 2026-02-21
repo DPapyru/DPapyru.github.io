@@ -1443,3 +1443,17 @@
 
 **备注**：
 - 本次按“先提交分支再讨论页面修改”的要求执行分支提交；验证状态已如实记录。
+
+### 验证记录 [2026-02-21 18:05]：统一 IDE 单壳改造（Markdown/Shader 融合 + 双通道提交）
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：通过
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+
+**备注**：
+- 已执行“截图 + 模拟输入 + 模拟点击”验收；截图产物：`test-results/tml-ide-unified-acceptance/01-shell-ready.png`、`test-results/tml-ide-unified-acceptance/02-markdown-shader-actions.png`。
+- 验收前临时安装了无保存依赖 `playwright`（`npm_config_package_lock=false npm install --no-save playwright`）并执行 `npx playwright install chromium`，未修改 `package.json`。
