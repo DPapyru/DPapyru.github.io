@@ -60,7 +60,19 @@ export function createMarkdownWorkspacePlugin() {
         getCommands() {
             return [];
         },
-        handleCommand(_commandId) {
+        handleCommand(commandId) {
+            if (String(commandId || '') === 'workspace.open-submit-panel') {
+                const trigger = document.getElementById('studio-open-publish');
+                if (trigger && typeof trigger.click === 'function') {
+                    trigger.click();
+                }
+                const panel = document.getElementById('studio-right-panel-modal');
+                if (panel) {
+                    panel.setAttribute('aria-hidden', 'false');
+                    panel.removeAttribute('hidden');
+                }
+                return true;
+            }
             return false;
         },
         getStatusItems() {
@@ -68,4 +80,3 @@ export function createMarkdownWorkspacePlugin() {
         }
     };
 }
-

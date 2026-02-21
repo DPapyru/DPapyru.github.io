@@ -691,6 +691,9 @@ function openUnifiedSubmitPanel(options) {
         setActiveWorkspace('markdown', { syncUrl: false, persist: true, collect: true }).catch(() => {});
     }
     setSubmitPanelRouteState(true, { syncUrl: opts.syncUrl !== false, replaceUrl: !!opts.replaceUrl });
+    if (state.route.workspace === 'markdown') {
+        dispatchWorkspaceCommand('markdown', 'workspace.open-submit-panel');
+    }
     if (state.route.workspace === 'shader') {
         dispatchWorkspaceCommand('shader', 'workspace.open-submit-panel');
     }
