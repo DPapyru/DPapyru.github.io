@@ -127,10 +127,25 @@ async function main() {
     await page.click('#file-list .file-item:has-text("effect.fx")');
     await page.click('button[data-panel-tab="compile"]');
     await page.waitForSelector('#shader-compile-group:not([hidden])', { timeout: 10000 });
+    await page.waitForSelector('#shader-sidepane:not([hidden])', { timeout: 10000 });
     await page.click('#btn-shader-insert-template');
     await page.waitForFunction(() => {
         const text = String(globalThis.__tmlIdeDebug.getEditorText() || '');
         return text.includes('float4 MainPS') && text.includes('saturate(');
+    }, null, { timeout: 10000 });
+    await page.selectOption('#shader-preset-image', 'noise');
+    await page.selectOption('#shader-render-mode', 'additive');
+    await page.selectOption('#shader-address-mode', 'wrap');
+    await page.selectOption('#shader-bg-mode', 'black');
+    await page.waitForFunction(() => {
+        const node = document.querySelector('#shader-preview-status');
+        if (!node) return false;
+        const text = String(node.textContent || '');
+        return text.includes('噪声') && text.includes('Additive') && text.includes('wrap') && text.includes('black');
+    }, null, { timeout: 10000 });
+    await page.waitForFunction(() => {
+        const canvas = document.querySelector('#shader-preview-canvas');
+        return !!(canvas && canvas.width > 0 && canvas.height > 0);
     }, null, { timeout: 10000 });
 
     await page.evaluate(() => {

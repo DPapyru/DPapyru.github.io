@@ -12,6 +12,13 @@ test('index.html exposes shader template insertion action in compile panel', () 
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
     assert.match(html, /id="shader-compile-group"/);
     assert.match(html, /id="btn-shader-insert-template"/);
+    assert.match(html, /id="shader-sidepane"/);
+    assert.match(html, /id="shader-preview-canvas"/);
+    assert.match(html, /id="shader-preset-image"/);
+    assert.match(html, /id="shader-render-mode"/);
+    assert.match(html, /id="shader-address-mode"/);
+    assert.match(html, /id="shader-bg-mode"/);
+    assert.doesNotMatch(html, /id="shader-pip"/);
 });
 
 test('main.js defines shaderfx language assist and template flow', () => {
@@ -23,6 +30,11 @@ test('main.js defines shaderfx language assist and template flow', () => {
     assert.match(source, /setMonarchTokensProvider\('shaderfx'/);
     assert.match(source, /registerCompletionItemProvider\('shaderfx'/);
     assert.match(source, /function shaderDefaultTemplate/);
+    assert.match(source, /function drawShaderPreviewCanvas/);
+    assert.match(source, /function shaderPreviewImageCanvas/);
+    assert.match(source, /shaderRenderMode/);
+    assert.match(source, /shaderBgMode/);
+    assert.doesNotMatch(source, /function installShaderPipInteractions/);
     assert.match(source, /btnShaderInsertTemplate/);
     assert.match(source, /已插入 Shader 默认模板/);
 });

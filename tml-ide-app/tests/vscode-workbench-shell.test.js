@@ -21,7 +21,8 @@ test('index.html exposes workbench contracts for activity, panel tabs and comman
     assert.match(html, /id="command-palette-input"/);
     assert.match(html, /id="command-palette-results"/);
     assert.match(html, /id="markdown-preview-pane"/);
-    assert.match(html, /id="shader-pip"/);
+    assert.match(html, /id="shader-sidepane"/);
+    assert.match(html, /id="shader-preview-canvas"/);
     assert.match(html, /id="unified-submit-panel"/);
     assert.doesNotMatch(html, /id="workspace-plugin-host"/);
 });

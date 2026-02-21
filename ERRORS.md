@@ -1527,3 +1527,17 @@
 **备注**：
 - Playwright 首次执行发现 `#image-preview-pane` 在隐藏态仍拦截点击（样式覆盖问题），已修复为图片面板默认 `display:none` 且由 `applyEditorModeUi` 显式控制显示。
 - 验收截图目录：`test-results/tml-ide-unified-acceptance/`（本次产物含 `01-shell-ready.png`、`02-markdown-toolbox.png`、`03-markdown-insert-paste.png`、`04-markdown-shader-actions.png`）。
+
+### 验证记录 [2026-02-21 19:46]：统一 IDE Shader 右侧固定渲染区与预设/模式迁移
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js vscode-workbench-shell.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含截图、模拟输入、模拟点击）
+
+**备注**：
+- Shader 浮动预览窗口已取消，改为编辑区右侧固定渲染面板。
+- 右侧面板迁移并保留了 shader-playground 风格能力：预设图片、渲染模式、采样模式、背景模式。
+- 验收截图目录：`test-results/tml-ide-unified-acceptance/`（更新 `01-shell-ready.png`、`02-markdown-toolbox.png`、`03-markdown-insert-paste.png`、`04-markdown-shader-actions.png`）。

@@ -47,15 +47,19 @@ const dom = {
     btnShaderExport: document.getElementById('btn-shader-export'),
     fileList: document.getElementById('file-list'),
     activeFileName: document.getElementById('active-file-name'),
+    panelEditor: document.getElementById('panel-editor'),
     editor: document.getElementById('editor'),
     markdownPreviewPane: document.getElementById('markdown-preview-pane'),
     markdownPreviewFrame: document.getElementById('markdown-preview-frame'),
     imagePreviewPane: document.getElementById('image-preview-pane'),
     imagePreviewImage: document.getElementById('image-preview-image'),
-    shaderPip: document.getElementById('shader-pip'),
-    shaderPipHead: document.getElementById('shader-pip-head'),
-    shaderPipResize: document.getElementById('shader-pip-resize'),
-    shaderPipCanvas: document.getElementById('shader-pip-canvas'),
+    shaderSidepane: document.getElementById('shader-sidepane'),
+    shaderPreviewCanvas: document.getElementById('shader-preview-canvas'),
+    shaderPreviewStatus: document.getElementById('shader-preview-status'),
+    shaderPresetImage: document.getElementById('shader-preset-image'),
+    shaderRenderMode: document.getElementById('shader-render-mode'),
+    shaderAddressMode: document.getElementById('shader-address-mode'),
+    shaderBgMode: document.getElementById('shader-bg-mode'),
     editorStatus: document.getElementById('editor-status'),
     statusLanguage: document.getElementById('status-language'),
     indexInfo: document.getElementById('index-info'),
@@ -154,8 +158,14 @@ const state = {
     problems: [],
     shaderCompile: {
         logs: [],
-        errors: [],
-        pip: { left: 0, top: 0, width: 360, height: 220 }
+        errors: []
+    },
+    shaderPreview: {
+        presetImage: 'checker',
+        renderMode: 'alpha',
+        addressMode: 'clamp',
+        bgMode: 'transparent',
+        rafId: 0
     },
     route: {
         workspace: 'csharp',
@@ -236,6 +246,10 @@ const MARKDOWN_PASTE_EXTENSION_BY_MIME = Object.freeze({
     'image/avif': '.avif'
 });
 const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif)$/i;
+const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
+const SHADER_PREVIEW_RENDER_MODES = new Set(['alpha', 'additive', 'multiply', 'screen']);
+const SHADER_PREVIEW_ADDRESS_MODES = new Set(['clamp', 'wrap']);
+const SHADER_PREVIEW_PRESETS = new Set(['checker', 'noise', 'gradient', 'rings']);
 const SHADER_KEYWORDS = Object.freeze([
     'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'default', 'break', 'continue',
     'return', 'discard', 'struct', 'static', 'const', 'in', 'out', 'inout', 'uniform'
@@ -277,6 +291,7 @@ const SHADER_COMPLETION_WORDS = Object.freeze(Array.from(new Set([
     ...SHADER_BUILTINS
 ])).sort((a, b) => a.localeCompare(b)));
 const SHADER_COMPLETION_RESERVED = new Set(SHADER_COMPLETION_WORDS.map((word) => String(word).toLowerCase()));
+const shaderPreviewPresetCache = new Map();
 
 // Keep Monaco colors aligned with site viewer's Rider dark Prism theme.
 const RIDER_CODE_COLORS = Object.freeze({
@@ -512,6 +527,42 @@ function languageForFile(pathValue) {
     if (mode === 'shaderfx') return 'shaderfx';
     if (mode === 'image') return 'plaintext';
     return 'csharp';
+}
+
+function normalizeShaderPreviewPreset(value) {
+    const safe = String(value || '').trim().toLowerCase();
+    return SHADER_PREVIEW_PRESETS.has(safe) ? safe : 'checker';
+}
+
+function normalizeShaderPreviewRenderMode(value) {
+    const safe = String(value || '').trim().toLowerCase();
+    return SHADER_PREVIEW_RENDER_MODES.has(safe) ? safe : 'alpha';
+}
+
+function normalizeShaderPreviewAddressMode(value) {
+    const safe = String(value || '').trim().toLowerCase();
+    return SHADER_PREVIEW_ADDRESS_MODES.has(safe) ? safe : 'clamp';
+}
+
+function normalizeShaderPreviewBgMode(value) {
+    const safe = String(value || '').trim().toLowerCase();
+    return SHADER_PREVIEW_BG_MODES.has(safe) ? safe : 'transparent';
+}
+
+function shaderPreviewPresetLabel(value) {
+    const safe = normalizeShaderPreviewPreset(value);
+    if (safe === 'noise') return '噪声';
+    if (safe === 'gradient') return '渐变';
+    if (safe === 'rings') return '同心环';
+    return '棋盘格';
+}
+
+function shaderPreviewRenderModeLabel(value) {
+    const safe = normalizeShaderPreviewRenderMode(value);
+    if (safe === 'additive') return 'Additive';
+    if (safe === 'multiply') return 'Multiply';
+    if (safe === 'screen') return 'Screen';
+    return 'AlphaBlend';
 }
 
 function normalizeMarkdownRepoPath(pathValue) {
@@ -3109,25 +3160,201 @@ function renderShaderCompilePanel(result) {
     });
 }
 
-function drawShaderPipCanvas() {
-    if (!dom.shaderPipCanvas) return;
-    const ctx = dom.shaderPipCanvas.getContext('2d');
-    if (!ctx) return;
-    const w = dom.shaderPipCanvas.width;
-    const h = dom.shaderPipCanvas.height;
-    const t = performance.now() / 1000;
-    ctx.clearRect(0, 0, w, h);
-    const g = ctx.createLinearGradient(0, 0, w, h);
-    g.addColorStop(0, `hsl(${(t * 25) % 360}, 70%, 45%)`);
-    g.addColorStop(1, `hsl(${(t * 25 + 120) % 360}, 70%, 40%)`);
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = 'rgba(255,255,255,0.18)';
-    for (let i = 0; i < 20; i += 1) {
-        const x = (i / 20) * w + Math.sin(t + i) * 12;
-        const y = h * 0.5 + Math.cos(t * 1.5 + i) * (h * 0.18);
-        ctx.fillRect(x, y, 12, 12);
+function shaderPreviewImageCanvas(preset) {
+    const safePreset = normalizeShaderPreviewPreset(preset);
+    if (shaderPreviewPresetCache.has(safePreset)) {
+        return shaderPreviewPresetCache.get(safePreset);
     }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    if (safePreset === 'noise') {
+        const imageData = ctx.createImageData(256, 256);
+        for (let i = 0; i < imageData.data.length; i += 4) {
+            const v = (Math.random() * 255) | 0;
+            imageData.data[i] = v;
+            imageData.data[i + 1] = v;
+            imageData.data[i + 2] = v;
+            imageData.data[i + 3] = 255;
+        }
+        ctx.putImageData(imageData, 0, 0);
+    } else if (safePreset === 'gradient') {
+        const grad = ctx.createLinearGradient(0, 0, 256, 256);
+        grad.addColorStop(0, '#1f93ff');
+        grad.addColorStop(0.5, '#7f4dff');
+        grad.addColorStop(1, '#ffd65a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 256, 256);
+    } else if (safePreset === 'rings') {
+        ctx.fillStyle = '#111';
+        ctx.fillRect(0, 0, 256, 256);
+        for (let i = 0; i < 10; i += 1) {
+            const ratio = i / 10;
+            ctx.strokeStyle = `hsla(${Math.round(ratio * 300)}, 85%, 65%, 0.9)`;
+            ctx.lineWidth = 2 + (i % 2);
+            ctx.beginPath();
+            ctx.arc(128, 128, 14 + i * 12, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+    } else {
+        for (let y = 0; y < 16; y += 1) {
+            for (let x = 0; x < 16; x += 1) {
+                const v = (x + y) % 2 ? 36 : 220;
+                ctx.fillStyle = `rgb(${v}, ${v}, ${v})`;
+                ctx.fillRect(x * 16, y * 16, 16, 16);
+            }
+        }
+    }
+
+    shaderPreviewPresetCache.set(safePreset, canvas);
+    return canvas;
+}
+
+function drawShaderPreviewCheckerboard(ctx, width, height, size) {
+    const cell = Math.max(4, Number(size || 16));
+    for (let y = 0; y < height; y += cell) {
+        for (let x = 0; x < width; x += cell) {
+            const dark = ((x / cell + y / cell) % 2) > 0.5;
+            ctx.fillStyle = dark ? '#272a2d' : '#4d5157';
+            ctx.fillRect(x, y, cell, cell);
+        }
+    }
+}
+
+function updateShaderPreviewStatus() {
+    if (!dom.shaderPreviewStatus) return;
+    const mode = shaderPreviewRenderModeLabel(state.shaderPreview.renderMode);
+    const preset = shaderPreviewPresetLabel(state.shaderPreview.presetImage);
+    const address = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
+    const bg = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
+    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg}`;
+}
+
+function syncShaderPreviewControls() {
+    if (dom.shaderPresetImage) {
+        dom.shaderPresetImage.value = normalizeShaderPreviewPreset(state.shaderPreview.presetImage);
+    }
+    if (dom.shaderRenderMode) {
+        dom.shaderRenderMode.value = normalizeShaderPreviewRenderMode(state.shaderPreview.renderMode);
+    }
+    if (dom.shaderAddressMode) {
+        dom.shaderAddressMode.value = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
+    }
+    if (dom.shaderBgMode) {
+        dom.shaderBgMode.value = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
+    }
+}
+
+function drawShaderPreviewCanvas() {
+    if (!dom.shaderPreviewCanvas) return;
+    const canvas = dom.shaderPreviewCanvas;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const dpr = Math.max(1, Number(globalThis.devicePixelRatio || 1));
+    const targetWidth = Math.max(1, Math.round(rect.width * dpr));
+    const targetHeight = Math.max(1, Math.round(rect.height * dpr));
+    if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const width = canvas.width;
+    const height = canvas.height;
+    const timeSec = performance.now() / 1000;
+    const bgMode = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
+    const addressMode = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
+    const renderMode = normalizeShaderPreviewRenderMode(state.shaderPreview.renderMode);
+    const presetCanvas = shaderPreviewImageCanvas(state.shaderPreview.presetImage);
+
+    ctx.clearRect(0, 0, width, height);
+    if (bgMode === 'white') {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+    } else if (bgMode === 'black') {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, width, height);
+    } else {
+        drawShaderPreviewCheckerboard(ctx, width, height, Math.max(8, Math.round(16 * dpr)));
+    }
+
+    if (presetCanvas) {
+        if (addressMode === 'wrap') {
+            const pattern = ctx.createPattern(presetCanvas, 'repeat');
+            if (pattern) {
+                ctx.save();
+                ctx.translate(-Math.round(timeSec * 42), -Math.round(timeSec * 24));
+                ctx.fillStyle = pattern;
+                ctx.fillRect(0, 0, width + presetCanvas.width, height + presetCanvas.height);
+                ctx.restore();
+            }
+        } else {
+            ctx.drawImage(presetCanvas, 0, 0, width, height);
+        }
+    }
+
+    const wave = 0.5 + 0.5 * Math.sin(timeSec * 1.8);
+    const overlay = ctx.createRadialGradient(width * 0.4, height * 0.35, 18, width * 0.6, height * 0.6, width * 0.9);
+    overlay.addColorStop(0, `hsla(${Math.round(180 + wave * 140)}, 90%, 62%, 0.82)`);
+    overlay.addColorStop(1, 'hsla(0, 0%, 0%, 0)');
+    ctx.save();
+    if (renderMode === 'additive') {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.68;
+    } else if (renderMode === 'multiply') {
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.globalAlpha = 0.78;
+    } else if (renderMode === 'screen') {
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.66;
+    } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 0.4;
+    }
+    ctx.fillStyle = overlay;
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+
+    const active = getActiveFile();
+    const compileErrors = Array.isArray(state.shaderCompile.errors) ? state.shaderCompile.errors.length : 0;
+    ctx.save();
+    ctx.fillStyle = 'rgba(14, 16, 20, 0.74)';
+    ctx.fillRect(12 * dpr, height - 40 * dpr, Math.min(width - 24 * dpr, 420 * dpr), 28 * dpr);
+    ctx.fillStyle = compileErrors > 0 ? '#ff9d82' : '#99e29f';
+    ctx.font = `${11 * dpr}px "Segoe UI", sans-serif`;
+    ctx.textBaseline = 'middle';
+    const fileName = active ? String(active.path || '').split('/').pop() : 'shader.fx';
+    const statusText = compileErrors > 0
+        ? `${fileName} · 编译错误 ${compileErrors}`
+        : `${fileName} · 编译通过`;
+    ctx.fillText(statusText, 18 * dpr, height - 26 * dpr);
+    ctx.restore();
+
+    updateShaderPreviewStatus();
+}
+
+function stopShaderPreviewLoop() {
+    if (!state.shaderPreview.rafId) return;
+    cancelAnimationFrame(state.shaderPreview.rafId);
+    state.shaderPreview.rafId = 0;
+}
+
+function ensureShaderPreviewLoop() {
+    if (state.shaderPreview.rafId) return;
+    const tick = () => {
+        state.shaderPreview.rafId = requestAnimationFrame(tick);
+        if (activeFileMode() !== 'shaderfx') {
+            stopShaderPreviewLoop();
+            return;
+        }
+        drawShaderPreviewCanvas();
+    };
+    tick();
 }
 
 function applyEditorModeUi() {
@@ -3158,8 +3385,11 @@ function applyEditorModeUi() {
             openMarkdownViewerPreview(false).catch(() => {});
         }
     }
-    if (dom.shaderPip) {
-        dom.shaderPip.hidden = !isShader;
+    if (dom.panelEditor) {
+        dom.panelEditor.classList.toggle('panel-editor-with-shader-sidepane', isShader);
+    }
+    if (dom.shaderSidepane) {
+        dom.shaderSidepane.hidden = !isShader;
     }
     if (dom.imagePreviewPane) {
         dom.imagePreviewPane.hidden = !isImage;
@@ -3179,8 +3409,12 @@ function applyEditorModeUi() {
         dom.editor.hidden = true;
     }
     if (isShader) {
-        drawShaderPipCanvas();
+        syncShaderPreviewControls();
+        ensureShaderPreviewLoop();
+        drawShaderPreviewCanvas();
         runShaderCompileForActiveFile({ silent: true });
+    } else {
+        stopShaderPreviewLoop();
     }
 }
 
@@ -3220,6 +3454,7 @@ function runShaderCompileForActiveFile(options) {
         log: `[${nowStamp()}] ${result.log}\n${state.shaderCompile.logs.join('\n')}`,
         errors: result.errors
     });
+    drawShaderPreviewCanvas();
     if (!opts.silent) {
         setActivePanelTab(result.ok ? 'compile' : 'errors');
         showBottomPanel(true);
@@ -3232,82 +3467,6 @@ function exportShaderFile() {
     const fileName = String(active.path || 'shader.fx').split('/').pop() || 'shader.fx';
     downloadTextFile(fileName, String(active.content || ''), 'text/plain;charset=utf-8');
     addEvent('info', `已导出 ${fileName}`);
-}
-
-function installShaderPipInteractions() {
-    if (!dom.shaderPip || !dom.shaderPipHead || !dom.shaderPipResize || !dom.shaderPipCanvas) return;
-
-    const pip = dom.shaderPip;
-    const setPipSize = (width, height) => {
-        const w = Math.max(220, Math.min(960, Number(width || 360)));
-        const h = Math.max(140, Math.min(540, Number(height || 220)));
-        state.shaderCompile.pip.width = w;
-        state.shaderCompile.pip.height = h;
-        pip.style.width = `${w}px`;
-        pip.style.height = `${h}px`;
-        const renderW = Math.min(1920, Math.round(w * 2));
-        const renderH = Math.min(1080, Math.round(h * 2));
-        dom.shaderPipCanvas.width = renderW;
-        dom.shaderPipCanvas.height = renderH;
-        drawShaderPipCanvas();
-    };
-
-    const moveTo = (left, top) => {
-        const editorRect = dom.editor ? dom.editor.getBoundingClientRect() : null;
-        const containerRect = editorRect || pip.parentElement.getBoundingClientRect();
-        const maxLeft = Math.max(0, containerRect.width - state.shaderCompile.pip.width - 8);
-        const maxTop = Math.max(0, containerRect.height - state.shaderCompile.pip.height - 8);
-        const safeLeft = Math.max(8, Math.min(maxLeft, Number(left || 8)));
-        const safeTop = Math.max(8, Math.min(maxTop, Number(top || 8)));
-        state.shaderCompile.pip.left = safeLeft;
-        state.shaderCompile.pip.top = safeTop;
-        pip.style.left = `${safeLeft}px`;
-        pip.style.top = `${safeTop}px`;
-    };
-
-    setPipSize(state.shaderCompile.pip.width, state.shaderCompile.pip.height);
-    requestAnimationFrame(() => moveTo(24, 24));
-
-    let dragging = null;
-    const onMove = (event) => {
-        if (!dragging) return;
-        if (dragging.type === 'move') {
-            moveTo(event.clientX - dragging.offsetX, event.clientY - dragging.offsetY);
-        } else if (dragging.type === 'resize') {
-            const nextW = dragging.baseW + (event.clientX - dragging.startX);
-            const nextH = dragging.baseH + (event.clientY - dragging.startY);
-            setPipSize(nextW, nextH);
-        }
-    };
-    const onUp = () => {
-        dragging = null;
-        window.removeEventListener('pointermove', onMove, true);
-        window.removeEventListener('pointerup', onUp, true);
-    };
-
-    dom.shaderPipHead.addEventListener('pointerdown', (event) => {
-        const rect = pip.getBoundingClientRect();
-        dragging = {
-            type: 'move',
-            offsetX: event.clientX - rect.left,
-            offsetY: event.clientY - rect.top
-        };
-        window.addEventListener('pointermove', onMove, true);
-        window.addEventListener('pointerup', onUp, true);
-    });
-
-    dom.shaderPipResize.addEventListener('pointerdown', (event) => {
-        event.preventDefault();
-        dragging = {
-            type: 'resize',
-            startX: event.clientX,
-            startY: event.clientY,
-            baseW: state.shaderCompile.pip.width,
-            baseH: state.shaderCompile.pip.height
-        };
-        window.addEventListener('pointermove', onMove, true);
-        window.addEventListener('pointerup', onUp, true);
-    });
 }
 
 function updateFileListUi() {
@@ -4331,6 +4490,44 @@ function bindUiEvents() {
         });
     }
 
+    if (dom.shaderPresetImage) {
+        dom.shaderPresetImage.addEventListener('change', () => {
+            state.shaderPreview.presetImage = normalizeShaderPreviewPreset(dom.shaderPresetImage.value);
+            drawShaderPreviewCanvas();
+            addEvent('info', `Shader 预设图片已切换：${shaderPreviewPresetLabel(state.shaderPreview.presetImage)}`);
+        });
+    }
+
+    if (dom.shaderRenderMode) {
+        dom.shaderRenderMode.addEventListener('change', () => {
+            state.shaderPreview.renderMode = normalizeShaderPreviewRenderMode(dom.shaderRenderMode.value);
+            drawShaderPreviewCanvas();
+            addEvent('info', `Shader 渲染模式已切换：${shaderPreviewRenderModeLabel(state.shaderPreview.renderMode)}`);
+        });
+    }
+
+    if (dom.shaderAddressMode) {
+        dom.shaderAddressMode.addEventListener('change', () => {
+            state.shaderPreview.addressMode = normalizeShaderPreviewAddressMode(dom.shaderAddressMode.value);
+            drawShaderPreviewCanvas();
+            addEvent('info', `Shader 采样模式已切换：${state.shaderPreview.addressMode}`);
+        });
+    }
+
+    if (dom.shaderBgMode) {
+        dom.shaderBgMode.addEventListener('change', () => {
+            state.shaderPreview.bgMode = normalizeShaderPreviewBgMode(dom.shaderBgMode.value);
+            drawShaderPreviewCanvas();
+            addEvent('info', `Shader 背景模式已切换：${state.shaderPreview.bgMode}`);
+        });
+    }
+
+    window.addEventListener('resize', () => {
+        if (activeFileMode() === 'shaderfx') {
+            drawShaderPreviewCanvas();
+        }
+    });
+
     dom.btnAddFile.addEventListener('click', function () {
         const input = globalThis.prompt('请输入新文件名（.cs/.md/.fx/.png）', '新文章.md');
         if (!input) return;
@@ -4798,7 +4995,8 @@ async function bootstrap() {
 
     installEditorProviders();
     bindUiEvents();
-    installShaderPipInteractions();
+    syncShaderPreviewControls();
+    updateShaderPreviewStatus();
     renderShaderCompilePanel({ log: '等待编译...', errors: [] });
     if (dom.indexCommandPreview || dom.appendCommandPreview) {
         refreshIndexerCommandPreview();
