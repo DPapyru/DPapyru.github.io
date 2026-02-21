@@ -116,14 +116,30 @@ async function main() {
     await page.screenshot({ path: path.join(outDir, '03-markdown-insert-paste.png'), fullPage: true });
 
     await page.click('#file-list .file-item:has-text("effect.fx")');
+    await page.click('button[data-panel-tab="compile"]');
+    await page.waitForSelector('#shader-compile-group:not([hidden])', { timeout: 10000 });
+    await page.click('#btn-shader-insert-template');
+    await page.waitForFunction(() => {
+        const text = String(globalThis.__tmlIdeDebug.getEditorText() || '');
+        return text.includes('float4 MainPS') && text.includes('saturate(');
+    }, null, { timeout: 10000 });
+
     await page.evaluate(() => {
         globalThis.__tmlIdeDebug.setEditorText([
             'float4 PSMain(float2 uv : TEXCOORD0) : SV_Target',
             '{',
+            '    sat',
             '    return float4(uv, 0.5, 1.0);',
             '}'
         ].join('\n'));
+        globalThis.__tmlIdeDebug.setCursorAfterText('sat');
     });
+    await page.evaluate(async () => {
+        if (globalThis.__tmlIdeDebug && typeof globalThis.__tmlIdeDebug.triggerSuggest === 'function') {
+            await globalThis.__tmlIdeDebug.triggerSuggest();
+        }
+    });
+    await page.keyboard.type('u');
 
     await page.click('#editor .monaco-editor');
     await page.keyboard.type('\n// 模拟输入');

@@ -91,6 +91,7 @@ const dom = {
     panelViews: Array.from(document.querySelectorAll('.panel-view[data-panel-view]')),
     bottomPanel: document.getElementById('bottom-panel'),
     btnToggleBottomPanel: document.getElementById('btn-toggle-bottom-panel'),
+    btnShaderInsertTemplate: document.getElementById('btn-shader-insert-template'),
     btnPanelShaderCompile: document.getElementById('btn-panel-shader-compile'),
     shaderCompileLog: document.getElementById('shader-compile-log'),
     shaderErrorList: document.getElementById('shader-error-list'),
@@ -221,6 +222,47 @@ const MARKDOWN_FALLBACK_ANCHORS = Object.freeze([
 ]);
 const MARKDOWN_PASTE_MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 const MARKDOWN_PASTE_MAX_IMAGE_COUNT = 8;
+const SHADER_KEYWORDS = Object.freeze([
+    'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'default', 'break', 'continue',
+    'return', 'discard', 'struct', 'static', 'const', 'in', 'out', 'inout', 'uniform'
+]);
+const SHADER_TYPES = Object.freeze([
+    'void', 'bool', 'int', 'uint', 'float', 'half', 'fixed',
+    'bool2', 'bool3', 'bool4',
+    'int2', 'int3', 'int4',
+    'uint2', 'uint3', 'uint4',
+    'float2', 'float3', 'float4',
+    'half2', 'half3', 'half4',
+    'fixed2', 'fixed3', 'fixed4',
+    'float2x2', 'float3x3', 'float4x4',
+    'half2x2', 'half3x3', 'half4x4',
+    'fixed2x2', 'fixed3x3', 'fixed4x4',
+    'sampler2D', 'Texture2D', 'sampler_state'
+]);
+const SHADER_FUNCTIONS = Object.freeze([
+    'MainPS', 'mainImage',
+    'abs', 'acos', 'asin', 'atan', 'atan2', 'ceil', 'clamp', 'clip', 'cos', 'cross',
+    'ddx', 'ddy', 'degrees', 'distance', 'dot', 'exp', 'exp2', 'faceforward', 'floor',
+    'fmod', 'frac', 'fwidth', 'isnan', 'isinf', 'length', 'lerp', 'log', 'log10', 'log2',
+    'mad', 'max', 'min', 'mul', 'normalize', 'pow', 'radians', 'reflect',
+    'refract', 'rcp', 'round', 'rsqrt', 'saturate', 'sign', 'sin', 'smoothstep', 'sqrt',
+    'step', 'tan', 'tex2D', 'tex2Dproj', 'tex2Dbias', 'tex2Dlod', 'tex2Dgrad',
+    'texture', 'textureProj', 'textureLod', 'textureGrad', 'transpose', 'determinant', 'inverse'
+]);
+const SHADER_BUILTINS = Object.freeze([
+    'iTime', 'iTimeDelta', 'iFrame', 'iResolution', 'iMouse', 'iDate',
+    'iChannel0', 'iChannel1', 'iChannel2', 'iChannel3',
+    'uImage0', 'uImage1', 'uImage2', 'uImage3',
+    'uv', 'fragCoord', 'fragColor', 'vertexColor',
+    'TEXCOORD0', 'COLOR0', 'SV_TARGET', 'SV_POSITION'
+]);
+const SHADER_COMPLETION_WORDS = Object.freeze(Array.from(new Set([
+    ...SHADER_KEYWORDS,
+    ...SHADER_TYPES,
+    ...SHADER_FUNCTIONS,
+    ...SHADER_BUILTINS
+])).sort((a, b) => a.localeCompare(b)));
+const SHADER_COMPLETION_RESERVED = new Set(SHADER_COMPLETION_WORDS.map((word) => String(word).toLowerCase()));
 
 // Keep Monaco colors aligned with site viewer's Rider dark Prism theme.
 const RIDER_CODE_COLORS = Object.freeze({
@@ -284,6 +326,7 @@ function registerRiderDarkMonacoTheme() {
             { token: 'delimiter.array', foreground: 'A7B0BE' },
             { token: 'identifier', foreground: '95FFE2' },
             { token: 'variable', foreground: '95FFE2' },
+            { token: 'variable.predefined', foreground: '66C3CC' },
             { token: 'variable.parameter', foreground: 'F2C77D' },
             { token: 'parameter', foreground: 'F2C77D' },
             { token: 'property', foreground: 'B370FF' },
@@ -388,7 +431,7 @@ function detectFileMode(pathValue) {
 function languageForFile(pathValue) {
     const mode = detectFileMode(pathValue);
     if (mode === 'markdown') return 'markdown';
-    if (mode === 'shaderfx') return 'cpp';
+    if (mode === 'shaderfx') return 'shaderfx';
     return 'csharp';
 }
 
@@ -456,6 +499,168 @@ function compileFxSource(code) {
             ? '编译成功：语法检查通过。'
             : `编译失败：${errors.length} 条错误。`
     };
+}
+
+function shaderDefaultTemplate() {
+    return [
+        '// tModLoader 风格像素着色器默认模板',
+        '// UV 约定: 左上(0,0), 右下(1,1)',
+        '// 可用纹理: iChannel0-3（兼容 uImage0-3）',
+        '',
+        'float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
+        '{',
+        '    float2 uv = texCoord;',
+        '    float2 p = uv * 2.0 - 1.0;',
+        '    float vignette = saturate(1.0 - dot(p, p) * 0.45);',
+        '    float wave = 0.5 + 0.5 * sin(iTime + uv.x * 6.0);',
+        '    float3 col = float3(uv.x, uv.y, wave) * vignette;',
+        '    return float4(col, 1.0);',
+        '}',
+        ''
+    ].join('\n');
+}
+
+function stripShaderCommentsAndStrings(text) {
+    let raw = String(text || '');
+    raw = raw.replace(/\/\*[\s\S]*?\*\//g, ' ');
+    raw = raw.replace(/\/\/[^\n]*/g, ' ');
+    raw = raw.replace(/"(?:\\.|[^"\\])*"/g, ' ');
+    raw = raw.replace(/'(?:\\.|[^'\\])*'/g, ' ');
+    return raw;
+}
+
+function collectShaderDynamicIdentifiers(sourceText) {
+    const cleaned = stripShaderCommentsAndStrings(sourceText);
+    const matches = cleaned.match(/\b[A-Za-z_][A-Za-z0-9_]*\b/g) || [];
+    const seen = new Set();
+    const dynamic = [];
+    matches.forEach((word) => {
+        const safe = String(word || '');
+        const key = safe.toLowerCase();
+        if (!safe) return;
+        if (SHADER_COMPLETION_RESERVED.has(key)) return;
+        if (/^[xyzwrgba]{1,4}$/i.test(safe)) return;
+        if (seen.has(key)) return;
+        seen.add(key);
+        dynamic.push(safe);
+    });
+    return dynamic;
+}
+
+function registerShaderFxLanguageSupport() {
+    monaco.languages.register({ id: 'shaderfx' });
+
+    monaco.languages.setLanguageConfiguration('shaderfx', {
+        comments: {
+            lineComment: '//',
+            blockComment: ['/*', '*/']
+        },
+        brackets: [
+            ['{', '}'],
+            ['[', ']'],
+            ['(', ')']
+        ],
+        autoClosingPairs: [
+            { open: '{', close: '}' },
+            { open: '[', close: ']' },
+            { open: '(', close: ')' },
+            { open: '"', close: '"' },
+            { open: '\'', close: '\'' }
+        ],
+        surroundingPairs: [
+            { open: '{', close: '}' },
+            { open: '[', close: ']' },
+            { open: '(', close: ')' },
+            { open: '"', close: '"' },
+            { open: '\'', close: '\'' }
+        ]
+    });
+
+    monaco.languages.setMonarchTokensProvider('shaderfx', {
+        defaultToken: '',
+        tokenPostfix: '.shaderfx',
+        keywords: SHADER_KEYWORDS,
+        types: SHADER_TYPES,
+        functions: SHADER_FUNCTIONS,
+        builtins: SHADER_BUILTINS,
+        tokenizer: {
+            root: [
+                [/[a-zA-Z_][\w]*/, {
+                    cases: {
+                        '@keywords': 'keyword',
+                        '@types': 'type',
+                        '@functions': 'function',
+                        '@builtins': 'variable.predefined',
+                        '@default': 'identifier'
+                    }
+                }],
+                [/#\s*[A-Za-z_][A-Za-z0-9_]*/, 'keyword.directive'],
+                [/\d*\.\d+([eE][\-+]?\d+)?[fFuU]?/, 'number.float'],
+                [/\d+([eE][\-+]?\d+)?[fFuU]?/, 'number'],
+                [/[{}()\[\]]/, '@brackets'],
+                [/[;,.]/, 'delimiter'],
+                [/--|[-+*/=<>!~?:&|^%]+/, 'operator'],
+                [/\/\*/, 'comment', '@comment'],
+                [/\/\/.*$/, 'comment'],
+                [/"/, 'string', '@string'],
+                [/'[^\\']'/, 'string'],
+                [/'/, 'string.invalid']
+            ],
+            comment: [
+                [/[^/*]+/, 'comment'],
+                [/\*\//, 'comment', '@pop'],
+                [/[/*]/, 'comment']
+            ],
+            string: [
+                [/[^\\"]+/, 'string'],
+                [/\\./, 'string.escape'],
+                [/"/, 'string', '@pop']
+            ]
+        }
+    });
+
+    monaco.languages.registerCompletionItemProvider('shaderfx', {
+        triggerCharacters: ['.', '_'],
+        provideCompletionItems(model, position) {
+            const word = model.getWordUntilPosition(position);
+            const prefix = String(word && word.word || '');
+            if (!prefix) {
+                return { suggestions: [] };
+            }
+
+            const query = prefix.toLowerCase();
+            const dictionary = Array.from(new Set([
+                ...SHADER_COMPLETION_WORDS,
+                ...collectShaderDynamicIdentifiers(model.getValue())
+            ]));
+            const items = dictionary
+                .filter((entry) => String(entry || '').toLowerCase().startsWith(query))
+                .sort((a, b) => String(a).localeCompare(String(b)))
+                .slice(0, 40);
+
+            const range = new monaco.Range(
+                position.lineNumber,
+                word.startColumn,
+                position.lineNumber,
+                word.endColumn
+            );
+
+            return {
+                suggestions: items.map((label) => ({
+                    label,
+                    kind: SHADER_TYPES.includes(label)
+                        ? monaco.languages.CompletionItemKind.Class
+                        : (SHADER_FUNCTIONS.includes(label)
+                            ? monaco.languages.CompletionItemKind.Function
+                            : (SHADER_BUILTINS.includes(label)
+                                ? monaco.languages.CompletionItemKind.Variable
+                                : monaco.languages.CompletionItemKind.Keyword)),
+                    insertText: label,
+                    range
+                }))
+            };
+        }
+    });
 }
 
 function normalizeWorkerApiUrl(value) {
@@ -2544,6 +2749,41 @@ function isMarkdownEditorFocused() {
     return !!(state.editor && typeof state.editor.hasTextFocus === 'function' && state.editor.hasTextFocus());
 }
 
+function getActiveShaderContext() {
+    const active = getActiveFile();
+    if (!active || detectFileMode(active.path) !== 'shaderfx') {
+        return null;
+    }
+    const model = ensureModelForFile(active);
+    if (!model) return null;
+    if (state.editor && state.editor.getModel() !== model) {
+        state.editor.setModel(model);
+    }
+    return { active, model };
+}
+
+function insertShaderDefaultTemplateForActiveFile(options) {
+    const opts = options || {};
+    const ctx = getActiveShaderContext();
+    if (!ctx) {
+        addEvent('error', '插入默认模板仅支持 .fx 文件');
+        return false;
+    }
+
+    const current = String(ctx.model.getValue() || '').trim();
+    if (current && !opts.force && !globalThis.confirm('当前 .fx 文件已有内容，确认覆盖为默认模板吗？')) {
+        return false;
+    }
+
+    ctx.model.setValue(shaderDefaultTemplate());
+    if (state.editor) {
+        state.editor.setPosition({ lineNumber: 1, column: 1 });
+        state.editor.focus();
+    }
+    addEvent('info', '已插入 Shader 默认模板');
+    return true;
+}
+
 function markdownTemplateBlock() {
     return [
         '---',
@@ -3888,6 +4128,12 @@ function bindUiEvents() {
         }
     });
 
+    if (dom.btnShaderInsertTemplate) {
+        dom.btnShaderInsertTemplate.addEventListener('click', () => {
+            insertShaderDefaultTemplateForActiveFile();
+        });
+    }
+
     if (dom.btnShaderCompile) {
         dom.btnShaderCompile.addEventListener('click', () => {
             runShaderCompileForActiveFile();
@@ -3922,10 +4168,11 @@ function bindUiEvents() {
             return;
         }
 
+        const initialContent = detectFileMode(fileName) === 'shaderfx' ? shaderDefaultTemplate() : '';
         const file = {
             id: createFileId(),
             path: fileName,
-            content: ''
+            content: initialContent
         };
 
         state.workspace.files.push(file);
@@ -4138,6 +4385,7 @@ async function bootstrap() {
     const enhancedCsharpLanguage = createEnhancedCsharpLanguage(csharpLanguage);
     monaco.languages.setLanguageConfiguration('csharp', csharpConf);
     monaco.languages.setMonarchTokensProvider('csharp', enhancedCsharpLanguage);
+    registerShaderFxLanguageSupport();
     registerRiderDarkMonacoTheme();
     setActiveActivity(state.ui.activeActivity);
     setActivePanelTab(state.ui.activePanelTab);

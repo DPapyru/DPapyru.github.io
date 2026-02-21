@@ -1499,3 +1499,18 @@
 - 新增自动化回归测试：`tml-ide-app/tests/markdown-editor-migration.test.js`，覆盖“格式插入按钮存在性 + Ctrl+V 粘贴图片逻辑接线”。
 - 已执行“截图 + 模拟输入 + 模拟点击”验收，脚本额外覆盖：点击格式插入按钮、模拟粘贴图片并校验编辑器包含 `data:image/`。
 - 验收截图更新：`test-results/tml-ide-unified-acceptance/02-markdown-toolbox.png`、`test-results/tml-ide-unified-acceptance/03-markdown-insert-paste.png`、`test-results/tml-ide-unified-acceptance/04-markdown-shader-actions.png`。
+
+### 验证记录 [2026-02-21 19:15]：统一 IDE 迁移 Shader 补全/高亮与默认模板
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173`：通过（用于验收）
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+
+**备注**：
+- 新增 `shaderfx` 语言支持：Monaco 词法高亮（Monarch）与补全词典（参考 shader-playground）。
+- 新增 `.fx` 文件创建默认模板与“插入默认模板”按钮（`btn-shader-insert-template`）。
+- 已执行“截图 + 模拟输入 + 模拟点击”验收，脚本覆盖 Shader 默认模板插入与补全触发输入路径。
