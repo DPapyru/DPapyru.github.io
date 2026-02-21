@@ -1782,3 +1782,15 @@
 - 修复了 Explorer 资源扫描漏检：`{{anim:...}}` 与 `animcs` 代码块首行 `anims/*.cs` 现在会出现在资源树，可直接右键预览/编辑。
 - 本地验收环境 `preview` 下 `/site/content/*` 为 404，验收脚本补充了 `anims/demo-basic.cs` 路由 mock，确保可复现“打开 C# 编辑器 -> 实时编译 -> 报错中断 -> 恢复播放”全流程。
 - 浏览器验收产物：`test-results/tml-ide-anim-realtime-acceptance/report.json` 与 4 张步骤截图（`01`~`04`）。
+
+### 验证记录 [2026-02-22 06:57]：合并两个 IDE 工作树分支后统一校验
+
+**级别**：L3
+
+**命令与结果**：
+- `npm test`：失败（9 项失败；`site/assets/js/shader-*`、`site/tooling/scripts/gallery-*`、`site/tooling/scripts/workbench-shell.test.js`、`site/tooling/scripts/markdown-ref-standard-links.test.js`、`site/tooling/scripts/page-common-alignment.test.js`）
+- `npm run build`：通过
+
+**备注**：
+- `npm test` 的失败在合并前 `main` 基线已存在，本次合并未新增失败项。
+- 已在 `main` 重新生成 `site` 与 `tml-ide` 产物，确保合并后构建输出一致。
