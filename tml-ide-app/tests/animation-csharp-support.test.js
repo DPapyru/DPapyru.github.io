@@ -17,3 +17,14 @@ test('main.js enables animation C# files with csharp completion/highlight mode',
     assert.match(source, /if \(isAnimationCsharpFilePath\(pathValue\)\) return 'csharp';/);
     assert.match(source, /dom\.statusLanguage\.textContent = 'C# \(动画\)';/);
 });
+
+test('main.js separates animation completion profile from normal tModLoader C#', () => {
+    const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
+
+    assert.match(source, /ANALYZE_COMPLETION_PROFILE_TMOD/);
+    assert.match(source, /ANALYZE_COMPLETION_PROFILE_ANIMATION/);
+    assert.match(source, /completionProfileForModel/);
+    assert.match(source, /buildAnimationDomainCompletionItems/);
+    assert.match(source, /filterAnalyzeItemsForAnimation/);
+    assert.match(source, /mergeCompletionItems/);
+});

@@ -727,7 +727,7 @@ html[data-theme="dark"] body.viewer-page .article-studio-wrapper {
 
 .studio-statusbar {
     display: grid;
-    grid-template-columns: minmax(140px, 1fr) minmax(180px, 2fr) auto;
+    grid-template-columns: minmax(140px, 1.1fr) minmax(180px, 2fr) minmax(120px, 1fr) minmax(120px, 1fr) auto;
     align-items: center;
     gap: 8px;
     border-top: 1px solid var(--border-color);
@@ -750,6 +750,8 @@ html[data-theme="dark"] body.viewer-page .article-studio-wrapper {
 
 #studio-status,
 #studio-current-path,
+#studio-anim-bridge-status,
+#studio-anim-compile-status,
 #studio-stats {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -761,6 +763,11 @@ html[data-theme="dark"] body.viewer-page .article-studio-wrapper {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+#studio-anim-bridge-status,
+#studio-anim-compile-status {
+    color: var(--text-secondary);
 }
 
 #studio-stats {
@@ -1041,6 +1048,23 @@ html[data-theme="dark"] body.viewer-page .article-studio-wrapper {
     padding: 12px;
 }
 
+.studio-csharp-editor-bridge {
+    grid-column: 1 / -1;
+    display: grid;
+    gap: 6px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-color);
+}
+
+.studio-csharp-editor-bridge-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+}
+
 .studio-csharp-editor-pane {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
@@ -1166,6 +1190,10 @@ html[data-theme="dark"] body.viewer-page .article-studio-wrapper {
     }
 
     .studio-csharp-editor-modal-body {
+        grid-template-columns: 1fr;
+    }
+
+    .studio-csharp-editor-bridge-row {
         grid-template-columns: 1fr;
     }
 

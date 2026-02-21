@@ -191,12 +191,32 @@
         return Object.keys(merged).length ? merged : null;
     }
 
+    function normalizeDiagnostics(input) {
+        if (!Array.isArray(input)) return [];
+        return input.map((entry) => String(entry || '').trim()).filter(Boolean);
+    }
+
+    function resolveGlobalEntryResolver() {
+        if (typeof globalThis !== 'undefined' && typeof globalThis.__ANIMCS_RESOLVE_ENTRY === 'function') {
+            return globalThis.__ANIMCS_RESOLVE_ENTRY;
+        }
+        if (typeof window !== 'undefined' && typeof window.__ANIMCS_RESOLVE_ENTRY === 'function') {
+            return window.__ANIMCS_RESOLVE_ENTRY;
+        }
+        return null;
+    }
+
     async function resolveCustomEntry(embed, normalized, rawSource) {
-        if (!embed || typeof embed.__ANIMCS_RESOLVE_ENTRY !== 'function') return null;
-        return embed.__ANIMCS_RESOLVE_ENTRY({
+        const resolver = embed && typeof embed.__ANIMCS_RESOLVE_ENTRY === 'function'
+            ? embed.__ANIMCS_RESOLVE_ENTRY
+            : resolveGlobalEntryResolver();
+        if (typeof resolver !== 'function') return null;
+
+        return resolver({
             normalized,
             rawSource,
-            assetsRoot: getAssetsRoot()
+            assetsRoot: getAssetsRoot(),
+            embed
         });
     }
 
@@ -1023,10 +1043,20 @@
 
         try {
             const custom = await resolveCustomEntry(embed, normalized, rawSource);
+            const customDiagnostics = normalizeDiagnostics(custom && custom.diagnostics);
+            const blockFallback = !!(custom && custom.blockFallback);
+            if (customDiagnostics.length) {
+                throw new Error(`compile diagnostics: ${customDiagnostics.join(' | ')}`);
+            }
+
             let entry = custom && custom.entry ? custom.entry : null;
             let moduleUrl = custom && typeof custom.moduleUrl === 'string' ? String(custom.moduleUrl).trim() : '';
 
             if (!moduleUrl) {
+                if (blockFallback) {
+                    throw new Error(`compile diagnostics: ${normalized || rawSource}`);
+                }
+
                 let manifest = null;
                 let manifestError = null;
                 try {

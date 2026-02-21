@@ -249,6 +249,66 @@ const VSCODE_SHORTCUTS = Object.freeze({
     FOCUS_EXPLORER: 'Ctrl+Shift+E'
 });
 const COMPLETION_MAX_ITEMS = 5000;
+const ANALYZE_COMPLETION_PROFILE_TMOD = 'tmod';
+const ANALYZE_COMPLETION_PROFILE_ANIMATION = 'animation';
+const ANIMATION_TYPE_LABELS = Object.freeze([
+    'AnimContext',
+    'AnimInput',
+    'ICanvas2D',
+    'Vec2',
+    'Vec3',
+    'Mat4',
+    'Color',
+    'MathF',
+    'AnimGeom',
+    'IAnimScript'
+]);
+const ANIMATION_LIFECYCLE_LABELS = Object.freeze([
+    'OnInit',
+    'OnUpdate',
+    'OnRender',
+    'OnDispose'
+]);
+const ANIMATION_STATIC_OWNER_TO_TYPE = Object.freeze({
+    ctx: 'AnimContext',
+    context: 'AnimContext',
+    input: 'AnimInput',
+    g: 'ICanvas2D',
+    canvas: 'ICanvas2D',
+    Vec2: 'Vec2',
+    Vec3: 'Vec3',
+    Mat4: 'Mat4',
+    Color: 'Color',
+    MathF: 'MathF',
+    AnimGeom: 'AnimGeom'
+});
+const ANIMATION_MEMBER_LABELS_BY_TYPE = Object.freeze({
+    AnimContext: Object.freeze(['Width', 'Height', 'Time', 'Input']),
+    AnimInput: Object.freeze(['X', 'Y', 'DeltaX', 'DeltaY', 'IsDown', 'WasPressed', 'WasReleased', 'IsInside', 'Mode', 'ModeLocked', 'WheelDelta']),
+    ICanvas2D: Object.freeze(['Clear', 'Line', 'Circle', 'FillCircle', 'Text']),
+    Vec2: Object.freeze(['X', 'Y', 'Add', 'Sub', 'MulScalar', 'DivScalar']),
+    Vec3: Object.freeze(['X', 'Y', 'Z', 'Add', 'Sub', 'MulScalar', 'DivScalar', 'Length', 'Normalize']),
+    Mat4: Object.freeze([
+        'M00', 'M01', 'M02', 'M03',
+        'M10', 'M11', 'M12', 'M13',
+        'M20', 'M21', 'M22', 'M23',
+        'M30', 'M31', 'M32', 'M33',
+        'Identity', 'Translation', 'Scale', 'RotationX', 'RotationY', 'RotationZ', 'PerspectiveFovRh', 'Mul', 'MulVec2', 'MulVec3'
+    ]),
+    Color: Object.freeze(['R', 'G', 'B', 'A']),
+    MathF: Object.freeze(['Sin', 'Cos', 'Tan', 'Min', 'Max', 'Sqrt', 'Abs', 'Round']),
+    AnimGeom: Object.freeze(['ToScreen', 'DrawAxes', 'DrawArrow'])
+});
+const ANIMATION_METHOD_LABELS = new Set([
+    'Clear', 'Line', 'Circle', 'FillCircle', 'Text',
+    'Add', 'Sub', 'MulScalar', 'DivScalar', 'Length', 'Normalize',
+    'Identity', 'Translation', 'Scale', 'RotationX', 'RotationY', 'RotationZ', 'PerspectiveFovRh', 'Mul', 'MulVec2', 'MulVec3',
+    'Sin', 'Cos', 'Tan', 'Min', 'Max', 'Sqrt', 'Abs', 'Round',
+    'ToScreen', 'DrawAxes', 'DrawArrow',
+    'OnInit', 'OnUpdate', 'OnRender', 'OnDispose'
+]);
+const ANIMATION_TYPE_LABEL_SET = new Set(ANIMATION_TYPE_LABELS);
+const ANIMATION_MEMBER_LABEL_SET = new Set(Object.values(ANIMATION_MEMBER_LABELS_BY_TYPE).flat());
 const UNIFIED_STATE_SAVE_DELAY = 240;
 const WORKSPACE_VALUES = Object.freeze(['csharp', 'markdown', 'shader']);
 const WORKSPACE_LAST_KEY = 'tml-ide:last-workspace';
@@ -4265,6 +4325,150 @@ function isAnimationCsharpFilePath(pathValue) {
     return false;
 }
 
+function normalizeAnalyzeCompletionProfile(profile) {
+    return String(profile || '').toLowerCase() === ANALYZE_COMPLETION_PROFILE_ANIMATION
+        ? ANALYZE_COMPLETION_PROFILE_ANIMATION
+        : ANALYZE_COMPLETION_PROFILE_TMOD;
+}
+
+function completionProfileForPath(pathValue) {
+    return isAnimationCsharpFilePath(pathValue)
+        ? ANALYZE_COMPLETION_PROFILE_ANIMATION
+        : ANALYZE_COMPLETION_PROFILE_TMOD;
+}
+
+function workspaceFileByModel(model) {
+    if (!model) return null;
+    for (let i = 0; i < state.workspace.files.length; i += 1) {
+        const file = state.workspace.files[i];
+        const knownModel = state.modelByFileId.get(file.id);
+        if (knownModel === model) {
+            return file;
+        }
+    }
+    return null;
+}
+
+function completionProfileForModel(model) {
+    const file = workspaceFileByModel(model);
+    return completionProfileForPath(file && file.path ? file.path : '');
+}
+
+function animationLocalTypeHints(text, offset) {
+    const scopeText = String(text || '').slice(0, Math.max(0, Number(offset) || 0));
+    const map = new Map();
+    let match = null;
+
+    const explicitRe = /\b(AnimContext|AnimInput|ICanvas2D|Vec2|Vec3|Mat4|Color)\s+([A-Za-z_][A-Za-z0-9_]*)\b/g;
+    while ((match = explicitRe.exec(scopeText)) !== null) {
+        map.set(String(match[2] || ''), String(match[1] || ''));
+    }
+
+    const varNewRe = /\bvar\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*new\s+(Vec2|Vec3|Mat4|Color)\b/g;
+    while ((match = varNewRe.exec(scopeText)) !== null) {
+        map.set(String(match[1] || ''), String(match[2] || ''));
+    }
+
+    const varInputRe = /\bvar\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*ctx\.Input\b/g;
+    while ((match = varInputRe.exec(scopeText)) !== null) {
+        map.set(String(match[1] || ''), 'AnimInput');
+    }
+
+    return map;
+}
+
+function animationOwnerTypeAtOffset(text, offset) {
+    const scopeText = String(text || '').slice(0, Math.max(0, Number(offset) || 0));
+    const memberMatch = scopeText.match(/([A-Za-z_][A-Za-z0-9_\.]*)\.[A-Za-z0-9_]*$/);
+    if (!memberMatch) return '';
+
+    const ownerExpr = String(memberMatch[1] || '');
+    if (!ownerExpr) return '';
+    if (/^(?:ctx|context)\.Input$/i.test(ownerExpr)) {
+        return 'AnimInput';
+    }
+    const owner = ownerExpr.split('.').filter(Boolean).pop() || '';
+    if (!owner) return '';
+    if (Object.prototype.hasOwnProperty.call(ANIMATION_STATIC_OWNER_TO_TYPE, owner)) {
+        return ANIMATION_STATIC_OWNER_TO_TYPE[owner];
+    }
+    const localHints = animationLocalTypeHints(scopeText, scopeText.length);
+    return String(localHints.get(owner) || '');
+}
+
+function keywordPrefixAtOffset(text, offset) {
+    const scopeText = String(text || '').slice(0, Math.max(0, Number(offset) || 0));
+    const match = scopeText.match(/[A-Za-z_][A-Za-z0-9_]*$/);
+    return match ? String(match[0] || '').toLowerCase() : '';
+}
+
+function buildAnimationCompletionItem(label, kind, detail) {
+    return {
+        label,
+        insertText: label,
+        insertTextMode: 'plain',
+        source: 'anim-domain',
+        kind,
+        detail,
+        documentation: '',
+        sortText: `0_anim_${label}`
+    };
+}
+
+function buildAnimationDomainCompletionItems(text, offset, maxItems) {
+    const prefix = keywordPrefixAtOffset(text, offset);
+    const ownerType = animationOwnerTypeAtOffset(text, offset);
+    const sourceLabels = ownerType
+        ? (ANIMATION_MEMBER_LABELS_BY_TYPE[ownerType] || [])
+        : ANIMATION_TYPE_LABELS.concat(ANIMATION_LIFECYCLE_LABELS);
+
+    const seen = new Set();
+    const items = [];
+    sourceLabels.forEach((label) => {
+        const safeLabel = String(label || '');
+        if (!safeLabel) return;
+        if (prefix && !safeLabel.toLowerCase().startsWith(prefix)) return;
+        const dedupeKey = safeLabel.toLowerCase();
+        if (seen.has(dedupeKey)) return;
+        seen.add(dedupeKey);
+
+        const kind = ANIMATION_METHOD_LABELS.has(safeLabel)
+            ? 'method'
+            : (ANIMATION_TYPE_LABEL_SET.has(safeLabel) ? 'class' : 'property');
+        const detail = ownerType ? `${ownerType} (anim)` : 'Animation API';
+        items.push(buildAnimationCompletionItem(safeLabel, kind, detail));
+    });
+    return items.slice(0, Math.max(10, Number(maxItems) || 80));
+}
+
+function filterAnalyzeItemsForAnimation(items) {
+    return (Array.isArray(items) ? items : []).filter((item) => {
+        if (!item) return false;
+        const source = String(item.source || '').toLowerCase();
+        const label = String(item.label || '');
+        if (!label) return false;
+        if (source === 'keyword') return true;
+        if (source === 'type') return ANIMATION_TYPE_LABEL_SET.has(label);
+        if (source === 'member') return ANIMATION_MEMBER_LABEL_SET.has(label);
+        return false;
+    });
+}
+
+function mergeCompletionItems(primaryItems, secondaryItems, maxItems) {
+    const seen = new Set();
+    const merged = [];
+    const push = function (item) {
+        const label = String(item && item.label || '').toLowerCase();
+        if (!label || seen.has(label)) return;
+        seen.add(label);
+        merged.push(item);
+    };
+
+    (Array.isArray(primaryItems) ? primaryItems : []).forEach(push);
+    (Array.isArray(secondaryItems) ? secondaryItems : []).forEach(push);
+    return merged.slice(0, Math.max(10, Number(maxItems) || 80));
+}
+
 function groupWorkspaceFilesByCategory(files) {
     const groups = [
         { key: 'markdown', title: 'Markdown 文章', items: [] },
@@ -4553,7 +4757,7 @@ function renderProblems(diags) {
     return normalized.length;
 }
 
-function buildAnalyzeCacheKey(model, offset, maxItems, features) {
+function buildAnalyzeCacheKey(model, offset, maxItems, features, completionProfile) {
     const featureMask = [
         features && features.completion ? 'c1' : 'c0',
         features && features.hover ? 'h1' : 'h0',
@@ -4564,7 +4768,8 @@ function buildAnalyzeCacheKey(model, offset, maxItems, features) {
         model && model.getVersionId ? String(model.getVersionId()) : '0',
         String(Math.max(0, Number(offset) || 0)),
         String(Math.max(10, Math.min(COMPLETION_MAX_ITEMS, Number(maxItems || 80)))),
-        featureMask
+        featureMask,
+        normalizeAnalyzeCompletionProfile(completionProfile)
     ].join('|');
 }
 
@@ -4584,7 +4789,11 @@ async function requestAnalyzeFromModel(model, offset, options) {
         hover: !!(options && options.hover),
         diagnostics: !!(options && options.diagnostics)
     };
-    const cacheKey = buildAnalyzeCacheKey(model, offset, maxItems, features);
+    const completionProfile = normalizeAnalyzeCompletionProfile(
+        (options && options.completionProfile)
+        || (features.completion ? completionProfileForModel(model) : ANALYZE_COMPLETION_PROFILE_TMOD)
+    );
+    const cacheKey = buildAnalyzeCacheKey(model, offset, maxItems, features, completionProfile);
     if (state.analyzeCache.has(cacheKey)) {
         return await state.analyzeCache.get(cacheKey);
     }
@@ -4593,10 +4802,22 @@ async function requestAnalyzeFromModel(model, offset, options) {
         text: model.getValue(),
         offset: Math.max(0, Number(offset) || 0),
         maxItems,
-        features
+        features,
+        completionProfile
     };
 
-    const promise = languageRpc.call(MESSAGE_TYPES.ANALYZE_V2_REQUEST, request).finally(() => {
+    const promise = languageRpc.call(MESSAGE_TYPES.ANALYZE_V2_REQUEST, request).then((payload) => {
+        if (!features.completion || completionProfile !== ANALYZE_COMPLETION_PROFILE_ANIMATION) {
+            return payload;
+        }
+        const safePayload = payload && typeof payload === 'object' ? payload : {};
+        const fromAnalyze = filterAnalyzeItemsForAnimation(safePayload.completionItems);
+        const fromAnimDomain = buildAnimationDomainCompletionItems(request.text, request.offset, maxItems);
+        return {
+            ...safePayload,
+            completionItems: mergeCompletionItems(fromAnimDomain, fromAnalyze, maxItems)
+        };
+    }).finally(() => {
         if (state.analyzeCache.size > 24) {
             const oldestKey = state.analyzeCache.keys().next().value;
             if (oldestKey) state.analyzeCache.delete(oldestKey);

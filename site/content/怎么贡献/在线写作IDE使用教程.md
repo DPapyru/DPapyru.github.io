@@ -2,10 +2,10 @@
 title: 在线写作IDE使用教程
 author: 小天使
 date: 2026-02-07
-last_updated: 2026-02-07
+last_updated: 2026-02-21
 difficulty: beginner
-time: 25分钟
-description: 面向当前 article-studio 页面，讲清写作、多文件编排与 PR 提交流程
+time: 30分钟
+description: 面向 article-studio 的写作、预览、实时动画编译与 PR 提交流程
 topic: article-contribution
 order: 3
 prev_chapter: 站点Markdown扩展语法说明.md
@@ -14,117 +14,111 @@ next_chapter: ContentProjects解决方案说明.md
 
 # 在线写作IDE使用教程
 
-本文对应页面：`/tml-ide/`。
+本文对应页面：`/tml-ide/?workspace=markdown`。
 
-它适合“写文章与提交流程”，不替代本地 C# 工程调试。
+当前页面定位：
 
-## 你将完成什么
+1. Markdown 写作
+2. viewer 同级预览
+3. 本地桥接下的 animcs 实时预览
+4. PR 提交
 
-1. 在页面中选择或创建目标文档路径
-2. 使用模板与快捷片段编写正文
-3. 使用多文件编排合并输出
-4. 提交 PR
+## 快速开始
 
-## 界面分区速览
+1. 打开页面并设置目标文档路径
+2. 点击“插入模板”生成初稿
+3. 在中栏写作，右栏实时看预览
+4. 完成后提交 PR
 
-页面分成三栏：
+## 界面分区
 
-1. 左栏 Explorer：文章路径、多文件编排
-2. 中栏 Editor：Markdown 编辑与 viewer 同级预览
-3. 右栏 Publish：GitHub 登录与 PR 提交
+1. 左栏 Explorer：文档与资源导航、上下文菜单
+2. 中栏 Editor：Markdown 与 Preview
+3. 右栏 Publish：登录与提交流程
 
-## 第一次使用流程
+## 实时动画预览（新）
 
-### 第1步：确定目标路径
+### 1. 本地启动桥接服务
 
-在左栏操作：
+在仓库根目录运行：
 
-1. 通过“已有文章”下拉选择并载入
-2. 或手动输入新路径，例如 `怎么贡献/我的新教程.md`
+```bash
+dotnet run --project site/tooling/tools/animcs-preview-bridge
+```
 
-建议：新文章优先放在明确分类目录下，避免后续再移动路径。
+默认地址：`http://127.0.0.1:5078`。
 
-### 第2步：插入基础模板
+### 2. 在 IDE 中连接桥接
 
-在中栏点击 `插入模板`，然后替换为你的真实内容。
+1. 打开任意 `anims/*.cs` 资源到 C# 编辑弹窗
+2. 在弹窗顶部确认桥接地址
+3. 点击“连接”
 
-最小模板建议包含：
+状态栏会显示：
 
-1. Front Matter
-2. 本章目标
-3. 最小示例
-4. 小结
+1. `AnimBridge: 已连接 ...`
+2. `Anim预览: 编译中/编译成功/编译失败`
 
-### 第3步：边写边看预览
+### 3. 实时编译触发规则
 
-右侧预览会自动同步。
+1. 只对 `anims/*.cs` 生效
+2. 输入后 400ms 防抖自动编译
+3. 单次编译超时 8s
+4. 编译失败会中断动画并显示诊断
 
-当你需要完整阅读视角时，用 `新标签预览` 打开 viewer 页面再检查一次。
+## animcs 写作规范
 
-## 多文件编排模式
+优先使用代码块写法：
 
-长文建议使用 `Compose(多文件合并)`：
+```text
+```animcs
+anims/vec2-basic-ops.cs
+```
+```
 
-1. 勾选 `启用多文件编排`
-2. 新增多个片段并命名
-3. 用上移和下移调整顺序
-4. 点击 `合并写回主稿`
+也可使用：
 
-建议按“导语、正文、FAQ、小结”拆分片段，后续维护更轻松。
+```text
+{{anim:anims/vec2-basic-ops.cs}}
+```
 
-## 快捷片段建议
+## 推荐模块（首版 6 个）
 
-常用按钮：
+1. `anims/vec2-basic-ops.cs`
+2. `anims/vec2-project-decompose.cs`
+3. `anims/vec3-axis-orbit.cs`
+4. `anims/mat4-trs-compose.cs`
+5. `anims/mat4-view-projection.cs`
+6. `anims/animgeom-toolkit-recipes.cs`
 
-1. 引用文档
-2. quiz 模板
+## 提交流程
 
-实践经验：先写主线，再补题目，不要一开始就堆太多扩展语法。
+1. 填写 Worker API 地址
+2. GitHub 登录
+3. 选择新建 PR 或继续已有 PR
+4. 点击提交并记录返回链接
 
-## 提交 PR 的标准流程
+## 发布前检查
 
-### 基础流程
-
-1. 填写 `Worker API 地址`
-2. 点击 `GitHub 登录`
-3. 可选填写 `PR 标题`
-4. 点击 `提交 PR`
-5. 若当前是“创建新 PR”且检测到附件，会弹出三选引导：
-   - `清空附件并新建 PR`：会进入二次确认，确认后仅提交 Markdown
-   - `继续已有 PR`：进入二级选择器，选中你的未关闭 PR 后继续提交
-   - `取消并返回编辑`：终止本次提交，附件保持不变
-
-## 发布前检查清单
-
-1. Front Matter 完整，含 `title` 和 `description`
-2. 正文结构清晰，最小示例可读
-3. quiz 区块可以正常渲染与作答
-4. 页面预览无明显错位或截断
+1. Front Matter 完整（至少 `title`）
+2. `animcs` 路径都是 `anims/*.cs`
+3. 预览无报错
+4. `npm run build` 可通过
 
 ## 常见问题
 
-### Q1：预览更新慢或不刷新
+1. `AnimBridge 未连接`
 
-可以先切换一次标签或重新打开 `新标签预览`，再检查是否是缓存问题。
+先确认桥接进程是否运行，或手动改成实际地址再点“连接”。
 
-### Q2：提交后预览与本地不一致
+2. `Anim预览未激活`
 
-先确认是否提交了最新 Markdown，再检查引用路径是否指向正确文件。
+当前编辑文件不在 `anims/*.cs`。
 
-### Q3：我是否必须使用多文件编排
+3. 代码改了但动画没变
 
-不是必须。短文直接单文件写作更快。长文或多人协作再启用。
+确认编辑的是被文章引用的同一路径。
 
-## 下一步
+4. 编译失败后不恢复
 
-需要本地 IDE 联动与 C# 工程补全时，继续阅读：`ContentProjects解决方案说明.md`。
-
-## 独立 tML IDE 补全页
-
-如果你需要网页内的 C# API 补全、悬停文档与诊断能力，请使用独立入口：`/tml-ide/`。
-
-边界说明：
-
-1. `article-studio` 仍然只负责 Markdown 写作与提交流程
-2. `tml-ide` 是单独项目页面，与 `site` / `limbus` 目录实现隔离
-3. 写作完成后，可把在 `tml-ide` 中验证过的代码片段再整理回教程正文
+继续修改触发下一次自动编译；必要时先修复最先出现的语法错误。

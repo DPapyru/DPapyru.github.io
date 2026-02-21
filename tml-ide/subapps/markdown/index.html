@@ -370,6 +370,8 @@
                                     <div class="studio-statusbar">
                                         <span id="studio-status">就绪</span>
                                         <span id="studio-current-path">目标: 怎么贡献/新文章.md</span>
+                                        <span id="studio-anim-bridge-status">AnimBridge: 未连接</span>
+                                        <span id="studio-anim-compile-status">Anim预览: 未激活</span>
                                         <span id="studio-stats">0 行 · 0 字</span>
                                     </div>
                                 </section>
@@ -647,6 +649,15 @@
                 <button id="studio-csharp-editor-close" class="modal-close" type="button" aria-label="关闭">×</button>
             </div>
             <div class="modal-body studio-csharp-editor-modal-body">
+                <div class="studio-csharp-editor-bridge">
+                    <label for="studio-csharp-bridge-endpoint">AnimCS 预览桥接地址（本地 Dotnet）</label>
+                    <div class="studio-csharp-editor-bridge-row">
+                        <input id="studio-csharp-bridge-endpoint" class="studio-input" type="text" value="http://127.0.0.1:5078" placeholder="http://127.0.0.1:5078">
+                        <button id="studio-csharp-bridge-save" class="btn btn-small btn-outline" type="button">连接</button>
+                        <button id="studio-csharp-bridge-reset" class="btn btn-small btn-outline" type="button">默认</button>
+                    </div>
+                    <span id="studio-csharp-compile-hint" class="studio-help">仅对 anims/*.cs 启用实时编译预览。</span>
+                </div>
                 <div class="studio-csharp-editor-pane">
                     <label for="studio-csharp-editor-text">源码（仅点击保存才会生效）</label>
                     <textarea id="studio-csharp-editor-text" class="studio-editor studio-csharp-editor-text" spellcheck="false" placeholder="// 在这里编辑 C# 代码"></textarea>

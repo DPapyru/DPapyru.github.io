@@ -6,7 +6,7 @@
 - 可选配置：支持 `[AnimProfile(...)]`（用于声明控件、高度缩放与模式选项）
 - 类成员：字段、方法（不支持属性 getter/setter）
 - 方法签名：`void`、`float`、`int`、`bool`、`string`、`Vec2`、`Vec3`、`Mat4`、`Color`
-- 控制流：`if` / `else`、`for`、`return`
+- 控制流：`if` / `else`、`for`、`while`、`foreach`、`switch`、`return`
 - 表达式：
   - 数学运算 `+ - * / %`
   - 比较 `== != < <= > >=`
@@ -36,7 +36,7 @@
 - `dynamic`
 - `unsafe`
 - `try/catch`
-- `switch` / `goto`
+- `goto`
 - 复杂泛型（包括自定义泛型类型）
 
 ## 运行时约定

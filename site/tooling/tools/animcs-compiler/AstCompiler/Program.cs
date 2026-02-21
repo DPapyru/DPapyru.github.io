@@ -448,6 +448,15 @@ internal sealed class JsEmitter
             case ForStatementSyntax forStatement:
                 EmitFor(forStatement);
                 return;
+            case WhileStatementSyntax whileStatement:
+                EmitWhile(whileStatement);
+                return;
+            case ForEachStatementSyntax forEachStatement:
+                EmitForEach(forEachStatement);
+                return;
+            case SwitchStatementSyntax switchStatement:
+                EmitSwitch(switchStatement);
+                return;
             case ReturnStatementSyntax returnStatement:
                 if (returnStatement.Expression is null)
                 {
@@ -530,6 +539,61 @@ internal sealed class JsEmitter
         }
 
         return string.Join(", ", forStatement.Initializers.Select(EmitExpression));
+    }
+
+    private void EmitWhile(WhileStatementSyntax whileStatement)
+    {
+        WriteLine($"while ({EmitExpression(whileStatement.Condition)})");
+        EmitEmbeddedStatement(whileStatement.Statement);
+    }
+
+    private void EmitForEach(ForEachStatementSyntax forEachStatement)
+    {
+        var identifier = forEachStatement.Identifier.ValueText;
+        var expression = EmitExpression(forEachStatement.Expression);
+        WriteLine($"for (const {identifier} of {expression})");
+        EmitEmbeddedStatement(forEachStatement.Statement);
+    }
+
+    private void EmitSwitch(SwitchStatementSyntax switchStatement)
+    {
+        WriteLine($"switch ({EmitExpression(switchStatement.Expression)}) {{");
+        _indentLevel += 1;
+
+        foreach (var section in switchStatement.Sections)
+        {
+            foreach (var label in section.Labels)
+            {
+                EmitSwitchLabel(label);
+            }
+
+            _indentLevel += 1;
+            foreach (var statement in section.Statements)
+            {
+                EmitStatement(statement);
+            }
+            _indentLevel -= 1;
+        }
+
+        _indentLevel -= 1;
+        WriteLine("}");
+    }
+
+    private void EmitSwitchLabel(SwitchLabelSyntax label)
+    {
+        if (label is CaseSwitchLabelSyntax caseSwitchLabel)
+        {
+            WriteLine($"case {EmitExpression(caseSwitchLabel.Value)}:");
+            return;
+        }
+
+        if (label is DefaultSwitchLabelSyntax)
+        {
+            WriteLine("default:");
+            return;
+        }
+
+        throw new InvalidOperationException($"unsupported switch label: {label.Kind()}");
     }
 
     private void EmitEmbeddedStatement(StatementSyntax statement)

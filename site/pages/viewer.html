@@ -705,12 +705,77 @@
 	        let STUDIO_PREVIEW_RELOAD_TIMER = 0;
 	        let STUDIO_PREVIEW_LAST_IMAGE_NOTICE = '';
 	        let STUDIO_PREVIEW_LAST_IMAGE_NOTICE_AT = 0;
+            const STUDIO_PREVIEW_ANIM_BLOB_CACHE = new Map();
 
 	        function normalizeStudioPreviewPath(input) {
 	            let value = String(input || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
 	            value = value.replace(/^site\/content\//i, '').replace(/^content\//i, '').replace(/\/{2,}/g, '/');
 	            return value;
 	        }
+
+            function normalizeStudioPreviewAnimPath(input) {
+                const value = normalizeStudioPreviewPath(input || '');
+                if (!value) return '';
+                if (!/^anims\//i.test(value) || !/\.cs$/i.test(value)) return '';
+                if (/(^|\/)\.\.(\/|$)/.test(value)) return '';
+                return value;
+            }
+
+            function normalizeStudioPreviewCompiledAnims(rawMap) {
+                const result = {};
+                if (!rawMap || typeof rawMap !== 'object') return result;
+
+                Object.keys(rawMap).forEach(function (rawPath) {
+                    const normalized = normalizeStudioPreviewAnimPath(rawPath);
+                    if (!normalized) return;
+
+                    const entry = rawMap[rawPath];
+                    const moduleJs = String(entry && entry.moduleJs || '');
+                    if (!moduleJs) return;
+
+                    result[normalized] = {
+                        moduleJs: moduleJs,
+                        profile: entry && typeof entry.profile === 'object' ? entry.profile : null,
+                        updatedAt: String(entry && entry.updatedAt || '')
+                    };
+                });
+                return result;
+            }
+
+            function normalizeStudioPreviewAnimCompileErrors(rawMap) {
+                const result = {};
+                if (!rawMap || typeof rawMap !== 'object') return result;
+
+                Object.keys(rawMap).forEach(function (rawPath) {
+                    const normalized = normalizeStudioPreviewAnimPath(rawPath);
+                    if (!normalized) return;
+
+                    const entry = rawMap[rawPath];
+                    const diagnostics = Array.isArray(entry && entry.diagnostics)
+                        ? entry.diagnostics.map(function (item) {
+                            return String(item || '').trim();
+                        }).filter(Boolean)
+                        : [];
+                    if (diagnostics.length === 0) return;
+
+                    result[normalized] = {
+                        diagnostics: diagnostics,
+                        updatedAt: String(entry && entry.updatedAt || '')
+                    };
+                });
+                return result;
+            }
+
+            function normalizeStudioPreviewAnimBridge(rawBridge) {
+                if (!rawBridge || typeof rawBridge !== 'object') return null;
+                const endpoint = String(rawBridge.endpoint || '').trim();
+                const connected = !!rawBridge.connected;
+                if (!endpoint && !connected) return null;
+                return {
+                    endpoint: endpoint,
+                    connected: connected
+                };
+            }
 
 	        function readStudioPreviewPayloadFromStorage() {
 	            try {
@@ -743,25 +808,31 @@
                         return item.assetPath && item.dataUrl;
                     })
                     : [];
-                const uploadedCsharpFiles = Array.isArray(parsed.uploadedCsharpFiles)
-                    ? parsed.uploadedCsharpFiles.map(function (item) {
-                        return {
-                            assetPath: normalizeStudioPreviewPath(item && item.assetPath || ''),
+	                const uploadedCsharpFiles = Array.isArray(parsed.uploadedCsharpFiles)
+	                    ? parsed.uploadedCsharpFiles.map(function (item) {
+	                        return {
+	                            assetPath: normalizeStudioPreviewPath(item && item.assetPath || ''),
                             content: String(item && item.content || ''),
                             name: String(item && item.name || '')
                         };
-                    }).filter(function (item) {
-                        return item.assetPath && item.content;
-                    })
-                    : [];
-                return {
-                    targetPath: targetPath,
-                    markdown: String(parsed.markdown || ''),
-                    uploadedImages: uploadedImages,
-                    uploadedMedia: uploadedMedia,
-                    uploadedCsharpFiles: uploadedCsharpFiles,
-                    updatedAt: String(parsed.updatedAt || '')
-                };
+	                    }).filter(function (item) {
+	                        return item.assetPath && item.content;
+	                    })
+	                    : [];
+                    const compiledAnims = normalizeStudioPreviewCompiledAnims(parsed.compiledAnims);
+                    const animCompileErrors = normalizeStudioPreviewAnimCompileErrors(parsed.animCompileErrors);
+                    const animBridge = normalizeStudioPreviewAnimBridge(parsed.animBridge);
+	                return {
+	                    targetPath: targetPath,
+	                    markdown: String(parsed.markdown || ''),
+	                    uploadedImages: uploadedImages,
+	                    uploadedMedia: uploadedMedia,
+	                    uploadedCsharpFiles: uploadedCsharpFiles,
+                        compiledAnims: compiledAnims,
+                        animCompileErrors: animCompileErrors,
+                        animBridge: animBridge,
+	                    updatedAt: String(parsed.updatedAt || '')
+	                };
 	            } catch (_) {
 	                return null;
 	            }
@@ -1017,13 +1088,16 @@
 
 	                try {
 	                    window.localStorage.setItem(STUDIO_PREVIEW_STORAGE_KEY, JSON.stringify({
-                        targetPath: targetPath,
-                        markdown: String(payload.markdown || ''),
-                        uploadedImages: Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [],
-                        uploadedMedia: Array.isArray(payload.uploadedMedia) ? payload.uploadedMedia : [],
-                        uploadedCsharpFiles: Array.isArray(payload.uploadedCsharpFiles) ? payload.uploadedCsharpFiles : [],
-                        updatedAt: String(payload.updatedAt || new Date().toISOString())
-                    }));
+	                        targetPath: targetPath,
+	                        markdown: String(payload.markdown || ''),
+	                        uploadedImages: Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [],
+	                        uploadedMedia: Array.isArray(payload.uploadedMedia) ? payload.uploadedMedia : [],
+	                        uploadedCsharpFiles: Array.isArray(payload.uploadedCsharpFiles) ? payload.uploadedCsharpFiles : [],
+                            compiledAnims: payload.compiledAnims && typeof payload.compiledAnims === 'object' ? payload.compiledAnims : {},
+                            animCompileErrors: payload.animCompileErrors && typeof payload.animCompileErrors === 'object' ? payload.animCompileErrors : {},
+                            animBridge: payload.animBridge && typeof payload.animBridge === 'object' ? payload.animBridge : null,
+	                        updatedAt: String(payload.updatedAt || new Date().toISOString())
+	                    }));
 	                } catch (_) {
 	                    // ignore storage failures
 	                }
@@ -1035,6 +1109,82 @@
 
 	            window.__STUDIO_PREVIEW_MESSAGE_PATCHED = true;
 	        }
+
+            function resolveStudioPreviewAnimModuleUrl(normalizedPath, compiledEntry) {
+                if (!compiledEntry || !compiledEntry.moduleJs) return '';
+                if (typeof Blob === 'undefined' || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+                    return '';
+                }
+
+                const stamp = `${String(compiledEntry.updatedAt || '')}:${String(compiledEntry.moduleJs || '').length}`;
+                const cached = STUDIO_PREVIEW_ANIM_BLOB_CACHE.get(normalizedPath);
+                if (cached && cached.stamp === stamp && cached.url) {
+                    return cached.url;
+                }
+
+                if (cached && cached.url && typeof URL.revokeObjectURL === 'function') {
+                    try {
+                        URL.revokeObjectURL(cached.url);
+                    } catch (_) {
+                        // ignore revoke errors
+                    }
+                }
+
+                const blob = new Blob([compiledEntry.moduleJs], { type: 'text/javascript' });
+                const moduleUrl = URL.createObjectURL(blob);
+                STUDIO_PREVIEW_ANIM_BLOB_CACHE.set(normalizedPath, { stamp: stamp, url: moduleUrl });
+                return moduleUrl;
+            }
+
+            function createStudioPreviewAnimResolver() {
+                return function resolveStudioPreviewAnimEntry(request) {
+                    if (!STUDIO_PREVIEW_MODE) return null;
+                    const payload = readStudioPreviewPayloadFromStorage();
+                    if (!payload) return null;
+
+                    const normalized = normalizeStudioPreviewAnimPath(
+                        request && (request.normalized || request.rawSource) ? (request.normalized || request.rawSource) : ''
+                    );
+                    if (!normalized) return null;
+
+                    const compileError = payload.animCompileErrors && payload.animCompileErrors[normalized];
+                    if (compileError && Array.isArray(compileError.diagnostics) && compileError.diagnostics.length > 0) {
+                        return {
+                            diagnostics: compileError.diagnostics,
+                            blockFallback: true
+                        };
+                    }
+
+                    const compiled = payload.compiledAnims && payload.compiledAnims[normalized];
+                    if (!compiled || !compiled.moduleJs) return null;
+
+                    const moduleUrl = resolveStudioPreviewAnimModuleUrl(normalized, compiled);
+                    if (!moduleUrl) {
+                        return {
+                            diagnostics: ['compiled moduleJs 解析失败'],
+                            blockFallback: true
+                        };
+                    }
+
+                    return {
+                        moduleUrl: moduleUrl,
+                        profile: compiled.profile || null,
+                        blockFallback: true
+                    };
+                };
+            }
+
+            function installStudioPreviewAnimResolver(container) {
+                if (!STUDIO_PREVIEW_MODE) return;
+                const resolver = createStudioPreviewAnimResolver();
+                window.__ANIMCS_RESOLVE_ENTRY = resolver;
+
+                const scope = container && container.querySelectorAll ? container : document;
+                if (!scope || typeof scope.querySelectorAll !== 'function') return;
+                scope.querySelectorAll('.animcs-embed[data-animcs-src]').forEach(function (embed) {
+                    embed.__ANIMCS_RESOLVE_ENTRY = resolver;
+                });
+            }
 
 	        
 	        function initializeMermaidOnce() {
@@ -3843,12 +3993,13 @@
 	                            console.warn('展开引用内容失败，继续渲染原始文档:', err);
 	                        }
 
-	                        const renderedHTML = marked.parse(content);
-	                        console.log('Markdown渲染完成，HTML长度:', renderedHTML.length);
-	                        markdownContent.innerHTML = renderedHTML;
+		                        const renderedHTML = marked.parse(content);
+		                        console.log('Markdown渲染完成，HTML长度:', renderedHTML.length);
+		                        markdownContent.innerHTML = renderedHTML;
+                                installStudioPreviewAnimResolver(markdownContent);
 
-	                        // 移除正文内重复的“章节进度”导航（统一使用页脚导航）
-	                        removeDuplicateChapterProgress(markdownContent);
+		                        // 移除正文内重复的“章节进度”导航（统一使用页脚导航）
+		                        removeDuplicateChapterProgress(markdownContent);
 
 	                        // 清理历史写法中的“（可引用）”标记，避免在目录/标题中出现
 	                        stripReferenceMarkersInDom(markdownContent);
