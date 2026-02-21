@@ -8,7 +8,7 @@ const {
     normalizeSlug,
     parseContributionTemplate,
     buildContributionPayload
-} = require('./shader-contribute');
+} = require('../../../tml-ide-app/public/subapps/assets/js/shader-contribute.js');
 
 test('normalizeWorkerApiUrl completes protocol and create-pr path', () => {
     assert.equal(

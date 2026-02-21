@@ -5,7 +5,7 @@ const {
     parseCommandVariables,
     applyCommandValues,
     clampCommandValue
-} = require('./shader-command-params');
+} = require('../../../tml-ide-app/public/subapps/assets/js/shader-command-params.js');
 
 test('parseCommandVariables parses Command metadata from inline declarations', () => {
     const source = [

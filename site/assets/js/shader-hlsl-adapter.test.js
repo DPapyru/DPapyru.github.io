@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { buildFragmentSource } = require('./shader-hlsl-adapter');
+const { buildFragmentSource } = require('../../../tml-ide-app/public/subapps/assets/js/shader-hlsl-adapter.js');
 
 test('buildFragmentSource maps uv/fragCoord to top-left origin', () => {
     const source = [
