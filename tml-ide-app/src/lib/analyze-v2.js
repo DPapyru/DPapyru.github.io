@@ -857,14 +857,16 @@ function parseOverrideContext(text, offset) {
 
 function buildOverrideSnippet(methodItem) {
     const params = Array.isArray(methodItem && methodItem.params) ? methodItem.params : [];
-    const callArgs = params
+    const signatureArgs = params
         .map((item, idx) => {
             const name = String(item && item.name || '').trim();
-            return name || `arg${idx + 1}`;
+            const type = String(item && item.type || '').trim();
+            const safeName = name || `arg${idx + 1}`;
+            return type ? `${type} ${safeName}` : safeName;
         })
         .join(', ');
 
-    return `${methodItem.name}(${callArgs})\n{\n    $0\n}`;
+    return `${methodItem.name}(${signatureArgs})\n{\n    $0\n}`;
 }
 
 function buildOverrideCompletionItems(index, context, text, offset, maxItems) {
