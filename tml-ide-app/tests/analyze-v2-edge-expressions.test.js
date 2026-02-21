@@ -179,3 +179,32 @@ test('Analyze v2 returns hover and diagnostics consistently', () => {
     assert.ok((result.diagnosticsRule || []).some((item) => item.code === 'RULE_ARG_COUNT'));
     assert.equal(typeof result.meta.elapsedMs, 'number');
 });
+
+test('Analyze v2 diagnostics does not emit RULE_SYNTAX on valid declarations', () => {
+    const index = createIndex();
+    const source = [
+        'public class Demo {',
+        '    public void SetDefaults() {',
+        '        int x = 1;',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const result = analyze(index, source, 'SetDefaults', { completion: false, hover: false, diagnostics: true });
+    const syntaxErrors = (result.diagnosticsRule || []).filter((item) => item.code === 'RULE_SYNTAX');
+    assert.equal(syntaxErrors.length, 0);
+});
+
+test('Analyze v2 diagnostics still reports rule issues when syntax parsing noise is disabled', () => {
+    const index = createIndex();
+    const source = [
+        'public class Demo {',
+        '    public void SetDefaults() {',
+        '        int x = 1',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const result = analyze(index, source, 'SetDefaults', { completion: false, hover: false, diagnostics: true });
+    assert.ok((result.diagnosticsRule || []).some((item) => item.code === 'RULE_MISSING_SEMICOLON'));
+});

@@ -438,6 +438,100 @@ button:disabled {
     line-height: 1.4;
 }
 
+.problems-summary {
+    margin: 0 0 8px;
+    font-size: 11px;
+    color: #b6b6b6;
+}
+
+.problems-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 6px;
+    max-height: 280px;
+    overflow: auto;
+}
+
+.problems-empty {
+    border: 1px dashed var(--vscode-border);
+    border-radius: var(--radius-sm);
+    color: #8f8f8f;
+    font-size: 11px;
+    padding: 8px;
+    background: #222223;
+}
+
+.problem-item {
+    margin: 0;
+}
+
+.problem-jump {
+    width: 100%;
+    min-height: 0;
+    border: 1px solid var(--vscode-border-soft);
+    background: #1f1f1f;
+    border-radius: var(--radius-sm);
+    display: grid;
+    gap: 4px;
+    padding: 7px 8px;
+    text-align: left;
+}
+
+.problem-item[data-severity="error"] .problem-jump {
+    border-color: #5a2f2f;
+    background: #2a1d1d;
+}
+
+.problem-item[data-severity="warning"] .problem-jump {
+    border-color: #61532b;
+    background: #2b2618;
+}
+
+.problem-jump:hover {
+    background: #2a2d2e;
+}
+
+.problem-item[data-severity="error"] .problem-jump:hover {
+    background: #332222;
+}
+
+.problem-item[data-severity="warning"] .problem-jump:hover {
+    background: #332c19;
+}
+
+.problem-severity {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.problem-item[data-severity="error"] .problem-severity {
+    color: #ff9a86;
+}
+
+.problem-item[data-severity="warning"] .problem-severity {
+    color: #ffce7a;
+}
+
+.problem-code {
+    color: #9ed4ff;
+    font-size: 11px;
+}
+
+.problem-location {
+    color: #9a9a9a;
+    font-size: 10px;
+}
+
+.problem-message {
+    color: #d0d0d0;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
 .event-log {
     margin: 0;
     padding: 0;

@@ -127,6 +127,25 @@ async function collectSuggestSnapshot(page, maxItems) {
     };
 }
 
+async function collectProblemsSnapshot(page) {
+    return await page.evaluate(() => {
+        const activeTab = document.querySelector('.panel-tab.panel-tab-active')?.getAttribute('data-panel-tab') || '';
+        const summary = document.querySelector('#problems-summary')?.textContent?.trim() || '';
+        const listItems = Array.from(document.querySelectorAll('#problems-list .problem-item'));
+        const rows = listItems.map((item) => ({
+            severity: item.getAttribute('data-severity') || '',
+            code: item.querySelector('.problem-code')?.textContent?.trim() || '',
+            message: item.querySelector('.problem-message')?.textContent?.trim() || ''
+        }));
+        return {
+            activeTab,
+            summary,
+            count: rows.length,
+            rows
+        };
+    });
+}
+
 async function verifyWorkbenchInteractions(page) {
     await page.keyboard.press('Control+Shift+P');
     await page.waitForSelector('#command-palette:not([hidden])', { timeout: 5000 });
@@ -205,6 +224,39 @@ async function main() {
     await verifyWorkbenchInteractions(page);
     await page.screenshot({ path: path.join(outDir, '02-workbench-commands.png'), fullPage: true });
 
+    const overrideDemoCode = [
+        'using Terraria;',
+        'using Terraria.ModLoader;',
+        '',
+        'public class ExampleItem : ModItem',
+        '{',
+        '    public override void Set',
+        '}'
+    ].join('\n');
+    await injectStableEditorText(page, overrideDemoCode, 'Set');
+    const overridePayload = await page.evaluate(async () => {
+        return await globalThis.__tmlIdeDebug.requestAnalyzeAtCursor({
+            completion: true,
+            hover: false,
+            diagnostics: false,
+            maxItems: 120
+        });
+    });
+    const overrideCandidate = (overridePayload && Array.isArray(overridePayload.completionItems)
+        ? overridePayload.completionItems
+        : []
+    ).find((item) => item.label === 'SetDefaults');
+    if (!overrideCandidate) {
+        throw new Error('override completion missing SetDefaults.');
+    }
+    if (overrideCandidate.insertTextMode !== 'snippet') {
+        throw new Error(`override completion insertTextMode mismatch: ${overrideCandidate.insertTextMode || '(empty)'}`);
+    }
+    if (!String(overrideCandidate.insertText || '').includes('{')) {
+        throw new Error('override completion snippet is missing method body braces.');
+    }
+    await page.screenshot({ path: path.join(outDir, '03-override-snippet-completion.png'), fullPage: true });
+
     const exampleItemCode = [
         'using Terraria;',
         'using Terraria.ModLoader;',
@@ -235,7 +287,7 @@ async function main() {
         throw new Error(`Item completion missing in type scenario. labels=${itemSnapshot.labels.slice(0, 10).join(',')}`);
     }
 
-    await page.screenshot({ path: path.join(outDir, '03-item-typed-completion.png'), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, '04-item-typed-completion.png'), fullPage: true });
 
     await page.keyboard.type('.');
     await page.waitForTimeout(350);
@@ -250,7 +302,7 @@ async function main() {
     if (!hasDamage) {
         throw new Error(`Item. completion missing 'damage'. labels=${itemDotSnapshot.labels.slice(0, 10).join(',')}`);
     }
-    await page.screenshot({ path: path.join(outDir, '04-item-dot-completion.png'), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, '05-item-dot-completion.png'), fullPage: true });
 
     await page.click('#btn-run-diagnostics');
     await page.waitForTimeout(500);
@@ -280,12 +332,31 @@ async function main() {
     }
 
     await page.waitForTimeout(300);
-    await page.screenshot({ path: path.join(outDir, '05-hover-diagnostics.png'), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, '06-hover-diagnostics.png'), fullPage: true });
+
+    const problemsDemoCode = [
+        'public class ProblemDemo {',
+        '    void Test() {',
+        '        int x = 1',
+        '    }',
+        '}'
+    ].join('\n');
+    await injectStableEditorText(page, problemsDemoCode, 'int x = 1');
+    await page.click('#btn-run-diagnostics');
+    await page.waitForTimeout(500);
+    const problemsSnapshot = await collectProblemsSnapshot(page);
+    if (problemsSnapshot.activeTab !== 'problems') {
+        throw new Error(`Problems panel not auto-focused. activeTab=${problemsSnapshot.activeTab}`);
+    }
+    if (problemsSnapshot.count <= 0) {
+        throw new Error(`Problems list is empty. summary=${problemsSnapshot.summary}`);
+    }
+    await page.screenshot({ path: path.join(outDir, '07-problems-list.png'), fullPage: true });
 
     await page.click('button[data-panel-tab="problems"]');
     await page.click('#toggle-roslyn');
     await page.waitForTimeout(800);
-    await page.screenshot({ path: path.join(outDir, '06-roslyn-toggle.png'), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, '08-roslyn-toggle.png'), fullPage: true });
 
     // Input validation: fill text-form fields before file import.
     await page.click('button[data-panel-tab="indexer"]');
@@ -295,7 +366,7 @@ async function main() {
     await importIndexInput.setInputFiles(path.resolve('tml-ide-app/public/data/api-index.v2.json'));
     await page.click('#btn-import-index');
     await page.waitForTimeout(800);
-    await page.screenshot({ path: path.join(outDir, '07-index-import.png'), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, '09-index-import.png'), fullPage: true });
 
     await browser.close();
 

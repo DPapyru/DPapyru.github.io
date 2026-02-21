@@ -11,6 +11,8 @@ test('index.html exposes required IDE controls', () => {
     assert.match(html, /id="btn-run-diagnostics"/);
     assert.match(html, /id="btn-import-assembly"/);
     assert.match(html, /id="toggle-roslyn"/);
+    assert.match(html, /id="problems-summary"/);
+    assert.match(html, /id="problems-list"/);
 });
 
 test('message contract includes required request channels', () => {

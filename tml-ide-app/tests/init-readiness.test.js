@@ -27,4 +27,7 @@ test('acceptance script validates runtime fingerprint and Item completion scenar
     assert.match(source, /data-panel-tab="indexer"/);
     assert.match(source, /Item\./);
     assert.match(source, /hasDamage/);
+    assert.match(source, /override/);
+    assert.match(source, /SetDefaults/);
+    assert.match(source, /problems-list/);
 });

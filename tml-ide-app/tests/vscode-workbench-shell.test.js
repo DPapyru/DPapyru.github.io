@@ -30,4 +30,8 @@ test('main.js restores vscode-like shortcut labels and debug wrappers', () => {
     assert.match(js, /Ctrl\+S/);
     assert.match(js, /requestCompletionsAtCursor/);
     assert.match(js, /requestHoverAtCursor/);
+    assert.match(js, /problemsSummary/);
+    assert.match(js, /problemsList/);
+    assert.match(js, /revealLineInCenter/);
+    assert.match(js, /renderProblems/);
 });

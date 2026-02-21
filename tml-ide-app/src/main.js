@@ -40,6 +40,8 @@ const dom = {
     btnExportWorkspace: document.getElementById('btn-export-workspace'),
     inputImportWorkspace: document.getElementById('input-import-workspace'),
     toggleRoslyn: document.getElementById('toggle-roslyn'),
+    problemsSummary: document.getElementById('problems-summary'),
+    problemsList: document.getElementById('problems-list'),
     inputExtraDll: document.getElementById('input-extra-dll'),
     inputExtraXml: document.getElementById('input-extra-xml'),
     btnImportAssembly: document.getElementById('btn-import-assembly'),
@@ -79,6 +81,7 @@ const state = {
     roslynEnabled: false,
     roslynWorker: null,
     initialized: false,
+    problems: [],
     ui: {
         sidebarVisible: true,
         panelVisible: true,
@@ -99,6 +102,7 @@ const VSCODE_SHORTCUTS = Object.freeze({
     SAVE_WORKSPACE: 'Ctrl+S',
     FOCUS_EXPLORER: 'Ctrl+Shift+E'
 });
+const COMPLETION_MAX_ITEMS = 5000;
 
 // Keep Monaco colors aligned with site viewer's Rider dark Prism theme.
 const RIDER_CODE_COLORS = Object.freeze({
@@ -859,6 +863,108 @@ function diagnosticsToMarkers(diags) {
     }));
 }
 
+function diagnosticSeverityRank(level) {
+    if (level === DIAGNOSTIC_SEVERITY.ERROR) return 0;
+    if (level === DIAGNOSTIC_SEVERITY.WARNING) return 1;
+    return 2;
+}
+
+function normalizeProblems(diags) {
+    return (Array.isArray(diags) ? diags : [])
+        .filter((item) => item && (item.severity === DIAGNOSTIC_SEVERITY.ERROR || item.severity === DIAGNOSTIC_SEVERITY.WARNING))
+        .map((item) => ({
+            code: String(item.code || 'RULE_UNKNOWN'),
+            severity: item.severity === DIAGNOSTIC_SEVERITY.ERROR ? DIAGNOSTIC_SEVERITY.ERROR : DIAGNOSTIC_SEVERITY.WARNING,
+            message: String(item.message || ''),
+            startLineNumber: Number(item.startLineNumber || 1),
+            startColumn: Number(item.startColumn || 1),
+            endLineNumber: Number(item.endLineNumber || item.startLineNumber || 1),
+            endColumn: Number(item.endColumn || item.startColumn || 1)
+        }))
+        .sort((a, b) => {
+            const bySeverity = diagnosticSeverityRank(a.severity) - diagnosticSeverityRank(b.severity);
+            if (bySeverity !== 0) return bySeverity;
+            const byLine = a.startLineNumber - b.startLineNumber;
+            if (byLine !== 0) return byLine;
+            const byColumn = a.startColumn - b.startColumn;
+            if (byColumn !== 0) return byColumn;
+            return a.code.localeCompare(b.code);
+        });
+}
+
+function jumpToProblem(problem) {
+    if (!problem || !state.editor || !state.editor.getModel()) return;
+    const line = Math.max(1, Number(problem.startLineNumber || 1));
+    const column = Math.max(1, Number(problem.startColumn || 1));
+    state.editor.setPosition({ lineNumber: line, column });
+    state.editor.revealLineInCenter(line);
+    state.editor.focus();
+}
+
+function renderProblems(diags) {
+    const normalized = normalizeProblems(diags);
+    state.problems = normalized;
+
+    const errorCount = normalized.filter((item) => item.severity === DIAGNOSTIC_SEVERITY.ERROR).length;
+    const warningCount = normalized.filter((item) => item.severity === DIAGNOSTIC_SEVERITY.WARNING).length;
+
+    if (dom.problemsSummary) {
+        dom.problemsSummary.textContent = `Errors: ${errorCount} · Warnings: ${warningCount}`;
+    }
+
+    if (!dom.problemsList) {
+        return normalized.length;
+    }
+
+    dom.problemsList.innerHTML = '';
+    if (!normalized.length) {
+        const empty = document.createElement('li');
+        empty.className = 'problems-empty';
+        empty.textContent = '暂无 error/warning。';
+        dom.problemsList.appendChild(empty);
+        return 0;
+    }
+
+    normalized.forEach((problem) => {
+        const item = document.createElement('li');
+        item.className = 'problem-item';
+        item.setAttribute('data-severity', problem.severity);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'problem-jump';
+        btn.title = '定位到问题位置';
+        btn.addEventListener('click', () => {
+            jumpToProblem(problem);
+        });
+
+        const severity = document.createElement('span');
+        severity.className = 'problem-severity';
+        severity.textContent = problem.severity === DIAGNOSTIC_SEVERITY.ERROR ? 'error' : 'warning';
+
+        const code = document.createElement('span');
+        code.className = 'problem-code';
+        code.textContent = problem.code;
+
+        const loc = document.createElement('span');
+        loc.className = 'problem-location';
+        loc.textContent = `Ln ${problem.startLineNumber}, Col ${problem.startColumn}`;
+
+        const message = document.createElement('span');
+        message.className = 'problem-message';
+        message.textContent = problem.message;
+
+        btn.appendChild(severity);
+        btn.appendChild(code);
+        btn.appendChild(loc);
+        btn.appendChild(message);
+        item.appendChild(btn);
+        dom.problemsList.appendChild(item);
+    });
+
+    return normalized.length;
+}
+
 function buildAnalyzeCacheKey(model, offset, maxItems, features) {
     const featureMask = [
         features && features.completion ? 'c1' : 'c0',
@@ -869,7 +975,7 @@ function buildAnalyzeCacheKey(model, offset, maxItems, features) {
         model && model.uri ? String(model.uri) : 'model',
         model && model.getVersionId ? String(model.getVersionId()) : '0',
         String(Math.max(0, Number(offset) || 0)),
-        String(Math.max(10, Math.min(200, Number(maxItems || 80)))),
+        String(Math.max(10, Math.min(COMPLETION_MAX_ITEMS, Number(maxItems || 80)))),
         featureMask
     ].join('|');
 }
@@ -884,7 +990,7 @@ async function requestAnalyzeFromModel(model, offset, options) {
         };
     }
 
-    const maxItems = Math.max(10, Math.min(200, Number(options && options.maxItems || 80)));
+    const maxItems = Math.max(10, Math.min(COMPLETION_MAX_ITEMS, Number(options && options.maxItems || 80)));
     const features = {
         completion: !!(options && options.completion),
         hover: !!(options && options.hover),
@@ -937,6 +1043,11 @@ async function runDiagnostics() {
         }
 
         monaco.editor.setModelMarkers(model, 'tml-ide', diagnosticsToMarkers(allDiags));
+        const problemCount = renderProblems(allDiags);
+        if (problemCount > 0) {
+            showBottomPanel(true);
+            setActivePanelTab('problems');
+        }
         setStatus(`诊断完成：${allDiags.length} 条`);
     } catch (error) {
         addEvent('error', `运行诊断失败：${error.message}`);
@@ -1102,7 +1213,7 @@ function installEditorProviders() {
                 completion: true,
                 hover: false,
                 diagnostics: false,
-                maxItems: 120
+                maxItems: COMPLETION_MAX_ITEMS
             });
 
             const items = Array.isArray(payload.completionItems) ? payload.completionItems : [];
@@ -1111,6 +1222,9 @@ function installEditorProviders() {
                     label: item.label,
                     kind: convertCompletionKind(item.kind),
                     insertText: item.insertText || item.label,
+                    insertTextRules: item.insertTextMode === 'snippet'
+                        ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet
+                        : undefined,
                     detail: item.detail || '',
                     documentation: item.documentation || '',
                     sortText: item.sortText || item.label,
@@ -1430,6 +1544,7 @@ async function bootstrap() {
 
     state.initialized = false;
     setStatus('初始化中...');
+    renderProblems([]);
 
     state.editor = monaco.editor.create(dom.editor, {
         language: 'csharp',
@@ -1512,7 +1627,7 @@ async function bootstrap() {
                 completion: !options || options.completion !== false,
                 hover: !!(options && options.hover),
                 diagnostics: !!(options && options.diagnostics),
-                maxItems: Number(options && options.maxItems || 80)
+                maxItems: Number(options && options.maxItems || COMPLETION_MAX_ITEMS)
             });
         },
         async requestCompletionsAtCursor(maxItems) {
@@ -1520,7 +1635,7 @@ async function bootstrap() {
                 completion: true,
                 hover: false,
                 diagnostics: false,
-                maxItems: Number(maxItems || 80)
+                maxItems: Number(maxItems || COMPLETION_MAX_ITEMS)
             });
             return Array.isArray(result && result.completionItems) ? result.completionItems : [];
         },

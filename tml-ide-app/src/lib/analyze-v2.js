@@ -21,6 +21,7 @@ const BUILTIN_TYPES = new Set([
     'void', 'bool', 'byte', 'sbyte', 'short', 'ushort', 'int', 'uint', 'long', 'ulong',
     'float', 'double', 'decimal', 'string', 'object', 'char'
 ]);
+const MAX_COMPLETION_ITEMS = 5000;
 
 function isIdentifierStart(ch) {
     return /[A-Za-z_]/.test(ch || '');
@@ -804,6 +805,109 @@ function pushDiagnostic(diags, lineStarts, startOffset, endOffset, code, severit
     });
 }
 
+function normalizeTypeIdentity(typeName) {
+    const safe = stripGenericsAndArrays(String(typeName || '').trim())
+        .replace(/^global::/, '')
+        .replace(/\s+/g, '');
+    return safe;
+}
+
+function returnTypeMatches(index, context, declaredReturnType, candidateReturnType) {
+    const declared = normalizeTypeIdentity(declaredReturnType);
+    const candidate = normalizeTypeIdentity(candidateReturnType);
+    if (!declared || !candidate) return false;
+    if (declared === candidate) return true;
+    if (declared.split('.').pop() === candidate.split('.').pop()) return true;
+
+    const declaredResolved = resolveTypeByName(index, declared, context) || getTypeByFullName(index, declared);
+    const candidateResolved = resolveTypeByName(index, candidate, context) || getTypeByFullName(index, candidate);
+    if (declaredResolved && candidateResolved) {
+        return String(declaredResolved.fullName || '') === String(candidateResolved.fullName || '');
+    }
+
+    return false;
+}
+
+function parseOverrideContext(text, offset) {
+    const source = String(text || '');
+    const safeOffset = Math.max(0, Math.min(source.length, Number(offset) || 0));
+    const lineStart = Math.max(0, source.lastIndexOf('\n', Math.max(0, safeOffset - 1)) + 1);
+    const linePrefix = source.slice(lineStart, safeOffset);
+    if (!/\boverride\b/.test(linePrefix)) return null;
+
+    const overrideMatch = linePrefix.match(/\boverride\b([\s\S]*)$/);
+    if (!overrideMatch) return null;
+    const tail = String(overrideMatch[1] || '');
+    if (!tail.trim()) return null;
+    if (/[(){};=]/.test(tail)) return null;
+
+    const pieces = tail.trim().split(/\s+/).filter(Boolean);
+    if (!pieces.length || pieces.length > 2) return null;
+    const returnType = pieces[0];
+    const memberPrefix = pieces.length > 1 ? pieces[1] : '';
+
+    if (!/^[A-Za-z_][A-Za-z0-9_<>\[\],.?]*$/.test(returnType)) return null;
+    if (memberPrefix && !/^[A-Za-z_][A-Za-z0-9_]*$/.test(memberPrefix)) return null;
+
+    return {
+        returnType,
+        memberPrefix
+    };
+}
+
+function buildOverrideSnippet(methodItem) {
+    const params = Array.isArray(methodItem && methodItem.params) ? methodItem.params : [];
+    const callArgs = params
+        .map((item, idx) => {
+            const name = String(item && item.name || '').trim();
+            return name || `arg${idx + 1}`;
+        })
+        .join(', ');
+
+    return `${methodItem.name}(${callArgs})\n{\n    $0\n}`;
+}
+
+function buildOverrideCompletionItems(index, context, text, offset, maxItems) {
+    const overrideContext = parseOverrideContext(text, offset);
+    if (!overrideContext) return [];
+
+    const scope = getClassScopeAtOffset(context, offset);
+    if (!scope || !Array.isArray(scope.baseTypes) || !scope.baseTypes.length) return [];
+
+    const baseTypeName = String(scope.baseTypes[0] || '').trim();
+    if (!baseTypeName) return [];
+
+    const baseType = resolveTypeByName(index, baseTypeName, context) || getTypeByFullName(index, baseTypeName);
+    if (!baseType) return [];
+
+    const prefix = String(overrideContext.memberPrefix || '').toLowerCase();
+    const methods = collectMembersForTypeHierarchy(index, context, baseType)
+        .filter((item) => item && item.kind === 'method' && !item.isStatic)
+        .filter((item) => returnTypeMatches(index, context, overrideContext.returnType, item.returnType))
+        .filter((item) => {
+            if (!prefix) return true;
+            return String(item.name || '').toLowerCase().startsWith(prefix);
+        })
+        .sort((a, b) => {
+            const byName = String(a.name || '').localeCompare(String(b.name || ''));
+            if (byName !== 0) return byName;
+            return String(a.signature || '').localeCompare(String(b.signature || ''));
+        });
+
+    return methods
+        .slice(0, maxItems)
+        .map((item) => ({
+            label: item.name,
+            insertText: buildOverrideSnippet(item),
+            insertTextMode: 'snippet',
+            source: 'override',
+            kind: 'method',
+            detail: item.signature || '',
+            documentation: item.summary || '',
+            sortText: `0_${item.name}`
+        }));
+}
+
 function buildCompletionItems(index, context, text, offset, maxItems, parsedTree) {
     const memberAccess = findExpressionChainAtOffset(parsedTree, text, offset);
     if (memberAccess) {
@@ -815,12 +919,17 @@ function buildCompletionItems(index, context, text, offset, maxItems, parsedTree
             .map((item) => ({
                 label: item.name,
                 insertText: item.name,
+                insertTextMode: 'plain',
+                source: 'member',
                 kind: item.kind,
                 detail: item.signature || item.type || item.returnType || '',
                 documentation: item.summary || '',
                 sortText: `1_${item.name}`
             }));
     }
+
+    const overrideItems = buildOverrideCompletionItems(index, context, text, offset, maxItems);
+    if (overrideItems.length) return overrideItems;
 
     const prefixMatch = text.slice(0, offset).match(/[A-Za-z_][A-Za-z0-9_]*$/);
     const prefix = prefixMatch ? prefixMatch[0].toLowerCase() : '';
@@ -835,6 +944,8 @@ function buildCompletionItems(index, context, text, offset, maxItems, parsedTree
         .map((typeName) => ({
             label: typeName,
             insertText: typeName,
+            insertTextMode: 'plain',
+            source: 'type',
             kind: 'class',
             detail: (index.lookup.byShortName[typeName] || [])[0] || '',
             documentation: '',
@@ -849,6 +960,8 @@ function buildCompletionItems(index, context, text, offset, maxItems, parsedTree
         .map((word) => ({
             label: word,
             insertText: word,
+            insertTextMode: 'plain',
+            source: 'keyword',
             kind: 'keyword',
             detail: 'C# keyword',
             documentation: '',
@@ -900,19 +1013,6 @@ function buildHover(index, context, text, offset, parsedTree) {
 function buildRuleDiagnostics(index, context, text, parsedTree) {
     const diagnostics = [];
     const lineStarts = createLineIndex(text);
-
-    const syntaxErrors = collectSyntaxErrors(parsedTree, text);
-    syntaxErrors.forEach((error) => {
-        pushDiagnostic(
-            diagnostics,
-            lineStarts,
-            error.from,
-            error.to,
-            'RULE_SYNTAX',
-            DIAGNOSTIC_SEVERITY.ERROR,
-            '检测到语法解析错误'
-        );
-    });
 
     const stack = [];
     const openToClose = { '(': ')', '{': '}', '[': ']' };
@@ -1071,7 +1171,7 @@ export function analyzeDocumentV2(state, request) {
     const index = normalizeApiIndex(state && state.index ? state.index : null);
     const text = String(request && request.text || '');
     const offset = Math.max(0, Math.min(text.length, Number(request && request.offset || 0)));
-    const maxItems = Math.max(10, Math.min(200, Number(request && request.maxItems || 80)));
+    const maxItems = Math.max(10, Math.min(MAX_COMPLETION_ITEMS, Number(request && request.maxItems || 80)));
     const features = normalizeFeatureFlags(request && request.features);
 
     const parsed = parseCSharp(text);

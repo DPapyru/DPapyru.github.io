@@ -1388,3 +1388,31 @@
 
 **备注**：
 - 本次提交按你的要求直接提交分支当前改动；`check-generated` 失败为仓库内容缺失资源导致。
+
+### 验证记录 [2026-02-21 13:43]：tml-ide 继承补全与 Problems 提示窗口修复
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && node --test tests/analyze-v2.test.js tests/analyze-v2-edge-expressions.test.js tests/smoke-contract.test.js tests/vscode-workbench-shell.test.js tests/init-readiness.test.js`：通过
+- `cd tml-ide-app && npm test`：通过（33/33）
+- `cd tml-ide-app && npm run build`：通过
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4177`：通过（用于验收）
+- `TML_IDE_URL=http://127.0.0.1:4177/tml-ide/ node tmp-playwright/tml-ide-vscode-acceptance.mjs`：通过
+
+**备注**：
+- 本轮已覆盖 override 继承补全 snippet、RULE_SYNTAX 误报去除、Problems 持久列表 + 自动切换 + 点击定位。
+
+### 验证记录 [2026-02-21 13:55]：tml-ide 扩展为全量 tModLoader 补全
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && node --test tests/analyze-v2.test.js tests/analyze-v2-edge-expressions.test.js tests/smoke-contract.test.js tests/vscode-workbench-shell.test.js tests/init-readiness.test.js`：通过
+- `cd tml-ide-app && npm test`：通过（34/34）
+- `cd tml-ide-app && npm run build`：通过
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4177`：通过（用于验收）
+- `TML_IDE_URL=http://127.0.0.1:4177/tml-ide/ node tmp-playwright/tml-ide-vscode-acceptance.mjs`：通过
+
+**备注**：
+- 本轮将 completion 上限从 200/120 提升为 5000，以覆盖 tModLoader 大对象（如 `Terraria.Player`）的全部成员补全。

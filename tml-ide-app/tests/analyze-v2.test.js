@@ -20,6 +20,28 @@ function method(name, returnType, minArgs, maxArgs) {
     };
 }
 
+function methodWithParams(name, returnType, params) {
+    const safeParams = Array.isArray(params) ? params : [];
+    return {
+        kind: 'method',
+        name,
+        signature: `${returnType} ${name}(${safeParams.map((item) => `${item.type} ${item.name}`).join(', ')})`,
+        returnType,
+        isStatic: false,
+        params: safeParams.map((item) => ({
+            name: item.name,
+            type: item.type,
+            optional: !!item.optional,
+            defaultValue: Object.prototype.hasOwnProperty.call(item, 'defaultValue') ? item.defaultValue : null
+        })),
+        minArgs: safeParams.filter((item) => !item.optional).length,
+        maxArgs: safeParams.length,
+        summary: '',
+        returnsDoc: '',
+        paramDocs: {}
+    };
+}
+
 function property(name, type) {
     return {
         kind: 'property',
@@ -40,6 +62,16 @@ function field(name, type) {
         isStatic: false,
         summary: ''
     };
+}
+
+function manyFields(prefix, count, type) {
+    const safePrefix = String(prefix || 'Field');
+    const safeCount = Math.max(0, Number(count) || 0);
+    const safeType = String(type || 'int');
+    return Array.from({ length: safeCount }, (_, idx) => {
+        const name = `${safePrefix}${String(idx).padStart(3, '0')}`;
+        return field(name, safeType);
+    });
 }
 
 function createAnalyzeIndex() {
@@ -123,6 +155,34 @@ function createAnalyzeIndex() {
                     methods: [],
                     properties: [],
                     fields: [field('Member', 'Terraria.Item')]
+                }
+            },
+            'Terraria.ModLoader.ModItem': {
+                fullName: 'Terraria.ModLoader.ModItem',
+                namespace: 'Terraria.ModLoader',
+                name: 'ModItem',
+                summary: '',
+                members: {
+                    methods: [
+                        method('SetDefaults', 'void', 0, 0),
+                        methodWithParams('AnglerQuestReward', 'void', [
+                            { name: 'rareMultiplier', type: 'float' },
+                            { name: 'rewardItems', type: 'List<Item>' }
+                        ])
+                    ],
+                    properties: [],
+                    fields: []
+                }
+            },
+            'Example.BigType': {
+                fullName: 'Example.BigType',
+                namespace: 'Example',
+                name: 'BigType',
+                summary: '',
+                members: {
+                    methods: [],
+                    properties: [],
+                    fields: manyFields('Member', 260, 'int')
                 }
             }
         }
@@ -225,4 +285,84 @@ test('Analyze v2 completion supports new expression and namespace-qualified chai
     const labelsByQualified = completionLabels(index, source, 'NamespaceA.NamespaceB.Type.Member.');
     assert.ok(labelsByNew.includes('AddBuff'));
     assert.ok(labelsByQualified.includes('damage'));
+});
+
+test('Analyze v2 completion provides override snippets with metadata', () => {
+    const index = createAnalyzeIndex();
+    const source = [
+        'using Terraria;',
+        'using Terraria.ModLoader;',
+        '',
+        'public class ExampleItem : ModItem',
+        '{',
+        '    public override void Set',
+        '}'
+    ].join('\n');
+
+    const offset = source.indexOf('Set') + 'Set'.length;
+    const result = analyzeV2WithIndex(index, {
+        text: source,
+        offset,
+        maxItems: 120,
+        features: { completion: true, hover: false, diagnostics: false }
+    });
+    const candidate = (result.completionItems || []).find((item) => item.label === 'SetDefaults');
+
+    assert.ok(candidate);
+    assert.equal(candidate.source, 'override');
+    assert.equal(candidate.insertTextMode, 'snippet');
+    assert.match(String(candidate.insertText || ''), /SetDefaults\(\)/);
+    assert.match(String(candidate.insertText || ''), /\{/);
+});
+
+test('Analyze v2 override snippet includes parameter names', () => {
+    const index = createAnalyzeIndex();
+    const source = [
+        'using Terraria;',
+        'using Terraria.ModLoader;',
+        '',
+        'public class ExampleItem : ModItem',
+        '{',
+        '    public override void Ang',
+        '}'
+    ].join('\n');
+
+    const offset = source.indexOf('Ang') + 'Ang'.length;
+    const result = analyzeV2WithIndex(index, {
+        text: source,
+        offset,
+        maxItems: 120,
+        features: { completion: true, hover: false, diagnostics: false }
+    });
+    const candidate = (result.completionItems || []).find((item) => item.label === 'AnglerQuestReward');
+
+    assert.ok(candidate);
+    assert.equal(candidate.insertTextMode, 'snippet');
+    assert.match(String(candidate.insertText || ''), /AnglerQuestReward\(rareMultiplier, rewardItems\)/);
+});
+
+test('Analyze v2 completion supports more than 200 members for large tML-like types', () => {
+    const index = createAnalyzeIndex();
+    const source = [
+        'using Example;',
+        '',
+        'public class Demo {',
+        '    void Test() {',
+        '        BigType value = null;',
+        '        value.',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const offset = source.indexOf('value.') + 'value.'.length;
+    const result = analyzeV2WithIndex(index, {
+        text: source,
+        offset,
+        maxItems: 5000,
+        features: { completion: true, hover: false, diagnostics: false }
+    });
+    const labels = (result.completionItems || []).map((item) => item.label);
+
+    assert.ok(labels.includes('Member259'));
+    assert.ok(labels.length >= 260);
 });
