@@ -1665,3 +1665,18 @@
 - 根因核对：统一 IDE 旧实现仅做 2D 贴图模拟，未将 `.fx` HLSL 实际编译并应用到渲染程序。
 - 修复内容：新增 WebGL2 实时预览链路（HLSL->GLSL 适配、Program 编译/替换、uImage 通道绑定、去抖自动编译）。
 - 验收截图目录：`test-results/tml-ide-unified-acceptance/`、`test-results/tml-ide-full-ui-audit/`。
+
+### 验证记录 [2026-02-22 00:03]：GitHub Actions 构建修复（`vite: not found`）
+
+**级别**：L3
+
+**命令与结果**：
+- `if [ -d tml-ide-app/node_modules ]; then mv tml-ide-app/node_modules tml-ide-app/node_modules.__bak__; fi && npm --prefix tml-ide-app run build; ec=$?; if [ -d tml-ide-app/node_modules.__bak__ ]; then mv tml-ide-app/node_modules.__bak__ tml-ide-app/node_modules; fi; exit $ec`：失败（符合预期，复现 `sh: 1: vite: not found`）
+- `if [ -f tml-ide-app/package-lock.json ]; then npm --prefix tml-ide-app ci; elif [ -f tml-ide-app/package.json ]; then npm --prefix tml-ide-app install; fi && npm --prefix tml-ide-app run build`：通过
+- `npm run build`：通过
+- `npm run check-generated`：待补跑
+
+**备注**：
+- 根因：`vite` 仅声明在 `tml-ide-app/package.json` 的 `devDependencies`，但 deploy workflow 之前只在仓库根目录执行 `npm ci`，未安装 `tml-ide-app` 依赖。
+- 修复：在 `.github/workflows/deploy.yml` 的依赖安装步骤新增 `tml-ide-app` 子项目安装（优先 `npm --prefix tml-ide-app ci`，无锁文件时回退 `npm --prefix tml-ide-app install`）。
+- 本次按用户要求在 `main` 工作区直接修改（未使用工作树）。

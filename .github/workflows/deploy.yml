@@ -42,10 +42,20 @@ jobs:
       - name: Install dependencies (if any)
         run: |
           if [ -f package.json ]; then
-            echo "Installing dependencies..."
+            echo "Installing root dependencies..."
             npm ci
           else
-            echo "No package.json found, skipping npm install"
+            echo "No root package.json found, skipping root install"
+          fi
+
+          if [ -f tml-ide-app/package-lock.json ]; then
+            echo "Installing tml-ide-app dependencies..."
+            npm --prefix tml-ide-app ci
+          elif [ -f tml-ide-app/package.json ]; then
+            echo "No tml-ide-app package-lock.json found, falling back to npm install"
+            npm --prefix tml-ide-app install
+          else
+            echo "No tml-ide-app/package.json found, skipping tml-ide-app install"
           fi
           
       - name: Build generated assets (if needed)
