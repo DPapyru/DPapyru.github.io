@@ -33,6 +33,7 @@ test('main.js defines shaderfx language assist and template flow', () => {
     const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
 
     assert.match(source, /languageForFile\(pathValue\)[\s\S]*mode === 'shaderfx'[\s\S]*'shaderfx'/);
+    assert.match(source, /buildShaderFragmentSource/);
     assert.match(source, /function registerShaderFxLanguageSupport/);
     assert.match(source, /monaco\.languages\.register\(\{\s*id:\s*'shaderfx'\s*\}\)/);
     assert.match(source, /setMonarchTokensProvider\('shaderfx'/);
@@ -52,6 +53,8 @@ test('main.js defines shaderfx language assist and template flow', () => {
     assert.match(source, /shaderUploadInputs:\s*\[/);
     assert.match(source, /function handleShaderUploadChange/);
     assert.match(source, /function clearShaderUploadSlot/);
+    assert.match(source, /function scheduleShaderRealtimeCompile/);
+    assert.match(source, /scheduleShaderRealtimeCompile\('编辑'\)/);
     assert.doesNotMatch(source, /shaderSidepane/);
     assert.doesNotMatch(source, /createRadialGradient\(/);
     assert.doesNotMatch(source, /未检测到 float4 像素着色器入口函数/);
@@ -62,4 +65,11 @@ test('main.js defines shaderfx language assist and template flow', () => {
 test('main.js applies default .fx template when creating shader files', () => {
     const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
     assert.match(source, /detectFileMode\(fileName\) === 'shaderfx'\s*\?\s*shaderDefaultTemplate\(\)\s*:\s*''/);
+});
+
+test('shader hlsl adapter exports fragment builder for realtime compile', () => {
+    const source = fs.readFileSync(path.join(root, 'src/lib/shader-hlsl-adapter.js'), 'utf8');
+    assert.match(source, /export function buildFragmentSource/);
+    assert.match(source, /#version 300 es/);
+    assert.match(source, /detectEntryFunction/);
 });

@@ -11,6 +11,7 @@ import { DIAGNOSTIC_SEVERITY, MESSAGE_TYPES } from './contracts/messages.js';
 import { createEnhancedCsharpLanguage } from './lib/csharp-highlighting.js';
 import { buildPatchIndexFromXml } from './lib/language-core.js';
 import { createEmptyApiIndex, mergeApiIndex, normalizeApiIndex } from './lib/index-schema.js';
+import { buildFragmentSource as buildShaderFragmentSource } from './lib/shader-hlsl-adapter.js';
 import { createPluginRegistry } from './core/plugin-registry.js';
 import { createShellEventBus } from './core/shell-event-bus.js';
 import { createStorageService } from './core/storage-service.js';
@@ -189,7 +190,9 @@ const state = {
         addressMode: 'clamp',
         bgMode: 'transparent',
         shaderUploads: [null, null, null, null],
-        rafId: 0
+        rafId: 0,
+        autoCompileTimer: 0,
+        runtime: null
     },
     route: {
         workspace: 'csharp',
@@ -281,6 +284,19 @@ const SHADER_PREVIEW_ADDRESS_MODES = new Set(['clamp', 'wrap']);
 const SHADER_PREVIEW_PRESETS = new Set(['checker', 'noise', 'gradient', 'rings']);
 const SHADER_UPLOAD_SLOT_COUNT = 4;
 const SHADER_UPLOAD_MAX_SIZE = 4 * 1024 * 1024;
+const SHADER_LIVE_COMPILE_DELAY = 260;
+const SHADER_MAX_TIME_DELTA = 0.2;
+const SHADER_VERTEX_SOURCE = [
+    '#version 300 es',
+    'precision highp float;',
+    'layout(location = 0) in vec2 aPos;',
+    'layout(location = 1) in vec2 aUv;',
+    'out vec2 vUv;',
+    'void main() {',
+    '    vUv = aUv;',
+    '    gl_Position = vec4(aPos, 0.0, 1.0);',
+    '}'
+].join('\n');
 const SHADER_KEYWORDS = Object.freeze([
     'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'default', 'break', 'continue',
     'return', 'discard', 'struct', 'static', 'const', 'in', 'out', 'inout', 'uniform',
@@ -919,6 +935,10 @@ function sanitizeShaderSlug(value) {
 
 function compileFxSource(code) {
     const text = String(code || '');
+    const previewTechniqueIndex = text.search(/\btechnique(?:10|11)?\b/i);
+    const previewSource = previewTechniqueIndex >= 0
+        ? text.slice(0, previewTechniqueIndex)
+        : text;
     const errors = [];
     if (!text.trim()) {
         errors.push({
@@ -957,11 +977,25 @@ function compileFxSource(code) {
     if (depth > 0) {
         errors.push({ line: lines.length || 1, column: 1, message: '缺少右花括号 }' });
     }
+    let fragmentSource = '';
+    if (!errors.length) {
+        const fragmentResult = buildShaderFragmentSource('', previewSource);
+        if (!fragmentResult || fragmentResult.ok !== true) {
+            errors.push({
+                line: 1,
+                column: 1,
+                message: String(fragmentResult && fragmentResult.error ? fragmentResult.error : 'HLSL 入口解析失败')
+            });
+        } else {
+            fragmentSource = String(fragmentResult.source || '');
+        }
+    }
     return {
         ok: errors.length === 0,
         errors,
+        fragmentSource,
         log: errors.length === 0
-            ? '编译成功：语法检查通过。'
+            ? '编译成功：HLSL 解析通过。'
             : `编译失败：${errors.length} 条错误。`
     };
 }
@@ -3611,17 +3645,6 @@ function shaderPreviewImageCanvas(preset) {
     return canvas;
 }
 
-function drawShaderPreviewCheckerboard(ctx, width, height, size) {
-    const cell = Math.max(4, Number(size || 16));
-    for (let y = 0; y < height; y += cell) {
-        for (let x = 0; x < width; x += cell) {
-            const dark = ((x / cell + y / cell) % 2) > 0.5;
-            ctx.fillStyle = dark ? '#272a2d' : '#4d5157';
-            ctx.fillRect(x, y, cell, cell);
-        }
-    }
-}
-
 function updateShaderPreviewStatus() {
     if (!dom.shaderPreviewStatus) return;
     const mode = shaderPreviewRenderModeLabel(state.shaderPreview.renderMode);
@@ -3635,7 +3658,9 @@ function updateShaderPreviewStatus() {
         }
     }
     const uploadText = uploads.length ? uploads.join(', ') : '无';
-    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg} · 上传: ${uploadText}`;
+    const compileErrors = Array.isArray(state.shaderCompile.errors) ? state.shaderCompile.errors.length : 0;
+    const compileText = compileErrors > 0 ? `错误 ${compileErrors}` : '通过';
+    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg} · 上传: ${uploadText} · 实时编译: ${compileText}`;
 }
 
 function syncShaderPreviewControls() {
@@ -3654,123 +3679,363 @@ function syncShaderPreviewControls() {
     updateShaderUploadUi();
 }
 
-function drawShaderPreviewTextureLayer(ctx, texture, width, height, addressMode, offsetX, offsetY, alpha, composite) {
-    if (!ctx || !texture) return;
-    const safeAddressMode = normalizeShaderPreviewAddressMode(addressMode);
-    const safeAlpha = Number.isFinite(alpha) ? alpha : 1;
-    const safeComposite = composite || 'source-over';
-    ctx.save();
-    ctx.globalAlpha = Math.max(0, Math.min(1, safeAlpha));
-    ctx.globalCompositeOperation = safeComposite;
-    if (safeAddressMode === 'wrap') {
-        const pattern = ctx.createPattern(texture, 'repeat');
-        if (pattern) {
-            ctx.translate(Math.round(offsetX || 0), Math.round(offsetY || 0));
-            ctx.fillStyle = pattern;
-            ctx.fillRect(
-                -Math.abs(Math.round(offsetX || 0)),
-                -Math.abs(Math.round(offsetY || 0)),
-                width + Math.abs(Math.round(offsetX || 0)) * 2,
-                height + Math.abs(Math.round(offsetY || 0)) * 2
-            );
+function parseShaderCompileLogErrors(logText) {
+    const text = String(logText || '').trim();
+    if (!text) return [];
+    const errors = [];
+    text.split(/\r?\n/).forEach((lineText) => {
+        const line = String(lineText || '').trim();
+        if (!line) return;
+        const match = line.match(/(?:ERROR:\s*\d+:|)(\d+):\s*(.*)$/i) || line.match(/0:(\d+):\s*(.*)$/);
+        if (match) {
+            errors.push({
+                line: Math.max(1, Number(match[1] || 1)),
+                column: 1,
+                message: String(match[2] || line).trim()
+            });
+            return;
         }
+        errors.push({
+            line: 1,
+            column: 1,
+            message: line
+        });
+    });
+    return errors;
+}
+
+function createShaderPreviewTexture(gl, source) {
+    const tex = gl.createTexture();
+    if (!tex) return null;
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    if (source) {
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
     } else {
-        ctx.drawImage(texture, 0, 0, width, height);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]));
     }
-    ctx.restore();
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    return tex;
+}
+
+function createShaderPreviewProgram(gl, vertexSource, fragmentSource) {
+    const compileShader = (type, source) => {
+        const shader = gl.createShader(type);
+        if (!shader) {
+            return { ok: false, error: '无法创建 Shader 对象。' };
+        }
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            const infoLog = gl.getShaderInfoLog(shader) || 'Shader 编译失败';
+            gl.deleteShader(shader);
+            return { ok: false, error: String(infoLog) };
+        }
+        return { ok: true, shader };
+    };
+
+    const vs = compileShader(gl.VERTEX_SHADER, vertexSource);
+    if (!vs.ok) return { ok: false, error: vs.error };
+    const fs = compileShader(gl.FRAGMENT_SHADER, fragmentSource);
+    if (!fs.ok) {
+        gl.deleteShader(vs.shader);
+        return { ok: false, error: fs.error };
+    }
+
+    const program = gl.createProgram();
+    if (!program) {
+        gl.deleteShader(vs.shader);
+        gl.deleteShader(fs.shader);
+        return { ok: false, error: '无法创建 Program 对象。' };
+    }
+    gl.attachShader(program, vs.shader);
+    gl.attachShader(program, fs.shader);
+    gl.linkProgram(program);
+    gl.deleteShader(vs.shader);
+    gl.deleteShader(fs.shader);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        const infoLog = gl.getProgramInfoLog(program) || 'Program 链接失败';
+        gl.deleteProgram(program);
+        return { ok: false, error: String(infoLog) };
+    }
+
+    return {
+        ok: true,
+        program,
+        uniforms: {
+            iResolution: gl.getUniformLocation(program, 'iResolution'),
+            iTime: gl.getUniformLocation(program, 'iTime'),
+            iTimeDelta: gl.getUniformLocation(program, 'iTimeDelta'),
+            iFrame: gl.getUniformLocation(program, 'iFrame'),
+            iMouse: gl.getUniformLocation(program, 'iMouse'),
+            iDate: gl.getUniformLocation(program, 'iDate'),
+            iChannelTime: gl.getUniformLocation(program, 'iChannelTime'),
+            iChannelResolution: gl.getUniformLocation(program, 'iChannelResolution'),
+            iChannel0: gl.getUniformLocation(program, 'iChannel0'),
+            iChannel1: gl.getUniformLocation(program, 'iChannel1'),
+            iChannel2: gl.getUniformLocation(program, 'iChannel2'),
+            iChannel3: gl.getUniformLocation(program, 'iChannel3')
+        }
+    };
+}
+
+function disposeShaderPreviewRuntime(options) {
+    const opts = options || {};
+    const runtime = state.shaderPreview.runtime;
+    if (!runtime) return;
+    const gl = runtime.gl;
+    if (gl) {
+        if (runtime.program) gl.deleteProgram(runtime.program);
+        if (runtime.vao) gl.deleteVertexArray(runtime.vao);
+        if (runtime.vbo) gl.deleteBuffer(runtime.vbo);
+        if (Array.isArray(runtime.channelTextures)) {
+            runtime.channelTextures.forEach((entry) => {
+                if (entry && entry.texture) gl.deleteTexture(entry.texture);
+            });
+        }
+    }
+    state.shaderPreview.runtime = null;
+    if (!opts.keepStatus) {
+        addEvent('warn', 'Shader 预览运行时已重置。');
+    }
+}
+
+function ensureShaderPreviewRuntime() {
+    if (!dom.shaderPreviewCanvas) return null;
+    if (state.shaderPreview.runtime && state.shaderPreview.runtime.gl) {
+        return state.shaderPreview.runtime;
+    }
+    const canvas = dom.shaderPreviewCanvas;
+    const gl = canvas.getContext('webgl2', {
+        alpha: true,
+        antialias: true,
+        preserveDrawingBuffer: false
+    });
+    if (!gl) {
+        return null;
+    }
+
+    const vao = gl.createVertexArray();
+    const vbo = gl.createBuffer();
+    if (!vao || !vbo) {
+        return null;
+    }
+    gl.bindVertexArray(vao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    const vertices = new Float32Array([
+        -1, -1, 0, 0,
+        3, -1, 2, 0,
+        -1, 3, 0, 2
+    ]);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+    gl.bindVertexArray(null);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+    state.shaderPreview.runtime = {
+        gl,
+        vao,
+        vbo,
+        program: null,
+        uniforms: null,
+        channelTextures: [null, null, null, null],
+        lastWidth: 0,
+        lastHeight: 0,
+        lastMs: 0,
+        elapsedSec: 0,
+        frame: 0
+    };
+    return state.shaderPreview.runtime;
+}
+
+function setShaderPreviewCanvasStyle(bgMode) {
+    if (!dom.shaderPreviewCanvas) return;
+    const safeBgMode = normalizeShaderPreviewBgMode(bgMode);
+    if (safeBgMode === 'transparent') {
+        dom.shaderPreviewCanvas.style.background = [
+            'linear-gradient(45deg, #1f1f21 25%, transparent 25%) 0 0 / 16px 16px',
+            'linear-gradient(-45deg, #1f1f21 25%, transparent 25%) 0 0 / 16px 16px',
+            'linear-gradient(45deg, transparent 75%, #1f1f21 75%) 0 0 / 16px 16px',
+            'linear-gradient(-45deg, transparent 75%, #1f1f21 75%) 0 0 / 16px 16px',
+            '#2a2d31'
+        ].join(',');
+        return;
+    }
+    if (safeBgMode === 'white') {
+        dom.shaderPreviewCanvas.style.background = '#ffffff';
+        return;
+    }
+    dom.shaderPreviewCanvas.style.background = '#000000';
+}
+
+function applyShaderPreviewBlendMode(gl, mode) {
+    const safeMode = normalizeShaderPreviewRenderMode(mode);
+    gl.enable(gl.BLEND);
+    gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
+    if (safeMode === 'additive') {
+        gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ONE, gl.ONE);
+        return;
+    }
+    if (safeMode === 'multiply') {
+        gl.blendFuncSeparate(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        return;
+    }
+    if (safeMode === 'screen') {
+        gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_COLOR, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        return;
+    }
+    gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+}
+
+function setBoundShaderTextureAddressMode(gl, mode) {
+    const safeMode = normalizeShaderPreviewAddressMode(mode);
+    const wrapValue = safeMode === 'wrap' ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapValue);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrapValue);
+}
+
+function ensureShaderChannelTexture(runtime, slotIndex, source, sourceKey) {
+    const safeIndex = normalizeShaderUploadSlotIndex(slotIndex);
+    if (safeIndex < 0) return { texture: null, width: 0, height: 0 };
+    const gl = runtime.gl;
+    const finalKey = String(sourceKey || 'empty');
+    const prev = runtime.channelTextures[safeIndex];
+    if (prev && prev.key === finalKey && prev.texture) {
+        return prev;
+    }
+
+    if (prev && prev.texture) {
+        gl.deleteTexture(prev.texture);
+    }
+    const texture = createShaderPreviewTexture(gl, source);
+    const width = source ? Number(source.width || source.naturalWidth || 0) : 1;
+    const height = source ? Number(source.height || source.naturalHeight || 0) : 1;
+    const next = {
+        key: finalKey,
+        texture,
+        width: Math.max(1, width || 1),
+        height: Math.max(1, height || 1)
+    };
+    runtime.channelTextures[safeIndex] = next;
+    return next;
+}
+
+function resolveShaderTextureSourceForSlot(slotIndex) {
+    const safeIndex = normalizeShaderUploadSlotIndex(slotIndex);
+    if (safeIndex < 0) return { source: null, key: 'empty' };
+    const upload = getShaderUploadSlot(safeIndex);
+    if (upload && upload.dataUrl) {
+        const image = getShaderUploadImage(safeIndex);
+        if (image) {
+            return { source: image, key: `upload:${upload.dataUrl}` };
+        }
+    }
+    if (safeIndex === 0) {
+        const presetCanvas = shaderPreviewImageCanvas(state.shaderPreview.presetImage);
+        if (presetCanvas) {
+            return { source: presetCanvas, key: `preset:${normalizeShaderPreviewPreset(state.shaderPreview.presetImage)}` };
+        }
+    }
+    return { source: null, key: `empty:${safeIndex}` };
 }
 
 function drawShaderPreviewCanvas() {
     if (!dom.shaderPreviewCanvas) return;
+    const runtime = ensureShaderPreviewRuntime();
+    if (!runtime || !runtime.gl) {
+        updateShaderPreviewStatus();
+        return;
+    }
+
     const canvas = dom.shaderPreviewCanvas;
+    const gl = runtime.gl;
     const rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
+
     const dpr = Math.max(1, Number(globalThis.devicePixelRatio || 1));
     const targetWidth = Math.max(1, Math.round(rect.width * dpr));
     const targetHeight = Math.max(1, Math.round(rect.height * dpr));
     if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
         canvas.width = targetWidth;
         canvas.height = targetHeight;
+        runtime.lastWidth = targetWidth;
+        runtime.lastHeight = targetHeight;
     }
 
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const width = canvas.width;
-    const height = canvas.height;
-    const timeSec = performance.now() / 1000;
-    const bgMode = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
-    const addressMode = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
-    const renderMode = normalizeShaderPreviewRenderMode(state.shaderPreview.renderMode);
-    const presetCanvas = shaderPreviewImageCanvas(state.shaderPreview.presetImage);
-    const baseTexture = getShaderUploadImage(0) || presetCanvas;
-    const overlayTexture = getShaderUploadImage(1);
+    const nowMs = Number(globalThis.performance && performance.now ? performance.now() : Date.now());
+    const lastMs = Number(runtime.lastMs || nowMs);
+    const deltaSec = Math.max(0, Math.min(SHADER_MAX_TIME_DELTA, (nowMs - lastMs) / 1000));
+    runtime.lastMs = nowMs;
+    runtime.elapsedSec = Number(runtime.elapsedSec || 0) + deltaSec;
 
-    ctx.clearRect(0, 0, width, height);
-    if (bgMode === 'white') {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, width, height);
-    } else if (bgMode === 'black') {
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(0, 0, width, height);
+    const safeBgMode = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
+    const safeAddressMode = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
+    setShaderPreviewCanvasStyle(safeBgMode);
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (safeBgMode === 'white') {
+        gl.clearColor(1, 1, 1, 1);
+    } else if (safeBgMode === 'black') {
+        gl.clearColor(0, 0, 0, 1);
     } else {
-        drawShaderPreviewCheckerboard(ctx, width, height, Math.max(8, Math.round(16 * dpr)));
+        gl.clearColor(0, 0, 0, 0);
+    }
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    if (!runtime.program || !runtime.uniforms) {
+        updateShaderPreviewStatus();
+        return;
     }
 
-    if (baseTexture) {
-        drawShaderPreviewTextureLayer(
-            ctx,
-            baseTexture,
-            width,
-            height,
-            addressMode,
-            -Math.round(timeSec * 42),
-            -Math.round(timeSec * 24),
-            1,
-            'source-over'
-        );
+    gl.disable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+    applyShaderPreviewBlendMode(gl, state.shaderPreview.renderMode);
+
+    gl.bindVertexArray(runtime.vao);
+    gl.useProgram(runtime.program);
+
+    const resolution = [canvas.width, canvas.height, 1];
+    const date = new Date();
+    const iDate = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()];
+    if (runtime.uniforms.iResolution) gl.uniform3fv(runtime.uniforms.iResolution, resolution);
+    if (runtime.uniforms.iTime) gl.uniform1f(runtime.uniforms.iTime, runtime.elapsedSec);
+    if (runtime.uniforms.iTimeDelta) gl.uniform1f(runtime.uniforms.iTimeDelta, deltaSec);
+    if (runtime.uniforms.iFrame) gl.uniform1i(runtime.uniforms.iFrame, runtime.frame);
+    if (runtime.uniforms.iMouse) gl.uniform4fv(runtime.uniforms.iMouse, [0, 0, 0, 0]);
+    if (runtime.uniforms.iDate) gl.uniform4fv(runtime.uniforms.iDate, iDate);
+
+    const channelTimes = [runtime.elapsedSec, runtime.elapsedSec, runtime.elapsedSec, runtime.elapsedSec];
+    const channelResolutions = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
+    for (let i = 0; i < SHADER_UPLOAD_SLOT_COUNT; i += 1) {
+        const sourceInfo = resolveShaderTextureSourceForSlot(i);
+        const channel = ensureShaderChannelTexture(runtime, i, sourceInfo.source, sourceInfo.key);
+        gl.activeTexture(gl.TEXTURE0 + i);
+        gl.bindTexture(gl.TEXTURE_2D, channel.texture);
+        setBoundShaderTextureAddressMode(gl, safeAddressMode);
+        channelResolutions[i * 3] = channel.width;
+        channelResolutions[i * 3 + 1] = channel.height;
+        channelResolutions[i * 3 + 2] = 1;
     }
 
-    if (overlayTexture) {
-        let composite = 'source-over';
-        let alpha = 0.45;
-        if (renderMode === 'additive') {
-            composite = 'lighter';
-            alpha = 0.8;
-        } else if (renderMode === 'multiply') {
-            composite = 'multiply';
-            alpha = 0.86;
-        } else if (renderMode === 'screen') {
-            composite = 'screen';
-            alpha = 0.74;
-        }
-        drawShaderPreviewTextureLayer(
-            ctx,
-            overlayTexture,
-            width,
-            height,
-            addressMode,
-            -Math.round(timeSec * 18),
-            -Math.round(timeSec * 12),
-            alpha,
-            composite
-        );
-    }
+    if (runtime.uniforms.iChannelTime) gl.uniform1fv(runtime.uniforms.iChannelTime, channelTimes);
+    if (runtime.uniforms.iChannelResolution) gl.uniform3fv(runtime.uniforms.iChannelResolution, channelResolutions);
+    if (runtime.uniforms.iChannel0) gl.uniform1i(runtime.uniforms.iChannel0, 0);
+    if (runtime.uniforms.iChannel1) gl.uniform1i(runtime.uniforms.iChannel1, 1);
+    if (runtime.uniforms.iChannel2) gl.uniform1i(runtime.uniforms.iChannel2, 2);
+    if (runtime.uniforms.iChannel3) gl.uniform1i(runtime.uniforms.iChannel3, 3);
 
-    const active = getActiveFile();
-    const compileErrors = Array.isArray(state.shaderCompile.errors) ? state.shaderCompile.errors.length : 0;
-    ctx.save();
-    ctx.fillStyle = 'rgba(14, 16, 20, 0.74)';
-    ctx.fillRect(12 * dpr, height - 40 * dpr, Math.min(width - 24 * dpr, 420 * dpr), 28 * dpr);
-    ctx.fillStyle = compileErrors > 0 ? '#ff9d82' : '#99e29f';
-    ctx.font = `${11 * dpr}px "Segoe UI", sans-serif`;
-    ctx.textBaseline = 'middle';
-    const fileName = active ? String(active.path || '').split('/').pop() : 'shader.fx';
-    const statusText = compileErrors > 0
-        ? `${fileName} · 编译错误 ${compileErrors}`
-        : `${fileName} · 编译通过`;
-    ctx.fillText(statusText, 18 * dpr, height - 26 * dpr);
-    ctx.restore();
-
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindVertexArray(null);
+    gl.useProgram(null);
+    runtime.frame += 1;
     updateShaderPreviewStatus();
 }
 
@@ -3867,6 +4132,7 @@ function applyEditorModeUi() {
         }
         runShaderCompileForActiveFile({ silent: true });
     } else {
+        clearShaderRealtimeCompileTimer();
         setShaderPreviewModalOpen(false, { focusEditor: false, focus: false });
         stopShaderPreviewLoop();
     }
@@ -3908,21 +4174,78 @@ function runShaderCompileForActiveFile(options) {
     if (!active || detectFileMode(active.path) !== 'shaderfx') {
         return;
     }
-    const result = compileFxSource(active.content || '');
-    state.shaderCompile.logs.push(result.log);
-    state.shaderCompile.errors = result.errors;
+
+    const reason = String(opts.reason || (opts.silent ? '自动' : '手动'));
+    const sourceText = state.editor && state.editor.getModel()
+        ? state.editor.getModel().getValue()
+        : String(active.content || '');
+    const result = compileFxSource(sourceText);
+    let errors = Array.isArray(result.errors) ? result.errors.slice() : [];
+
+    if (!errors.length) {
+        const runtime = ensureShaderPreviewRuntime();
+        if (!runtime || !runtime.gl) {
+            errors.push({
+                line: 1,
+                column: 1,
+                message: '当前环境不支持 WebGL2，无法实时渲染。'
+            });
+        } else {
+            const programResult = createShaderPreviewProgram(runtime.gl, SHADER_VERTEX_SOURCE, result.fragmentSource);
+            if (!programResult.ok) {
+                const compileErrors = parseShaderCompileLogErrors(programResult.error);
+                errors = compileErrors.length
+                    ? compileErrors
+                    : [{ line: 1, column: 1, message: String(programResult.error || 'Shader 编译失败') }];
+            } else {
+                if (runtime.program) {
+                    runtime.gl.deleteProgram(runtime.program);
+                }
+                runtime.program = programResult.program;
+                runtime.uniforms = programResult.uniforms;
+                runtime.lastMs = 0;
+                runtime.elapsedSec = 0;
+                runtime.frame = 0;
+            }
+        }
+    }
+
+    const logMessage = errors.length
+        ? `${reason}编译失败：${errors.length} 条错误。`
+        : `${reason}编译成功：HLSL 已应用到实时渲染。`;
+    state.shaderCompile.logs.push(logMessage);
+    state.shaderCompile.errors = errors;
     while (state.shaderCompile.logs.length > 120) {
         state.shaderCompile.logs.shift();
     }
     renderShaderCompilePanel({
-        log: `[${nowStamp()}] ${result.log}\n${state.shaderCompile.logs.join('\n')}`,
-        errors: result.errors
+        log: `[${nowStamp()}] ${logMessage}\n${state.shaderCompile.logs.join('\n')}`,
+        errors
     });
     drawShaderPreviewCanvas();
     if (!opts.silent) {
-        setActivePanelTab(result.ok ? 'compile' : 'errors');
+        setActivePanelTab(errors.length ? 'errors' : 'compile');
         showBottomPanel(true);
     }
+}
+
+function clearShaderRealtimeCompileTimer() {
+    if (!state.shaderPreview.autoCompileTimer) return;
+    clearTimeout(state.shaderPreview.autoCompileTimer);
+    state.shaderPreview.autoCompileTimer = 0;
+}
+
+function scheduleShaderRealtimeCompile(reason) {
+    if (activeFileMode() !== 'shaderfx') return;
+    clearShaderRealtimeCompileTimer();
+    const triggerReason = String(reason || '编辑');
+    state.shaderPreview.autoCompileTimer = setTimeout(() => {
+        state.shaderPreview.autoCompileTimer = 0;
+        runShaderCompileForActiveFile({
+            silent: true,
+            reason: `自动(${triggerReason})`
+        });
+    }, SHADER_LIVE_COMPILE_DELAY);
 }
 
 function exportShaderFile() {
@@ -4062,6 +4385,10 @@ function ensureModelForFile(file) {
         scheduleWorkspaceSave();
         if (detectFileMode(file.path) === 'csharp') {
             scheduleDiagnostics();
+            return;
+        }
+        if (detectFileMode(file.path) === 'shaderfx') {
+            scheduleShaderRealtimeCompile('编辑');
         }
     });
 

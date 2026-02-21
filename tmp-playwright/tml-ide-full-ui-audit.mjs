@@ -363,6 +363,7 @@ async function main() {
     await clickAndShot(page, '#btn-md-reset', '29-md-reset.png');
 
     await page.click('#file-list .file-item:has-text("audit.fx")');
+    await clickAndShot(page, 'button[data-panel-tab="compile"]', '30-shader-compile-tab.png');
     await clickAndShot(page, '#btn-shader-insert-template', '30-shader-insert-template.png');
     await clickAndShot(page, '#btn-shader-compile', '31-shader-header-compile.png');
     await clickAndShot(page, '#btn-panel-shader-compile', '32-shader-panel-compile.png');

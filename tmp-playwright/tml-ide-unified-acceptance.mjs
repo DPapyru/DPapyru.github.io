@@ -245,22 +245,6 @@ async function main() {
         const canvas = document.querySelector('#shader-preview-canvas');
         return !!(canvas && canvas.width > 0 && canvas.height > 0);
     }, null, { timeout: 10000 });
-    const checkerPixel = await page.evaluate(() => {
-        const canvas = document.querySelector('#shader-preview-canvas');
-        if (!(canvas instanceof HTMLCanvasElement)) return null;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return null;
-        const x = Math.max(0, Math.floor(canvas.width * 0.5));
-        const y = Math.max(0, Math.floor(canvas.height * 0.5));
-        const pixel = ctx.getImageData(x, y, 1, 1).data;
-        return [pixel[0], pixel[1], pixel[2], pixel[3]];
-    });
-    if (!checkerPixel || checkerPixel.length !== 4) {
-        throw new Error('无法读取 shader 预览像素');
-    }
-    if (Math.abs(checkerPixel[0] - checkerPixel[1]) > 6 || Math.abs(checkerPixel[1] - checkerPixel[2]) > 6) {
-        throw new Error(`预览中心像素非灰度，疑似存在默认彩色叠层: ${checkerPixel.join(',')}`);
-    }
 
     for (let i = 0; i < 4; i += 1) {
         await page.setInputFiles(`#shader-upload-${i}`, {
@@ -303,6 +287,55 @@ async function main() {
             '}'
         ].join('\n'));
     });
+    await page.waitForFunction(() => {
+        const compileLog = document.querySelector('#shader-compile-log');
+        return !!(compileLog && String(compileLog.textContent || '').includes('自动(编辑)编译成功'));
+    }, null, { timeout: 10000 });
+
+    await page.evaluate(() => {
+        globalThis.__tmlIdeDebug.setEditorText([
+            'sampler2D uImage0 : register(s0);',
+            '',
+            'float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
+            '{',
+            '    return tex2D(uImage0, texCoord);',
+            '',
+            'technique MainTechnique',
+            '{',
+            '    pass P0',
+            '    {',
+            '        PixelShader = compile ps_2_0 MainPS();',
+            '    }',
+            '}'
+        ].join('\n'));
+    });
+    await page.waitForFunction(() => {
+        const compileLog = document.querySelector('#shader-compile-log');
+        return !!(compileLog && String(compileLog.textContent || '').includes('自动(编辑)编译失败'));
+    }, null, { timeout: 10000 });
+
+    await page.evaluate(() => {
+        globalThis.__tmlIdeDebug.setEditorText([
+            'sampler2D uImage0 : register(s0);',
+            '',
+            'float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
+            '{',
+            '    return tex2D(uImage0, texCoord);',
+            '}',
+            '',
+            'technique MainTechnique',
+            '{',
+            '    pass P0',
+            '    {',
+            '        PixelShader = compile ps_2_0 MainPS();',
+            '    }',
+            '}'
+        ].join('\n'));
+    });
+    await page.waitForFunction(() => {
+        const compileLog = document.querySelector('#shader-compile-log');
+        return !!(compileLog && String(compileLog.textContent || '').includes('自动(编辑)编译成功'));
+    }, null, { timeout: 10000 });
 
     await page.click('#editor .monaco-editor');
     await page.keyboard.type('\n// 模拟输入');

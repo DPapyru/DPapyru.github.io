@@ -1648,3 +1648,20 @@
 - Shader 预览 UI 已从编辑区右侧固定面板迁移为弹窗（打开/关闭/遮罩/Esc）。
 - 全按钮验收截图目录：`test-results/tml-ide-full-ui-audit/`（本轮新增如 `34-shader-popup-open.png`、`35-shader-select-controls.png`、`36-shader-uploaded.png`、`38-shader-popup-close.png`）。
 - 与 `main` `site/pages/shader-playground.html`（排除 DPapyru--）已做锚点映射校验与交互验证，覆盖：编译、导出、渲染模式、采样模式、背景模式、纹理上传、预览状态/画布、投稿入口。
+
+### 验证记录 [2026-02-21 23:33]：修复 Shader 渲染代码未生效并启用 HLSL 实时编译
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图，覆盖自动实时编译成功/失败/恢复）
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-full-ui-audit.mjs`：通过（含 main 对照、全按钮交互与截图）
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js vscode-workbench-shell.test.js workspace-explorer-categories.test.js animation-csharp-support.test.js`：通过
+- `npm run check-generated`：失败（`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`，为仓库既有问题）
+
+**备注**：
+- 根因核对：统一 IDE 旧实现仅做 2D 贴图模拟，未将 `.fx` HLSL 实际编译并应用到渲染程序。
+- 修复内容：新增 WebGL2 实时预览链路（HLSL->GLSL 适配、Program 编译/替换、uImage 通道绑定、去抖自动编译）。
+- 验收截图目录：`test-results/tml-ide-unified-acceptance/`、`test-results/tml-ide-full-ui-audit/`。
