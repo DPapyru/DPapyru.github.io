@@ -1570,3 +1570,17 @@
 - 根因：统一 IDE 仅传 `file` 参数给 viewer，未写入 `articleStudioViewerPreview.v1` 草稿 payload，也未启用 `studio_preview` 机制。
 - 修复：`tml-ide-app/src/main.js` 新增并接入 viewer 草稿桥接（payload 存储 + `studio_preview=1` + iframe `postMessage`）。
 - 本轮验收已验证 iframe 包含当前编辑文本“这是 markdown 预览测试。”，并更新截图：`test-results/tml-ide-unified-acceptance/01a-markdown-preview-frame.png`。
+
+### 验证记录 [2026-02-21 21:31]：修复 Markdown 预览中相对图片路径破图（./images）
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- markdown-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含截图、模拟输入、模拟点击）
+
+**备注**：
+- 根因：viewer 的 studio 预览资源命中依赖路径精确匹配，Markdown 中 `./images/...` 与 payload 中 `images/...` 不一致，导致未映射为 data URL。
+- 修复：`tml-ide-app/src/main.js` 预览 payload 对图片/C# 资源同时写入无前缀与 `./` 前缀两类路径变体，兼容相对路径写法。
+- 验收脚本新增断言：Markdown 预览 iframe 中必须存在可解码 `data:image/`（`naturalWidth > 0`）的图片，防止回归。

@@ -657,6 +657,42 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
     const uploadedImages = [];
     const uploadedMedia = [];
     const uploadedCsharpFiles = [];
+    const imagePathSet = new Set();
+    const csharpPathSet = new Set();
+
+    const pathVariants = (pathValue) => {
+        const safe = String(pathValue || '').trim();
+        if (!safe) return [];
+        const variants = [safe];
+        if (!safe.startsWith('./') && !safe.startsWith('../') && !safe.startsWith('/')) {
+            variants.push(`./${safe}`);
+        }
+        return variants;
+    };
+
+    const appendUploadedImage = (assetPath, dataUrl, name) => {
+        pathVariants(assetPath).forEach((variantPath) => {
+            if (!variantPath || imagePathSet.has(variantPath)) return;
+            imagePathSet.add(variantPath);
+            uploadedImages.push({
+                assetPath: variantPath,
+                dataUrl,
+                name
+            });
+        });
+    };
+
+    const appendUploadedCsharpFile = (assetPath, content, name) => {
+        pathVariants(assetPath).forEach((variantPath) => {
+            if (!variantPath || csharpPathSet.has(variantPath)) return;
+            csharpPathSet.add(variantPath);
+            uploadedCsharpFiles.push({
+                assetPath: variantPath,
+                content,
+                name
+            });
+        });
+    };
 
     state.workspace.files.forEach((file) => {
         if (!file || !file.path) return;
@@ -666,19 +702,11 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
         if (mode === 'image') {
             const dataUrl = String(file.content || '').trim();
             if (!dataUrl.startsWith('data:image/')) return;
-            uploadedImages.push({
-                assetPath,
-                dataUrl,
-                name: String(file.path).split('/').pop() || ''
-            });
+            appendUploadedImage(assetPath, dataUrl, String(file.path).split('/').pop() || '');
             return;
         }
         if (mode === 'csharp') {
-            uploadedCsharpFiles.push({
-                assetPath,
-                content: String(file.content || ''),
-                name: String(file.path).split('/').pop() || ''
-            });
+            appendUploadedCsharpFile(assetPath, String(file.content || ''), String(file.path).split('/').pop() || '');
         }
     });
 

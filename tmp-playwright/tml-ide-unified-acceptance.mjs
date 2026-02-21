@@ -101,8 +101,13 @@ async function main() {
 
     await page.click('#editor .monaco-editor');
     await page.evaluate(() => {
-        const pngPayload = 'tiny-png-binary';
-        const file = new File([pngPayload], 'paste.png', { type: 'image/png' });
+        const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO5xYV0AAAAASUVORK5CYII=';
+        const binary = globalThis.atob(pngBase64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        const file = new File([bytes], 'paste.png', { type: 'image/png' });
         const clipboardData = new DataTransfer();
         clipboardData.items.add(file);
         let event = null;
@@ -135,6 +140,18 @@ async function main() {
         return !!(node && String(node.getAttribute('src') || '').startsWith('data:image/'));
     }, null, { timeout: 10000 });
     await page.click('#file-list .file-item:has-text("demo.md")');
+    await page.waitForSelector('#editor .monaco-editor', { timeout: 10000 });
+    await page.click('#btn-markdown-toggle-preview');
+    await page.waitForSelector('#markdown-preview-pane:not([hidden])', { timeout: 10000 });
+    await page.waitForFunction(() => {
+        const frame = document.querySelector('#markdown-preview-frame');
+        if (!(frame instanceof HTMLIFrameElement) || !frame.contentDocument) return false;
+        const dataImage = Array.from(frame.contentDocument.querySelectorAll('img')).find((img) => {
+            return String(img.getAttribute('src') || '').startsWith('data:image/');
+        });
+        return !!(dataImage && Number(dataImage.naturalWidth || 0) > 0);
+    }, null, { timeout: 10000 });
+    await page.click('#btn-markdown-toggle-preview');
     await page.waitForSelector('#editor .monaco-editor', { timeout: 10000 });
     await page.click('#btn-md-focus-mode');
     await page.waitForTimeout(120);
