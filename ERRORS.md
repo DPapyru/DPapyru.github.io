@@ -1711,3 +1711,17 @@
 - 变更后索引统计：`types=2764`、`xna=307`、`fna=65`、`sourceCount=2`（`tModLoader.dll` + `FNA.dll`）。
 - FNA 未提供 XML 文档文件（索引器提示 `XML not found for .../FNA.dll`），因此 FNA 类型可补全但文档注释以程序集反射信息为主。
 - 仍有 `Steamworks.NET` 引用程序集告警并显示 `partial type load`，与本次 FNA 提取无直接冲突。
+
+### 验证记录 [2026-02-22 06:35]：统一 IDE 直载教程整页 Markdown 编辑
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test tests/tutorial-route-integration.test.js`：通过
+- `node --test tests/tutorial-route-integration.test.js tests/markdown-editor-migration.test.js tests/workspace-explorer-categories.test.js tests/vscode-workbench-shell.test.js`：通过
+- `npm run build`：通过
+- `npm run check-generated`：失败（`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`，为仓库既有内容问题）
+
+**备注**：
+- 本次改动使 `/tml-ide/` 可从 URL 参数（`file`/`tutorial`）直接载入教程 Markdown 整页内容，并在现有分区 UI（活动栏/文件树/编辑器/底部面板）内继续编辑。
+- 构建过程中先遇到一次命令会话中断（非脚本错误），后已重新执行 `npm run build` 并通过。

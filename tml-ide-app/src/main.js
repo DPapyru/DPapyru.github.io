@@ -196,7 +196,8 @@ const state = {
     },
     route: {
         workspace: 'csharp',
-        panel: ''
+        panel: '',
+        tutorialPath: ''
     },
     subapps: {
         snapshotByWorkspace: {
@@ -1258,10 +1259,29 @@ function writeLastWorkspacePreference(workspace) {
     }
 }
 
+function parseTutorialMarkdownPathFromUrl(url) {
+    const safeUrl = url instanceof URL ? url : new URL(globalThis.location.href);
+    const raw = String(
+        safeUrl.searchParams.get('file')
+        || safeUrl.searchParams.get('tutorial')
+        || ''
+    ).trim();
+    if (!raw) return '';
+
+    const normalized = normalizeMarkdownRepoPath(raw);
+    if (!normalized) return '';
+    if (/(?:^|\/)\.\.(?:\/|$)/.test(normalized)) return '';
+    return normalized;
+}
+
 function parseRouteFromUrl() {
     const url = new URL(globalThis.location.href);
     const panel = normalizePanelName(url.searchParams.get('panel'));
-    return { workspace: 'csharp', panel };
+    return {
+        workspace: 'csharp',
+        panel,
+        tutorialPath: parseTutorialMarkdownPathFromUrl(url)
+    };
 }
 
 function syncRouteToUrl(options) {
@@ -1835,6 +1855,72 @@ async function loadMarkdownContentFromPath(pathValue) {
         throw new Error(`加载锚点 Markdown 失败（HTTP ${response.status}）：${path}`);
     }
     return await response.text();
+}
+
+function findWorkspaceFileByPath(pathValue) {
+    const safe = normalizeRepoPath(pathValue).toLowerCase();
+    if (!safe) return null;
+    return state.workspace.files.find((file) => normalizeRepoPath(file.path).toLowerCase() === safe) || null;
+}
+
+function createWorkspaceMarkdownFile(pathValue) {
+    const safePath = normalizeRepoPath(pathValue);
+    if (!safePath) return null;
+    const nextFile = {
+        id: createFileId(),
+        path: safePath,
+        content: ''
+    };
+    state.workspace.files.push(nextFile);
+    ensureModelForFile(nextFile);
+    return nextFile;
+}
+
+async function ensureTutorialMarkdownRouteLoaded() {
+    const tutorialRepoPath = normalizeMarkdownRepoPath(state.route && state.route.tutorialPath || '');
+    if (!tutorialRepoPath) return false;
+
+    const workspacePath = toViewerFileParam(tutorialRepoPath);
+    if (!workspacePath) return false;
+
+    try {
+        let targetFile = findWorkspaceFileByPath(workspacePath);
+        let markdownContent = targetFile ? String(targetFile.content || '') : '';
+        const hasWorkspaceContent = !!markdownContent.trim();
+
+        if (!hasWorkspaceContent) {
+            markdownContent = await loadMarkdownContentFromPath(tutorialRepoPath);
+        }
+
+        if (!targetFile) {
+            targetFile = createWorkspaceMarkdownFile(workspacePath);
+        }
+        if (!targetFile) return false;
+
+        const nextText = String(markdownContent || '').replace(/\r\n/g, '\n');
+        targetFile.path = workspacePath;
+        targetFile.content = nextText;
+
+        const model = ensureModelForFile(targetFile);
+        if (model && model.getValue() !== nextText) {
+            model.setValue(nextText);
+        }
+
+        updateFileListUi();
+        switchActiveFile(targetFile.id);
+        scheduleUnifiedStateSave();
+
+        if (hasWorkspaceContent) {
+            addEvent('info', `已定位教程文件：${workspacePath}`);
+        } else {
+            addEvent('info', `已载入教程全文：${workspacePath}`);
+        }
+        setStatus(`教程编辑模式：${workspacePath}`);
+        return true;
+    } catch (error) {
+        addEvent('error', `教程载入失败：${error.message}`);
+        return false;
+    }
 }
 
 async function resolveAnchorMarkdownForBatch(collection, preferredPath) {
@@ -4866,10 +4952,18 @@ function installEditorProviders() {
 
 function bindUiEvents() {
     window.addEventListener('popstate', () => {
+        const previousTutorialPath = normalizeRepoPath(state.route.tutorialPath);
         const route = parseRouteFromUrl();
         state.route.workspace = normalizeWorkspaceName(route.workspace);
         state.route.panel = normalizePanelName(route.panel);
-        setActiveWorkspace(state.route.workspace, { syncUrl: false, persist: true, collect: true, replaceUrl: true }).catch(() => {});
+        state.route.tutorialPath = normalizeMarkdownRepoPath(route.tutorialPath);
+        setActiveWorkspace(state.route.workspace, { syncUrl: false, persist: true, collect: true, replaceUrl: true })
+            .then(async () => {
+                if (normalizeRepoPath(state.route.tutorialPath) !== previousTutorialPath) {
+                    await ensureTutorialMarkdownRouteLoaded();
+                }
+            })
+            .catch(() => {});
         if (routePanelIsOpen()) {
             openUnifiedSubmitPanel({ syncUrl: false, replaceUrl: true });
         } else {
@@ -5652,6 +5746,7 @@ async function bootstrap() {
     const route = parseRouteFromUrl();
     state.route.workspace = normalizeWorkspaceName(route.workspace);
     state.route.panel = normalizePanelName(route.panel);
+    state.route.tutorialPath = normalizeMarkdownRepoPath(route.tutorialPath);
     updateWorkspaceButtons();
     applyUnifiedSubmitPanelVisibility();
 
@@ -5783,7 +5878,8 @@ async function bootstrap() {
         getRoute() {
             return {
                 workspace: normalizeWorkspaceName(state.route.workspace),
-                panel: normalizePanelName(state.route.panel)
+                panel: normalizePanelName(state.route.panel),
+                tutorialPath: normalizeMarkdownRepoPath(state.route.tutorialPath)
             };
         },
         async switchWorkspace(workspace, panel) {
@@ -5904,6 +6000,7 @@ async function bootstrap() {
 
     const workspace = csharpWorkspaceFromUnifiedState() || await loadWorkspace();
     applyWorkspace(workspace);
+    await ensureTutorialMarkdownRouteLoaded();
     state.initialized = true;
     state.editor.updateOptions({ readOnly: false });
 
