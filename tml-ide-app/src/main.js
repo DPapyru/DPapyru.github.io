@@ -61,7 +61,11 @@ const dom = {
     shaderPreviewModalBackdrop: document.getElementById('shader-preview-modal-backdrop'),
     btnShaderPreviewClose: document.getElementById('btn-shader-preview-close'),
     shaderPreviewCanvas: document.getElementById('shader-preview-canvas'),
+    shaderPreviewViewport: document.getElementById('shader-preview-viewport'),
     shaderPreviewStatus: document.getElementById('shader-preview-status'),
+    shaderPreviewZoomOut: document.getElementById('shader-preview-zoom-out'),
+    shaderPreviewZoomReset: document.getElementById('shader-preview-zoom-reset'),
+    shaderPreviewZoomIn: document.getElementById('shader-preview-zoom-in'),
     shaderPresetImage: document.getElementById('shader-preset-image'),
     shaderRenderMode: document.getElementById('shader-render-mode'),
     shaderAddressMode: document.getElementById('shader-address-mode'),
@@ -192,7 +196,15 @@ const state = {
         shaderUploads: [null, null, null, null],
         rafId: 0,
         autoCompileTimer: 0,
-        runtime: null
+        runtime: null,
+        viewScale: 1,
+        viewOffsetX: 0,
+        viewOffsetY: 0,
+        dragPointerId: -1,
+        dragStartX: 0,
+        dragStartY: 0,
+        dragOriginX: 0,
+        dragOriginY: 0
     },
     route: {
         workspace: 'csharp',
@@ -347,6 +359,9 @@ const SHADER_UPLOAD_SLOT_COUNT = 4;
 const SHADER_UPLOAD_MAX_SIZE = 4 * 1024 * 1024;
 const SHADER_LIVE_COMPILE_DELAY = 260;
 const SHADER_MAX_TIME_DELTA = 0.2;
+const SHADER_PREVIEW_MIN_SCALE = 0.2;
+const SHADER_PREVIEW_MAX_SCALE = 8;
+const SHADER_PREVIEW_ZOOM_STEP = 0.2;
 const SHADER_VERTEX_SOURCE = [
     '#version 300 es',
     'precision highp float;',
@@ -3049,6 +3064,10 @@ function setShaderPreviewModalOpen(open, options) {
     const opts = options || {};
     const allowOpen = activeFileMode() === 'shaderfx';
     const shouldOpen = !!open && allowOpen;
+    if (!shouldOpen) {
+        stopShaderPreviewDragging();
+        applyShaderPreviewViewTransform();
+    }
     state.ui.shaderPreviewModalOpen = shouldOpen;
     if (dom.shaderPreviewModal) {
         dom.shaderPreviewModal.hidden = !shouldOpen;
@@ -3066,6 +3085,7 @@ function setShaderPreviewModalOpen(open, options) {
         return;
     }
 
+    installShaderPreviewViewportInteractions();
     syncShaderPreviewControls();
     ensureShaderPreviewLoop();
     drawShaderPreviewCanvas();
@@ -3797,6 +3817,7 @@ function updateShaderPreviewStatus() {
     const preset = shaderPreviewPresetLabel(state.shaderPreview.presetImage);
     const address = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
     const bg = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
+    const zoom = Math.round(clampShaderPreviewZoom(state.shaderPreview.viewScale) * 100);
     const uploads = [];
     for (let i = 0; i < SHADER_UPLOAD_SLOT_COUNT; i += 1) {
         if (getShaderUploadSlot(i)) {
@@ -3806,7 +3827,130 @@ function updateShaderPreviewStatus() {
     const uploadText = uploads.length ? uploads.join(', ') : '无';
     const compileErrors = Array.isArray(state.shaderCompile.errors) ? state.shaderCompile.errors.length : 0;
     const compileText = compileErrors > 0 ? `错误 ${compileErrors}` : '通过';
-    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg} · 上传: ${uploadText} · 实时编译: ${compileText}`;
+    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg} · 缩放: ${zoom}% · 上传: ${uploadText} · 实时编译: ${compileText}`;
+}
+
+function clampShaderPreviewZoom(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 1;
+    return Math.max(SHADER_PREVIEW_MIN_SCALE, Math.min(SHADER_PREVIEW_MAX_SCALE, numeric));
+}
+
+function stopShaderPreviewDragging() {
+    if (!dom.shaderPreviewViewport) {
+        state.shaderPreview.dragPointerId = -1;
+        return;
+    }
+    const pointerId = Number.isInteger(state.shaderPreview.dragPointerId) ? state.shaderPreview.dragPointerId : -1;
+    if (pointerId >= 0 && typeof dom.shaderPreviewViewport.hasPointerCapture === 'function') {
+        if (dom.shaderPreviewViewport.hasPointerCapture(pointerId)) {
+            try {
+                dom.shaderPreviewViewport.releasePointerCapture(pointerId);
+            } catch (_) {
+                // ignore capture release errors when pointer lifecycle already ended.
+            }
+        }
+    }
+    state.shaderPreview.dragPointerId = -1;
+}
+
+function applyShaderPreviewViewTransform() {
+    if (!dom.shaderPreviewCanvas) return;
+    const scale = clampShaderPreviewZoom(state.shaderPreview.viewScale);
+    const offsetX = Number.isFinite(state.shaderPreview.viewOffsetX) ? state.shaderPreview.viewOffsetX : 0;
+    const offsetY = Number.isFinite(state.shaderPreview.viewOffsetY) ? state.shaderPreview.viewOffsetY : 0;
+    state.shaderPreview.viewScale = scale;
+    state.shaderPreview.viewOffsetX = offsetX;
+    state.shaderPreview.viewOffsetY = offsetY;
+    dom.shaderPreviewCanvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    if (dom.shaderPreviewViewport) {
+        dom.shaderPreviewViewport.classList.toggle('is-dragging', state.shaderPreview.dragPointerId >= 0);
+    }
+    if (dom.shaderPreviewZoomReset) {
+        dom.shaderPreviewZoomReset.textContent = `${Math.round(scale * 100)}%`;
+    }
+}
+
+function setShaderPreviewZoom(value, anchorClientX, anchorClientY) {
+    const prevScale = clampShaderPreviewZoom(state.shaderPreview.viewScale);
+    const nextScale = clampShaderPreviewZoom(value);
+    const viewport = dom.shaderPreviewViewport;
+    if (!viewport) {
+        state.shaderPreview.viewScale = nextScale;
+        applyShaderPreviewViewTransform();
+        return;
+    }
+
+    const rect = viewport.getBoundingClientRect();
+    const anchorX = Number.isFinite(anchorClientX) ? anchorClientX - rect.left : rect.width * 0.5;
+    const anchorY = Number.isFinite(anchorClientY) ? anchorClientY - rect.top : rect.height * 0.5;
+    const prevOffsetX = Number.isFinite(state.shaderPreview.viewOffsetX) ? state.shaderPreview.viewOffsetX : 0;
+    const prevOffsetY = Number.isFinite(state.shaderPreview.viewOffsetY) ? state.shaderPreview.viewOffsetY : 0;
+    const worldX = (anchorX - prevOffsetX) / prevScale;
+    const worldY = (anchorY - prevOffsetY) / prevScale;
+    state.shaderPreview.viewScale = nextScale;
+    state.shaderPreview.viewOffsetX = anchorX - worldX * nextScale;
+    state.shaderPreview.viewOffsetY = anchorY - worldY * nextScale;
+    applyShaderPreviewViewTransform();
+    updateShaderPreviewStatus();
+}
+
+function resetShaderPreviewView() {
+    state.shaderPreview.viewScale = 1;
+    state.shaderPreview.viewOffsetX = 0;
+    state.shaderPreview.viewOffsetY = 0;
+    applyShaderPreviewViewTransform();
+    updateShaderPreviewStatus();
+}
+
+function installShaderPreviewViewportInteractions() {
+    if (!dom.shaderPreviewViewport || dom.shaderPreviewViewport.dataset.interactionsBound === '1') return;
+    dom.shaderPreviewViewport.dataset.interactionsBound = '1';
+
+    dom.shaderPreviewViewport.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        state.shaderPreview.dragPointerId = Number(event.pointerId);
+        state.shaderPreview.dragStartX = Number(event.clientX);
+        state.shaderPreview.dragStartY = Number(event.clientY);
+        state.shaderPreview.dragOriginX = Number(state.shaderPreview.viewOffsetX || 0);
+        state.shaderPreview.dragOriginY = Number(state.shaderPreview.viewOffsetY || 0);
+        if (typeof dom.shaderPreviewViewport.setPointerCapture === 'function') {
+            try {
+                dom.shaderPreviewViewport.setPointerCapture(event.pointerId);
+            } catch (_) {
+                // ignore capture failures; dragging still works through move events.
+            }
+        }
+        event.preventDefault();
+        applyShaderPreviewViewTransform();
+    });
+
+    dom.shaderPreviewViewport.addEventListener('pointermove', (event) => {
+        if (Number(state.shaderPreview.dragPointerId) !== Number(event.pointerId)) return;
+        const deltaX = Number(event.clientX) - Number(state.shaderPreview.dragStartX || 0);
+        const deltaY = Number(event.clientY) - Number(state.shaderPreview.dragStartY || 0);
+        state.shaderPreview.viewOffsetX = Number(state.shaderPreview.dragOriginX || 0) + deltaX;
+        state.shaderPreview.viewOffsetY = Number(state.shaderPreview.dragOriginY || 0) + deltaY;
+        applyShaderPreviewViewTransform();
+    });
+
+    const endDrag = () => {
+        stopShaderPreviewDragging();
+        applyShaderPreviewViewTransform();
+    };
+    dom.shaderPreviewViewport.addEventListener('pointerup', endDrag);
+    dom.shaderPreviewViewport.addEventListener('pointercancel', endDrag);
+    dom.shaderPreviewViewport.addEventListener('lostpointercapture', endDrag);
+
+    dom.shaderPreviewViewport.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        const factor = Math.exp((-Number(event.deltaY || 0) * SHADER_PREVIEW_ZOOM_STEP) / 100);
+        setShaderPreviewZoom(Number(state.shaderPreview.viewScale || 1) * factor, event.clientX, event.clientY);
+    }, { passive: false });
+
+    dom.shaderPreviewViewport.addEventListener('dblclick', () => {
+        resetShaderPreviewView();
+    });
 }
 
 function syncShaderPreviewControls() {
@@ -3823,6 +3967,7 @@ function syncShaderPreviewControls() {
         dom.shaderBgMode.value = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
     }
     updateShaderUploadUi();
+    applyShaderPreviewViewTransform();
 }
 
 function parseShaderCompileLogErrors(logText) {
@@ -4103,7 +4248,8 @@ function drawShaderPreviewCanvas() {
 
     const canvas = dom.shaderPreviewCanvas;
     const gl = runtime.gl;
-    const rect = canvas.getBoundingClientRect();
+    const viewportNode = dom.shaderPreviewViewport || canvas;
+    const rect = viewportNode.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
 
     const dpr = Math.max(1, Number(globalThis.devicePixelRatio || 1));
@@ -5444,6 +5590,26 @@ function bindUiEvents() {
     if (dom.btnShaderPreviewClose) {
         dom.btnShaderPreviewClose.addEventListener('click', () => {
             setShaderPreviewModalOpen(false, { focusEditor: false, focus: false });
+        });
+    }
+
+    installShaderPreviewViewportInteractions();
+
+    if (dom.shaderPreviewZoomOut) {
+        dom.shaderPreviewZoomOut.addEventListener('click', () => {
+            setShaderPreviewZoom(Number(state.shaderPreview.viewScale || 1) * (1 - SHADER_PREVIEW_ZOOM_STEP));
+        });
+    }
+
+    if (dom.shaderPreviewZoomReset) {
+        dom.shaderPreviewZoomReset.addEventListener('click', () => {
+            resetShaderPreviewView();
+        });
+    }
+
+    if (dom.shaderPreviewZoomIn) {
+        dom.shaderPreviewZoomIn.addEventListener('click', () => {
+            setShaderPreviewZoom(Number(state.shaderPreview.viewScale || 1) * (1 + SHADER_PREVIEW_ZOOM_STEP));
         });
     }
 

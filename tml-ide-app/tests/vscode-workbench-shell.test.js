@@ -24,6 +24,9 @@ test('index.html exposes workbench contracts for activity, panel tabs and comman
     assert.match(html, /id="shader-preview-modal"/);
     assert.match(html, /id="btn-shader-preview-popup"/);
     assert.match(html, /id="shader-preview-canvas"/);
+    assert.match(html, /id="shader-preview-viewport"/);
+    assert.match(html, /id="shader-preview-controls"/);
+    assert.match(html, /id="shader-preview-zoom-reset"/);
     assert.match(html, /id="unified-submit-panel"/);
     assert.doesNotMatch(html, /id="shader-sidepane"/);
     assert.doesNotMatch(html, /id="workspace-plugin-host"/);
