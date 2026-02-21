@@ -6,8 +6,8 @@
     <title>tML IDE Playground</title>
     <meta name="description" content="独立 tModLoader C# IDE Playground，支持补全、悬停文档与双层诊断。">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
-  <script type="module" crossorigin src="/tml-ide/assets/index-BvzV-RZz.js"></script>
-  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-efq_oJL6.css">
+  <script type="module" crossorigin src="/tml-ide/assets/index-BVKP3ae7.js"></script>
+  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-Mse85Uty.css">
 </head>
 <body>
     <div id="app" class="app-shell">
@@ -60,7 +60,7 @@
                     <button id="btn-delete-file" type="button">删除</button>
                 </div>
                 <ul id="file-list" class="file-list" aria-label="工程文件列表"></ul>
-                <p class="panel-tip">支持 .cs/.md/.fx 以及常见图片文件，内容自动保存到浏览器 IndexedDB。</p>
+                <p class="panel-tip">支持 .cs/.md/.fx 以及常见图片与视频资源，内容自动保存到浏览器 IndexedDB。</p>
             </aside>
 
             <section id="panel-editor" class="panel panel-editor">
@@ -77,6 +77,9 @@
                 </section>
                 <section id="image-preview-pane" class="image-preview-pane" hidden>
                     <img id="image-preview-image" class="image-preview-image" alt="图片预览">
+                </section>
+                <section id="video-preview-pane" class="video-preview-pane" hidden>
+                    <video id="video-preview-element" class="video-preview-element" controls preload="metadata"></video>
                 </section>
                 <section id="shader-sidepane" class="shader-sidepane" hidden>
                     <header class="shader-sidepane-head">渲染预览</header>

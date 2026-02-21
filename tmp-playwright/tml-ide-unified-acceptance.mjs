@@ -62,6 +62,28 @@ async function main() {
 
     await addWorkspaceFile(page, 'demo.md');
     await addWorkspaceFile(page, 'effect.fx');
+    await addWorkspaceFile(page, 'clip.mp4');
+    await page.waitForFunction(() => {
+        const titles = Array.from(document.querySelectorAll('#file-list .file-group-title')).map((el) => {
+            return String(el.textContent || '').trim();
+        });
+        return titles.includes('Markdown 文章') && titles.includes('C# 文件') && titles.includes('Shader 文件') && titles.includes('资源文件');
+    }, null, { timeout: 10000 });
+    await page.screenshot({ path: path.join(outDir, '01b-workspace-groups.png'), fullPage: true });
+    await page.click('#file-list .file-item:has-text("clip.mp4")');
+    await page.evaluate(() => {
+        globalThis.__tmlIdeDebug.setEditorText('data:video/mp4;base64,AAAAIGZ0eXBpc29tAAAAAGlzb20=');
+    });
+    await page.click('#file-list .file-item:has-text("demo.md")');
+    await page.click('#file-list .file-item:has-text("clip.mp4")');
+    await page.waitForSelector('#video-preview-pane:not([hidden])', { timeout: 10000 });
+    await page.waitForFunction(() => {
+        const node = document.querySelector('#video-preview-element');
+        if (!(node instanceof HTMLVideoElement)) return false;
+        const src = String(node.currentSrc || node.getAttribute('src') || '');
+        return src.startsWith('data:video/');
+    }, null, { timeout: 10000 });
+    await page.screenshot({ path: path.join(outDir, '01c-video-resource-preview.png'), fullPage: true });
 
     await page.click('#file-list .file-item:has-text("demo.md")');
     await page.evaluate(() => {

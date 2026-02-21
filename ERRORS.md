@@ -1595,3 +1595,14 @@
 - `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图，且用最简完整 `.fx` 代码验证编译）
 
 **备注**：Playwright 截图输出目录为 `test-results/tml-ide-unified-acceptance/`，包含 `04a-shader-upload-4-slots.png` 等验收截图；本次同步更新了统一 IDE 右侧 Shader 面板四通道上传、默认模板（`technique/pass`）与预览渲染逻辑（移除默认彩色渐变叠层）。
+
+### 验证记录 [2026-02-21 22:03]：统一 IDE 工作区分组展示与视频资源预览
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- workspace-explorer-categories.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图；覆盖文件分组与视频资源预览）
+
+**备注**：新增截图 `test-results/tml-ide-unified-acceptance/01b-workspace-groups.png` 与 `test-results/tml-ide-unified-acceptance/01c-video-resource-preview.png`，用于验证 Markdown/C#/Shader/资源分组与视频预览 UI。

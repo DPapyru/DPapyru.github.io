@@ -53,6 +53,8 @@ const dom = {
     markdownPreviewFrame: document.getElementById('markdown-preview-frame'),
     imagePreviewPane: document.getElementById('image-preview-pane'),
     imagePreviewImage: document.getElementById('image-preview-image'),
+    videoPreviewPane: document.getElementById('video-preview-pane'),
+    videoPreviewElement: document.getElementById('video-preview-element'),
     shaderSidepane: document.getElementById('shader-sidepane'),
     shaderPreviewCanvas: document.getElementById('shader-preview-canvas'),
     shaderPreviewStatus: document.getElementById('shader-preview-status'),
@@ -254,6 +256,7 @@ const MARKDOWN_FALLBACK_ANCHORS = Object.freeze([
 const MARKDOWN_PASTE_MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 const MARKDOWN_PASTE_MAX_IMAGE_COUNT = 8;
 const IMAGE_FILE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.avif']);
+const VIDEO_FILE_EXTENSIONS = new Set(['.mp4', '.webm', '.mov', '.m4v', '.avi', '.mkv']);
 const MARKDOWN_PASTE_EXTENSION_BY_MIME = Object.freeze({
     'image/png': '.png',
     'image/jpeg': '.jpg',
@@ -267,7 +270,7 @@ const MARKDOWN_PASTE_EXTENSION_BY_MIME = Object.freeze({
 const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
 const VIEWER_PREVIEW_MESSAGE_TYPE = 'article-studio-preview-update';
 let viewerPagePathCache = '';
-const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif)$/i;
+const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif|mp4|webm|mov|m4v|avi|mkv)$/i;
 const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
 const SHADER_PREVIEW_RENDER_MODES = new Set(['alpha', 'additive', 'multiply', 'screen']);
 const SHADER_PREVIEW_ADDRESS_MODES = new Set(['clamp', 'wrap']);
@@ -543,6 +546,7 @@ function detectFileMode(pathValue) {
     const ext = fileExt(pathValue);
     if (ext === '.md' || ext === '.markdown') return 'markdown';
     if (ext === '.fx') return 'shaderfx';
+    if (VIDEO_FILE_EXTENSIONS.has(ext)) return 'video';
     if (IMAGE_FILE_EXTENSIONS.has(ext)) return 'image';
     return 'csharp';
 }
@@ -551,6 +555,7 @@ function languageForFile(pathValue) {
     const mode = detectFileMode(pathValue);
     if (mode === 'markdown') return 'markdown';
     if (mode === 'shaderfx') return 'shaderfx';
+    if (mode === 'video') return 'plaintext';
     if (mode === 'image') return 'plaintext';
     return 'csharp';
 }
@@ -795,6 +800,7 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
     const uploadedMedia = [];
     const uploadedCsharpFiles = [];
     const imagePathSet = new Set();
+    const mediaPathSet = new Set();
     const csharpPathSet = new Set();
 
     const pathVariants = (pathValue) => {
@@ -831,6 +837,19 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
         });
     };
 
+    const appendUploadedMedia = (assetPath, dataUrl, name, type) => {
+        pathVariants(assetPath).forEach((variantPath) => {
+            if (!variantPath || mediaPathSet.has(variantPath)) return;
+            mediaPathSet.add(variantPath);
+            uploadedMedia.push({
+                assetPath: variantPath,
+                dataUrl,
+                name,
+                type
+            });
+        });
+    };
+
     state.workspace.files.forEach((file) => {
         if (!file || !file.path) return;
         const mode = detectFileMode(file.path);
@@ -840,6 +859,12 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
             const dataUrl = String(file.content || '').trim();
             if (!dataUrl.startsWith('data:image/')) return;
             appendUploadedImage(assetPath, dataUrl, String(file.path).split('/').pop() || '');
+            return;
+        }
+        if (mode === 'video') {
+            const dataUrl = String(file.content || '').trim();
+            if (!dataUrl.startsWith('data:video/')) return;
+            appendUploadedMedia(assetPath, dataUrl, String(file.path).split('/').pop() || '', 'video');
             return;
         }
         if (mode === 'csharp') {
@@ -2780,6 +2805,19 @@ function imagePreviewSrcFromActiveFile() {
     return '';
 }
 
+function videoPreviewSrcFromActiveFile() {
+    const active = getActiveFile();
+    if (!active || detectFileMode(active.path) !== 'video') {
+        return '';
+    }
+    const content = String(active.content || '').trim();
+    if (!content) return '';
+    if (content.startsWith('data:video/')) {
+        return content;
+    }
+    return '';
+}
+
 function updateStatusLanguage() {
     if (!dom.statusLanguage) return;
     const mode = activeFileMode();
@@ -2793,6 +2831,10 @@ function updateStatusLanguage() {
     }
     if (mode === 'image') {
         dom.statusLanguage.textContent = 'Image';
+        return;
+    }
+    if (mode === 'video') {
+        dom.statusLanguage.textContent = 'Video';
         return;
     }
     dom.statusLanguage.textContent = 'C#';
@@ -3712,6 +3754,8 @@ function applyEditorModeUi() {
     const isMarkdown = mode === 'markdown';
     const isShader = mode === 'shaderfx';
     const isImage = mode === 'image';
+    const isVideo = mode === 'video';
+    const isResourcePreview = isImage || isVideo;
     updateStatusLanguage();
     updateHeaderModeActions();
     if (dom.markdownToolboxGroup) {
@@ -3745,6 +3789,10 @@ function applyEditorModeUi() {
         dom.imagePreviewPane.hidden = !isImage;
         dom.imagePreviewPane.style.display = isImage ? 'flex' : 'none';
     }
+    if (dom.videoPreviewPane) {
+        dom.videoPreviewPane.hidden = !isVideo;
+        dom.videoPreviewPane.style.display = isVideo ? 'flex' : 'none';
+    }
     if (dom.imagePreviewImage) {
         if (isImage) {
             dom.imagePreviewImage.src = imagePreviewSrcFromActiveFile();
@@ -3755,8 +3803,21 @@ function applyEditorModeUi() {
             dom.imagePreviewImage.alt = '图片预览';
         }
     }
-    if (dom.editor && isImage) {
-        dom.editor.hidden = true;
+    if (dom.videoPreviewElement) {
+        if (isVideo) {
+            dom.videoPreviewElement.src = videoPreviewSrcFromActiveFile();
+        } else {
+            dom.videoPreviewElement.pause();
+            dom.videoPreviewElement.removeAttribute('src');
+            try {
+                dom.videoPreviewElement.load();
+            } catch (_error) {
+                // Ignore media reset failures.
+            }
+        }
+    }
+    if (dom.editor) {
+        dom.editor.hidden = isResourcePreview;
     }
     if (isShader) {
         syncShaderPreviewControls();
@@ -3829,22 +3890,78 @@ function exportShaderFile() {
     addEvent('info', `已导出 ${fileName}`);
 }
 
+function isAnimationCsharpFilePath(pathValue) {
+    const safe = normalizeRepoPath(pathValue).toLowerCase();
+    if (!safe) return false;
+    if (/\.anim\.cs$/i.test(safe)) return true;
+    if (/\/(?:anims?|animations?)\//i.test(safe)) return true;
+    return false;
+}
+
+function groupWorkspaceFilesByCategory(files) {
+    const groups = [
+        { key: 'markdown', title: 'Markdown 文章', items: [] },
+        { key: 'csharp', title: 'C# 文件', items: [] },
+        { key: 'shader', title: 'Shader 文件', items: [] },
+        { key: 'assets', title: '资源文件', items: [] }
+    ];
+    const categoryMap = new Map(groups.map((group) => [group.key, group]));
+
+    (Array.isArray(files) ? files : []).forEach((file) => {
+        if (!file || !file.path) return;
+        const mode = detectFileMode(file.path);
+        if (mode === 'markdown') {
+            categoryMap.get('markdown').items.push(file);
+            return;
+        }
+        if (mode === 'shaderfx') {
+            categoryMap.get('shader').items.push(file);
+            return;
+        }
+        if (mode === 'image' || mode === 'video') {
+            categoryMap.get('assets').items.push(file);
+            return;
+        }
+        categoryMap.get('csharp').items.push(file);
+    });
+
+    return groups.filter((group) => group.items.length > 0);
+}
+
+function formatFileListLabel(file) {
+    const mode = detectFileMode(file.path);
+    const pathText = String(file.path || '');
+    if (mode === 'video') return `${pathText} [视频]`;
+    if (mode === 'image') return `${pathText} [图片]`;
+    if (mode === 'csharp' && isAnimationCsharpFilePath(pathText)) return `${pathText} [动画]`;
+    return pathText;
+}
+
 function updateFileListUi() {
     if (!dom.fileList) return;
     dom.fileList.innerHTML = '';
 
-    state.workspace.files.forEach((file) => {
-        const li = document.createElement('li');
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'file-item';
-        btn.textContent = file.path;
-        btn.setAttribute('aria-current', file.id === state.workspace.activeFileId ? 'true' : 'false');
-        btn.addEventListener('click', function () {
-            switchActiveFile(file.id);
+    const groupedFiles = groupWorkspaceFilesByCategory(state.workspace.files);
+    groupedFiles.forEach((group) => {
+        const headLi = document.createElement('li');
+        headLi.className = 'file-group-title';
+        headLi.textContent = group.title;
+        dom.fileList.appendChild(headLi);
+
+        group.items.forEach((file) => {
+            const li = document.createElement('li');
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'file-item';
+            btn.textContent = formatFileListLabel(file);
+            btn.title = String(file.path || '');
+            btn.setAttribute('aria-current', file.id === state.workspace.activeFileId ? 'true' : 'false');
+            btn.addEventListener('click', function () {
+                switchActiveFile(file.id);
+            });
+            li.appendChild(btn);
+            dom.fileList.appendChild(li);
         });
-        li.appendChild(btn);
-        dom.fileList.appendChild(li);
     });
 
     const active = getActiveFile();
@@ -4915,12 +5032,12 @@ function bindUiEvents() {
     });
 
     dom.btnAddFile.addEventListener('click', function () {
-        const input = globalThis.prompt('请输入新文件名（.cs/.md/.fx/.png）', '新文章.md');
+        const input = globalThis.prompt('请输入新文件名（.cs/.md/.fx/.png/.jpg/.webp/.mp4）', '新文章.md');
         if (!input) return;
 
         const fileName = input.trim();
         if (!FILE_NAME_ALLOWED_EXT_RE.test(fileName)) {
-            addEvent('error', '文件名必须以 .cs/.md/.fx/.png/.jpg/.jpeg/.gif/.webp/.svg/.bmp/.avif 结尾');
+            addEvent('error', '文件名必须以 .cs/.md/.fx 或常见图片/视频后缀结尾');
             return;
         }
 
@@ -4949,12 +5066,12 @@ function bindUiEvents() {
         const active = getActiveFile();
         if (!active) return;
 
-        const input = globalThis.prompt('请输入新的文件名（.cs/.md/.fx/.png）', active.path);
+        const input = globalThis.prompt('请输入新的文件名（.cs/.md/.fx/.png/.jpg/.webp/.mp4）', active.path);
         if (!input) return;
 
         const next = input.trim();
         if (!FILE_NAME_ALLOWED_EXT_RE.test(next)) {
-            addEvent('error', '文件名必须以 .cs/.md/.fx/.png/.jpg/.jpeg/.gif/.webp/.svg/.bmp/.avif 结尾');
+            addEvent('error', '文件名必须以 .cs/.md/.fx 或常见图片/视频后缀结尾');
             return;
         }
 
