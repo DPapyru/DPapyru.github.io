@@ -9,6 +9,13 @@ import { DIAGNOSTIC_SEVERITY, MESSAGE_TYPES } from './contracts/messages.js';
 import { createEnhancedCsharpLanguage } from './lib/csharp-highlighting.js';
 import { buildPatchIndexFromXml } from './lib/language-core.js';
 import { createEmptyApiIndex, mergeApiIndex, normalizeApiIndex } from './lib/index-schema.js';
+import { createPluginRegistry } from './core/plugin-registry.js';
+import { createShellEventBus } from './core/shell-event-bus.js';
+import { createStorageService } from './core/storage-service.js';
+import { createUnifiedSubmitService } from './core/unified-submit-service.js';
+import { createCsharpWorkspacePlugin } from './workspaces/csharp/index.js';
+import { createMarkdownWorkspacePlugin } from './workspaces/markdown/index.js';
+import { createShaderWorkspacePlugin } from './workspaces/shader/index.js';
 import {
     createDefaultWorkspace,
     exportWorkspaceJson,
@@ -75,10 +82,10 @@ const dom = {
     commandPaletteBackdrop: document.getElementById('command-palette-backdrop'),
     commandPaletteInput: document.getElementById('command-palette-input'),
     commandPaletteResults: document.getElementById('command-palette-results'),
+    pluginHost: document.getElementById('workspace-plugin-host'),
     subappTitle: document.getElementById('subapp-title'),
     btnSubappReload: document.getElementById('btn-subapp-reload'),
     btnSubappOpenSubmit: document.getElementById('btn-subapp-open-submit'),
-    subappIframe: document.getElementById('subapp-iframe'),
     unifiedSubmitPanel: document.getElementById('unified-submit-panel'),
     btnUnifiedSubmitClose: document.getElementById('btn-unified-submit-close'),
     unifiedWorkerUrl: document.getElementById('unified-worker-url'),
@@ -116,17 +123,20 @@ const state = {
         panel: ''
     },
     subapps: {
-        activeWorkspace: '',
-        currentSrc: '',
-        readyByWorkspace: {
-            markdown: false,
-            shader: false
-        },
         snapshotByWorkspace: {
             markdown: null,
             shader: null
-        },
-        collectWaiters: []
+        }
+    },
+    plugins: {
+        registry: createPluginRegistry(),
+        activeWorkspace: '',
+        mountedWorkspace: '',
+        shellEventBus: createShellEventBus(),
+        storageService: createStorageService(),
+        submitService: createUnifiedSubmitService({
+            normalizeRepoPath
+        })
     },
     unified: {
         persistTimer: 0,
@@ -161,7 +171,6 @@ const VSCODE_SHORTCUTS = Object.freeze({
 });
 const COMPLETION_MAX_ITEMS = 5000;
 const UNIFIED_STATE_SAVE_DELAY = 240;
-const SUBAPP_COLLECT_TIMEOUT_MS = 2500;
 const WORKSPACE_VALUES = Object.freeze(['csharp', 'markdown', 'shader']);
 const WORKSPACE_LAST_KEY = 'tml-ide:last-workspace';
 const OAUTH_TOKEN_KEY = 'articleStudioOAuthToken.v1';
@@ -559,123 +568,79 @@ function scheduleUnifiedStateSave() {
     }, UNIFIED_STATE_SAVE_DELAY);
 }
 
-function buildSubappUrl(workspace) {
-    const base = import.meta.env.BASE_URL || '/tml-ide/';
-    const subPath = workspace === 'markdown'
-        ? `${base}subapps/markdown/`
-        : (workspace === 'shader' ? `${base}subapps/shader/` : '');
-    if (!subPath) return '';
-
-    const url = new URL(subPath, globalThis.location.origin);
-    const current = new URL(globalThis.location.href);
-    current.searchParams.forEach((value, key) => {
-        if (key === 'workspace' || key === 'panel') return;
-        url.searchParams.set(key, value);
-    });
-    return `${url.pathname}${url.search}`;
+function getWorkspacePlugin(workspace) {
+    return state.plugins.registry.get(normalizeWorkspaceName(workspace));
 }
 
-function postMessageToSubapp(type, payload) {
-    if (!dom.subappIframe || !dom.subappIframe.contentWindow) return;
-    dom.subappIframe.contentWindow.postMessage({
-        type: String(type || ''),
-        source: 'tml-ide-host',
-        workspace: normalizeWorkspaceName(state.route.workspace),
-        payload: payload || {}
-    }, globalThis.location.origin);
-}
-
-function loadSubappWorkspace(workspace, options) {
-    if (!dom.subappIframe) return;
+async function mountWorkspacePlugin(workspace, options) {
     const safeWorkspace = normalizeWorkspaceName(workspace);
-    if (safeWorkspace !== 'markdown' && safeWorkspace !== 'shader') return;
-
     const opts = options || {};
-    const baseSrc = buildSubappUrl(safeWorkspace);
-    if (!baseSrc) return;
+    const plugin = getWorkspacePlugin(safeWorkspace);
+    if (!plugin) return;
 
-    const nextSrc = opts.forceReload
-        ? `${baseSrc}${baseSrc.includes('?') ? '&' : '?'}v=${Date.now()}`
-        : baseSrc;
-
-    state.subapps.activeWorkspace = safeWorkspace;
-    updateSubappTitle(safeWorkspace);
-
-    const currentSrc = String(dom.subappIframe.getAttribute('src') || '');
-    if (currentSrc !== nextSrc) {
-        state.subapps.readyByWorkspace[safeWorkspace] = false;
-        dom.subappIframe.setAttribute('src', nextSrc);
-    } else {
-        postMessageToSubapp('tml-ide-host:ping');
+    if (opts.forceReload && safeWorkspace !== 'csharp') {
+        plugin.unmount({
+            dom,
+            state
+        });
     }
-}
 
-function resolveSubappCollectWaiters(workspace, snapshot) {
-    const waiters = Array.isArray(state.subapps.collectWaiters) ? state.subapps.collectWaiters : [];
-    const left = [];
-    waiters.forEach((waiter) => {
-        if (waiter.workspace === workspace) {
-            waiter.resolve(snapshot);
-        } else {
-            left.push(waiter);
+    if (state.plugins.mountedWorkspace && state.plugins.mountedWorkspace !== safeWorkspace) {
+        const previous = getWorkspacePlugin(state.plugins.mountedWorkspace);
+        if (previous) {
+            previous.unmount({
+                dom,
+                state
+            });
+        }
+    }
+
+    await plugin.mount({
+        dom,
+        state,
+        shellEventBus: state.plugins.shellEventBus,
+        storageService: state.plugins.storageService,
+        submitService: state.plugins.submitService,
+        route: state.route,
+        logger(level, message) {
+            addEvent(level, message);
+        },
+        setStatus(text) {
+            setStatus(text);
         }
     });
-    state.subapps.collectWaiters = left;
+
+    state.plugins.activeWorkspace = safeWorkspace;
+    state.plugins.mountedWorkspace = safeWorkspace;
+    updateSubappTitle(safeWorkspace);
 }
 
-function onSubappMessage(event) {
-    if (!event || event.origin !== globalThis.location.origin) return;
-    const data = event.data || {};
-    if (!data || typeof data !== 'object') return;
-    if (String(data.source || '') !== 'tml-ide-subapp') return;
-
-    const workspace = normalizeWorkspaceName(data.workspace);
-    if (workspace !== 'markdown' && workspace !== 'shader') return;
-
-    if (data.type === 'tml-ide-subapp:ready') {
-        state.subapps.readyByWorkspace[workspace] = true;
-        if (workspace === state.subapps.activeWorkspace) {
-            postMessageToSubapp('tml-ide-host:collect');
-            if (workspace === 'shader' && routePanelIsOpen()) {
-                postMessageToSubapp('tml-ide-host:open-submit-panel');
-            }
-        }
-        return;
-    }
-
-    if (data.type === 'tml-ide-subapp:staged') {
-        const snapshot = data.payload && typeof data.payload === 'object' ? data.payload : null;
-        state.subapps.snapshotByWorkspace[workspace] = snapshot;
-        resolveSubappCollectWaiters(workspace, snapshot);
-        scheduleUnifiedStateSave();
-    }
-}
-
-function requestSubappCollect(workspace) {
+function requestWorkspaceCollect(workspace) {
     const safeWorkspace = normalizeWorkspaceName(workspace);
     if (safeWorkspace !== 'markdown' && safeWorkspace !== 'shader') {
         return Promise.resolve(null);
     }
-
-    if (state.subapps.activeWorkspace !== safeWorkspace) {
+    const plugin = getWorkspacePlugin(safeWorkspace);
+    if (!plugin || typeof plugin.collectStaged !== 'function') {
         return Promise.resolve(state.subapps.snapshotByWorkspace[safeWorkspace]);
     }
+    const snapshot = plugin.collectStaged({
+        dom,
+        state,
+        route: state.route
+    });
+    state.subapps.snapshotByWorkspace[safeWorkspace] = snapshot && typeof snapshot === 'object' ? snapshot : null;
+    scheduleUnifiedStateSave();
+    return Promise.resolve(state.subapps.snapshotByWorkspace[safeWorkspace]);
+}
 
-    return new Promise((resolve) => {
-        const timer = setTimeout(() => {
-            state.subapps.collectWaiters = state.subapps.collectWaiters.filter((item) => item !== waiter);
-            resolve(state.subapps.snapshotByWorkspace[safeWorkspace]);
-        }, SUBAPP_COLLECT_TIMEOUT_MS);
-
-        const waiter = {
-            workspace: safeWorkspace,
-            resolve(snapshot) {
-                clearTimeout(timer);
-                resolve(snapshot);
-            }
-        };
-        state.subapps.collectWaiters.push(waiter);
-        postMessageToSubapp('tml-ide-host:collect');
+function dispatchWorkspaceCommand(workspace, commandId) {
+    const plugin = getWorkspacePlugin(workspace);
+    if (!plugin || typeof plugin.handleCommand !== 'function') return false;
+    return !!plugin.handleCommand(commandId, {
+        dom,
+        state,
+        route: state.route
     });
 }
 
@@ -687,10 +652,13 @@ async function setActiveWorkspace(workspace, options) {
     applyWorkspaceLayout();
 
     if (safeWorkspace === 'markdown' || safeWorkspace === 'shader') {
-        loadSubappWorkspace(safeWorkspace, { forceReload: !!opts.forceReload });
-        if (routePanelIsOpen() && safeWorkspace === 'shader') {
-            postMessageToSubapp('tml-ide-host:open-submit-panel');
-        }
+        await mountWorkspacePlugin(safeWorkspace, { forceReload: !!opts.forceReload });
+    } else {
+        await mountWorkspacePlugin('csharp', { forceReload: false });
+    }
+
+    if (routePanelIsOpen() && safeWorkspace === 'shader') {
+        dispatchWorkspaceCommand('shader', 'workspace.open-submit-panel');
     }
 
     if (opts.persist !== false) {
@@ -703,7 +671,7 @@ async function setActiveWorkspace(workspace, options) {
     }
 
     if (opts.collect !== false && (safeWorkspace === 'markdown' || safeWorkspace === 'shader')) {
-        await requestSubappCollect(safeWorkspace);
+        await requestWorkspaceCollect(safeWorkspace);
     }
 }
 
@@ -724,7 +692,7 @@ function openUnifiedSubmitPanel(options) {
     }
     setSubmitPanelRouteState(true, { syncUrl: opts.syncUrl !== false, replaceUrl: !!opts.replaceUrl });
     if (state.route.workspace === 'shader') {
-        postMessageToSubapp('tml-ide-host:open-submit-panel');
+        dispatchWorkspaceCommand('shader', 'workspace.open-submit-panel');
     }
 }
 
@@ -966,7 +934,7 @@ async function collectUnifiedChanges(options) {
     const silent = !!opts.silent;
     const activeWorkspace = normalizeWorkspaceName(state.route.workspace);
     if (opts.requestSubapp !== false && (activeWorkspace === 'markdown' || activeWorkspace === 'shader')) {
-        await requestSubappCollect(activeWorkspace);
+        await requestWorkspaceCollect(activeWorkspace);
     }
 
     const entries = []
@@ -2122,6 +2090,18 @@ function downloadTextFile(fileName, content, mimeType) {
     URL.revokeObjectURL(url);
 }
 
+function registerWorkspacePlugins() {
+    if (!state.plugins.registry.has('csharp')) {
+        state.plugins.registry.register(createCsharpWorkspacePlugin());
+    }
+    if (!state.plugins.registry.has('markdown')) {
+        state.plugins.registry.register(createMarkdownWorkspacePlugin());
+    }
+    if (!state.plugins.registry.has('shader')) {
+        state.plugins.registry.register(createShaderWorkspacePlugin());
+    }
+}
+
 function quoteArg(value) {
     const safe = String(value || '').trim();
     if (!safe) return '""';
@@ -2294,8 +2274,6 @@ function installEditorProviders() {
 }
 
 function bindUiEvents() {
-    window.addEventListener('message', onSubappMessage);
-
     window.addEventListener('popstate', () => {
         const route = parseRouteFromUrl();
         state.route.workspace = normalizeWorkspaceName(route.workspace);
@@ -2331,7 +2309,7 @@ function bindUiEvents() {
         dom.btnRouteSubmitPanel.addEventListener('click', () => {
             setActiveWorkspace('shader', { syncUrl: false, persist: true, collect: true }).catch(() => {});
             openUnifiedSubmitPanel({ syncUrl: true });
-            postMessageToSubapp('tml-ide-host:open-submit-panel');
+            dispatchWorkspaceCommand('shader', 'workspace.open-submit-panel');
         });
     }
 
@@ -2339,7 +2317,7 @@ function bindUiEvents() {
         dom.btnSubappReload.addEventListener('click', () => {
             const workspace = normalizeWorkspaceName(state.route.workspace);
             if (workspace === 'markdown' || workspace === 'shader') {
-                loadSubappWorkspace(workspace, { forceReload: true });
+                setActiveWorkspace(workspace, { syncUrl: false, persist: true, collect: true, forceReload: true }).catch(() => {});
             }
         });
     }
@@ -2353,15 +2331,6 @@ function bindUiEvents() {
     if (dom.btnUnifiedSubmitClose) {
         dom.btnUnifiedSubmitClose.addEventListener('click', () => {
             closeUnifiedSubmitPanel({ syncUrl: true });
-        });
-    }
-
-    if (dom.subappIframe) {
-        dom.subappIframe.addEventListener('load', () => {
-            postMessageToSubapp('tml-ide-host:ping');
-            if (state.route.workspace === 'shader' && routePanelIsOpen()) {
-                postMessageToSubapp('tml-ide-host:open-submit-panel');
-            }
         });
     }
 
@@ -2754,6 +2723,8 @@ async function bootstrap() {
     if (dom.commandPaletteInput) {
         dom.commandPaletteInput.placeholder = `输入命令（${VSCODE_SHORTCUTS.COMMAND_PALETTE}）`;
     }
+
+    registerWorkspacePlugins();
 
     state.initialized = false;
     setStatus('初始化中...');

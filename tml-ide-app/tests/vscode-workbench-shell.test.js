@@ -18,6 +18,8 @@ test('index.html exposes workbench contracts for activity, panel tabs and comman
     assert.match(html, /id="command-palette"/);
     assert.match(html, /id="command-palette-input"/);
     assert.match(html, /id="command-palette-results"/);
+    assert.match(html, /id="workspace-plugin-host"/);
+    assert.doesNotMatch(html, /id="subapp-iframe"/);
 });
 
 test('main.js restores vscode-like shortcut labels and debug wrappers', () => {
@@ -34,4 +36,7 @@ test('main.js restores vscode-like shortcut labels and debug wrappers', () => {
     assert.match(js, /problemsList/);
     assert.match(js, /revealLineInCenter/);
     assert.match(js, /renderProblems/);
+    assert.match(js, /createPluginRegistry/);
+    assert.match(js, /pluginHost/);
+    assert.doesNotMatch(js, /postMessageToSubapp/);
 });
