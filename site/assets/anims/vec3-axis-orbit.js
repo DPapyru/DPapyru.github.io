@@ -49,11 +49,17 @@ export function create(runtime) {
             Vec3AxisOrbit.DrawArrow3(g, Mat4.MulVec3(view, new Vec3(0, 0, 0)), Mat4.MulVec3(view, new Vec3(1.2, 0, 0)), new Color(255, 110, 110, 240), 2, center, scale);
             Vec3AxisOrbit.DrawArrow3(g, Mat4.MulVec3(view, new Vec3(0, 0, 0)), Mat4.MulVec3(view, new Vec3(0, 1.2, 0)), new Color(120, 255, 140, 240), 2, center, scale);
             Vec3AxisOrbit.DrawArrow3(g, Mat4.MulVec3(view, new Vec3(0, 0, 0)), Mat4.MulVec3(view, new Vec3(0, 0, 1.2)), new Color(120, 170, 255, 240), 2, center, scale);
+            let orbit = new Vec3(MathF.Cos(this._ctx.Time * 0.9), 0.35 * MathF.Sin(this._ctx.Time * 0.6), MathF.Sin(this._ctx.Time * 0.9));
+            let orbitLen = MathF.Sqrt(orbit.X * orbit.X + orbit.Y * orbit.Y + orbit.Z * orbit.Z);
+            let normalizedOrbit = orbitLen > 0.0001 ? Vec3.DivScalar(orbit, orbitLen) : new Vec3(0, 0, 0);
+            Vec3AxisOrbit.DrawArrow3(g, Mat4.MulVec3(view, new Vec3(0, 0, 0)), Mat4.MulVec3(view, orbit), new Color(255, 210, 120, 240), 2, center, scale);
+            Vec3AxisOrbit.DrawArrow3(g, Mat4.MulVec3(view, new Vec3(0, 0, 0)), Mat4.MulVec3(view, normalizedOrbit), new Color(255, 255, 255, 220), 1.6, center, scale);
             g.Text("X", Vec3AxisOrbit.Project(Mat4.MulVec3(view, new Vec3(1.35, 0, 0)), center, scale), new Color(255, 140, 140), 14);
             g.Text("Y", Vec3AxisOrbit.Project(Mat4.MulVec3(view, new Vec3(0, 1.35, 0)), center, scale), new Color(150, 255, 170), 14);
             g.Text("Z", Vec3AxisOrbit.Project(Mat4.MulVec3(view, new Vec3(0, 0, 1.35)), center, scale), new Color(150, 190, 255), 14);
-            g.Text("\u53F3\u624B\u7CFB 3D \u5750\u6807\u8F74\uFF08\u62D6\u62FD\u65CB\u8F6C\uFF0C\u6EDA\u8F6E\u7F29\u653E\uFF09", new Vec2(12, 12), new Color(220, 230, 240, 220), 13);
-            g.Text("yaw=" + Vec3AxisOrbit.Fmt(this._yaw) + "  pitch=" + Vec3AxisOrbit.Fmt(this._pitch) + "  zoom=" + Vec3AxisOrbit.Fmt(this._zoom), new Vec2(12, 30), new Color(155, 195, 230, 210), 12);
+            g.Text("Vec3 Axis Orbit\uFF08\u62D6\u62FD\u65CB\u8F6C\uFF0C\u6EDA\u8F6E\u7F29\u653E\uFF09", new Vec2(12, 12), new Color(220, 230, 240, 220), 13);
+            g.Text("\u9EC4: \u539F\u5411\u91CF  \u767D: \u5F52\u4E00\u5316\u5411\u91CF", new Vec2(12, 30), new Color(155, 195, 230, 210), 12);
+            g.Text("yaw=" + Vec3AxisOrbit.Fmt(this._yaw) + "  pitch=" + Vec3AxisOrbit.Fmt(this._pitch) + "  zoom=" + Vec3AxisOrbit.Fmt(this._zoom), new Vec2(12, 48), new Color(130, 150, 175, 210), 12);
         }
         OnDispose() {
         }

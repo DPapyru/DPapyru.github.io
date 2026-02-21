@@ -263,17 +263,18 @@ async function main() {
     await page.click('#file-list .file-item:has-text("anims/swing.animcs")');
     await page.evaluate(() => {
         globalThis.__tmlIdeDebug.setEditorText([
-            'using Terraria;',
+            'using AnimRuntime;',
+            'using AnimRuntime.Math;',
             '',
             'public class DemoAnim',
             '{',
-            '    public void Tick(Player player)',
+            '    public void Tick(ICanvas2D g, AnimContext ctx)',
             '    {',
-            '        player.',
+            '        AnimGeom.',
             '    }',
             '}'
         ].join('\n'));
-        globalThis.__tmlIdeDebug.setCursorAfterText('player.');
+        globalThis.__tmlIdeDebug.setCursorAfterText('AnimGeom.');
     });
     await page.waitForFunction(() => {
         const node = document.querySelector('#status-language');
@@ -283,8 +284,11 @@ async function main() {
         const items = await globalThis.__tmlIdeDebug.requestCompletionsAtCursor(200);
         return Array.isArray(items) ? items.map((item) => String(item.label || '')) : [];
     });
-    if (!completionLabels.includes('AddBuff')) {
-        throw new Error(`动画 C# 补全未命中 AddBuff，前 30 项: ${JSON.stringify(completionLabels.slice(0, 30))}`);
+    if (!completionLabels.includes('DrawAxes')) {
+        throw new Error(`动画 C# 补全未命中 DrawAxes，前 30 项: ${JSON.stringify(completionLabels.slice(0, 30))}`);
+    }
+    if (completionLabels.includes('AddBuff')) {
+        throw new Error(`动画 C# 补全不应出现 AddBuff，前 30 项: ${JSON.stringify(completionLabels.slice(0, 30))}`);
     }
     await page.screenshot({ path: path.join(outDir, '13-animation-completion.png'), fullPage: true });
 

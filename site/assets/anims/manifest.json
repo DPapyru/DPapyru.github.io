@@ -1,17 +1,40 @@
 {
   "schemaVersion": 1,
   "sources": [
+    "anims/animgeom-toolkit-recipes.cs",
     "anims/demo-basic.cs",
     "anims/demo-eoc-ai.cs",
     "anims/demo-math-transform.cs",
     "anims/demo-mode-state.cs",
+    "anims/mat4-trs-compose.cs",
+    "anims/mat4-view-projection.cs",
     "anims/matrix-mat4-transform.cs",
+    "anims/vec2-basic-ops.cs",
+    "anims/vec2-project-decompose.cs",
     "anims/vec3-axis-orbit.cs",
     "anims/vector-add-resolution.cs",
     "anims/vector-basic.cs",
     "anims/vector-move.cs"
   ],
   "entries": {
+    "anims/animgeom-toolkit-recipes.cs": {
+      "js": "animgeom-toolkit-recipes.js",
+      "entry": "animgeom-toolkit-recipes",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 1.55,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "坐标轴+箭头"
+          },
+          {
+            "value": 1,
+            "text": "轨迹采样"
+          }
+        ]
+      }
+    },
     "anims/demo-basic.cs": {
       "js": "demo-basic.js",
       "entry": "demo-basic"
@@ -80,6 +103,50 @@
         ]
       }
     },
+    "anims/mat4-trs-compose.cs": {
+      "js": "mat4-trs-compose.js",
+      "entry": "mat4-trs-compose",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 2.05,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "TRS复合"
+          },
+          {
+            "value": 1,
+            "text": "仅平移"
+          },
+          {
+            "value": 2,
+            "text": "仅旋转"
+          },
+          {
+            "value": 3,
+            "text": "仅缩放"
+          }
+        ]
+      }
+    },
+    "anims/mat4-view-projection.cs": {
+      "js": "mat4-view-projection.js",
+      "entry": "mat4-view-projection",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 2,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "透视+视图"
+          },
+          {
+            "value": 1,
+            "text": "仅视图"
+          }
+        ]
+      }
+    },
     "anims/matrix-mat4-transform.cs": {
       "js": "matrix-mat4-transform.js",
       "entry": "matrix-mat4-transform",
@@ -102,6 +169,46 @@
           {
             "value": 3,
             "text": "缩放"
+          }
+        ]
+      }
+    },
+    "anims/vec2-basic-ops.cs": {
+      "js": "vec2-basic-ops.js",
+      "entry": "vec2-basic-ops",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 1.5,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "加法"
+          },
+          {
+            "value": 1,
+            "text": "减法"
+          },
+          {
+            "value": 2,
+            "text": "缩放"
+          }
+        ]
+      }
+    },
+    "anims/vec2-project-decompose.cs": {
+      "js": "vec2-project-decompose.js",
+      "entry": "vec2-project-decompose",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 1.55,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "投影"
+          },
+          {
+            "value": 1,
+            "text": "分解"
           }
         ]
       }

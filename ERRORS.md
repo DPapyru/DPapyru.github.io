@@ -1680,3 +1680,75 @@
 - 根因：`vite` 仅声明在 `tml-ide-app/package.json` 的 `devDependencies`，但 deploy workflow 之前只在仓库根目录执行 `npm ci`，未安装 `tml-ide-app` 依赖。
 - 修复：在 `.github/workflows/deploy.yml` 的依赖安装步骤新增 `tml-ide-app` 子项目安装（优先 `npm --prefix tml-ide-app ci`，无锁文件时回退 `npm --prefix tml-ide-app install`）。
 - 本次按用户要求在 `main` 工作区直接修改（未使用工作树）。
+
+### 验证记录 [2026-02-22 01:29]：Markdown 写作 IDE AnimCS 实时预览桥接与语法/内容对齐
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/viewer-studio-preview-animcs.test.js`：通过
+- `node --test site/tooling/scripts/animcs-js-runtime-resolver.test.js`：通过
+- `node --test site/tooling/scripts/animcs-preview-bridge-contract.test.js`：通过
+- `node --test site/tooling/scripts/animcs-compiler-feature-gates.test.js`：通过
+- `ANIMCS_AST_INTEGRATION=1 node --test site/tooling/scripts/animcs-compiler-ast.test.js`：通过
+- `node --test site/tooling/scripts/article-studio-anim-preview-payload.test.js`：通过
+- `dotnet build site/tooling/tools/animcs-preview-bridge/AnimcsPreviewBridge.csproj -c Release`：通过
+- `npm run build:animcs`：通过
+- `npm run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-anim-realtime-acceptance.mjs`：通过（桌面视口，含模拟输入/点击/截图）
+- `npm run check-generated`：失败（`gallery-check` 报错：`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`，为仓库既有问题）
+
+**备注**：
+- 浏览器验收产物：`test-results/tml-ide-anim-realtime-acceptance/report.json` 与 4 张关键步骤截图：
+  - `test-results/tml-ide-anim-realtime-acceptance/01-compile-success-preview.png`
+  - `test-results/tml-ide-anim-realtime-acceptance/02-realtime-refresh-after-edit.png`
+  - `test-results/tml-ide-anim-realtime-acceptance/03-compile-error-blocked-preview.png`
+  - `test-results/tml-ide-anim-realtime-acceptance/04-recovered-replay.png`
+- 本地验收脚本依赖 `playwright` 运行时，执行了 `npm install --no-save playwright`（未写入依赖声明）。
+
+### 验证记录 [2026-02-22 06:15]：动画文件与普通 C# 文件补全域隔离
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `node --check tml-ide-app/src/main.js`：通过
+- `node --check tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+- `node --check tmp-playwright/tml-ide-full-ui-audit.mjs`：通过
+- `npm --prefix tml-ide-app test -- animation-csharp-support.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入/点击，动画补全断言改为 `DrawAxes`，并反向断言不出现 `AddBuff`）
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-full-ui-audit.mjs`：失败（脚本读取 `git show main:site/pages/article-studio.html`，当前 `main` 无该路径）
+
+**备注**：
+- 本次核心变更在 `tml-ide-app/src/main.js`：按文件路径区分补全档位，动画文件走动画域补全（AnimContext/ICanvas2D/Vec2/Vec3/Mat4/MathF/AnimGeom 等），普通 C# 继续走 tModLoader API 分析。
+- 同步更新了 Playwright 验收脚本断言：
+  - `tmp-playwright/tml-ide-unified-acceptance.mjs`
+  - `tmp-playwright/tml-ide-full-ui-audit.mjs`
+
+### 验证补跑 [2026-02-22 06:20]：动画补全域细化（支持 `ctx.Input.` 识别）
+
+**级别**：工作树任务补跑
+
+**命令与结果**：
+- `node --check tml-ide-app/src/main.js`：通过
+- `npm --prefix tml-ide-app test -- animation-csharp-support.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+
+**备注**：
+- 本轮对动画补全 owner 解析增加链式场景（`ctx.Input.` -> `AnimInput`）。
+
+### 验证补跑 [2026-02-22 06:40]：Anim 实时预览浏览器验收修正（Explorer 动画路径识别）
+
+**级别**：工作树任务补跑
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-anim-preview-payload.test.js`：通过
+- `npm run build`：通过（后台执行并记录退出码 `0`）
+- `npm run check-generated`：失败（`gallery-check` 报错：`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`，为仓库既有问题）
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-anim-realtime-acceptance.mjs`：通过（桌面视口，含模拟输入/点击/截图）
+
+**备注**：
+- 修复了 Explorer 资源扫描漏检：`{{anim:...}}` 与 `animcs` 代码块首行 `anims/*.cs` 现在会出现在资源树，可直接右键预览/编辑。
+- 本地验收环境 `preview` 下 `/site/content/*` 为 404，验收脚本补充了 `anims/demo-basic.cs` 路由 mock，确保可复现“打开 C# 编辑器 -> 实时编译 -> 报错中断 -> 恢复播放”全流程。
+- 浏览器验收产物：`test-results/tml-ide-anim-realtime-acceptance/report.json` 与 4 张步骤截图（`01`~`04`）。

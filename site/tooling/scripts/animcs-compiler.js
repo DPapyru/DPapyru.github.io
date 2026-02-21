@@ -18,10 +18,6 @@ function validateFeatures(source) {
     if (/\btry\b/.test(text) || /\bcatch\b/.test(text)) {
         errors.push('try/catch is not supported');
     }
-    if (/\bswitch\b/.test(text)) {
-        errors.push('switch is not supported');
-    }
-
     return errors;
 }
 

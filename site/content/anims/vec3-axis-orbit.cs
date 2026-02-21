@@ -63,12 +63,19 @@ public sealed class Vec3AxisOrbit : IAnimScript
         DrawArrow3(g, view * new Vec3(0f, 0f, 0f), view * new Vec3(0f, 1.2f, 0f), new Color(120, 255, 140, 240), 2f, center, scale);
         DrawArrow3(g, view * new Vec3(0f, 0f, 0f), view * new Vec3(0f, 0f, 1.2f), new Color(120, 170, 255, 240), 2f, center, scale);
 
+        var orbit = new Vec3(MathF.Cos(_ctx.Time * 0.9f), 0.35f * MathF.Sin(_ctx.Time * 0.6f), MathF.Sin(_ctx.Time * 0.9f));
+        var orbitLen = MathF.Sqrt(orbit.X * orbit.X + orbit.Y * orbit.Y + orbit.Z * orbit.Z);
+        var normalizedOrbit = orbitLen > 0.0001f ? orbit / orbitLen : new Vec3(0f, 0f, 0f);
+        DrawArrow3(g, view * new Vec3(0f, 0f, 0f), view * orbit, new Color(255, 210, 120, 240), 2f, center, scale);
+        DrawArrow3(g, view * new Vec3(0f, 0f, 0f), view * normalizedOrbit, new Color(255, 255, 255, 220), 1.6f, center, scale);
+
         g.Text("X", Project(view * new Vec3(1.35f, 0f, 0f), center, scale), new Color(255, 140, 140), 14f);
         g.Text("Y", Project(view * new Vec3(0f, 1.35f, 0f), center, scale), new Color(150, 255, 170), 14f);
         g.Text("Z", Project(view * new Vec3(0f, 0f, 1.35f), center, scale), new Color(150, 190, 255), 14f);
 
-        g.Text("右手系 3D 坐标轴（拖拽旋转，滚轮缩放）", new Vec2(12f, 12f), new Color(220, 230, 240, 220), 13f);
-        g.Text("yaw=" + Fmt(_yaw) + "  pitch=" + Fmt(_pitch) + "  zoom=" + Fmt(_zoom), new Vec2(12f, 30f), new Color(155, 195, 230, 210), 12f);
+        g.Text("Vec3 Axis Orbit（拖拽旋转，滚轮缩放）", new Vec2(12f, 12f), new Color(220, 230, 240, 220), 13f);
+        g.Text("黄: 原向量  白: 归一化向量", new Vec2(12f, 30f), new Color(155, 195, 230, 210), 12f);
+        g.Text("yaw=" + Fmt(_yaw) + "  pitch=" + Fmt(_pitch) + "  zoom=" + Fmt(_zoom), new Vec2(12f, 48f), new Color(130, 150, 175, 210), 12f);
     }
 
     public void OnDispose()

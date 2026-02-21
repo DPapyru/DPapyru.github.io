@@ -15,6 +15,11 @@
     const MAX_CSHARP_FILE_SIZE = 200 * 1024;
     const MAX_CSHARP_COUNT = 5;
     const FLOWCHART_REALTIME_DEBOUNCE_MS = 500;
+    const ANIMCS_BRIDGE_STORAGE_KEY = 'articleStudioAnimBridgeEndpoint.v1';
+    const ANIMCS_DEFAULT_BRIDGE_ENDPOINT = 'http://127.0.0.1:5078';
+    const ANIMCS_BRIDGE_CANDIDATE_ENDPOINTS = [ANIMCS_DEFAULT_BRIDGE_ENDPOINT, 'http://127.0.0.1:5178'];
+    const ANIMCS_COMPILE_DEBOUNCE_MS = 400;
+    const ANIMCS_COMPILE_TIMEOUT_MS = 8000;
 
     const dom = {
         markdown: document.getElementById('studio-markdown'),
@@ -76,6 +81,8 @@
         flowchartSourceReset: document.getElementById('studio-flowchart-source-reset'),
         status: document.getElementById('studio-status'),
         stats: document.getElementById('studio-stats'),
+        animBridgeStatus: document.getElementById('studio-anim-bridge-status'),
+        animCompileStatus: document.getElementById('studio-anim-compile-status'),
         currentPath: document.getElementById('studio-current-path'),
         breadcrumbPath: document.getElementById('studio-breadcrumb-path'),
         editorPath: document.getElementById('studio-editor-path'),
@@ -125,6 +132,10 @@
         csharpEditorPreviewCode: document.getElementById('studio-csharp-editor-preview-code'),
         csharpEditorSave: document.getElementById('studio-csharp-editor-save'),
         csharpEditorCancel: document.getElementById('studio-csharp-editor-cancel'),
+        csharpBridgeEndpoint: document.getElementById('studio-csharp-bridge-endpoint'),
+        csharpBridgeSave: document.getElementById('studio-csharp-bridge-save'),
+        csharpBridgeReset: document.getElementById('studio-csharp-bridge-reset'),
+        csharpCompileHint: document.getElementById('studio-csharp-compile-hint'),
         metaTitle: document.getElementById('studio-meta-title'),
         metaAuthor: document.getElementById('studio-meta-author'),
         metaTopic: document.getElementById('studio-meta-topic'),
@@ -181,6 +192,11 @@
         csharpSymbolEntries: [],
         csharpEditorTargetId: '',
         csharpEditorDraft: '',
+        compiledAnims: {},
+        animCompileErrors: {},
+        animBridgeEndpoint: ANIMCS_DEFAULT_BRIDGE_ENDPOINT,
+        animBridgeConnected: false,
+        animCompileStatus: '未激活',
         preflightPending: false,
         previewImageNoticeEnabled: true,
         isDirectPreview: false,
@@ -239,6 +255,8 @@
     let saveTimer = 0;
     let previewSyncTimer = 0;
     let flowchartRealtimeTimer = 0;
+    let animCompileTimer = 0;
+    let animCompileRequestSeq = 0;
     let lastPreviewImageNotice = '';
     let lastPreviewImageNoticeAt = 0;
     let metaSyncLock = false;
@@ -400,6 +418,28 @@
             pushRef('csharp', resolvedPath);
         }
 
+        const animRegex = /\{\{anim:([^}\n]+)\}\}/g;
+        let animMatch = null;
+        while ((animMatch = animRegex.exec(source)) !== null) {
+            const rawPath = String(animMatch[1] || '').trim();
+            if (!rawPath) continue;
+            const resolvedPath = normalizePath(rawPath).replace(/^\.\//, '');
+            if (!isAnimSourcePath(resolvedPath)) continue;
+            pushRef('csharp', resolvedPath);
+        }
+
+        const animcsRegex = /```animcs\s*([\s\S]*?)```/g;
+        let animcsMatch = null;
+        while ((animcsMatch = animcsRegex.exec(source)) !== null) {
+            const body = String(animcsMatch[1] || '');
+            const firstLine = body.split(/\r?\n/).map(function (line) {
+                return String(line || '').trim();
+            }).find(Boolean) || '';
+            const resolvedPath = normalizePath(firstLine).replace(/^\.\//, '');
+            if (!isAnimSourcePath(resolvedPath)) continue;
+            pushRef('csharp', resolvedPath);
+        }
+
         return refs;
     }
 
@@ -531,6 +571,79 @@
         value = value.replace(/^site\/content\//i, '').replace(/^content\//i, '');
         value = value.replace(/\/{2,}/g, '/');
         return value;
+    }
+
+    function normalizeAnimSourcePath(input) {
+        return normalizePath(input || '').replace(/^\.\//, '');
+    }
+
+    function isAnimSourcePath(input) {
+        const normalized = normalizeAnimSourcePath(input);
+        if (!normalized) return false;
+        if (!/^anims\//i.test(normalized)) return false;
+        if (!/\.cs$/i.test(normalized)) return false;
+        if (/(^|\/)\.\.(\/|$)/.test(normalized)) return false;
+        return true;
+    }
+
+    function normalizeAnimBridgeEndpoint(input) {
+        let value = String(input || '').trim();
+        if (!value) return '';
+        if (!/^https?:\/\//i.test(value)) {
+            value = `http://${value}`;
+        }
+
+        try {
+            const parsed = new URL(value);
+            if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+                return '';
+            }
+            return parsed.toString().replace(/\/+$/, '');
+        } catch (_) {
+            return '';
+        }
+    }
+
+    function readStoredAnimBridgeEndpoint() {
+        try {
+            return normalizeAnimBridgeEndpoint(localStorage.getItem(ANIMCS_BRIDGE_STORAGE_KEY) || '');
+        } catch (_) {
+            return '';
+        }
+    }
+
+    function persistAnimBridgeEndpoint(endpoint) {
+        try {
+            localStorage.setItem(ANIMCS_BRIDGE_STORAGE_KEY, String(endpoint || ''));
+        } catch (_) {
+            // ignore storage errors
+        }
+    }
+
+    function renderAnimBridgeStatusline() {
+        const endpoint = normalizeAnimBridgeEndpoint(state.animBridgeEndpoint) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+        const connected = !!state.animBridgeConnected;
+        if (dom.animBridgeStatus) {
+            dom.animBridgeStatus.textContent = connected
+                ? `AnimBridge: 已连接 ${endpoint}`
+                : `AnimBridge: 未连接 ${endpoint}`;
+        }
+        if (dom.animCompileStatus) {
+            dom.animCompileStatus.textContent = `Anim预览: ${String(state.animCompileStatus || '未激活')}`;
+        }
+        if (dom.csharpBridgeEndpoint && document.activeElement !== dom.csharpBridgeEndpoint) {
+            dom.csharpBridgeEndpoint.value = endpoint;
+        }
+        if (dom.csharpCompileHint) {
+            dom.csharpCompileHint.textContent = connected
+                ? `桥接可用：${endpoint}`
+                : '仅对 anims/*.cs 启用实时编译预览。';
+        }
+    }
+
+    function setAnimCompileStatus(text) {
+        state.animCompileStatus = String(text || '').trim() || '未激活';
+        renderAnimBridgeStatusline();
     }
 
     function ensureMarkdownPath(input) {
@@ -1625,6 +1738,9 @@
         state.uploadedMedia = [];
         state.uploadedCsharpFiles = [];
         state.csharpSymbolEntries = [];
+        state.compiledAnims = {};
+        state.animCompileErrors = {};
+        setAnimCompileStatus('未激活');
         closeCsharpEditorModal();
 
         renderUploadedImages();
@@ -1633,6 +1749,7 @@
         renderUploadedCsharpFiles();
         renderExplorerPanels();
         scheduleSave();
+        syncViewerPreview(false);
 
         if (!silent) {
             setStatus(reason ? `已清空已上传附件（${reason}）` : '已清空已上传附件');
@@ -2223,8 +2340,231 @@
         }
     }
 
+    function resolveAnimBridgeCandidates(preferredEndpoint) {
+        const candidates = [];
+        const seen = new Set();
+        const pushCandidate = function (value) {
+            const normalized = normalizeAnimBridgeEndpoint(value);
+            if (!normalized || seen.has(normalized)) return;
+            seen.add(normalized);
+            candidates.push(normalized);
+        };
+
+        pushCandidate(preferredEndpoint);
+        pushCandidate(state.animBridgeEndpoint);
+        ANIMCS_BRIDGE_CANDIDATE_ENDPOINTS.forEach(pushCandidate);
+        return candidates;
+    }
+
+    async function checkAnimBridgeHealth(endpoint) {
+        const controller = new AbortController();
+        const timer = setTimeout(function () {
+            controller.abort();
+        }, 1500);
+
+        try {
+            const response = await fetch(`${endpoint}/health`, {
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const payload = await response.json().catch(function () { return {}; });
+            if (!payload || payload.ok !== true) {
+                throw new Error('健康检查失败');
+            }
+            return {
+                ok: true,
+                version: String(payload.version || '')
+            };
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
+    async function connectAnimBridge(options) {
+        const opts = options && typeof options === 'object' ? options : {};
+        const candidates = resolveAnimBridgeCandidates(opts.preferredEndpoint);
+        if (candidates.length === 0) {
+            state.animBridgeConnected = false;
+            renderAnimBridgeStatusline();
+            return '';
+        }
+
+        let lastError = null;
+        for (const endpoint of candidates) {
+            try {
+                await checkAnimBridgeHealth(endpoint);
+                state.animBridgeEndpoint = endpoint;
+                state.animBridgeConnected = true;
+                persistAnimBridgeEndpoint(endpoint);
+                renderAnimBridgeStatusline();
+                return endpoint;
+            } catch (err) {
+                lastError = err;
+            }
+        }
+
+        state.animBridgeConnected = false;
+        renderAnimBridgeStatusline();
+        if (!opts.silent && lastError) {
+            setStatus(`AnimBridge 不可用：${lastError && lastError.message ? lastError.message : String(lastError)}`);
+        }
+        return '';
+    }
+
+    function normalizeAnimCompileDiagnostics(input) {
+        if (!Array.isArray(input)) return [];
+        return input.map(function (item) {
+            return String(item || '').trim();
+        }).filter(Boolean);
+    }
+
+    function setCompiledAnimOutput(animPath, moduleJs, profile) {
+        const normalized = normalizeAnimSourcePath(animPath);
+        if (!isAnimSourcePath(normalized)) return;
+        state.compiledAnims[normalized] = {
+            moduleJs: String(moduleJs || ''),
+            profile: profile && typeof profile === 'object' ? profile : null,
+            updatedAt: new Date().toISOString()
+        };
+        delete state.animCompileErrors[normalized];
+    }
+
+    function setCompiledAnimError(animPath, diagnostics) {
+        const normalized = normalizeAnimSourcePath(animPath);
+        if (!isAnimSourcePath(normalized)) return;
+        const safeDiagnostics = normalizeAnimCompileDiagnostics(diagnostics);
+        delete state.compiledAnims[normalized];
+        state.animCompileErrors[normalized] = {
+            diagnostics: safeDiagnostics.length ? safeDiagnostics : ['编译失败'],
+            updatedAt: new Date().toISOString()
+        };
+    }
+
+    function removeCompiledAnimState(animPath) {
+        const normalized = normalizeAnimSourcePath(animPath);
+        if (!normalized) return;
+        delete state.compiledAnims[normalized];
+        delete state.animCompileErrors[normalized];
+    }
+
+    function getActiveCsharpEditorItem() {
+        return getUploadedCsharpFileById(state.csharpEditorTargetId);
+    }
+
+    function getActiveCsharpEditorAnimPath() {
+        const item = getActiveCsharpEditorItem();
+        if (!item) return '';
+        const normalized = normalizeAnimSourcePath(item.assetPath || '');
+        return isAnimSourcePath(normalized) ? normalized : '';
+    }
+
+    async function compileAnimDraftNow(animPath, sourceText) {
+        const requestId = String(++animCompileRequestSeq);
+        const normalized = normalizeAnimSourcePath(animPath);
+        if (!isAnimSourcePath(normalized)) {
+            return;
+        }
+
+        setAnimCompileStatus(`编译中 ${normalized}`);
+        const endpoint = await connectAnimBridge({ silent: true });
+        if (!endpoint) {
+            setCompiledAnimError(normalized, ['未检测到本地 AnimBridge，请先启动 dotnet 桥接服务']);
+            setAnimCompileStatus(`桥接不可用 ${normalized}`);
+            syncViewerPreview(false);
+            return;
+        }
+
+        const controller = new AbortController();
+        const timeout = setTimeout(function () {
+            controller.abort();
+        }, ANIMCS_COMPILE_TIMEOUT_MS);
+
+        try {
+            const response = await fetch(`${endpoint}/api/animcs/compile`, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sourcePath: normalized,
+                    sourceText: String(sourceText || ''),
+                    requestId: requestId
+                }),
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const payload = await response.json().catch(function () { return null; });
+            if (requestId !== String(animCompileRequestSeq)) {
+                return;
+            }
+
+            const diagnostics = normalizeAnimCompileDiagnostics(payload && payload.diagnostics);
+            const moduleJs = String(payload && payload.moduleJs || '');
+            if (!payload || payload.ok !== true || !moduleJs) {
+                setCompiledAnimError(normalized, diagnostics.length ? diagnostics : ['编译失败：未生成 JS 模块']);
+                setAnimCompileStatus(`编译失败 ${normalized}`);
+                syncViewerPreview(false);
+                return;
+            }
+
+            setCompiledAnimOutput(normalized, moduleJs, payload.profile && typeof payload.profile === 'object' ? payload.profile : null);
+            state.animBridgeConnected = true;
+            setAnimCompileStatus(`编译成功 ${normalized}`);
+            syncViewerPreview(false);
+        } catch (err) {
+            if (requestId !== String(animCompileRequestSeq)) {
+                return;
+            }
+            const reason = err && err.name === 'AbortError'
+                ? `编译超时（>${ANIMCS_COMPILE_TIMEOUT_MS}ms）`
+                : (err && err.message ? err.message : String(err));
+            setCompiledAnimError(normalized, [reason]);
+            setAnimCompileStatus(`编译失败 ${normalized}`);
+            state.animBridgeConnected = false;
+            renderAnimBridgeStatusline();
+            syncViewerPreview(false);
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
+
+    function scheduleAnimDraftCompile(options) {
+        const opts = options && typeof options === 'object' ? options : {};
+        const animPath = getActiveCsharpEditorAnimPath();
+        if (!animPath) {
+            setAnimCompileStatus('未激活（当前文件不在 anims/*.cs）');
+            return;
+        }
+
+        const sourceText = String(state.csharpEditorDraft || '');
+        if (animCompileTimer) {
+            clearTimeout(animCompileTimer);
+        }
+
+        const runCompile = function () {
+            animCompileTimer = 0;
+            compileAnimDraftNow(animPath, sourceText);
+        };
+        if (opts.immediate) {
+            runCompile();
+            return;
+        }
+        animCompileTimer = setTimeout(runCompile, ANIMCS_COMPILE_DEBOUNCE_MS);
+    }
+
     function closeCsharpEditorModal(options) {
         const keepDraft = !!(options && options.keepDraft);
+        if (animCompileTimer) {
+            clearTimeout(animCompileTimer);
+            animCompileTimer = 0;
+        }
 
         if (dom.csharpEditorModal) {
             dom.csharpEditorModal.classList.remove('active');
@@ -2276,6 +2616,8 @@
             const length = dom.csharpEditorText.value.length;
             dom.csharpEditorText.setSelectionRange(length, length);
         }
+        renderAnimBridgeStatusline();
+        scheduleAnimDraftCompile({ immediate: true });
     }
 
     async function saveCsharpEditorModalChanges() {
@@ -2315,6 +2657,16 @@
         renderUploadedCsharpFiles();
         renderPreview();
         scheduleSave();
+        const savedAnimPath = normalizeAnimSourcePath(item.assetPath || '');
+        if (isAnimSourcePath(savedAnimPath)) {
+            compileAnimDraftNow(savedAnimPath, nextContent).catch(function (err) {
+                setCompiledAnimError(savedAnimPath, [err && err.message ? err.message : String(err)]);
+                setAnimCompileStatus(`编译失败 ${savedAnimPath}`);
+                syncViewerPreview(false);
+            });
+        } else {
+            setAnimCompileStatus('未激活（当前文件不在 anims/*.cs）');
+        }
         closeCsharpEditorModal();
         setStatus(`已保存 C# 编辑：${item.name}`);
     }
@@ -2355,10 +2707,12 @@
                 state.uploadedCsharpFiles = state.uploadedCsharpFiles.filter(function (it) {
                     return it.id !== item.id;
                 });
+                removeCompiledAnimState(item.assetPath || '');
                 refreshCsharpSymbolOptions();
                 renderUploadedCsharpFiles();
                 renderExplorerPanels();
                 scheduleSave();
+                syncViewerPreview(false);
                 setStatus(`已移除 C# 文件：${item.name}`);
             });
 
@@ -3484,6 +3838,45 @@
                     resourceId: ''
                 });
             }
+
+            const animRegex = /\{\{anim:([^}\n]+)\}\}/g;
+            let animMatch = null;
+            while ((animMatch = animRegex.exec(source)) !== null) {
+                const rawPath = String(animMatch[1] || '').trim();
+                const resolvedPath = normalizePath(rawPath).replace(/^\.\//, '');
+                if (!isAnimSourcePath(resolvedPath)) continue;
+                const key = `csharp:${resolvedPath}`;
+                if (resourcePathKindSet.has(key)) continue;
+                resourcePathKindSet.add(key);
+                upsertEntry({
+                    key: `ref:csharp:${resolvedPath}`,
+                    path: resolvedPath,
+                    title: getFilenameFromPath(resolvedPath) || resolvedPath,
+                    kind: 'csharp',
+                    resourceId: ''
+                });
+            }
+
+            const animcsRegex = /```animcs\s*([\s\S]*?)```/g;
+            let animcsMatch = null;
+            while ((animcsMatch = animcsRegex.exec(source)) !== null) {
+                const body = String(animcsMatch[1] || '');
+                const firstLine = body.split(/\r?\n/).map(function (line) {
+                    return String(line || '').trim();
+                }).find(Boolean) || '';
+                const resolvedPath = normalizePath(firstLine).replace(/^\.\//, '');
+                if (!isAnimSourcePath(resolvedPath)) continue;
+                const key = `csharp:${resolvedPath}`;
+                if (resourcePathKindSet.has(key)) continue;
+                resourcePathKindSet.add(key);
+                upsertEntry({
+                    key: `ref:csharp:${resolvedPath}`,
+                    path: resolvedPath,
+                    title: getFilenameFromPath(resolvedPath) || resolvedPath,
+                    kind: 'csharp',
+                    resourceId: ''
+                });
+            }
         };
 
         const upsertEntry = function (item) {
@@ -4234,7 +4627,42 @@
         }
     }
 
-    function previewExplorerResource(contextValue) {
+    async function ensureLocalCsharpResource(pathValue, displayName) {
+        const normalized = normalizePath(pathValue || '');
+        if (!normalized || !/\.cs$/i.test(normalized)) return null;
+
+        const existing = (Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : []).find(function (entry) {
+            return normalizePath(entry && entry.assetPath || '') === normalized;
+        });
+        if (existing) return existing;
+
+        const response = await fetch(`/site/content/${encodePathForUrl(normalized)}`, { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const content = String(await response.text() || '').replace(/\r\n/g, '\n');
+        const fileName = String(displayName || getFilenameFromPath(normalized) || 'source.cs');
+        const localItem = {
+            id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+            name: fileName,
+            size: Number(content.length || 0),
+            assetPath: normalized,
+            content: content,
+            symbols: extractCSharpSymbols(content),
+            checkState: 'warn',
+            checkMessage: '站点源码已加载为本地副本',
+            preflightPending: false
+        };
+        state.uploadedCsharpFiles.push(localItem);
+        refreshCsharpSymbolOptions();
+        renderUploadedCsharpFiles();
+        renderExplorerPanels();
+        scheduleSave();
+        return localItem;
+    }
+
+    async function previewExplorerResource(contextValue) {
         const resolved = resolveExplorerResourceContext(contextValue);
         if (!resolved) {
             setStatus('未找到可预览资源');
@@ -4243,14 +4671,23 @@
 
         if (resolved.kind === 'csharp') {
             const localId = String(resolved.item.id || '').trim();
-            if (localId) {
-                openCsharpEditorModal(localId);
-                setStatus(`已打开 C# 编辑：${resolved.item.name}`);
+            let localItem = localId ? getUploadedCsharpFileById(localId) : null;
+            if (!localItem) {
+                try {
+                    localItem = await ensureLocalCsharpResource(resolved.path, resolved.item.name);
+                } catch (err) {
+                    const sourceUrl = `/site/content/${encodePathForUrl(resolved.path)}`;
+                    window.open(sourceUrl, '_blank', 'noopener,noreferrer');
+                    setStatus(`加载 C# 本地副本失败，已打开源码：${err && err.message ? err.message : String(err)}`);
+                    return;
+                }
+            }
+            if (!localItem) {
+                setStatus(`无法打开 C# 编辑：${resolved.item.name}`);
                 return;
             }
-            const sourceUrl = `/site/content/${encodePathForUrl(resolved.path)}`;
-            window.open(sourceUrl, '_blank', 'noopener,noreferrer');
-            setStatus(`已打开 C# 源文件：${resolved.item.name}`);
+            openCsharpEditorModal(localItem.id);
+            setStatus(`已打开 C# 编辑：${localItem.name}`);
             return;
         }
 
@@ -4258,6 +4695,12 @@
         const previewUrl = String(resolved.item.dataUrl || fallbackUrl);
         window.open(previewUrl, '_blank', 'noopener,noreferrer');
         setStatus(`已打开资源预览：${resolved.item.name}`);
+    }
+
+    function previewExplorerResourceSafely(contextValue) {
+        previewExplorerResource(contextValue).catch(function (err) {
+            setStatus(`资源预览失败：${err && err.message ? err.message : String(err)}`);
+        });
     }
 
     function removeExplorerResource(contextValue) {
@@ -4292,6 +4735,7 @@
             if (state.csharpEditorTargetId === resolved.item.id) {
                 closeCsharpEditorModal();
             }
+            removeCompiledAnimState(resolved.item.assetPath || resolved.path || '');
             state.uploadedCsharpFiles = (Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : []).filter(function (it) {
                 return String(it && it.id || '') !== String(resolved.item.id || '');
             });
@@ -4301,6 +4745,7 @@
 
         renderExplorerPanels();
         scheduleSave();
+        syncViewerPreview(false);
         setStatus(`已移除资源：${name}`);
     }
 
@@ -4319,11 +4764,11 @@
                 return;
             }
             if (key === 'preview-resource') {
-                previewExplorerResource(context);
+                previewExplorerResourceSafely(context);
                 return;
             }
             if (key === 'edit-csharp') {
-                previewExplorerResource({ ...context, kind: 'csharp' });
+                previewExplorerResourceSafely({ ...context, kind: 'csharp' });
                 return;
             }
             if (key === 'remove-resource') {
@@ -5144,6 +5589,11 @@
             if (typeof parsed.isDirectPreview === 'boolean') {
                 state.isDirectPreview = parsed.isDirectPreview;
             }
+            state.animBridgeEndpoint = normalizeAnimBridgeEndpoint(parsed.animBridgeEndpoint || readStoredAnimBridgeEndpoint() || ANIMCS_DEFAULT_BRIDGE_ENDPOINT) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+            state.animBridgeConnected = false;
+            state.compiledAnims = {};
+            state.animCompileErrors = {};
+            state.animCompileStatus = '未激活';
             state.explorerFilter = String(parsed.explorerFilter || '');
             const restoredFolders = {};
             Object.keys(ensureObject(parsed.explorerFolders)).forEach(function (folderPath) {
@@ -5215,6 +5665,7 @@
                 metadata: applyMetadataDefaults(state.metadata),
                 previewImageNoticeEnabled: !!state.previewImageNoticeEnabled,
                 isDirectPreview: !!state.isDirectPreview,
+                animBridgeEndpoint: normalizeAnimBridgeEndpoint(state.animBridgeEndpoint) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT,
                 explorerFilter: String(state.explorerFilter || ''),
                 explorerFolders: ensureObject(state.explorerFolders),
                 rightPanelTab: normalizeRightPanelTab(state.rightPanelTab),
@@ -5461,6 +5912,43 @@
         updateEditorContent(next, caret, caret);
     }
 
+    function buildCompiledAnimsPayload() {
+        const payload = {};
+        Object.keys(ensureObject(state.compiledAnims)).forEach(function (rawPath) {
+            const normalized = normalizeAnimSourcePath(rawPath);
+            if (!isAnimSourcePath(normalized)) return;
+
+            const entry = ensureObject(state.compiledAnims[rawPath]);
+            const moduleJs = String(entry.moduleJs || '');
+            if (!moduleJs) return;
+
+            payload[normalized] = {
+                moduleJs: moduleJs,
+                profile: entry.profile && typeof entry.profile === 'object' ? entry.profile : null,
+                updatedAt: String(entry.updatedAt || new Date().toISOString())
+            };
+        });
+        return payload;
+    }
+
+    function buildAnimCompileErrorsPayload() {
+        const payload = {};
+        Object.keys(ensureObject(state.animCompileErrors)).forEach(function (rawPath) {
+            const normalized = normalizeAnimSourcePath(rawPath);
+            if (!isAnimSourcePath(normalized)) return;
+
+            const entry = ensureObject(state.animCompileErrors[rawPath]);
+            const diagnostics = normalizeAnimCompileDiagnostics(entry.diagnostics);
+            if (diagnostics.length <= 0) return;
+
+            payload[normalized] = {
+                diagnostics: diagnostics,
+                updatedAt: String(entry.updatedAt || new Date().toISOString())
+            };
+        });
+        return payload;
+    }
+
     function buildViewerPreviewPayload() {
         let safeTargetPath = '怎么贡献/新文章.md';
         try {
@@ -5505,6 +5993,12 @@
                     return item.assetPath && item.content;
                 })
                 : [],
+            compiledAnims: buildCompiledAnimsPayload(),
+            animCompileErrors: buildAnimCompileErrorsPayload(),
+            animBridge: {
+                endpoint: normalizeAnimBridgeEndpoint(state.animBridgeEndpoint) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT,
+                connected: !!state.animBridgeConnected
+            },
             updatedAt: new Date().toISOString()
         };
     }
@@ -7325,6 +7819,13 @@
     function init() {
         loadState();
         loadAuthSession();
+        state.animBridgeEndpoint = normalizeAnimBridgeEndpoint(state.animBridgeEndpoint || readStoredAnimBridgeEndpoint() || ANIMCS_DEFAULT_BRIDGE_ENDPOINT) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+        persistAnimBridgeEndpoint(state.animBridgeEndpoint);
+        renderAnimBridgeStatusline();
+        connectAnimBridge({ silent: true }).catch(function () {
+            state.animBridgeConnected = false;
+            renderAnimBridgeStatusline();
+        });
         const consumedOauthHash = consumeOauthResultFromHash();
         const leftDocked = !!(dom.leftPanelModal && dom.leftPanelModal.classList.contains('studio-side-panel-modal--dock'));
         const rightDocked = !!(dom.rightPanelModal && dom.rightPanelModal.classList.contains('studio-side-panel-modal--dock'));
@@ -7889,6 +8390,53 @@
             dom.csharpEditorText.addEventListener('input', function () {
                 state.csharpEditorDraft = String(dom.csharpEditorText.value || '').replace(/\r\n/g, '\n');
                 renderCsharpEditorPreviewHighlight();
+                scheduleAnimDraftCompile({ immediate: false });
+            });
+        }
+
+        if (dom.csharpBridgeSave) {
+            dom.csharpBridgeSave.addEventListener('click', async function () {
+                const endpoint = normalizeAnimBridgeEndpoint(dom.csharpBridgeEndpoint ? dom.csharpBridgeEndpoint.value : state.animBridgeEndpoint);
+                if (!endpoint) {
+                    setStatus('AnimBridge 地址无效，请输入 http://127.0.0.1:5078 形式地址');
+                    renderAnimBridgeStatusline();
+                    return;
+                }
+
+                state.animBridgeEndpoint = endpoint;
+                persistAnimBridgeEndpoint(endpoint);
+                const connectedEndpoint = await connectAnimBridge({ preferredEndpoint: endpoint, silent: true });
+                if (connectedEndpoint) {
+                    setStatus(`AnimBridge 已连接：${connectedEndpoint}`);
+                    scheduleAnimDraftCompile({ immediate: true });
+                } else {
+                    setStatus(`AnimBridge 连接失败：${endpoint}`);
+                }
+            });
+        }
+
+        if (dom.csharpBridgeReset) {
+            dom.csharpBridgeReset.addEventListener('click', async function () {
+                state.animBridgeEndpoint = ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+                persistAnimBridgeEndpoint(state.animBridgeEndpoint);
+                renderAnimBridgeStatusline();
+                const connectedEndpoint = await connectAnimBridge({ preferredEndpoint: ANIMCS_DEFAULT_BRIDGE_ENDPOINT, silent: true });
+                if (connectedEndpoint) {
+                    setStatus(`AnimBridge 已恢复默认并连接：${connectedEndpoint}`);
+                    scheduleAnimDraftCompile({ immediate: true });
+                } else {
+                    setStatus('AnimBridge 默认地址不可用，请确认桥接服务已启动');
+                }
+            });
+        }
+
+        if (dom.csharpBridgeEndpoint) {
+            dom.csharpBridgeEndpoint.addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter') return;
+                event.preventDefault();
+                if (dom.csharpBridgeSave) {
+                    dom.csharpBridgeSave.click();
+                }
             });
         }
 
