@@ -1,0 +1,1124 @@
+/* ShaderToy-ish shell */
+.shaderpg-page .container {
+    max-width: min(1800px, 96vw);
+}
+
+.shaderpg-shell {
+    margin-top: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    overflow: hidden;
+}
+
+.shaderpg-modebar {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-color);
+}
+
+.shaderpg-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-color);
+}
+
+.shaderpg-topbar-left,
+.shaderpg-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.shaderpg-lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+}
+
+.shaderpg-lang-btn {
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.shaderpg-lang-btn.active {
+    background: var(--bg-color);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.shaderpg-mode-indicator {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 10px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.shaderpg-mode-indicator.is-hlsl {
+    border-color: color-mix(in srgb, var(--primary-color) 45%, var(--border-color));
+    color: var(--text-color);
+    background: color-mix(in srgb, var(--primary-color) 18%, transparent);
+}
+
+.shaderpg-mode-indicator.is-dp {
+    border-color: color-mix(in srgb, var(--accent-color) 45%, var(--border-color));
+    color: var(--text-color);
+    background: color-mix(in srgb, var(--accent-color) 18%, transparent);
+}
+
+.shaderpg-shell[data-mode="hlsl"] .shaderpg-mode-dp {
+    display: none !important;
+}
+
+.shaderpg-shell[data-mode="dp"] .shaderpg-mode-hlsl {
+    display: none !important;
+}
+
+.shaderpg-shell[data-mode="dp"] .shaderpg-main {
+    grid-template-columns: minmax(620px, 1fr) 620px;
+}
+
+.shaderpg-topbar-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.shaderpg-custom-aspect-group {
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-secondary);
+}
+
+.shaderpg-itime-group {
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-secondary);
+}
+
+.shaderpg-command-panel {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.shaderpg-command-header {
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+}
+
+.shaderpg-command-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.shaderpg-command-vars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.shaderpg-command-empty {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.shaderpg-command-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-color);
+    min-height: 34px;
+}
+
+.shaderpg-command-name {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-family: var(--font-family-tutorial);
+}
+
+.shaderpg-number {
+    width: 96px;
+    padding: 4px 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family-tutorial);
+    font-size: 12px;
+    text-align: center;
+}
+
+.shaderpg-number:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.shaderpg-stats {
+    font-family: var(--font-family-tutorial);
+    font-size: 12px;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    padding: 4px 10px;
+    background: var(--bg-secondary);
+}
+
+.shaderpg-main {
+    display: grid;
+    grid-template-columns: minmax(620px, 1fr) 620px;
+    gap: 0;
+    min-height: 620px;
+}
+
+.shaderpg-editor {
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    min-height: 620px;
+}
+
+.shaderpg-preview {
+    display: flex;
+    flex-direction: column;
+    min-height: 620px;
+    background: var(--bg-secondary);
+}
+
+.shaderpg-pass-tabs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    overflow-x: auto;
+}
+
+.shaderpg-pass-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.shaderpg-pass-tab[aria-selected="true"] {
+    border-color: var(--primary-color);
+    color: var(--text-color);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary-color) 55%, transparent);
+}
+
+.shaderpg-pass-tab[data-error="true"] {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--danger-color) 55%, transparent);
+}
+
+.shaderpg-pass-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.shaderpg-textarea--editor {
+    border: 0;
+    border-radius: 0;
+    background: #0c0c0d;
+    min-height: 0;
+    flex: 1;
+    resize: none;
+    padding: 12px;
+}
+
+.shaderpg-editor-surface {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    background: #0c0c0d;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.shaderpg-editor-stack {
+    position: relative;
+    flex: 1;
+    min-height: 260px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #0c0c0d;
+    --shaderpg-editor-font-family: var(--font-family-tutorial);
+    --shaderpg-editor-font-size: 13px;
+    --shaderpg-editor-line-height: 20px;
+    --shaderpg-editor-letter-spacing: 0;
+}
+
+.shaderpg-editor-highlight {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 12px;
+    overflow: hidden;
+    box-sizing: border-box;
+    pointer-events: none;
+    white-space: pre;
+    word-break: normal;
+    tab-size: 4;
+    font-family: var(--shaderpg-editor-font-family);
+    font-size: var(--shaderpg-editor-font-size);
+    line-height: var(--shaderpg-editor-line-height);
+    letter-spacing: var(--shaderpg-editor-letter-spacing);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-weight: 400;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+    font-kerning: none;
+    color: #d4d4d4;
+    user-select: none;
+    z-index: 1;
+}
+
+.shaderpg-editor-highlight-code {
+    display: block;
+    min-height: 100%;
+    white-space: inherit;
+    font: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    transform: translate(0, 0);
+    will-change: transform;
+}
+
+.shaderpg-textarea--editor {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    background: transparent;
+    color: transparent;
+    caret-color: #f1f1f1;
+}
+
+.shaderpg-autocomplete {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    z-index: 3;
+    min-width: 220px;
+    max-width: 360px;
+    max-height: 220px;
+    overflow: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    display: none;
+}
+
+.shaderpg-autocomplete.show {
+    display: block;
+}
+
+.shaderpg-autocomplete-item {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--text-color);
+    text-align: left;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-family: var(--font-family-tutorial);
+    cursor: pointer;
+}
+
+.shaderpg-autocomplete-item:hover,
+.shaderpg-autocomplete-item[data-selected="true"] {
+    background: color-mix(in srgb, var(--primary-color) 20%, transparent);
+}
+
+.shaderpg-token-keyword {
+    color: #c792ea;
+}
+
+.shaderpg-token-type {
+    color: #82aaff;
+}
+
+.shaderpg-token-function {
+    color: #89ddff;
+}
+
+.shaderpg-token-builtin {
+    color: #f78c6c;
+}
+
+.shaderpg-token-number {
+    color: #f2c94c;
+}
+
+.shaderpg-token-comment {
+    color: #6a9955;
+}
+
+.shaderpg-token-string {
+    color: #ecc48d;
+}
+
+.shaderpg-token-preproc {
+    color: #ff5370;
+}
+
+.shaderpg-console {
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-color);
+    padding: 8px 12px;
+}
+
+.shaderpg-console-title {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.shaderpg-console-body {
+    margin: 0;
+    font-family: var(--font-family-tutorial);
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    color: var(--text-secondary);
+    min-height: 54px;
+    max-height: 160px;
+    overflow: auto;
+}
+
+.shaderpg-panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.shaderpg-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+}
+
+.shaderpg-panel-title {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+.shaderpg-panel-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.shaderpg-inline-label {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.shaderpg-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+}
+
+.shaderpg-hint--footer {
+    border-top: 1px solid var(--border-color);
+    margin: 0;
+    padding: 10px 12px;
+    background: var(--bg-color);
+}
+
+.shaderpg-textarea {
+    width: 100%;
+    min-height: 260px;
+    resize: vertical;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family-tutorial);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+/* 覆盖通用 textarea 样式，确保编辑器稳定输入 */
+.shaderpg-textarea.shaderpg-textarea--editor {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    flex: 1;
+    resize: none;
+    border: 0;
+    border-radius: 0;
+    padding: 12px;
+    background: transparent;
+    color: transparent;
+    caret-color: #f1f1f1;
+    -webkit-text-fill-color: transparent;
+    font-family: var(--shaderpg-editor-font-family);
+    font-size: var(--shaderpg-editor-font-size);
+    line-height: var(--shaderpg-editor-line-height);
+    letter-spacing: var(--shaderpg-editor-letter-spacing);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-weight: 400;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+    font-kerning: none;
+    margin: 0;
+    box-sizing: border-box;
+    scrollbar-gutter: stable;
+    tab-size: 4;
+    white-space: pre;
+    overflow-wrap: normal;
+    word-break: normal;
+    z-index: 2;
+}
+
+.shaderpg-textarea.shaderpg-textarea--editor::placeholder {
+    color: rgba(122, 127, 135, 0.75);
+    -webkit-text-fill-color: rgba(122, 127, 135, 0.75);
+}
+
+.shaderpg-textarea.shaderpg-textarea--editor::selection {
+    background: rgba(112, 162, 255, 0.28);
+}
+
+.shaderpg-editor-highlight code {
+    color: #d4d4d4;
+}
+
+.shaderpg-export {
+    min-height: 220px;
+}
+
+.shaderpg-error {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+}
+
+.shaderpg-canvas-wrap {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background-color: #ffffff;
+    background-image:
+        linear-gradient(45deg, #000000 25%, transparent 25%, transparent 75%, #000000 75%, #000000),
+        linear-gradient(45deg, #000000 25%, transparent 25%, transparent 75%, #000000 75%, #000000);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+}
+
+.shaderpg-shell[data-bg-mode="white"] .shaderpg-canvas-wrap {
+    background: #ffffff;
+}
+
+.shaderpg-shell[data-bg-mode="black"] .shaderpg-canvas-wrap {
+    background: #000000;
+}
+
+.shaderpg-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.shaderpg-dp-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: none;
+    pointer-events: none;
+}
+
+.shaderpg-shell[data-mode="dp"] .shaderpg-dp-canvas {
+    display: block;
+}
+
+.shaderpg-shell[data-mode="dp"] #shaderpg-canvas {
+    visibility: hidden;
+}
+
+.shaderpg-status {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.shaderpg-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 12px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+}
+
+.shaderpg-shell[data-mode="dp"] .shaderpg-bottom {
+    grid-template-columns: minmax(420px, 1.2fr) minmax(320px, 0.8fr);
+}
+
+.shaderpg-dp-param-body {
+    min-height: 220px;
+    max-height: 360px;
+}
+
+.shaderpg-dp-log-body {
+    min-height: 220px;
+    max-height: 360px;
+}
+
+
+.shaderpg-dp-syntax-body {
+    min-height: 260px;
+    max-height: 420px;
+}
+
+.shaderpg-dp-api-body {
+    min-height: 240px;
+    max-height: 420px;
+}
+
+.shaderpg-dp-syntax-body code,
+.shaderpg-dp-api-body code {
+    color: inherit;
+}
+
+
+.shaderpg-dp-mode-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+}
+
+.shaderpg-dpapyru-label {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.shaderpg-dpapyru-editor {
+    min-height: 480px;
+    resize: vertical;
+}
+
+.shaderpg-dp-editor-surface {
+    position: relative;
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+}
+
+.shaderpg-dp-editor-stack {
+    min-height: 480px;
+}
+
+.shaderpg-dp-autocomplete {
+    z-index: 4;
+}
+
+.shaderpg-dpapyru-status {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.shaderpg-channels {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.shaderpg-channel-row {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 8px;
+    align-items: center;
+}
+
+.shaderpg-channel-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.shaderpg-textures {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.shaderpg-texture-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-color);
+}
+
+.shaderpg-texture-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.shaderpg-texture-meta {
+    font-size: 11px;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.shaderpg-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 12px 0;
+}
+
+.shaderpg-doc {
+    margin-top: 14px;
+}
+
+.shaderpg-doc-body {
+    margin-top: 10px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.shaderpg-doc-body h3 {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.shaderpg-doc-body h3:first-child {
+    margin-top: 0;
+}
+
+.shaderpg-doc-body p {
+    margin: 8px 0;
+}
+
+.shaderpg-doc-body ul,
+.shaderpg-doc-body ol {
+    margin: 8px 0;
+    padding-left: 24px;
+}
+
+.shaderpg-doc-body li {
+    margin: 4px 0;
+}
+
+.shaderpg-doc-body code {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    font-family: var(--font-family-tutorial);
+    font-size: 11px;
+}
+
+.shaderpg-doc-body strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.shaderpg-doc-body em {
+    color: var(--accent-color);
+    font-style: normal;
+}
+
+.shaderpg-doc-body pre {
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    overflow: auto;
+}
+
+.shaderpg-doc-body pre code {
+    padding: 0;
+    background: none;
+}
+
+@media (max-width: 1400px) {
+    .shaderpg-main {
+        grid-template-columns: minmax(560px, 1fr) 520px;
+        min-height: 560px;
+    }
+    .shaderpg-editor,
+    .shaderpg-preview {
+        min-height: 560px;
+    }
+}
+
+@media (max-width: 1100px) {
+    .shaderpg-main {
+        grid-template-columns: 1fr;
+    }
+    .shaderpg-editor {
+        border-right: 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .shaderpg-bottom {
+        grid-template-columns: 1fr;
+    }
+    .shaderpg-dpapyru-grid {
+        grid-template-columns: 1fr;
+    }
+    .shaderpg-itime-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .shaderpg-command-item {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .shaderpg-number {
+        width: min(96px, 26vw);
+    }
+}
+
+/* 下拉菜单 */
+.shaderpg-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.shaderpg-dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 100;
+    min-width: 120px;
+    margin-top: 4px;
+    padding: 4px 0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.shaderpg-dropdown-content.show {
+    display: block;
+}
+
+.shaderpg-dropdown-content button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    color: var(--text-color);
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.shaderpg-dropdown-content button:hover {
+    background: var(--bg-secondary);
+}
+
+.shaderpg-dropdown-content button:disabled {
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+/* 可切换布局 */
+.shaderpg-main[data-layout="vertical"] {
+    grid-template-columns: 1fr;
+}
+
+.shaderpg-main[data-layout="vertical"] .shaderpg-editor {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-color);
+    min-height: 360px;
+}
+
+.shaderpg-main[data-layout="vertical"] .shaderpg-preview {
+    min-height: 460px;
+}
+
+/* 教程大窗口 */
+.shaderpg-drawer {
+    position: fixed;
+    top: 5vh;
+    left: 50%;
+    transform: translateX(-50%) scale(0.98);
+    width: min(1100px, 92vw);
+    max-width: 92vw;
+    height: 86vh;
+    z-index: 1000;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.shaderpg-drawer.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) scale(1);
+}
+
+.shaderpg-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.shaderpg-drawer-header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--text-color);
+}
+
+.shaderpg-drawer-content {
+    padding: 24px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.shaderpg-drawer-content h3 {
+    margin-top: 24px;
+    margin-bottom: 12px;
+    color: var(--text-color);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.shaderpg-drawer-content h4 {
+    margin-top: 18px;
+    margin-bottom: 8px;
+    color: var(--text-color);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.shaderpg-drawer-content h3:first-child {
+    margin-top: 0;
+}
+
+.shaderpg-drawer-content p {
+    margin: 10px 0;
+}
+
+.shaderpg-drawer-content ul,
+.shaderpg-drawer-content ol {
+    margin: 10px 0;
+    padding-left: 24px;
+}
+
+.shaderpg-drawer-content li {
+    margin: 6px 0;
+}
+
+.shaderpg-drawer-content code {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--bg-secondary);
+    font-family: var(--font-family-tutorial);
+    font-size: 12px;
+}
+
+.shaderpg-drawer-content pre {
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.shaderpg-drawer-content pre code {
+    padding: 0;
+    background: none;
+}
+
+.shaderpg-drawer-content strong {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.shaderpg-drawer-content em {
+    color: var(--accent-color);
+    font-style: normal;
+}
+
+/* 抽屉遮罩 */
+.shaderpg-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.shaderpg-drawer-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.shaderpg-contribute-panel {
+    margin-top: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    padding: 12px;
+}
+
+.shaderpg-contribute-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.shaderpg-contribute-panel-title {
+    margin: 0;
+    font-size: 18px;
+    color: var(--text-color);
+}
+
+.shaderpg-contribute-panel .shader-contribute-shell {
+    margin-top: 0;
+}
+
+.shaderpg-contribute-panel .shader-contribute-grid {
+    grid-template-columns: minmax(300px, 0.95fr) minmax(420px, 1.25fr);
+}
+
+.shaderpg-contribute-panel .shader-contribute-template {
+    min-height: 420px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .shaderpg-topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .shaderpg-topbar-left,
+    .shaderpg-topbar-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .shaderpg-drawer {
+        top: 0;
+        left: 0;
+        transform: none;
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+    }
+
+    .shaderpg-drawer.open {
+        transform: none;
+    }
+
+    .shaderpg-contribute-panel .shader-contribute-grid {
+        grid-template-columns: 1fr;
+    }
+}

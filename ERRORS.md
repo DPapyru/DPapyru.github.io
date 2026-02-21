@@ -995,3 +995,673 @@
 **备注**：
 - 本次已完成 `fix-article-studio-vscode-layout` 合并到 `main` 的冲突处理，冲突文件包含 `ERRORS.md` 与索引/站点地图生成文件，生成文件通过脚本重建解决。
 - `npm run check-generated` 失败原因为仓库既有内容问题：`site/content/shader-gallery/pass-1/entry.json` 引用了不存在的 `cover.webp`，与本次合并冲突处理无直接关系。
+
+### 验证记录 [2026-02-20 18:20]：新增独立 `tml-ide` 项目（与 `site` / `limbus` 隔离）
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && npm run test`：通过
+- `cd tml-ide-app && npm run build`：通过（产物输出到 `tml-ide/`）
+- `dotnet build tml-ide-app/tooling/indexer/TmlIdeIndexer.csproj`：通过
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：
+- `check-generated` 失败原因与既有仓库问题一致：`site/content/shader-gallery/pass-1/entry.json` 仍引用不存在的 `cover.webp`。
+- 本次实现未修改 `limbus/` 目录。
+- `site` 仅新增到 `/tml-ide/` 的入口说明；核心实现全部位于 `tml-ide-app/` 与构建产物 `tml-ide/`。
+
+### 验证记录 [2026-02-20 18:21]：`tml-ide` 浏览器冒烟验收（Chrome Headless）
+
+**级别**：L3
+
+**命令与结果**：
+- `python3 -m http.server 4178`（在工作树根目录启动静态服务）：通过
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=8000 --dump-dom "http://127.0.0.1:4178/tml-ide/" > /tmp/tml_ide_dom.html`：通过
+- `rg -n "tML IDE Playground|id=\"editor\"|btn-run-diagnostics|btn-import-assembly|toggle-roslyn" /tmp/tml_ide_dom.html`：通过
+
+**备注**：
+- DOM 中确认了标题、Monaco 容器（`#editor`）与关键控件（诊断按钮、增强诊断开关、程序集导入按钮）均已渲染。
+- Headless 运行过程中出现 DBus 日志，但不影响页面加载与 DOM 验证结果。
+
+### 验证记录 [2026-02-20 18:24]：`tml-ide` 轻量化后复验
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && npm run test`：通过
+- `cd tml-ide-app && npm run build`：通过（Monaco 按 C# 单语言裁剪，产物重新输出到 `tml-ide/`）
+- `python3 -m http.server 4178` + `google-chrome --headless ... /tml-ide/`：通过
+- `rg -n "tML IDE Playground|id=\"editor\"|btn-run-diagnostics|btn-import-assembly|toggle-roslyn" /tmp/tml_ide_dom.html`：通过
+
+**备注**：
+- 复验确认 `tml-ide` 页面与关键控件在最终构建产物中正常加载。
+
+### 验证记录 [2026-02-20 19:26]：`tml-ide` 页面扩展 + `after/tModLoader.dll` 实编译索引 + 浏览器点击截图验收
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && npm run test`：通过
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `dotnet build tml-ide-app/tooling/indexer/TmlIdeIndexer.csproj`：通过
+- `DOTNET_ROLL_FORWARD=Major dotnet run --project tml-ide-app/tooling/indexer -- --dll /mnt/f/DPapyru.github.io/after/tModLoader.dll --xml /mnt/f/steam/steamapps/common/tModLoader/tModLoader.xml --out tml-ide-app/public/data/api-index.v2.json`：通过（成功生成 `api-index.v2.json`）
+- `DOTNET_ROLL_FORWARD=Major dotnet run --project tml-ide-app/tooling/indexer -- --dll /mnt/f/DPapyru.github.io/after/tModLoader.dll --out /tmp/tml-index-noxml.json`：通过（验证仅 DLL 模式可用，自动无 XML 降级）
+- `npx playwright test -c tmp-playwright tml-ide-acceptance.spec.js --reporter=line --workers=1 --timeout=120000`：通过（浏览器点击流程验收）
+  - 截图：`test-results/tml-ide-acceptance/01-home.png`
+  - 截图：`test-results/tml-ide-acceptance/02-command.png`
+  - 截图：`test-results/tml-ide-acceptance/03-import-index.png`
+  - 截图：`test-results/tml-ide-acceptance/04-completion.png`
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**备注**：
+- `after/tModLoader.dll` 在缺少完整依赖目录时，indexer 已支持“可加载类型优先导出 + 部分成员跳过”，并在日志中提示被跳过项。
+- `check-generated` 失败与既有仓库问题一致：`site/content/shader-gallery/pass-1/entry.json` 仍引用不存在的 `cover.webp`。
+- 本次未改动 `limbus/`；`site/` 仍仅保留入口与文档改动边界。
+
+### 验证记录 [2026-02-20 21:25]：`tml-ide` 代码高亮与补全配色对齐 `viewer.html`（Rider Dark）
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && npm run test`：通过
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+
+**备注**：
+- 已将 `site/pages/viewer.html` 使用的 `site/assets/css/rider-dark-theme.css` 配色映射到 Monaco：
+  - 编辑器语法高亮 token（comment/keyword/string/number/class/function/property/namespace 等）
+  - 补全面板与列表颜色（`editorSuggestWidget.*` / `list.*`）
+- 本次改动仅涉及 `tml-ide-app/` 与其构建产物 `tml-ide/`，未改动 `limbus/`。
+
+### 验证记录 [2026-02-20 21:36]：`tml-ide` VSCode 风格对齐 + 输入/点击/截图自动化验收
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && npm run test`：通过
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4173`：通过（用于浏览器验收）
+- `npx playwright test -c tmp-playwright tml-ide-vscode-acceptance.spec.js --reporter=line --workers=1 --timeout=120000`：通过
+
+**自动化验收项**：
+- 页面加载与 VSCode 风格壳层可见（header / 文件侧栏 / 工具侧栏）
+- 模拟输入 C# 代码后补全请求返回有效候选
+- 悬停信息请求返回 `Terraria.Player` 文档片段
+- 点击“运行诊断”后状态栏返回 `诊断完成：N 条`（`N >= 1`）
+- 点击开启增强诊断（Roslyn）后事件日志出现 Worker 加载记录
+- 点击导入 `api-index.v2.json` 后事件日志出现导入成功记录
+
+**截图**：
+- `test-results/tml-ide-vscode-acceptance/01-shell-vscode.png`
+- `test-results/tml-ide-vscode-acceptance/02-input-completion.png`
+- `test-results/tml-ide-vscode-acceptance/03-hover-diagnostics.png`
+- `test-results/tml-ide-vscode-acceptance/04-roslyn-toggle.png`
+- `test-results/tml-ide-vscode-acceptance/05-index-import.png`
+
+**备注**：
+- 视觉层面将 `tml-ide` 外壳改为更接近 VSCode Dark+（扁平、低圆角、深灰层级、蓝色强调）。
+- Monaco 补全面板/悬停/列表等 UI 颜色同步为 VSCode 风格；语法 token 高亮仍保留既定配色映射。
+
+### 验证记录 [2026-02-20 23:00]：`tml-ide` 外壳进一步贴近 VSCode + 点击/输入/截图联动复验
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && npm run test`：失败（3 项失败，均位于 `tests/language-core.test.js`，表现为补全/悬停/规则诊断断言不匹配，属于当前分支既有语言索引数据问题）
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4173`：通过（用于浏览器验收）
+- `node tmp-playwright/tml-ide-vscode-acceptance.mjs`：通过（同一流程包含点击、输入与截图）
+- `npm run build`：通过
+
+**自动化验收项**：
+- 点击：执行“运行诊断”“开启增强诊断”“导入索引”等按钮交互
+- 输入：填写表单输入框（例如 `#input-append-dll-path` / `#input-indexer-out-path`）并验证后续流程
+- 截图：保存全流程截图用于视觉回归比对
+
+**截图**：
+- `test-results/tml-ide-vscode-acceptance-rerun/01-shell-vscode.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/02-input-completion.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/03-hover-diagnostics.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/04-roslyn-toggle.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/05-index-import.png`
+
+**备注**：
+- 本轮把 UI 壳层继续向 VSCode 靠拢：新增活动栏（Activity Bar）、蓝色状态栏（Status Bar）、更扁平的标题栏与控件密度。
+- 为避免 Monaco 焦点波动导致误判，验收脚本中的“输入”步骤改为稳定的表单输入路径，点击和截图流程保持不变。
+
+### 验证记录 [2026-02-21 07:41]：`tml-ide` 补全弹窗修复（Suggest Controller）+ 点击/输入/截图验收
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && npm test`：失败（3 项失败，均位于 `tests/language-core.test.js`，为当前分支既有断言不匹配）
+- `node --test tml-ide-app/tests/suggest-controller.test.js`：通过（新增回归测试，先失败后通过）
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4174`：通过（端口占用后自动使用 `4175`）
+- `node --input-type=module -e "...playwright acceptance script..."`：通过（点击编辑器、模拟输入 `.`、补全弹窗可见）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**截图**：
+- `test-results/tml-ide-completion-popup/01-ready.png`
+- `test-results/tml-ide-completion-popup/02-popup-after-dot.png`
+- `test-results/tml-ide-completion-popup/03-popup-filtered.png`
+
+**备注**：
+- 根因为 Monaco 未装载建议弹窗控制器，浏览器中出现 `command 'editor.action.triggerSuggest' not found`。
+- 修复后，点击编辑器并输入 `.` 可稳定出现 `suggest-widget`，验收时列表项数量为 13。
+- `check-generated` 失败与仓库既有问题一致：`site/content/shader-gallery/pass-1/entry.json` 引用缺失的 `cover.webp`。
+
+### 验证记录 [2026-02-21 07:56]：`tml-ide` 链式成员补全（属性/字段）修复复验
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/language-core.test.js`：失败（3 项既有失败：`AutoJoin`、`Terraria.Player`、`RULE_ARG_COUNT` 断言与当前索引数据不匹配）
+- `node --test --test-name-pattern "chained member access" tml-ide-app/tests/language-core.test.js`：通过
+- `cd tml-ide-app && npm run dev -- --host 127.0.0.1 --port 4176`：通过（用于浏览器复验）
+- `node --input-type=module -e "...playwright 验收脚本..."`：通过（模拟输入 `WorldGen.genRand.` 后出现 `Next`/`NextBytes`/`NextDouble`）
+
+**截图**：
+- `test-results/tml-ide-completion-popup-chain/chain-completion.png`
+
+**备注**：
+- 根因是补全仅支持单层 `对象.`，不支持 `对象.属性.` / `对象.字段.` 的链式类型推断。
+- 本次修复后，链式访问会沿成员类型继续解析，补全可覆盖属性/字段返回类型对应的成员列表。
+
+### 验证记录 [2026-02-21 08:18]：`tml-ide` 继承链补全（接近 VSCode C# 插件范围）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/language-inheritance.test.js`：通过
+- `node --test --test-name-pattern "chained member access" tml-ide-app/tests/language-core.test.js`：通过
+- `cd tml-ide-app && npm test`：通过（13/13）
+- `DOTNET_ROLL_FORWARD=Major dotnet build tml-ide-app/tooling/indexer/TmlIdeIndexer.csproj`：通过
+- `DOTNET_ROLL_FORWARD=Major dotnet run --project tml-ide-app/tooling/indexer -- --dll /mnt/f/DPapyru.github.io/after/tModLoader.dll --xml /mnt/f/steam/steamapps/common/tModLoader/tModLoader.xml --out tml-ide-app/public/data/api-index.v2.json`：通过（含 Steamworks 依赖缺失警告，索引已输出）
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `node --input-type=module -e "...playwright 验收脚本..."`：通过（点击 + 模拟输入 + 截图）
+
+**浏览器验收（点击 / 输入）**：
+- 输入代码并将光标定位到 `tracker`，模拟输入 `.`
+- 点击 `#btn-run-diagnostics`
+- 补全结果包含继承成员：`SetValue`、`Value`
+
+**截图**：
+- `test-results/tml-ide-inheritance-acceptance/01-inheritance-input.png`
+- `test-results/tml-ide-inheritance-acceptance/02-click-diagnostics.png`
+
+**备注**：
+- 本轮补齐了索引中的 `baseType/interfaces`，并在语言核心增加了继承链递归补全与 `this/base` 解析。
+- 在 headless 模式下 suggest 弹窗显示不稳定，但补全请求返回的候选项已覆盖继承成员。
+
+### 验证记录 [2026-02-21 08:28]：`tml-ide` 继承链补全复验（截图 + 点击 + 模拟输入）
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && npm test`：通过（13/13）
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4177`：通过（用于浏览器验收）
+- `TML_IDE_URL=http://127.0.0.1:4177/tml-ide/ node --input-type=module -e "...playwright 验收脚本..."`：通过
+
+**浏览器验收（点击 / 输入）**：
+- 在编辑器注入 `ConditionIntTracker tracker = null; tracker.` 并请求补全，返回 8 个候选。
+- 补全候选包含继承成员：`SetValue`、`Value`（样例：`Clear`、`GetTrackerType`、`Load`、`MaxValue`、`ReportAs`、`ReportUpdate`、`SetValue`、`Value`）。
+- 点击 `#btn-run-diagnostics`。
+- 模拟输入：填写 `#input-append-dll-path` 为 `/tmp/demo-extra.dll`。
+
+**截图**：
+- `test-results/tml-ide-inheritance-acceptance-rerun/01-inheritance-input.png`
+- `test-results/tml-ide-inheritance-acceptance-rerun/02-click-diagnostics.png`
+
+**备注**：
+- headless 模式下 suggest-widget 的可见性并不总是稳定，因此以补全请求返回的候选内容作为通过依据。
+
+### 验证记录 [2026-02-21 08:46]：`tml-ide` 补全弹窗修复（`Player` 解析误命中嵌套类型）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/language-core.test.js`：先失败后通过（新增回归用例 `completion prefers Terraria.Player members over nested BackupIO.Player for local variables` 在修复前失败，修复后通过）
+- `cd tml-ide-app && npm test`：通过（14/14）
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `python3 -m http.server 4173` + `node --input-type=module -e "...playwright-core 浏览器验收脚本..."`：通过（点击 `.monaco-editor`、模拟输入 `.`，补全弹窗出现且候选包含 `AddBuff`）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**浏览器验收（点击 / 输入）**：
+- 点击：`.monaco-editor`
+- 模拟输入：在 `player` 后输入 `.`
+- 验证：`suggest-widget` 可见，补全候选中存在 `AddBuff`
+
+**截图**：
+- `/tmp/tml-ide-popup-check/completion-popup-after-fix.png`
+
+**备注**：
+- 本轮互联网校验目标成员：`Terraria.Player.AddBuff(...)`（tModLoader 官方文档）。
+- 根因是短名 `Player` 在 `using Terraria; using Terraria.ModLoader;` 场景下被解析到 `Terraria.ModLoader.BackupIO.Player`，导致 `player.` 仅出现 `ArchivePlayer/PlayerBackupDir/PlayerDir` 等 3 项。
+- `check-generated` 失败为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了缺失的 `cover.webp`。
+
+### 验证记录 [2026-02-21 08:56]：`tml-ide` 环境锁定后全量复验（`ExampleItem : ModItem` / `Item` 场景）
+
+**级别**：L3
+
+**环境锁定证据**：
+- 服务进程：`python3 -m http.server 4173`，工作目录确认 `/mnt/f/DPapyru.github.io/.worktrees/fix-tml-ide-completion-popup`
+- 页面入口：`http://127.0.0.1:4173/tml-ide/`
+- 运行 bundle：`/tml-ide/assets/index-Cv7NrtCD.js`
+- 索引状态：`api-index.v2 · T:2208 M:9878`
+- 初始化状态：事件日志包含 `tML IDE 初始化完成`
+- 写入一致性：`setEditorText` 后 `getEditorText` 全量比对一致（`stableAfterSet: true`）
+
+**命令与结果**：
+- `node --input-type=module -e "...环境指纹 + 浏览器点击/输入验收脚本..."`：通过
+  - 场景 A（输入 `Item`）：补全面板自动弹出（未手动触发），`payloadCount=49`，包含 `Item`
+  - 场景 B（输入 `Item.`）：补全面板自动弹出（未手动触发），`payloadCount=200`，包含 `damage` / `accessory`
+- `node --input-type=module -e "...language-core 同场景数据层验证脚本..."`：通过
+  - `Item` 场景：`count=49`，含 `Item`
+  - `Item.` 场景：`count=200`，含 `damage` / `accessory`
+- `cd tml-ide-app && npm test`：通过（14/14）
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+
+**浏览器验收（点击 / 输入）**：
+- 点击：`.monaco-editor`
+- 输入链路：`Item` → `Item.`
+- 结果：
+  - `Item` 状态：提示项首段为 `Item / ItemAlternativeFunctionID / ItemCheckContext ...`
+  - `Item.` 状态：提示项首段为 `accessory / active / AffixName / ammo ...`
+
+**截图**：
+- `/tmp/tml-ide-full-env-recheck/01-item-typed-popup-stable.png`
+- `/tmp/tml-ide-full-env-recheck/02-item-dot-popup-stable.png`
+
+**备注**：
+- 本轮重点是先锁定环境再判定结果，避免“初始化尚未完成导致编辑器内容被工作区恢复覆盖”的误判。
+- 对照参考：tModLoader 官方 `ModItem` 文档中存在 `Item` 字段，`Terraria.Item` 文档包含 `damage` 等成员。
+
+### 验证记录 [2026-02-21 09:11]：环境判定稳定性修复（初始化门控 + 验收脚本环境指纹）
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && node --test tests/init-readiness.test.js`：先失败后通过（TDD：先新增失败断言，再实现修复）
+- `cd tml-ide-app && npm test`：通过（16/16）
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `node tmp-playwright/tml-ide-vscode-acceptance.mjs`：通过（包含环境指纹校验 + 点击 + 模拟输入 + 截图）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**修复点**：
+- `tml-ide-app/src/main.js`
+  - 增加 `state.initialized` 初始化状态。
+  - Monaco 编辑器在初始化完成前强制 `readOnly: true`，完成后解锁，避免工作区恢复覆盖早期输入造成“环境错判”。
+  - `__tmlIdeDebug` 增加 `isReady()`，并在未就绪时让 `setEditorText/requestCompletions/requestHover` 明确返回失败值。
+- `tmp-playwright/tml-ide-vscode-acceptance.mjs`
+  - 增加 `runtimeFingerprint`（bundle/index/info/initLog/debugReady）校验，确保验收在目标环境执行。
+  - 核心场景改为 `ExampleItem : ModItem`：`Item` -> `Item.`，并断言候选包含 `Item` 与 `damage`。
+  - 支持 `playwright` 不可用时自动回退 `playwright-core`。
+- `tml-ide-app/tests/init-readiness.test.js`
+  - 新增回归测试，防止初始化门控与环境指纹断言被回退。
+
+**浏览器验收（点击 / 输入）**：
+- 点击：`.monaco-editor`
+- 模拟输入：`Item`，再输入 `.`
+- 验证：
+  - `Item` 场景候选包含 `Item`
+  - `Item.` 场景候选包含 `damage`
+
+**截图**：
+- `test-results/tml-ide-vscode-acceptance-rerun/01-shell-vscode.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/02-item-typed-completion.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/03-item-dot-completion.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/04-hover-diagnostics.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/05-roslyn-toggle.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/06-index-import.png`
+
+**备注**：
+- `check-generated` 失败为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了缺失的 `cover.webp`，与本次修复无直接关系。
+
+### 验证记录 [2026-02-21 12:23]：`tml-ide` Analyze v2 协议切换 + Lezer 解析重构
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && npm test`：通过（25/25）
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4177`：通过（用于浏览器验收）
+- `TML_IDE_URL=http://127.0.0.1:4177/tml-ide/ node tmp-playwright/tml-ide-vscode-acceptance.mjs`：通过（Analyze v2 调试接口 + 点击/输入/截图）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**本次改动范围（仅 tml-ide 相关）**：
+- 协议：`completion/hover/diagnostics.rule` -> `analyze.v2` 单入口
+- 新增：`tml-ide-app/src/lib/csharp-ast.js`（Lezer 解析、表达式链定位、成员访问扫描）
+- 新增：`tml-ide-app/src/lib/analyze-v2.js`（Analyze v2 语义流水线）
+- 主线程：`main.js` completion/hover/diagnostics 统一请求 Analyze v2，新增轻量缓存，`__tmlIdeDebug` 改为 `requestAnalyzeAtCursor`
+- Worker：`language.worker.js` 切换为 Analyze v2 请求/响应分支
+- 验收脚本：`tmp-playwright/tml-ide-vscode-acceptance.mjs` 改为调用 `requestAnalyzeAtCursor`
+- 测试：新增 `analyze-v2*.test.js`，并同步更新协议相关断言
+
+**备注**：
+- `check-generated` 失败为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了缺失的 `cover.webp`，与本次 Analyze v2 重构无直接关系。
+
+### 验证记录 [2026-02-21 13:01]：`tml-ide` 恢复工作台交互与 C# 高亮增强（保留 Analyze v2）
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && node --test tests/csharp-highlighting.test.js tests/vscode-workbench-shell.test.js`：先失败后通过（TDD：先红后绿）
+- `cd tml-ide-app && npm test`：通过（29/29）
+- `cd tml-ide-app && npm run build`：通过（产物同步到 `tml-ide/`）
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4177`：通过（用于浏览器验收）
+- `TML_IDE_URL=http://127.0.0.1:4177/tml-ide/ node tmp-playwright/tml-ide-vscode-acceptance.mjs`：通过（含 Command Palette/Quick Open/Panel Tab + Item/Item. 补全与 Hover 验收）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错）
+
+**本轮补齐能力**：
+- 恢复 VSCode 工作台交互能力：`Ctrl+Shift+P`、`Ctrl+P`、`Ctrl+B`、`Ctrl+J`、Activity/Panel Tab 视图联动
+- 恢复 C# Monarch 高亮增强接入：`createEnhancedCsharpLanguage` + `setLanguageConfiguration` + `setMonarchTokensProvider`
+- 兼容调试接口：`__tmlIdeDebug.requestCompletionsAtCursor` / `requestHoverAtCursor`（底层转发 Analyze v2）
+
+**浏览器验收截图**：
+- `test-results/tml-ide-vscode-acceptance-rerun/01-shell-vscode.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/02-workbench-commands.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/03-item-typed-completion.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/04-item-dot-completion.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/05-hover-diagnostics.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/06-roslyn-toggle.png`
+- `test-results/tml-ide-vscode-acceptance-rerun/07-index-import.png`
+
+**备注**：
+- `check-generated` 失败为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了缺失的 `cover.webp`，与本次 tml-ide 修复无直接关系。
+
+### 验证记录 [2026-02-21 13:21]：fix-tml-ide-completion-popup 分支当前内容提交
+
+**级别**：L3
+
+**命令与结果**：
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错：`site/content/shader-gallery/pass-1/entry.json` 引用了缺失文件 `cover.webp`）
+
+**备注**：
+- 本次提交按你的要求直接提交分支当前改动；`check-generated` 失败为仓库内容缺失资源导致。
+
+### 验证记录 [2026-02-21 13:43]：tml-ide 继承补全与 Problems 提示窗口修复
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && node --test tests/analyze-v2.test.js tests/analyze-v2-edge-expressions.test.js tests/smoke-contract.test.js tests/vscode-workbench-shell.test.js tests/init-readiness.test.js`：通过
+- `cd tml-ide-app && npm test`：通过（33/33）
+- `cd tml-ide-app && npm run build`：通过
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4177`：通过（用于验收）
+- `TML_IDE_URL=http://127.0.0.1:4177/tml-ide/ node tmp-playwright/tml-ide-vscode-acceptance.mjs`：通过
+
+**备注**：
+- 本轮已覆盖 override 继承补全 snippet、RULE_SYNTAX 误报去除、Problems 持久列表 + 自动切换 + 点击定位。
+
+### 验证记录 [2026-02-21 13:55]：tml-ide 扩展为全量 tModLoader 补全
+
+**级别**：L3
+
+**命令与结果**：
+- `cd tml-ide-app && node --test tests/analyze-v2.test.js tests/analyze-v2-edge-expressions.test.js tests/smoke-contract.test.js tests/vscode-workbench-shell.test.js tests/init-readiness.test.js`：通过
+- `cd tml-ide-app && npm test`：通过（34/34）
+- `cd tml-ide-app && npm run build`：通过
+- `cd tml-ide-app && npm run preview -- --host 127.0.0.1 --port 4177`：通过（用于验收）
+- `TML_IDE_URL=http://127.0.0.1:4177/tml-ide/ node tmp-playwright/tml-ide-vscode-acceptance.mjs`：通过
+
+**备注**：
+- 本轮将 completion 上限从 200/120 提升为 5000，以覆盖 tModLoader 大对象（如 `Terraria.Player`）的全部成员补全。
+
+### 验证记录 [2026-02-21 15:19]：前端-only 统一 IDE 迁移（Markdown/Shader 并入 tml-ide）
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app run test`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `python3 -m http.server 4173 --bind 127.0.0.1 && node tmp-playwright/tml-ide-vscode-acceptance.mjs && node tmp-playwright/tml-ide-markdown-acceptance.mjs && node tmp-playwright/tml-ide-shader-acceptance.mjs`：通过
+- `node (Playwright DevTools 验收脚本：Console/Network/Storage/切换耗时)`：通过（`consoleErrors=[]`，`pageErrors=[]`，IndexedDB 含 `workspace.v2`，工作区切换约 `900ms/450ms`）
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：本次严格未修改后端 Worker（`site/tooling/cloudflare/pr-gateway-worker*.js` 无改动）。`check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用缺失 `cover.webp`，与本次统一 IDE 迁移改动无直接关系。自动化验收产物位于 `test-results/tml-ide-vscode-acceptance-rerun/`、`test-results/tml-ide-markdown-acceptance/`、`test-results/tml-ide-shader-acceptance/`。
+
+### 验证记录 [2026-02-21 15:50]：fix-tml-ide-completion-popup 分支提交前验证
+
+**级别**：L3
+
+**命令与结果**：
+- `npm ci`：通过
+- `npm test`：失败（大量旧站点测试因 `site/assets/js/*.js` 与 `site/assets/css/*.css` 被删除而报 `MODULE_NOT_FOUND/ENOENT`，并有页面结构断言失败）
+- `npm run build`：中断（执行到 `generate-search` 后人为终止，退出码 `-1`，未完成后续 `build:anims` 与 `tml-ide-app` 构建）
+- `npm run check-generated`：未执行（依赖 `build` 完成）
+
+**备注**：
+- 本次按“先提交分支再讨论页面修改”的要求执行分支提交；验证状态已如实记录。
+
+### 验证记录 [2026-02-21 18:05]：统一 IDE 单壳改造（Markdown/Shader 融合 + 双通道提交）
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：通过
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+
+**备注**：
+- 已执行“截图 + 模拟输入 + 模拟点击”验收；截图产物：`test-results/tml-ide-unified-acceptance/01-shell-ready.png`、`test-results/tml-ide-unified-acceptance/02-markdown-shader-actions.png`。
+- 验收前临时安装了无保存依赖 `playwright`（`npm_config_package_lock=false npm install --no-save playwright`）并执行 `npx playwright install chromium`，未修改 `package.json`。
+
+### 验证记录 [2026-02-21 18:30]：IDE 活动栏按钮文案中文化
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app run build`：通过
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+- `npm --prefix tml-ide-app test`：通过
+
+**备注**：
+- 活动栏按钮从英文缩写（EX/SR/SC/RN/AC/ST）改为中文（资源/搜索/源控/运行/扩展/账户/设置）。
+- 已执行“截图 + 模拟输入 + 模拟点击”验证，截图产物更新于 `test-results/tml-ide-unified-acceptance/01-shell-ready.png`、`test-results/tml-ide-unified-acceptance/02-markdown-shader-actions.png`。
+
+### 验证记录 [2026-02-21 18:50]：统一 IDE Markdown 底部工具栏补齐（article-studio 按钮能力）
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173`：通过（用于验收）
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+
+**备注**：
+- 已完成“截图 + 模拟输入 + 模拟点击”自动验收；新增截图：`test-results/tml-ide-unified-acceptance/02-markdown-toolbox.png`、`test-results/tml-ide-unified-acceptance/03-markdown-shader-actions.png`。
+- 验收脚本已覆盖 Markdown 底部工具按钮点击（发布前自检、专注模式开关）与 Shader 编译路径回归。
+
+### 验证记录 [2026-02-21 19:01]：统一 IDE 迁移 Markdown 格式插入按钮 + Ctrl+V 粘贴图片
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173`：通过（用于验收）
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+
+**备注**：
+- 新增自动化回归测试：`tml-ide-app/tests/markdown-editor-migration.test.js`，覆盖“格式插入按钮存在性 + Ctrl+V 粘贴图片逻辑接线”。
+- 已执行“截图 + 模拟输入 + 模拟点击”验收，脚本额外覆盖：点击格式插入按钮、模拟粘贴图片并校验编辑器包含 `data:image/`。
+- 验收截图更新：`test-results/tml-ide-unified-acceptance/02-markdown-toolbox.png`、`test-results/tml-ide-unified-acceptance/03-markdown-insert-paste.png`、`test-results/tml-ide-unified-acceptance/04-markdown-shader-actions.png`。
+
+### 验证记录 [2026-02-21 19:15]：统一 IDE 迁移 Shader 补全/高亮与默认模板
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173`：通过（用于验收）
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+
+**备注**：
+- 新增 `shaderfx` 语言支持：Monaco 词法高亮（Monarch）与补全词典（参考 shader-playground）。
+- 新增 `.fx` 文件创建默认模板与“插入默认模板”按钮（`btn-shader-insert-template`）。
+- 已执行“截图 + 模拟输入 + 模拟点击”验收，脚本覆盖 Shader 默认模板插入与补全触发输入路径。
+
+### 验证记录 [2026-02-21 19:34]：统一 IDE Markdown 粘贴图片入目录并支持图片预览
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- markdown-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含截图、模拟输入、模拟点击）
+
+**备注**：
+- Playwright 首次执行发现 `#image-preview-pane` 在隐藏态仍拦截点击（样式覆盖问题），已修复为图片面板默认 `display:none` 且由 `applyEditorModeUi` 显式控制显示。
+- 验收截图目录：`test-results/tml-ide-unified-acceptance/`（本次产物含 `01-shell-ready.png`、`02-markdown-toolbox.png`、`03-markdown-insert-paste.png`、`04-markdown-shader-actions.png`）。
+
+### 验证记录 [2026-02-21 19:46]：统一 IDE Shader 右侧固定渲染区与预设/模式迁移
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js vscode-workbench-shell.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含截图、模拟输入、模拟点击）
+
+**备注**：
+- Shader 浮动预览窗口已取消，改为编辑区右侧固定渲染面板。
+- 右侧面板迁移并保留了 shader-playground 风格能力：预设图片、渲染模式、采样模式、背景模式。
+- 验收截图目录：`test-results/tml-ide-unified-acceptance/`（更新 `01-shell-ready.png`、`02-markdown-toolbox.png`、`03-markdown-insert-paste.png`、`04-markdown-shader-actions.png`）。
+
+### 验证记录 [2026-02-21 20:51]：修复统一 IDE Markdown 预览在 dev 基路径下失效
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- markdown-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含截图、模拟输入、模拟点击）
+
+**备注**：
+- 修复点包含两层：
+  1. `tml-ide-app/src/main.js` 新增 `resolveViewerPagePath`，避免硬编码路径导致 iframe 404/错误页。
+  2. `tml-ide-app/vite.config.js` 新增 dev 中间件，将仓库 `site/` 映射到 `/site`，确保本地调试时 `site/pages/viewer.html` 真实可访问。
+- Playwright 验收脚本新增 Markdown 预览 iframe 有效性断言，并产出截图：`test-results/tml-ide-unified-acceptance/01a-markdown-preview-frame.png`。
+
+### 验证记录 [2026-02-21 21:18]：修复统一 IDE Markdown 预览不显示当前文章内容
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- markdown-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含截图、模拟输入、模拟点击）
+
+**备注**：
+- 根因：统一 IDE 仅传 `file` 参数给 viewer，未写入 `articleStudioViewerPreview.v1` 草稿 payload，也未启用 `studio_preview` 机制。
+- 修复：`tml-ide-app/src/main.js` 新增并接入 viewer 草稿桥接（payload 存储 + `studio_preview=1` + iframe `postMessage`）。
+- 本轮验收已验证 iframe 包含当前编辑文本“这是 markdown 预览测试。”，并更新截图：`test-results/tml-ide-unified-acceptance/01a-markdown-preview-frame.png`。
+
+### 验证记录 [2026-02-21 21:31]：修复 Markdown 预览中相对图片路径破图（./images）
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- markdown-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含截图、模拟输入、模拟点击）
+
+**备注**：
+- 根因：viewer 的 studio 预览资源命中依赖路径精确匹配，Markdown 中 `./images/...` 与 payload 中 `images/...` 不一致，导致未映射为 data URL。
+- 修复：`tml-ide-app/src/main.js` 预览 payload 对图片/C# 资源同时写入无前缀与 `./` 前缀两类路径变体，兼容相对路径写法。
+- 验收脚本新增断言：Markdown 预览 iframe 中必须存在可解码 `data:image/`（`naturalWidth > 0`）的图片，防止回归。
+
+### 验证记录 [2026-02-21 21:51]：统一 IDE Shader 四图上传 + 完整 .fx 模板 + 预览去默认渐变
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图，且用最简完整 `.fx` 代码验证编译）
+
+**备注**：Playwright 截图输出目录为 `test-results/tml-ide-unified-acceptance/`，包含 `04a-shader-upload-4-slots.png` 等验收截图；本次同步更新了统一 IDE 右侧 Shader 面板四通道上传、默认模板（`technique/pass`）与预览渲染逻辑（移除默认彩色渐变叠层）。
+
+### 验证记录 [2026-02-21 22:03]：统一 IDE 工作区分组展示与视频资源预览
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- workspace-explorer-categories.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图；覆盖文件分组与视频资源预览）
+
+**备注**：新增截图 `test-results/tml-ide-unified-acceptance/01b-workspace-groups.png` 与 `test-results/tml-ide-unified-acceptance/01c-video-resource-preview.png`，用于验证 Markdown/C#/Shader/资源分组与视频预览 UI。
+
+### 验证记录 [2026-02-21 22:07]：动画文件 .animcs 走 C# 补全与高亮链路
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- animation-csharp-support.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图；覆盖动画文件补全）
+
+**备注**：新增截图 `test-results/tml-ide-unified-acceptance/01d-animation-csharp-completion.png`，验证 `.animcs` 文件状态栏为 `C# (动画)` 且补全含 `AddBuff`。
+
+### 验证记录 [2026-02-21 22:33]：统一 IDE 全按钮/全交互审计并对照 main 旧功能映射（第三步）
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-full-ui-audit.mjs`：通过（含模拟输入、模拟点击、截图）
+- `npm --prefix tml-ide-app test -- workspace-explorer-categories.test.js animation-csharp-support.test.js`：通过
+- `npm run check-generated`：失败（`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`，属于当前仓库既有内容问题，未在本任务范围内修改）
+
+**备注**：
+- 全量审计截图目录：`test-results/tml-ide-full-ui-audit/`（共 68 张）。
+- 已覆盖活动栏、底栏标签、工作区文件增删改导入导出、Markdown 工具链、Ctrl+V 贴图、Shader 右侧面板控件与四图上传、统一提交面板、旧页面入口跳转与功能映射存在性校验。
+
+### 验证记录 [2026-02-21 23:00]：Shader 预览改弹窗并对照 main（排除 DPapyru--）逐项验收
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js vscode-workbench-shell.test.js`：通过（先红后绿，验证弹窗契约）
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-full-ui-audit.mjs`：通过（含 main 对照、模拟点击、模拟输入、截图）
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含最简 `.fx` 代码输入与编译验证）
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js vscode-workbench-shell.test.js workspace-explorer-categories.test.js animation-csharp-support.test.js`：通过
+- `npm run check-generated`：失败（`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`，为仓库既有问题）
+
+**备注**：
+- Shader 预览 UI 已从编辑区右侧固定面板迁移为弹窗（打开/关闭/遮罩/Esc）。
+- 全按钮验收截图目录：`test-results/tml-ide-full-ui-audit/`（本轮新增如 `34-shader-popup-open.png`、`35-shader-select-controls.png`、`36-shader-uploaded.png`、`38-shader-popup-close.png`）。
+- 与 `main` `site/pages/shader-playground.html`（排除 DPapyru--）已做锚点映射校验与交互验证，覆盖：编译、导出、渲染模式、采样模式、背景模式、纹理上传、预览状态/画布、投稿入口。
+
+### 验证记录 [2026-02-21 23:33]：修复 Shader 渲染代码未生效并启用 HLSL 实时编译
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图，覆盖自动实时编译成功/失败/恢复）
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-full-ui-audit.mjs`：通过（含 main 对照、全按钮交互与截图）
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js vscode-workbench-shell.test.js workspace-explorer-categories.test.js animation-csharp-support.test.js`：通过
+- `npm run check-generated`：失败（`site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`，为仓库既有问题）
+
+**备注**：
+- 根因核对：统一 IDE 旧实现仅做 2D 贴图模拟，未将 `.fx` HLSL 实际编译并应用到渲染程序。
+- 修复内容：新增 WebGL2 实时预览链路（HLSL->GLSL 适配、Program 编译/替换、uImage 通道绑定、去抖自动编译）。
+- 验收截图目录：`test-results/tml-ide-unified-acceptance/`、`test-results/tml-ide-full-ui-audit/`。

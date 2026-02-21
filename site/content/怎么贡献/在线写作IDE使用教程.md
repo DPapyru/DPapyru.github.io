@@ -14,7 +14,7 @@ next_chapter: ContentProjects解决方案说明.md
 
 # 在线写作IDE使用教程
 
-本文对应页面：`site/pages/article-studio.html`。
+本文对应页面：`/tml-ide/`。
 
 它适合“写文章与提交流程”，不替代本地 C# 工程调试。
 
@@ -118,3 +118,13 @@ next_chapter: ContentProjects解决方案说明.md
 ## 下一步
 
 需要本地 IDE 联动与 C# 工程补全时，继续阅读：`ContentProjects解决方案说明.md`。
+
+## 独立 tML IDE 补全页
+
+如果你需要网页内的 C# API 补全、悬停文档与诊断能力，请使用独立入口：`/tml-ide/`。
+
+边界说明：
+
+1. `article-studio` 仍然只负责 Markdown 写作与提交流程
+2. `tml-ide` 是单独项目页面，与 `site` / `limbus` 目录实现隔离
+3. 写作完成后，可把在 `tml-ide` 中验证过的代码片段再整理回教程正文

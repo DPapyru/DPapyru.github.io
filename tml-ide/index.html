@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tML IDE Playground</title>
+    <meta name="description" content="独立 tModLoader C# IDE Playground，支持补全、悬停文档与双层诊断。">
+    <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
+  <script type="module" crossorigin src="/tml-ide/assets/index-PMdGXBV3.js"></script>
+  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-SZb8_YG-.css">
+</head>
+<body>
+    <div id="app" class="app-shell">
+        <header class="app-header">
+            <div class="window-controls" aria-hidden="true">
+                <span class="window-dot"></span>
+                <span class="window-dot"></span>
+                <span class="window-dot"></span>
+            </div>
+            <div class="app-title-wrap">
+                <h1 class="app-title">tML IDE Playground</h1>
+                <p class="app-subtitle">workspace: tml-ide · C# API 补全</p>
+            </div>
+            <div class="app-header-actions">
+                <button id="btn-markdown-toggle-preview" type="button">预览</button>
+                <button id="btn-markdown-open-viewer" type="button">新标签预览</button>
+                <button id="btn-shader-compile" type="button">编译 .fx</button>
+                <button id="btn-shader-preview-popup" type="button">渲染预览</button>
+                <button id="btn-shader-export" type="button">导出 .fx</button>
+                <button id="btn-open-unified-submit" type="button">统一提交</button>
+                <button id="btn-save-workspace" type="button">保存工作区</button>
+                <button id="btn-export-workspace" type="button">导出 workspace.v1.json</button>
+                <label class="file-btn" for="input-import-workspace">导入工作区</label>
+                <input id="input-import-workspace" type="file" accept="application/json,.json" hidden>
+            </div>
+        </header>
+
+        <main id="workspace-csharp-root" class="app-main">
+            <aside class="activity-bar" aria-label="活动栏">
+                <div class="activity-group">
+                    <button class="activity-btn activity-btn-active" type="button" data-activity="explorer" aria-label="资源管理器">资源</button>
+                    <button class="activity-btn" type="button" data-activity="search" aria-label="搜索">搜索</button>
+                    <button class="activity-btn" type="button" data-activity="scm" aria-label="源代码管理">源控</button>
+                    <button class="activity-btn" type="button" data-activity="run" aria-label="运行和调试">运行</button>
+                    <button class="activity-btn" type="button" data-activity="extensions" aria-label="扩展">扩展</button>
+                </div>
+                <div class="activity-group activity-group-bottom">
+                    <button class="activity-btn" type="button" data-activity="account" aria-label="账户">账户</button>
+                    <button class="activity-btn" type="button" data-activity="settings" aria-label="设置">设置</button>
+                </div>
+            </aside>
+
+            <aside class="side-bar panel panel-files" aria-label="Primary Side Bar">
+                <div class="panel-head">
+                    <h2>文件目录</h2>
+                    <span id="workspace-version" class="pill">workspace.v1</span>
+                </div>
+                <div class="panel-actions">
+                    <button id="btn-add-file" type="button">新增文件</button>
+                    <button id="btn-rename-file" type="button">重命名</button>
+                    <button id="btn-delete-file" type="button">删除</button>
+                </div>
+                <ul id="file-list" class="file-list" aria-label="工程文件列表"></ul>
+                <p class="panel-tip">支持 .cs/.animcs/.md/.fx 以及常见图片与视频资源，内容自动保存到浏览器 IndexedDB。</p>
+            </aside>
+
+            <section id="panel-editor" class="panel panel-editor">
+                <div class="panel-head">
+                    <h2 id="active-file-name">Program.cs</h2>
+                    <div class="panel-head-right">
+                        <span id="index-info" class="pill">api-index.v2</span>
+                        <button id="btn-run-diagnostics" type="button">运行诊断</button>
+                    </div>
+                </div>
+                <div id="editor" class="editor" aria-label="C# 编辑器"></div>
+                <section id="markdown-preview-pane" class="markdown-preview-pane" hidden>
+                    <iframe id="markdown-preview-frame" class="markdown-preview-frame" title="Markdown 预览" loading="lazy"></iframe>
+                </section>
+                <section id="image-preview-pane" class="image-preview-pane" hidden>
+                    <img id="image-preview-image" class="image-preview-image" alt="图片预览">
+                </section>
+                <section id="video-preview-pane" class="video-preview-pane" hidden>
+                    <video id="video-preview-element" class="video-preview-element" controls preload="metadata"></video>
+                </section>
+            </section>
+
+            <aside id="bottom-panel" class="panel panel-tools" aria-label="Panel">
+                <div class="bottom-panel-head">
+                    <div class="panel-tab-strip" role="tablist" aria-label="Panel Tabs">
+                        <button class="panel-tab panel-tab-active" type="button" data-panel-tab="problems">问题</button>
+                        <button class="panel-tab" type="button" data-panel-tab="output">输出</button>
+                        <button class="panel-tab" type="button" data-panel-tab="compile">编译</button>
+                        <button class="panel-tab" type="button" data-panel-tab="errors">报错</button>
+                    </div>
+                    <button id="btn-toggle-bottom-panel" class="panel-collapse-btn" type="button" aria-label="隐藏底部面板">
+                        <span class="panel-collapse-icon" aria-hidden="true">▾</span>
+                    </button>
+                </div>
+                <div class="bottom-panel-body">
+                    <section class="panel-view panel-view-active" data-panel-view="problems">
+                        <div class="tool-group">
+                            <label class="checkbox-row">
+                                <input id="toggle-roslyn" type="checkbox">
+                                <span>开启增强诊断（diagnostics.roslyn）</span>
+                            </label>
+                            <p class="panel-tip">默认启用规则诊断（diagnostics.rule）。增强诊断按需懒加载 Worker。</p>
+                        </div>
+                        <div class="tool-group">
+                            <h3>诊断问题</h3>
+                            <p id="problems-summary" class="problems-summary">Errors: 0 · Warnings: 0</p>
+                            <ul id="problems-list" class="problems-list" aria-live="polite"></ul>
+                        </div>
+                    </section>
+
+                    <section class="panel-view" data-panel-view="output">
+                        <div class="tool-group">
+                            <h3>最近事件</h3>
+                            <ul id="event-log" class="event-log" aria-live="polite"></ul>
+                        </div>
+                    </section>
+
+                    <section class="panel-view" data-panel-view="compile">
+                        <div id="markdown-toolbox-group" class="tool-group" hidden>
+                            <h3>Markdown 工具（article-studio）</h3>
+                            <div class="tool-btn-row">
+                                <button id="btn-md-open-guide" type="button">项目 Markdown 教程</button>
+                                <button id="btn-md-draft-check" type="button">发布前自检</button>
+                                <button id="btn-md-insert-template" type="button">插入模板</button>
+                                <button id="btn-md-insert-image" type="button">插入图片引用</button>
+                                <button id="btn-md-format" type="button">快速格式化</button>
+                                <button id="btn-md-copy" type="button">复制 Markdown</button>
+                                <button id="btn-md-export-draft" type="button">导出草稿 JSON</button>
+                                <label class="file-btn" for="input-md-import-draft">导入草稿 JSON</label>
+                                <input id="input-md-import-draft" type="file" accept="application/json,.json" hidden>
+                                <button id="btn-md-reset" type="button">清空草稿</button>
+                                <button id="btn-md-focus-mode" type="button">专注模式</button>
+                            </div>
+                            <div class="tool-btn-row" aria-label="Markdown 格式插入">
+                                <button type="button" data-md-insert="bold">加粗</button>
+                                <button type="button" data-md-insert="h2">二级标题</button>
+                                <button type="button" data-md-insert="list">列表</button>
+                                <button type="button" data-md-insert="quote">引用</button>
+                                <button type="button" data-md-insert="ref">引用文档</button>
+                                <button type="button" data-md-insert="anim">动画片段</button>
+                                <button type="button" data-md-insert="animcs-block">animcs 代码块</button>
+                                <button type="button" data-md-insert="color-inline">单色文本</button>
+                                <button type="button" data-md-insert="color-change-inline">颜色动画文本</button>
+                                <button type="button" data-md-insert="quiz-tf">判断题</button>
+                                <button type="button" data-md-insert="quiz-choice">选择题</button>
+                                <button type="button" data-md-insert="quiz-multi">多选题</button>
+                            </div>
+                            <p class="panel-tip">支持 Ctrl+V 粘贴图片到编辑器，自动插入 Markdown 图片引用。</p>
+                            <pre id="markdown-draft-check-log" class="cmd-preview">等待自检...</pre>
+                        </div>
+                        <div id="shader-compile-group" class="tool-group">
+                            <h3>.fx 编译</h3>
+                            <button id="btn-shader-insert-template" type="button">插入默认模板</button>
+                            <button id="btn-panel-shader-compile" type="button">编译当前 .fx</button>
+                            <pre id="shader-compile-log" class="cmd-preview">等待编译...</pre>
+                        </div>
+                    </section>
+
+                    <section class="panel-view" data-panel-view="errors">
+                        <div class="tool-group">
+                            <h3>.fx 报错列表</h3>
+                            <ul id="shader-error-list" class="problems-list" aria-live="polite"></ul>
+                        </div>
+                    </section>
+                </div>
+            </aside>
+        </main>
+
+        <aside id="unified-submit-panel" class="unified-submit-panel" aria-hidden="true">
+            <header class="unified-submit-head">
+                <h2>统一提交</h2>
+                <button id="btn-unified-submit-close" type="button">关闭</button>
+            </header>
+            <section class="unified-submit-section">
+                <label for="unified-worker-url">Worker API 地址</label>
+                <input id="unified-worker-url" type="text" value="https://greenhome-pr.3577415213.workers.dev/api/create-pr" spellcheck="false">
+            </section>
+            <section class="unified-submit-section">
+                <div class="unified-auth-row">
+                    <button id="btn-unified-auth-login" type="button">GitHub 登录</button>
+                    <button id="btn-unified-auth-logout" type="button">退出</button>
+                </div>
+                <div id="unified-auth-status" class="unified-auth-status">未登录</div>
+            </section>
+            <section class="unified-submit-section">
+                <label for="unified-pr-title">PR 标题（可选）</label>
+                <input id="unified-pr-title" type="text" placeholder="例如：docs: 统一IDE提交">
+            </section>
+            <section class="unified-submit-section">
+                <label for="unified-existing-pr-number">继续已有 PR（可选）</label>
+                <input id="unified-existing-pr-number" type="number" min="1" step="1" placeholder="留空=新建 PR">
+            </section>
+            <section class="unified-submit-section">
+                <label for="unified-anchor-select">Markdown 锚点（无 Markdown 时必选）</label>
+                <select id="unified-anchor-select">
+                    <option value="">自动选择（若可用）</option>
+                </select>
+            </section>
+            <section class="unified-submit-section">
+                <label for="unified-shader-slug">Shader 投稿 Slug（手动）</label>
+                <input id="unified-shader-slug" type="text" placeholder="例如：my-shader">
+            </section>
+            <section class="unified-submit-section">
+                <div id="unified-summary" class="unified-summary">待收集 staged 改动。</div>
+                <div class="unified-submit-actions">
+                    <button id="btn-unified-collect" type="button">收集改动</button>
+                    <button id="btn-unified-submit" type="button">提交全部（双通道）</button>
+                    <button id="btn-unified-resume" type="button">重试失败通道</button>
+                </div>
+            </section>
+            <section class="unified-submit-section">
+                <h3>可提交文件</h3>
+                <ul id="unified-sendable-list" class="unified-file-list"></ul>
+            </section>
+            <section class="unified-submit-section">
+                <h3>需手工 PR 文件</h3>
+                <ul id="unified-blocked-list" class="unified-file-list"></ul>
+            </section>
+            <section class="unified-submit-section">
+                <h3>批次进度</h3>
+                <pre id="unified-batch-progress" class="unified-batch-progress">尚未提交。</pre>
+            </section>
+            <section class="unified-submit-section">
+                <div id="unified-submit-status" class="unified-submit-status">就绪</div>
+            </section>
+        </aside>
+
+        <footer class="app-statusbar">
+            <span class="status-item status-item-main" id="editor-status" role="status" aria-live="polite"></span>
+            <span class="status-item" id="status-language">C#</span>
+            <span class="status-item">UTF-8</span>
+            <span class="status-item">LF</span>
+            <span class="status-item">Spaces: 4</span>
+        </footer>
+    </div>
+
+    <div id="shader-preview-modal" class="shader-preview-modal" hidden>
+        <button id="shader-preview-modal-backdrop" class="shader-preview-modal-backdrop" type="button" aria-label="关闭 Shader 预览"></button>
+        <section class="shader-preview-dialog" role="dialog" aria-modal="true" aria-label="Shader 渲染预览">
+            <header class="shader-sidepane-head">
+                <span>渲染预览</span>
+                <button id="btn-shader-preview-close" type="button">关闭</button>
+            </header>
+            <div class="shader-sidepane-controls">
+                <label for="shader-preset-image">预设图片</label>
+                <select id="shader-preset-image">
+                    <option value="checker">棋盘格（builtin:checker）</option>
+                    <option value="noise">噪声（builtin:noise）</option>
+                    <option value="gradient">渐变</option>
+                    <option value="rings">同心环</option>
+                </select>
+                <label for="shader-render-mode">渲染模式</label>
+                <select id="shader-render-mode">
+                    <option value="alpha">AlphaBlend</option>
+                    <option value="additive">Additive</option>
+                    <option value="multiply">Multiply</option>
+                    <option value="screen">Screen</option>
+                </select>
+                <label for="shader-address-mode">采样模式</label>
+                <select id="shader-address-mode">
+                    <option value="clamp">Clamp</option>
+                    <option value="wrap">Wrap</option>
+                </select>
+                <label for="shader-bg-mode">背景模式</label>
+                <select id="shader-bg-mode">
+                    <option value="transparent">透明棋盘</option>
+                    <option value="black">黑色</option>
+                    <option value="white">白色</option>
+                </select>
+                <div class="shader-upload-grid" aria-label="Shader 纹理通道">
+                    <div class="shader-upload-row">
+                        <label for="shader-upload-0">uImage0</label>
+                        <input id="shader-upload-0" type="file" accept="image/*">
+                        <button id="shader-upload-clear-0" type="button">清空</button>
+                        <span id="shader-upload-name-0" class="shader-upload-name">未上传</span>
+                    </div>
+                    <div class="shader-upload-row">
+                        <label for="shader-upload-1">uImage1</label>
+                        <input id="shader-upload-1" type="file" accept="image/*">
+                        <button id="shader-upload-clear-1" type="button">清空</button>
+                        <span id="shader-upload-name-1" class="shader-upload-name">未上传</span>
+                    </div>
+                    <div class="shader-upload-row">
+                        <label for="shader-upload-2">uImage2</label>
+                        <input id="shader-upload-2" type="file" accept="image/*">
+                        <button id="shader-upload-clear-2" type="button">清空</button>
+                        <span id="shader-upload-name-2" class="shader-upload-name">未上传</span>
+                    </div>
+                    <div class="shader-upload-row">
+                        <label for="shader-upload-3">uImage3</label>
+                        <input id="shader-upload-3" type="file" accept="image/*">
+                        <button id="shader-upload-clear-3" type="button">清空</button>
+                        <span id="shader-upload-name-3" class="shader-upload-name">未上传</span>
+                    </div>
+                </div>
+            </div>
+            <div class="shader-preview-canvas-wrap">
+                <canvas id="shader-preview-canvas" class="shader-preview-canvas" width="720" height="420"></canvas>
+            </div>
+            <div id="shader-preview-status" class="shader-preview-status">预览就绪</div>
+        </section>
+    </div>
+
+    <div id="command-palette" class="command-palette" hidden>
+        <button id="command-palette-backdrop" class="command-palette-backdrop" type="button" aria-label="关闭命令面板"></button>
+        <section class="command-palette-dialog" role="dialog" aria-modal="true" aria-label="Command Palette">
+            <label for="command-palette-input" class="command-palette-title">Command Palette</label>
+            <input id="command-palette-input" class="command-palette-input" type="text" spellcheck="false" autocomplete="off" placeholder="输入命令（Ctrl+Shift+P）">
+            <ul id="command-palette-results" class="command-palette-results" role="listbox" aria-label="命令列表"></ul>
+        </section>
+    </div>
+</body>
+</html>

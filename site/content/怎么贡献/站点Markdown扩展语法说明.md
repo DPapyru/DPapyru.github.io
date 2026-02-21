@@ -224,7 +224,7 @@ colorChange:
 {color:warning}{使用警告色}
 ```
 
-提示：在 `site/pages/article-studio.html` 左侧 Metadata 面板中填写 `colors` 和 `colorChange` 后，会自动写入 front matter。
+提示：在 `/tml-ide/` 左侧 Metadata 面板中填写 `colors` 和 `colorChange` 后，会自动写入 front matter。
 
 ## 作者模式调试
 

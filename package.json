@@ -12,7 +12,7 @@
     "gallery:check": "node site/tooling/scripts/gallery-check.js",
     "build:anims": "node site/tooling/scripts/build-anims.js",
     "build:animcs": "node site/tooling/scripts/build-animcs.js",
-    "build": "npm run generate-index && npm run build:anims",
+    "build": "npm run generate-index && npm run build:anims && npm --prefix tml-ide-app run build",
     "check-generated": "npm run gallery:check && npm run build && git diff --exit-code",
     "check-content": "node site/tooling/scripts/check-content.js",
     "test": "node --test"

@@ -34,6 +34,8 @@ test-*.html
 test-*.js
 *-test.html
 *-test.js
+!tml-ide-app/tests/
+!tml-ide-app/tests/**
 
 # 部署和构建文件
 dist/
