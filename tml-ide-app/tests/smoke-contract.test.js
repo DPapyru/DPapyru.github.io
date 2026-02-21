@@ -15,9 +15,8 @@ test('index.html exposes required IDE controls', () => {
 
 test('message contract includes required request channels', () => {
     const contract = fs.readFileSync(path.join(root, 'src/contracts/messages.js'), 'utf8');
-    assert.match(contract, /completion\.request/);
-    assert.match(contract, /hover\.request/);
-    assert.match(contract, /diagnostics\.rule\.request/);
+    assert.match(contract, /analyze\.v2\.request/);
+    assert.match(contract, /analyze\.v2\.response/);
     assert.match(contract, /diagnostics\.roslyn\.request/);
     assert.match(contract, /assembly\.import\.request/);
 });

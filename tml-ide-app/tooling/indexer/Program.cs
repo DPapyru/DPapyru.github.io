@@ -251,7 +251,13 @@ static class Program
                             FullName = fullName,
                             Namespace = type.Namespace ?? "",
                             Name = type.Name.Split('`')[0],
-                            Summary = docs.GetSummary($"T:{fullName}")
+                            Summary = docs.GetSummary($"T:{fullName}"),
+                            BaseType = type.BaseType != null ? NormalizeTypeFullName(type.BaseType) : "",
+                            Interfaces = type.GetInterfaces()
+                                .Select(NormalizeTypeFullName)
+                                .Distinct(StringComparer.Ordinal)
+                                .OrderBy(x => x, StringComparer.Ordinal)
+                                .ToList()
                         };
                         index.Types[fullName] = typeEntry;
                     }
@@ -298,7 +304,13 @@ static class Program
                     FullName = fullName,
                     Namespace = type.Namespace ?? "",
                     Name = type.Name.Split('`')[0],
-                    Summary = docs.GetSummary($"T:{fullName}")
+                    Summary = docs.GetSummary($"T:{fullName}"),
+                    BaseType = type.BaseType != null ? NormalizeTypeFullName(type.BaseType) : "",
+                    Interfaces = type.GetInterfaces()
+                        .Select(NormalizeTypeFullName)
+                        .Distinct(StringComparer.Ordinal)
+                        .OrderBy(x => x, StringComparer.Ordinal)
+                        .ToList()
                 };
                 IndexMembers(type, typeEntry, docs);
                 entry.Types[fullName] = typeEntry;
@@ -908,6 +920,8 @@ sealed class TypeEntry
     public string Namespace { get; set; } = "";
     public string Name { get; set; } = "";
     public string Summary { get; set; } = "";
+    public string BaseType { get; set; } = "";
+    public List<string> Interfaces { get; set; } = new();
     public MemberCollection Members { get; set; } = new();
 }
 

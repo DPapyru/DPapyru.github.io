@@ -1,13 +1,11 @@
 import { MESSAGE_TYPES } from '../contracts/messages.js';
 import {
     createLanguageState,
-    getCompletionItems,
-    getHoverInfo,
     getIndexStats,
-    getRuleDiagnostics,
     importAssemblyFromXml,
     setLanguageIndex
 } from '../lib/language-core.js';
+import { analyzeDocumentV2 } from '../lib/analyze-v2.js';
 import { createEmptyApiIndex } from '../lib/index-schema.js';
 
 const state = createLanguageState(createEmptyApiIndex());
@@ -32,21 +30,9 @@ self.onmessage = function (event) {
             return;
         }
 
-        if (type === MESSAGE_TYPES.COMPLETION_REQUEST) {
-            const items = getCompletionItems(state, payload);
-            send(id, MESSAGE_TYPES.COMPLETION_RESPONSE, { items });
-            return;
-        }
-
-        if (type === MESSAGE_TYPES.HOVER_REQUEST) {
-            const hover = getHoverInfo(state, payload);
-            send(id, MESSAGE_TYPES.HOVER_RESPONSE, { hover });
-            return;
-        }
-
-        if (type === MESSAGE_TYPES.DIAGNOSTICS_RULE_REQUEST) {
-            const diagnostics = getRuleDiagnostics(state, payload);
-            send(id, MESSAGE_TYPES.DIAGNOSTICS_RULE_RESPONSE, { diagnostics });
+        if (type === MESSAGE_TYPES.ANALYZE_V2_REQUEST) {
+            const result = analyzeDocumentV2(state, payload);
+            send(id, MESSAGE_TYPES.ANALYZE_V2_RESPONSE, result);
             return;
         }
 

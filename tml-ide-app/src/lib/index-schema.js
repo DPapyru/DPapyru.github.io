@@ -8,6 +8,8 @@ function createTypeRecord(fullName) {
         namespace: ns,
         name: name,
         summary: '',
+        baseType: '',
+        interfaces: [],
         members: {
             methods: [],
             properties: [],
@@ -137,6 +139,10 @@ export function normalizeApiIndex(raw) {
         record.namespace = String(sourceType && sourceType.namespace || record.namespace);
         record.name = String(sourceType && sourceType.name || record.name);
         record.summary = String(sourceType && sourceType.summary || '');
+        record.baseType = String(sourceType && sourceType.baseType || '');
+        record.interfaces = Array.isArray(sourceType && sourceType.interfaces)
+            ? sourceType.interfaces.map((item) => String(item || '')).filter(Boolean)
+            : [];
         ensureMemberBuckets(record);
 
         const sourceMembers = sourceType && sourceType.members && typeof sourceType.members === 'object'
@@ -203,6 +209,17 @@ export function mergeApiIndex(baseIndex, patchIndex) {
         ensureMemberBuckets(current);
         if (!current.summary && incoming.summary) {
             current.summary = incoming.summary;
+        }
+        if (!current.baseType && incoming.baseType) {
+            current.baseType = incoming.baseType;
+        }
+        if (!Array.isArray(current.interfaces)) {
+            current.interfaces = [];
+        }
+        if (Array.isArray(incoming.interfaces) && incoming.interfaces.length) {
+            const interfaceSet = new Set(current.interfaces);
+            incoming.interfaces.forEach((name) => interfaceSet.add(name));
+            current.interfaces = Array.from(interfaceSet).sort((a, b) => a.localeCompare(b));
         }
 
         const mergeKind = (kind) => {

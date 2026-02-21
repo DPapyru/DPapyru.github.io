@@ -31,16 +31,81 @@ function stripGenericsAndArrays(typeName) {
     return text;
 }
 
+function splitBaseTypeList(rawList) {
+    const source = String(rawList || '').trim();
+    if (!source) return [];
+
+    const items = [];
+    let current = '';
+    let depth = 0;
+
+    for (let i = 0; i < source.length; i++) {
+        const ch = source[i];
+        if (ch === '<') {
+            depth += 1;
+            current += ch;
+            continue;
+        }
+        if (ch === '>') {
+            depth = Math.max(0, depth - 1);
+            current += ch;
+            continue;
+        }
+        if (ch === ',' && depth === 0) {
+            const name = stripGenericsAndArrays(current);
+            if (name) items.push(name);
+            current = '';
+            continue;
+        }
+        current += ch;
+    }
+
+    const last = stripGenericsAndArrays(current);
+    if (last) items.push(last);
+    return items;
+}
+
+function findMatchingBrace(source, openBraceOffset) {
+    const start = Math.max(0, Number(openBraceOffset) || 0);
+    if (source[start] !== '{') return source.length;
+
+    let depth = 0;
+    for (let i = start; i < source.length; i++) {
+        const ch = source[i];
+        if (ch === '{') depth += 1;
+        else if (ch === '}') depth -= 1;
+        if (depth === 0) return i;
+    }
+
+    return source.length;
+}
+
 function extractContext(text) {
     const source = String(text || '');
     const usings = new Set();
     const declaredTypes = new Set();
     const localTypes = new Map();
+    const classScopes = [];
 
     let m;
     const usingRe = /^\s*using\s+([A-Za-z_][A-Za-z0-9_.]*)\s*;/gm;
     while ((m = usingRe.exec(source)) !== null) {
         usings.add(m[1]);
+    }
+
+    const classDeclRe = /\b(?:class|struct|interface|record)\s+([A-Za-z_][A-Za-z0-9_]*)(?:\s*:\s*([^{\n]+))?\s*\{/g;
+    while ((m = classDeclRe.exec(source)) !== null) {
+        const className = m[1];
+        declaredTypes.add(className);
+
+        const openBraceOffset = classDeclRe.lastIndex - 1;
+        const closeBraceOffset = findMatchingBrace(source, openBraceOffset);
+        classScopes.push({
+            name: className,
+            start: m.index,
+            end: closeBraceOffset,
+            baseTypes: splitBaseTypeList(m[2] || '')
+        });
     }
 
     const typeDeclRe = /\b(?:class|struct|interface|enum|record)\s+([A-Za-z_][A-Za-z0-9_]*)/g;
@@ -68,7 +133,8 @@ function extractContext(text) {
     return {
         usings,
         declaredTypes,
-        localTypes
+        localTypes,
+        classScopes
     };
 }
 
@@ -90,20 +156,60 @@ function resolveTypeByName(index, typeName, context) {
             if (candidate.namespace && usingSet.has(candidate.namespace)) score = 0;
             if (candidate.namespace === 'Terraria') score = Math.min(score, 1);
             if (candidate.namespace === 'Terraria.ModLoader') score = Math.min(score, 2);
-            return { candidate, score };
+            const namespaceParts = String(candidate.namespace || '')
+                .split('.')
+                .filter(Boolean);
+            const fullNameParts = String(candidate.fullName || '')
+                .split('.')
+                .filter(Boolean);
+            const nestedDepth = Math.max(0, fullNameParts.length - namespaceParts.length - 1);
+            return { candidate, score, nestedDepth };
         })
         .sort((a, b) => {
             const byScore = a.score - b.score;
             if (byScore !== 0) return byScore;
+            const byNestedDepth = a.nestedDepth - b.nestedDepth;
+            if (byNestedDepth !== 0) return byNestedDepth;
+            const byLength = a.candidate.fullName.length - b.candidate.fullName.length;
+            if (byLength !== 0) return byLength;
             return a.candidate.fullName.localeCompare(b.candidate.fullName);
         });
 
     return ranked[0].candidate;
 }
 
-function resolveIdentifierType(index, identifier, context) {
+function getClassScopeAtOffset(context, offset) {
+    const scopes = context && Array.isArray(context.classScopes) ? context.classScopes : [];
+    if (!scopes.length) return null;
+
+    const safeOffset = Math.max(0, Number(offset) || 0);
+    let match = null;
+    for (let i = 0; i < scopes.length; i++) {
+        const scope = scopes[i];
+        if (safeOffset < scope.start || safeOffset > scope.end) continue;
+        if (!match || scope.start >= match.start) {
+            match = scope;
+        }
+    }
+    return match;
+}
+
+function resolveIdentifierType(index, identifier, context, offset) {
     const safe = String(identifier || '').trim();
     if (!safe) return null;
+
+    if (safe === 'this' || safe === 'base') {
+        const scope = getClassScopeAtOffset(context, offset);
+        if (!scope) return null;
+        const baseType = Array.isArray(scope.baseTypes) && scope.baseTypes.length ? scope.baseTypes[0] : '';
+        if (safe === 'base') {
+            return baseType ? resolveTypeByName(index, baseType, context) : null;
+        }
+
+        const current = resolveTypeByName(index, scope.name, context);
+        if (current) return current;
+        return baseType ? resolveTypeByName(index, baseType, context) : null;
+    }
 
     if (context.localTypes.has(safe)) {
         return resolveTypeByName(index, context.localTypes.get(safe), context);
@@ -116,29 +222,124 @@ function resolveIdentifierType(index, identifier, context) {
     return null;
 }
 
-function collectMembersByName(typeRecord, name) {
-    const safe = String(name || '').trim();
-    if (!safe || !typeRecord) return [];
-    const all = [];
-    typeRecord.members.methods.forEach((item) => {
-        if (item.name === safe) all.push(item);
-    });
-    typeRecord.members.properties.forEach((item) => {
-        if (item.name === safe) all.push(item);
-    });
-    typeRecord.members.fields.forEach((item) => {
-        if (item.name === safe) all.push(item);
-    });
-    return all;
+function resolveMemberResultType(index, context, ownerType, memberName) {
+    if (!ownerType) return null;
+
+    const candidates = collectMembersByName(index, context, ownerType, memberName);
+    if (!candidates.length) return null;
+
+    for (let i = 0; i < candidates.length; i++) {
+        const item = candidates[i];
+        const declaredType =
+            item.kind === 'method'
+                ? stripGenericsAndArrays(item.returnType)
+                : stripGenericsAndArrays(item.type || item.returnType);
+
+        if (!declaredType || declaredType === 'void' || BUILTIN_TYPES.has(declaredType)) {
+            continue;
+        }
+
+        const resolved = getTypeByFullName(index, declaredType) || resolveTypeByName(index, declaredType, context);
+        if (resolved) {
+            return resolved;
+        }
+    }
+
+    return null;
 }
 
-function getMemberCompletionCandidates(typeRecord, prefix) {
-    const needle = String(prefix || '').toLowerCase();
-    const members = [];
+function resolveAccessPathType(index, accessPath, context, offset) {
+    const safePath = String(accessPath || '').trim();
+    if (!safePath) return null;
 
-    typeRecord.members.methods.forEach((item) => members.push(item));
-    typeRecord.members.properties.forEach((item) => members.push(item));
-    typeRecord.members.fields.forEach((item) => members.push(item));
+    const directType = getTypeByFullName(index, safePath) || resolveTypeByName(index, safePath, context);
+    if (directType) return directType;
+
+    const parts = safePath.split('.').filter(Boolean);
+    if (!parts.length) return null;
+
+    let typeRecord = resolveIdentifierType(index, parts[0], context, offset);
+    let memberStart = 1;
+
+    if (!typeRecord && parts.length > 1) {
+        for (let i = parts.length - 1; i > 0; i--) {
+            const maybeTypeName = parts.slice(0, i).join('.');
+            const maybeType = getTypeByFullName(index, maybeTypeName) || resolveTypeByName(index, maybeTypeName, context);
+            if (maybeType) {
+                typeRecord = maybeType;
+                memberStart = i;
+                break;
+            }
+        }
+    }
+
+    if (!typeRecord) return null;
+
+    for (let i = memberStart; i < parts.length; i++) {
+        typeRecord = resolveMemberResultType(index, context, typeRecord, parts[i]);
+        if (!typeRecord) {
+            return null;
+        }
+    }
+
+    return typeRecord;
+}
+
+function collectMembersForTypeHierarchy(index, context, typeRecord) {
+    if (!typeRecord) return [];
+
+    const queue = [typeRecord];
+    const seenTypes = new Set();
+    const seenMembers = new Set();
+    const allMembers = [];
+
+    while (queue.length) {
+        const current = queue.shift();
+        if (!current) continue;
+
+        const fullName = String(current.fullName || '');
+        if (fullName && seenTypes.has(fullName)) continue;
+        if (fullName) seenTypes.add(fullName);
+
+        const pushMember = (item) => {
+            const key = `${item.kind}:${item.name}:${item.signature || ''}`;
+            if (seenMembers.has(key)) return;
+            seenMembers.add(key);
+            allMembers.push(item);
+        };
+
+        current.members.methods.forEach(pushMember);
+        current.members.properties.forEach(pushMember);
+        current.members.fields.forEach(pushMember);
+
+        const parents = [];
+        if (current.baseType) parents.push(current.baseType);
+        if (Array.isArray(current.interfaces)) {
+            current.interfaces.forEach((name) => {
+                if (name) parents.push(name);
+            });
+        }
+
+        parents.forEach((name) => {
+            const parent =
+                getTypeByFullName(index, name) ||
+                resolveTypeByName(index, name, context);
+            if (parent) queue.push(parent);
+        });
+    }
+
+    return allMembers;
+}
+
+function collectMembersByName(index, context, typeRecord, name) {
+    const safe = String(name || '').trim();
+    if (!safe || !typeRecord) return [];
+    return collectMembersForTypeHierarchy(index, context, typeRecord).filter((item) => item.name === safe);
+}
+
+function getMemberCompletionCandidates(index, context, typeRecord, prefix) {
+    const needle = String(prefix || '').toLowerCase();
+    const members = collectMembersForTypeHierarchy(index, context, typeRecord);
 
     return members
         .filter((item) => item.name.toLowerCase().startsWith(needle))
@@ -178,7 +379,7 @@ function getMemberAccessBeforeCursor(text, offset) {
     const source = String(text || '');
     const pos = Math.max(0, Math.min(source.length, Number(offset) || 0));
     const left = source.slice(0, pos);
-    const match = left.match(/([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)?$/);
+    const match = left.match(/([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.([A-Za-z_][A-Za-z0-9_]*)?$/);
     if (!match) return null;
     return {
         objectName: match[1],
@@ -546,12 +747,12 @@ export function getCompletionItems(state, request) {
     const memberAccess = getMemberAccessBeforeCursor(text, offset);
 
     if (memberAccess) {
-        const ownerType = resolveIdentifierType(index, memberAccess.objectName, context);
+        const ownerType = resolveAccessPathType(index, memberAccess.objectName, context, offset);
         if (!ownerType) {
             return [];
         }
 
-        const members = getMemberCompletionCandidates(ownerType, memberAccess.memberPrefix)
+        const members = getMemberCompletionCandidates(index, context, ownerType, memberAccess.memberPrefix)
             .slice(0, maxItems)
             .map((item) => ({
                 label: item.name,
@@ -611,13 +812,13 @@ export function getHoverInfo(state, request) {
     if (!tokenInfo) return null;
 
     const before = text.slice(0, tokenInfo.start);
-    const memberOwnerMatch = before.match(/([A-Za-z_][A-Za-z0-9_]*)\.$/);
+    const memberOwnerMatch = before.match(/([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.$/);
 
     if (memberOwnerMatch) {
-        const ownerType = resolveIdentifierType(index, memberOwnerMatch[1], context);
+        const ownerType = resolveAccessPathType(index, memberOwnerMatch[1], context, tokenInfo.start);
         if (!ownerType) return null;
 
-        const members = collectMembersByName(ownerType, tokenInfo.token);
+        const members = collectMembersByName(index, context, ownerType, tokenInfo.token);
         if (!members.length) return null;
 
         const lines = [];
@@ -761,15 +962,15 @@ export function getRuleDiagnostics(state, request) {
         }
     }
 
-    const memberRe = /\b([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)\s*(\(([^)]*)\))?/g;
+    const memberRe = /\b([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*)\.([A-Za-z_][A-Za-z0-9_]*)\s*(\(([^)]*)\))?/g;
     while ((match = memberRe.exec(text)) !== null) {
         const owner = match[1];
         const member = match[2];
         const argsText = match[4] || '';
-        const ownerType = resolveIdentifierType(index, owner, context);
+        const ownerType = resolveAccessPathType(index, owner, context, match.index);
         if (!ownerType) continue;
 
-        const candidates = collectMembersByName(ownerType, member);
+        const candidates = collectMembersByName(index, context, ownerType, member);
         if (!candidates.length) {
             pushDiagnostic(
                 diagnostics,

@@ -40,6 +40,42 @@ test('completion suggests members after dot access', () => {
     assert.ok(items.some((item) => item.label === 'AutoJoin'));
 });
 
+test('completion resolves chained member access from fields or properties', () => {
+    const state = createState();
+    const source = [
+        'using Terraria;',
+        '',
+        'public class Demo {',
+        '    void Test() {',
+        '        WorldGen.genRand.',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const offset = source.indexOf('WorldGen.genRand.') + 'WorldGen.genRand.'.length;
+    const items = getCompletionItems(state, { text: source, offset });
+    assert.ok(items.some((item) => item.label === 'Next'));
+});
+
+test('completion prefers Terraria.Player members over nested BackupIO.Player for local variables', () => {
+    const state = createState();
+    const source = [
+        'using Terraria;',
+        'using Terraria.ModLoader;',
+        '',
+        'public class DemoMod : Mod {',
+        '    void Test() {',
+        '        Player player = null;',
+        '        player.',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const offset = source.indexOf('player.') + 'player.'.length;
+    const items = getCompletionItems(state, { text: source, offset });
+    assert.ok(items.some((item) => item.label === 'AddBuff'));
+});
+
 test('hover returns markdown for known type', () => {
     const state = createState();
     const source = 'using Terraria;\n\npublic class Demo { Player player; }';
