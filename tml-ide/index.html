@@ -6,8 +6,8 @@
     <title>tML IDE Playground</title>
     <meta name="description" content="独立 tModLoader C# IDE Playground，支持补全、悬停文档与双层诊断。">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
-  <script type="module" crossorigin src="/tml-ide/assets/index-Cy1GbvRt.js"></script>
-  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-CTADXsjj.css">
+  <script type="module" crossorigin src="/tml-ide/assets/index-R857y8B1.js"></script>
+  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-BqzJwP0z.css">
 </head>
 <body>
     <div id="app" class="app-shell">
@@ -21,7 +21,14 @@
                 <h1 class="app-title">tML IDE Playground</h1>
                 <p class="app-subtitle">workspace: tml-ide · C# API 补全</p>
             </div>
+            <div class="workspace-switch" role="tablist" aria-label="工作区切换">
+                <button class="workspace-btn workspace-btn-active" id="workspace-btn-csharp" type="button" data-workspace="csharp" role="tab" aria-selected="true">C# IDE</button>
+                <button class="workspace-btn" id="workspace-btn-markdown" type="button" data-workspace="markdown" role="tab" aria-selected="false">Markdown IDE</button>
+                <button class="workspace-btn" id="workspace-btn-shader" type="button" data-workspace="shader" role="tab" aria-selected="false">Shader</button>
+            </div>
             <div class="app-header-actions">
+                <button id="btn-open-unified-submit" type="button">统一提交</button>
+                <button id="btn-route-submit-panel" type="button">提交面板</button>
                 <button id="btn-save-workspace" type="button">保存工作区</button>
                 <button id="btn-export-workspace" type="button">导出 workspace.v1.json</button>
                 <label class="file-btn" for="input-import-workspace">导入工作区</label>
@@ -29,7 +36,7 @@
             </div>
         </header>
 
-        <main class="app-main">
+        <main id="workspace-csharp-root" class="app-main">
             <aside class="activity-bar" aria-label="Activity Bar">
                 <div class="activity-group">
                     <button class="activity-btn activity-btn-active" type="button" data-activity="explorer" aria-label="Explorer">EX</button>
@@ -153,6 +160,73 @@
                         </div>
                     </section>
                 </div>
+            </aside>
+        </main>
+
+        <main id="workspace-subapp-root" class="workspace-subapp" hidden>
+            <section class="subapp-frame-wrap">
+                <div class="subapp-toolbar">
+                    <span class="subapp-title" id="subapp-title">Markdown IDE</span>
+                    <div class="subapp-toolbar-actions">
+                        <button id="btn-subapp-reload" type="button">刷新子应用</button>
+                        <button id="btn-subapp-open-submit" type="button">打开提交面板</button>
+                    </div>
+                </div>
+                <iframe id="subapp-iframe" class="subapp-iframe" title="Unified IDE Subapp" loading="lazy"></iframe>
+            </section>
+            <aside id="unified-submit-panel" class="unified-submit-panel">
+                <header class="unified-submit-head">
+                    <h2>统一提交</h2>
+                    <button id="btn-unified-submit-close" type="button">关闭</button>
+                </header>
+                <section class="unified-submit-section">
+                    <label for="unified-worker-url">Worker API 地址</label>
+                    <input id="unified-worker-url" type="text" value="https://greenhome-pr.3577415213.workers.dev/api/create-pr" spellcheck="false">
+                </section>
+                <section class="unified-submit-section">
+                    <div class="unified-auth-row">
+                        <button id="btn-unified-auth-login" type="button">GitHub 登录</button>
+                        <button id="btn-unified-auth-logout" type="button">退出</button>
+                    </div>
+                    <div id="unified-auth-status" class="unified-auth-status">未登录</div>
+                </section>
+                <section class="unified-submit-section">
+                    <label for="unified-pr-title">PR 标题（可选）</label>
+                    <input id="unified-pr-title" type="text" placeholder="例如：docs: 统一IDE提交">
+                </section>
+                <section class="unified-submit-section">
+                    <label for="unified-existing-pr-number">继续已有 PR（可选）</label>
+                    <input id="unified-existing-pr-number" type="number" min="1" step="1" placeholder="留空=新建 PR">
+                </section>
+                <section class="unified-submit-section">
+                    <label for="unified-anchor-select">Markdown 锚点（无 Markdown 时必选）</label>
+                    <select id="unified-anchor-select">
+                        <option value="">自动选择（若可用）</option>
+                    </select>
+                </section>
+                <section class="unified-submit-section">
+                    <div id="unified-summary" class="unified-summary">待收集 staged 改动。</div>
+                    <div class="unified-submit-actions">
+                        <button id="btn-unified-collect" type="button">收集改动</button>
+                        <button id="btn-unified-submit" type="button">提交全部（自动分批）</button>
+                        <button id="btn-unified-resume" type="button">续传失败批次</button>
+                    </div>
+                </section>
+                <section class="unified-submit-section">
+                    <h3>可提交文件</h3>
+                    <ul id="unified-sendable-list" class="unified-file-list"></ul>
+                </section>
+                <section class="unified-submit-section">
+                    <h3>需手工 PR 文件</h3>
+                    <ul id="unified-blocked-list" class="unified-file-list"></ul>
+                </section>
+                <section class="unified-submit-section">
+                    <h3>批次进度</h3>
+                    <pre id="unified-batch-progress" class="unified-batch-progress">尚未提交。</pre>
+                </section>
+                <section class="unified-submit-section">
+                    <div id="unified-submit-status" class="unified-submit-status">就绪</div>
+                </section>
             </aside>
         </main>
 

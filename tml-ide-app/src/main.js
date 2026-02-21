@@ -14,7 +14,9 @@ import {
     exportWorkspaceJson,
     importWorkspaceJson,
     loadWorkspace,
-    saveWorkspace
+    saveWorkspace,
+    loadUnifiedWorkspaceState,
+    saveUnifiedWorkspaceState
 } from './lib/workspace-store.js';
 
 self.MonacoEnvironment = {
@@ -25,6 +27,11 @@ self.MonacoEnvironment = {
 
 const dom = {
     appRoot: document.getElementById('app'),
+    workspaceCsharpRoot: document.getElementById('workspace-csharp-root'),
+    workspaceSubappRoot: document.getElementById('workspace-subapp-root'),
+    workspaceButtons: Array.from(document.querySelectorAll('.workspace-btn[data-workspace]')),
+    btnOpenUnifiedSubmit: document.getElementById('btn-open-unified-submit'),
+    btnRouteSubmitPanel: document.getElementById('btn-route-submit-panel'),
     fileList: document.getElementById('file-list'),
     activeFileName: document.getElementById('active-file-name'),
     editor: document.getElementById('editor'),
@@ -67,12 +74,34 @@ const dom = {
     commandPalette: document.getElementById('command-palette'),
     commandPaletteBackdrop: document.getElementById('command-palette-backdrop'),
     commandPaletteInput: document.getElementById('command-palette-input'),
-    commandPaletteResults: document.getElementById('command-palette-results')
+    commandPaletteResults: document.getElementById('command-palette-results'),
+    subappTitle: document.getElementById('subapp-title'),
+    btnSubappReload: document.getElementById('btn-subapp-reload'),
+    btnSubappOpenSubmit: document.getElementById('btn-subapp-open-submit'),
+    subappIframe: document.getElementById('subapp-iframe'),
+    unifiedSubmitPanel: document.getElementById('unified-submit-panel'),
+    btnUnifiedSubmitClose: document.getElementById('btn-unified-submit-close'),
+    unifiedWorkerUrl: document.getElementById('unified-worker-url'),
+    btnUnifiedAuthLogin: document.getElementById('btn-unified-auth-login'),
+    btnUnifiedAuthLogout: document.getElementById('btn-unified-auth-logout'),
+    unifiedAuthStatus: document.getElementById('unified-auth-status'),
+    unifiedPrTitle: document.getElementById('unified-pr-title'),
+    unifiedExistingPrNumber: document.getElementById('unified-existing-pr-number'),
+    unifiedAnchorSelect: document.getElementById('unified-anchor-select'),
+    unifiedSummary: document.getElementById('unified-summary'),
+    btnUnifiedCollect: document.getElementById('btn-unified-collect'),
+    btnUnifiedSubmit: document.getElementById('btn-unified-submit'),
+    btnUnifiedResume: document.getElementById('btn-unified-resume'),
+    unifiedSendableList: document.getElementById('unified-sendable-list'),
+    unifiedBlockedList: document.getElementById('unified-blocked-list'),
+    unifiedBatchProgress: document.getElementById('unified-batch-progress'),
+    unifiedSubmitStatus: document.getElementById('unified-submit-status')
 };
 
 const state = {
     index: createEmptyApiIndex(),
     workspace: createDefaultWorkspace(),
+    unifiedWorkspaceState: null,
     editor: null,
     modelByFileId: new Map(),
     analyzeCache: new Map(),
@@ -82,6 +111,34 @@ const state = {
     roslynWorker: null,
     initialized: false,
     problems: [],
+    route: {
+        workspace: 'csharp',
+        panel: ''
+    },
+    subapps: {
+        activeWorkspace: '',
+        currentSrc: '',
+        readyByWorkspace: {
+            markdown: false,
+            shader: false
+        },
+        snapshotByWorkspace: {
+            markdown: null,
+            shader: null
+        },
+        collectWaiters: []
+    },
+    unified: {
+        persistTimer: 0,
+        collectVersion: 0,
+        collection: null,
+        sendableEntries: [],
+        blockedEntries: [],
+        markdownEntries: [],
+        resumeState: null,
+        submitting: false,
+        submitLogs: []
+    },
     ui: {
         sidebarVisible: true,
         panelVisible: true,
@@ -103,6 +160,18 @@ const VSCODE_SHORTCUTS = Object.freeze({
     FOCUS_EXPLORER: 'Ctrl+Shift+E'
 });
 const COMPLETION_MAX_ITEMS = 5000;
+const UNIFIED_STATE_SAVE_DELAY = 240;
+const SUBAPP_COLLECT_TIMEOUT_MS = 2500;
+const WORKSPACE_VALUES = Object.freeze(['csharp', 'markdown', 'shader']);
+const WORKSPACE_LAST_KEY = 'tml-ide:last-workspace';
+const OAUTH_TOKEN_KEY = 'articleStudioOAuthToken.v1';
+const OAUTH_USER_KEY = 'articleStudioOAuthUser.v1';
+const DEFAULT_WORKER_API_URL = 'https://greenhome-pr.3577415213.workers.dev/api/create-pr';
+const MARKDOWN_FALLBACK_ANCHORS = Object.freeze([
+    'site/content/怎么贡献/新文章.md',
+    'site/content/怎么贡献/贡献者规范.md',
+    'site/content/基础概念/教程结构说明.md'
+]);
 
 // Keep Monaco colors aligned with site viewer's Rider dark Prism theme.
 const RIDER_CODE_COLORS = Object.freeze({
@@ -245,6 +314,971 @@ function addEvent(level, message) {
     }
 }
 
+function normalizeRepoPath(pathValue) {
+    return String(pathValue || '')
+        .trim()
+        .replace(/\\/g, '/')
+        .replace(/^\/+/, '')
+        .replace(/\/{2,}/g, '/');
+}
+
+function normalizeWorkerApiUrl(value) {
+    let safe = String(value || '').trim();
+    if (!safe) return '';
+    safe = safe.replace(/\/+$/, '');
+    safe = safe.replace(/\/(?:api\/(?:create-pr|preflight-check|my-open-prs)|auth\/(?:me|github\/login|github\/callback))$/i, '');
+    if (!/\/api\/create-pr(?:\?|$)/i.test(safe)) {
+        safe = `${safe}/api/create-pr`;
+    }
+    return safe;
+}
+
+function workerBaseUrlFromApiUrl(apiUrl) {
+    return String(apiUrl || '').trim().replace(/\/api\/create-pr(?:\?.*)?$/i, '');
+}
+
+function normalizeWorkspaceName(workspace) {
+    const safe = String(workspace || '').trim().toLowerCase();
+    if (WORKSPACE_VALUES.includes(safe)) return safe;
+    return 'csharp';
+}
+
+function normalizePanelName(panel) {
+    return String(panel || '').trim().toLowerCase() === 'submit' ? 'submit' : '';
+}
+
+function normalizeAuthSession() {
+    let token = '';
+    let user = '';
+    try {
+        token = String(sessionStorage.getItem(OAUTH_TOKEN_KEY) || '').trim();
+        user = String(sessionStorage.getItem(OAUTH_USER_KEY) || '').trim();
+    } catch (_err) {
+        token = '';
+        user = '';
+    }
+    return { token, user };
+}
+
+function saveAuthSession(token, user) {
+    try {
+        sessionStorage.setItem(OAUTH_TOKEN_KEY, String(token || '').trim());
+        sessionStorage.setItem(OAUTH_USER_KEY, String(user || '').trim());
+    } catch (_err) {
+        // Ignore.
+    }
+}
+
+function clearAuthSession() {
+    try {
+        sessionStorage.removeItem(OAUTH_TOKEN_KEY);
+        sessionStorage.removeItem(OAUTH_USER_KEY);
+    } catch (_err) {
+        // Ignore.
+    }
+}
+
+function consumeOAuthHashSession() {
+    const rawHash = String(globalThis.location && globalThis.location.hash || '');
+    if (!rawHash.startsWith('#')) return;
+
+    const params = new URLSearchParams(rawHash.slice(1));
+    const token = String(params.get('oauth_token') || '').trim();
+    const user = String(params.get('github_user') || '').trim();
+    if (!token) return;
+
+    saveAuthSession(token, user);
+
+    const url = new URL(globalThis.location.href);
+    url.hash = '';
+    globalThis.history.replaceState({}, '', url.toString());
+}
+
+function readLastWorkspacePreference() {
+    try {
+        const value = String(localStorage.getItem(WORKSPACE_LAST_KEY) || '').trim();
+        return normalizeWorkspaceName(value);
+    } catch (_err) {
+        return 'csharp';
+    }
+}
+
+function writeLastWorkspacePreference(workspace) {
+    try {
+        localStorage.setItem(WORKSPACE_LAST_KEY, normalizeWorkspaceName(workspace));
+    } catch (_err) {
+        // Ignore.
+    }
+}
+
+function parseRouteFromUrl() {
+    const url = new URL(globalThis.location.href);
+    const queryWorkspace = normalizeWorkspaceName(url.searchParams.get('workspace'));
+    const panel = normalizePanelName(url.searchParams.get('panel'));
+
+    const hasWorkspaceParam = url.searchParams.has('workspace');
+    const storedWorkspace = normalizeWorkspaceName(
+        state.unifiedWorkspaceState && state.unifiedWorkspaceState.lastWorkspace
+            ? state.unifiedWorkspaceState.lastWorkspace
+            : readLastWorkspacePreference()
+    );
+    const workspace = hasWorkspaceParam ? queryWorkspace : storedWorkspace;
+    return { workspace, panel };
+}
+
+function syncRouteToUrl(options) {
+    const opts = options || {};
+    const currentUrl = new URL(globalThis.location.href);
+    const nextUrl = new URL(globalThis.location.href);
+    nextUrl.searchParams.set('workspace', normalizeWorkspaceName(state.route.workspace));
+    if (normalizePanelName(state.route.panel)) {
+        nextUrl.searchParams.set('panel', normalizePanelName(state.route.panel));
+    } else {
+        nextUrl.searchParams.delete('panel');
+    }
+    if (nextUrl.toString() === currentUrl.toString()) {
+        return;
+    }
+    const method = opts.replace ? 'replaceState' : 'pushState';
+    globalThis.history[method]({}, '', nextUrl.toString());
+}
+
+function updateWorkspaceButtons() {
+    dom.workspaceButtons.forEach((button) => {
+        const target = normalizeWorkspaceName(button.dataset.workspace);
+        const active = target === normalizeWorkspaceName(state.route.workspace);
+        button.classList.toggle('workspace-btn-active', active);
+        button.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+}
+
+function applyWorkspaceLayout() {
+    const workspace = normalizeWorkspaceName(state.route.workspace);
+    const isCsharp = workspace === 'csharp';
+    if (dom.workspaceCsharpRoot) {
+        dom.workspaceCsharpRoot.hidden = !isCsharp;
+    }
+    if (dom.workspaceSubappRoot) {
+        dom.workspaceSubappRoot.hidden = isCsharp;
+    }
+    if (isCsharp && state.editor) {
+        requestAnimationFrame(() => {
+            if (state.editor) state.editor.layout();
+        });
+    }
+}
+
+function updateSubappTitle(workspace) {
+    if (!dom.subappTitle) return;
+    if (workspace === 'markdown') {
+        dom.subappTitle.textContent = 'Markdown IDE';
+        return;
+    }
+    if (workspace === 'shader') {
+        dom.subappTitle.textContent = 'Shader IDE';
+        return;
+    }
+    dom.subappTitle.textContent = 'Unified IDE';
+}
+
+function routePanelIsOpen() {
+    return normalizePanelName(state.route.panel) === 'submit';
+}
+
+function applyUnifiedSubmitPanelVisibility() {
+    if (!dom.unifiedSubmitPanel) return;
+    const open = routePanelIsOpen();
+    dom.unifiedSubmitPanel.classList.toggle('unified-submit-panel-open', open);
+    dom.unifiedSubmitPanel.setAttribute('aria-hidden', open ? 'false' : 'true');
+}
+
+function setUnifiedSubmitStatus(text, level) {
+    if (!dom.unifiedSubmitStatus) return;
+    dom.unifiedSubmitStatus.textContent = String(text || '');
+    dom.unifiedSubmitStatus.dataset.level = String(level || 'info');
+}
+
+function pushUnifiedSubmitLog(line) {
+    const text = String(line || '').trim();
+    if (!text) return;
+    state.unified.submitLogs.push(`[${nowStamp()}] ${text}`);
+    while (state.unified.submitLogs.length > 60) {
+        state.unified.submitLogs.shift();
+    }
+    if (dom.unifiedBatchProgress) {
+        dom.unifiedBatchProgress.textContent = state.unified.submitLogs.join('\n');
+    }
+}
+
+function rememberUnifiedStateSnapshot() {
+    if (!state.unifiedWorkspaceState) return;
+
+    state.unifiedWorkspaceState.lastWorkspace = normalizeWorkspaceName(state.route.workspace);
+    state.unifiedWorkspaceState.snapshots = {
+        csharp: {
+            updatedAt: new Date().toISOString(),
+            files: state.workspace.files.map((file) => ({
+                id: String(file.id || ''),
+                path: String(file.path || ''),
+                content: String(file.content || '')
+            }))
+        },
+        markdown: state.subapps.snapshotByWorkspace.markdown,
+        shader: state.subapps.snapshotByWorkspace.shader
+    };
+
+    const workerApiUrl = normalizeWorkerApiUrl(dom.unifiedWorkerUrl ? dom.unifiedWorkerUrl.value : DEFAULT_WORKER_API_URL) || DEFAULT_WORKER_API_URL;
+    const prTitle = String(dom.unifiedPrTitle ? dom.unifiedPrTitle.value : '').trim();
+    const existingPrNumber = String(dom.unifiedExistingPrNumber ? dom.unifiedExistingPrNumber.value : '').trim();
+    const anchorPath = String(dom.unifiedAnchorSelect ? dom.unifiedAnchorSelect.value : '').trim();
+
+    state.unifiedWorkspaceState.submit = {
+        workerApiUrl,
+        prTitle,
+        existingPrNumber,
+        anchorPath,
+        resume: state.unified.resumeState,
+        lastCollection: state.unified.collection
+    };
+}
+
+function scheduleUnifiedStateSave() {
+    if (!state.unifiedWorkspaceState) return;
+    rememberUnifiedStateSnapshot();
+
+    if (state.unified.persistTimer) {
+        clearTimeout(state.unified.persistTimer);
+    }
+    state.unified.persistTimer = setTimeout(async () => {
+        state.unified.persistTimer = 0;
+        try {
+            await saveUnifiedWorkspaceState(state.unifiedWorkspaceState);
+        } catch (error) {
+            addEvent('error', `保存 workspace.v2 失败：${error.message}`);
+        }
+    }, UNIFIED_STATE_SAVE_DELAY);
+}
+
+function buildSubappUrl(workspace) {
+    const base = import.meta.env.BASE_URL || '/tml-ide/';
+    const subPath = workspace === 'markdown'
+        ? `${base}subapps/markdown/`
+        : (workspace === 'shader' ? `${base}subapps/shader/` : '');
+    if (!subPath) return '';
+
+    const url = new URL(subPath, globalThis.location.origin);
+    const current = new URL(globalThis.location.href);
+    current.searchParams.forEach((value, key) => {
+        if (key === 'workspace' || key === 'panel') return;
+        url.searchParams.set(key, value);
+    });
+    return `${url.pathname}${url.search}`;
+}
+
+function postMessageToSubapp(type, payload) {
+    if (!dom.subappIframe || !dom.subappIframe.contentWindow) return;
+    dom.subappIframe.contentWindow.postMessage({
+        type: String(type || ''),
+        source: 'tml-ide-host',
+        workspace: normalizeWorkspaceName(state.route.workspace),
+        payload: payload || {}
+    }, globalThis.location.origin);
+}
+
+function loadSubappWorkspace(workspace, options) {
+    if (!dom.subappIframe) return;
+    const safeWorkspace = normalizeWorkspaceName(workspace);
+    if (safeWorkspace !== 'markdown' && safeWorkspace !== 'shader') return;
+
+    const opts = options || {};
+    const baseSrc = buildSubappUrl(safeWorkspace);
+    if (!baseSrc) return;
+
+    const nextSrc = opts.forceReload
+        ? `${baseSrc}${baseSrc.includes('?') ? '&' : '?'}v=${Date.now()}`
+        : baseSrc;
+
+    state.subapps.activeWorkspace = safeWorkspace;
+    updateSubappTitle(safeWorkspace);
+
+    const currentSrc = String(dom.subappIframe.getAttribute('src') || '');
+    if (currentSrc !== nextSrc) {
+        state.subapps.readyByWorkspace[safeWorkspace] = false;
+        dom.subappIframe.setAttribute('src', nextSrc);
+    } else {
+        postMessageToSubapp('tml-ide-host:ping');
+    }
+}
+
+function resolveSubappCollectWaiters(workspace, snapshot) {
+    const waiters = Array.isArray(state.subapps.collectWaiters) ? state.subapps.collectWaiters : [];
+    const left = [];
+    waiters.forEach((waiter) => {
+        if (waiter.workspace === workspace) {
+            waiter.resolve(snapshot);
+        } else {
+            left.push(waiter);
+        }
+    });
+    state.subapps.collectWaiters = left;
+}
+
+function onSubappMessage(event) {
+    if (!event || event.origin !== globalThis.location.origin) return;
+    const data = event.data || {};
+    if (!data || typeof data !== 'object') return;
+    if (String(data.source || '') !== 'tml-ide-subapp') return;
+
+    const workspace = normalizeWorkspaceName(data.workspace);
+    if (workspace !== 'markdown' && workspace !== 'shader') return;
+
+    if (data.type === 'tml-ide-subapp:ready') {
+        state.subapps.readyByWorkspace[workspace] = true;
+        if (workspace === state.subapps.activeWorkspace) {
+            postMessageToSubapp('tml-ide-host:collect');
+            if (workspace === 'shader' && routePanelIsOpen()) {
+                postMessageToSubapp('tml-ide-host:open-submit-panel');
+            }
+        }
+        return;
+    }
+
+    if (data.type === 'tml-ide-subapp:staged') {
+        const snapshot = data.payload && typeof data.payload === 'object' ? data.payload : null;
+        state.subapps.snapshotByWorkspace[workspace] = snapshot;
+        resolveSubappCollectWaiters(workspace, snapshot);
+        scheduleUnifiedStateSave();
+    }
+}
+
+function requestSubappCollect(workspace) {
+    const safeWorkspace = normalizeWorkspaceName(workspace);
+    if (safeWorkspace !== 'markdown' && safeWorkspace !== 'shader') {
+        return Promise.resolve(null);
+    }
+
+    if (state.subapps.activeWorkspace !== safeWorkspace) {
+        return Promise.resolve(state.subapps.snapshotByWorkspace[safeWorkspace]);
+    }
+
+    return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+            state.subapps.collectWaiters = state.subapps.collectWaiters.filter((item) => item !== waiter);
+            resolve(state.subapps.snapshotByWorkspace[safeWorkspace]);
+        }, SUBAPP_COLLECT_TIMEOUT_MS);
+
+        const waiter = {
+            workspace: safeWorkspace,
+            resolve(snapshot) {
+                clearTimeout(timer);
+                resolve(snapshot);
+            }
+        };
+        state.subapps.collectWaiters.push(waiter);
+        postMessageToSubapp('tml-ide-host:collect');
+    });
+}
+
+async function setActiveWorkspace(workspace, options) {
+    const opts = options || {};
+    const safeWorkspace = normalizeWorkspaceName(workspace);
+    state.route.workspace = safeWorkspace;
+    updateWorkspaceButtons();
+    applyWorkspaceLayout();
+
+    if (safeWorkspace === 'markdown' || safeWorkspace === 'shader') {
+        loadSubappWorkspace(safeWorkspace, { forceReload: !!opts.forceReload });
+        if (routePanelIsOpen() && safeWorkspace === 'shader') {
+            postMessageToSubapp('tml-ide-host:open-submit-panel');
+        }
+    }
+
+    if (opts.persist !== false) {
+        writeLastWorkspacePreference(safeWorkspace);
+        scheduleUnifiedStateSave();
+    }
+
+    if (opts.syncUrl !== false) {
+        syncRouteToUrl({ replace: !!opts.replaceUrl });
+    }
+
+    if (opts.collect !== false && (safeWorkspace === 'markdown' || safeWorkspace === 'shader')) {
+        await requestSubappCollect(safeWorkspace);
+    }
+}
+
+function setSubmitPanelRouteState(open, options) {
+    const opts = options || {};
+    state.route.panel = open ? 'submit' : '';
+    applyUnifiedSubmitPanelVisibility();
+    if (opts.syncUrl !== false) {
+        syncRouteToUrl({ replace: !!opts.replaceUrl });
+    }
+    scheduleUnifiedStateSave();
+}
+
+function openUnifiedSubmitPanel(options) {
+    const opts = options || {};
+    if (normalizeWorkspaceName(state.route.workspace) === 'csharp') {
+        setActiveWorkspace('markdown', { syncUrl: false, persist: true, collect: true }).catch(() => {});
+    }
+    setSubmitPanelRouteState(true, { syncUrl: opts.syncUrl !== false, replaceUrl: !!opts.replaceUrl });
+    if (state.route.workspace === 'shader') {
+        postMessageToSubapp('tml-ide-host:open-submit-panel');
+    }
+}
+
+function closeUnifiedSubmitPanel(options) {
+    const opts = options || {};
+    setSubmitPanelRouteState(false, { syncUrl: opts.syncUrl !== false, replaceUrl: !!opts.replaceUrl });
+}
+
+function sanitizeCsharpCodeFileName(filePath) {
+    const fileName = String(filePath || '').split('/').pop() || 'Program.cs';
+    const noExt = fileName.replace(/\.cs$/i, '');
+    const safeBase = noExt.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5_-]+/g, '-').replace(/^-+|-+$/g, '') || 'file';
+    return `${safeBase}.cs`;
+}
+
+function collectCsharpWorkspaceEntries() {
+    return state.workspace.files.map((file) => ({
+        workspace: 'csharp',
+        path: `site/content/tml-ide-workspace/code/${sanitizeCsharpCodeFileName(file.path)}`,
+        content: String(file.content || ''),
+        encoding: 'utf8',
+        source: 'csharp-workspace',
+        isMainMarkdown: false
+    }));
+}
+
+function collectSubappEntries(snapshot, workspace) {
+    if (!snapshot || typeof snapshot !== 'object') return [];
+    const output = [];
+    const files = Array.isArray(snapshot.files) ? snapshot.files : [];
+
+    files.forEach((item) => {
+        if (!item || typeof item !== 'object') return;
+        output.push({
+            workspace,
+            path: normalizeRepoPath(item.path),
+            content: String(item.content || ''),
+            encoding: String(item.encoding || 'utf8').toLowerCase() === 'base64' ? 'base64' : 'utf8',
+            source: String(item.source || workspace),
+            isMainMarkdown: !!item.isMainMarkdown,
+            op: String(item.op || '')
+        });
+    });
+
+    const targetPath = normalizeRepoPath(snapshot.targetPath);
+    const markdown = String(snapshot.markdown || '');
+    if (targetPath && markdown) {
+        const exists = output.some((item) => item.path === targetPath);
+        if (!exists) {
+            output.push({
+                workspace,
+                path: targetPath,
+                content: markdown,
+                encoding: 'utf8',
+                source: `${workspace}-main`,
+                isMainMarkdown: true,
+                op: ''
+            });
+        }
+    }
+
+    return output;
+}
+
+function isAllowedExtraFilePath(pathValue) {
+    const path = normalizeRepoPath(pathValue);
+    const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(path);
+    const isArticleImageFile = /^site\/content\/.+\/imgs\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(path);
+    const isArticleMediaFile = /^site\/content\/.+\/media\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:mp4|webm)$/i.test(path);
+    const isArticleCsharpFile = /^site\/content\/.+\/code\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(path);
+    return isShaderGalleryFile || isArticleImageFile || isArticleMediaFile || isArticleCsharpFile;
+}
+
+function isMarkdownContentPath(pathValue) {
+    return /^site\/content\/.+\.md$/i.test(normalizeRepoPath(pathValue));
+}
+
+function buildUnifiedCollection(rawEntries) {
+    const dedup = new Map();
+    (Array.isArray(rawEntries) ? rawEntries : []).forEach((item) => {
+        if (!item || typeof item !== 'object') return;
+        const path = normalizeRepoPath(item.path);
+        if (!path) return;
+        dedup.set(path, {
+            workspace: String(item.workspace || ''),
+            path,
+            content: String(item.content || ''),
+            encoding: String(item.encoding || 'utf8').toLowerCase() === 'base64' ? 'base64' : 'utf8',
+            source: String(item.source || ''),
+            isMainMarkdown: !!item.isMainMarkdown,
+            op: String(item.op || '')
+        });
+    });
+
+    const markdownEntries = [];
+    const extraEntries = [];
+    const blockedEntries = [];
+
+    dedup.forEach((entry) => {
+        if (entry.path.includes('..')) {
+            blockedEntries.push({ ...entry, reason: '路径非法（包含 ..）' });
+            return;
+        }
+
+        if (entry.op === 'delete') {
+            blockedEntries.push({ ...entry, reason: '统一提交暂不支持删除文件' });
+            return;
+        }
+
+        if (!entry.content.trim()) {
+            blockedEntries.push({ ...entry, reason: '内容为空' });
+            return;
+        }
+
+        if (/^site\/assets\//i.test(entry.path)) {
+            blockedEntries.push({ ...entry, reason: 'site/assets/** 需手工 PR' });
+            return;
+        }
+
+        if (isMarkdownContentPath(entry.path)) {
+            markdownEntries.push(entry);
+            return;
+        }
+
+        if (isAllowedExtraFilePath(entry.path)) {
+            extraEntries.push(entry);
+            return;
+        }
+
+        blockedEntries.push({ ...entry, reason: '后端不接受该路径类型' });
+    });
+
+    return {
+        collectedAt: new Date().toISOString(),
+        rawCount: dedup.size,
+        markdownEntries,
+        extraEntries,
+        blockedEntries
+    };
+}
+
+function renderUnifiedFileList(container, entries, emptyText) {
+    if (!container) return;
+    container.innerHTML = '';
+    const list = Array.isArray(entries) ? entries : [];
+    if (!list.length) {
+        const li = document.createElement('li');
+        li.className = 'unified-file-item unified-file-item-empty';
+        li.textContent = emptyText;
+        container.appendChild(li);
+        return;
+    }
+
+    list.forEach((entry) => {
+        const li = document.createElement('li');
+        li.className = 'unified-file-item';
+        const reason = entry.reason ? ` · ${entry.reason}` : '';
+        li.textContent = `${entry.path} (${entry.source || entry.workspace || 'unknown'})${reason}`;
+        container.appendChild(li);
+    });
+}
+
+function buildAnchorCandidates(collection) {
+    const set = new Set();
+    const output = [];
+
+    const appendPath = (pathValue) => {
+        const path = normalizeRepoPath(pathValue);
+        if (!path || !isMarkdownContentPath(path) || set.has(path)) return;
+        set.add(path);
+        output.push(path);
+    };
+
+    (collection && Array.isArray(collection.markdownEntries) ? collection.markdownEntries : []).forEach((item) => {
+        appendPath(item.path);
+    });
+
+    const markdownSnapshot = state.subapps.snapshotByWorkspace.markdown;
+    const shaderSnapshot = state.subapps.snapshotByWorkspace.shader;
+    if (markdownSnapshot && markdownSnapshot.targetPath) appendPath(markdownSnapshot.targetPath);
+    if (shaderSnapshot && shaderSnapshot.targetPath) appendPath(shaderSnapshot.targetPath);
+    MARKDOWN_FALLBACK_ANCHORS.forEach(appendPath);
+
+    return output;
+}
+
+function updateAnchorSelectOptions(collection) {
+    if (!dom.unifiedAnchorSelect) return;
+
+    const selected = String(dom.unifiedAnchorSelect.value || '').trim();
+    const options = buildAnchorCandidates(collection);
+
+    dom.unifiedAnchorSelect.innerHTML = '';
+    const autoOption = document.createElement('option');
+    autoOption.value = '';
+    autoOption.textContent = '自动选择（若可用）';
+    dom.unifiedAnchorSelect.appendChild(autoOption);
+
+    options.forEach((pathValue) => {
+        const option = document.createElement('option');
+        option.value = pathValue;
+        option.textContent = pathValue;
+        dom.unifiedAnchorSelect.appendChild(option);
+    });
+
+    if (selected && options.includes(selected)) {
+        dom.unifiedAnchorSelect.value = selected;
+    } else if (!selected && state.unifiedWorkspaceState && state.unifiedWorkspaceState.submit && state.unifiedWorkspaceState.submit.anchorPath && options.includes(state.unifiedWorkspaceState.submit.anchorPath)) {
+        dom.unifiedAnchorSelect.value = state.unifiedWorkspaceState.submit.anchorPath;
+    } else {
+        dom.unifiedAnchorSelect.value = '';
+    }
+}
+
+function updateUnifiedSummary(collection) {
+    if (!dom.unifiedSummary) return;
+    const markdownCount = collection && Array.isArray(collection.markdownEntries) ? collection.markdownEntries.length : 0;
+    const extraCount = collection && Array.isArray(collection.extraEntries) ? collection.extraEntries.length : 0;
+    const blockedCount = collection && Array.isArray(collection.blockedEntries) ? collection.blockedEntries.length : 0;
+    dom.unifiedSummary.textContent = `Markdown: ${markdownCount} · Extra: ${extraCount} · 需手工 PR: ${blockedCount}`;
+}
+
+function persistUnifiedCollection(collection) {
+    state.unified.collection = collection;
+    state.unified.sendableEntries = (collection && Array.isArray(collection.extraEntries) ? collection.extraEntries : []).concat(
+        collection && Array.isArray(collection.markdownEntries) ? collection.markdownEntries : []
+    );
+    state.unified.blockedEntries = collection && Array.isArray(collection.blockedEntries) ? collection.blockedEntries : [];
+    state.unified.markdownEntries = collection && Array.isArray(collection.markdownEntries) ? collection.markdownEntries : [];
+    renderUnifiedFileList(dom.unifiedSendableList, state.unified.sendableEntries, '暂无可提交文件。');
+    renderUnifiedFileList(dom.unifiedBlockedList, state.unified.blockedEntries, '暂无需手工 PR 文件。');
+    updateUnifiedSummary(collection);
+    updateAnchorSelectOptions(collection);
+    scheduleUnifiedStateSave();
+}
+
+async function collectUnifiedChanges(options) {
+    const opts = options || {};
+    const silent = !!opts.silent;
+    const activeWorkspace = normalizeWorkspaceName(state.route.workspace);
+    if (opts.requestSubapp !== false && (activeWorkspace === 'markdown' || activeWorkspace === 'shader')) {
+        await requestSubappCollect(activeWorkspace);
+    }
+
+    const entries = []
+        .concat(collectCsharpWorkspaceEntries())
+        .concat(collectSubappEntries(state.subapps.snapshotByWorkspace.markdown, 'markdown'))
+        .concat(collectSubappEntries(state.subapps.snapshotByWorkspace.shader, 'shader'));
+
+    const collection = buildUnifiedCollection(entries);
+    persistUnifiedCollection(collection);
+    if (!silent) {
+        setUnifiedSubmitStatus('已收集 staged 改动', 'success');
+        pushUnifiedSubmitLog(`收集完成：Markdown ${collection.markdownEntries.length}，Extra ${collection.extraEntries.length}，需手工 ${collection.blockedEntries.length}`);
+    }
+    return collection;
+}
+
+async function loadMarkdownContentFromPath(pathValue) {
+    const path = normalizeRepoPath(pathValue);
+    if (!isMarkdownContentPath(path)) {
+        throw new Error(`锚点 Markdown 非法：${pathValue}`);
+    }
+    const relative = path.replace(/^site\//i, '');
+    const response = await fetch(`/${relative}`, { cache: 'no-store' });
+    if (!response.ok) {
+        throw new Error(`加载锚点 Markdown 失败（HTTP ${response.status}）：${path}`);
+    }
+    return await response.text();
+}
+
+async function resolveAnchorMarkdownForBatch(collection, preferredPath) {
+    const preferred = normalizeRepoPath(preferredPath);
+    if (preferred && isMarkdownContentPath(preferred)) {
+        const fromCollection = (collection.markdownEntries || []).find((item) => item.path === preferred);
+        if (fromCollection) {
+            return { path: preferred, markdown: fromCollection.content };
+        }
+        const fetched = await loadMarkdownContentFromPath(preferred);
+        return { path: preferred, markdown: fetched };
+    }
+
+    const firstMarkdown = collection && Array.isArray(collection.markdownEntries) ? collection.markdownEntries[0] : null;
+    if (firstMarkdown) {
+        return { path: firstMarkdown.path, markdown: firstMarkdown.content };
+    }
+
+    const options = buildAnchorCandidates(collection);
+    for (const candidate of options) {
+        try {
+            const fetched = await loadMarkdownContentFromPath(candidate);
+            return { path: candidate, markdown: fetched };
+        } catch (_err) {
+            // Try next candidate.
+        }
+    }
+
+    throw new Error('当前批次没有 Markdown 改动，请选择可用的锚点 Markdown');
+}
+
+function relativeTargetPath(pathValue) {
+    return normalizeRepoPath(pathValue).replace(/^site\/content\//i, '');
+}
+
+async function buildUnifiedSubmitBatches(collection) {
+    const safeCollection = collection || state.unified.collection || { markdownEntries: [], extraEntries: [], blockedEntries: [] };
+    const markdownEntries = Array.isArray(safeCollection.markdownEntries) ? safeCollection.markdownEntries.slice() : [];
+    const extraEntries = Array.isArray(safeCollection.extraEntries) ? safeCollection.extraEntries.slice() : [];
+
+    if (!markdownEntries.length && !extraEntries.length) {
+        throw new Error('没有可提交的文件');
+    }
+
+    const batches = markdownEntries.map((entry) => ({
+        targetPath: entry.path,
+        markdown: entry.content,
+        extraFiles: []
+    }));
+
+    if (batches.length > 0) {
+        let cursor = 0;
+        extraEntries.forEach((entry) => {
+            while (cursor < batches.length && batches[cursor].extraFiles.length >= 8) {
+                cursor += 1;
+            }
+            if (cursor >= batches.length) {
+                batches.push({
+                    targetPath: batches[0].targetPath,
+                    markdown: batches[0].markdown,
+                    extraFiles: []
+                });
+                cursor = batches.length - 1;
+            }
+            batches[cursor].extraFiles.push(entry);
+        });
+    } else {
+        for (let i = 0; i < extraEntries.length; i += 8) {
+            batches.push({
+                targetPath: '',
+                markdown: '',
+                extraFiles: extraEntries.slice(i, i + 8)
+            });
+        }
+    }
+
+    const selectedAnchorPath = String(dom.unifiedAnchorSelect ? dom.unifiedAnchorSelect.value : '').trim();
+    if (!markdownEntries.length && !selectedAnchorPath) {
+        throw new Error('当前无 Markdown 改动，请先选择锚点 Markdown');
+    }
+    const needsAnchor = batches.some((batch) => !batch.targetPath || !batch.markdown.trim());
+    let anchorInfo = null;
+    if (needsAnchor) {
+        anchorInfo = await resolveAnchorMarkdownForBatch(safeCollection, selectedAnchorPath);
+    }
+
+    const normalizedBatches = batches.map((batch) => {
+        const targetPath = batch.targetPath && batch.markdown.trim()
+            ? batch.targetPath
+            : (anchorInfo ? anchorInfo.path : '');
+        const markdown = batch.targetPath && batch.markdown.trim()
+            ? batch.markdown
+            : (anchorInfo ? anchorInfo.markdown : '');
+        if (!targetPath || !markdown.trim()) {
+            throw new Error('构建提交批次失败：缺少目标 Markdown');
+        }
+
+        return {
+            targetPath: relativeTargetPath(targetPath),
+            markdown,
+            extraFiles: batch.extraFiles.map((item) => ({
+                path: item.path,
+                content: item.content,
+                encoding: item.encoding
+            }))
+        };
+    });
+
+    return {
+        batches: normalizedBatches,
+        anchorPath: anchorInfo ? anchorInfo.path : ''
+    };
+}
+
+function normalizeCreatePrResponse(responseText) {
+    let data = null;
+    try {
+        data = responseText ? JSON.parse(responseText) : null;
+    } catch (_err) {
+        data = null;
+    }
+    return data;
+}
+
+async function submitBatchRequest(workerApiUrl, authToken, payload) {
+    const headers = {
+        'content-type': 'application/json'
+    };
+    if (authToken) {
+        headers.authorization = `Bearer ${authToken}`;
+    }
+
+    const response = await fetch(workerApiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload)
+    });
+
+    const responseText = await response.text();
+    const responseData = normalizeCreatePrResponse(responseText);
+    if (response.status === 401 && authToken) {
+        clearAuthSession();
+        updateUnifiedAuthUi();
+        throw new Error('GitHub 登录已过期，请重新登录');
+    }
+    if (!response.ok || !responseData || responseData.ok !== true) {
+        throw new Error(responseData && responseData.error ? String(responseData.error) : `HTTP ${response.status}`);
+    }
+    if (responseData.submitter) {
+        saveAuthSession(authToken, String(responseData.submitter || '').trim());
+        updateUnifiedAuthUi();
+    }
+    return responseData;
+}
+
+function setUnifiedSubmitting(submitting) {
+    state.unified.submitting = !!submitting;
+    if (dom.btnUnifiedSubmit) dom.btnUnifiedSubmit.disabled = submitting;
+    if (dom.btnUnifiedResume) dom.btnUnifiedResume.disabled = submitting;
+    if (dom.btnUnifiedCollect) dom.btnUnifiedCollect.disabled = submitting;
+}
+
+async function runUnifiedSubmitBatches(batches, options) {
+    const opts = options || {};
+    const auth = normalizeAuthSession();
+    if (!auth.token) {
+        throw new Error('请先 GitHub 登录');
+    }
+
+    const workerApiUrl = normalizeWorkerApiUrl(dom.unifiedWorkerUrl ? dom.unifiedWorkerUrl.value : '');
+    if (!workerApiUrl) {
+        throw new Error('请填写 Worker API 地址');
+    }
+    if (dom.unifiedWorkerUrl) {
+        dom.unifiedWorkerUrl.value = workerApiUrl;
+    }
+
+    const prTitle = String(dom.unifiedPrTitle ? dom.unifiedPrTitle.value : '').trim();
+    let existingPrNumber = String(opts.existingPrNumber || (dom.unifiedExistingPrNumber ? dom.unifiedExistingPrNumber.value : '') || '').trim();
+    const startIndex = Math.max(0, Number(opts.startIndex || 0));
+
+    setUnifiedSubmitting(true);
+    setUnifiedSubmitStatus('统一提交进行中...', 'info');
+
+    let nextIndex = startIndex;
+    try {
+        for (let i = startIndex; i < batches.length; i += 1) {
+            nextIndex = i;
+            const batch = batches[i];
+            const payload = {
+                targetPath: String(batch.targetPath || ''),
+                markdown: String(batch.markdown || '')
+            };
+            if (prTitle) {
+                payload.prTitle = prTitle;
+            }
+            if (existingPrNumber) {
+                payload.existingPrNumber = existingPrNumber;
+            }
+            if (Array.isArray(batch.extraFiles) && batch.extraFiles.length > 0) {
+                payload.extraFiles = batch.extraFiles.slice(0, 8).map((entry) => ({
+                    path: entry.path,
+                    content: entry.content,
+                    encoding: entry.encoding === 'base64' ? 'base64' : 'utf8'
+                }));
+            }
+
+            pushUnifiedSubmitLog(`提交批次 ${i + 1}/${batches.length} -> ${payload.targetPath}（extra=${Array.isArray(payload.extraFiles) ? payload.extraFiles.length : 0}）`);
+            const responseData = await submitBatchRequest(workerApiUrl, auth.token, payload);
+            if (responseData.prNumber) {
+                existingPrNumber = String(responseData.prNumber);
+                if (dom.unifiedExistingPrNumber) {
+                    dom.unifiedExistingPrNumber.value = existingPrNumber;
+                }
+            }
+            pushUnifiedSubmitLog(`批次 ${i + 1} 成功：PR #${existingPrNumber || '?'}${responseData.reusedExistingPr === true ? '（续传）' : ''}`);
+            nextIndex = i + 1;
+        }
+
+        state.unified.resumeState = null;
+        setUnifiedSubmitStatus('提交成功', 'success');
+        pushUnifiedSubmitLog('全部批次提交完成。');
+    } catch (error) {
+        state.unified.resumeState = {
+            batches,
+            nextIndex,
+            existingPrNumber: String(dom.unifiedExistingPrNumber ? dom.unifiedExistingPrNumber.value : '').trim(),
+            failedAt: new Date().toISOString(),
+            message: String(error && error.message || error)
+        };
+        setUnifiedSubmitStatus(`提交失败：${error.message}`, 'error');
+        pushUnifiedSubmitLog(`提交中止：${error.message}`);
+        throw error;
+    } finally {
+        setUnifiedSubmitting(false);
+        scheduleUnifiedStateSave();
+    }
+}
+
+function updateUnifiedAuthUi() {
+    const auth = normalizeAuthSession();
+    if (dom.unifiedAuthStatus) {
+        dom.unifiedAuthStatus.textContent = auth.token
+            ? `已登录：${auth.user || 'GitHub 用户'}`
+            : '未登录';
+    }
+    if (dom.btnUnifiedAuthLogin) dom.btnUnifiedAuthLogin.disabled = !!auth.token;
+    if (dom.btnUnifiedAuthLogout) dom.btnUnifiedAuthLogout.disabled = !auth.token;
+}
+
+function buildGithubLoginUrl(workerApiUrl) {
+    const base = workerBaseUrlFromApiUrl(workerApiUrl);
+    if (!base) return '';
+    const target = new URL(`${base}/auth/github/login`);
+    target.searchParams.set('return_to', globalThis.location.href);
+    return target.toString();
+}
+
+function initializeUnifiedState(loadedState) {
+    const initial = loadedState && typeof loadedState === 'object'
+        ? loadedState
+        : {
+            lastWorkspace: 'csharp',
+            snapshots: { csharp: { updatedAt: '', files: [] }, markdown: null, shader: null },
+            submit: { workerApiUrl: '', prTitle: '', existingPrNumber: '', anchorPath: '', resume: null, lastCollection: null }
+        };
+    state.unifiedWorkspaceState = initial;
+    state.subapps.snapshotByWorkspace.markdown = initial.snapshots && initial.snapshots.markdown ? initial.snapshots.markdown : null;
+    state.subapps.snapshotByWorkspace.shader = initial.snapshots && initial.snapshots.shader ? initial.snapshots.shader : null;
+    state.unified.resumeState = initial.submit && initial.submit.resume ? initial.submit.resume : null;
+
+    if (dom.unifiedWorkerUrl) {
+        dom.unifiedWorkerUrl.value = normalizeWorkerApiUrl(initial.submit && initial.submit.workerApiUrl || DEFAULT_WORKER_API_URL) || DEFAULT_WORKER_API_URL;
+    }
+    if (dom.unifiedPrTitle) {
+        dom.unifiedPrTitle.value = String(initial.submit && initial.submit.prTitle || '');
+    }
+    if (dom.unifiedExistingPrNumber) {
+        dom.unifiedExistingPrNumber.value = String(initial.submit && initial.submit.existingPrNumber || '');
+    }
+    if (dom.unifiedBatchProgress && state.unified.submitLogs.length === 0) {
+        dom.unifiedBatchProgress.textContent = '尚未提交。';
+    }
+}
+
 function applyWorkbenchVisibility() {
     if (!dom.appRoot) return;
     dom.appRoot.classList.toggle('is-sidebar-hidden', !state.ui.sidebarVisible);
@@ -321,6 +1355,7 @@ function saveWorkspaceNow() {
         .then(() => {
             addEvent('info', '工作区已保存');
             setStatus('工作区已保存');
+            scheduleUnifiedStateSave();
         })
         .catch((error) => {
             addEvent('error', `保存工作区失败：${error.message}`);
@@ -792,6 +1827,7 @@ function scheduleWorkspaceSave() {
         state.saveTimer = 0;
         try {
             await saveWorkspace(workspaceSnapshotForSave());
+            scheduleUnifiedStateSave();
         } catch (error) {
             addEvent('error', `保存工作区失败：${error.message}`);
         }
@@ -1202,6 +2238,7 @@ function applyWorkspace(nextWorkspace) {
     updateFileListUi();
     switchActiveFile(state.workspace.activeFileId);
     scheduleWorkspaceSave();
+    scheduleUnifiedStateSave();
 }
 
 function installEditorProviders() {
@@ -1257,6 +2294,171 @@ function installEditorProviders() {
 }
 
 function bindUiEvents() {
+    window.addEventListener('message', onSubappMessage);
+
+    window.addEventListener('popstate', () => {
+        const route = parseRouteFromUrl();
+        state.route.workspace = normalizeWorkspaceName(route.workspace);
+        state.route.panel = normalizePanelName(route.panel);
+        setActiveWorkspace(state.route.workspace, { syncUrl: false, persist: true, collect: true, replaceUrl: true }).catch(() => {});
+        if (routePanelIsOpen()) {
+            openUnifiedSubmitPanel({ syncUrl: false, replaceUrl: true });
+        } else {
+            closeUnifiedSubmitPanel({ syncUrl: false, replaceUrl: true });
+        }
+    });
+
+    dom.workspaceButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const nextWorkspace = normalizeWorkspaceName(button.dataset.workspace);
+            if (nextWorkspace === 'csharp') {
+                closeUnifiedSubmitPanel({ syncUrl: false, replaceUrl: true });
+            }
+            setActiveWorkspace(nextWorkspace, { syncUrl: true, persist: true, collect: true }).catch(() => {});
+        });
+    });
+
+    if (dom.btnOpenUnifiedSubmit) {
+        dom.btnOpenUnifiedSubmit.addEventListener('click', () => {
+            if (normalizeWorkspaceName(state.route.workspace) === 'csharp') {
+                setActiveWorkspace('markdown', { syncUrl: false, persist: true, collect: true }).catch(() => {});
+            }
+            openUnifiedSubmitPanel({ syncUrl: true });
+        });
+    }
+
+    if (dom.btnRouteSubmitPanel) {
+        dom.btnRouteSubmitPanel.addEventListener('click', () => {
+            setActiveWorkspace('shader', { syncUrl: false, persist: true, collect: true }).catch(() => {});
+            openUnifiedSubmitPanel({ syncUrl: true });
+            postMessageToSubapp('tml-ide-host:open-submit-panel');
+        });
+    }
+
+    if (dom.btnSubappReload) {
+        dom.btnSubappReload.addEventListener('click', () => {
+            const workspace = normalizeWorkspaceName(state.route.workspace);
+            if (workspace === 'markdown' || workspace === 'shader') {
+                loadSubappWorkspace(workspace, { forceReload: true });
+            }
+        });
+    }
+
+    if (dom.btnSubappOpenSubmit) {
+        dom.btnSubappOpenSubmit.addEventListener('click', () => {
+            openUnifiedSubmitPanel({ syncUrl: true });
+        });
+    }
+
+    if (dom.btnUnifiedSubmitClose) {
+        dom.btnUnifiedSubmitClose.addEventListener('click', () => {
+            closeUnifiedSubmitPanel({ syncUrl: true });
+        });
+    }
+
+    if (dom.subappIframe) {
+        dom.subappIframe.addEventListener('load', () => {
+            postMessageToSubapp('tml-ide-host:ping');
+            if (state.route.workspace === 'shader' && routePanelIsOpen()) {
+                postMessageToSubapp('tml-ide-host:open-submit-panel');
+            }
+        });
+    }
+
+    if (dom.unifiedWorkerUrl) {
+        dom.unifiedWorkerUrl.addEventListener('change', () => {
+            dom.unifiedWorkerUrl.value = normalizeWorkerApiUrl(dom.unifiedWorkerUrl.value) || DEFAULT_WORKER_API_URL;
+            scheduleUnifiedStateSave();
+        });
+    }
+
+    if (dom.unifiedPrTitle) {
+        dom.unifiedPrTitle.addEventListener('input', () => {
+            scheduleUnifiedStateSave();
+        });
+    }
+
+    if (dom.unifiedExistingPrNumber) {
+        dom.unifiedExistingPrNumber.addEventListener('input', () => {
+            scheduleUnifiedStateSave();
+        });
+    }
+
+    if (dom.unifiedAnchorSelect) {
+        dom.unifiedAnchorSelect.addEventListener('change', () => {
+            scheduleUnifiedStateSave();
+        });
+    }
+
+    if (dom.btnUnifiedAuthLogin) {
+        dom.btnUnifiedAuthLogin.addEventListener('click', () => {
+            const workerApiUrl = normalizeWorkerApiUrl(dom.unifiedWorkerUrl ? dom.unifiedWorkerUrl.value : '');
+            if (!workerApiUrl) {
+                setUnifiedSubmitStatus('请先填写 Worker API 地址', 'error');
+                return;
+            }
+            const loginUrl = buildGithubLoginUrl(workerApiUrl);
+            if (!loginUrl) {
+                setUnifiedSubmitStatus('无法构建 OAuth 登录地址', 'error');
+                return;
+            }
+            globalThis.location.href = loginUrl;
+        });
+    }
+
+    if (dom.btnUnifiedAuthLogout) {
+        dom.btnUnifiedAuthLogout.addEventListener('click', () => {
+            clearAuthSession();
+            updateUnifiedAuthUi();
+            setUnifiedSubmitStatus('已退出登录', 'info');
+        });
+    }
+
+    if (dom.btnUnifiedCollect) {
+        dom.btnUnifiedCollect.addEventListener('click', async () => {
+            try {
+                await collectUnifiedChanges({ requestSubapp: true });
+            } catch (error) {
+                setUnifiedSubmitStatus(`收集失败：${error.message}`, 'error');
+            }
+        });
+    }
+
+    if (dom.btnUnifiedSubmit) {
+        dom.btnUnifiedSubmit.addEventListener('click', async () => {
+            try {
+                const collection = await collectUnifiedChanges({ requestSubapp: true });
+                const batchPlan = await buildUnifiedSubmitBatches(collection);
+                pushUnifiedSubmitLog(`批次规划完成：${batchPlan.batches.length} 批`);
+                await runUnifiedSubmitBatches(batchPlan.batches, {
+                    startIndex: 0,
+                    existingPrNumber: String(dom.unifiedExistingPrNumber ? dom.unifiedExistingPrNumber.value : '').trim()
+                });
+            } catch (error) {
+                setUnifiedSubmitStatus(`提交失败：${error.message}`, 'error');
+            }
+        });
+    }
+
+    if (dom.btnUnifiedResume) {
+        dom.btnUnifiedResume.addEventListener('click', async () => {
+            const resume = state.unified.resumeState;
+            if (!resume || !Array.isArray(resume.batches) || !resume.batches.length) {
+                setUnifiedSubmitStatus('没有可续传的失败批次', 'info');
+                return;
+            }
+            try {
+                pushUnifiedSubmitLog(`从批次 ${Number(resume.nextIndex || 0) + 1} 开始续传`);
+                await runUnifiedSubmitBatches(resume.batches, {
+                    startIndex: Number(resume.nextIndex || 0),
+                    existingPrNumber: String(resume.existingPrNumber || '')
+                });
+            } catch (error) {
+                setUnifiedSubmitStatus(`续传失败：${error.message}`, 'error');
+            }
+        });
+    }
+
     dom.activityButtons.forEach((button) => {
         button.addEventListener('click', () => {
             onActivityClicked(button.dataset.activity);
@@ -1526,7 +2728,18 @@ function bindUiEvents() {
 }
 
 async function bootstrap() {
-    dom.workspaceVersion.textContent = 'workspace.v1';
+    consumeOAuthHashSession();
+    const unifiedState = await loadUnifiedWorkspaceState();
+    initializeUnifiedState(unifiedState);
+    updateUnifiedAuthUi();
+
+    const route = parseRouteFromUrl();
+    state.route.workspace = normalizeWorkspaceName(route.workspace);
+    state.route.panel = normalizePanelName(route.panel);
+    updateWorkspaceButtons();
+    applyUnifiedSubmitPanelVisibility();
+
+    dom.workspaceVersion.textContent = 'workspace.v2';
     const enhancedCsharpLanguage = createEnhancedCsharpLanguage(csharpLanguage);
     monaco.languages.setLanguageConfiguration('csharp', csharpConf);
     monaco.languages.setMonarchTokensProvider('csharp', enhancedCsharpLanguage);
@@ -1646,6 +2859,102 @@ async function bootstrap() {
                 diagnostics: false
             });
             return result && result.hover ? result.hover : null;
+        },
+        getRoute() {
+            return {
+                workspace: normalizeWorkspaceName(state.route.workspace),
+                panel: normalizePanelName(state.route.panel)
+            };
+        },
+        async switchWorkspace(workspace, panel) {
+            const nextWorkspace = normalizeWorkspaceName(workspace);
+            await setActiveWorkspace(nextWorkspace, {
+                syncUrl: true,
+                replaceUrl: false,
+                persist: true,
+                collect: true
+            });
+            if (normalizePanelName(panel) === 'submit') {
+                openUnifiedSubmitPanel({ syncUrl: true, replaceUrl: false });
+            } else {
+                closeUnifiedSubmitPanel({ syncUrl: true, replaceUrl: false });
+            }
+            return this.getRoute();
+        },
+        async collectUnified(options) {
+            const opts = options || {};
+            const collection = await collectUnifiedChanges({
+                requestSubapp: opts.requestSubapp !== false,
+                silent: true
+            });
+            return {
+                markdown: collection.markdownEntries.length,
+                extra: collection.extraEntries.length,
+                blocked: collection.blockedEntries.length
+            };
+        },
+        setCsharpWorkspaceFiles(files) {
+            if (!Array.isArray(files)) return false;
+            const normalized = files
+                .map((item, index) => ({
+                    id: String(item && item.id || `file-test-${index + 1}`),
+                    path: String(item && item.path || `Test${index + 1}.cs`),
+                    content: String(item && item.content || '')
+                }))
+                .filter((item) => item.path && item.path.toLowerCase().endsWith('.cs'));
+
+            if (!normalized.length) return false;
+            applyWorkspace({
+                schemaVersion: 1,
+                activeFileId: normalized[0].id,
+                files: normalized
+            });
+            runDiagnostics();
+            return true;
+        },
+        setSubappSnapshot(workspace, snapshot) {
+            const safeWorkspace = normalizeWorkspaceName(workspace);
+            if (safeWorkspace !== 'markdown' && safeWorkspace !== 'shader') return false;
+            if (!snapshot || typeof snapshot !== 'object') return false;
+            state.subapps.snapshotByWorkspace[safeWorkspace] = snapshot;
+            scheduleUnifiedStateSave();
+            return true;
+        },
+        getUnifiedSnapshot() {
+            const collection = state.unified.collection || { markdownEntries: [], extraEntries: [], blockedEntries: [] };
+            return {
+                markdown: collection.markdownEntries.length,
+                extra: collection.extraEntries.length,
+                blocked: collection.blockedEntries.length,
+                resume: state.unified.resumeState ? {
+                    nextIndex: Number(state.unified.resumeState.nextIndex || 0),
+                    existingPrNumber: String(state.unified.resumeState.existingPrNumber || '')
+                } : null
+            };
+        },
+        async submitUnified(options) {
+            const opts = options || {};
+            const collection = await collectUnifiedChanges({
+                requestSubapp: opts.requestSubapp !== false,
+                silent: true
+            });
+            const plan = await buildUnifiedSubmitBatches(collection);
+            await runUnifiedSubmitBatches(plan.batches, {
+                startIndex: Number(opts.startIndex || 0),
+                existingPrNumber: String(opts.existingPrNumber || '')
+            });
+            return this.getUnifiedSnapshot();
+        },
+        async resumeUnified() {
+            const resume = state.unified.resumeState;
+            if (!resume || !Array.isArray(resume.batches) || !resume.batches.length) {
+                throw new Error('没有可续传批次');
+            }
+            await runUnifiedSubmitBatches(resume.batches, {
+                startIndex: Number(resume.nextIndex || 0),
+                existingPrNumber: String(resume.existingPrNumber || '')
+            });
+            return this.getUnifiedSnapshot();
         }
     };
 
@@ -1659,6 +2968,24 @@ async function bootstrap() {
     applyWorkspace(workspace);
     state.initialized = true;
     state.editor.updateOptions({ readOnly: false });
+
+    await setActiveWorkspace(state.route.workspace, {
+        syncUrl: true,
+        replaceUrl: true,
+        persist: true,
+        collect: true
+    });
+    if (routePanelIsOpen()) {
+        openUnifiedSubmitPanel({ syncUrl: true, replaceUrl: true });
+    } else {
+        closeUnifiedSubmitPanel({ syncUrl: true, replaceUrl: true });
+    }
+
+    if (state.unifiedWorkspaceState && state.unifiedWorkspaceState.submit && state.unifiedWorkspaceState.submit.lastCollection) {
+        persistUnifiedCollection(state.unifiedWorkspaceState.submit.lastCollection);
+    } else {
+        await collectUnifiedChanges({ requestSubapp: false, silent: true });
+    }
 
     addEvent('info', 'tML IDE 初始化完成');
     setStatus('就绪');

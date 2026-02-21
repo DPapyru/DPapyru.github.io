@@ -14,7 +14,7 @@ next_chapter: ContentProjects解决方案说明.md
 
 # 在线写作IDE使用教程
 
-本文对应页面：`site/pages/article-studio.html`。
+本文对应页面：`/tml-ide/?workspace=markdown`。
 
 它适合“写文章与提交流程”，不替代本地 C# 工程调试。
 

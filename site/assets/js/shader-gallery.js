@@ -40,7 +40,7 @@
         try {
             localStorage.setItem(PLAYGROUND_IMPORT_KEY, JSON.stringify(payload));
         } catch (_) { }
-        const url = 'shader-playground.html?import=gallery&slug=' + encodeURIComponent(item.slug || '');
+        const url = '/tml-ide/?workspace=shader&import=gallery&slug=' + encodeURIComponent(item.slug || '');
         window.location.href = url;
     }
 

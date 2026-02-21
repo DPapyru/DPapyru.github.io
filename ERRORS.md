@@ -1416,3 +1416,30 @@
 
 **备注**：
 - 本轮将 completion 上限从 200/120 提升为 5000，以覆盖 tModLoader 大对象（如 `Terraria.Player`）的全部成员补全。
+
+### 验证记录 [2026-02-21 15:19]：前端-only 统一 IDE 迁移（Markdown/Shader 并入 tml-ide）
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app run test`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `python3 -m http.server 4173 --bind 127.0.0.1 && node tmp-playwright/tml-ide-vscode-acceptance.mjs && node tmp-playwright/tml-ide-markdown-acceptance.mjs && node tmp-playwright/tml-ide-shader-acceptance.mjs`：通过
+- `node (Playwright DevTools 验收脚本：Console/Network/Storage/切换耗时)`：通过（`consoleErrors=[]`，`pageErrors=[]`，IndexedDB 含 `workspace.v2`，工作区切换约 `900ms/450ms`）
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：本次严格未修改后端 Worker（`site/tooling/cloudflare/pr-gateway-worker*.js` 无改动）。`check-generated` 失败原因为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用缺失 `cover.webp`，与本次统一 IDE 迁移改动无直接关系。自动化验收产物位于 `test-results/tml-ide-vscode-acceptance-rerun/`、`test-results/tml-ide-markdown-acceptance/`、`test-results/tml-ide-shader-acceptance/`。
+
+### 验证记录 [2026-02-21 15:50]：fix-tml-ide-completion-popup 分支提交前验证
+
+**级别**：L3
+
+**命令与结果**：
+- `npm ci`：通过
+- `npm test`：失败（大量旧站点测试因 `site/assets/js/*.js` 与 `site/assets/css/*.css` 被删除而报 `MODULE_NOT_FOUND/ENOENT`，并有页面结构断言失败）
+- `npm run build`：中断（执行到 `generate-search` 后人为终止，退出码 `-1`，未完成后续 `build:anims` 与 `tml-ide-app` 构建）
+- `npm run check-generated`：未执行（依赖 `build` 完成）
+
+**备注**：
+- 本次按“先提交分支再讨论页面修改”的要求执行分支提交；验证状态已如实记录。

@@ -2,8 +2,10 @@ const DB_NAME = 'tml-ide-workspace-db';
 const DB_VERSION = 1;
 const STORE_NAME = 'workspace';
 const WORKSPACE_KEY = 'workspace.v1';
+const UNIFIED_WORKSPACE_KEY = 'workspace.v2';
 
 const FALLBACK_STORAGE_KEY = 'tml-ide-workspace.v1';
+const UNIFIED_FALLBACK_STORAGE_KEY = 'tml-ide-workspace.v2';
 
 export function createDefaultWorkspace() {
     return {
@@ -30,6 +32,29 @@ export function createDefaultWorkspace() {
     };
 }
 
+export function createDefaultUnifiedWorkspaceState() {
+    return {
+        schemaVersion: 2,
+        lastWorkspace: 'csharp',
+        snapshots: {
+            csharp: {
+                updatedAt: '',
+                files: []
+            },
+            markdown: null,
+            shader: null
+        },
+        submit: {
+            workerApiUrl: '',
+            prTitle: '',
+            existingPrNumber: '',
+            anchorPath: '',
+            resume: null,
+            lastCollection: null
+        }
+    };
+}
+
 function normalizeWorkspace(raw) {
     const fallback = createDefaultWorkspace();
     if (!raw || typeof raw !== 'object') return fallback;
@@ -52,6 +77,47 @@ function normalizeWorkspace(raw) {
         schemaVersion: 1,
         activeFileId: exists ? activeFileId : normalizedFiles[0].id,
         files: normalizedFiles
+    };
+}
+
+function normalizeUnifiedWorkspaceState(raw) {
+    const fallback = createDefaultUnifiedWorkspaceState();
+    if (!raw || typeof raw !== 'object') return fallback;
+
+    const snapshots = raw.snapshots && typeof raw.snapshots === 'object' ? raw.snapshots : {};
+    const submit = raw.submit && typeof raw.submit === 'object' ? raw.submit : {};
+
+    return {
+        schemaVersion: 2,
+        lastWorkspace: String(raw.lastWorkspace || fallback.lastWorkspace),
+        snapshots: {
+            csharp: {
+                updatedAt: String(snapshots.csharp && snapshots.csharp.updatedAt || ''),
+                files: Array.isArray(snapshots.csharp && snapshots.csharp.files)
+                    ? snapshots.csharp.files.map((item) => ({
+                        id: String(item && item.id || ''),
+                        path: String(item && item.path || ''),
+                        content: String(item && item.content || '')
+                    })).filter((item) => !!item.path)
+                    : []
+            },
+            markdown: snapshots.markdown && typeof snapshots.markdown === 'object'
+                ? snapshots.markdown
+                : null,
+            shader: snapshots.shader && typeof snapshots.shader === 'object'
+                ? snapshots.shader
+                : null
+        },
+        submit: {
+            workerApiUrl: String(submit.workerApiUrl || ''),
+            prTitle: String(submit.prTitle || ''),
+            existingPrNumber: String(submit.existingPrNumber || ''),
+            anchorPath: String(submit.anchorPath || ''),
+            resume: submit.resume && typeof submit.resume === 'object' ? submit.resume : null,
+            lastCollection: submit.lastCollection && typeof submit.lastCollection === 'object'
+                ? submit.lastCollection
+                : null
+        }
     };
 }
 
@@ -133,6 +199,67 @@ export async function saveWorkspace(workspace) {
 
     if (globalThis.localStorage) {
         globalThis.localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(payload));
+    }
+}
+
+export async function loadUnifiedWorkspaceState() {
+    try {
+        const db = await openDatabase();
+        if (db) {
+            const value = await new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.get(UNIFIED_WORKSPACE_KEY);
+                req.onerror = function () {
+                    reject(new Error('读取 unified workspace 失败'));
+                };
+                req.onsuccess = function () {
+                    resolve(req.result || null);
+                };
+            });
+            db.close();
+            if (value) return normalizeUnifiedWorkspaceState(value);
+        }
+    } catch (_err) {
+        // Fallback below.
+    }
+
+    try {
+        const raw = globalThis.localStorage ? globalThis.localStorage.getItem(UNIFIED_FALLBACK_STORAGE_KEY) : null;
+        if (!raw) return createDefaultUnifiedWorkspaceState();
+        const parsed = JSON.parse(raw);
+        return normalizeUnifiedWorkspaceState(parsed);
+    } catch (_err) {
+        return createDefaultUnifiedWorkspaceState();
+    }
+}
+
+export async function saveUnifiedWorkspaceState(unifiedState) {
+    const payload = normalizeUnifiedWorkspaceState(unifiedState);
+
+    try {
+        const db = await openDatabase();
+        if (db) {
+            await new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.put(payload, UNIFIED_WORKSPACE_KEY);
+                req.onerror = function () {
+                    reject(new Error('保存 unified workspace 失败'));
+                };
+                req.onsuccess = function () {
+                    resolve(null);
+                };
+            });
+            db.close();
+            return;
+        }
+    } catch (_err) {
+        // localStorage fallback below.
+    }
+
+    if (globalThis.localStorage) {
+        globalThis.localStorage.setItem(UNIFIED_FALLBACK_STORAGE_KEY, JSON.stringify(payload));
     }
 }
 
