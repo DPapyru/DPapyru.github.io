@@ -1484,3 +1484,18 @@
 **备注**：
 - 已完成“截图 + 模拟输入 + 模拟点击”自动验收；新增截图：`test-results/tml-ide-unified-acceptance/02-markdown-toolbox.png`、`test-results/tml-ide-unified-acceptance/03-markdown-shader-actions.png`。
 - 验收脚本已覆盖 Markdown 底部工具按钮点击（发布前自检、专注模式开关）与 Shader 编译路径回归。
+
+### 验证记录 [2026-02-21 19:01]：统一 IDE 迁移 Markdown 格式插入按钮 + Ctrl+V 粘贴图片
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173`：通过（用于验收）
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+
+**备注**：
+- 新增自动化回归测试：`tml-ide-app/tests/markdown-editor-migration.test.js`，覆盖“格式插入按钮存在性 + Ctrl+V 粘贴图片逻辑接线”。
+- 已执行“截图 + 模拟输入 + 模拟点击”验收，脚本额外覆盖：点击格式插入按钮、模拟粘贴图片并校验编辑器包含 `data:image/`。
+- 验收截图更新：`test-results/tml-ide-unified-acceptance/02-markdown-toolbox.png`、`test-results/tml-ide-unified-acceptance/03-markdown-insert-paste.png`、`test-results/tml-ide-unified-acceptance/04-markdown-shader-actions.png`。

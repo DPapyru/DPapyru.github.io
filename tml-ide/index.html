@@ -6,7 +6,7 @@
     <title>tML IDE Playground</title>
     <meta name="description" content="独立 tModLoader C# IDE Playground，支持补全、悬停文档与双层诊断。">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
-  <script type="module" crossorigin src="/tml-ide/assets/index-BlBOqNJC.js"></script>
+  <script type="module" crossorigin src="/tml-ide/assets/index-CZs1NwJk.js"></script>
   <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-CKQjUZkt.css">
 </head>
 <body>
@@ -133,6 +133,21 @@
                                 <button id="btn-md-reset" type="button">清空草稿</button>
                                 <button id="btn-md-focus-mode" type="button">专注模式</button>
                             </div>
+                            <div class="tool-btn-row" aria-label="Markdown 格式插入">
+                                <button type="button" data-md-insert="bold">加粗</button>
+                                <button type="button" data-md-insert="h2">二级标题</button>
+                                <button type="button" data-md-insert="list">列表</button>
+                                <button type="button" data-md-insert="quote">引用</button>
+                                <button type="button" data-md-insert="ref">引用文档</button>
+                                <button type="button" data-md-insert="anim">动画片段</button>
+                                <button type="button" data-md-insert="animcs-block">animcs 代码块</button>
+                                <button type="button" data-md-insert="color-inline">单色文本</button>
+                                <button type="button" data-md-insert="color-change-inline">颜色动画文本</button>
+                                <button type="button" data-md-insert="quiz-tf">判断题</button>
+                                <button type="button" data-md-insert="quiz-choice">选择题</button>
+                                <button type="button" data-md-insert="quiz-multi">多选题</button>
+                            </div>
+                            <p class="panel-tip">支持 Ctrl+V 粘贴图片到编辑器，自动插入 Markdown 图片引用。</p>
                             <pre id="markdown-draft-check-log" class="cmd-preview">等待自检...</pre>
                         </div>
                         <div id="shader-compile-group" class="tool-group">

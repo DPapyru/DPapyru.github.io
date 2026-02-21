@@ -66,6 +66,8 @@ async function main() {
     await page.click('#btn-markdown-toggle-preview');
     await page.waitForSelector('#markdown-preview-pane:not([hidden])', { timeout: 10000 });
     await page.click('#btn-markdown-open-viewer');
+    await page.click('#btn-markdown-toggle-preview');
+    await page.waitForSelector('#editor .monaco-editor', { timeout: 10000 });
     await page.click('button[data-panel-tab="compile"]');
     await page.waitForSelector('#markdown-toolbox-group:not([hidden])', { timeout: 10000 });
     await page.click('#btn-md-draft-check');
@@ -73,10 +75,45 @@ async function main() {
         const node = document.querySelector('#markdown-draft-check-log');
         return node && String(node.textContent || '').includes('发布前自检结果');
     }, null, { timeout: 10000 });
+    await page.click('#editor .monaco-editor');
+    await page.click('button[data-md-insert="bold"]');
+    await page.waitForFunction(() => {
+        return String(globalThis.__tmlIdeDebug.getEditorText() || '').includes('**加粗文本**');
+    }, null, { timeout: 10000 });
+
+    await page.click('#editor .monaco-editor');
+    await page.evaluate(() => {
+        const pngPayload = 'tiny-png-binary';
+        const file = new File([pngPayload], 'paste.png', { type: 'image/png' });
+        const clipboardData = new DataTransfer();
+        clipboardData.items.add(file);
+        let event = null;
+        try {
+            event = new ClipboardEvent('paste', {
+                clipboardData,
+                bubbles: true,
+                cancelable: true
+            });
+        } catch (_err) {
+            event = new Event('paste', { bubbles: true, cancelable: true });
+            Object.defineProperty(event, 'clipboardData', {
+                value: clipboardData
+            });
+        }
+        const target = document.activeElement || document.querySelector('#editor .monaco-editor');
+        if (!target || typeof target.dispatchEvent !== 'function') {
+            throw new Error('paste target not found');
+        }
+        target.dispatchEvent(event);
+    });
+    await page.waitForFunction(() => {
+        return String(globalThis.__tmlIdeDebug.getEditorText() || '').includes('data:image/');
+    }, null, { timeout: 10000 });
     await page.click('#btn-md-focus-mode');
     await page.waitForTimeout(120);
     await page.click('#btn-md-focus-mode');
     await page.screenshot({ path: path.join(outDir, '02-markdown-toolbox.png'), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, '03-markdown-insert-paste.png'), fullPage: true });
 
     await page.click('#file-list .file-item:has-text("effect.fx")');
     await page.evaluate(() => {
@@ -99,7 +136,7 @@ async function main() {
         throw new Error(`Shader 编译日志未成功: ${compileLog}`);
     }
 
-    await page.screenshot({ path: path.join(outDir, '03-markdown-shader-actions.png'), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, '04-markdown-shader-actions.png'), fullPage: true });
     await browser.close();
 }
 

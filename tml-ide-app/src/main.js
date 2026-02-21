@@ -107,6 +107,7 @@ const dom = {
     btnMdReset: document.getElementById('btn-md-reset'),
     btnMdFocusMode: document.getElementById('btn-md-focus-mode'),
     markdownDraftCheckLog: document.getElementById('markdown-draft-check-log'),
+    markdownInsertButtons: Array.from(document.querySelectorAll('[data-md-insert]')),
     commandPalette: document.getElementById('command-palette'),
     commandPaletteBackdrop: document.getElementById('command-palette-backdrop'),
     commandPaletteInput: document.getElementById('command-palette-input'),
@@ -218,6 +219,8 @@ const MARKDOWN_FALLBACK_ANCHORS = Object.freeze([
     'site/content/怎么贡献/贡献者规范.md',
     'site/content/基础概念/教程结构说明.md'
 ]);
+const MARKDOWN_PASTE_MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const MARKDOWN_PASTE_MAX_IMAGE_COUNT = 8;
 
 // Keep Monaco colors aligned with site viewer's Rider dark Prism theme.
 const RIDER_CODE_COLORS = Object.freeze({
@@ -2216,6 +2219,109 @@ function buildMarkdownDraftExportName(pathValue) {
     return `${stem}.draft.json`;
 }
 
+function markdownSelectionRange(model) {
+    if (!state.editor) return null;
+    const selection = state.editor.getSelection();
+    if (selection) return selection;
+    const position = state.editor.getPosition() || model.getPositionAt(model.getValueLength());
+    return new monaco.Selection(position.lineNumber, position.column, position.lineNumber, position.column);
+}
+
+function readMarkdownSelectionText(fallback) {
+    const ctx = getActiveMarkdownContext();
+    if (!ctx || !state.editor) return String(fallback || '');
+    const model = state.editor.getModel();
+    if (!model) return String(fallback || '');
+    const selection = markdownSelectionRange(model);
+    if (!selection) return String(fallback || '');
+    const selected = String(model.getValueInRange(selection) || '').replace(/\s+/g, ' ').trim();
+    return selected || String(fallback || '');
+}
+
+function wrapMarkdownSelection(prefix, suffix, placeholder) {
+    const ctx = getActiveMarkdownContext();
+    if (!ctx || !state.editor) return false;
+    const model = state.editor.getModel();
+    if (!model) return false;
+    const selection = markdownSelectionRange(model);
+    if (!selection) return false;
+
+    const selected = String(model.getValueInRange(selection) || '');
+    const content = selected || String(placeholder || '内容');
+    const inserted = `${String(prefix || '')}${content}${String(suffix || '')}`;
+    const startOffset = model.getOffsetAt({
+        lineNumber: selection.startLineNumber,
+        column: selection.startColumn
+    });
+    state.editor.executeEdits('markdown-tool-wrap', [{
+        range: selection,
+        text: inserted,
+        forceMoveMarkers: true
+    }]);
+    const caretStart = model.getPositionAt(startOffset + String(prefix || '').length);
+    const caretEnd = model.getPositionAt(startOffset + String(prefix || '').length + content.length);
+    state.editor.setSelection(new monaco.Selection(
+        caretStart.lineNumber,
+        caretStart.column,
+        caretEnd.lineNumber,
+        caretEnd.column
+    ));
+    state.editor.focus();
+    return true;
+}
+
+function insertMarkdownBlockSnippet(snippet, selectText) {
+    const ctx = getActiveMarkdownContext();
+    if (!ctx || !state.editor) return false;
+    const model = state.editor.getModel();
+    if (!model) return false;
+    const selection = markdownSelectionRange(model);
+    if (!selection) return false;
+
+    const startOffset = model.getOffsetAt({
+        lineNumber: selection.startLineNumber,
+        column: selection.startColumn
+    });
+    const endOffset = model.getOffsetAt({
+        lineNumber: selection.endLineNumber,
+        column: selection.endColumn
+    });
+    const value = model.getValue();
+    const before = value.slice(0, startOffset);
+    const after = value.slice(endOffset);
+    const body = String(snippet || '');
+    const prefix = before && !before.endsWith('\n') ? '\n' : '';
+    const suffix = after && !after.startsWith('\n') ? '\n' : '';
+    const inserted = `${prefix}${body}${suffix}`;
+
+    state.editor.executeEdits('markdown-tool-block', [{
+        range: selection,
+        text: inserted,
+        forceMoveMarkers: true
+    }]);
+
+    let caretStartOffset = startOffset + prefix.length;
+    let caretEndOffset = caretStartOffset;
+    const marker = String(selectText || '');
+    if (marker) {
+        const markerIndex = body.indexOf(marker);
+        if (markerIndex >= 0) {
+            caretStartOffset = startOffset + prefix.length + markerIndex;
+            caretEndOffset = caretStartOffset + marker.length;
+        }
+    }
+    const caretStart = model.getPositionAt(caretStartOffset);
+    const caretEnd = model.getPositionAt(caretEndOffset);
+    state.editor.setSelection(new monaco.Selection(
+        caretStart.lineNumber,
+        caretStart.column,
+        caretEnd.lineNumber,
+        caretEnd.column
+    ));
+    state.editor.focus();
+    return true;
+}
+
 function insertMarkdownAtCursor(text) {
     const ctx = getActiveMarkdownContext();
     if (!ctx || !state.editor) return false;
@@ -2226,6 +2332,216 @@ function insertMarkdownAtCursor(text) {
     state.editor.executeEdits('markdown-tool', [{ range, text: String(text || ''), forceMoveMarkers: true }]);
     state.editor.focus();
     return true;
+}
+
+function createMarkdownQuizId(prefix) {
+    const safePrefix = String(prefix || 'quiz').trim() || 'quiz';
+    return `${safePrefix}-${Date.now().toString(36).slice(-6)}`;
+}
+
+function applyMarkdownInsertAction(action) {
+    const key = String(action || '').trim();
+    if (!key) return;
+
+    if (activeFileMode() !== 'markdown') {
+        addEvent('error', '格式插入仅支持 Markdown 文件');
+        return;
+    }
+
+    if (key === 'bold') {
+        wrapMarkdownSelection('**', '**', '加粗文本');
+        return;
+    }
+    if (key === 'h2') {
+        insertMarkdownBlockSnippet('## 小节标题\n', '小节标题');
+        return;
+    }
+    if (key === 'list') {
+        insertMarkdownBlockSnippet('- 项目 1\n- 项目 2\n', '项目 1');
+        return;
+    }
+    if (key === 'quote') {
+        insertMarkdownBlockSnippet('> 这里是引用内容\n', '这里是引用内容');
+        return;
+    }
+    if (key === 'ref') {
+        const selectedTitle = readMarkdownSelectionText('引用标题');
+        insertMarkdownBlockSnippet(`[${selectedTitle}](目标文档.md)\n`, '目标文档.md');
+        return;
+    }
+    if (key === 'anim') {
+        insertMarkdownBlockSnippet('{{anim:anims/你的动画文件.cs}}\n', 'anims/你的动画文件.cs');
+        return;
+    }
+    if (key === 'animcs-block') {
+        insertMarkdownBlockSnippet([
+            '```animcs',
+            'anims/demo-basic.cs',
+            '```',
+            ''
+        ].join('\n'), 'anims/demo-basic.cs');
+        return;
+    }
+    if (key === 'color-inline') {
+        insertMarkdownBlockSnippet('{color:primary}{这里是强调文本}\n', 'primary');
+        return;
+    }
+    if (key === 'color-change-inline') {
+        insertMarkdownBlockSnippet('{colorChange:rainbow}{这里是颜色动画文本}\n', 'rainbow');
+        return;
+    }
+    if (key === 'quiz-tf') {
+        const quizId = createMarkdownQuizId('quiz-tf');
+        const question = readMarkdownSelectionText('这里填写判断题题干。');
+        insertMarkdownBlockSnippet([
+            '```quiz',
+            'type: tf',
+            `id: ${quizId}`,
+            'question: |',
+            `  ${question}`,
+            'answer: true',
+            'explain: |',
+            '  这里填写解析。',
+            '```',
+            ''
+        ].join('\n'), `  ${question}`);
+        return;
+    }
+    if (key === 'quiz-choice') {
+        const quizId = createMarkdownQuizId('quiz-choice');
+        const question = readMarkdownSelectionText('这里填写选择题题干。');
+        insertMarkdownBlockSnippet([
+            '```quiz',
+            'type: choice',
+            `id: ${quizId}`,
+            'question: |',
+            `  ${question}`,
+            'options:',
+            '  - id: A',
+            '    text: 选项 A',
+            '  - id: B',
+            '    text: 选项 B',
+            '  - id: C',
+            '    text: 选项 C',
+            'answer: B',
+            'explain: |',
+            '  这里填写解析。',
+            '```',
+            ''
+        ].join('\n'), '选项 B');
+        return;
+    }
+    if (key === 'quiz-multi') {
+        const quizId = createMarkdownQuizId('quiz-multi');
+        const question = readMarkdownSelectionText('这里填写多选题题干。');
+        insertMarkdownBlockSnippet([
+            '```quiz',
+            'type: multiple',
+            `id: ${quizId}`,
+            'question: |',
+            `  ${question}`,
+            'options:',
+            '  - id: A',
+            '    text: 选项 A',
+            '  - id: B',
+            '    text: 选项 B',
+            '  - id: C',
+            '    text: 选项 C',
+            '  - id: D',
+            '    text: 选项 D',
+            'answer:',
+            '  - A',
+            '  - C',
+            'explain: |',
+            '  这里填写解析。',
+            '```',
+            ''
+        ].join('\n'), '选项 A');
+        return;
+    }
+
+    addEvent('error', `未识别的格式插入命令：${key}`);
+}
+
+function collectClipboardImageFiles(clipboardData) {
+    if (!clipboardData) return [];
+    const files = [];
+    const items = Array.from(clipboardData.items || []);
+    items.forEach((item) => {
+        if (!item || item.kind !== 'file') return;
+        if (!String(item.type || '').toLowerCase().startsWith('image/')) return;
+        const file = item.getAsFile();
+        if (file) files.push(file);
+    });
+    if (files.length > 0) {
+        return files;
+    }
+    return Array.from(clipboardData.files || []).filter((file) => {
+        return file && String(file.type || '').toLowerCase().startsWith('image/');
+    });
+}
+
+function pastedImageFileName(file, index) {
+    const sourceName = String(file && file.name || '');
+    const stem = sourceName.replace(/\.[a-z0-9]+$/i, '').replace(/[^a-z0-9\u4e00-\u9fa5_-]+/gi, '-');
+    const fallback = `pasted-image-${index + 1}`;
+    const safe = String(stem || fallback).replace(/^-+|-+$/g, '');
+    return safe || fallback;
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            resolve(String(reader.result || ''));
+        };
+        reader.onerror = () => {
+            reject(new Error('读取图片失败'));
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function insertPastedMarkdownImages(fileList) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return 0;
+
+    const limited = files.slice(0, MARKDOWN_PASTE_MAX_IMAGE_COUNT);
+    if (files.length > MARKDOWN_PASTE_MAX_IMAGE_COUNT) {
+        addEvent('warn', `最多一次粘贴 ${MARKDOWN_PASTE_MAX_IMAGE_COUNT} 张图片，已自动截断`);
+    }
+
+    const snippets = [];
+    for (let i = 0; i < limited.length; i += 1) {
+        const file = limited[i];
+        if (!file) continue;
+        if (Number(file.size || 0) > MARKDOWN_PASTE_MAX_IMAGE_SIZE) {
+            addEvent('warn', `已跳过过大图片：${file.name || `image-${i + 1}`}`);
+            continue;
+        }
+        const dataUrl = await readFileAsDataUrl(file);
+        if (!dataUrl || !dataUrl.startsWith('data:image/')) {
+            addEvent('warn', `图片编码失败，已跳过：${file.name || `image-${i + 1}`}`);
+            continue;
+        }
+        const alt = pastedImageFileName(file, i);
+        snippets.push(`![${alt}](${dataUrl})`);
+    }
+
+    if (!snippets.length) return 0;
+    const inserted = insertMarkdownBlockSnippet(`\n${snippets.join('\n\n')}\n`);
+    if (!inserted) return 0;
+    addEvent('info', `已粘贴图片 ${snippets.length} 张`);
+    return snippets.length;
+}
+
+function isMarkdownEditorFocused() {
+    if (activeFileMode() !== 'markdown') return false;
+    const active = globalThis.document ? document.activeElement : null;
+    if (dom.editor && active && dom.editor.contains(active)) {
+        return true;
+    }
+    return !!(state.editor && typeof state.editor.hasTextFocus === 'function' && state.editor.hasTextFocus());
 }
 
 function markdownTemplateBlock() {
@@ -3544,6 +3860,33 @@ function bindUiEvents() {
             toggleMarkdownFocusMode();
         });
     }
+
+    if (dom.markdownInsertButtons && dom.markdownInsertButtons.length > 0) {
+        dom.markdownInsertButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const action = String(button.getAttribute('data-md-insert') || '').trim();
+                applyMarkdownInsertAction(action);
+            });
+        });
+    }
+
+    window.addEventListener('paste', async (event) => {
+        if (!isMarkdownEditorFocused()) return;
+        const clipboardData = event && event.clipboardData ? event.clipboardData : null;
+        if (!clipboardData) return;
+        const imageFiles = collectClipboardImageFiles(clipboardData);
+        if (!imageFiles.length) return;
+
+        event.preventDefault();
+        try {
+            const insertedCount = await insertPastedMarkdownImages(imageFiles);
+            if (!insertedCount) {
+                addEvent('warn', '粘贴图片失败：未写入任何图片');
+            }
+        } catch (error) {
+            addEvent('error', `粘贴图片失败：${error.message}`);
+        }
+    });
 
     if (dom.btnShaderCompile) {
         dom.btnShaderCompile.addEventListener('click', () => {
