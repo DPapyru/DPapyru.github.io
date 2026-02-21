@@ -6,8 +6,8 @@
     <title>tML IDE Playground</title>
     <meta name="description" content="独立 tModLoader C# IDE Playground，支持补全、悬停文档与双层诊断。">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
-  <script type="module" crossorigin src="/tml-ide/assets/index-DVB2srtT.js"></script>
-  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-Cq1lsLWu.css">
+  <script type="module" crossorigin src="/tml-ide/assets/index-BlBOqNJC.js"></script>
+  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-CKQjUZkt.css">
 </head>
 <body>
     <div id="app" class="app-shell">
@@ -118,7 +118,24 @@
                     </section>
 
                     <section class="panel-view" data-panel-view="compile">
-                        <div class="tool-group">
+                        <div id="markdown-toolbox-group" class="tool-group" hidden>
+                            <h3>Markdown 工具（article-studio）</h3>
+                            <div class="tool-btn-row">
+                                <button id="btn-md-open-guide" type="button">项目 Markdown 教程</button>
+                                <button id="btn-md-draft-check" type="button">发布前自检</button>
+                                <button id="btn-md-insert-template" type="button">插入模板</button>
+                                <button id="btn-md-insert-image" type="button">插入图片引用</button>
+                                <button id="btn-md-format" type="button">快速格式化</button>
+                                <button id="btn-md-copy" type="button">复制 Markdown</button>
+                                <button id="btn-md-export-draft" type="button">导出草稿 JSON</button>
+                                <label class="file-btn" for="input-md-import-draft">导入草稿 JSON</label>
+                                <input id="input-md-import-draft" type="file" accept="application/json,.json" hidden>
+                                <button id="btn-md-reset" type="button">清空草稿</button>
+                                <button id="btn-md-focus-mode" type="button">专注模式</button>
+                            </div>
+                            <pre id="markdown-draft-check-log" class="cmd-preview">等待自检...</pre>
+                        </div>
+                        <div id="shader-compile-group" class="tool-group">
                             <h3>.fx 编译</h3>
                             <button id="btn-panel-shader-compile" type="button">编译当前 .fx</button>
                             <pre id="shader-compile-log" class="cmd-preview">等待编译...</pre>

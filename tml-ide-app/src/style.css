@@ -677,6 +677,13 @@ button:disabled {
     letter-spacing: 0.02em;
 }
 
+.tool-btn-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
 .checkbox-row {
     display: flex;
     align-items: center;

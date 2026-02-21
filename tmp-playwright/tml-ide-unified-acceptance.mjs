@@ -66,6 +66,17 @@ async function main() {
     await page.click('#btn-markdown-toggle-preview');
     await page.waitForSelector('#markdown-preview-pane:not([hidden])', { timeout: 10000 });
     await page.click('#btn-markdown-open-viewer');
+    await page.click('button[data-panel-tab="compile"]');
+    await page.waitForSelector('#markdown-toolbox-group:not([hidden])', { timeout: 10000 });
+    await page.click('#btn-md-draft-check');
+    await page.waitForFunction(() => {
+        const node = document.querySelector('#markdown-draft-check-log');
+        return node && String(node.textContent || '').includes('发布前自检结果');
+    }, null, { timeout: 10000 });
+    await page.click('#btn-md-focus-mode');
+    await page.waitForTimeout(120);
+    await page.click('#btn-md-focus-mode');
+    await page.screenshot({ path: path.join(outDir, '02-markdown-toolbox.png'), fullPage: true });
 
     await page.click('#file-list .file-item:has-text("effect.fx")');
     await page.evaluate(() => {
@@ -88,7 +99,7 @@ async function main() {
         throw new Error(`Shader 编译日志未成功: ${compileLog}`);
     }
 
-    await page.screenshot({ path: path.join(outDir, '02-markdown-shader-actions.png'), fullPage: true });
+    await page.screenshot({ path: path.join(outDir, '03-markdown-shader-actions.png'), fullPage: true });
     await browser.close();
 }
 

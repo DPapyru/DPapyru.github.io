@@ -94,6 +94,19 @@ const dom = {
     btnPanelShaderCompile: document.getElementById('btn-panel-shader-compile'),
     shaderCompileLog: document.getElementById('shader-compile-log'),
     shaderErrorList: document.getElementById('shader-error-list'),
+    markdownToolboxGroup: document.getElementById('markdown-toolbox-group'),
+    shaderCompileGroup: document.getElementById('shader-compile-group'),
+    btnMdOpenGuide: document.getElementById('btn-md-open-guide'),
+    btnMdDraftCheck: document.getElementById('btn-md-draft-check'),
+    btnMdInsertTemplate: document.getElementById('btn-md-insert-template'),
+    btnMdInsertImage: document.getElementById('btn-md-insert-image'),
+    btnMdFormat: document.getElementById('btn-md-format'),
+    btnMdCopy: document.getElementById('btn-md-copy'),
+    btnMdExportDraft: document.getElementById('btn-md-export-draft'),
+    inputMdImportDraft: document.getElementById('input-md-import-draft'),
+    btnMdReset: document.getElementById('btn-md-reset'),
+    btnMdFocusMode: document.getElementById('btn-md-focus-mode'),
+    markdownDraftCheckLog: document.getElementById('markdown-draft-check-log'),
     commandPalette: document.getElementById('command-palette'),
     commandPaletteBackdrop: document.getElementById('command-palette-backdrop'),
     commandPaletteInput: document.getElementById('command-palette-input'),
@@ -177,6 +190,7 @@ const state = {
         activeActivity: 'explorer',
         activePanelTab: 'problems',
         markdownPreviewMode: 'edit',
+        markdownFocusMode: false,
         paletteOpen: false,
         paletteMode: 'commands',
         paletteItems: [],
@@ -2144,6 +2158,203 @@ function setMarkdownPreviewMode(mode) {
     }
 }
 
+function getActiveMarkdownContext() {
+    const active = getActiveFile();
+    if (!active || detectFileMode(active.path) !== 'markdown') {
+        return null;
+    }
+    const model = ensureModelForFile(active);
+    if (!model) return null;
+    if (state.editor && state.editor.getModel() !== model) {
+        state.editor.setModel(model);
+    }
+    return { active, model };
+}
+
+function getMarkdownContextForAction(actionLabel) {
+    const ctx = getActiveMarkdownContext();
+    if (ctx) return ctx;
+    addEvent('error', `${String(actionLabel || '该操作')}仅支持 Markdown 文件`);
+    return null;
+}
+
+function normalizeMarkdownDraftPath(pathValue) {
+    const safe = normalizeRepoPath(pathValue).replace(/^site\/content\//i, '');
+    if (!safe || !/\.md$/i.test(safe)) {
+        return '';
+    }
+    return safe;
+}
+
+function ensureMarkdownDraftTargetFile(targetPath) {
+    const safePath = normalizeMarkdownDraftPath(targetPath);
+    if (!safePath) return null;
+
+    const existed = state.workspace.files.find((file) => {
+        return normalizeRepoPath(file.path).toLowerCase() === safePath.toLowerCase();
+    });
+    if (existed) {
+        return existed;
+    }
+
+    const nextFile = {
+        id: createFileId(),
+        path: safePath,
+        content: ''
+    };
+    state.workspace.files.push(nextFile);
+    ensureModelForFile(nextFile);
+    updateFileListUi();
+    addEvent('info', `已创建草稿目标文件：${safePath}`);
+    return nextFile;
+}
+
+function buildMarkdownDraftExportName(pathValue) {
+    const safePath = normalizeMarkdownDraftPath(pathValue) || 'markdown-draft.md';
+    const base = safePath.split('/').pop() || 'markdown-draft.md';
+    const stem = base.replace(/\.md$/i, '') || 'markdown-draft';
+    return `${stem}.draft.json`;
+}
+
+function insertMarkdownAtCursor(text) {
+    const ctx = getActiveMarkdownContext();
+    if (!ctx || !state.editor) return false;
+    const model = state.editor.getModel();
+    if (!model) return false;
+    const position = state.editor.getPosition() || model.getPositionAt(model.getValueLength());
+    const range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
+    state.editor.executeEdits('markdown-tool', [{ range, text: String(text || ''), forceMoveMarkers: true }]);
+    state.editor.focus();
+    return true;
+}
+
+function markdownTemplateBlock() {
+    return [
+        '---',
+        'title: 新文章',
+        'author: ',
+        'topic: article-contribution',
+        'description: ',
+        '---',
+        '',
+        '# 标题',
+        '',
+        '## 概述',
+        '',
+        '## 正文',
+        '',
+        '## 小结',
+        ''
+    ].join('\n');
+}
+
+function formatMarkdownText(input) {
+    const normalized = String(input || '').replace(/\r\n/g, '\n');
+    const lines = normalized.split('\n').map((line) => line.replace(/[ \t]+$/g, ''));
+    const compact = [];
+    let blankCount = 0;
+    lines.forEach((line) => {
+        if (!line.trim()) {
+            blankCount += 1;
+            if (blankCount <= 2) compact.push('');
+            return;
+        }
+        blankCount = 0;
+        compact.push(line);
+    });
+    return `${compact.join('\n').replace(/\n{3,}/g, '\n\n')}\n`;
+}
+
+function parseMarkdownDraftPayload(rawText) {
+    const parsed = JSON.parse(String(rawText || '{}'));
+    const markdown = typeof parsed.markdown === 'string'
+        ? parsed.markdown
+        : (parsed && parsed.state && typeof parsed.state.markdown === 'string' ? parsed.state.markdown : '');
+    const targetPath = typeof parsed.targetPath === 'string'
+        ? parsed.targetPath
+        : (parsed && parsed.state && typeof parsed.state.targetPath === 'string' ? parsed.state.targetPath : '');
+    return {
+        markdown: String(markdown || ''),
+        targetPath: String(targetPath || '')
+    };
+}
+
+function runMarkdownDraftCheck(markdownText) {
+    const text = String(markdownText || '').replace(/\r\n/g, '\n');
+    const errors = [];
+    const warnings = [];
+
+    const hasFrontMatter = text.startsWith('---\n');
+    if (!hasFrontMatter) {
+        errors.push('缺少 YAML front matter（应以 --- 开始）。');
+    } else {
+        const end = text.indexOf('\n---\n', 4);
+        if (end < 0) {
+            errors.push('front matter 未正确闭合（缺少结尾 ---）。');
+        } else {
+            const frontMatter = text.slice(4, end);
+            if (!/^\s*title\s*:\s*.+$/m.test(frontMatter)) {
+                errors.push('front matter 缺少必填字段 title。');
+            }
+        }
+    }
+
+    if (!/^#\s+\S+/m.test(text)) {
+        warnings.push('建议至少包含一个一级标题（# 标题）。');
+    }
+    if (/[ \t]+$/m.test(text)) {
+        warnings.push('检测到行尾空白字符，建议格式化。');
+    }
+    if (/\b(?:TODO|TBD)\b|待补充|占位/i.test(text)) {
+        warnings.push('检测到占位词（TODO/TBD/待补充），发布前请清理。');
+    }
+    const imageRefs = Array.from(text.matchAll(/!\[[^\]]*]\(([^)]+)\)/g)).map((item) => String(item[1] || '').trim());
+    imageRefs.forEach((ref) => {
+        if (!ref) return;
+        if (/^https?:\/\//i.test(ref)) return;
+        if (/\s/.test(ref)) {
+            warnings.push(`图片路径包含空格：${ref}`);
+        }
+    });
+
+    const lines = [];
+    lines.push(`[${nowStamp()}] 发布前自检结果`);
+    if (!errors.length && !warnings.length) {
+        lines.push('通过：未发现阻塞问题。');
+    } else {
+        errors.forEach((msg, index) => {
+            lines.push(`错误 ${index + 1}: ${msg}`);
+        });
+        warnings.forEach((msg, index) => {
+            lines.push(`警告 ${index + 1}: ${msg}`);
+        });
+    }
+    return {
+        errors,
+        warnings,
+        log: lines.join('\n')
+    };
+}
+
+function renderMarkdownDraftCheckLog(text) {
+    if (!dom.markdownDraftCheckLog) return;
+    dom.markdownDraftCheckLog.textContent = String(text || '等待自检...');
+}
+
+function toggleMarkdownFocusMode() {
+    state.ui.markdownFocusMode = !state.ui.markdownFocusMode;
+    if (state.ui.markdownFocusMode) {
+        showSidebar(false);
+        addEvent('info', '已进入 Markdown 专注模式');
+    } else {
+        showSidebar(true);
+        addEvent('info', '已退出 Markdown 专注模式');
+    }
+    if (dom.btnMdFocusMode) {
+        dom.btnMdFocusMode.textContent = state.ui.markdownFocusMode ? '退出专注模式' : '专注模式';
+    }
+}
+
 async function saveWorkspaceImmediate() {
     await saveWorkspace(workspaceSnapshotForSave());
     scheduleUnifiedStateSave();
@@ -2208,8 +2419,21 @@ function applyEditorModeUi() {
     const isShader = mode === 'shaderfx';
     updateStatusLanguage();
     updateHeaderModeActions();
+    if (dom.markdownToolboxGroup) {
+        dom.markdownToolboxGroup.hidden = !isMarkdown;
+    }
+    if (dom.shaderCompileGroup) {
+        dom.shaderCompileGroup.hidden = !isShader;
+    }
+    if (dom.btnMdFocusMode) {
+        dom.btnMdFocusMode.textContent = state.ui.markdownFocusMode ? '退出专注模式' : '专注模式';
+    }
     if (!isMarkdown) {
         setMarkdownPreviewMode('edit');
+        if (state.ui.markdownFocusMode) {
+            state.ui.markdownFocusMode = false;
+            showSidebar(true);
+        }
     } else {
         setMarkdownPreviewMode(state.ui.markdownPreviewMode);
         if (state.ui.markdownPreviewMode === 'preview') {
@@ -3139,6 +3363,185 @@ function bindUiEvents() {
             } catch (error) {
                 addEvent('error', `新标签预览失败：${error.message}`);
             }
+        });
+    }
+
+    if (dom.btnMdOpenGuide) {
+        dom.btnMdOpenGuide.addEventListener('click', () => {
+            if (!getMarkdownContextForAction('打开教程')) return;
+            const guidePath = MARKDOWN_FALLBACK_ANCHORS[1] || MARKDOWN_FALLBACK_ANCHORS[0] || '';
+            if (!guidePath) {
+                addEvent('error', '未配置 Markdown 教程入口');
+                return;
+            }
+            const viewerFile = encodeURIComponent(toViewerFileParam(guidePath));
+            globalThis.open(`/site/pages/viewer.html?file=${viewerFile}`, '_blank', 'noopener,noreferrer');
+            addEvent('info', `已打开 Markdown 教程：${toViewerFileParam(guidePath)}`);
+        });
+    }
+
+    if (dom.btnMdDraftCheck) {
+        dom.btnMdDraftCheck.addEventListener('click', () => {
+            const ctx = getMarkdownContextForAction('发布前自检');
+            if (!ctx) return;
+            const result = runMarkdownDraftCheck(ctx.model.getValue());
+            renderMarkdownDraftCheckLog(result.log);
+            showBottomPanel(true);
+            setActivePanelTab('compile');
+            addEvent('info', `自检完成：错误 ${result.errors.length}，警告 ${result.warnings.length}`);
+        });
+    }
+
+    if (dom.btnMdInsertTemplate) {
+        dom.btnMdInsertTemplate.addEventListener('click', () => {
+            const ctx = getMarkdownContextForAction('插入模板');
+            if (!ctx) return;
+            if (ctx.model.getValue().trim() && !globalThis.confirm('当前已有内容，确认覆盖为模板吗？')) {
+                return;
+            }
+            ctx.model.setValue(markdownTemplateBlock());
+            setMarkdownPreviewMode('edit');
+            if (state.editor) {
+                state.editor.setPosition({ lineNumber: 1, column: 1 });
+                state.editor.focus();
+            }
+            addEvent('info', '已插入 Markdown 模板');
+        });
+    }
+
+    if (dom.btnMdInsertImage) {
+        dom.btnMdInsertImage.addEventListener('click', () => {
+            if (!getMarkdownContextForAction('插入图片引用')) return;
+            const imagePathRaw = globalThis.prompt('请输入图片路径（相对站点内容目录）', './images/example.png');
+            if (imagePathRaw === null) return;
+            const imagePath = String(imagePathRaw || '').trim();
+            if (!imagePath) {
+                addEvent('error', '图片路径不能为空');
+                return;
+            }
+            const altRaw = globalThis.prompt('请输入图片说明（alt）', '图片说明');
+            if (altRaw === null) return;
+            const alt = String(altRaw || '').trim() || '图片说明';
+            const ok = insertMarkdownAtCursor(`![${alt}](${imagePath})\n`);
+            if (!ok) {
+                addEvent('error', '插入图片引用失败');
+                return;
+            }
+            addEvent('info', '已插入图片引用');
+        });
+    }
+
+    if (dom.btnMdFormat) {
+        dom.btnMdFormat.addEventListener('click', () => {
+            const ctx = getMarkdownContextForAction('快速格式化');
+            if (!ctx) return;
+            const source = ctx.model.getValue();
+            const formatted = formatMarkdownText(source);
+            if (formatted === source) {
+                addEvent('info', 'Markdown 已是格式化状态');
+                return;
+            }
+            ctx.model.setValue(formatted);
+            addEvent('info', '已完成 Markdown 快速格式化');
+        });
+    }
+
+    if (dom.btnMdCopy) {
+        dom.btnMdCopy.addEventListener('click', async () => {
+            const ctx = getMarkdownContextForAction('复制 Markdown');
+            if (!ctx) return;
+            try {
+                const ok = await copyToClipboard(ctx.model.getValue());
+                if (!ok) {
+                    throw new Error('浏览器拒绝复制');
+                }
+                addEvent('info', '已复制 Markdown');
+            } catch (error) {
+                addEvent('error', `复制失败：${error.message}`);
+            }
+        });
+    }
+
+    if (dom.btnMdExportDraft) {
+        dom.btnMdExportDraft.addEventListener('click', () => {
+            const ctx = getMarkdownContextForAction('导出草稿');
+            if (!ctx) return;
+            const fileName = buildMarkdownDraftExportName(ctx.active.path);
+            const payload = {
+                markdown: ctx.model.getValue(),
+                targetPath: normalizeMarkdownDraftPath(ctx.active.path),
+                exportedAt: new Date().toISOString(),
+                source: 'tml-ide-app/unified-markdown'
+            };
+            downloadTextFile(fileName, `${JSON.stringify(payload, null, 2)}\n`, 'application/json;charset=utf-8');
+            addEvent('info', `已导出草稿 JSON：${fileName}`);
+        });
+    }
+
+    if (dom.inputMdImportDraft) {
+        dom.inputMdImportDraft.addEventListener('change', async () => {
+            const file = dom.inputMdImportDraft.files && dom.inputMdImportDraft.files[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const payload = parseMarkdownDraftPayload(text);
+                if (!payload.markdown && !payload.targetPath) {
+                    throw new Error('草稿文件缺少 markdown/targetPath 字段');
+                }
+
+                let targetFile = ensureMarkdownDraftTargetFile(payload.targetPath);
+                if (!targetFile) {
+                    const ctx = getActiveMarkdownContext();
+                    targetFile = ctx ? ctx.active : null;
+                }
+                if (!targetFile || detectFileMode(targetFile.path) !== 'markdown') {
+                    targetFile = ensureMarkdownDraftTargetFile(`导入草稿-${Date.now().toString(36)}.md`);
+                }
+                if (!targetFile) {
+                    throw new Error('无法确定导入目标 Markdown 文件');
+                }
+
+                switchActiveFile(targetFile.id);
+                const model = ensureModelForFile(targetFile);
+                model.setValue(String(payload.markdown || ''));
+                setMarkdownPreviewMode('edit');
+                renderMarkdownDraftCheckLog('等待自检...');
+                if (state.editor) state.editor.focus();
+
+                const importedPath = normalizeMarkdownDraftPath(payload.targetPath);
+                addEvent('info', importedPath
+                    ? `已导入草稿：${file.name} -> ${importedPath}`
+                    : `已导入草稿：${file.name}`);
+            } catch (error) {
+                addEvent('error', `导入草稿失败：${error.message}`);
+            } finally {
+                dom.inputMdImportDraft.value = '';
+            }
+        });
+    }
+
+    if (dom.btnMdReset) {
+        dom.btnMdReset.addEventListener('click', () => {
+            const ctx = getMarkdownContextForAction('清空草稿');
+            if (!ctx) return;
+            if (!ctx.model.getValue().trim()) {
+                addEvent('info', '当前草稿已为空');
+                return;
+            }
+            if (!globalThis.confirm('确认清空当前 Markdown 草稿吗？')) {
+                return;
+            }
+            ctx.model.setValue('');
+            setMarkdownPreviewMode('edit');
+            renderMarkdownDraftCheckLog('等待自检...');
+            addEvent('info', '已清空当前 Markdown 草稿');
+        });
+    }
+
+    if (dom.btnMdFocusMode) {
+        dom.btnMdFocusMode.addEventListener('click', () => {
+            if (!getMarkdownContextForAction('专注模式')) return;
+            toggleMarkdownFocusMode();
         });
     }
 
