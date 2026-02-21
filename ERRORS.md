@@ -1377,3 +1377,14 @@
 
 **备注**：
 - `check-generated` 失败为仓库既有问题：`site/content/shader-gallery/pass-1/entry.json` 引用了缺失的 `cover.webp`，与本次 tml-ide 修复无直接关系。
+
+### 验证记录 [2026-02-21 13:21]：fix-tml-ide-completion-popup 分支当前内容提交
+
+**级别**：L3
+
+**命令与结果**：
+- `npm run build`：通过
+- `npm run check-generated`：失败（`gallery-check` 报错：`site/content/shader-gallery/pass-1/entry.json` 引用了缺失文件 `cover.webp`）
+
+**备注**：
+- 本次提交按你的要求直接提交分支当前改动；`check-generated` 失败为仓库内容缺失资源导致。
