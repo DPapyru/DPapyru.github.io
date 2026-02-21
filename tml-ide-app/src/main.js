@@ -270,7 +270,7 @@ const MARKDOWN_PASTE_EXTENSION_BY_MIME = Object.freeze({
 const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
 const VIEWER_PREVIEW_MESSAGE_TYPE = 'article-studio-preview-update';
 let viewerPagePathCache = '';
-const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif|mp4|webm|mov|m4v|avi|mkv)$/i;
+const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|animcs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif|mp4|webm|mov|m4v|avi|mkv)$/i;
 const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
 const SHADER_PREVIEW_RENDER_MODES = new Set(['alpha', 'additive', 'multiply', 'screen']);
 const SHADER_PREVIEW_ADDRESS_MODES = new Set(['clamp', 'wrap']);
@@ -546,12 +546,14 @@ function detectFileMode(pathValue) {
     const ext = fileExt(pathValue);
     if (ext === '.md' || ext === '.markdown') return 'markdown';
     if (ext === '.fx') return 'shaderfx';
+    if (ext === '.animcs') return 'csharp';
     if (VIDEO_FILE_EXTENSIONS.has(ext)) return 'video';
     if (IMAGE_FILE_EXTENSIONS.has(ext)) return 'image';
     return 'csharp';
 }
 
 function languageForFile(pathValue) {
+    if (isAnimationCsharpFilePath(pathValue)) return 'csharp';
     const mode = detectFileMode(pathValue);
     if (mode === 'markdown') return 'markdown';
     if (mode === 'shaderfx') return 'shaderfx';
@@ -2821,6 +2823,7 @@ function videoPreviewSrcFromActiveFile() {
 function updateStatusLanguage() {
     if (!dom.statusLanguage) return;
     const mode = activeFileMode();
+    const active = getActiveFile();
     if (mode === 'markdown') {
         dom.statusLanguage.textContent = 'Markdown';
         return;
@@ -2835,6 +2838,10 @@ function updateStatusLanguage() {
     }
     if (mode === 'video') {
         dom.statusLanguage.textContent = 'Video';
+        return;
+    }
+    if (active && isAnimationCsharpFilePath(active.path)) {
+        dom.statusLanguage.textContent = 'C# (动画)';
         return;
     }
     dom.statusLanguage.textContent = 'C#';
@@ -3893,6 +3900,7 @@ function exportShaderFile() {
 function isAnimationCsharpFilePath(pathValue) {
     const safe = normalizeRepoPath(pathValue).toLowerCase();
     if (!safe) return false;
+    if (/\.animcs$/i.test(safe)) return true;
     if (/\.anim\.cs$/i.test(safe)) return true;
     if (/\/(?:anims?|animations?)\//i.test(safe)) return true;
     return false;
@@ -5032,12 +5040,12 @@ function bindUiEvents() {
     });
 
     dom.btnAddFile.addEventListener('click', function () {
-        const input = globalThis.prompt('请输入新文件名（.cs/.md/.fx/.png/.jpg/.webp/.mp4）', '新文章.md');
+        const input = globalThis.prompt('请输入新文件名（.cs/.animcs/.md/.fx/.png/.jpg/.webp/.mp4）', '新文章.md');
         if (!input) return;
 
         const fileName = input.trim();
         if (!FILE_NAME_ALLOWED_EXT_RE.test(fileName)) {
-            addEvent('error', '文件名必须以 .cs/.md/.fx 或常见图片/视频后缀结尾');
+            addEvent('error', '文件名必须以 .cs/.animcs/.md/.fx 或常见图片/视频后缀结尾');
             return;
         }
 
@@ -5066,12 +5074,12 @@ function bindUiEvents() {
         const active = getActiveFile();
         if (!active) return;
 
-        const input = globalThis.prompt('请输入新的文件名（.cs/.md/.fx/.png/.jpg/.webp/.mp4）', active.path);
+        const input = globalThis.prompt('请输入新的文件名（.cs/.animcs/.md/.fx/.png/.jpg/.webp/.mp4）', active.path);
         if (!input) return;
 
         const next = input.trim();
         if (!FILE_NAME_ALLOWED_EXT_RE.test(next)) {
-            addEvent('error', '文件名必须以 .cs/.md/.fx 或常见图片/视频后缀结尾');
+            addEvent('error', '文件名必须以 .cs/.animcs/.md/.fx 或常见图片/视频后缀结尾');
             return;
         }
 

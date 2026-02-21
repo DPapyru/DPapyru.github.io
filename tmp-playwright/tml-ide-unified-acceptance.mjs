@@ -63,6 +63,7 @@ async function main() {
     await addWorkspaceFile(page, 'demo.md');
     await addWorkspaceFile(page, 'effect.fx');
     await addWorkspaceFile(page, 'clip.mp4');
+    await addWorkspaceFile(page, 'swing.animcs');
     await page.waitForFunction(() => {
         const titles = Array.from(document.querySelectorAll('#file-list .file-group-title')).map((el) => {
             return String(el.textContent || '').trim();
@@ -84,6 +85,36 @@ async function main() {
         return src.startsWith('data:video/');
     }, null, { timeout: 10000 });
     await page.screenshot({ path: path.join(outDir, '01c-video-resource-preview.png'), fullPage: true });
+
+    await page.click('#file-list .file-item:has-text("swing.animcs")');
+    await page.evaluate(() => {
+        globalThis.__tmlIdeDebug.setEditorText([
+            'using Terraria;',
+            '',
+            'public class DemoAnim',
+            '{',
+            '    public void Test(Player player)',
+            '    {',
+            '        player.',
+            '    }',
+            '}'
+        ].join('\n'));
+        globalThis.__tmlIdeDebug.setCursorAfterText('player.');
+    });
+    await page.waitForFunction(() => {
+        const node = document.querySelector('#status-language');
+        return !!(node && String(node.textContent || '').includes('C# (动画)'));
+    }, null, { timeout: 10000 });
+    const animCompletionLabels = await page.evaluate(async () => {
+        const items = await globalThis.__tmlIdeDebug.requestCompletionsAtCursor(200);
+        return Array.isArray(items)
+            ? items.slice(0, 200).map((item) => String(item.label || ''))
+            : [];
+    });
+    if (!Array.isArray(animCompletionLabels) || !animCompletionLabels.includes('AddBuff')) {
+        throw new Error(`动画文件 C# 补全未命中预期成员(AddBuff): ${JSON.stringify(animCompletionLabels.slice(0, 40))}`);
+    }
+    await page.screenshot({ path: path.join(outDir, '01d-animation-csharp-completion.png'), fullPage: true });
 
     await page.click('#file-list .file-item:has-text("demo.md")');
     await page.evaluate(() => {

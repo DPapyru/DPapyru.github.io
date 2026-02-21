@@ -1606,3 +1606,14 @@
 - `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图；覆盖文件分组与视频资源预览）
 
 **备注**：新增截图 `test-results/tml-ide-unified-acceptance/01b-workspace-groups.png` 与 `test-results/tml-ide-unified-acceptance/01c-video-resource-preview.png`，用于验证 Markdown/C#/Shader/资源分组与视频预览 UI。
+
+### 验证记录 [2026-02-21 22:07]：动画文件 .animcs 走 C# 补全与高亮链路
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- animation-csharp-support.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图；覆盖动画文件补全）
+
+**备注**：新增截图 `test-results/tml-ide-unified-acceptance/01d-animation-csharp-completion.png`，验证 `.animcs` 文件状态栏为 `C# (动画)` 且补全含 `AddBuff`。
