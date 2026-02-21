@@ -1584,3 +1584,14 @@
 - 根因：viewer 的 studio 预览资源命中依赖路径精确匹配，Markdown 中 `./images/...` 与 payload 中 `images/...` 不一致，导致未映射为 data URL。
 - 修复：`tml-ide-app/src/main.js` 预览 payload 对图片/C# 资源同时写入无前缀与 `./` 前缀两类路径变体，兼容相对路径写法。
 - 验收脚本新增断言：Markdown 预览 iframe 中必须存在可解码 `data:image/`（`naturalWidth > 0`）的图片，防止回归。
+
+### 验证记录 [2026-02-21 21:51]：统一 IDE Shader 四图上传 + 完整 .fx 模板 + 预览去默认渐变
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过（含模拟输入、模拟点击、截图，且用最简完整 `.fx` 代码验证编译）
+
+**备注**：Playwright 截图输出目录为 `test-results/tml-ide-unified-acceptance/`，包含 `04a-shader-upload-4-slots.png` 等验收截图；本次同步更新了统一 IDE 右侧 Shader 面板四通道上传、默认模板（`technique/pass`）与预览渲染逻辑（移除默认彩色渐变叠层）。

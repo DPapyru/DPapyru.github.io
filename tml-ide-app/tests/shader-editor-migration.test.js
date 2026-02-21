@@ -18,6 +18,10 @@ test('index.html exposes shader template insertion action in compile panel', () 
     assert.match(html, /id="shader-render-mode"/);
     assert.match(html, /id="shader-address-mode"/);
     assert.match(html, /id="shader-bg-mode"/);
+    assert.match(html, /id="shader-upload-0"/);
+    assert.match(html, /id="shader-upload-1"/);
+    assert.match(html, /id="shader-upload-2"/);
+    assert.match(html, /id="shader-upload-3"/);
     assert.doesNotMatch(html, /id="shader-pip"/);
 });
 
@@ -37,6 +41,14 @@ test('main.js defines shaderfx language assist and template flow', () => {
     assert.doesNotMatch(source, /function installShaderPipInteractions/);
     assert.match(source, /btnShaderInsertTemplate/);
     assert.match(source, /已插入 Shader 默认模板/);
+    assert.match(source, /shaderUploads:\s*\[/);
+    assert.match(source, /shaderUploadInputs:\s*\[/);
+    assert.match(source, /function handleShaderUploadChange/);
+    assert.match(source, /function clearShaderUploadSlot/);
+    assert.doesNotMatch(source, /createRadialGradient\(/);
+    assert.doesNotMatch(source, /未检测到 float4 像素着色器入口函数/);
+    assert.match(source, /technique\s+\w+/);
+    assert.match(source, /pass\s+\w+/);
 });
 
 test('main.js applies default .fx template when creating shader files', () => {

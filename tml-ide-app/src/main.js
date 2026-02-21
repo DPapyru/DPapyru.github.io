@@ -60,6 +60,24 @@ const dom = {
     shaderRenderMode: document.getElementById('shader-render-mode'),
     shaderAddressMode: document.getElementById('shader-address-mode'),
     shaderBgMode: document.getElementById('shader-bg-mode'),
+    shaderUploadInputs: [
+        document.getElementById('shader-upload-0'),
+        document.getElementById('shader-upload-1'),
+        document.getElementById('shader-upload-2'),
+        document.getElementById('shader-upload-3')
+    ],
+    shaderUploadClearButtons: [
+        document.getElementById('shader-upload-clear-0'),
+        document.getElementById('shader-upload-clear-1'),
+        document.getElementById('shader-upload-clear-2'),
+        document.getElementById('shader-upload-clear-3')
+    ],
+    shaderUploadNames: [
+        document.getElementById('shader-upload-name-0'),
+        document.getElementById('shader-upload-name-1'),
+        document.getElementById('shader-upload-name-2'),
+        document.getElementById('shader-upload-name-3')
+    ],
     editorStatus: document.getElementById('editor-status'),
     statusLanguage: document.getElementById('status-language'),
     indexInfo: document.getElementById('index-info'),
@@ -165,6 +183,7 @@ const state = {
         renderMode: 'alpha',
         addressMode: 'clamp',
         bgMode: 'transparent',
+        shaderUploads: [null, null, null, null],
         rafId: 0
     },
     route: {
@@ -253,9 +272,12 @@ const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
 const SHADER_PREVIEW_RENDER_MODES = new Set(['alpha', 'additive', 'multiply', 'screen']);
 const SHADER_PREVIEW_ADDRESS_MODES = new Set(['clamp', 'wrap']);
 const SHADER_PREVIEW_PRESETS = new Set(['checker', 'noise', 'gradient', 'rings']);
+const SHADER_UPLOAD_SLOT_COUNT = 4;
+const SHADER_UPLOAD_MAX_SIZE = 4 * 1024 * 1024;
 const SHADER_KEYWORDS = Object.freeze([
     'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'default', 'break', 'continue',
-    'return', 'discard', 'struct', 'static', 'const', 'in', 'out', 'inout', 'uniform'
+    'return', 'discard', 'struct', 'static', 'const', 'in', 'out', 'inout', 'uniform',
+    'technique', 'pass', 'compile', 'register', 'cbuffer'
 ]);
 const SHADER_TYPES = Object.freeze([
     'void', 'bool', 'int', 'uint', 'float', 'half', 'fixed',
@@ -295,6 +317,7 @@ const SHADER_COMPLETION_WORDS = Object.freeze(Array.from(new Set([
 ])).sort((a, b) => a.localeCompare(b)));
 const SHADER_COMPLETION_RESERVED = new Set(SHADER_COMPLETION_WORDS.map((word) => String(word).toLowerCase()));
 const shaderPreviewPresetCache = new Map();
+const shaderUploadImageCache = new Map();
 
 // Keep Monaco colors aligned with site viewer's Rider dark Prism theme.
 const RIDER_CODE_COLORS = Object.freeze({
@@ -568,6 +591,120 @@ function shaderPreviewRenderModeLabel(value) {
     return 'AlphaBlend';
 }
 
+function normalizeShaderUploadSlotIndex(value) {
+    const index = Number(value);
+    if (!Number.isInteger(index) || index < 0 || index >= SHADER_UPLOAD_SLOT_COUNT) {
+        return -1;
+    }
+    return index;
+}
+
+function getShaderUploadSlot(index) {
+    const safeIndex = normalizeShaderUploadSlotIndex(index);
+    if (safeIndex < 0) return null;
+    if (!state.shaderPreview || !Array.isArray(state.shaderPreview.shaderUploads)) return null;
+    return state.shaderPreview.shaderUploads[safeIndex] || null;
+}
+
+function readImageFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.addEventListener('load', () => {
+            resolve(String(reader.result || ''));
+        });
+        reader.addEventListener('error', () => {
+            reject(new Error('图片读取失败'));
+        });
+        reader.readAsDataURL(file);
+    });
+}
+
+function shaderUploadSlotLabel(index) {
+    const safeIndex = normalizeShaderUploadSlotIndex(index);
+    if (safeIndex < 0) return 'uImage?';
+    return `uImage${safeIndex}`;
+}
+
+function updateShaderUploadUi() {
+    if (!Array.isArray(state.shaderPreview.shaderUploads)) {
+        state.shaderPreview.shaderUploads = [null, null, null, null];
+    }
+    for (let i = 0; i < SHADER_UPLOAD_SLOT_COUNT; i += 1) {
+        const entry = getShaderUploadSlot(i);
+        const nameNode = Array.isArray(dom.shaderUploadNames) ? dom.shaderUploadNames[i] : null;
+        const clearBtn = Array.isArray(dom.shaderUploadClearButtons) ? dom.shaderUploadClearButtons[i] : null;
+        if (nameNode) {
+            nameNode.textContent = entry && entry.name ? entry.name : '未上传';
+            nameNode.title = entry && entry.name ? entry.name : '';
+        }
+        if (clearBtn) {
+            clearBtn.disabled = !(entry && entry.dataUrl);
+        }
+    }
+}
+
+function ensureShaderUploadImage(dataUrl) {
+    const safeDataUrl = String(dataUrl || '').trim();
+    if (!safeDataUrl.startsWith('data:image/')) return null;
+    if (shaderUploadImageCache.has(safeDataUrl)) {
+        return shaderUploadImageCache.get(safeDataUrl);
+    }
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = safeDataUrl;
+    shaderUploadImageCache.set(safeDataUrl, img);
+    return img;
+}
+
+function getShaderUploadImage(index) {
+    const entry = getShaderUploadSlot(index);
+    if (!entry || !entry.dataUrl) return null;
+    const img = ensureShaderUploadImage(entry.dataUrl);
+    if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return null;
+    return img;
+}
+
+async function handleShaderUploadChange(slotIndex, event) {
+    const safeSlot = normalizeShaderUploadSlotIndex(slotIndex);
+    if (safeSlot < 0) return;
+    const input = event && event.target ? event.target : null;
+    const file = input && input.files && input.files[0] ? input.files[0] : null;
+    if (!file) return;
+    if (!String(file.type || '').startsWith('image/')) {
+        addEvent('error', `${shaderUploadSlotLabel(safeSlot)} 仅支持图片文件`);
+        if (input) input.value = '';
+        return;
+    }
+    if (Number(file.size || 0) > SHADER_UPLOAD_MAX_SIZE) {
+        addEvent('error', `${shaderUploadSlotLabel(safeSlot)} 图片过大（>${Math.round(SHADER_UPLOAD_MAX_SIZE / (1024 * 1024))}MB）`);
+        if (input) input.value = '';
+        return;
+    }
+    const dataUrl = await readImageFileAsDataUrl(file);
+    state.shaderPreview.shaderUploads[safeSlot] = {
+        name: String(file.name || `upload-${safeSlot}.png`),
+        dataUrl
+    };
+    if (input) input.value = '';
+    updateShaderUploadUi();
+    drawShaderPreviewCanvas();
+    addEvent('info', `${shaderUploadSlotLabel(safeSlot)} 已上传：${file.name}`);
+}
+
+function clearShaderUploadSlot(slotIndex, options) {
+    const safeSlot = normalizeShaderUploadSlotIndex(slotIndex);
+    if (safeSlot < 0) return;
+    const opts = options || {};
+    const current = getShaderUploadSlot(safeSlot);
+    if (!current) return;
+    state.shaderPreview.shaderUploads[safeSlot] = null;
+    updateShaderUploadUi();
+    drawShaderPreviewCanvas();
+    if (!opts.silent) {
+        addEvent('info', `${shaderUploadSlotLabel(safeSlot)} 已清空`);
+    }
+}
+
 function normalizeMarkdownRepoPath(pathValue) {
     let safe = normalizeRepoPath(pathValue);
     if (!safe) return '';
@@ -752,6 +889,13 @@ function sanitizeShaderSlug(value) {
 function compileFxSource(code) {
     const text = String(code || '');
     const errors = [];
+    if (!text.trim()) {
+        errors.push({
+            line: 1,
+            column: 1,
+            message: '文件内容为空'
+        });
+    }
     let depth = 0;
     const lines = text.split('\n');
     for (let i = 0; i < lines.length; i += 1) {
@@ -782,9 +926,6 @@ function compileFxSource(code) {
     if (depth > 0) {
         errors.push({ line: lines.length || 1, column: 1, message: '缺少右花括号 }' });
     }
-    if (!/float4\s+\w+\s*\(/i.test(text)) {
-        errors.push({ line: 1, column: 1, message: '未检测到 float4 像素着色器入口函数' });
-    }
     return {
         ok: errors.length === 0,
         errors,
@@ -796,18 +937,25 @@ function compileFxSource(code) {
 
 function shaderDefaultTemplate() {
     return [
-        '// tModLoader 风格像素着色器默认模板',
-        '// UV 约定: 左上(0,0), 右下(1,1)',
+        '// tModLoader 风格 .fx 默认模板（完整 HLSL）',
         '// 可用纹理: iChannel0-3（兼容 uImage0-3）',
+        '// 后缀请使用 .fx',
+        '',
+        'sampler2D uImage0 : register(s0);',
         '',
         'float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
         '{',
         '    float2 uv = texCoord;',
-        '    float2 p = uv * 2.0 - 1.0;',
-        '    float vignette = saturate(1.0 - dot(p, p) * 0.45);',
-        '    float wave = 0.5 + 0.5 * sin(iTime + uv.x * 6.0);',
-        '    float3 col = float3(uv.x, uv.y, wave) * vignette;',
-        '    return float4(col, 1.0);',
+        '    float4 baseColor = tex2D(uImage0, uv);',
+        '    return baseColor;',
+        '}',
+        '',
+        'technique MainTechnique',
+        '{',
+        '    pass P0',
+        '    {',
+        '        PixelShader = compile ps_2_0 MainPS();',
+        '    }',
         '}',
         ''
     ].join('\n');
@@ -3394,7 +3542,14 @@ function updateShaderPreviewStatus() {
     const preset = shaderPreviewPresetLabel(state.shaderPreview.presetImage);
     const address = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
     const bg = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
-    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg}`;
+    const uploads = [];
+    for (let i = 0; i < SHADER_UPLOAD_SLOT_COUNT; i += 1) {
+        if (getShaderUploadSlot(i)) {
+            uploads.push(`uImage${i}`);
+        }
+    }
+    const uploadText = uploads.length ? uploads.join(', ') : '无';
+    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg} · 上传: ${uploadText}`;
 }
 
 function syncShaderPreviewControls() {
@@ -3410,6 +3565,33 @@ function syncShaderPreviewControls() {
     if (dom.shaderBgMode) {
         dom.shaderBgMode.value = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
     }
+    updateShaderUploadUi();
+}
+
+function drawShaderPreviewTextureLayer(ctx, texture, width, height, addressMode, offsetX, offsetY, alpha, composite) {
+    if (!ctx || !texture) return;
+    const safeAddressMode = normalizeShaderPreviewAddressMode(addressMode);
+    const safeAlpha = Number.isFinite(alpha) ? alpha : 1;
+    const safeComposite = composite || 'source-over';
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, Math.min(1, safeAlpha));
+    ctx.globalCompositeOperation = safeComposite;
+    if (safeAddressMode === 'wrap') {
+        const pattern = ctx.createPattern(texture, 'repeat');
+        if (pattern) {
+            ctx.translate(Math.round(offsetX || 0), Math.round(offsetY || 0));
+            ctx.fillStyle = pattern;
+            ctx.fillRect(
+                -Math.abs(Math.round(offsetX || 0)),
+                -Math.abs(Math.round(offsetY || 0)),
+                width + Math.abs(Math.round(offsetX || 0)) * 2,
+                height + Math.abs(Math.round(offsetY || 0)) * 2
+            );
+        }
+    } else {
+        ctx.drawImage(texture, 0, 0, width, height);
+    }
+    ctx.restore();
 }
 
 function drawShaderPreviewCanvas() {
@@ -3434,6 +3616,8 @@ function drawShaderPreviewCanvas() {
     const addressMode = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
     const renderMode = normalizeShaderPreviewRenderMode(state.shaderPreview.renderMode);
     const presetCanvas = shaderPreviewImageCanvas(state.shaderPreview.presetImage);
+    const baseTexture = getShaderUploadImage(0) || presetCanvas;
+    const overlayTexture = getShaderUploadImage(1);
 
     ctx.clearRect(0, 0, width, height);
     if (bgMode === 'white') {
@@ -3446,42 +3630,45 @@ function drawShaderPreviewCanvas() {
         drawShaderPreviewCheckerboard(ctx, width, height, Math.max(8, Math.round(16 * dpr)));
     }
 
-    if (presetCanvas) {
-        if (addressMode === 'wrap') {
-            const pattern = ctx.createPattern(presetCanvas, 'repeat');
-            if (pattern) {
-                ctx.save();
-                ctx.translate(-Math.round(timeSec * 42), -Math.round(timeSec * 24));
-                ctx.fillStyle = pattern;
-                ctx.fillRect(0, 0, width + presetCanvas.width, height + presetCanvas.height);
-                ctx.restore();
-            }
-        } else {
-            ctx.drawImage(presetCanvas, 0, 0, width, height);
-        }
+    if (baseTexture) {
+        drawShaderPreviewTextureLayer(
+            ctx,
+            baseTexture,
+            width,
+            height,
+            addressMode,
+            -Math.round(timeSec * 42),
+            -Math.round(timeSec * 24),
+            1,
+            'source-over'
+        );
     }
 
-    const wave = 0.5 + 0.5 * Math.sin(timeSec * 1.8);
-    const overlay = ctx.createRadialGradient(width * 0.4, height * 0.35, 18, width * 0.6, height * 0.6, width * 0.9);
-    overlay.addColorStop(0, `hsla(${Math.round(180 + wave * 140)}, 90%, 62%, 0.82)`);
-    overlay.addColorStop(1, 'hsla(0, 0%, 0%, 0)');
-    ctx.save();
-    if (renderMode === 'additive') {
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.globalAlpha = 0.68;
-    } else if (renderMode === 'multiply') {
-        ctx.globalCompositeOperation = 'multiply';
-        ctx.globalAlpha = 0.78;
-    } else if (renderMode === 'screen') {
-        ctx.globalCompositeOperation = 'screen';
-        ctx.globalAlpha = 0.66;
-    } else {
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.globalAlpha = 0.4;
+    if (overlayTexture) {
+        let composite = 'source-over';
+        let alpha = 0.45;
+        if (renderMode === 'additive') {
+            composite = 'lighter';
+            alpha = 0.8;
+        } else if (renderMode === 'multiply') {
+            composite = 'multiply';
+            alpha = 0.86;
+        } else if (renderMode === 'screen') {
+            composite = 'screen';
+            alpha = 0.74;
+        }
+        drawShaderPreviewTextureLayer(
+            ctx,
+            overlayTexture,
+            width,
+            height,
+            addressMode,
+            -Math.round(timeSec * 18),
+            -Math.round(timeSec * 12),
+            alpha,
+            composite
+        );
     }
-    ctx.fillStyle = overlay;
-    ctx.fillRect(0, 0, width, height);
-    ctx.restore();
 
     const active = getActiveFile();
     const compileErrors = Array.isArray(state.shaderCompile.errors) ? state.shaderCompile.errors.length : 0;
@@ -4696,6 +4883,28 @@ function bindUiEvents() {
             state.shaderPreview.bgMode = normalizeShaderPreviewBgMode(dom.shaderBgMode.value);
             drawShaderPreviewCanvas();
             addEvent('info', `Shader 背景模式已切换：${state.shaderPreview.bgMode}`);
+        });
+    }
+
+    if (Array.isArray(dom.shaderUploadInputs)) {
+        dom.shaderUploadInputs.forEach((input, index) => {
+            if (!input) return;
+            input.addEventListener('change', async (event) => {
+                try {
+                    await handleShaderUploadChange(index, event);
+                } catch (error) {
+                    addEvent('error', `上传 ${shaderUploadSlotLabel(index)} 失败：${error.message}`);
+                }
+            });
+        });
+    }
+
+    if (Array.isArray(dom.shaderUploadClearButtons)) {
+        dom.shaderUploadClearButtons.forEach((button, index) => {
+            if (!button) return;
+            button.addEventListener('click', () => {
+                clearShaderUploadSlot(index);
+            });
         });
     }
 
