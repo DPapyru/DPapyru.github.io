@@ -1457,3 +1457,16 @@
 **备注**：
 - 已执行“截图 + 模拟输入 + 模拟点击”验收；截图产物：`test-results/tml-ide-unified-acceptance/01-shell-ready.png`、`test-results/tml-ide-unified-acceptance/02-markdown-shader-actions.png`。
 - 验收前临时安装了无保存依赖 `playwright`（`npm_config_package_lock=false npm install --no-save playwright`）并执行 `npx playwright install chromium`，未修改 `package.json`。
+
+### 验证记录 [2026-02-21 18:30]：IDE 活动栏按钮文案中文化
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app run build`：通过
+- `node tmp-playwright/tml-ide-unified-acceptance.mjs`：通过
+- `npm --prefix tml-ide-app test`：通过
+
+**备注**：
+- 活动栏按钮从英文缩写（EX/SR/SC/RN/AC/ST）改为中文（资源/搜索/源控/运行/扩展/账户/设置）。
+- 已执行“截图 + 模拟输入 + 模拟点击”验证，截图产物更新于 `test-results/tml-ide-unified-acceptance/01-shell-ready.png`、`test-results/tml-ide-unified-acceptance/02-markdown-shader-actions.png`。

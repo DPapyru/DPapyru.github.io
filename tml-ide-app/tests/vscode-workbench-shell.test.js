@@ -11,7 +11,7 @@ const root = path.resolve(__dirname, '..');
 test('index.html exposes workbench contracts for activity, panel tabs and command palette', () => {
     const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
-    assert.match(html, /aria-label="Activity Bar"/);
+    assert.match(html, /aria-label="(?:Activity Bar|活动栏)"/);
     assert.match(html, /data-activity="explorer"/);
     assert.match(html, /data-panel-tab="problems"/);
     assert.match(html, /data-panel-tab="compile"/);
