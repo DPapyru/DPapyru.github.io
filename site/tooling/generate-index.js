@@ -4,6 +4,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 const { resolveCategory, mapToExistingCategory } = require('./lib/category-utils');
 const yaml = require('js-yaml');
+const { generateFunTestQuiz } = require('./scripts/generate-fun-test-quiz');
 
 const SITE_BASE_URL = 'https://dpapyru.github.io';
 const SEARCH_INDEX_PATH = './site/assets/search-index.json';
@@ -2138,9 +2139,11 @@ function processCustomFields(metadata, configManager) {
 }
 
 function runStructure(deps = {}) {
+    const runGenerateFunTestQuiz = deps.generateFunTestQuiz || generateFunTestQuiz;
     const runProcess = deps.processMainProject || processMainProject;
     const runSitemap = deps.generateSitemap || generateSitemap;
     const runIdeEditableIndex = deps.generateIdeEditableIndex || generateIdeEditableIndex;
+    runGenerateFunTestQuiz();
     const mainConfig = runProcess();
     runSitemap(mainConfig);
     runIdeEditableIndex();
@@ -2158,12 +2161,14 @@ function runSearch(deps = {}) {
 }
 
 function runAll(deps = {}) {
+    const runGenerateFunTestQuiz = deps.generateFunTestQuiz || generateFunTestQuiz;
     const runProcess = deps.processMainProject || processMainProject;
     const runSitemap = deps.generateSitemap || generateSitemap;
     const runSearchIndex = deps.generateSearchIndex || generateSearchIndex;
     const runGuided = deps.generateGuidedSemanticIndex || generateGuidedSemanticIndex;
     const runBm25 = deps.generateBm25Index || generateBm25Index;
     const runIdeEditableIndex = deps.generateIdeEditableIndex || generateIdeEditableIndex;
+    runGenerateFunTestQuiz();
     const mainConfig = runProcess();
     runSitemap(mainConfig);
     runSearchIndex(mainConfig);
@@ -2178,6 +2183,7 @@ module.exports = {
     generateSearchIndex,
     generateGuidedSemanticIndex,
     generateBm25Index,
+    generateFunTestQuiz,
     generateIdeEditableIndex,
     runStructure,
     runSearch,

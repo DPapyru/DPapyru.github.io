@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜猜你是《星辰击碎者》（小天使的独立游戏世界观）什么类型的角色</title>
+    <meta name="description" content="独立娱乐测评：通过多维度题目判断你在《星辰击碎者》世界观中的角色类型。">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://dpapyru.github.io/fun-test/">
+    <script src="/site/assets/js/theme-init.js"></script>
+    <link rel="stylesheet" href="/site/assets/css/style.css">
+    <link rel="stylesheet" href="/fun-test/style.css">
+    <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
+</head>
+
+<body class="fun-test-body">
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <header class="fun-test-header" role="banner">
+        <div class="fun-test-header-inner">
+            <a class="fun-test-home-link" href="/index.html">返回导航首页</a>
+            <div class="fun-test-header-text">
+                <p class="fun-test-header-tag">FUN TEST</p>
+                <h1 class="fun-test-header-title">猜猜你是《星辰击碎者》（小天使的独立游戏世界观）什么类型的角色</h1>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content" class="fun-test-main" tabindex="-1">
+        <section id="screen-start" class="fun-screen fun-screen-active" aria-labelledby="start-title">
+            <div class="fun-panel">
+                <h2 id="start-title">开始测评</h2>
+                <p class="fun-muted">这是一个独立娱乐测评页。题目结果仅用于趣味画像，不代表能力评价。</p>
+                <ul class="fun-start-list">
+                    <li>题型包含单选、多选、1-5 量表。</li>
+                    <li>结果由多维度比例触发称号组成。</li>
+                    <li>系统会自动保存未完成进度与最近 5 次结果。</li>
+                </ul>
+                <div class="fun-actions">
+                    <button id="btn-start" class="btn btn-primary" type="button">开始测评</button>
+                    <button id="btn-continue" class="btn btn-outline" type="button" hidden>继续上次进度</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-quiz" class="fun-screen" aria-labelledby="quiz-title" hidden>
+            <div class="fun-panel">
+                <div class="fun-quiz-top">
+                    <h2 id="quiz-title">答题中</h2>
+                    <div id="quiz-progress" class="fun-progress" aria-live="polite"></div>
+                </div>
+                <div id="quiz-nav" class="fun-question-nav" aria-label="题号导航"></div>
+                <article id="question-card" class="fun-question-card" aria-live="polite"></article>
+                <div id="quiz-hint" class="fun-hint" aria-live="assertive"></div>
+                <div class="fun-actions fun-actions-split">
+                    <button id="btn-prev" class="btn btn-outline" type="button">上一题</button>
+                    <button id="btn-next" class="btn btn-primary" type="button">下一题</button>
+                    <button id="btn-submit" class="btn btn-primary" type="button" hidden>提交结果</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="screen-result" class="fun-screen" aria-labelledby="result-title" hidden>
+            <div class="fun-grid">
+                <article class="fun-panel">
+                    <h2 id="result-title">测评结果</h2>
+                    <p id="result-time" class="fun-muted"></p>
+                    <div class="fun-chart-wrap">
+                        <canvas id="result-radar" width="440" height="440" aria-label="维度雷达图" role="img"></canvas>
+                    </div>
+                    <div id="result-dimensions" class="fun-dimensions"></div>
+                </article>
+
+                <article class="fun-panel">
+                    <h3>触发称号</h3>
+                    <div id="result-titles" class="fun-titles"></div>
+                    <div class="fun-actions fun-actions-wrap">
+                        <button id="btn-restart" class="btn btn-primary" type="button">重新测试</button>
+                        <button id="btn-clear-progress" class="btn btn-outline" type="button">清空当前进度</button>
+                        <button id="btn-clear-history" class="btn btn-outline" type="button">清空全部历史</button>
+                    </div>
+                </article>
+            </div>
+
+            <article class="fun-panel">
+                <h3>最近 5 次结果</h3>
+                <div id="result-history" class="fun-history"></div>
+            </article>
+        </section>
+    </main>
+
+    <noscript>
+        <p class="fun-noscript">该测评页需要启用 JavaScript。</p>
+    </noscript>
+
+    <script src="/fun-test/vendor/chart.umd.min.js"></script>
+    <script src="/fun-test/quiz-engine.js"></script>
+    <script src="/fun-test/app.js"></script>
+</body>
+
+</html>
