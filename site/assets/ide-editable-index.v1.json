@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "root": "site/content",
-  "generatedAt": "2026-02-22T09:45:13.739Z",
+  "generatedAt": "2026-02-22T14:04:48.041Z",
   "files": [
     {
       "path": "Modder入门/code/firstclass_makefirstweapon.cs",
@@ -9,6 +9,10 @@
     },
     {
       "path": "Modder入门/code/firstgun.cs",
+      "kind": "csharp"
+    },
+    {
+      "path": "Modder入门/code/program.cs",
       "kind": "csharp"
     },
     {

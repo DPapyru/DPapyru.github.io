@@ -40,7 +40,7 @@ export function create(runtime) {
                 vec2 = new Vec2((this._center.X - center.X) / width * 4, -(this._center.Y - center.Y) / height * 2);
             }
             vector_add_resolution.DrawAxes(g, center, scale);
-            let center_x = new Vec2(center.X, center.Y - vec2.Y * height / 2);
+            let center_x = new Vec2(center.X, center.Y - vec2.Y * height / 4.5);
             let center_y = new Vec2(center.X + vec2.X * width / 4, center.Y);
             vector_add_resolution.DrawArrow(g, center, vector_add_resolution.ToScreen(new Vec2(vec2.X, 0), center, scale), new Color(231, 234, 20, 255), 1.5, 8);
             vector_add_resolution.DrawArrow(g, center_x, vector_add_resolution.ToScreen(new Vec2(vec2.X, 0), center_x, scale), new Color(231, 234, 20, 150), 1.5, 8);
