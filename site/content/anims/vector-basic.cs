@@ -1,4 +1,4 @@
-﻿using AnimRuntime;
+using AnimRuntime;
 using AnimRuntime.Math;
 
 namespace AnimScripts.Dev;

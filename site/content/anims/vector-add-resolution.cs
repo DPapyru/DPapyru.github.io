@@ -1,4 +1,4 @@
-﻿using AnimRuntime;
+using AnimRuntime;
 using AnimRuntime.Math;
 
 namespace AnimScripts.Dev;
@@ -47,7 +47,7 @@ public sealed class vector_add_resolution : IAnimScript
         // 绘制坐标系
         DrawAxes(g, center, scale);
 
-        var center_x = new Vec2(center.X, center.Y - vec2.Y * height / 2);
+        var center_x = new Vec2(center.X, center.Y - vec2.Y * height / 4.5f);
         var center_y = new Vec2(center.X + vec2.X * width / 4, center.Y);
         
         // 绘制X轴
