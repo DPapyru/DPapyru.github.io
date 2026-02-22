@@ -196,15 +196,145 @@ async function verifyWorkbenchInteractions(page) {
         return Boolean(node && node.hasAttribute('hidden'));
     }, null, { timeout: 5000 });
 
-    await page.click('button[data-panel-tab="indexer"]');
+    await page.click('button[data-panel-tab="output"]');
     const activePanelState = await page.evaluate(() => {
         const activeTab = document.querySelector('.panel-tab.panel-tab-active')?.getAttribute('data-panel-tab') || '';
         const activeView = document.querySelector('.panel-view.panel-view-active')?.getAttribute('data-panel-view') || '';
         return { activeTab, activeView };
     });
-    if (activePanelState.activeTab !== 'indexer' || activePanelState.activeView !== 'indexer') {
+    if (activePanelState.activeTab !== 'output' || activePanelState.activeView !== 'output') {
         throw new Error(`Panel tab switch failed: tab=${activePanelState.activeTab} view=${activePanelState.activeView}`);
     }
+}
+
+async function clickContextMenuItem(page, labelText) {
+    await page.waitForSelector('#ide-context-menu:not([hidden])', { timeout: 5000 });
+    const item = page.locator('#ide-context-menu .ide-context-menu-item').filter({ hasText: labelText }).first();
+    const count = await item.count();
+    if (!count) {
+        throw new Error(`Context menu item not found: ${labelText}`);
+    }
+    await item.click();
+}
+
+async function verifyPopupInViewport(page, selector, name) {
+    const within = await page.evaluate((targetSelector) => {
+        const node = document.querySelector(targetSelector);
+        if (!node || node.hasAttribute('hidden')) return false;
+        const rect = node.getBoundingClientRect();
+        return rect.left >= -1
+            && rect.top >= -1
+            && rect.right <= window.innerWidth + 1
+            && rect.bottom <= window.innerHeight + 1;
+    }, selector);
+    if (!within) {
+        throw new Error(`${name} exceeds viewport bounds.`);
+    }
+}
+
+async function verifyContextAndFixInteractions(page) {
+    const problemsDemoCode = [
+        'public class ProblemDemo {',
+        '    void Test() {',
+        '        int x = 1',
+        '    }',
+        '}'
+    ].join('\n');
+    await injectStableEditorText(page, problemsDemoCode, 'int x = 1');
+    await page.click('#btn-run-diagnostics');
+    await page.waitForTimeout(600);
+
+    await page.click('.monaco-editor', { button: 'right' });
+    await clickContextMenuItem(page, '显示问题面板');
+    const activeProblemsTab = await page.evaluate(() => {
+        return document.querySelector('.panel-tab.panel-tab-active')?.getAttribute('data-panel-tab') || '';
+    });
+    if (activeProblemsTab !== 'problems') {
+        throw new Error(`Context menu command failed to show problems tab: ${activeProblemsTab}`);
+    }
+
+    await page.evaluate(() => globalThis.__tmlIdeDebug.setCursorAfterText('int x = 1'));
+    await page.waitForSelector('#ide-fix-popup:not([hidden])', { timeout: 5000 });
+    await verifyPopupInViewport(page, '#ide-fix-popup', 'Fix popup');
+    await page.screenshot({ path: path.join(outDir, '08-context-fix-auto-popup.png'), fullPage: true });
+
+    await page.mouse.click(4, 4);
+    await page.waitForFunction(() => {
+        return Boolean(document.querySelector('#ide-fix-popup')?.hasAttribute('hidden'));
+    }, null, { timeout: 5000 });
+
+    await page.keyboard.press('Control+Period');
+    await page.waitForSelector('#ide-fix-popup:not([hidden])', { timeout: 5000 });
+    await verifyPopupInViewport(page, '#ide-fix-popup', 'Fix popup (Ctrl+.)');
+
+    await page.click('#problems-list .problem-item .problem-jump', { button: 'right' });
+    await clickContextMenuItem(page, '打开修复子窗');
+    await page.waitForSelector('#ide-fix-popup:not([hidden])', { timeout: 5000 });
+
+    const suggestionCount = await page.evaluate(() => {
+        return document.querySelectorAll('#ide-fix-popup-suggestions .ide-fix-suggestion').length;
+    });
+    if (suggestionCount <= 0) {
+        throw new Error('Fix popup suggestions are empty.');
+    }
+    await page.click('#ide-fix-popup-suggestions .ide-fix-suggestion-actions button');
+    await page.waitForTimeout(200);
+
+    await page.evaluate(() => {
+        const originalPrompt = window.prompt;
+        window.prompt = function (...args) {
+            window.prompt = originalPrompt;
+            return 'site/content/怎么贡献/code/context-menu-acceptance.fx';
+        };
+    });
+    await page.click('#btn-add-file');
+    await page.waitForTimeout(200);
+
+    const invalidShaderCode = [
+        'sampler2D Texture0 : register(s0)',
+        '{',
+        '};'
+    ].join('\n');
+    await page.evaluate((text) => {
+        globalThis.__tmlIdeDebug.setEditorText(text);
+    }, invalidShaderCode);
+    await page.click('button[data-panel-tab="compile"]');
+    await page.waitForTimeout(150);
+    await page.click('#btn-panel-shader-compile');
+    await page.waitForTimeout(700);
+
+    const shaderHasErrors = await page.evaluate(() => {
+        return document.querySelectorAll('#shader-error-list .problem-item').length > 0;
+    });
+    if (!shaderHasErrors) {
+        throw new Error('Shader compile error list did not populate.');
+    }
+
+    await page.click('button[data-panel-tab="problems"]');
+    await page.waitForTimeout(250);
+    await page.click('#problems-list .problem-item .problem-jump', { button: 'right' });
+    await clickContextMenuItem(page, '打开修复子窗');
+    const shaderFixState = await page.evaluate(() => globalThis.__tmlIdeDebug.getFixPopupState());
+    if (!shaderFixState || shaderFixState.issueCode !== 'SHADER_COMPILE_ERROR') {
+        throw new Error(`Shader quick-fix popup mismatch: ${JSON.stringify(shaderFixState)}`);
+    }
+
+    const contextClampState = await page.evaluate(() => {
+        return globalThis.__tmlIdeDebug.openContextMenuAt('editor', { x: 9999, y: 9999, context: { menuTitle: '编辑器' } });
+    });
+    if (!contextClampState || !contextClampState.open) {
+        throw new Error('Debug API failed to open context menu near viewport edge.');
+    }
+    await verifyPopupInViewport(page, '#ide-context-menu', 'Context menu');
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => {
+        return Boolean(document.querySelector('#ide-context-menu')?.hasAttribute('hidden'));
+    }, null, { timeout: 5000 });
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(() => {
+        return Boolean(document.querySelector('#ide-fix-popup')?.hasAttribute('hidden'));
+    }, null, { timeout: 5000 });
+    await page.screenshot({ path: path.join(outDir, '09-context-fix-shader.png'), fullPage: true });
 }
 
 async function main() {
@@ -353,20 +483,7 @@ async function main() {
     }
     await page.screenshot({ path: path.join(outDir, '07-problems-list.png'), fullPage: true });
 
-    await page.click('button[data-panel-tab="problems"]');
-    await page.click('#toggle-roslyn');
-    await page.waitForTimeout(800);
-    await page.screenshot({ path: path.join(outDir, '08-roslyn-toggle.png'), fullPage: true });
-
-    // Input validation: fill text-form fields before file import.
-    await page.click('button[data-panel-tab="indexer"]');
-    await page.fill('#input-append-dll-path', '/tmp/example/extra-mod.dll');
-    await page.fill('#input-indexer-out-path', 'tml-ide-app/public/data/api-index.v2.json');
-    const importIndexInput = page.locator('#input-import-index');
-    await importIndexInput.setInputFiles(path.resolve('tml-ide-app/public/data/api-index.v2.json'));
-    await page.click('#btn-import-index');
-    await page.waitForTimeout(800);
-    await page.screenshot({ path: path.join(outDir, '09-index-import.png'), fullPage: true });
+    await verifyContextAndFixInteractions(page);
 
     await browser.close();
 

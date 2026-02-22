@@ -28,6 +28,10 @@ test('index.html exposes workbench contracts for activity, panel tabs and comman
     assert.match(html, /id="shader-preview-controls"/);
     assert.match(html, /id="shader-preview-zoom-reset"/);
     assert.match(html, /id="unified-submit-panel"/);
+    assert.match(html, /id="ide-context-menu"/);
+    assert.match(html, /id="ide-context-menu-list"/);
+    assert.match(html, /id="ide-fix-popup"/);
+    assert.match(html, /id="ide-fix-popup-suggestions"/);
     assert.doesNotMatch(html, /id="shader-sidepane"/);
     assert.doesNotMatch(html, /id="workspace-plugin-host"/);
 });
@@ -48,5 +52,10 @@ test('main.js restores vscode-like shortcut labels and debug wrappers', () => {
     assert.match(js, /renderProblems/);
     assert.match(js, /createPluginRegistry/);
     assert.match(js, /runSplitUnifiedSubmit/);
+    assert.match(js, /openContextMenuAt/);
+    assert.match(js, /getContextMenuState/);
+    assert.match(js, /getFixPopupState/);
+    assert.match(js, /openFixPopupAtCursor/);
+    assert.match(js, /Ctrl\+\./);
     assert.doesNotMatch(js, /postMessageToSubapp/);
 });

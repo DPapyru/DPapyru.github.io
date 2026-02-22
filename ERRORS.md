@@ -1839,3 +1839,19 @@
 - `npm --prefix tml-ide-app run build`：通过
 
 **备注**：通过浏览器自动化脚本完成“点击隐藏底部 Panel -> 点击恢复按钮 -> Panel 恢复”的交互验证，并截图留档：`/tmp/pwdebug/ide-before.png`、`/tmp/pwdebug/ide-hidden-with-restore.png`、`/tmp/pwdebug/ide-restored.png`；同时验证 Shader 预览右侧拖拽可改变画布比例（宽度从 `802` 到 `900`），截图：`/tmp/pwdebug/shader-before-resize.png`、`/tmp/pwdebug/shader-after-resize.png`。
+
+### 验证记录 [2026-02-22 16:24]：tML IDE 右键功能窗 + 报错修复窗
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过（63/63）
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：失败
+- `npm run check-generated`：失败
+- `npm --prefix tml-ide-app run preview -- --host 127.0.0.1 --port 4173` + `node tmp-playwright/tml-ide-vscode-acceptance.mjs`：通过
+
+**备注**：
+- `npm run build` 与 `npm run check-generated` 均在 `build:anims` 阶段失败，根因是当前环境缺少 `Microsoft.NETCore.App 8.0.0`，`site/tooling/tools/animcs-compiler/AstCompiler` 启动失败（exit 150）。
+- Playwright 验收过程：第一次失败原因为本地缺少 `playwright`/`playwright-core` 运行时依赖（脚本在 `resolveChromium` 抛错）；补装 `npm install --no-save playwright` 后，修复 `setCursorAfterText` 自动调度与验收脚本编译面板切换步骤，最终验收通过。
+- 浏览器验收产物：`test-results/tml-ide-vscode-acceptance-rerun/`。

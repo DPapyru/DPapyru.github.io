@@ -24,10 +24,13 @@ test('acceptance script validates runtime fingerprint and Item completion scenar
     assert.match(source, /runtimeFingerprint/);
     assert.match(source, /Runtime bundle mismatch/);
     assert.match(source, /Control\+Shift\+P/);
-    assert.match(source, /data-panel-tab="indexer"/);
+    assert.match(source, /data-panel-tab="output"/);
     assert.match(source, /Item\./);
     assert.match(source, /hasDamage/);
     assert.match(source, /override/);
     assert.match(source, /SetDefaults/);
     assert.match(source, /problems-list/);
+    assert.match(source, /ide-context-menu/);
+    assert.match(source, /Control\+Period/);
+    assert.match(source, /SHADER_COMPILE_ERROR/);
 });

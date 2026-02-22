@@ -12,10 +12,13 @@ import { createEnhancedCsharpLanguage } from './lib/csharp-highlighting.js';
 import { buildPatchIndexFromXml } from './lib/language-core.js';
 import { createEmptyApiIndex, mergeApiIndex, normalizeApiIndex } from './lib/index-schema.js';
 import { buildFragmentSource as buildShaderFragmentSource } from './lib/shader-hlsl-adapter.js';
+import { buildSuggestions as buildDiagnosticSuggestions } from './lib/diagnostic-suggestions.js';
 import { createPluginRegistry } from './core/plugin-registry.js';
 import { createShellEventBus } from './core/shell-event-bus.js';
 import { createStorageService } from './core/storage-service.js';
 import { createUnifiedSubmitService } from './core/unified-submit-service.js';
+import { createContextMenuController } from './ui/context-menu.js';
+import { createFixPopupController } from './ui/fix-popup.js';
 import { createCsharpWorkspacePlugin } from './workspaces/csharp/index.js';
 import { createMarkdownWorkspacePlugin } from './workspaces/markdown/index.js';
 import { createShaderWorkspacePlugin } from './workspaces/shader/index.js';
@@ -149,6 +152,13 @@ const dom = {
     commandPaletteBackdrop: document.getElementById('command-palette-backdrop'),
     commandPaletteInput: document.getElementById('command-palette-input'),
     commandPaletteResults: document.getElementById('command-palette-results'),
+    contextMenu: document.getElementById('ide-context-menu'),
+    contextMenuTitle: document.getElementById('ide-context-menu-title'),
+    contextMenuList: document.getElementById('ide-context-menu-list'),
+    fixPopup: document.getElementById('ide-fix-popup'),
+    fixPopupIssue: document.getElementById('ide-fix-popup-issue'),
+    fixPopupSuggestions: document.getElementById('ide-fix-popup-suggestions'),
+    fixPopupActions: document.getElementById('ide-fix-popup-actions'),
     pluginHost: document.getElementById('workspace-plugin-host'),
     subappTitle: document.getElementById('subapp-title'),
     btnSubappReload: document.getElementById('btn-subapp-reload'),
@@ -186,8 +196,15 @@ const state = {
     },
     unifiedWorkspaceState: null,
     editor: null,
+    contextMenuController: null,
+    fixPopupController: null,
+    menuContext: null,
     modelByFileId: new Map(),
     analyzeCache: new Map(),
+    diagnosticsIssuesByFileId: new Map(),
+    shaderIssuesByFileId: new Map(),
+    issueByProblemKey: new Map(),
+    activeIssues: [],
     diagnosticsTimer: 0,
     saveTimer: 0,
     roslynEnabled: false,
@@ -286,6 +303,7 @@ const VSCODE_SHORTCUTS = Object.freeze({
     QUICK_OPEN: 'Ctrl+P',
     TOGGLE_SIDEBAR: 'Ctrl+B',
     TOGGLE_PANEL: 'Ctrl+J',
+    QUICK_FIX: 'Ctrl+.',
     SAVE_WORKSPACE: 'Ctrl+S',
     FOCUS_EXPLORER: 'Ctrl+Shift+E'
 });
@@ -351,6 +369,7 @@ const ANIMATION_METHOD_LABELS = new Set([
 const ANIMATION_TYPE_LABEL_SET = new Set(ANIMATION_TYPE_LABELS);
 const ANIMATION_MEMBER_LABEL_SET = new Set(Object.values(ANIMATION_MEMBER_LABELS_BY_TYPE).flat());
 const UNIFIED_STATE_SAVE_DELAY = 240;
+const FIX_POPUP_AUTO_DELAY = 300;
 const WORKSPACE_VALUES = Object.freeze(['csharp', 'markdown', 'shader']);
 const WORKSPACE_LAST_KEY = 'tml-ide:last-workspace';
 const OAUTH_TOKEN_KEY = 'articleStudioOAuthToken.v1';
@@ -3549,6 +3568,619 @@ function handleGlobalShortcuts(event) {
     if (key === 'e' && event.shiftKey) {
         event.preventDefault();
         focusExplorer();
+        return;
+    }
+
+    if (key === '.' && !event.shiftKey) {
+        event.preventDefault();
+        openFixPopupAtCursor({ allowInfo: true });
+    }
+}
+
+function runEditorAction(actionId, fallbackCommandId) {
+    if (!state.editor) return;
+    const safeActionId = String(actionId || '');
+    if (safeActionId) {
+        const action = state.editor.getAction ? state.editor.getAction(safeActionId) : null;
+        if (action && typeof action.run === 'function') {
+            action.run();
+            return;
+        }
+    }
+    const safeFallback = String(fallbackCommandId || safeActionId || '');
+    if (safeFallback) {
+        state.editor.trigger('keyboard', safeFallback, {});
+    }
+}
+
+function focusProblemsPanel(issue) {
+    showBottomPanel(true);
+    setActivePanelTab('problems');
+    if (!issue || !dom.problemsList) return;
+    const key = issueKey(issue);
+    const candidates = Array.from(dom.problemsList.querySelectorAll('.problem-item'));
+    const target = candidates.find((node) => {
+        const problemKeyText = String(node.dataset.problemKey || '');
+        const mappedIssue = state.issueByProblemKey.get(problemKeyText);
+        return mappedIssue && issueKey(mappedIssue) === key;
+    });
+    if (!target) return;
+    const button = target.querySelector('.problem-jump');
+    if (button) {
+        button.focus();
+    }
+}
+
+function suggestionCandidatesForUnknownMember(issue) {
+    const message = String(issue && issue.message || '');
+    const memberMatch = message.match(/成员[:：]\s*([A-Za-z_][A-Za-z0-9_]*)/);
+    const ownerMatch = message.match(/^([A-Za-z_][A-Za-z0-9_]*)\s+中不存在成员/);
+    const unknownMember = memberMatch ? String(memberMatch[1] || '') : '';
+    const ownerName = ownerMatch ? String(ownerMatch[1] || '') : '';
+    if (!unknownMember || !ownerName) return [];
+
+    const indexTypes = state.index && state.index.types ? state.index.types : {};
+    const ownerType = Object.values(indexTypes).find((type) => {
+        if (!type) return false;
+        const simpleName = String(type.name || '');
+        const fullName = String(type.fullName || '');
+        return simpleName === ownerName || fullName.endsWith(`.${ownerName}`);
+    });
+    if (!ownerType || !ownerType.members) return [];
+
+    const pool = [];
+    const pushNames = (members) => {
+        (Array.isArray(members) ? members : []).forEach((item) => {
+            const name = String(item && item.name || '').trim();
+            if (!name) return;
+            pool.push(name);
+        });
+    };
+    pushNames(ownerType.members.methods);
+    pushNames(ownerType.members.properties);
+    pushNames(ownerType.members.fields);
+
+    const unique = Array.from(new Set(pool.map((name) => name.toLowerCase())));
+    const sourceByLower = new Map(pool.map((name) => [name.toLowerCase(), name]));
+    unique.sort((a, b) => {
+        const da = Math.abs(a.length - unknownMember.length) + (a.includes(unknownMember.toLowerCase()) ? 0 : 2);
+        const db = Math.abs(b.length - unknownMember.length) + (b.includes(unknownMember.toLowerCase()) ? 0 : 2);
+        return da - db;
+    });
+    return unique.slice(0, 4).map((key) => sourceByLower.get(key));
+}
+
+function buildFixSuggestionContext(issue) {
+    const safeIssue = issue && typeof issue === 'object' ? issue : {};
+    const context = {
+        filePath: String(safeIssue.filePath || '')
+    };
+    if (safeIssue.code === 'RULE_UNKNOWN_MEMBER') {
+        const candidates = suggestionCandidatesForUnknownMember(safeIssue);
+        if (candidates.length > 0) {
+            context.similarMembers = candidates;
+        }
+    }
+    return context;
+}
+
+function openFixPopupForIssue(issue, anchor, reason) {
+    if (!state.fixPopupController || !issue) return false;
+    const safeAnchor = anchor && typeof anchor === 'object' ? anchor : {};
+    return state.fixPopupController.open({
+        issue,
+        x: Number(safeAnchor.x || 24),
+        y: Number(safeAnchor.y || 24),
+        reason: String(reason || 'manual')
+    });
+}
+
+function openFixPopupAtCursor(options) {
+    if (!state.fixPopupController) return false;
+    return state.fixPopupController.openAtCursor({
+        allowInfo: !!(options && options.allowInfo),
+        reason: String(options && options.reason || 'manual'),
+        closeWhenMissing: options && options.closeWhenMissing === false ? false : true
+    });
+}
+
+function runContextCommandAsync(fn) {
+    Promise.resolve()
+        .then(() => fn())
+        .catch((error) => {
+            addEvent('error', `右键命令执行失败：${error.message}`);
+        });
+}
+
+function createFileFromPathInput(pathInput) {
+    const fileName = normalizeEditableWorkspacePathInput(pathInput);
+    if (!fileName) {
+        addEvent('error', '路径必须位于 site/content 白名单（.md / anims/*.cs / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
+        return null;
+    }
+    const exists = state.workspace.files.some((file) => isSameContentRelativePath(file.path, fileName));
+    if (exists) {
+        addEvent('error', `文件已存在：${fileName}`);
+        return null;
+    }
+    const file = {
+        id: createFileId(),
+        path: fileName,
+        content: detectFileMode(fileName) === 'shaderfx' ? shaderDefaultTemplate() : ''
+    };
+    state.workspace.files.push(file);
+    ensureModelForFile(file);
+    switchActiveFile(file.id);
+    updateFileListUi();
+    scheduleWorkspaceSave();
+    addEvent('info', `已新增文件：${fileName}`);
+    return file;
+}
+
+function parentDirOfRepoPath(repoPath) {
+    const safe = normalizeEditableWorkspacePathInput(repoPath);
+    if (!safe) return '';
+    const idx = safe.lastIndexOf('/');
+    if (idx < 0) return '';
+    return safe.slice(0, idx);
+}
+
+function contextEditorMenuCommands() {
+    return [
+        {
+            id: 'editor.quick-fix',
+            label: '快速修复',
+            shortcut: VSCODE_SHORTCUTS.QUICK_FIX,
+            group: 'edit',
+            region: 'editor',
+            run(ctx) {
+                const issue = ctx && ctx.issue ? ctx.issue : (resolveIssueAtCursor({ allowInfo: true }) || {}).issue;
+                if (issue) {
+                    openFixPopupForIssue(issue, { x: ctx.anchorX, y: ctx.anchorY }, 'manual');
+                    return;
+                }
+                openFixPopupAtCursor({ allowInfo: true });
+            }
+        },
+        {
+            id: 'editor.run-diagnostics',
+            label: '运行诊断',
+            shortcut: '',
+            group: 'edit',
+            region: 'editor',
+            run() {
+                runDiagnostics();
+            }
+        },
+        {
+            id: 'editor.show-problems',
+            label: '显示问题面板',
+            shortcut: '',
+            group: 'edit',
+            region: 'editor',
+            run(ctx) {
+                focusProblemsPanel(ctx && ctx.issue ? ctx.issue : null);
+            }
+        },
+        {
+            id: 'editor.suggest',
+            label: '触发补全',
+            shortcut: 'Ctrl+Space',
+            group: 'code',
+            region: 'editor',
+            run() {
+                runEditorAction('editor.action.triggerSuggest');
+            }
+        },
+        {
+            id: 'editor.copy',
+            label: '复制',
+            shortcut: 'Ctrl+C',
+            group: 'clipboard',
+            region: 'editor',
+            run() {
+                runEditorAction('editor.action.clipboardCopyAction');
+            }
+        },
+        {
+            id: 'editor.cut',
+            label: '剪切',
+            shortcut: 'Ctrl+X',
+            group: 'clipboard',
+            region: 'editor',
+            run() {
+                runEditorAction('editor.action.clipboardCutAction');
+            }
+        },
+        {
+            id: 'editor.paste',
+            label: '粘贴',
+            shortcut: 'Ctrl+V',
+            group: 'clipboard',
+            region: 'editor',
+            run() {
+                runEditorAction('editor.action.clipboardPasteAction');
+            }
+        },
+        {
+            id: 'editor.select-all',
+            label: '全选',
+            shortcut: 'Ctrl+A',
+            group: 'clipboard',
+            region: 'editor',
+            run() {
+                runEditorAction('editor.action.selectAll');
+            }
+        },
+        {
+            id: 'editor.save-workspace',
+            label: '保存工作区',
+            shortcut: VSCODE_SHORTCUTS.SAVE_WORKSPACE,
+            group: 'view',
+            region: 'editor',
+            run() {
+                saveWorkspaceNow();
+            }
+        },
+        {
+            id: 'editor.open-command-palette',
+            label: '打开命令面板',
+            shortcut: VSCODE_SHORTCUTS.COMMAND_PALETTE,
+            group: 'view',
+            region: 'editor',
+            run() {
+                openCommandPalette('commands', '');
+            }
+        },
+        {
+            id: 'editor.quick-open',
+            label: '快速打开文件',
+            shortcut: VSCODE_SHORTCUTS.QUICK_OPEN,
+            group: 'view',
+            region: 'editor',
+            run() {
+                openCommandPalette('quick-open', '');
+            }
+        },
+        {
+            id: 'editor.toggle-sidebar',
+            label: '切换侧边栏',
+            shortcut: VSCODE_SHORTCUTS.TOGGLE_SIDEBAR,
+            group: 'view',
+            region: 'editor',
+            run() {
+                toggleSidebar();
+            }
+        },
+        {
+            id: 'editor.toggle-panel',
+            label: '切换底部面板',
+            shortcut: VSCODE_SHORTCUTS.TOGGLE_PANEL,
+            group: 'view',
+            region: 'editor',
+            run() {
+                toggleBottomPanel();
+            }
+        }
+    ];
+}
+
+function contextFileTreeMenuCommands() {
+    return [
+        {
+            id: 'tree.open',
+            label: '打开文件',
+            shortcut: '',
+            group: 'file',
+            region: 'file-tree',
+            when: (ctx) => !!(ctx && ctx.repoPath),
+            run(ctx) {
+                runContextCommandAsync(async () => {
+                    await openRepoExplorerFile(ctx.repoPath);
+                });
+            }
+        },
+        {
+            id: 'tree.new-file',
+            label: '在当前目录新建文件',
+            shortcut: '',
+            group: 'file',
+            region: 'file-tree',
+            when: (ctx) => !!(ctx && ctx.repoPath),
+            run(ctx) {
+                const parent = parentDirOfRepoPath(ctx.repoPath);
+                const placeholder = parent ? `${parent}/new-file.cs` : 'new-file.cs';
+                const input = globalThis.prompt('请输入新文件名（site/content 下白名单路径）', placeholder);
+                if (!input) return;
+                createFileFromPathInput(input);
+            }
+        },
+        {
+            id: 'tree.rename',
+            label: '重命名文件',
+            shortcut: 'F2',
+            group: 'file',
+            region: 'file-tree',
+            when: (ctx) => !!(ctx && ctx.repoPath),
+            run(ctx) {
+                runContextCommandAsync(async () => {
+                    await openRepoExplorerFile(ctx.repoPath);
+                    dom.btnRenameFile.click();
+                });
+            }
+        },
+        {
+            id: 'tree.delete',
+            label: '删除文件',
+            shortcut: 'Del',
+            group: 'file',
+            region: 'file-tree',
+            when: (ctx) => !!(ctx && ctx.repoPath),
+            run(ctx) {
+                runContextCommandAsync(async () => {
+                    await openRepoExplorerFile(ctx.repoPath);
+                    dom.btnDeleteFile.click();
+                });
+            }
+        },
+        {
+            id: 'tree.copy-path',
+            label: '复制相对路径',
+            shortcut: '',
+            group: 'meta',
+            region: 'file-tree',
+            when: (ctx) => !!(ctx && ctx.repoPath),
+            run(ctx) {
+                runContextCommandAsync(async () => {
+                    const ok = await copyToClipboard(String(ctx.repoPath || ''));
+                    if (!ok) {
+                        throw new Error('浏览器拒绝复制路径');
+                    }
+                    addEvent('info', `已复制路径：${ctx.repoPath}`);
+                });
+            }
+        },
+        {
+            id: 'tree.reload',
+            label: '从仓库重新加载该文件',
+            shortcut: '',
+            group: 'meta',
+            region: 'file-tree',
+            when: (ctx) => !!(ctx && ctx.repoPath),
+            run(ctx) {
+                runContextCommandAsync(async () => {
+                    await openRepoExplorerFile(ctx.repoPath, { reload: true });
+                });
+            }
+        },
+        {
+            id: 'tree.focus-editor',
+            label: '在编辑器中聚焦该文件',
+            shortcut: '',
+            group: 'meta',
+            region: 'file-tree',
+            when: (ctx) => !!(ctx && ctx.repoPath),
+            run(ctx) {
+                runContextCommandAsync(async () => {
+                    await openRepoExplorerFile(ctx.repoPath);
+                    if (state.editor) state.editor.focus();
+                });
+            }
+        },
+        {
+            id: 'tree.run-diagnostics',
+            label: '运行诊断',
+            shortcut: '',
+            group: 'meta',
+            region: 'file-tree',
+            when: (ctx) => !!(ctx && ctx.repoPath && detectFileMode(ctx.repoPath) === 'csharp'),
+            run(ctx) {
+                runContextCommandAsync(async () => {
+                    await openRepoExplorerFile(ctx.repoPath);
+                    runDiagnostics();
+                });
+            }
+        }
+    ];
+}
+
+function contextProblemsMenuCommands() {
+    return [
+        {
+            id: 'problems.locate',
+            label: '定位到问题',
+            shortcut: '',
+            group: 'problems',
+            region: 'problems',
+            when: (ctx) => !!(ctx && ctx.issue),
+            run(ctx) {
+                jumpToProblem(ctx.issue);
+            }
+        },
+        {
+            id: 'problems.quick-fix',
+            label: '打开修复子窗',
+            shortcut: VSCODE_SHORTCUTS.QUICK_FIX,
+            group: 'problems',
+            region: 'problems',
+            when: (ctx) => !!(ctx && ctx.issue),
+            run(ctx) {
+                openFixPopupForIssue(ctx.issue, { x: ctx.anchorX, y: ctx.anchorY }, 'manual');
+            }
+        },
+        {
+            id: 'problems.copy-message',
+            label: '复制问题消息',
+            shortcut: '',
+            group: 'clipboard',
+            region: 'problems',
+            when: (ctx) => !!(ctx && ctx.issue),
+            run(ctx) {
+                runContextCommandAsync(async () => {
+                    const ok = await copyToClipboard(String(ctx.issue.message || ''));
+                    if (!ok) throw new Error('浏览器拒绝复制问题消息');
+                });
+            }
+        },
+        {
+            id: 'problems.copy-code-loc',
+            label: '复制诊断码与位置',
+            shortcut: '',
+            group: 'clipboard',
+            region: 'problems',
+            when: (ctx) => !!(ctx && ctx.issue),
+            run(ctx) {
+                runContextCommandAsync(async () => {
+                    const issue = ctx.issue;
+                    const text = `[${issue.code}] Ln ${issue.startLineNumber}, Col ${issue.startColumn} - ${issue.message}`;
+                    const ok = await copyToClipboard(text);
+                    if (!ok) throw new Error('浏览器拒绝复制诊断信息');
+                });
+            }
+        },
+        {
+            id: 'problems.rerun',
+            label: '重新运行诊断',
+            shortcut: '',
+            group: 'view',
+            region: 'problems',
+            run() {
+                runDiagnostics();
+            }
+        },
+        {
+            id: 'problems.focus-panel',
+            label: '打开 Problems 面板并聚焦当前项',
+            shortcut: '',
+            group: 'view',
+            region: 'problems',
+            run(ctx) {
+                focusProblemsPanel(ctx && ctx.issue ? ctx.issue : null);
+            }
+        }
+    ];
+}
+
+function contextMenuCommandRegistry() {
+    return contextEditorMenuCommands()
+        .concat(contextFileTreeMenuCommands())
+        .concat(contextProblemsMenuCommands());
+}
+
+function selectContextMenuCommands(region, context) {
+    const safeRegion = String(region || '').trim();
+    const safeContext = context || {};
+    return contextMenuCommandRegistry()
+        .filter((command) => command.region === safeRegion)
+        .filter((command) => !command.when || command.when(safeContext))
+        .map((command) => ({
+            id: command.id,
+            label: command.label,
+            shortcut: command.shortcut || '',
+            group: command.group || '',
+            run() {
+                command.run(safeContext);
+            }
+        }));
+}
+
+function resolveEditorMenuContext(event) {
+    const position = state.editor && state.editor.getPosition ? state.editor.getPosition() : null;
+    const issue = position ? findIssueAtPosition(position.lineNumber, position.column, { allowInfo: true, preferNearest: true }) : null;
+    const anchor = resolveFixPopupAnchorFromEditor(position);
+    const ctx = {
+        region: 'editor',
+        menuTitle: '编辑器',
+        issue,
+        anchorX: Number(event && event.clientX || anchor.x || 24),
+        anchorY: Number(event && event.clientY || anchor.y || 24)
+    };
+    state.menuContext = ctx;
+    return ctx;
+}
+
+function resolveFileTreeMenuContext(event) {
+    const target = event && event.target && event.target.closest
+        ? event.target.closest('.file-item, .repo-tree-toggle')
+        : null;
+    let repoPath = '';
+    if (target) {
+        repoPath = normalizeEditableWorkspacePathInput(target.dataset && target.dataset.repoPath || '');
+        if (!repoPath) {
+            const rawTitle = String(target.title || '').replace(/（点击加载）$/, '');
+            repoPath = normalizeEditableWorkspacePathInput(rawTitle);
+        }
+    }
+    const loaded = repoPath ? findWorkspaceFileByContentPath(repoPath) : null;
+    const ctx = {
+        region: 'file-tree',
+        menuTitle: '文件树',
+        repoPath,
+        fileId: loaded ? loaded.id : '',
+        anchorX: Number(event && event.clientX || 24),
+        anchorY: Number(event && event.clientY || 24)
+    };
+    state.menuContext = ctx;
+    return ctx;
+}
+
+function resolveProblemsMenuContext(event) {
+    const item = event && event.target && event.target.closest
+        ? event.target.closest('.problem-item')
+        : null;
+    const key = item ? String(item.dataset.problemKey || '') : '';
+    const issue = key ? state.issueByProblemKey.get(key) || null : null;
+    const ctx = {
+        region: 'problems',
+        menuTitle: '问题列表',
+        problemKey: key,
+        issue,
+        anchorX: Number(event && event.clientX || 24),
+        anchorY: Number(event && event.clientY || 24)
+    };
+    state.menuContext = ctx;
+    return ctx;
+}
+
+function ensureContextControllers() {
+    if (!state.fixPopupController) {
+        state.fixPopupController = createFixPopupController({
+            root: dom.fixPopup,
+            issueNode: dom.fixPopupIssue,
+            suggestionsNode: dom.fixPopupSuggestions,
+            actionsNode: dom.fixPopupActions,
+            autoDelay: FIX_POPUP_AUTO_DELAY,
+            buildSuggestions: buildDiagnosticSuggestions,
+            getSuggestionContext: buildFixSuggestionContext,
+            resolveIssueAtCursor,
+            onJumpIssue(issue) {
+                jumpToProblem(issue);
+            },
+            onShowProblems(issue) {
+                focusProblemsPanel(issue);
+            },
+            async onCopyText(text) {
+                const ok = await copyToClipboard(text);
+                if (!ok) {
+                    throw new Error('浏览器拒绝复制建议');
+                }
+                addEvent('info', '已复制修复建议');
+                return true;
+            }
+        });
+    }
+
+    if (!state.contextMenuController) {
+        state.contextMenuController = createContextMenuController({
+            root: dom.contextMenu,
+            list: dom.contextMenuList,
+            titleNode: dom.contextMenuTitle,
+            selectItems: selectContextMenuCommands
+        });
+
+        state.contextMenuController.bindRegion(dom.editor, 'editor', resolveEditorMenuContext);
+        state.contextMenuController.bindRegion(dom.fileList, 'file-tree', resolveFileTreeMenuContext);
+        state.contextMenuController.bindRegion(dom.problemsList, 'problems', resolveProblemsMenuContext);
     }
 }
 
@@ -4350,6 +4982,16 @@ function renderShaderCompilePanel(result) {
     if (!dom.shaderErrorList) return;
     dom.shaderErrorList.innerHTML = '';
     const errors = Array.isArray(result && result.errors) ? result.errors : [];
+    const active = getActiveFile();
+    const activeIsShader = !!(active && detectFileMode(active.path) === 'shaderfx');
+    if (activeIsShader) {
+        setShaderIssuesForFile(active, errors);
+        refreshActiveIssues();
+        renderProblems(state.activeIssues);
+        if (state.fixPopupController) {
+            state.fixPopupController.scheduleAuto();
+        }
+    }
     if (!errors.length) {
         const li = document.createElement('li');
         li.className = 'problems-empty';
@@ -5623,6 +6265,8 @@ function renderRepoExplorerTree() {
                 btn.style.setProperty('--tree-depth', String(depth));
                 btn.textContent = `${expanded ? '▾' : '▸'} ${node.name}`;
                 btn.title = node.path;
+                btn.dataset.repoPath = String(node.path || '');
+                btn.dataset.nodeType = 'dir';
                 btn.addEventListener('click', () => {
                     if (expanded) {
                         state.repoExplorer.expandedDirs.delete(node.path);
@@ -5652,6 +6296,8 @@ function renderRepoExplorerTree() {
             btn.title = loaded
                 ? node.path
                 : `${node.path}（点击加载）`;
+            btn.dataset.repoPath = String(node.path || '');
+            btn.dataset.nodeType = 'file';
             btn.setAttribute('aria-current', isActive ? 'true' : 'false');
             btn.addEventListener('click', () => {
                 openRepoExplorerFile(node.path).catch((error) => {
@@ -5890,11 +6536,24 @@ function switchActiveFile(fileId) {
     updateFileListUi();
     scheduleWorkspaceSave();
     applyEditorModeUi();
-    if (detectFileMode(target.path) === 'csharp') {
+    const mode = detectFileMode(target.path);
+    if (mode === 'csharp') {
         runDiagnostics();
+    } else if (mode === 'shaderfx') {
+        monaco.editor.setModelMarkers(model, 'tml-ide', []);
+        const shaderIssues = state.shaderIssuesByFileId.get(String(target.id || '')) || [];
+        renderProblems(shaderIssues);
+        refreshActiveIssues();
+        if (state.fixPopupController) {
+            state.fixPopupController.scheduleAuto();
+        }
     } else {
         monaco.editor.setModelMarkers(model, 'tml-ide', []);
         renderProblems([]);
+        refreshActiveIssues();
+        if (state.fixPopupController) {
+            state.fixPopupController.close();
+        }
     }
 }
 
@@ -5902,6 +6561,8 @@ function removeModelForFile(fileId) {
     if (!state.modelByFileId.has(fileId)) return;
     const model = state.modelByFileId.get(fileId);
     state.modelByFileId.delete(fileId);
+    state.diagnosticsIssuesByFileId.delete(String(fileId || ''));
+    state.shaderIssuesByFileId.delete(String(fileId || ''));
     model.dispose();
 }
 
@@ -5922,6 +6583,201 @@ function convertCompletionKind(kind) {
     if (kind === 'class') return monaco.languages.CompletionItemKind.Class;
     if (kind === 'keyword') return monaco.languages.CompletionItemKind.Keyword;
     return monaco.languages.CompletionItemKind.Text;
+}
+
+function issueSourceFromCode(code) {
+    const safeCode = String(code || '').trim().toUpperCase();
+    if (safeCode.startsWith('ROSLYN_')) return 'roslyn';
+    return 'rule';
+}
+
+function issueKey(issue) {
+    const safe = issue && typeof issue === 'object' ? issue : {};
+    return [
+        String(safe.fileId || ''),
+        String(safe.source || ''),
+        String(safe.code || ''),
+        String(safe.severity || ''),
+        String(safe.startLineNumber || 1),
+        String(safe.startColumn || 1),
+        String(safe.message || '')
+    ].join('|');
+}
+
+function normalizeIssueFromDiagnostic(diag, file) {
+    const safeDiag = diag && typeof diag === 'object' ? diag : {};
+    const safeFile = file && typeof file === 'object' ? file : null;
+    return {
+        source: issueSourceFromCode(safeDiag.code),
+        code: String(safeDiag.code || 'RULE_UNKNOWN'),
+        severity: safeDiag.severity === DIAGNOSTIC_SEVERITY.ERROR
+            ? DIAGNOSTIC_SEVERITY.ERROR
+            : (safeDiag.severity === DIAGNOSTIC_SEVERITY.WARNING ? DIAGNOSTIC_SEVERITY.WARNING : DIAGNOSTIC_SEVERITY.INFO),
+        message: String(safeDiag.message || ''),
+        startLineNumber: Number(safeDiag.startLineNumber || 1),
+        startColumn: Number(safeDiag.startColumn || 1),
+        endLineNumber: Number(safeDiag.endLineNumber || safeDiag.startLineNumber || 1),
+        endColumn: Number(safeDiag.endColumn || safeDiag.startColumn || 1),
+        fileId: safeFile ? String(safeFile.id || '') : '',
+        filePath: safeFile ? String(safeFile.path || '') : ''
+    };
+}
+
+function normalizeIssuesFromDiagnostics(diags, file) {
+    return (Array.isArray(diags) ? diags : [])
+        .filter((diag) => diag && diag.severity)
+        .map((diag) => normalizeIssueFromDiagnostic(diag, file))
+        .sort((a, b) => {
+            const bySeverity = diagnosticSeverityRank(a.severity) - diagnosticSeverityRank(b.severity);
+            if (bySeverity !== 0) return bySeverity;
+            const byLine = a.startLineNumber - b.startLineNumber;
+            if (byLine !== 0) return byLine;
+            return a.startColumn - b.startColumn;
+        });
+}
+
+function normalizeIssuesFromShaderErrors(errors, file) {
+    const safeFile = file && typeof file === 'object' ? file : null;
+    return (Array.isArray(errors) ? errors : []).map((entry) => ({
+        source: 'shader',
+        code: 'SHADER_COMPILE_ERROR',
+        severity: DIAGNOSTIC_SEVERITY.ERROR,
+        message: String(entry && entry.message || 'Shader 编译错误'),
+        startLineNumber: Number(entry && entry.line || 1),
+        startColumn: Number(entry && entry.column || 1),
+        endLineNumber: Number(entry && entry.line || 1),
+        endColumn: Number(entry && entry.column || 1),
+        fileId: safeFile ? String(safeFile.id || '') : '',
+        filePath: safeFile ? String(safeFile.path || '') : ''
+    }));
+}
+
+function setDiagnosticsIssuesForFile(file, diags) {
+    if (!file) return;
+    state.diagnosticsIssuesByFileId.set(String(file.id || ''), normalizeIssuesFromDiagnostics(diags, file));
+}
+
+function setShaderIssuesForFile(file, errors) {
+    if (!file) return;
+    state.shaderIssuesByFileId.set(String(file.id || ''), normalizeIssuesFromShaderErrors(errors, file));
+}
+
+function refreshActiveIssues() {
+    const active = getActiveFile();
+    if (!active) {
+        state.activeIssues = [];
+        return;
+    }
+    const mode = detectFileMode(active.path);
+    if (mode === 'shaderfx') {
+        state.activeIssues = state.shaderIssuesByFileId.get(String(active.id || '')) || [];
+    } else if (mode === 'csharp') {
+        state.activeIssues = state.diagnosticsIssuesByFileId.get(String(active.id || '')) || [];
+    } else {
+        state.activeIssues = [];
+    }
+}
+
+function problemKey(problem) {
+    const safe = problem && typeof problem === 'object' ? problem : {};
+    return [
+        String(safe.code || ''),
+        String(safe.severity || ''),
+        String(safe.startLineNumber || 1),
+        String(safe.startColumn || 1),
+        String(safe.message || '')
+    ].join('|');
+}
+
+function locateIssueForProblem(problem) {
+    const key = problemKey(problem);
+    if (state.issueByProblemKey.has(key)) {
+        return state.issueByProblemKey.get(key);
+    }
+    const found = state.activeIssues.find((item) => {
+        return String(item.code || '') === String(problem.code || '')
+            && Number(item.startLineNumber || 1) === Number(problem.startLineNumber || 1)
+            && Number(item.startColumn || 1) === Number(problem.startColumn || 1)
+            && String(item.message || '') === String(problem.message || '');
+    });
+    return found || null;
+}
+
+function issueContainsPosition(issue, line, column) {
+    const startLine = Number(issue && issue.startLineNumber || 1);
+    const startColumn = Number(issue && issue.startColumn || 1);
+    const endLine = Number(issue && issue.endLineNumber || startLine);
+    const endColumn = Number(issue && issue.endColumn || startColumn);
+    if (line < startLine || line > endLine) return false;
+    if (line === startLine && column < startColumn) return false;
+    if (line === endLine && column > Math.max(endColumn, startColumn)) return false;
+    return true;
+}
+
+function findIssueAtPosition(line, column, options) {
+    const opts = options || {};
+    const allowInfo = opts.allowInfo === true;
+    const safeLine = Math.max(1, Number(line || 1));
+    const safeColumn = Math.max(1, Number(column || 1));
+    const eligible = state.activeIssues.filter((issue) => {
+        if (!issue) return false;
+        if (!allowInfo && issue.severity === DIAGNOSTIC_SEVERITY.INFO) return false;
+        return true;
+    });
+    const direct = eligible.find((issue) => issueContainsPosition(issue, safeLine, safeColumn));
+    if (direct) return direct;
+    if (!opts.preferNearest) return null;
+    const sameLine = eligible.filter((issue) => Number(issue.startLineNumber || 1) === safeLine);
+    if (!sameLine.length) return null;
+    sameLine.sort((a, b) => {
+        const da = Math.abs(Number(a.startColumn || 1) - safeColumn);
+        const db = Math.abs(Number(b.startColumn || 1) - safeColumn);
+        return da - db;
+    });
+    return sameLine[0] || null;
+}
+
+function resolveFixPopupAnchorFromEditor(position) {
+    const fallback = {
+        x: 24,
+        y: 24
+    };
+    if (!state.editor || !dom.editor || !position) return fallback;
+    const domNode = state.editor.getDomNode ? state.editor.getDomNode() : dom.editor;
+    const rect = domNode && domNode.getBoundingClientRect ? domNode.getBoundingClientRect() : null;
+    const coords = state.editor.getScrolledVisiblePosition
+        ? state.editor.getScrolledVisiblePosition(position)
+        : null;
+    if (!rect || !coords) {
+        return {
+            x: Math.max(24, rect ? rect.left + 24 : 24),
+            y: Math.max(24, rect ? rect.top + 24 : 24)
+        };
+    }
+    return {
+        x: Math.round(rect.left + coords.left + 20),
+        y: Math.round(rect.top + coords.top + coords.height + 10)
+    };
+}
+
+function resolveIssueAtCursor(options) {
+    const opts = options || {};
+    const allowInfo = opts.allowInfo === true;
+    const active = getActiveFile();
+    if (!active || !state.editor) return null;
+    const position = state.editor.getPosition ? state.editor.getPosition() : null;
+    if (!position) return null;
+    const issue = findIssueAtPosition(position.lineNumber, position.column, {
+        allowInfo,
+        preferNearest: opts.preferCurrent !== false
+    });
+    if (!issue) return null;
+    const anchor = resolveFixPopupAnchorFromEditor(position);
+    return {
+        issue,
+        x: anchor.x,
+        y: anchor.y
+    };
 }
 
 function diagnosticsToMarkers(diags) {
@@ -5976,6 +6832,7 @@ function jumpToProblem(problem) {
 function renderProblems(diags) {
     const normalized = normalizeProblems(diags);
     state.problems = normalized;
+    state.issueByProblemKey = new Map();
 
     const errorCount = normalized.filter((item) => item.severity === DIAGNOSTIC_SEVERITY.ERROR).length;
     const warningCount = normalized.filter((item) => item.severity === DIAGNOSTIC_SEVERITY.WARNING).length;
@@ -6001,13 +6858,23 @@ function renderProblems(diags) {
         const item = document.createElement('li');
         item.className = 'problem-item';
         item.setAttribute('data-severity', problem.severity);
+        const key = problemKey(problem);
+        item.dataset.problemKey = key;
+        state.issueByProblemKey.set(key, locateIssueForProblem(problem) || {
+            ...problem,
+            source: issueSourceFromCode(problem.code),
+            fileId: String((getActiveFile() && getActiveFile().id) || ''),
+            filePath: String((getActiveFile() && getActiveFile().path) || '')
+        });
 
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'problem-jump';
         btn.title = '定位到问题位置';
+        btn.dataset.problemKey = key;
         btn.addEventListener('click', () => {
-            jumpToProblem(problem);
+            const issue = state.issueByProblemKey.get(key);
+            jumpToProblem(issue || problem);
         });
 
         const severity = document.createElement('span');
@@ -6135,10 +7002,18 @@ async function runDiagnostics() {
         }
 
         monaco.editor.setModelMarkers(model, 'tml-ide', diagnosticsToMarkers(allDiags));
+        const active = getActiveFile();
+        if (active) {
+            setDiagnosticsIssuesForFile(active, allDiags);
+        }
+        refreshActiveIssues();
         const problemCount = renderProblems(allDiags);
         if (problemCount > 0) {
             showBottomPanel(true);
             setActivePanelTab('problems');
+        }
+        if (state.fixPopupController) {
+            state.fixPopupController.scheduleAuto();
         }
         setStatus(`诊断完成：${allDiags.length} 条`);
     } catch (error) {
@@ -6591,6 +7466,12 @@ function bindUiEvents() {
     }
 
     window.addEventListener('keydown', (event) => {
+        if (state.contextMenuController && state.contextMenuController.handleKeydown(event)) {
+            return;
+        }
+        if (state.fixPopupController && state.fixPopupController.handleKeydown(event)) {
+            return;
+        }
         if (state.ui.paletteOpen && event.key === 'Escape') {
             closeCommandPalette();
             return;
@@ -7236,6 +8117,12 @@ async function bootstrap() {
         suggestOnTriggerCharacters: true,
         readOnly: true
     });
+    ensureContextControllers();
+    state.editor.onDidChangeCursorPosition(() => {
+        if (state.fixPopupController) {
+            state.fixPopupController.scheduleAuto();
+        }
+    });
 
     globalThis.__tmlIdeDebug = {
         isReady() {
@@ -7266,6 +8153,9 @@ async function bootstrap() {
             const position = model.getPositionAt(index + safeNeedle.length);
             state.editor.setPosition(position);
             state.editor.focus();
+            if (state.fixPopupController) {
+                state.fixPopupController.scheduleAuto();
+            }
             return true;
         },
         getEditorText() {
@@ -7323,6 +8213,38 @@ async function bootstrap() {
                 diagnostics: false
             });
             return result && result.hover ? result.hover : null;
+        },
+        openContextMenuAt(region, payload) {
+            ensureContextControllers();
+            if (!state.contextMenuController) return null;
+            const safe = payload && typeof payload === 'object' ? payload : {};
+            const context = safe.context && typeof safe.context === 'object' ? safe.context : {};
+            state.contextMenuController.open({
+                region: String(region || ''),
+                context,
+                x: Number(safe.x || 24),
+                y: Number(safe.y || 24),
+                title: String(safe.title || '')
+            });
+            return state.contextMenuController.getState();
+        },
+        getContextMenuState() {
+            if (!state.contextMenuController) return { open: false, region: '' };
+            return state.contextMenuController.getState();
+        },
+        getFixPopupState() {
+            if (!state.fixPopupController) return { open: false, issueCode: '' };
+            return state.fixPopupController.getState();
+        },
+        openFixPopupAtCursor(options) {
+            ensureContextControllers();
+            if (!state.fixPopupController) return { open: false, issueCode: '' };
+            const safe = options && typeof options === 'object' ? options : {};
+            state.fixPopupController.openAtCursor({
+                allowInfo: safe.allowInfo === true,
+                reason: 'manual'
+            });
+            return state.fixPopupController.getState();
         },
         getRoute() {
             return {

@@ -6,8 +6,8 @@
     <title>tML IDE Playground</title>
     <meta name="description" content="独立 tModLoader C# IDE Playground，支持补全、悬停文档与双层诊断。">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
-  <script type="module" crossorigin src="/tml-ide/assets/index-iXQuaXtc.js"></script>
-  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-C1p_yNlG.css">
+  <script type="module" crossorigin src="/tml-ide/assets/index-cCsNlQvD.js"></script>
+  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-Cm87PeWa.css">
 </head>
 <body>
     <div id="app" class="app-shell">
@@ -303,7 +303,7 @@
                 </aside>
                 <section class="shader-preview-stage">
                     <header class="shader-preview-stage-head">
-                        <span class="shader-preview-stage-tip">拖动画布平移，滚轮缩放；拖动右侧分隔条可调整比例</span>
+                        <span class="shader-preview-stage-tip">拖动平移，滚轮缩放；拖动右侧分隔条可调整比例</span>
                         <div class="shader-preview-zoom-actions" role="group" aria-label="预览缩放">
                             <button id="shader-preview-zoom-out" type="button" aria-label="缩小预览">-</button>
                             <button id="shader-preview-zoom-reset" type="button" aria-label="重置缩放">100%</button>
@@ -336,6 +336,21 @@
             <input id="command-palette-input" class="command-palette-input" type="text" spellcheck="false" autocomplete="off" placeholder="输入命令（Ctrl+Shift+P）">
             <ul id="command-palette-results" class="command-palette-results" role="listbox" aria-label="命令列表"></ul>
         </section>
+    </div>
+
+    <div id="ide-context-menu" class="ide-context-menu" hidden aria-hidden="true">
+        <header id="ide-context-menu-title" class="ide-context-menu-title" hidden>功能</header>
+        <ul id="ide-context-menu-list" class="ide-context-menu-list" role="menu" aria-label="IDE 右键功能菜单"></ul>
+        <button class="ide-context-menu-sentinel" type="button" role="menuitem" hidden>sentinel</button>
+    </div>
+
+    <div id="ide-fix-popup" class="ide-fix-popup" hidden aria-hidden="true" aria-live="polite">
+        <header class="ide-fix-popup-head">
+            <h3>报错修复建议</h3>
+        </header>
+        <p id="ide-fix-popup-issue" class="ide-fix-popup-issue"></p>
+        <ul id="ide-fix-popup-suggestions" class="ide-fix-popup-suggestions" role="listbox" aria-label="修复建议列表"></ul>
+        <div id="ide-fix-popup-actions" class="ide-fix-popup-actions"></div>
     </div>
 </body>
 </html>
