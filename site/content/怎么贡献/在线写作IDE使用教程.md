@@ -70,11 +70,11 @@ dotnet run --project site/tooling/tools/animcs-preview-bridge
 
 优先使用代码块写法：
 
-```text
+````text
 ```animcs
 anims/vec2-basic-ops.cs
 ```
-```
+````
 
 也可使用：
 

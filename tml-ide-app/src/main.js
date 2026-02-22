@@ -174,6 +174,14 @@ const dom = {
 const state = {
     index: createEmptyApiIndex(),
     workspace: createDefaultWorkspace(),
+    repoExplorer: {
+        loaded: false,
+        loading: false,
+        loadError: '',
+        generatedAt: '',
+        files: [],
+        expandedDirs: new Set()
+    },
     unifiedWorkspaceState: null,
     editor: null,
     modelByFileId: new Map(),
@@ -205,6 +213,20 @@ const state = {
         dragStartY: 0,
         dragOriginX: 0,
         dragOriginY: 0
+    },
+    animPreview: {
+        compiledAnims: {},
+        animCompileErrors: {},
+        bridgeEndpoint: '',
+        bridgeConnected: false,
+        compileStatus: '未激活',
+        previewMarkdownPath: '',
+        referencedAnimPaths: [],
+        referencedAnimSet: new Set(),
+        compileTimerByPath: {},
+        latestRequestIdByPath: {},
+        compileRequestSeq: 0,
+        previewSyncTimer: 0
     },
     route: {
         workspace: 'csharp',
@@ -349,6 +371,13 @@ const MARKDOWN_PASTE_EXTENSION_BY_MIME = Object.freeze({
 });
 const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
 const VIEWER_PREVIEW_MESSAGE_TYPE = 'article-studio-preview-update';
+const IDE_EDITABLE_INDEX_PATH = '/site/assets/ide-editable-index.v1.json';
+const PREVIEW_SYNC_DEBOUNCE_MS = 120;
+const ANIMCS_BRIDGE_STORAGE_KEY = 'articleStudioAnimBridgeEndpoint.v1';
+const ANIMCS_DEFAULT_BRIDGE_ENDPOINT = 'http://127.0.0.1:5078';
+const ANIMCS_BRIDGE_CANDIDATE_ENDPOINTS = [ANIMCS_DEFAULT_BRIDGE_ENDPOINT, 'http://127.0.0.1:5178'];
+const ANIMCS_COMPILE_DEBOUNCE_MS = 400;
+const ANIMCS_COMPILE_TIMEOUT_MS = 8000;
 let viewerPagePathCache = '';
 const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|animcs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif|mp4|webm|mov|m4v|avi|mkv)$/i;
 const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
@@ -638,6 +667,106 @@ function ensureUniqueWorkspacePath(pathValue) {
     return nextPath;
 }
 
+function stableRepoPathCompare(left, right) {
+    const a = String(left || '');
+    const b = String(right || '');
+    if (a === b) return 0;
+    return a < b ? -1 : 1;
+}
+
+function normalizeContentRelativePath(pathValue) {
+    return normalizeRepoPath(pathValue).replace(/^site\/content\//i, '');
+}
+
+function toSiteContentRepoPath(pathValue) {
+    const relative = normalizeContentRelativePath(pathValue);
+    if (!relative) return '';
+    return `site/content/${relative}`;
+}
+
+function toSiteContentFetchUrl(pathValue) {
+    const relative = normalizeContentRelativePath(pathValue);
+    if (!relative) return '';
+    const encoded = splitRepoPathSegments(relative).map((segment) => encodeURIComponent(segment)).join('/');
+    return encoded ? `/site/content/${encoded}` : '';
+}
+
+function isIdeEditableRelativePath(pathValue) {
+    const relative = normalizeContentRelativePath(pathValue);
+    if (!relative) return false;
+    if (/(^|\/)\.\.(\/|$)/.test(relative)) return false;
+
+    const lower = relative.toLowerCase();
+    if (lower.endsWith('.md')) return true;
+    if (lower.endsWith('.fx')) return true;
+    if (/^anims\/[^/]+\.cs$/i.test(relative)) return true;
+    if (/(?:^|\/)code\/[^/]+\.cs$/i.test(relative)) return true;
+    if (/(?:^|\/)imgs\/[^/]+$/i.test(relative)) return true;
+    if (/(?:^|\/)media\/[^/]+$/i.test(relative)) return true;
+    return false;
+}
+
+function normalizeEditableWorkspacePathInput(pathValue) {
+    const safe = normalizeContentRelativePath(pathValue);
+    if (!safe) return '';
+    if (!isIdeEditableRelativePath(safe)) return '';
+    return safe;
+}
+
+function isSameContentRelativePath(left, right) {
+    const a = normalizeContentRelativePath(left).toLowerCase();
+    const b = normalizeContentRelativePath(right).toLowerCase();
+    if (!a || !b) return false;
+    return a === b;
+}
+
+function findWorkspaceFileByContentPath(pathValue) {
+    const target = normalizeContentRelativePath(pathValue).toLowerCase();
+    if (!target) return null;
+    return state.workspace.files.find((file) => normalizeContentRelativePath(file.path).toLowerCase() === target) || null;
+}
+
+function resolveRelativeRepoPath(baseDir, relativePath) {
+    const baseSegments = splitRepoPathSegments(baseDir);
+    const raw = String(relativePath || '').trim();
+    if (!raw) return '';
+    if (/^(?:https?:|data:|mailto:|tel:|javascript:|#)/i.test(raw)) return '';
+
+    const normalizedRelative = normalizeRepoPath(raw);
+    if (!normalizedRelative) return '';
+
+    const relativeSegments = splitRepoPathSegments(normalizedRelative);
+    const resolved = raw.startsWith('/')
+        ? []
+        : baseSegments.slice();
+
+    relativeSegments.forEach((segment) => {
+        if (segment === '.') return;
+        if (segment === '..') {
+            if (resolved.length > 0) {
+                resolved.pop();
+            }
+            return;
+        }
+        resolved.push(segment);
+    });
+
+    return resolved.join('/');
+}
+
+function resolveContentPathFromMarkdown(markdownPath, rawPath) {
+    const source = String(rawPath || '').split('#')[0].split('?')[0].trim();
+    if (!source) return '';
+    if (/^(?:https?:|data:|mailto:|tel:|javascript:|#)/i.test(source)) return '';
+
+    if (/^anims\//i.test(source)) {
+        return normalizeContentRelativePath(source);
+    }
+
+    const markdownDir = dirnameRepoPath(normalizeContentRelativePath(markdownPath));
+    return normalizeContentRelativePath(resolveRelativeRepoPath(markdownDir, source));
+}
+
 function detectFileMode(pathValue) {
     const ext = fileExt(pathValue);
     if (ext === '.md' || ext === '.markdown') return 'markdown';
@@ -892,14 +1021,209 @@ async function buildViewerPageUrl(pathValue, options) {
     return `${viewerPath}?${params.toString()}`;
 }
 
+function normalizeAnimSourcePath(pathValue) {
+    return normalizeContentRelativePath(pathValue).replace(/^\.\//, '');
+}
+
+function isAnimSourcePath(pathValue) {
+    const normalized = normalizeAnimSourcePath(pathValue);
+    if (!normalized) return false;
+    if (!/^anims\//i.test(normalized)) return false;
+    if (!/\.cs$/i.test(normalized)) return false;
+    if (/(^|\/)\.\.(\/|$)/.test(normalized)) return false;
+    return true;
+}
+
+function normalizeAnimBridgeEndpoint(input) {
+    let value = String(input || '').trim();
+    if (!value) return '';
+    if (!/^https?:\/\//i.test(value)) {
+        value = `http://${value}`;
+    }
+    try {
+        const parsed = new URL(value);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return '';
+        }
+        return parsed.toString().replace(/\/+$/, '');
+    } catch (_error) {
+        return '';
+    }
+}
+
+function readStoredAnimBridgeEndpoint() {
+    try {
+        return normalizeAnimBridgeEndpoint(localStorage.getItem(ANIMCS_BRIDGE_STORAGE_KEY) || '');
+    } catch (_error) {
+        return '';
+    }
+}
+
+function persistAnimBridgeEndpoint(endpoint) {
+    try {
+        localStorage.setItem(ANIMCS_BRIDGE_STORAGE_KEY, String(endpoint || ''));
+    } catch (_error) {
+        // Ignore storage errors.
+    }
+}
+
+function normalizeAnimCompileDiagnostics(input) {
+    if (!Array.isArray(input)) return [];
+    return input
+        .map((item) => String(item || '').trim())
+        .filter(Boolean);
+}
+
+function setAnimCompileStatus(text) {
+    const message = String(text || '').trim() || '未激活';
+    state.animPreview.compileStatus = message;
+    setStatus(`Anim预览: ${message}`);
+}
+
+function clearAnimCompileTimerForPath(animPath) {
+    const normalized = normalizeAnimSourcePath(animPath);
+    if (!normalized) return;
+    const timer = state.animPreview.compileTimerByPath[normalized];
+    if (!timer) return;
+    clearTimeout(timer);
+    delete state.animPreview.compileTimerByPath[normalized];
+}
+
+function setCompiledAnimOutput(animPath, moduleJs, profile) {
+    const normalized = normalizeAnimSourcePath(animPath);
+    if (!isAnimSourcePath(normalized)) return;
+    state.animPreview.compiledAnims[normalized] = {
+        moduleJs: String(moduleJs || ''),
+        profile: profile && typeof profile === 'object' ? profile : null,
+        updatedAt: new Date().toISOString()
+    };
+    delete state.animPreview.animCompileErrors[normalized];
+}
+
+function setCompiledAnimError(animPath, diagnostics) {
+    const normalized = normalizeAnimSourcePath(animPath);
+    if (!isAnimSourcePath(normalized)) return;
+    delete state.animPreview.compiledAnims[normalized];
+    state.animPreview.animCompileErrors[normalized] = {
+        diagnostics: normalizeAnimCompileDiagnostics(diagnostics).slice(0, 20),
+        updatedAt: new Date().toISOString()
+    };
+}
+
+function removeCompiledAnimState(animPath) {
+    const normalized = normalizeAnimSourcePath(animPath);
+    if (!normalized) return;
+    delete state.animPreview.compiledAnims[normalized];
+    delete state.animPreview.animCompileErrors[normalized];
+}
+
+function buildCompiledAnimsPayload() {
+    const payload = {};
+    Object.keys(state.animPreview.compiledAnims || {}).forEach((rawPath) => {
+        const normalized = normalizeAnimSourcePath(rawPath);
+        if (!isAnimSourcePath(normalized)) return;
+
+        const entry = state.animPreview.compiledAnims[rawPath];
+        if (!entry || typeof entry !== 'object') return;
+        const moduleJs = String(entry.moduleJs || '');
+        if (!moduleJs) return;
+
+        payload[normalized] = {
+            moduleJs,
+            profile: entry.profile && typeof entry.profile === 'object' ? entry.profile : null,
+            updatedAt: String(entry.updatedAt || new Date().toISOString())
+        };
+    });
+    return payload;
+}
+
+function buildAnimCompileErrorsPayload() {
+    const payload = {};
+    Object.keys(state.animPreview.animCompileErrors || {}).forEach((rawPath) => {
+        const normalized = normalizeAnimSourcePath(rawPath);
+        if (!isAnimSourcePath(normalized)) return;
+
+        const entry = state.animPreview.animCompileErrors[rawPath];
+        if (!entry || typeof entry !== 'object') return;
+        const diagnostics = normalizeAnimCompileDiagnostics(entry.diagnostics);
+        if (diagnostics.length <= 0) return;
+
+        payload[normalized] = {
+            diagnostics,
+            updatedAt: String(entry.updatedAt || new Date().toISOString())
+        };
+    });
+    return payload;
+}
+
+function parseAnimSourcePathFromCsDirective(rawValue) {
+    const text = String(rawValue || '').trim();
+    if (!text) return '';
+    const pathPart = text.split('|')[0].trim();
+    if (!pathPart) return '';
+    return pathPart;
+}
+
+function collectReferencedAnimPaths(markdownPath, markdownContent) {
+    const source = String(markdownContent || '');
+    if (!source.trim()) return [];
+
+    const result = new Set();
+    const appendPath = (rawPath) => {
+        const resolved = resolveContentPathFromMarkdown(markdownPath, rawPath);
+        const normalized = normalizeAnimSourcePath(resolved);
+        if (!isAnimSourcePath(normalized)) return;
+        result.add(normalized);
+    };
+
+    const animDirectiveRe = /\{\{anim:([^}\n]+)\}\}/g;
+    let animMatch = null;
+    while ((animMatch = animDirectiveRe.exec(source)) !== null) {
+        appendPath(animMatch[1]);
+    }
+
+    const csDirectiveRe = /\{\{cs:([^}\n]+)\}\}/g;
+    let csMatch = null;
+    while ((csMatch = csDirectiveRe.exec(source)) !== null) {
+        appendPath(parseAnimSourcePathFromCsDirective(csMatch[1]));
+    }
+
+    const animcsFenceRe = /```animcs\s*([\s\S]*?)```/g;
+    let fenceMatch = null;
+    while ((fenceMatch = animcsFenceRe.exec(source)) !== null) {
+        const blockText = String(fenceMatch[1] || '');
+        const firstLine = blockText
+            .split(/\r?\n/)
+            .map((line) => String(line || '').trim())
+            .find(Boolean) || '';
+        appendPath(firstLine);
+    }
+
+    return Array.from(result).sort(stableRepoPathCompare);
+}
+
+function updateAnimPreviewReferenceContext(markdownPath, markdownContent) {
+    const safeMarkdownPath = normalizeMarkdownRepoPath(markdownPath);
+    const referencedPaths = collectReferencedAnimPaths(safeMarkdownPath, markdownContent);
+    state.animPreview.previewMarkdownPath = safeMarkdownPath;
+    state.animPreview.referencedAnimPaths = referencedPaths;
+    state.animPreview.referencedAnimSet = new Set(referencedPaths);
+    if (referencedPaths.length <= 0) {
+        setAnimCompileStatus('未激活（当前文章未引用 anims/*.cs）');
+    }
+}
+
 function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
-    const targetPath = toViewerFileParam(markdownPath);
+    const safeMarkdownPath = normalizeMarkdownRepoPath(markdownPath) || normalizeMarkdownRepoPath(state.animPreview.previewMarkdownPath);
+    const targetPath = toViewerFileParam(safeMarkdownPath || markdownPath);
     const uploadedImages = [];
     const uploadedMedia = [];
     const uploadedCsharpFiles = [];
     const imagePathSet = new Set();
     const mediaPathSet = new Set();
     const csharpPathSet = new Set();
+
+    updateAnimPreviewReferenceContext(safeMarkdownPath || markdownPath, markdownContent);
 
     const pathVariants = (pathValue) => {
         const safe = String(pathValue || '').trim();
@@ -976,6 +1300,13 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
         uploadedImages,
         uploadedMedia,
         uploadedCsharpFiles,
+        compiledAnims: buildCompiledAnimsPayload(),
+        animCompileErrors: buildAnimCompileErrorsPayload(),
+        animBridge: {
+            endpoint: normalizeAnimBridgeEndpoint(state.animPreview.bridgeEndpoint) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT,
+            connected: !!state.animPreview.bridgeConnected,
+            status: String(state.animPreview.compileStatus || '未激活')
+        },
         updatedAt: new Date().toISOString()
     };
 }
@@ -998,6 +1329,263 @@ function postMarkdownViewerPreviewPayload(payload) {
     } catch (_error) {
         // Ignore cross-window message failures for preview sync.
     }
+}
+
+function resolveAnimBridgeCandidates(preferredEndpoint) {
+    const candidates = [];
+    const seen = new Set();
+    const appendCandidate = (value) => {
+        const endpoint = normalizeAnimBridgeEndpoint(value);
+        if (!endpoint || seen.has(endpoint)) return;
+        seen.add(endpoint);
+        candidates.push(endpoint);
+    };
+
+    appendCandidate(preferredEndpoint);
+    appendCandidate(state.animPreview.bridgeEndpoint);
+    ANIMCS_BRIDGE_CANDIDATE_ENDPOINTS.forEach((value) => appendCandidate(value));
+    return candidates;
+}
+
+async function checkAnimBridgeHealth(endpoint) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+        controller.abort();
+    }, 1500);
+
+    try {
+        const response = await fetch(`${endpoint}/health`, {
+            cache: 'no-store',
+            signal: controller.signal
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const payload = await response.json().catch(() => ({}));
+        if (!payload || payload.ok !== true) {
+            throw new Error('健康检查失败');
+        }
+        return payload;
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+async function connectAnimBridge(options) {
+    const opts = options || {};
+    const candidates = resolveAnimBridgeCandidates(opts.preferredEndpoint);
+    if (!candidates.length) {
+        state.animPreview.bridgeConnected = false;
+        return '';
+    }
+
+    let lastError = null;
+    for (let i = 0; i < candidates.length; i += 1) {
+        const endpoint = candidates[i];
+        try {
+            await checkAnimBridgeHealth(endpoint);
+            state.animPreview.bridgeEndpoint = endpoint;
+            state.animPreview.bridgeConnected = true;
+            persistAnimBridgeEndpoint(endpoint);
+            return endpoint;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    state.animPreview.bridgeConnected = false;
+    if (!opts.silent && lastError) {
+        addEvent('warn', `AnimBridge 不可用：${lastError.message || String(lastError)}`);
+    }
+    return '';
+}
+
+function resolvePreviewMarkdownRepoPath(pathValue) {
+    const direct = normalizeMarkdownRepoPath(pathValue);
+    if (direct) return direct;
+    const active = getActiveFile();
+    if (active && detectFileMode(active.path) === 'markdown') {
+        return normalizeMarkdownRepoPath(active.path);
+    }
+    return '';
+}
+
+function readWorkspaceMarkdownContentByRepoPath(repoPath) {
+    const safeRepoPath = normalizeMarkdownRepoPath(repoPath);
+    if (!safeRepoPath) return '';
+    const file = state.workspace.files.find((entry) => normalizeMarkdownRepoPath(entry.path) === safeRepoPath);
+    if (!file) return '';
+    const model = state.modelByFileId.get(file.id);
+    if (model && typeof model.getValue === 'function') {
+        return model.getValue();
+    }
+    return String(file.content || '');
+}
+
+function clearPreviewSyncTimer() {
+    if (!state.animPreview.previewSyncTimer) return;
+    clearTimeout(state.animPreview.previewSyncTimer);
+    state.animPreview.previewSyncTimer = 0;
+}
+
+async function syncMarkdownViewerPreviewByRepoPath(repoPath, options) {
+    const opts = options || {};
+    const safeRepoPath = resolvePreviewMarkdownRepoPath(repoPath);
+    if (!safeRepoPath) return false;
+    const markdownContent = readWorkspaceMarkdownContentByRepoPath(safeRepoPath);
+    const payload = buildMarkdownViewerPreviewPayload(safeRepoPath, markdownContent);
+    persistMarkdownViewerPreviewPayload(payload);
+    if (opts.postToFrame !== false) {
+        postMarkdownViewerPreviewPayload(payload);
+    }
+    if (opts.refreshAnimRefs) {
+        scheduleCompileForReferencedAnims({
+            immediate: false,
+            reason: '文章引用更新'
+        });
+    }
+    return true;
+}
+
+function scheduleMarkdownPreviewSync(options) {
+    const opts = options || {};
+    const markdownPath = resolvePreviewMarkdownRepoPath(opts.markdownPath || state.animPreview.previewMarkdownPath);
+    if (!markdownPath) return;
+    clearPreviewSyncTimer();
+    state.animPreview.previewSyncTimer = setTimeout(() => {
+        state.animPreview.previewSyncTimer = 0;
+        syncMarkdownViewerPreviewByRepoPath(markdownPath, {
+            postToFrame: true,
+            refreshAnimRefs: !!opts.refreshAnimRefs
+        }).catch(() => {});
+    }, PREVIEW_SYNC_DEBOUNCE_MS);
+}
+
+async function compileAnimSourceNow(animPath, sourceText, options) {
+    const opts = options || {};
+    const normalized = normalizeAnimSourcePath(animPath);
+    if (!isAnimSourcePath(normalized)) return;
+    const requestId = String(++state.animPreview.compileRequestSeq);
+    state.animPreview.latestRequestIdByPath[normalized] = requestId;
+    setAnimCompileStatus(`编译中 ${normalized}`);
+
+    const endpoint = await connectAnimBridge({ preferredEndpoint: opts.preferredEndpoint, silent: true });
+    if (!endpoint) {
+        setCompiledAnimError(normalized, ['未检测到本地 AnimBridge，请先启动 dotnet 桥接服务']);
+        setAnimCompileStatus(`桥接不可用 ${normalized}`);
+        scheduleMarkdownPreviewSync({ refreshAnimRefs: false });
+        return;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+        controller.abort();
+    }, ANIMCS_COMPILE_TIMEOUT_MS);
+
+    try {
+        const response = await fetch(`${endpoint}/api/animcs/compile`, {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                sourcePath: normalized,
+                sourceText: String(sourceText || ''),
+                requestId
+            }),
+            signal: controller.signal
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const payload = await response.json().catch(() => null);
+        if (state.animPreview.latestRequestIdByPath[normalized] !== requestId) {
+            return;
+        }
+
+        const diagnostics = normalizeAnimCompileDiagnostics(payload && payload.diagnostics);
+        const moduleJs = String(payload && payload.moduleJs || '');
+        if (!payload || payload.ok !== true || !moduleJs) {
+            setCompiledAnimError(normalized, diagnostics.length ? diagnostics : ['编译失败：未生成 JS 模块']);
+            setAnimCompileStatus(`编译失败 ${normalized}`);
+            scheduleMarkdownPreviewSync({ refreshAnimRefs: false });
+            return;
+        }
+
+        setCompiledAnimOutput(normalized, moduleJs, payload.profile && typeof payload.profile === 'object' ? payload.profile : null);
+        state.animPreview.bridgeConnected = true;
+        setAnimCompileStatus(`编译成功 ${normalized}`);
+        scheduleMarkdownPreviewSync({ refreshAnimRefs: false });
+    } catch (error) {
+        if (state.animPreview.latestRequestIdByPath[normalized] !== requestId) {
+            return;
+        }
+        const reason = error && error.name === 'AbortError'
+            ? `编译超时（>${ANIMCS_COMPILE_TIMEOUT_MS}ms）`
+            : (error && error.message ? error.message : String(error));
+        setCompiledAnimError(normalized, [reason]);
+        setAnimCompileStatus(`编译失败 ${normalized}`);
+        state.animPreview.bridgeConnected = false;
+        scheduleMarkdownPreviewSync({ refreshAnimRefs: false });
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+function scheduleAnimCompileForPath(animPath, sourceText, options) {
+    const opts = options || {};
+    const normalized = normalizeAnimSourcePath(animPath);
+    if (!isAnimSourcePath(normalized)) return;
+    clearAnimCompileTimerForPath(normalized);
+
+    const run = () => {
+        delete state.animPreview.compileTimerByPath[normalized];
+        compileAnimSourceNow(normalized, sourceText, opts).catch(() => {});
+    };
+
+    if (opts.immediate) {
+        run();
+        return;
+    }
+    state.animPreview.compileTimerByPath[normalized] = setTimeout(run, ANIMCS_COMPILE_DEBOUNCE_MS);
+}
+
+function scheduleCompileForReferencedAnims(options) {
+    const opts = options || {};
+    const referenced = Array.isArray(state.animPreview.referencedAnimPaths)
+        ? state.animPreview.referencedAnimPaths
+        : [];
+    if (!referenced.length) {
+        setAnimCompileStatus('未激活（当前文章未引用 anims/*.cs）');
+        return;
+    }
+
+    let compileCount = 0;
+    referenced.forEach((animPath) => {
+        const file = findWorkspaceFileByContentPath(animPath);
+        if (!file) return;
+        const model = state.modelByFileId.get(file.id);
+        const sourceText = model && typeof model.getValue === 'function'
+            ? model.getValue()
+            : String(file.content || '');
+        scheduleAnimCompileForPath(animPath, sourceText, {
+            immediate: !!opts.immediate
+        });
+        compileCount += 1;
+    });
+
+    if (compileCount <= 0) {
+        setAnimCompileStatus('未激活（引用的 anims/*.cs 尚未在工作区打开）');
+    }
+}
+
+function onWorkspaceCsharpContentChanged(file) {
+    const animPath = normalizeAnimSourcePath(file && file.path ? file.path : '');
+    if (!isAnimSourcePath(animPath)) return;
+    if (!state.animPreview.referencedAnimSet.has(animPath)) return;
+    scheduleAnimCompileForPath(animPath, String(file && file.content || ''), { immediate: false });
 }
 
 function sanitizeShaderSlug(value) {
@@ -1689,8 +2277,9 @@ function isAllowedExtraFilePath(pathValue) {
     const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(path);
     const isArticleImageFile = /^site\/content\/.+\/imgs\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(path);
     const isArticleMediaFile = /^site\/content\/.+\/media\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:mp4|webm)$/i.test(path);
+    const isAnimRootCsharpFile = /^site\/content\/anims\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(path);
     const isArticleCsharpFile = /^site\/content\/.+\/code\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(path);
-    return isShaderGalleryFile || isArticleImageFile || isArticleMediaFile || isArticleCsharpFile;
+    return isShaderGalleryFile || isArticleImageFile || isArticleMediaFile || isAnimRootCsharpFile || isArticleCsharpFile;
 }
 
 function isMarkdownContentPath(pathValue) {
@@ -1721,6 +2310,19 @@ function toCodePathForArticle(articleMarkdownPath, csharpFilePath) {
     const dir = markdownPath.replace(/^site\/content\//i, '').replace(/\/[^/]+$/, '');
     const codeName = sanitizeCsharpCodeFileName(csharpFilePath);
     return `site/content/${dir}/code/${codeName}`;
+}
+
+function toDirectCsharpRepoPath(csharpFilePath) {
+    const relativePath = normalizeContentRelativePath(csharpFilePath);
+    if (!relativePath || !/\.cs$/i.test(relativePath)) return '';
+    const repoPath = `site/content/${relativePath}`;
+    if (/^site\/content\/anims\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(repoPath)) {
+        return repoPath;
+    }
+    if (/^site\/content\/.+\/code\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(repoPath)) {
+        return repoPath;
+    }
+    return '';
 }
 
 function buildUnifiedCollectionFromWorkspace() {
@@ -1782,7 +2384,7 @@ function buildUnifiedCollectionFromWorkspace() {
             });
         } else {
             csharpFiles.forEach((item) => {
-                const path = toCodePathForArticle(articlePath, item.path);
+                const path = toDirectCsharpRepoPath(item.path) || toCodePathForArticle(articlePath, item.path);
                 if (!isAllowedExtraFilePath(path)) {
                     blockedEntries.push({ ...item, reason: 'C# 目标路径非法' });
                     return;
@@ -1924,8 +2526,11 @@ async function loadMarkdownContentFromPath(pathValue) {
     if (!isMarkdownContentPath(path)) {
         throw new Error(`锚点 Markdown 非法：${pathValue}`);
     }
-    const relative = path.replace(/^site\//i, '');
-    const response = await fetch(`/${relative}`, { cache: 'no-store' });
+    const fetchUrl = toSiteContentFetchUrl(path);
+    if (!fetchUrl) {
+        throw new Error(`锚点 Markdown 路径非法：${pathValue}`);
+    }
+    const response = await fetch(fetchUrl, { cache: 'no-store' });
     if (!response.ok) {
         throw new Error(`加载锚点 Markdown 失败（HTTP ${response.status}）：${path}`);
     }
@@ -1933,13 +2538,11 @@ async function loadMarkdownContentFromPath(pathValue) {
 }
 
 function findWorkspaceFileByPath(pathValue) {
-    const safe = normalizeRepoPath(pathValue).toLowerCase();
-    if (!safe) return null;
-    return state.workspace.files.find((file) => normalizeRepoPath(file.path).toLowerCase() === safe) || null;
+    return findWorkspaceFileByContentPath(pathValue);
 }
 
 function createWorkspaceMarkdownFile(pathValue) {
-    const safePath = normalizeRepoPath(pathValue);
+    const safePath = normalizeContentRelativePath(pathValue);
     if (!safePath) return null;
     const nextFile = {
         id: createFileId(),
@@ -3143,7 +3746,7 @@ function ensureMarkdownDraftTargetFile(targetPath) {
     if (!safePath) return null;
 
     const existed = state.workspace.files.find((file) => {
-        return normalizeRepoPath(file.path).toLowerCase() === safePath.toLowerCase();
+        return isSameContentRelativePath(file.path, safePath);
     });
     if (existed) {
         return existed;
@@ -4438,10 +5041,15 @@ async function openMarkdownViewerPreview(newTab) {
         addEvent('error', 'Markdown 文件路径必须是相对 content 目录的 .md 路径');
         return;
     }
+    state.animPreview.previewMarkdownPath = repoPath;
     const model = ensureModelForFile(active);
     const markdownContent = model ? model.getValue() : String(active.content || '');
     const previewPayload = buildMarkdownViewerPreviewPayload(repoPath, markdownContent);
     persistMarkdownViewerPreviewPayload(previewPayload);
+    scheduleCompileForReferencedAnims({
+        immediate: false,
+        reason: '打开预览'
+    });
     await saveWorkspaceImmediate();
     const url = await buildViewerPageUrl(repoPath, {
         studioPreview: true,
@@ -4701,71 +5309,328 @@ function mergeCompletionItems(primaryItems, secondaryItems, maxItems) {
     return merged.slice(0, Math.max(10, Number(maxItems) || 80));
 }
 
-function groupWorkspaceFilesByCategory(files) {
-    const groups = [
-        { key: 'markdown', title: 'Markdown 文章', items: [] },
-        { key: 'csharp', title: 'C# 文件', items: [] },
-        { key: 'shader', title: 'Shader 文件', items: [] },
-        { key: 'assets', title: '资源文件', items: [] }
-    ];
-    const categoryMap = new Map(groups.map((group) => [group.key, group]));
+function collectRepoExplorerEntries() {
+    const map = new Map();
+    const pushEntry = (pathValue, kindValue) => {
+        const normalizedPath = normalizeEditableWorkspacePathInput(pathValue);
+        if (!normalizedPath) return;
+        const key = normalizedPath.toLowerCase();
+        if (map.has(key)) return;
+        map.set(key, {
+            path: normalizedPath,
+            kind: String(kindValue || '')
+        });
+    };
 
-    (Array.isArray(files) ? files : []).forEach((file) => {
-        if (!file || !file.path) return;
-        const mode = detectFileMode(file.path);
-        if (mode === 'markdown') {
-            categoryMap.get('markdown').items.push(file);
-            return;
-        }
-        if (mode === 'shaderfx') {
-            categoryMap.get('shader').items.push(file);
-            return;
-        }
-        if (mode === 'image' || mode === 'video') {
-            categoryMap.get('assets').items.push(file);
-            return;
-        }
-        categoryMap.get('csharp').items.push(file);
+    state.repoExplorer.files.forEach((entry) => {
+        if (!entry || !entry.path) return;
+        pushEntry(entry.path, entry.kind);
     });
 
-    return groups.filter((group) => group.items.length > 0);
+    state.workspace.files.forEach((file) => {
+        if (!file || !file.path) return;
+        const mode = detectFileMode(file.path);
+        let kind = 'csharp';
+        if (mode === 'markdown') kind = 'markdown';
+        else if (mode === 'shaderfx') kind = 'shaderfx';
+        else if (mode === 'image') kind = 'image';
+        else if (mode === 'video') kind = 'media';
+        pushEntry(file.path, kind);
+    });
+
+    return Array.from(map.values()).sort((left, right) => stableRepoPathCompare(left.path, right.path));
 }
 
-function formatFileListLabel(file) {
-    const mode = detectFileMode(file.path);
-    const pathText = String(file.path || '');
-    if (mode === 'video') return `${pathText} [视频]`;
-    if (mode === 'image') return `${pathText} [图片]`;
-    if (mode === 'csharp' && isAnimationCsharpFilePath(pathText)) return `${pathText} [动画]`;
-    return pathText;
+function buildRepoExplorerTree(entries) {
+    const root = {
+        dirs: new Map(),
+        files: new Map()
+    };
+
+    const appendEntry = (entry) => {
+        const normalizedPath = normalizeEditableWorkspacePathInput(entry && entry.path);
+        if (!normalizedPath) return;
+        const segments = splitRepoPathSegments(normalizedPath);
+        if (!segments.length) return;
+
+        let cursor = root;
+        for (let i = 0; i < segments.length; i += 1) {
+            const segment = segments[i];
+            const segmentPath = segments.slice(0, i + 1).join('/');
+            const key = segment.toLowerCase();
+            const isLast = i === segments.length - 1;
+
+            if (isLast) {
+                if (!cursor.files.has(key)) {
+                    cursor.files.set(key, {
+                        type: 'file',
+                        name: segment,
+                        path: segmentPath,
+                        kind: String(entry.kind || '')
+                    });
+                }
+                continue;
+            }
+
+            if (!cursor.dirs.has(key)) {
+                cursor.dirs.set(key, {
+                    type: 'dir',
+                    name: segment,
+                    path: segmentPath,
+                    dirs: new Map(),
+                    files: new Map()
+                });
+            }
+            cursor = cursor.dirs.get(key);
+        }
+    };
+
+    (Array.isArray(entries) ? entries : []).forEach((entry) => appendEntry(entry));
+
+    const toChildren = (folder) => {
+        const dirs = Array.from(folder.dirs.values())
+            .sort((left, right) => stableRepoPathCompare(left.name.toLowerCase(), right.name.toLowerCase()))
+            .map((dir) => ({
+                type: 'dir',
+                name: dir.name,
+                path: dir.path,
+                children: toChildren(dir)
+            }));
+        const files = Array.from(folder.files.values())
+            .sort((left, right) => stableRepoPathCompare(left.name.toLowerCase(), right.name.toLowerCase()))
+            .map((file) => ({
+                type: 'file',
+                name: file.name,
+                path: file.path,
+                kind: file.kind
+            }));
+        return dirs.concat(files);
+    };
+
+    return toChildren(root);
 }
 
-function updateFileListUi() {
+function appendRepoExplorerHintItem(text, className) {
+    if (!dom.fileList) return;
+    const li = document.createElement('li');
+    li.className = className || 'repo-tree-hint';
+    li.textContent = String(text || '');
+    dom.fileList.appendChild(li);
+}
+
+function renderRepoExplorerTree() {
     if (!dom.fileList) return;
     dom.fileList.innerHTML = '';
 
-    const groupedFiles = groupWorkspaceFilesByCategory(state.workspace.files);
-    groupedFiles.forEach((group) => {
-        const headLi = document.createElement('li');
-        headLi.className = 'file-group-title';
-        headLi.textContent = group.title;
-        dom.fileList.appendChild(headLi);
+    if (state.repoExplorer.loading) {
+        appendRepoExplorerHintItem('正在加载可编辑目录索引...', 'repo-tree-hint');
+    }
+    if (state.repoExplorer.loadError) {
+        appendRepoExplorerHintItem(state.repoExplorer.loadError, 'repo-tree-hint repo-tree-hint-error');
+    }
 
-        group.items.forEach((file) => {
+    const entries = collectRepoExplorerEntries();
+    if (!entries.length) {
+        appendRepoExplorerHintItem('没有可编辑文件。');
+        return;
+    }
+
+    const active = getActiveFile();
+    const tree = buildRepoExplorerTree(entries);
+    const renderNodes = (nodes, depth) => {
+        nodes.forEach((node) => {
+            if (!node || !node.path) return;
+
             const li = document.createElement('li');
+            li.className = 'repo-tree-node';
+
+            if (node.type === 'dir') {
+                const expanded = state.repoExplorer.expandedDirs.has(node.path);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'repo-tree-toggle';
+                btn.style.setProperty('--tree-depth', String(depth));
+                btn.textContent = `${expanded ? '▾' : '▸'} ${node.name}`;
+                btn.title = node.path;
+                btn.addEventListener('click', () => {
+                    if (expanded) {
+                        state.repoExplorer.expandedDirs.delete(node.path);
+                    } else {
+                        state.repoExplorer.expandedDirs.add(node.path);
+                    }
+                    updateFileListUi();
+                });
+                li.appendChild(btn);
+                dom.fileList.appendChild(li);
+
+                if (expanded) {
+                    renderNodes(node.children || [], depth + 1);
+                }
+                return;
+            }
+
+            const loaded = !!findWorkspaceFileByContentPath(node.path);
+            const isActive = !!(active && isSameContentRelativePath(active.path, node.path));
             const btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'file-item';
-            btn.textContent = formatFileListLabel(file);
-            btn.title = String(file.path || '');
-            btn.setAttribute('aria-current', file.id === state.workspace.activeFileId ? 'true' : 'false');
-            btn.addEventListener('click', function () {
-                switchActiveFile(file.id);
+            btn.className = loaded
+                ? 'file-item repo-tree-file'
+                : 'file-item repo-tree-file repo-tree-file-unloaded';
+            btn.style.setProperty('--tree-depth', String(depth));
+            btn.textContent = node.name;
+            btn.title = loaded
+                ? node.path
+                : `${node.path}（点击加载）`;
+            btn.setAttribute('aria-current', isActive ? 'true' : 'false');
+            btn.addEventListener('click', () => {
+                openRepoExplorerFile(node.path).catch((error) => {
+                    addEvent('error', `打开文件失败：${error.message}`);
+                });
             });
             li.appendChild(btn);
             dom.fileList.appendChild(li);
         });
+    };
+
+    renderNodes(tree, 0);
+}
+
+async function readBlobAsDataUrl(blob) {
+    return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('读取资源文件失败'));
+        reader.readAsDataURL(blob);
     });
+}
+
+async function loadWorkspaceFileContentFromSite(pathValue) {
+    const relativePath = normalizeEditableWorkspacePathInput(pathValue);
+    if (!relativePath) {
+        throw new Error('文件路径不在可编辑白名单');
+    }
+    const url = toSiteContentFetchUrl(relativePath);
+    if (!url) {
+        throw new Error('文件路径非法');
+    }
+
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+
+    const mode = detectFileMode(relativePath);
+    if (mode === 'image' || mode === 'video') {
+        const blob = await response.blob();
+        return await readBlobAsDataUrl(blob);
+    }
+
+    return String(await response.text()).replace(/\r\n/g, '\n');
+}
+
+async function openRepoExplorerFile(pathValue, options) {
+    const opts = options || {};
+    const relativePath = normalizeEditableWorkspacePathInput(pathValue);
+    if (!relativePath) {
+        throw new Error('路径不在可编辑白名单内');
+    }
+
+    let file = findWorkspaceFileByContentPath(relativePath);
+    const createdNow = !file;
+    if (!file) {
+        file = {
+            id: createFileId(),
+            path: relativePath,
+            content: ''
+        };
+        state.workspace.files.push(file);
+    }
+
+    if (createdNow || opts.reload === true) {
+        try {
+            const content = await loadWorkspaceFileContentFromSite(relativePath);
+            file.content = content;
+        } catch (error) {
+            if (createdNow) {
+                state.workspace.files = state.workspace.files.filter((entry) => entry.id !== file.id);
+                removeModelForFile(file.id);
+            }
+            throw error;
+        }
+    }
+
+    const model = ensureModelForFile(file);
+    if (model && model.getValue() !== String(file.content || '')) {
+        model.setValue(String(file.content || ''));
+    }
+    switchActiveFile(file.id);
+    updateFileListUi();
+    scheduleWorkspaceSave();
+    scheduleUnifiedStateSave();
+    return file;
+}
+
+async function loadIdeEditableIndex(options) {
+    const opts = options || {};
+    if (state.repoExplorer.loaded && !opts.force) {
+        return state.repoExplorer.files;
+    }
+
+    state.repoExplorer.loading = true;
+    state.repoExplorer.loadError = '';
+    updateFileListUi();
+
+    try {
+        const requestUrl = `${IDE_EDITABLE_INDEX_PATH}?ts=${Date.now()}`;
+        const response = await fetch(requestUrl, { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error(`加载 ide-editable-index 失败（HTTP ${response.status}）`);
+        }
+        const payload = await response.json();
+        const entries = [];
+        const seen = new Set();
+        (Array.isArray(payload && payload.files) ? payload.files : []).forEach((entry) => {
+            const normalizedPath = normalizeEditableWorkspacePathInput(entry && entry.path || '');
+            if (!normalizedPath) return;
+            const dedupeKey = normalizedPath.toLowerCase();
+            if (seen.has(dedupeKey)) return;
+            seen.add(dedupeKey);
+            entries.push({
+                path: normalizedPath,
+                kind: String(entry && entry.kind || '')
+            });
+        });
+
+        entries.sort((left, right) => stableRepoPathCompare(left.path, right.path));
+        state.repoExplorer.files = entries;
+        state.repoExplorer.generatedAt = String(payload && payload.generatedAt || '');
+        state.repoExplorer.loaded = true;
+        state.repoExplorer.loading = false;
+        state.repoExplorer.loadError = '';
+
+        if (state.repoExplorer.expandedDirs.size <= 0) {
+            entries.forEach((entry) => {
+                const first = splitRepoPathSegments(entry.path)[0];
+                if (first) state.repoExplorer.expandedDirs.add(first);
+            });
+        }
+
+        updateFileListUi();
+        return entries;
+    } catch (error) {
+        state.repoExplorer.loading = false;
+        state.repoExplorer.loaded = false;
+        state.repoExplorer.loadError = `索引加载失败：${error.message}`;
+        updateFileListUi();
+        if (!opts.silent) {
+            addEvent('error', state.repoExplorer.loadError);
+        }
+        return [];
+    }
+}
+
+function updateFileListUi() {
+    renderRepoExplorerTree();
 
     const active = getActiveFile();
     if (dom.activeFileName) {
@@ -4821,6 +5686,18 @@ function ensureModelForFile(file) {
         scheduleWorkspaceSave();
         if (detectFileMode(file.path) === 'csharp') {
             scheduleDiagnostics();
+            onWorkspaceCsharpContentChanged(file);
+            return;
+        }
+        if (detectFileMode(file.path) === 'markdown') {
+            const markdownRepoPath = normalizeMarkdownRepoPath(file.path);
+            const previewRepoPath = normalizeMarkdownRepoPath(state.animPreview.previewMarkdownPath);
+            if (previewRepoPath && markdownRepoPath === previewRepoPath) {
+                scheduleMarkdownPreviewSync({
+                    markdownPath: previewRepoPath,
+                    refreshAnimRefs: true
+                });
+            }
             return;
         }
         if (detectFileMode(file.path) === 'shaderfx') {
@@ -5908,16 +6785,16 @@ function bindUiEvents() {
     });
 
     dom.btnAddFile.addEventListener('click', function () {
-        const input = globalThis.prompt('请输入新文件名（.cs/.animcs/.md/.fx/.png/.jpg/.webp/.mp4）', '新文章.md');
+        const input = globalThis.prompt('请输入新文件名（site/content 下白名单路径）', '怎么贡献/新文章.md');
         if (!input) return;
 
-        const fileName = input.trim();
-        if (!FILE_NAME_ALLOWED_EXT_RE.test(fileName)) {
-            addEvent('error', '文件名必须以 .cs/.animcs/.md/.fx 或常见图片/视频后缀结尾');
+        const fileName = normalizeEditableWorkspacePathInput(input);
+        if (!fileName) {
+            addEvent('error', '路径必须位于 site/content 白名单（.md / anims/*.cs / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
             return;
         }
 
-        const exists = state.workspace.files.some((file) => file.path.toLowerCase() === fileName.toLowerCase());
+        const exists = state.workspace.files.some((file) => isSameContentRelativePath(file.path, fileName));
         if (exists) {
             addEvent('error', `文件已存在：${fileName}`);
             return;
@@ -5942,17 +6819,17 @@ function bindUiEvents() {
         const active = getActiveFile();
         if (!active) return;
 
-        const input = globalThis.prompt('请输入新的文件名（.cs/.animcs/.md/.fx/.png/.jpg/.webp/.mp4）', active.path);
+        const input = globalThis.prompt('请输入新的文件名（site/content 下白名单路径）', normalizeContentRelativePath(active.path));
         if (!input) return;
 
-        const next = input.trim();
-        if (!FILE_NAME_ALLOWED_EXT_RE.test(next)) {
-            addEvent('error', '文件名必须以 .cs/.animcs/.md/.fx 或常见图片/视频后缀结尾');
+        const next = normalizeEditableWorkspacePathInput(input);
+        if (!next) {
+            addEvent('error', '路径必须位于 site/content 白名单（.md / anims/*.cs / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
             return;
         }
 
         const exists = state.workspace.files.some((file) => {
-            return file.id !== active.id && file.path.toLowerCase() === next.toLowerCase();
+            return file.id !== active.id && isSameContentRelativePath(file.path, next);
         });
         if (exists) {
             addEvent('error', `文件名冲突：${next}`);
@@ -6129,6 +7006,12 @@ async function bootstrap() {
     const unifiedState = await loadUnifiedWorkspaceState();
     initializeUnifiedState(unifiedState);
     updateUnifiedAuthUi();
+    state.animPreview.bridgeEndpoint = normalizeAnimBridgeEndpoint(
+        readStoredAnimBridgeEndpoint() || ANIMCS_DEFAULT_BRIDGE_ENDPOINT
+    ) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+    persistAnimBridgeEndpoint(state.animPreview.bridgeEndpoint);
+    state.animPreview.bridgeConnected = false;
+    setAnimCompileStatus('未激活');
 
     const route = parseRouteFromUrl();
     state.route.workspace = normalizeWorkspaceName(route.workspace);
@@ -6384,6 +7267,7 @@ async function bootstrap() {
     }
 
     await loadInitialIndex();
+    await loadIdeEditableIndex({ silent: true });
 
     const workspace = csharpWorkspaceFromUnifiedState() || await loadWorkspace();
     applyWorkspace(workspace);

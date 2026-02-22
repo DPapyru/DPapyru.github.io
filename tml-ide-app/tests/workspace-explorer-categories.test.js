@@ -14,15 +14,16 @@ test('index.html exposes preview pane for video resources', () => {
     assert.match(html, /id="video-preview-element"/);
 });
 
-test('main.js supports grouped explorer categories and video file mode', () => {
+test('main.js supports repo explorer tree, editable index, and video file mode', () => {
     const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
 
     assert.match(source, /const VIDEO_FILE_EXTENSIONS = new Set\(\[/);
     assert.match(source, /FILE_NAME_ALLOWED_EXT_RE[\s\S]*mp4[\s\S]*webm/);
     assert.match(source, /if \(VIDEO_FILE_EXTENSIONS\.has\(ext\)\) return 'video';/);
-    assert.match(source, /function groupWorkspaceFilesByCategory/);
-    assert.match(source, /Markdown 文章/);
-    assert.match(source, /C# 文件/);
-    assert.match(source, /Shader 文件/);
-    assert.match(source, /资源文件/);
+    assert.match(source, /ide-editable-index\.v1\.json/);
+    assert.match(source, /repoExplorer/);
+    assert.match(source, /function\s+loadIdeEditableIndex/);
+    assert.match(source, /function\s+renderRepoExplorerTree/);
+    assert.match(source, /function\s+openRepoExplorerFile/);
+    assert.match(source, /\/site\/content\//);
 });

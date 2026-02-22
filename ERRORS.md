@@ -1794,3 +1794,23 @@
 **备注**：
 - `npm test` 的失败在合并前 `main` 基线已存在，本次合并未新增失败项。
 - 已在 `main` 重新生成 `site` 与 `tml-ide` 产物，确保合并后构建输出一致。
+
+### 验证记录 [2026-02-22 08:02]：`/tml-ide` 目录树 + AnimBridge 实时预览 + `怎么贡献` 格式修复
+
+**级别**：L3
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过（56/56）
+- `node --test site/tooling/scripts/ide-editable-index.test.js`：通过
+- `node --test site/tooling/scripts/pr-worker-extra-files.test.js`：通过
+- `node --test site/tooling/scripts/article-studio-anim-preview-payload.test.js`：通过
+- `node --test site/tooling/scripts/viewer-studio-preview-animcs.test.js`：通过
+- `node --test site/tooling/scripts/contrib-docs-format.test.js`：通过
+- `node site/tooling/scripts/check-content.js --root site/content/怎么贡献`：通过（`check-content: OK`）
+- `npm run build`：失败
+- `npm run check-generated`：失败
+
+**备注**：
+- `npm run build` 在 `build:anims` 阶段失败，根因是当前环境缺少 `Microsoft.NETCore.App 8.0.0`（仅检测到 `10.0.2`），`site/tooling/tools/animcs-compiler/AstCompiler` 无法启动。
+- `npm run build` 的前置阶段已成功执行并生成：`generate-structure`（含 `site/assets/ide-editable-index.v1.json`）、`generate-search`、`generate-shader-gallery`。
+- `npm run check-generated` 失败于 `gallery-check`，报错 `site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`，属于仓库既有问题，与本次 `/tml-ide` 改造无直接关系。
