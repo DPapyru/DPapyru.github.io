@@ -11,6 +11,10 @@ next_chapter: Modder入门/第一个配置-可调开关.md
 colors:
   Mad: "#ff5430"
 ---
+
+> 截图测试:  ![image](./images/image.png)
+
+
 # 前言
 
 > ***倾听我们阴暗的振翅声……我们在阴影中筑巢***
