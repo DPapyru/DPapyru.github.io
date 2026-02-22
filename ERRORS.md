@@ -1814,3 +1814,16 @@
 - `npm run build` 在 `build:anims` 阶段失败，根因是当前环境缺少 `Microsoft.NETCore.App 8.0.0`（仅检测到 `10.0.2`），`site/tooling/tools/animcs-compiler/AstCompiler` 无法启动。
 - `npm run build` 的前置阶段已成功执行并生成：`generate-structure`（含 `site/assets/ide-editable-index.v1.json`）、`generate-search`、`generate-shader-gallery`。
 - `npm run check-generated` 失败于 `gallery-check`，报错 `site/content/shader-gallery/pass-1/entry.json` 缺少 `cover.webp`，属于仓库既有问题，与本次 `/tml-ide` 改造无直接关系。
+
+### 验证记录 [2026-02-22 13:58]：移除 Shader Gallery 页面 + Shader 预览右侧比例拖拽
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/workbench-shell.test.js site/tooling/scripts/page-common-alignment.test.js`：失败
+- `node site/tooling/scripts/check-accent-theme.js`：失败
+- `node --test tml-ide-app/tests/vscode-workbench-shell.test.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：失败
+
+**备注**：前两项失败均为仓库当前文件缺失导致（`site/pages/article-studio.html`、`site/pages/shader-playground.html` 不存在），与本次改动无直接关系；`npm run build` 失败原因为当前环境缺失 `.NET 8.0` 运行时（`AstCompiler` 启动失败，exit 150）。本次改动在工作树 `.worktrees/fix-shader-ide-panels` 完成。

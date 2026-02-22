@@ -300,15 +300,25 @@
                 </aside>
                 <section class="shader-preview-stage">
                     <header class="shader-preview-stage-head">
-                        <span class="shader-preview-stage-tip">拖动平移，滚轮缩放</span>
+                        <span class="shader-preview-stage-tip">拖动画布平移，滚轮缩放；拖动右侧分隔条可调整比例</span>
                         <div class="shader-preview-zoom-actions" role="group" aria-label="预览缩放">
                             <button id="shader-preview-zoom-out" type="button" aria-label="缩小预览">-</button>
                             <button id="shader-preview-zoom-reset" type="button" aria-label="重置缩放">100%</button>
                             <button id="shader-preview-zoom-in" type="button" aria-label="放大预览">+</button>
                         </div>
                     </header>
-                    <div id="shader-preview-viewport" class="shader-preview-viewport">
-                        <canvas id="shader-preview-canvas" class="shader-preview-canvas" width="720" height="420"></canvas>
+                    <div class="shader-preview-stage-shell">
+                        <div id="shader-preview-viewport" class="shader-preview-viewport">
+                            <canvas id="shader-preview-canvas" class="shader-preview-canvas" width="720" height="420"></canvas>
+                        </div>
+                        <div
+                            id="shader-preview-aspect-resizer"
+                            class="shader-preview-aspect-resizer"
+                            role="separator"
+                            tabindex="0"
+                            aria-orientation="vertical"
+                            aria-label="拖动调整画布比例"
+                            title="拖动调整画布比例（双击重置）"></div>
                     </div>
                 </section>
             </div>

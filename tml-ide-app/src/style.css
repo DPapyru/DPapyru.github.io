@@ -880,6 +880,14 @@ button:disabled {
     min-height: 0;
 }
 
+.shader-preview-stage-shell {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    margin: 10px;
+    min-height: 0;
+}
+
 .shader-preview-stage-head {
     min-height: 30px;
     border-bottom: 1px solid var(--vscode-border-soft);
@@ -913,7 +921,8 @@ button:disabled {
 }
 
 .shader-preview-viewport {
-    margin: 10px;
+    flex: 1 1 auto;
+    min-width: 260px;
     border: 1px solid var(--vscode-border);
     border-radius: 4px;
     overflow: hidden;
@@ -925,6 +934,25 @@ button:disabled {
 
 .shader-preview-viewport.is-dragging {
     cursor: grabbing;
+}
+
+.shader-preview-aspect-resizer {
+    flex: 0 0 8px;
+    border: 1px solid var(--vscode-border);
+    border-radius: 4px;
+    background: linear-gradient(to right, #2b2c2f 0, #323338 50%, #2b2c2f 100%);
+    cursor: ew-resize;
+    touch-action: none;
+}
+
+.shader-preview-aspect-resizer.is-dragging {
+    border-color: var(--vscode-accent);
+    background: linear-gradient(to right, #195177 0, #1f6a9a 50%, #195177 100%);
+}
+
+.shader-preview-aspect-resizer:focus-visible {
+    outline: 1px solid var(--vscode-accent);
+    outline-offset: 1px;
 }
 
 .shader-preview-canvas {
@@ -1480,8 +1508,12 @@ button:disabled {
         padding: 0 8px;
     }
 
-    .shader-preview-viewport {
+    .shader-preview-stage-shell {
         margin: 8px;
+    }
+
+    .shader-preview-aspect-resizer {
+        display: none;
     }
 
     .shader-preview-canvas {

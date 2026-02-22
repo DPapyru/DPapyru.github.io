@@ -12,7 +12,6 @@ const targetPages = [
     'site/pages/article-studio.html',
     'site/pages/folder.html',
     'site/pages/shader-contribute.html',
-    'site/pages/shader-gallery.html',
     'site/pages/shader-playground.html',
     'site/pages/viewer.html'
 ];

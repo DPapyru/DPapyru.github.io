@@ -17,7 +17,6 @@ const unifiedHeaderPages = [
     'site/pages/viewer.html',
     'site/pages/folder.html',
     'site/pages/shader-playground.html',
-    'site/pages/shader-gallery.html',
     'site/pages/shader-contribute.html'
 ];
 
