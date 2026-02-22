@@ -1886,3 +1886,18 @@
 - 根因定位：`.app-shell` 仅设置了 `min-height: 100vh`，在内容高度增长时容器被拉伸到视口之外，且 `body` 在桌面宽度为 `overflow: hidden`，导致底部问题栏/状态栏看起来“消失”。
 - 修复：在 `tml-ide-app/src/style.css` 为 `.app-shell` 增加 `height: 100vh`，并在 `@media (max-width: 1200px)` 明确回退 `height: auto; min-height: 100vh;`。
 - 浏览器确认截图：`/tmp/ide_after_fix_1600.png`、`/tmp/ide_static_after_fix_1600.png`。
+
+### 验证记录 [2026-02-22 18:12]：`fun-test/quiz.source.yaml` 题库去重与生活化改写（main）
+
+**级别**：定向验证（题库内容）
+
+**命令与结果**：
+- `node - <<'NODE'`（检查题干去重、回答文案去重、非量表题选项数）：通过（`duplicatePrompts=0`、`duplicateOptionTexts=0`、`nonScaleWithLessThan5=[]`）
+- `node site/tooling/scripts/generate-fun-test-quiz.js`：通过
+- `node --test site/tooling/scripts/generate-fun-test-quiz.test.js fun-test/quiz-engine.test.js`：通过（14/14）
+
+**备注**：
+- 本次改写仅调整 `fun-test/quiz.source.yaml` 文案，并重新生成 `fun-test/quiz-data.v1.json`。
+- `q1~q35` 均为 5 个选项，题干与回答文案在全局范围内去重。
+- 文案方向从模板化表达改为生活化/人际互动场景，降低“工作场景”占比。
+- 本次未执行 `npm run build` 与 `npm run check-generated`（仅做 fun-test 题库定向改动，已完成针对性生成与测试验证）。

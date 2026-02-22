@@ -1,9 +1,9 @@
 {
     "schemaVersion": 1,
     "meta": {
-        "id": "inner-psyche-profile",
-        "title": "你的情绪触发与受伤模式测评",
-        "description": "通过 50 道生活与突发情境题，识别你的情绪效果、伤害类型与属性倾向。"
+        "id": "inner-psyche-profile-real",
+        "title": "你的情绪触发与受伤模式测评（现实生活版）",
+        "description": "通过50道真实生活与突发情境题，识别你的情绪特质、伤害应对模式与核心属性倾向。"
     },
     "dimensions": [
         {
@@ -68,31 +68,31 @@
         }
     ],
     "theoreticalMax": {
-        "emotion_arrogance": 172,
-        "emotion_envy": 178,
-        "emotion_wrath": 182,
-        "emotion_lust": 186,
-        "emotion_sloth": 178,
-        "emotion_greed": 168,
-        "emotion_melancholy": 168,
-        "emotion_gluttony": 168,
-        "damage_slash": 285,
-        "damage_pierce": 283,
-        "damage_strike": 282,
-        "element_fire": 225,
-        "element_thunder": 223,
-        "element_wind": 225,
-        "element_ice": 227
+        "emotion_arrogance": 136,
+        "emotion_envy": 142,
+        "emotion_wrath": 140,
+        "emotion_lust": 156,
+        "emotion_sloth": 150,
+        "emotion_greed": 142,
+        "emotion_melancholy": 132,
+        "emotion_gluttony": 132,
+        "damage_slash": 255,
+        "damage_pierce": 253,
+        "damage_strike": 252,
+        "element_fire": 186,
+        "element_thunder": 185,
+        "element_wind": 177,
+        "element_ice": 187
     },
     "questions": [
         {
             "id": "q1",
             "type": "single",
-            "prompt": "早高峰刚上地铁发现手机只剩 2% 电，且客户要求你 10 分钟内回复。你会？",
+            "prompt": "晚高峰地铁里手机只剩 2% 电，好友却发来“我现在很崩溃，能不能见你一面”。你会先怎么做？",
             "options": [
                 {
                     "id": "q1a",
-                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "text": "先发一条定位与状态确认消息：你现在在哪、身边有人吗，我再决定是否改道去见你。",
                     "scores": {
                         "emotion_arrogance": 4,
                         "damage_slash": 3,
@@ -101,7 +101,7 @@
                 },
                 {
                     "id": "q1b",
-                    "text": "先把表面问题压住，情绪先放在心里",
+                    "text": "先打 30 秒语音稳住对方情绪，并说明我手机快没电、接下来怎么保持联系。",
                     "scores": {
                         "emotion_envy": 6,
                         "damage_pierce": 4,
@@ -110,7 +110,7 @@
                 },
                 {
                     "id": "q1c",
-                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "text": "先直说我在赶路且电量告急，只能给到短时支持，避免许下做不到的承诺。",
                     "scores": {
                         "emotion_wrath": 8,
                         "damage_strike": 6,
@@ -119,11 +119,20 @@
                 },
                 {
                     "id": "q1d",
-                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "text": "先找最近能充电的地方，让自己恢复可沟通状态后再投入陪伴。",
                     "scores": {
                         "emotion_lust": 10,
                         "damage_slash": 7,
                         "element_ice": 6
+                    }
+                },
+                {
+                    "id": "q1e",
+                    "text": "先联系她共同熟悉的朋友顶上，确保她今晚不是一个人扛。",
+                    "scores": {
+                        "emotion_wrath": 8,
+                        "damage_strike": 6,
+                        "element_wind": 5
                     }
                 }
             ]
@@ -131,11 +140,11 @@
         {
             "id": "q2",
             "type": "single",
-            "prompt": "临睡前收到“明早汇报提前 1 小时”的通知，你通常怎么做？",
+            "prompt": "你刚准备睡觉，家人突然发来“现在必须回电话”。你会如何接住这个突发请求？",
             "options": [
                 {
                     "id": "q2a",
-                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "text": "先回文字问清“必须现在回电”的具体原因，判断是否属于真正紧急。",
                     "scores": {
                         "emotion_envy": 4,
                         "damage_pierce": 3,
@@ -144,7 +153,7 @@
                 },
                 {
                     "id": "q2b",
-                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "text": "先回拨两分钟，听完重点后把可立刻处理和可明早处理的事项分开。",
                     "scores": {
                         "emotion_wrath": 6,
                         "damage_strike": 4,
@@ -153,7 +162,7 @@
                 },
                 {
                     "id": "q2c",
-                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "text": "先说明我已准备休息，只接最关键的信息，其余明天继续沟通。",
                     "scores": {
                         "emotion_lust": 8,
                         "damage_slash": 6,
@@ -162,11 +171,20 @@
                 },
                 {
                     "id": "q2d",
-                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "text": "先做几次深呼吸再接电话，避免把困倦和烦躁带进谈话。",
                     "scores": {
                         "emotion_sloth": 10,
                         "damage_pierce": 7,
                         "element_fire": 6
+                    }
+                },
+                {
+                    "id": "q2e",
+                    "text": "先约一个明确回电时间，并请家人把要点先发成消息。",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_slash": 6,
+                        "element_ice": 5
                     }
                 }
             ]
@@ -174,11 +192,11 @@
         {
             "id": "q3",
             "type": "single",
-            "prompt": "朋友聚餐时有人拿你旧失误开玩笑，现场气氛很热。你会？",
+            "prompt": "聚餐时有人反复拿你的外貌开玩笑，桌上还在起哄。你会怎么回应？",
             "options": [
                 {
                     "id": "q3a",
-                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "text": "当场平静说一句“这个玩笑我不舒服”，把边界直接讲清。",
                     "scores": {
                         "emotion_wrath": 4,
                         "damage_strike": 3,
@@ -187,7 +205,7 @@
                 },
                 {
                     "id": "q3b",
-                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "text": "先把话题转到菜品或活动上，避免围攻氛围继续发酵。",
                     "scores": {
                         "emotion_lust": 6,
                         "damage_slash": 4,
@@ -196,7 +214,7 @@
                 },
                 {
                     "id": "q3c",
-                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "text": "饭后单独找当事人沟通，说明这种调侃会伤关系。",
                     "scores": {
                         "emotion_sloth": 8,
                         "damage_pierce": 6,
@@ -205,11 +223,20 @@
                 },
                 {
                     "id": "q3d",
-                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "text": "先短暂离席缓一下，等情绪降下来再决定是否继续坐。",
                     "scores": {
                         "emotion_greed": 10,
                         "damage_strike": 7,
                         "element_thunder": 6
+                    }
+                },
+                {
+                    "id": "q3e",
+                    "text": "如果对方仍不停，我会提前离场，并在群里说明原因。",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_pierce": 6,
+                        "element_fire": 5
                     }
                 }
             ]
@@ -217,11 +244,11 @@
         {
             "id": "q4",
             "type": "single",
-            "prompt": "周末刚准备休息，家里临时让你处理一件棘手琐事。你会？",
+            "prompt": "周末你安排好独处充电，伴侣却临时提出“现在就去见我朋友”。你会怎么取舍？",
             "options": [
                 {
                     "id": "q4a",
-                    "text": "先找可信的人或资料校准，再做决定",
+                    "text": "先肯定伴侣的邀请，再说明我今天确实需要独处恢复。",
                     "scores": {
                         "emotion_lust": 4,
                         "damage_slash": 3,
@@ -230,7 +257,7 @@
                 },
                 {
                     "id": "q4b",
-                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "text": "先提折中方案：我晚点加入一小时，不参加整场社交。",
                     "scores": {
                         "emotion_sloth": 6,
                         "damage_pierce": 4,
@@ -239,7 +266,7 @@
                 },
                 {
                     "id": "q4c",
-                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "text": "先问清这次见面的重要性，再决定要不要临时改计划。",
                     "scores": {
                         "emotion_greed": 8,
                         "damage_strike": 6,
@@ -248,11 +275,20 @@
                 },
                 {
                     "id": "q4d",
-                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "text": "先坦白我的疲惫状态，避免被误解成敷衍或不重视。",
                     "scores": {
                         "emotion_melancholy": 10,
                         "damage_slash": 7,
                         "element_wind": 6
+                    }
+                },
+                {
+                    "id": "q4e",
+                    "text": "先把可补上的时间定下来，让彼此都知道何时兑现。",
+                    "scores": {
+                        "emotion_greed": 8,
+                        "damage_strike": 6,
+                        "element_thunder": 5
                     }
                 }
             ]
@@ -260,11 +296,11 @@
         {
             "id": "q5",
             "type": "single",
-            "prompt": "你负责的文件被误删，备份也不完整，截止时间不变。你会？",
+            "prompt": "亲戚在家庭群公开追问你的婚恋/买房计划，你明显不想展开。你会怎么接话？",
             "options": [
                 {
                     "id": "q5a",
-                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "text": "先用轻松话带过，比如“有进展会第一时间报喜”。",
                     "scores": {
                         "emotion_sloth": 4,
                         "damage_pierce": 3,
@@ -273,7 +309,7 @@
                 },
                 {
                     "id": "q5b",
-                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "text": "先私聊关系近的长辈，请他帮忙在群里打个圆场。",
                     "scores": {
                         "emotion_greed": 6,
                         "damage_strike": 4,
@@ -282,7 +318,7 @@
                 },
                 {
                     "id": "q5c",
-                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "text": "先明确这属于我的私人节奏，不适合在群里细聊。",
                     "scores": {
                         "emotion_melancholy": 8,
                         "damage_slash": 6,
@@ -291,11 +327,20 @@
                 },
                 {
                     "id": "q5d",
-                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "text": "先把手机放下十分钟，避免被连环追问牵着走。",
                     "scores": {
                         "emotion_gluttony": 10,
                         "damage_pierce": 7,
                         "element_ice": 6
+                    }
+                },
+                {
+                    "id": "q5e",
+                    "text": "先准备一句固定回复模板，下次遇到同类问题直接使用。",
+                    "scores": {
+                        "emotion_melancholy": 8,
+                        "damage_slash": 6,
+                        "element_wind": 5
                     }
                 }
             ]
@@ -303,11 +348,11 @@
         {
             "id": "q6",
             "type": "single",
-            "prompt": "会议进行到一半，领导突然让你当场给出新方案。你会？",
+            "prompt": "邻居连续几晚制造噪音，已经影响你休息和情绪。你会先采取什么动作？",
             "options": [
                 {
                     "id": "q6a",
-                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "text": "先记录噪音出现的时间和类型，沟通时有事实依据。",
                     "scores": {
                         "emotion_greed": 4,
                         "damage_strike": 3,
@@ -316,7 +361,7 @@
                 },
                 {
                     "id": "q6b",
-                    "text": "先把表面问题压住，情绪先放在心里",
+                    "text": "先礼貌敲门说明影响，请对方给出可执行的安静时段。",
                     "scores": {
                         "emotion_melancholy": 6,
                         "damage_slash": 4,
@@ -325,7 +370,7 @@
                 },
                 {
                     "id": "q6c",
-                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "text": "先联系物业或房东协助协调，减少正面冲突概率。",
                     "scores": {
                         "emotion_gluttony": 8,
                         "damage_pierce": 6,
@@ -334,11 +379,20 @@
                 },
                 {
                     "id": "q6d",
-                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "text": "先用耳塞或白噪音做保底，确保自己今晚能休息。",
                     "scores": {
                         "emotion_arrogance": 10,
                         "damage_strike": 7,
                         "element_fire": 6
+                    }
+                },
+                {
+                    "id": "q6e",
+                    "text": "先和邻居约一个双方都能接受的作息规则。",
+                    "scores": {
+                        "emotion_gluttony": 8,
+                        "damage_pierce": 6,
+                        "element_ice": 5
                     }
                 }
             ]
@@ -346,11 +400,11 @@
         {
             "id": "q7",
             "type": "single",
-            "prompt": "同事在群里只@你问责，却没提其他参与人。你会？",
+            "prompt": "朋友借钱多次延期归还，还继续找你再借一次。你会怎么处理这段关系和边界？",
             "options": [
                 {
                     "id": "q7a",
-                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "text": "先把过往借款时间和金额梳理清楚，再谈后续安排。",
                     "scores": {
                         "emotion_melancholy": 4,
                         "damage_slash": 3,
@@ -359,7 +413,7 @@
                 },
                 {
                     "id": "q7b",
-                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "text": "先明确拒绝新增借款，只讨论旧账如何归还。",
                     "scores": {
                         "emotion_gluttony": 6,
                         "damage_pierce": 4,
@@ -368,7 +422,7 @@
                 },
                 {
                     "id": "q7c",
-                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "text": "先给出可执行的分期方案，让还款路径更清晰。",
                     "scores": {
                         "emotion_arrogance": 8,
                         "damage_strike": 6,
@@ -377,11 +431,20 @@
                 },
                 {
                     "id": "q7d",
-                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "text": "先承认自己也有压力，避免谈话变成人身指责。",
                     "scores": {
                         "emotion_envy": 10,
                         "damage_slash": 7,
                         "element_thunder": 6
+                    }
+                },
+                {
+                    "id": "q7e",
+                    "text": "先设定逾期后的处理方式，保护关系也保护自己。",
+                    "scores": {
+                        "emotion_arrogance": 8,
+                        "damage_strike": 6,
+                        "element_fire": 5
                     }
                 }
             ]
@@ -389,11 +452,11 @@
         {
             "id": "q8",
             "type": "single",
-            "prompt": "排队很久买到的东西，轮到你时店员说“系统故障要重来”。你会？",
+            "prompt": "排队很久被人插队，对方还装作没看见。你会怎么应对当下局面？",
             "options": [
                 {
                     "id": "q8a",
-                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "text": "先轻拍对方提醒“这里在排队，请到后面”。",
                     "scores": {
                         "emotion_gluttony": 4,
                         "damage_pierce": 3,
@@ -402,7 +465,7 @@
                 },
                 {
                     "id": "q8b",
-                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "text": "先和周围人确认顺序，让规则由现场共同维护。",
                     "scores": {
                         "emotion_arrogance": 6,
                         "damage_strike": 4,
@@ -411,7 +474,7 @@
                 },
                 {
                     "id": "q8c",
-                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "text": "先把语速放慢，避免小摩擦升级成对骂。",
                     "scores": {
                         "emotion_envy": 8,
                         "damage_slash": 6,
@@ -420,11 +483,20 @@
                 },
                 {
                     "id": "q8d",
-                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "text": "先评估安全风险，必要时让工作人员来处理。",
                     "scores": {
                         "emotion_wrath": 10,
                         "damage_pierce": 7,
                         "element_wind": 6
+                    }
+                },
+                {
+                    "id": "q8e",
+                    "text": "先把这次经历记成边界提醒，下次不再默认被越线。",
+                    "scores": {
+                        "emotion_envy": 8,
+                        "damage_slash": 6,
+                        "element_thunder": 5
                     }
                 }
             ]
@@ -432,11 +504,11 @@
         {
             "id": "q9",
             "type": "single",
-            "prompt": "准备已久的计划被一句“先等等”搁置，你通常会？",
+            "prompt": "你认真筹备的兴趣计划被一句“下次再说”直接搁置。你会怎么调节自己？",
             "options": [
                 {
                     "id": "q9a",
-                    "text": "先找可信的人或资料校准，再做决定",
+                    "text": "先承认自己确实失落，不把被放鸽子的感觉硬吞下去。",
                     "scores": {
                         "emotion_arrogance": 4,
                         "damage_strike": 3,
@@ -445,7 +517,7 @@
                 },
                 {
                     "id": "q9b",
-                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "text": "先确认对方是临时有事，还是长期不重视这件事。",
                     "scores": {
                         "emotion_envy": 6,
                         "damage_slash": 4,
@@ -454,7 +526,7 @@
                 },
                 {
                     "id": "q9c",
-                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "text": "先把计划拆成我一个人也能完成的小版本。",
                     "scores": {
                         "emotion_wrath": 8,
                         "damage_pierce": 6,
@@ -463,11 +535,20 @@
                 },
                 {
                     "id": "q9d",
-                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "text": "先把改期时间当场定掉，避免无限期“下次再说”。",
                     "scores": {
                         "emotion_lust": 10,
                         "damage_strike": 7,
                         "element_ice": 6
+                    }
+                },
+                {
+                    "id": "q9e",
+                    "text": "先把期待值调回现实，给合作关系重新设边界。",
+                    "scores": {
+                        "emotion_wrath": 8,
+                        "damage_pierce": 6,
+                        "element_wind": 5
                     }
                 }
             ]
@@ -475,11 +556,11 @@
         {
             "id": "q10",
             "type": "single",
-            "prompt": "临时合住的室友频繁打乱你的作息，你会？",
+            "prompt": "合租室友总在你休息时开麦打游戏，沟通几次都不稳定。你会怎么处理？",
             "options": [
                 {
                     "id": "q10a",
-                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "text": "先挑双方都清醒的时段沟通，不在凌晨对吵。",
                     "scores": {
                         "emotion_envy": 4,
                         "damage_slash": 3,
@@ -488,7 +569,7 @@
                 },
                 {
                     "id": "q10b",
-                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "text": "先提出具体规则，比如 23 点后统一戴耳机。",
                     "scores": {
                         "emotion_wrath": 6,
                         "damage_pierce": 4,
@@ -497,7 +578,7 @@
                 },
                 {
                     "id": "q10c",
-                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "text": "先了解对方也在意什么，交换出双方都能执行的方案。",
                     "scores": {
                         "emotion_lust": 8,
                         "damage_strike": 6,
@@ -506,11 +587,20 @@
                 },
                 {
                     "id": "q10d",
-                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "text": "先准备临时替代休息点，避免每晚都被动熬着。",
                     "scores": {
                         "emotion_sloth": 10,
                         "damage_slash": 7,
                         "element_fire": 6
+                    }
+                },
+                {
+                    "id": "q10e",
+                    "text": "先约一周后复盘，确认规则有没有真正落地。",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_strike": 6,
+                        "element_ice": 5
                     }
                 }
             ]
@@ -518,11 +608,11 @@
         {
             "id": "q11",
             "type": "single",
-            "prompt": "出门前发现重要证件不见了，而出发时间已逼近。你会？",
+            "prompt": "出门前发现证件不见了，还要赶一场重要见面。你会怎么把节奏拉回来？",
             "options": [
                 {
                     "id": "q11a",
-                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "text": "先停下乱翻，把最后一次使用地点按时间倒推。",
                     "scores": {
                         "emotion_wrath": 4,
                         "damage_pierce": 3,
@@ -531,7 +621,7 @@
                 },
                 {
                     "id": "q11b",
-                    "text": "先把表面问题压住，情绪先放在心里",
+                    "text": "先联系见面对象说明可能迟到，争取必要缓冲。",
                     "scores": {
                         "emotion_lust": 6,
                         "damage_strike": 4,
@@ -540,7 +630,7 @@
                 },
                 {
                     "id": "q11c",
-                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "text": "先启用电子证件或备用方案，保证行程不断线。",
                     "scores": {
                         "emotion_sloth": 8,
                         "damage_slash": 6,
@@ -549,11 +639,20 @@
                 },
                 {
                     "id": "q11d",
-                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "text": "先请家人或室友按分工帮忙找，提高搜索效率。",
                     "scores": {
                         "emotion_greed": 10,
                         "damage_pierce": 7,
                         "element_thunder": 6
+                    }
+                },
+                {
+                    "id": "q11e",
+                    "text": "先接受这次意外，避免自责把心态越搅越乱。",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_slash": 6,
+                        "element_fire": 5
                     }
                 }
             ]
@@ -561,11 +660,11 @@
         {
             "id": "q12",
             "type": "single",
-            "prompt": "合作方突然改需求并要求“今天就确认”，你会？",
+            "prompt": "家里临时让你照看孩子半天，原本安排被打乱。你会怎么重新安排这一天？",
             "options": [
                 {
                     "id": "q12a",
-                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "text": "先和家人确认孩子作息与禁忌，减少临场慌乱。",
                     "scores": {
                         "emotion_lust": 4,
                         "damage_strike": 3,
@@ -574,7 +673,7 @@
                 },
                 {
                     "id": "q12b",
-                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "text": "先把我原计划里可延期与不可延期的事项分开。",
                     "scores": {
                         "emotion_sloth": 6,
                         "damage_slash": 4,
@@ -583,7 +682,7 @@
                 },
                 {
                     "id": "q12c",
-                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "text": "先给孩子安排可互动活动，降低双方消耗。",
                     "scores": {
                         "emotion_greed": 8,
                         "damage_pierce": 6,
@@ -592,11 +691,20 @@
                 },
                 {
                     "id": "q12d",
-                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "text": "先说明我能帮到几点，避免默认无限加码。",
                     "scores": {
                         "emotion_melancholy": 10,
                         "damage_strike": 7,
                         "element_wind": 6
+                    }
+                },
+                {
+                    "id": "q12e",
+                    "text": "先预留自己的恢复时间，带完孩子后及时充电。",
+                    "scores": {
+                        "emotion_greed": 8,
+                        "damage_pierce": 6,
+                        "element_thunder": 5
                     }
                 }
             ]
@@ -604,11 +712,11 @@
         {
             "id": "q13",
             "type": "single",
-            "prompt": "你辛苦完成的成果被别人先发到群里，你会？",
+            "prompt": "你在社群里做的整理被别人转发时不署名，你心里很别扭。你会怎么处理？",
             "options": [
                 {
                     "id": "q13a",
-                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "text": "先私信对方礼貌提醒补署名，给他修正机会。",
                     "scores": {
                         "emotion_sloth": 4,
                         "damage_slash": 3,
@@ -617,7 +725,7 @@
                 },
                 {
                     "id": "q13b",
-                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "text": "先在原帖评论补充来源，让信息链条公开可见。",
                     "scores": {
                         "emotion_greed": 6,
                         "damage_pierce": 4,
@@ -626,7 +734,7 @@
                 },
                 {
                     "id": "q13c",
-                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "text": "先把创作记录留档，防止后续扯皮无证据。",
                     "scores": {
                         "emotion_melancholy": 8,
                         "damage_strike": 6,
@@ -635,11 +743,20 @@
                 },
                 {
                     "id": "q13d",
-                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "text": "先判断这是疏忽还是惯犯，再决定是否公开回应。",
                     "scores": {
                         "emotion_gluttony": 10,
                         "damage_slash": 7,
                         "element_ice": 6
+                    }
+                },
+                {
+                    "id": "q13e",
+                    "text": "先优化以后发布格式，降低被抹名的概率。",
+                    "scores": {
+                        "emotion_melancholy": 8,
+                        "damage_strike": 6,
+                        "element_wind": 5
                     }
                 }
             ]
@@ -647,11 +764,11 @@
         {
             "id": "q14",
             "type": "single",
-            "prompt": "原本答应帮你的人临阵失联，你会？",
+            "prompt": "本来约好帮你搬家的朋友临时失联。你会怎么救场并处理后续关系？",
             "options": [
                 {
                     "id": "q14a",
-                    "text": "先找可信的人或资料校准，再做决定",
+                    "text": "先确认还能调动的人手和车辆，不把希望压在失联者身上。",
                     "scores": {
                         "emotion_greed": 4,
                         "damage_pierce": 3,
@@ -660,7 +777,7 @@
                 },
                 {
                     "id": "q14b",
-                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "text": "先把搬家任务拆成轻重缓急，优先保住今天必须完成的部分。",
                     "scores": {
                         "emotion_melancholy": 6,
                         "damage_strike": 4,
@@ -669,7 +786,7 @@
                 },
                 {
                     "id": "q14c",
-                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "text": "先直接叫搬家公司补位，别把面子放在效率前面。",
                     "scores": {
                         "emotion_gluttony": 8,
                         "damage_slash": 6,
@@ -678,11 +795,20 @@
                 },
                 {
                     "id": "q14d",
-                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "text": "先把情绪放到事后处理，现场只专注把事情做完。",
                     "scores": {
                         "emotion_arrogance": 10,
                         "damage_pierce": 7,
                         "element_fire": 6
+                    }
+                },
+                {
+                    "id": "q14e",
+                    "text": "先在事后讲清失约感受，再决定关系是否要降级。",
+                    "scores": {
+                        "emotion_gluttony": 8,
+                        "damage_slash": 6,
+                        "element_ice": 5
                     }
                 }
             ]
@@ -690,11 +816,11 @@
         {
             "id": "q15",
             "type": "single",
-            "prompt": "旅行中导航失灵，还下起大雨，同行人都在等你决定。你会？",
+            "prompt": "旅行途中导航失灵又下大雨，同行人都看着你等决策。你会怎么判断？",
             "options": [
                 {
                     "id": "q15a",
-                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "text": "先确认每个人都安全、没被淋坏，再谈路线最优。",
                     "scores": {
                         "emotion_melancholy": 4,
                         "damage_strike": 3,
@@ -703,7 +829,7 @@
                 },
                 {
                     "id": "q15b",
-                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "text": "先找最近可避雨地点，让队伍先稳定下来。",
                     "scores": {
                         "emotion_gluttony": 6,
                         "damage_slash": 4,
@@ -712,7 +838,7 @@
                 },
                 {
                     "id": "q15c",
-                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "text": "先开双导航交叉验证，不盲信单一路径。",
                     "scores": {
                         "emotion_arrogance": 8,
                         "damage_pierce": 6,
@@ -721,11 +847,20 @@
                 },
                 {
                     "id": "q15d",
-                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "text": "先征求同行意见，让决策不是我一个人硬扛。",
                     "scores": {
                         "emotion_envy": 10,
                         "damage_strike": 7,
                         "element_thunder": 6
+                    }
+                },
+                {
+                    "id": "q15e",
+                    "text": "先准备 Plan B，例如改目的地或直接打车。",
+                    "scores": {
+                        "emotion_arrogance": 8,
+                        "damage_pierce": 6,
+                        "element_fire": 5
                     }
                 }
             ]
@@ -733,11 +868,11 @@
         {
             "id": "q16",
             "type": "single",
-            "prompt": "项目复盘时你被连续追问细节，语气也不友好。你会？",
+            "prompt": "聊天群里有人用阴阳语气点评你，其他人都在围观。你会怎么接招？",
             "options": [
                 {
                     "id": "q16a",
-                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "text": "先点名具体句子“这句像在讽刺我”，不打模糊仗。",
                     "scores": {
                         "emotion_gluttony": 4,
                         "damage_slash": 3,
@@ -746,7 +881,7 @@
                 },
                 {
                     "id": "q16b",
-                    "text": "先把表面问题压住，情绪先放在心里",
+                    "text": "先把讨论拉回事实层面，拒绝被拖进人身评价。",
                     "scores": {
                         "emotion_arrogance": 6,
                         "damage_pierce": 4,
@@ -755,7 +890,7 @@
                 },
                 {
                     "id": "q16c",
-                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "text": "先私聊管理员协助控场，降低群体围观伤害。",
                     "scores": {
                         "emotion_envy": 8,
                         "damage_strike": 6,
@@ -764,11 +899,20 @@
                 },
                 {
                     "id": "q16d",
-                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "text": "先决定是否暂时静音群聊，保护自己的情绪带宽。",
                     "scores": {
                         "emotion_wrath": 10,
                         "damage_slash": 7,
                         "element_wind": 6
+                    }
+                },
+                {
+                    "id": "q16e",
+                    "text": "先给出我可接受的讨论规则，愿聊就按规则聊。",
+                    "scores": {
+                        "emotion_envy": 8,
+                        "damage_strike": 6,
+                        "element_thunder": 5
                     }
                 }
             ]
@@ -776,11 +920,11 @@
         {
             "id": "q17",
             "type": "single",
-            "prompt": "社交平台看到熟人持续晒成绩，而你最近不顺。你会？",
+            "prompt": "刷到同龄人不断晒高光时刻，而你正处在低潮期。你会怎么调节比较心态？",
             "options": [
                 {
                     "id": "q17a",
-                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "text": "先限制刷高光内容的时长，别让算法放大焦虑。",
                     "scores": {
                         "emotion_arrogance": 4,
                         "damage_pierce": 3,
@@ -789,7 +933,7 @@
                 },
                 {
                     "id": "q17b",
-                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "text": "先写下自己最近三件小进步，拉回真实参照系。",
                     "scores": {
                         "emotion_envy": 6,
                         "damage_strike": 4,
@@ -798,7 +942,7 @@
                 },
                 {
                     "id": "q17c",
-                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "text": "先找可信朋友聊近况，不在脑内独自内耗。",
                     "scores": {
                         "emotion_wrath": 8,
                         "damage_slash": 6,
@@ -807,11 +951,20 @@
                 },
                 {
                     "id": "q17d",
-                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "text": "先承认羡慕是正常情绪，再看我真正想追的目标。",
                     "scores": {
                         "emotion_lust": 10,
                         "damage_pierce": 7,
                         "element_ice": 6
+                    }
+                },
+                {
+                    "id": "q17e",
+                    "text": "先把下一步行动收敛成一件今天能做的小事。",
+                    "scores": {
+                        "emotion_wrath": 8,
+                        "damage_slash": 6,
+                        "element_wind": 5
                     }
                 }
             ]
@@ -819,11 +972,11 @@
         {
             "id": "q18",
             "type": "single",
-            "prompt": "你刚开始专注工作，手机连续弹出三条紧急提醒。你会？",
+            "prompt": "你在专注做事时被连续语音轰炸，对方还说“你怎么不秒回”。你会怎么处理？",
             "options": [
                 {
                     "id": "q18a",
-                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "text": "先发一句“我在忙，晚些统一回复”，把预期说清。",
                     "scores": {
                         "emotion_envy": 4,
                         "damage_strike": 3,
@@ -832,7 +985,7 @@
                 },
                 {
                     "id": "q18b",
-                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "text": "先听前两条抓重点，不被十几条语音拖垮。",
                     "scores": {
                         "emotion_wrath": 6,
                         "damage_slash": 4,
@@ -841,7 +994,7 @@
                 },
                 {
                     "id": "q18c",
-                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "text": "先请求改用文字沟通，请对方三句话说清诉求。",
                     "scores": {
                         "emotion_lust": 8,
                         "damage_pierce": 6,
@@ -850,11 +1003,20 @@
                 },
                 {
                     "id": "q18d",
-                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "text": "先拒绝“秒回”要求，明确我的在线边界。",
                     "scores": {
                         "emotion_sloth": 10,
                         "damage_strike": 7,
                         "element_fire": 6
+                    }
+                },
+                {
+                    "id": "q18e",
+                    "text": "先在固定空档集中处理消息，避免全天被打断。",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_pierce": 6,
+                        "element_ice": 5
                     }
                 }
             ]
@@ -862,11 +1024,11 @@
         {
             "id": "q19",
             "type": "single",
-            "prompt": "原定预算突然被砍半，但目标没有减少。你会？",
+            "prompt": "同学聚会被反复追问收入与感情进展，你不想回答得太细。你会怎么回应？",
             "options": [
                 {
                     "id": "q19a",
-                    "text": "先找可信的人或资料校准，再做决定",
+                    "text": "先用幽默回答一轮，给自己留出转场空间。",
                     "scores": {
                         "emotion_wrath": 4,
                         "damage_slash": 3,
@@ -875,7 +1037,7 @@
                 },
                 {
                     "id": "q19b",
-                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "text": "先把话题拉到通用层面，不给具体数字细节。",
                     "scores": {
                         "emotion_lust": 6,
                         "damage_pierce": 4,
@@ -884,7 +1046,7 @@
                 },
                 {
                     "id": "q19c",
-                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "text": "先对亲近同学单独说明，我不想公开聊私事。",
                     "scores": {
                         "emotion_sloth": 8,
                         "damage_strike": 6,
@@ -893,11 +1055,20 @@
                 },
                 {
                     "id": "q19d",
-                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "text": "先主动提问别人近况，把焦点从我身上移开。",
                     "scores": {
                         "emotion_greed": 10,
                         "damage_slash": 7,
                         "element_thunder": 6
+                    }
+                },
+                {
+                    "id": "q19e",
+                    "text": "先准备一句结束语，连续追问时直接收口。",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_strike": 6,
+                        "element_fire": 5
                     }
                 }
             ]
@@ -905,11 +1076,11 @@
         {
             "id": "q20",
             "type": "single",
-            "prompt": "你解释了三次的事情仍被误解，对方还在重复指责。你会？",
+            "prompt": "你和亲近的人进入冷战，对方只回“随便你”。你会怎么尝试破冰？",
             "options": [
                 {
                     "id": "q20a",
-                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "text": "先发一条不带指责的开场，表达我愿意谈。",
                     "scores": {
                         "emotion_lust": 4,
                         "damage_pierce": 3,
@@ -918,7 +1089,7 @@
                 },
                 {
                     "id": "q20b",
-                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "text": "先约定双方都不疲惫的时间再沟通。",
                     "scores": {
                         "emotion_sloth": 6,
                         "damage_strike": 4,
@@ -927,7 +1098,7 @@
                 },
                 {
                     "id": "q20c",
-                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "text": "先只谈这次冲突，不把旧账一起端上桌。",
                     "scores": {
                         "emotion_greed": 8,
                         "damage_slash": 6,
@@ -936,23 +1107,32 @@
                 },
                 {
                     "id": "q20d",
-                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "text": "先用“我感受到什么”来表达，而不是“你总是怎样”。",
                     "scores": {
                         "emotion_melancholy": 10,
                         "damage_pierce": 7,
                         "element_wind": 6
+                    }
+                },
+                {
+                    "id": "q20e",
+                    "text": "先给对方缓冲空间，但说明我希望本周内解决。",
+                    "scores": {
+                        "emotion_greed": 8,
+                        "damage_slash": 6,
+                        "element_thunder": 5
                     }
                 }
             ]
         },
         {
             "id": "q21",
-            "type": "single",
-            "prompt": "家人临时通知今晚必须参加聚会，你原本打算独处恢复。你会？",
+            "type": "multi",
+            "prompt": "你原本想今晚独处恢复精力，家人却临时要你参加聚会。以下哪些动作你会同时采用？",
             "options": [
                 {
                     "id": "q21a",
-                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "text": "先告诉家人我今晚体力值，并给出“到场多久”的具体边界。",
                     "scores": {
                         "emotion_sloth": 4,
                         "damage_strike": 3,
@@ -961,7 +1141,7 @@
                 },
                 {
                     "id": "q21b",
-                    "text": "先把表面问题压住，情绪先放在心里",
+                    "text": "先确认这次聚会有没有必须我出面的关键环节。",
                     "scores": {
                         "emotion_greed": 6,
                         "damage_slash": 4,
@@ -970,7 +1150,7 @@
                 },
                 {
                     "id": "q21c",
-                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "text": "先把独处时间压缩成可执行版本，比如回家后 30 分钟不被打扰。",
                     "scores": {
                         "emotion_melancholy": 8,
                         "damage_pierce": 6,
@@ -979,23 +1159,45 @@
                 },
                 {
                     "id": "q21d",
-                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "text": "先准备一套低能耗社交模式，避免全程硬撑。",
                     "scores": {
                         "emotion_gluttony": 10,
                         "damage_strike": 7,
                         "element_ice": 6
                     }
+                },
+                {
+                    "id": "q21e",
+                    "text": "先和家人约定下次提前沟通，减少类似临时拉扯。",
+                    "scores": {
+                        "emotion_melancholy": 8,
+                        "damage_pierce": 6,
+                        "element_wind": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_sloth": 4,
+                "damage_strike": 10,
+                "element_fire": 3,
+                "emotion_greed": 6,
+                "damage_slash": 4,
+                "element_thunder": 4,
+                "emotion_melancholy": 8,
+                "damage_pierce": 6,
+                "element_wind": 5,
+                "emotion_gluttony": 10,
+                "element_ice": 6
+            }
         },
         {
             "id": "q22",
-            "type": "single",
-            "prompt": "你准备的活动临时被改到陌生场地，设备也不齐。你会？",
+            "type": "multi",
+            "prompt": "你约的生日局突然改到陌生场地，朋友都在问怎么走。以下哪些动作你会立刻并行推进？",
             "options": [
                 {
                     "id": "q22a",
-                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "text": "先把新地址、交通方式和集合时间一次性发到群公告。",
                     "scores": {
                         "emotion_greed": 4,
                         "damage_slash": 3,
@@ -1004,7 +1206,7 @@
                 },
                 {
                     "id": "q22b",
-                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "text": "先分配两位朋友做“路上答疑”和“现场签到”，别全压在我身上。",
                     "scores": {
                         "emotion_melancholy": 6,
                         "damage_pierce": 4,
@@ -1013,7 +1215,7 @@
                 },
                 {
                     "id": "q22c",
-                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "text": "先准备简化版流程，确保没设备也能顺利进行。",
                     "scores": {
                         "emotion_gluttony": 8,
                         "damage_strike": 6,
@@ -1022,23 +1224,45 @@
                 },
                 {
                     "id": "q22d",
-                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "text": "先逐个确认关键朋友是否能到，避免现场人数失真。",
                     "scores": {
                         "emotion_arrogance": 10,
                         "damage_slash": 7,
                         "element_fire": 6
                     }
+                },
+                {
+                    "id": "q22e",
+                    "text": "先预留 15 分钟机动时间，给迟到和迷路留缓冲。",
+                    "scores": {
+                        "emotion_gluttony": 8,
+                        "damage_strike": 6,
+                        "element_ice": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_greed": 4,
+                "damage_slash": 10,
+                "element_thunder": 3,
+                "emotion_melancholy": 6,
+                "damage_pierce": 4,
+                "element_wind": 4,
+                "emotion_gluttony": 8,
+                "damage_strike": 6,
+                "element_ice": 5,
+                "emotion_arrogance": 10,
+                "element_fire": 6
+            }
         },
         {
             "id": "q23",
-            "type": "single",
-            "prompt": "部门群里出现含糊的负面评价，很多人默认在说你。你会？",
+            "type": "multi",
+            "prompt": "社交平台出现一条疑似影射你的动态。以下哪些处理方式你会同时使用？",
             "options": [
                 {
                     "id": "q23a",
-                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "text": "先截图留证并记录发布时间，防止对方后删文改口。",
                     "scores": {
                         "emotion_melancholy": 4,
                         "damage_pierce": 3,
@@ -1047,7 +1271,7 @@
                 },
                 {
                     "id": "q23b",
-                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "text": "先克制公开互撕冲动，优先私聊核实是否在指向我。",
                     "scores": {
                         "emotion_gluttony": 6,
                         "damage_strike": 4,
@@ -1056,7 +1280,7 @@
                 },
                 {
                     "id": "q23c",
-                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "text": "先和可信朋友对齐事实，避免只听到单一版本。",
                     "scores": {
                         "emotion_arrogance": 8,
                         "damage_slash": 6,
@@ -1065,23 +1289,45 @@
                 },
                 {
                     "id": "q23d",
-                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "text": "先决定回应目标是澄清还是止损，不被情绪牵着跑。",
                     "scores": {
                         "emotion_envy": 10,
                         "damage_pierce": 7,
                         "element_thunder": 6
                     }
+                },
+                {
+                    "id": "q23e",
+                    "text": "先调整评论可见范围，减少二次扩散。",
+                    "scores": {
+                        "emotion_arrogance": 8,
+                        "damage_slash": 6,
+                        "element_fire": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_melancholy": 4,
+                "damage_pierce": 10,
+                "element_wind": 3,
+                "emotion_gluttony": 6,
+                "damage_strike": 4,
+                "element_ice": 4,
+                "emotion_arrogance": 8,
+                "damage_slash": 6,
+                "element_fire": 5,
+                "emotion_envy": 10,
+                "element_thunder": 6
+            }
         },
         {
             "id": "q24",
-            "type": "single",
-            "prompt": "你排好的一整天计划被突发电话和消息不断切碎。你会？",
+            "type": "multi",
+            "prompt": "一天计划被电话和消息打碎。以下哪些方法你会一起用来拉回节奏？",
             "options": [
                 {
                     "id": "q24a",
-                    "text": "先找可信的人或资料校准，再做决定",
+                    "text": "先把通知收敛到紧急联系人，止住信息洪水。",
                     "scores": {
                         "emotion_gluttony": 4,
                         "damage_strike": 3,
@@ -1090,7 +1336,7 @@
                 },
                 {
                     "id": "q24b",
-                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "text": "先列出今天必须完成的三件事，其余顺延。",
                     "scores": {
                         "emotion_arrogance": 6,
                         "damage_slash": 4,
@@ -1099,7 +1345,7 @@
                 },
                 {
                     "id": "q24c",
-                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "text": "先给常联系的人发统一说明，降低来回解释成本。",
                     "scores": {
                         "emotion_envy": 8,
                         "damage_pierce": 6,
@@ -1108,23 +1354,45 @@
                 },
                 {
                     "id": "q24d",
-                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "text": "先按 90 分钟一个节拍重启日程，不追求满血复原。",
                     "scores": {
                         "emotion_wrath": 10,
                         "damage_strike": 7,
                         "element_wind": 6
                     }
+                },
+                {
+                    "id": "q24e",
+                    "text": "先在晚上留 20 分钟复盘，避免同样失控重复发生。",
+                    "scores": {
+                        "emotion_envy": 8,
+                        "damage_pierce": 6,
+                        "element_thunder": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_gluttony": 4,
+                "damage_strike": 10,
+                "element_ice": 3,
+                "emotion_arrogance": 6,
+                "damage_slash": 4,
+                "element_fire": 4,
+                "emotion_envy": 8,
+                "damage_pierce": 6,
+                "element_thunder": 5,
+                "emotion_wrath": 10,
+                "element_wind": 6
+            }
         },
         {
             "id": "q25",
-            "type": "single",
-            "prompt": "一位关系一般的人突然向你倾诉很多私人问题。你会？",
+            "type": "multi",
+            "prompt": "关系一般的人突然向你大量倾诉私人烦恼。以下哪些边界动作你会同时做？",
             "options": [
                 {
                     "id": "q25a",
-                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "text": "先回应一句共情，但不立刻接下“情绪救火员”角色。",
                     "scores": {
                         "emotion_arrogance": 4,
                         "damage_slash": 3,
@@ -1133,7 +1401,7 @@
                 },
                 {
                     "id": "q25b",
-                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "text": "先询问对方是想被倾听，还是希望我给建议。",
                     "scores": {
                         "emotion_envy": 6,
                         "damage_pierce": 4,
@@ -1142,7 +1410,7 @@
                 },
                 {
                     "id": "q25c",
-                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "text": "先说明我能聊的时长，比如“我现在只有 15 分钟”。",
                     "scores": {
                         "emotion_wrath": 8,
                         "damage_strike": 6,
@@ -1151,23 +1419,45 @@
                 },
                 {
                     "id": "q25d",
-                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "text": "先把超出能力的议题引导到专业渠道，不把自己拖垮。",
                     "scores": {
                         "emotion_lust": 10,
                         "damage_slash": 7,
                         "element_ice": 6
                     }
+                },
+                {
+                    "id": "q25e",
+                    "text": "先在聊天结束后做情绪切换，别把对方压力带进生活。",
+                    "scores": {
+                        "emotion_wrath": 8,
+                        "damage_strike": 6,
+                        "element_wind": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_arrogance": 4,
+                "damage_slash": 10,
+                "element_fire": 3,
+                "emotion_envy": 6,
+                "damage_pierce": 4,
+                "element_thunder": 4,
+                "emotion_wrath": 8,
+                "damage_strike": 6,
+                "element_wind": 5,
+                "emotion_lust": 10,
+                "element_ice": 6
+            }
         },
         {
             "id": "q26",
-            "type": "single",
-            "prompt": "你花钱买的课程效果一般，但退款窗口只剩今天。你会？",
+            "type": "multi",
+            "prompt": "你买的课程效果不如预期，退款窗口快关闭。以下哪些步骤你会并行处理？",
             "options": [
                 {
                     "id": "q26a",
-                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "text": "先读清退款条款和截止时间，避免凭感觉操作。",
                     "scores": {
                         "emotion_envy": 4,
                         "damage_pierce": 3,
@@ -1176,7 +1466,7 @@
                 },
                 {
                     "id": "q26b",
-                    "text": "先把表面问题压住，情绪先放在心里",
+                    "text": "先整理聊天记录与付款凭证，把材料一次性备齐。",
                     "scores": {
                         "emotion_wrath": 6,
                         "damage_strike": 4,
@@ -1185,7 +1475,7 @@
                 },
                 {
                     "id": "q26c",
-                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "text": "先给客服发结构化诉求，减少反复拉扯。",
                     "scores": {
                         "emotion_lust": 8,
                         "damage_slash": 6,
@@ -1194,23 +1484,45 @@
                 },
                 {
                     "id": "q26d",
-                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "text": "先同步身边一起购买的人，必要时联合反馈。",
                     "scores": {
                         "emotion_sloth": 10,
                         "damage_pierce": 7,
                         "element_fire": 6
                     }
+                },
+                {
+                    "id": "q26e",
+                    "text": "先设一个最终止损线，到了就不再继续消耗。",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_slash": 6,
+                        "element_ice": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_envy": 4,
+                "damage_pierce": 10,
+                "element_thunder": 3,
+                "emotion_wrath": 6,
+                "damage_strike": 4,
+                "element_wind": 4,
+                "emotion_lust": 8,
+                "damage_slash": 6,
+                "element_ice": 5,
+                "emotion_sloth": 10,
+                "element_fire": 6
+            }
         },
         {
             "id": "q27",
-            "type": "single",
-            "prompt": "通勤路上发生小擦碰，对方语气强硬且不讲理。你会？",
+            "type": "multi",
+            "prompt": "通勤路上发生小擦碰，对方态度很冲。以下哪些应对你会同步进行？",
             "options": [
                 {
                     "id": "q27a",
-                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "text": "先确认有没有人受伤，必要时直接报警或叫急救。",
                     "scores": {
                         "emotion_wrath": 4,
                         "damage_strike": 3,
@@ -1219,7 +1531,7 @@
                 },
                 {
                     "id": "q27b",
-                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "text": "先拍照取证并记下时间地点，不在现场争输赢。",
                     "scores": {
                         "emotion_lust": 6,
                         "damage_slash": 4,
@@ -1228,7 +1540,7 @@
                 },
                 {
                     "id": "q27c",
-                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "text": "先和对方保持安全距离，沟通只围绕事实。",
                     "scores": {
                         "emotion_sloth": 8,
                         "damage_pierce": 6,
@@ -1237,23 +1549,45 @@
                 },
                 {
                     "id": "q27d",
-                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "text": "先联系保险或交警，让流程替代情绪对抗。",
                     "scores": {
                         "emotion_greed": 10,
                         "damage_strike": 7,
                         "element_thunder": 6
                     }
+                },
+                {
+                    "id": "q27e",
+                    "text": "先屏蔽围观压力，避免被旁人节奏带偏。",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_pierce": 6,
+                        "element_fire": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_wrath": 4,
+                "damage_strike": 10,
+                "element_wind": 3,
+                "emotion_lust": 6,
+                "damage_slash": 4,
+                "element_ice": 4,
+                "emotion_sloth": 8,
+                "damage_pierce": 6,
+                "element_fire": 5,
+                "emotion_greed": 10,
+                "element_thunder": 6
+            }
         },
         {
             "id": "q28",
-            "type": "single",
-            "prompt": "你在公开场合被点名临时发言，毫无准备。你会？",
+            "type": "multi",
+            "prompt": "公开场合被临时点名发言，你完全没准备。以下哪些动作你会一起采用？",
             "options": [
                 {
                     "id": "q28a",
-                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "text": "先用一句话争取 30 秒整理思路，再开口。",
                     "scores": {
                         "emotion_lust": 4,
                         "damage_slash": 3,
@@ -1262,7 +1596,7 @@
                 },
                 {
                     "id": "q28b",
-                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "text": "先讲结论和立场，细节留到后续补充。",
                     "scores": {
                         "emotion_sloth": 6,
                         "damage_pierce": 4,
@@ -1271,7 +1605,7 @@
                 },
                 {
                     "id": "q28c",
-                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "text": "先借一个真实小例子，把场子快速稳住。",
                     "scores": {
                         "emotion_greed": 8,
                         "damage_strike": 6,
@@ -1280,23 +1614,45 @@
                 },
                 {
                     "id": "q28d",
-                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "text": "先把发言控制在一分钟内，防止越说越乱。",
                     "scores": {
                         "emotion_melancholy": 10,
                         "damage_slash": 7,
                         "element_wind": 6
                     }
+                },
+                {
+                    "id": "q28e",
+                    "text": "先在结束后补发文字版，修正临场遗漏。",
+                    "scores": {
+                        "emotion_greed": 8,
+                        "damage_strike": 6,
+                        "element_thunder": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_lust": 4,
+                "damage_slash": 10,
+                "element_ice": 3,
+                "emotion_sloth": 6,
+                "damage_pierce": 4,
+                "element_fire": 4,
+                "emotion_greed": 8,
+                "damage_strike": 6,
+                "element_thunder": 5,
+                "emotion_melancholy": 10,
+                "element_wind": 6
+            }
         },
         {
             "id": "q29",
-            "type": "single",
-            "prompt": "重要约会前 30 分钟，你收到一条让人不安的消息。你会？",
+            "type": "multi",
+            "prompt": "重要见面前 30 分钟收到让你不安的消息。以下哪些方式你会同时用来稳住自己？",
             "options": [
                 {
                     "id": "q29a",
-                    "text": "先找可信的人或资料校准，再做决定",
+                    "text": "先判断消息真伪和优先级，不让猜测直接接管情绪。",
                     "scores": {
                         "emotion_sloth": 4,
                         "damage_pierce": 3,
@@ -1305,7 +1661,7 @@
                 },
                 {
                     "id": "q29b",
-                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "text": "先把最坏情况写成一句可执行预案，降低失控感。",
                     "scores": {
                         "emotion_greed": 6,
                         "damage_strike": 4,
@@ -1314,7 +1670,7 @@
                 },
                 {
                     "id": "q29c",
-                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "text": "先做两分钟呼吸或走动，把身体紧绷降下来。",
                     "scores": {
                         "emotion_melancholy": 8,
                         "damage_slash": 6,
@@ -1323,23 +1679,45 @@
                 },
                 {
                     "id": "q29d",
-                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "text": "先决定这条消息是否需要立刻回复，避免被牵走。",
                     "scores": {
                         "emotion_gluttony": 10,
                         "damage_pierce": 7,
                         "element_ice": 6
                     }
+                },
+                {
+                    "id": "q29e",
+                    "text": "先把注意力拉回眼前会面目标，完成当下最重要的事。",
+                    "scores": {
+                        "emotion_melancholy": 8,
+                        "damage_slash": 6,
+                        "element_wind": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_sloth": 4,
+                "damage_pierce": 10,
+                "element_fire": 3,
+                "emotion_greed": 6,
+                "damage_strike": 4,
+                "element_thunder": 4,
+                "emotion_melancholy": 8,
+                "damage_slash": 6,
+                "element_wind": 5,
+                "emotion_gluttony": 10,
+                "element_ice": 6
+            }
         },
         {
             "id": "q30",
-            "type": "single",
-            "prompt": "团队里两人激烈争执，都希望你立刻站队。你会？",
+            "type": "multi",
+            "prompt": "两位朋友激烈争执并要求你站队。以下哪些介入动作你会同时做？",
             "options": [
                 {
                     "id": "q30a",
-                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "text": "先表态我愿意帮忙沟通，但不接受被逼站队。",
                     "scores": {
                         "emotion_greed": 4,
                         "damage_strike": 3,
@@ -1348,7 +1726,7 @@
                 },
                 {
                     "id": "q30b",
-                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "text": "先分别听双方版本，避免只凭第一印象判断。",
                     "scores": {
                         "emotion_melancholy": 6,
                         "damage_slash": 4,
@@ -1357,7 +1735,7 @@
                 },
                 {
                     "id": "q30c",
-                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "text": "先把争议点写成可讨论问题，而不是贴人设标签。",
                     "scores": {
                         "emotion_gluttony": 8,
                         "damage_pierce": 6,
@@ -1366,23 +1744,45 @@
                 },
                 {
                     "id": "q30d",
-                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "text": "先建议暂停情绪化聊天，约一个冷静后再谈的时间。",
                     "scores": {
                         "emotion_arrogance": 10,
                         "damage_strike": 7,
                         "element_fire": 6
                     }
+                },
+                {
+                    "id": "q30e",
+                    "text": "先给自己退出权，超出能力范围就不继续仲裁。",
+                    "scores": {
+                        "emotion_gluttony": 8,
+                        "damage_pierce": 6,
+                        "element_ice": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_greed": 4,
+                "damage_strike": 10,
+                "element_thunder": 3,
+                "emotion_melancholy": 6,
+                "damage_slash": 4,
+                "element_wind": 4,
+                "emotion_gluttony": 8,
+                "damage_pierce": 6,
+                "element_ice": 5,
+                "emotion_arrogance": 10,
+                "element_fire": 6
+            }
         },
         {
             "id": "q31",
-            "type": "single",
-            "prompt": "你连续几天睡眠不足，今天又被临时安排额外任务。你会？",
+            "type": "multi",
+            "prompt": "连续几晚没睡好，今天家里又临时来客需要你招呼。以下哪些精力管理方式你会并行采用？",
             "options": [
                 {
                     "id": "q31a",
-                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "text": "先把待客标准降到“够用就好”，不为面子透支。",
                     "scores": {
                         "emotion_melancholy": 4,
                         "damage_slash": 3,
@@ -1391,7 +1791,7 @@
                 },
                 {
                     "id": "q31b",
-                    "text": "先把表面问题压住，情绪先放在心里",
+                    "text": "先请家人分担具体事务，避免所有细节都压在我身上。",
                     "scores": {
                         "emotion_gluttony": 6,
                         "damage_pierce": 4,
@@ -1400,7 +1800,7 @@
                 },
                 {
                     "id": "q31c",
-                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "text": "先安排一段短时补觉或闭眼休息，保住基础状态。",
                     "scores": {
                         "emotion_arrogance": 8,
                         "damage_strike": 6,
@@ -1409,23 +1809,45 @@
                 },
                 {
                     "id": "q31d",
-                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "text": "先减少临时加码活动，优先完成最关键招待。",
                     "scores": {
                         "emotion_envy": 10,
                         "damage_slash": 7,
                         "element_thunder": 6
                     }
+                },
+                {
+                    "id": "q31e",
+                    "text": "先在客人离开后留恢复时段，防止第二天崩盘。",
+                    "scores": {
+                        "emotion_arrogance": 8,
+                        "damage_strike": 6,
+                        "element_fire": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_melancholy": 4,
+                "damage_slash": 10,
+                "element_wind": 3,
+                "emotion_gluttony": 6,
+                "damage_pierce": 4,
+                "element_ice": 4,
+                "emotion_arrogance": 8,
+                "damage_strike": 6,
+                "element_fire": 5,
+                "emotion_envy": 10,
+                "element_thunder": 6
+            }
         },
         {
             "id": "q32",
-            "type": "single",
-            "prompt": "你提交的建议被“已读不回”，但别人类似建议被快速采纳。你会？",
+            "type": "multi",
+            "prompt": "你在朋友圈提的点子总被忽略，换个人说却立刻被采纳。以下哪些回应你会一起做？",
             "options": [
                 {
                     "id": "q32a",
-                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "text": "先记录我提议的时间和内容，避免被说“你没讲过”。",
                     "scores": {
                         "emotion_gluttony": 4,
                         "damage_pierce": 3,
@@ -1434,7 +1856,7 @@
                 },
                 {
                     "id": "q32b",
-                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "text": "先换一种表达方式，把观点变成可执行步骤。",
                     "scores": {
                         "emotion_arrogance": 6,
                         "damage_strike": 4,
@@ -1443,7 +1865,7 @@
                 },
                 {
                     "id": "q32c",
-                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "text": "先在合适场合重复一次，不因一次被忽略就沉默。",
                     "scores": {
                         "emotion_envy": 8,
                         "damage_slash": 6,
@@ -1452,23 +1874,45 @@
                 },
                 {
                     "id": "q32d",
-                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "text": "先找一个愿意支持的同伴背书，提高被听见概率。",
                     "scores": {
                         "emotion_wrath": 10,
                         "damage_pierce": 7,
                         "element_wind": 6
                     }
+                },
+                {
+                    "id": "q32e",
+                    "text": "先把“被忽视”与“被否决”区分开，减少自我否定。",
+                    "scores": {
+                        "emotion_envy": 8,
+                        "damage_slash": 6,
+                        "element_thunder": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_gluttony": 4,
+                "damage_pierce": 10,
+                "element_ice": 3,
+                "emotion_arrogance": 6,
+                "damage_strike": 4,
+                "element_fire": 4,
+                "emotion_envy": 8,
+                "damage_slash": 6,
+                "element_thunder": 5,
+                "emotion_wrath": 10,
+                "element_wind": 6
+            }
         },
         {
             "id": "q33",
-            "type": "single",
-            "prompt": "刚准备结束一天工作，系统突然提示“数据异常需处理”。你会？",
+            "type": "multi",
+            "prompt": "临出门前，你负责组织的周末聚会报名链接突然失效。以下哪些排障动作你会同步推进？",
             "options": [
                 {
                     "id": "q33a",
-                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "text": "先在群里立刻发备用报名方式，优先保住参与人数。",
                     "scores": {
                         "emotion_arrogance": 4,
                         "damage_strike": 3,
@@ -1477,7 +1921,7 @@
                 },
                 {
                     "id": "q33b",
-                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "text": "先检查是平台故障还是链接配置错误，避免盲修。",
                     "scores": {
                         "emotion_envy": 6,
                         "damage_slash": 4,
@@ -1486,7 +1930,7 @@
                 },
                 {
                     "id": "q33c",
-                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "text": "先请一位朋友帮忙人工登记，做双线兜底。",
                     "scores": {
                         "emotion_wrath": 8,
                         "damage_pierce": 6,
@@ -1495,23 +1939,45 @@
                 },
                 {
                     "id": "q33d",
-                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "text": "先按时间节点更新进展，让大家知道问题在推进。",
                     "scores": {
                         "emotion_lust": 10,
                         "damage_strike": 7,
                         "element_ice": 6
                     }
+                },
+                {
+                    "id": "q33e",
+                    "text": "先把处理步骤沉淀成清单，给下次活动复用。",
+                    "scores": {
+                        "emotion_wrath": 8,
+                        "damage_pierce": 6,
+                        "element_wind": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_arrogance": 4,
+                "damage_strike": 10,
+                "element_fire": 3,
+                "emotion_envy": 6,
+                "damage_slash": 4,
+                "element_thunder": 4,
+                "emotion_wrath": 8,
+                "damage_pierce": 6,
+                "element_wind": 5,
+                "emotion_lust": 10,
+                "element_ice": 6
+            }
         },
         {
             "id": "q34",
-            "type": "single",
-            "prompt": "你信任的人说了句“你太敏感了”，你会？",
+            "type": "multi",
+            "prompt": "你信任的人对你说“你太敏感了”。以下哪些回应方式你会结合使用？",
             "options": [
                 {
                     "id": "q34a",
-                    "text": "先找可信的人或资料校准，再做决定",
+                    "text": "先回应“这句话让我受伤”，把感受具体说出来。",
                     "scores": {
                         "emotion_envy": 4,
                         "damage_slash": 3,
@@ -1520,7 +1986,7 @@
                 },
                 {
                     "id": "q34b",
-                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "text": "先请对方举例他看到的场景，避免空对空争执。",
                     "scores": {
                         "emotion_wrath": 6,
                         "damage_pierce": 4,
@@ -1529,7 +1995,7 @@
                 },
                 {
                     "id": "q34c",
-                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "text": "先区分语气问题和事实问题，再逐条聊清楚。",
                     "scores": {
                         "emotion_lust": 8,
                         "damage_strike": 6,
@@ -1538,23 +2004,45 @@
                 },
                 {
                     "id": "q34d",
-                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "text": "先在情绪上头时暂停对话，避免互相贴标签。",
                     "scores": {
                         "emotion_sloth": 10,
                         "damage_slash": 7,
                         "element_fire": 6
                     }
+                },
+                {
+                    "id": "q34e",
+                    "text": "先提出我期待的沟通方式，给关系一个改进方向。",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_strike": 6,
+                        "element_ice": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_envy": 4,
+                "damage_slash": 10,
+                "element_thunder": 3,
+                "emotion_wrath": 6,
+                "damage_pierce": 4,
+                "element_wind": 4,
+                "emotion_lust": 8,
+                "damage_strike": 6,
+                "element_ice": 5,
+                "emotion_sloth": 10,
+                "element_fire": 6
+            }
         },
         {
             "id": "q35",
-            "type": "single",
-            "prompt": "朋友临时爽约且没有提前说明，你会？",
+            "type": "multi",
+            "prompt": "朋友临时爽约且没有解释。以下哪些处理方式你会同时采用？",
             "options": [
                 {
                     "id": "q35a",
-                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "text": "先发一条关心加确认消息，先排除对方是否出意外。",
                     "scores": {
                         "emotion_wrath": 4,
                         "damage_pierce": 3,
@@ -1563,7 +2051,7 @@
                 },
                 {
                     "id": "q35b",
-                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "text": "先表达我被放鸽子的真实感受，不用阴阳怪气。",
                     "scores": {
                         "emotion_lust": 6,
                         "damage_strike": 4,
@@ -1572,7 +2060,7 @@
                 },
                 {
                     "id": "q35c",
-                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "text": "先询问是否继续约，并要求给出明确时间。",
                     "scores": {
                         "emotion_sloth": 8,
                         "damage_slash": 6,
@@ -1581,659 +2069,516 @@
                 },
                 {
                     "id": "q35d",
-                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "text": "先把这次失约当作关系信号，调整后续投入程度。",
                     "scores": {
                         "emotion_greed": 10,
                         "damage_pierce": 7,
                         "element_thunder": 6
                     }
+                },
+                {
+                    "id": "q35e",
+                    "text": "先把空出来的时间用起来，不让情绪拖垮整天。",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_slash": 6,
+                        "element_fire": 5
+                    }
                 }
-            ]
+            ],
+            "cap": {
+                "emotion_wrath": 4,
+                "damage_pierce": 10,
+                "element_wind": 3,
+                "emotion_lust": 6,
+                "damage_strike": 4,
+                "element_ice": 4,
+                "emotion_sloth": 8,
+                "damage_slash": 6,
+                "element_fire": 5,
+                "emotion_greed": 10,
+                "element_thunder": 6
+            }
         },
         {
             "id": "q36",
-            "type": "single",
-            "prompt": "你为某件事投入很多，却被一句“就这样吧”轻描淡写带过。你会？",
-            "options": [
-                {
-                    "id": "q36a",
-                    "text": "先稳住现场，确认事实和边界，再决定动作",
-                    "scores": {
-                        "emotion_lust": 4,
-                        "damage_strike": 3,
-                        "element_ice": 3
-                    }
+            "type": "scale",
+            "prompt": "你投入了很久心血的一件事，被别人一句轻飘飘的“就这样吧”带过。你会怎么面对？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_lust": 2
                 },
-                {
-                    "id": "q36b",
-                    "text": "先把表面问题压住，情绪先放在心里",
-                    "scores": {
-                        "emotion_sloth": 6,
-                        "damage_slash": 4,
-                        "element_fire": 4
-                    }
+                "3": {
+                    "emotion_lust": 4,
+                    "damage_strike": 3
                 },
-                {
-                    "id": "q36c",
-                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
-                    "scores": {
-                        "emotion_greed": 8,
-                        "damage_pierce": 6,
-                        "element_thunder": 5
-                    }
+                "4": {
+                    "emotion_lust": 7,
+                    "damage_strike": 5,
+                    "element_ice": 4
                 },
-                {
-                    "id": "q36d",
-                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
-                    "scores": {
-                        "emotion_melancholy": 10,
-                        "damage_strike": 7,
-                        "element_wind": 6
-                    }
+                "5": {
+                    "emotion_lust": 10,
+                    "damage_strike": 8,
+                    "element_ice": 7
                 }
-            ]
+            }
         },
         {
             "id": "q37",
-            "type": "single",
-            "prompt": "突然接到通知：你明天需要带新人完成关键流程。你会？",
-            "options": [
-                {
-                    "id": "q37a",
-                    "text": "先分步骤处理，尽量避免让事情继续扩散",
-                    "scores": {
-                        "emotion_sloth": 4,
-                        "damage_slash": 3,
-                        "element_fire": 3
-                    }
+            "type": "scale",
+            "prompt": "临时通知你，明天要带第一次来你城市的朋友跑完整天行程。你会先做什么准备？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_sloth": 2
                 },
-                {
-                    "id": "q37b",
-                    "text": "先做最小应对，回头再慢慢消化不舒服",
-                    "scores": {
-                        "emotion_greed": 6,
-                        "damage_pierce": 4,
-                        "element_thunder": 4
-                    }
+                "3": {
+                    "emotion_sloth": 4,
+                    "damage_slash": 3
                 },
-                {
-                    "id": "q37c",
-                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
-                    "scores": {
-                        "emotion_melancholy": 8,
-                        "damage_strike": 6,
-                        "element_wind": 5
-                    }
+                "4": {
+                    "emotion_sloth": 7,
+                    "damage_slash": 5,
+                    "element_fire": 4
                 },
-                {
-                    "id": "q37d",
-                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
-                    "scores": {
-                        "emotion_gluttony": 10,
-                        "damage_slash": 7,
-                        "element_ice": 6
-                    }
+                "5": {
+                    "emotion_sloth": 10,
+                    "damage_slash": 8,
+                    "element_fire": 7
                 }
-            ]
+            }
         },
         {
             "id": "q38",
-            "type": "single",
-            "prompt": "你在公共场合遇到曾让你很受伤的人，对方主动打招呼。你会？",
-            "options": [
-                {
-                    "id": "q38a",
-                    "text": "先问清楚再回应，尽量把判断放慢一点",
-                    "scores": {
-                        "emotion_greed": 4,
-                        "damage_pierce": 3,
-                        "element_thunder": 3
-                    }
+            "type": "scale",
+            "prompt": "公共场合遇到了曾经深深伤害过你的人，对方还主动和你打招呼。你会怎么做？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_greed": 2
                 },
-                {
-                    "id": "q38b",
-                    "text": "先顺着场面走，但心里会记下这次体验",
-                    "scores": {
-                        "emotion_melancholy": 6,
-                        "damage_strike": 4,
-                        "element_wind": 4
-                    }
+                "3": {
+                    "emotion_greed": 4,
+                    "damage_pierce": 3
                 },
-                {
-                    "id": "q38c",
-                    "text": "迅速接手并主导节奏，优先确保结果",
-                    "scores": {
-                        "emotion_gluttony": 8,
-                        "damage_slash": 6,
-                        "element_ice": 5
-                    }
+                "4": {
+                    "emotion_greed": 7,
+                    "damage_pierce": 5,
+                    "element_thunder": 4
                 },
-                {
-                    "id": "q38d",
-                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
-                    "scores": {
-                        "emotion_arrogance": 10,
-                        "damage_pierce": 7,
-                        "element_fire": 6
-                    }
+                "5": {
+                    "emotion_greed": 10,
+                    "damage_pierce": 8,
+                    "element_thunder": 7
                 }
-            ]
+            }
         },
         {
             "id": "q39",
-            "type": "single",
-            "prompt": "同一个小问题一周内反复出现，你已经解释过很多次。你会？",
-            "options": [
-                {
-                    "id": "q39a",
-                    "text": "先找可信的人或资料校准，再做决定",
-                    "scores": {
-                        "emotion_melancholy": 4,
-                        "damage_strike": 3,
-                        "element_wind": 3
-                    }
+            "type": "scale",
+            "prompt": "同一个小问题一周内反复出现，你也已经解释过很多次。你会怎么推进解决？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_melancholy": 2
                 },
-                {
-                    "id": "q39b",
-                    "text": "先把任务完成到及格线，再考虑内心感受",
-                    "scores": {
-                        "emotion_gluttony": 6,
-                        "damage_slash": 4,
-                        "element_ice": 4
-                    }
+                "3": {
+                    "emotion_melancholy": 4,
+                    "damage_strike": 3
                 },
-                {
-                    "id": "q39c",
-                    "text": "立即抬高处理力度，避免局势继续失控",
-                    "scores": {
-                        "emotion_arrogance": 8,
-                        "damage_pierce": 6,
-                        "element_fire": 5
-                    }
+                "4": {
+                    "emotion_melancholy": 7,
+                    "damage_strike": 5,
+                    "element_wind": 4
                 },
-                {
-                    "id": "q39d",
-                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
-                    "scores": {
-                        "emotion_envy": 10,
-                        "damage_strike": 7,
-                        "element_thunder": 6
-                    }
+                "5": {
+                    "emotion_melancholy": 10,
+                    "damage_strike": 8,
+                    "element_wind": 7
                 }
-            ]
+            }
         },
         {
             "id": "q40",
-            "type": "single",
-            "prompt": "你难得放松时，工作群突然连续@你需要即时反馈。你会？",
-            "options": [
-                {
-                    "id": "q40a",
-                    "text": "先把节奏降下来，给自己一点观察窗口",
-                    "scores": {
-                        "emotion_gluttony": 4,
-                        "damage_slash": 3,
-                        "element_ice": 3
-                    }
+            "type": "scale",
+            "prompt": "难得的休息时间，家族群突然连续 @ 你处理琐事。你会怎么回复？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_gluttony": 2
                 },
-                {
-                    "id": "q40b",
-                    "text": "先维持体面和秩序，之后再处理情绪残留",
-                    "scores": {
-                        "emotion_arrogance": 6,
-                        "damage_pierce": 4,
-                        "element_fire": 4
-                    }
+                "3": {
+                    "emotion_gluttony": 4,
+                    "damage_slash": 3
                 },
-                {
-                    "id": "q40c",
-                    "text": "马上表态并推动行动，不想把主动权交出去",
-                    "scores": {
-                        "emotion_envy": 8,
-                        "damage_strike": 6,
-                        "element_thunder": 5
-                    }
+                "4": {
+                    "emotion_gluttony": 7,
+                    "damage_slash": 5,
+                    "element_ice": 4
                 },
-                {
-                    "id": "q40d",
-                    "text": "先抽离现场，靠即时满足或回避来止损",
-                    "scores": {
-                        "emotion_wrath": 10,
-                        "damage_slash": 7,
-                        "element_wind": 6
-                    }
+                "5": {
+                    "emotion_gluttony": 10,
+                    "damage_slash": 8,
+                    "element_ice": 7
                 }
-            ]
+            }
         },
         {
             "id": "q41",
-            "type": "single",
-            "prompt": "你被安排和不熟悉的人共同完成高压任务。你会？",
-            "options": [
-                {
-                    "id": "q41a",
-                    "text": "先稳住现场，确认事实和边界，再决定动作",
-                    "scores": {
-                        "emotion_arrogance": 4,
-                        "damage_pierce": 3,
-                        "element_fire": 3
-                    }
+            "type": "scale",
+            "prompt": "你被安排和完全不熟悉的人一起处理一件高压家事。你会怎么建立配合？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_arrogance": 2
                 },
-                {
-                    "id": "q41b",
-                    "text": "先把表面问题压住，情绪先放在心里",
-                    "scores": {
-                        "emotion_envy": 6,
-                        "damage_strike": 4,
-                        "element_thunder": 4
-                    }
+                "3": {
+                    "emotion_arrogance": 4,
+                    "damage_pierce": 3
                 },
-                {
-                    "id": "q41c",
-                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
-                    "scores": {
-                        "emotion_wrath": 8,
-                        "damage_slash": 6,
-                        "element_wind": 5
-                    }
+                "4": {
+                    "emotion_arrogance": 7,
+                    "damage_pierce": 5,
+                    "element_fire": 4
                 },
-                {
-                    "id": "q41d",
-                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
-                    "scores": {
-                        "emotion_lust": 10,
-                        "damage_pierce": 7,
-                        "element_ice": 6
-                    }
+                "5": {
+                    "emotion_arrogance": 10,
+                    "damage_pierce": 8,
+                    "element_fire": 7
                 }
-            ]
+            }
         },
         {
             "id": "q42",
-            "type": "single",
-            "prompt": "你在家中休息时，亲友突然把难题推给你决定。你会？",
-            "options": [
-                {
-                    "id": "q42a",
-                    "text": "先分步骤处理，尽量避免让事情继续扩散",
-                    "scores": {
-                        "emotion_envy": 4,
-                        "damage_strike": 3,
-                        "element_thunder": 3
-                    }
+            "type": "scale",
+            "prompt": "在家休息时，亲友突然把一件棘手的难题交给你，让你来做决定。你会怎么接下这件事？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_envy": 2
                 },
-                {
-                    "id": "q42b",
-                    "text": "先做最小应对，回头再慢慢消化不舒服",
-                    "scores": {
-                        "emotion_wrath": 6,
-                        "damage_slash": 4,
-                        "element_wind": 4
-                    }
+                "3": {
+                    "emotion_envy": 4,
+                    "damage_strike": 3
                 },
-                {
-                    "id": "q42c",
-                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
-                    "scores": {
-                        "emotion_lust": 8,
-                        "damage_pierce": 6,
-                        "element_ice": 5
-                    }
+                "4": {
+                    "emotion_envy": 7,
+                    "damage_strike": 5,
+                    "element_thunder": 4
                 },
-                {
-                    "id": "q42d",
-                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
-                    "scores": {
-                        "emotion_sloth": 10,
-                        "damage_strike": 7,
-                        "element_fire": 6
-                    }
+                "5": {
+                    "emotion_envy": 10,
+                    "damage_strike": 8,
+                    "element_thunder": 7
                 }
-            ]
+            }
         },
         {
             "id": "q43",
-            "type": "single",
-            "prompt": "线上讨论里有人截取你一句话并误读传播。你会？",
-            "options": [
-                {
-                    "id": "q43a",
-                    "text": "先问清楚再回应，尽量把判断放慢一点",
-                    "scores": {
-                        "emotion_wrath": 4,
-                        "damage_slash": 3,
-                        "element_wind": 3
-                    }
+            "type": "scale",
+            "prompt": "线上讨论时，有人截取了你说的一句话恶意误读，还在群里传播。你会怎么止损？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_wrath": 2
                 },
-                {
-                    "id": "q43b",
-                    "text": "先顺着场面走，但心里会记下这次体验",
-                    "scores": {
-                        "emotion_lust": 6,
-                        "damage_pierce": 4,
-                        "element_ice": 4
-                    }
+                "3": {
+                    "emotion_wrath": 4,
+                    "damage_slash": 3
                 },
-                {
-                    "id": "q43c",
-                    "text": "迅速接手并主导节奏，优先确保结果",
-                    "scores": {
-                        "emotion_sloth": 8,
-                        "damage_strike": 6,
-                        "element_fire": 5
-                    }
+                "4": {
+                    "emotion_wrath": 7,
+                    "damage_slash": 5,
+                    "element_wind": 4
                 },
-                {
-                    "id": "q43d",
-                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
-                    "scores": {
-                        "emotion_greed": 10,
-                        "damage_slash": 7,
-                        "element_thunder": 6
-                    }
+                "5": {
+                    "emotion_wrath": 10,
+                    "damage_slash": 8,
+                    "element_wind": 7
                 }
-            ]
+            }
         },
         {
             "id": "q44",
-            "type": "single",
-            "prompt": "临出发前发现交通方案全失效，只能现场改线。你会？",
-            "options": [
-                {
-                    "id": "q44a",
-                    "text": "先找可信的人或资料校准，再做决定",
-                    "scores": {
-                        "emotion_lust": 4,
-                        "damage_pierce": 3,
-                        "element_ice": 3
-                    }
+            "type": "scale",
+            "prompt": "临出发前，发现所有交通方案全部失效，只能现场重新规划路线。你会怎么调整？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_lust": 2
                 },
-                {
-                    "id": "q44b",
-                    "text": "先把任务完成到及格线，再考虑内心感受",
-                    "scores": {
-                        "emotion_sloth": 6,
-                        "damage_strike": 4,
-                        "element_fire": 4
-                    }
+                "3": {
+                    "emotion_lust": 4,
+                    "damage_pierce": 3
                 },
-                {
-                    "id": "q44c",
-                    "text": "立即抬高处理力度，避免局势继续失控",
-                    "scores": {
-                        "emotion_greed": 8,
-                        "damage_slash": 6,
-                        "element_thunder": 5
-                    }
+                "4": {
+                    "emotion_lust": 7,
+                    "damage_pierce": 5,
+                    "element_ice": 4
                 },
-                {
-                    "id": "q44d",
-                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
-                    "scores": {
-                        "emotion_melancholy": 10,
-                        "damage_pierce": 7,
-                        "element_wind": 6
-                    }
+                "5": {
+                    "emotion_lust": 10,
+                    "damage_pierce": 8,
+                    "element_ice": 7
                 }
-            ]
+            }
         },
         {
             "id": "q45",
-            "type": "single",
-            "prompt": "你在做长期目标时，短期诱惑频繁出现。你会？",
-            "options": [
-                {
-                    "id": "q45a",
-                    "text": "先把节奏降下来，给自己一点观察窗口",
-                    "scores": {
-                        "emotion_sloth": 4,
-                        "damage_strike": 3,
-                        "element_fire": 3
-                    }
+            "type": "scale",
+            "prompt": "推进长期目标的过程中，短期诱惑频繁出现，不断打乱你的节奏。你会怎么守住自己的进度？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_sloth": 2
                 },
-                {
-                    "id": "q45b",
-                    "text": "先维持体面和秩序，之后再处理情绪残留",
-                    "scores": {
-                        "emotion_greed": 6,
-                        "damage_slash": 4,
-                        "element_thunder": 4
-                    }
+                "3": {
+                    "emotion_sloth": 4,
+                    "damage_strike": 3
                 },
-                {
-                    "id": "q45c",
-                    "text": "马上表态并推动行动，不想把主动权交出去",
-                    "scores": {
-                        "emotion_melancholy": 8,
-                        "damage_pierce": 6,
-                        "element_wind": 5
-                    }
+                "4": {
+                    "emotion_sloth": 7,
+                    "damage_strike": 5,
+                    "element_fire": 4
                 },
-                {
-                    "id": "q45d",
-                    "text": "先抽离现场，靠即时满足或回避来止损",
-                    "scores": {
-                        "emotion_gluttony": 10,
-                        "damage_strike": 7,
-                        "element_ice": 6
-                    }
+                "5": {
+                    "emotion_sloth": 10,
+                    "damage_strike": 8,
+                    "element_fire": 7
                 }
-            ]
+            }
         },
         {
             "id": "q46",
-            "type": "single",
-            "prompt": "一次重要沟通突然变成指责现场，你会？",
-            "options": [
-                {
-                    "id": "q46a",
-                    "text": "先稳住现场，确认事实和边界，再决定动作",
-                    "scores": {
-                        "emotion_greed": 4,
-                        "damage_slash": 3,
-                        "element_thunder": 3
-                    }
+            "type": "scale",
+            "prompt": "一场重要的沟通，突然变成了针对你的指责现场。你会怎么把对话拉回正题？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_greed": 2
                 },
-                {
-                    "id": "q46b",
-                    "text": "先把表面问题压住，情绪先放在心里",
-                    "scores": {
-                        "emotion_melancholy": 6,
-                        "damage_pierce": 4,
-                        "element_wind": 4
-                    }
+                "3": {
+                    "emotion_greed": 4,
+                    "damage_slash": 3
                 },
-                {
-                    "id": "q46c",
-                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
-                    "scores": {
-                        "emotion_gluttony": 8,
-                        "damage_strike": 6,
-                        "element_ice": 5
-                    }
+                "4": {
+                    "emotion_greed": 7,
+                    "damage_slash": 5,
+                    "element_thunder": 4
                 },
-                {
-                    "id": "q46d",
-                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
-                    "scores": {
-                        "emotion_arrogance": 10,
-                        "damage_slash": 7,
-                        "element_fire": 6
-                    }
+                "5": {
+                    "emotion_greed": 10,
+                    "damage_slash": 8,
+                    "element_thunder": 7
                 }
-            ]
+            }
         },
         {
             "id": "q47",
-            "type": "single",
-            "prompt": "你被要求在有限时间内同时处理三件互相冲突的事。你会？",
-            "options": [
-                {
-                    "id": "q47a",
-                    "text": "先分步骤处理，尽量避免让事情继续扩散",
-                    "scores": {
-                        "emotion_melancholy": 4,
-                        "damage_pierce": 3,
-                        "element_wind": 3
-                    }
+            "type": "scale",
+            "prompt": "有限的时间里，你需要同时处理三件互相冲突的紧急事情。你会怎么排序处理？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_melancholy": 2
                 },
-                {
-                    "id": "q47b",
-                    "text": "先做最小应对，回头再慢慢消化不舒服",
-                    "scores": {
-                        "emotion_gluttony": 6,
-                        "damage_strike": 4,
-                        "element_ice": 4
-                    }
+                "3": {
+                    "emotion_melancholy": 4,
+                    "damage_pierce": 3
                 },
-                {
-                    "id": "q47c",
-                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
-                    "scores": {
-                        "emotion_arrogance": 8,
-                        "damage_slash": 6,
-                        "element_fire": 5
-                    }
+                "4": {
+                    "emotion_melancholy": 7,
+                    "damage_pierce": 5,
+                    "element_wind": 4
                 },
-                {
-                    "id": "q47d",
-                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
-                    "scores": {
-                        "emotion_envy": 10,
-                        "damage_pierce": 7,
-                        "element_thunder": 6
-                    }
+                "5": {
+                    "emotion_melancholy": 10,
+                    "damage_pierce": 8,
+                    "element_wind": 7
                 }
-            ]
+            }
         },
         {
             "id": "q48",
-            "type": "single",
-            "prompt": "一条模糊消息让你误以为事情要失控，你会？",
-            "options": [
-                {
-                    "id": "q48a",
-                    "text": "先问清楚再回应，尽量把判断放慢一点",
-                    "scores": {
-                        "emotion_gluttony": 4,
-                        "damage_strike": 3,
-                        "element_ice": 3
-                    }
+            "type": "scale",
+            "prompt": "一条模糊的消息，让你误以为事情即将失控。你会怎么核实情况？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_gluttony": 2
                 },
-                {
-                    "id": "q48b",
-                    "text": "先顺着场面走，但心里会记下这次体验",
-                    "scores": {
-                        "emotion_arrogance": 6,
-                        "damage_slash": 4,
-                        "element_fire": 4
-                    }
+                "3": {
+                    "emotion_gluttony": 4,
+                    "damage_strike": 3
                 },
-                {
-                    "id": "q48c",
-                    "text": "迅速接手并主导节奏，优先确保结果",
-                    "scores": {
-                        "emotion_envy": 8,
-                        "damage_pierce": 6,
-                        "element_thunder": 5
-                    }
+                "4": {
+                    "emotion_gluttony": 7,
+                    "damage_strike": 5,
+                    "element_ice": 4
                 },
-                {
-                    "id": "q48d",
-                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
-                    "scores": {
-                        "emotion_wrath": 10,
-                        "damage_strike": 7,
-                        "element_wind": 6
-                    }
+                "5": {
+                    "emotion_gluttony": 10,
+                    "damage_strike": 8,
+                    "element_ice": 7
                 }
-            ]
+            }
         },
         {
             "id": "q49",
-            "type": "single",
-            "prompt": "你帮助别人后对方没有任何回应或感谢，你会？",
-            "options": [
-                {
-                    "id": "q49a",
-                    "text": "先找可信的人或资料校准，再做决定",
-                    "scores": {
-                        "emotion_arrogance": 4,
-                        "damage_slash": 3,
-                        "element_fire": 3
-                    }
+            "type": "scale",
+            "prompt": "你尽心尽力帮了别人，对方却没有任何回应，连一句感谢都没有。你会怎么处理这份心理落差？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_arrogance": 2
                 },
-                {
-                    "id": "q49b",
-                    "text": "先把任务完成到及格线，再考虑内心感受",
-                    "scores": {
-                        "emotion_envy": 6,
-                        "damage_pierce": 4,
-                        "element_thunder": 4
-                    }
+                "3": {
+                    "emotion_arrogance": 4,
+                    "damage_slash": 3
                 },
-                {
-                    "id": "q49c",
-                    "text": "立即抬高处理力度，避免局势继续失控",
-                    "scores": {
-                        "emotion_wrath": 8,
-                        "damage_strike": 6,
-                        "element_wind": 5
-                    }
+                "4": {
+                    "emotion_arrogance": 7,
+                    "damage_slash": 5,
+                    "element_fire": 4
                 },
-                {
-                    "id": "q49d",
-                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
-                    "scores": {
-                        "emotion_lust": 10,
-                        "damage_slash": 7,
-                        "element_ice": 6
-                    }
+                "5": {
+                    "emotion_arrogance": 10,
+                    "damage_slash": 8,
+                    "element_fire": 7
                 }
-            ]
+            }
         },
         {
             "id": "q50",
-            "type": "single",
-            "prompt": "计划好的稳定节奏突然被连续变化打乱，你会？",
-            "options": [
-                {
-                    "id": "q50a",
-                    "text": "先把节奏降下来，给自己一点观察窗口",
-                    "scores": {
-                        "emotion_envy": 4,
-                        "damage_pierce": 3,
-                        "element_thunder": 3
-                    }
+            "type": "scale",
+            "prompt": "你规划好的稳定生活节奏，突然被连续的意外变故打乱。你会怎么重建对生活的掌控感？",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {},
+                "2": {
+                    "emotion_envy": 2
                 },
-                {
-                    "id": "q50b",
-                    "text": "先维持体面和秩序，之后再处理情绪残留",
-                    "scores": {
-                        "emotion_wrath": 6,
-                        "damage_strike": 4,
-                        "element_wind": 4
-                    }
+                "3": {
+                    "emotion_envy": 4,
+                    "damage_pierce": 3
                 },
-                {
-                    "id": "q50c",
-                    "text": "马上表态并推动行动，不想把主动权交出去",
-                    "scores": {
-                        "emotion_lust": 8,
-                        "damage_slash": 6,
-                        "element_ice": 5
-                    }
+                "4": {
+                    "emotion_envy": 7,
+                    "damage_pierce": 5,
+                    "element_thunder": 4
                 },
-                {
-                    "id": "q50d",
-                    "text": "先抽离现场，靠即时满足或回避来止损",
-                    "scores": {
-                        "emotion_sloth": 10,
-                        "damage_pierce": 7,
-                        "element_fire": 6
-                    }
+                "5": {
+                    "emotion_envy": 10,
+                    "damage_pierce": 8,
+                    "element_thunder": 7
                 }
-            ]
+            }
         }
     ],
     "titleRules": [
@@ -2479,5 +2824,5 @@
         }
     ],
     "fallbackTitleId": "fallback",
-    "generatedAt": "2026-02-22T09:21:58.973Z"
+    "generatedAt": "2026-02-22T10:12:47.618Z"
 }
