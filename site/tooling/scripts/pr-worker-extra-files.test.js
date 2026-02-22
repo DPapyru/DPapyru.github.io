@@ -36,7 +36,7 @@ test('oauth worker restricts extraFiles path and count', () => {
     const file = path.resolve('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
     const text = fs.readFileSync(file, 'utf8');
 
-    assert.doesNotMatch(text, /site\/content\/routes\/\*\.route\.json/);
+    assert.match(text, /site\/content\/routes\/\*\.route\.json/);
     assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
     assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
     assert.match(text, /site\/content\/\*\*\/media\/\*\.\{mp4,webm\}/);
@@ -61,7 +61,7 @@ test('shared-key worker supports shader gallery extra files', () => {
     const file = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
     const text = fs.readFileSync(file, 'utf8');
 
-    assert.doesNotMatch(text, /site\/content\/routes\/\*\.route\.json/);
+    assert.match(text, /site\/content\/routes\/\*\.route\.json/);
     assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
     assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
     assert.match(text, /site\/content\/\*\*\/media\/\*\.\{mp4,webm\}/);
@@ -105,6 +105,20 @@ test('shared-key worker writes extra files to github contents api', () => {
     assert.match(text, /for\s*\(const\s+file\s+of\s+extraFiles\)/);
     assert.match(text, /encodePathForUrl\(file\.path\)/);
     assert.match(text, /extraFiles:\s*extraFiles\.map/);
+});
+
+test('workers normalize workspace-tagged extra file paths before whitelist check', () => {
+    const oauthFile = path.resolve('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
+    const sharedFile = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
+    const oauthText = fs.readFileSync(oauthFile, 'utf8');
+    const sharedText = fs.readFileSync(sharedFile, 'utf8');
+
+    assert.match(oauthText, /function\s+normalizeIncomingExtraFilePath\s*\(/);
+    assert.match(sharedText, /function\s+normalizeIncomingExtraFilePath\s*\(/);
+    assert.ok(oauthText.includes('workspace-[a-z0-9-]+'));
+    assert.ok(sharedText.includes('workspace-[a-z0-9-]+'));
+    assert.match(oauthText, /extra file path 不在白名单/);
+    assert.match(sharedText, /extra file path 不在白名单/);
 });
 
 test('tml-ide unified submit keeps anims/code csharp paths when already valid', () => {
