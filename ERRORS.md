@@ -1901,3 +1901,19 @@
 - `q1~q35` 均为 5 个选项，题干与回答文案在全局范围内去重。
 - 文案方向从模板化表达改为生活化/人际互动场景，降低“工作场景”占比。
 - 本次未执行 `npm run build` 与 `npm run check-generated`（仅做 fun-test 题库定向改动，已完成针对性生成与测试验证）。
+
+### 验证记录 [2026-02-22 21:53]：教程 IDE 粘贴图片自动入库并可提交
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/markdown-editor-migration.test.js`：通过（先红后绿）
+- `npm --prefix tml-ide-app test`：通过（64/64）
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：失败
+- `npm run check-generated`：失败
+
+**备注**：
+- 本次修复工作树：`.worktrees/fix-ide-paste-save`。
+- `npm run build` 与 `npm run check-generated` 均在 `build:anims` 阶段失败，根因是当前环境缺少 `Microsoft.NETCore.App 8.0.0`（仅检测到 `10.0.2`），`AstCompiler` 启动失败（exit 150）。
+- 失败与本次 `tml-ide-app` 粘贴图片入库/提交流程修复无直接关系；IDE 子项目测试与构建已通过。

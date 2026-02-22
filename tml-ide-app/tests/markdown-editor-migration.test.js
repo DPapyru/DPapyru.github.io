@@ -45,6 +45,9 @@ test('main.js wires markdown insert actions and Ctrl+V image paste flow', () => 
     assert.match(source, /article-studio-preview-update/);
     assert.match(source, /addEventListener\('paste'/);
     assert.match(source, /已粘贴图片/);
+    assert.match(source, /joinRepoPathParts\(markdownDir,\s*'imgs'\)/);
+    assert.match(source, /entry\.mode === 'image'[\s\S]*entry\.mode === 'video'[\s\S]*docs\.extraEntries\.push/);
+    assert.match(source, /extractBase64ContentFromDataUrl[\s\S]*encoding:\s*'base64'/);
     assert.match(source, /detectFileMode\(pathValue\)[\s\S]*'image'/);
     assert.doesNotMatch(source, /globalThis\.open\(`\/site\/pages\/viewer\.html\?file=/);
 });

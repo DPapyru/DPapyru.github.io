@@ -2322,6 +2322,20 @@ function listWorkspaceEntries() {
     }));
 }
 
+function extractBase64ContentFromDataUrl(dataUrl, mediaTypePrefix) {
+    const safeDataUrl = String(dataUrl || '').trim();
+    if (!safeDataUrl) return '';
+    const expectedPrefix = String(mediaTypePrefix || '').trim().toLowerCase();
+    if (expectedPrefix && !safeDataUrl.toLowerCase().startsWith(`data:${expectedPrefix}`)) {
+        return '';
+    }
+
+    const match = safeDataUrl.match(/^data:[^;,]+;base64,([a-z0-9+/=\s]+)$/i);
+    if (!match) return '';
+    const payload = String(match[1] || '').replace(/\s+/g, '');
+    return payload || '';
+}
+
 function resolveActiveMarkdownPath(collection) {
     const active = getActiveFile();
     const activeRepoPath = active ? normalizeMarkdownRepoPath(active.path) : '';
@@ -2393,6 +2407,29 @@ function buildUnifiedCollectionFromWorkspace() {
                 path: normalizeRepoPath(entry.path),
                 content: entry.content,
                 source: 'workspace-shaderfx'
+            });
+            return;
+        }
+        if (entry.mode === 'image' || entry.mode === 'video') {
+            const path = normalizeRepoPath(entry.path);
+            if (!isAllowedExtraFilePath(path)) {
+                blockedEntries.push({ ...entry, reason: '资源目标路径非法（仅允许 **/imgs/* 或 **/media/*）' });
+                return;
+            }
+
+            const mediaTypePrefix = entry.mode === 'image' ? 'image/' : 'video/';
+            const base64Content = extractBase64ContentFromDataUrl(entry.content, mediaTypePrefix);
+            if (!base64Content) {
+                blockedEntries.push({ ...entry, reason: '资源内容不是合法的 base64 DataURL' });
+                return;
+            }
+
+            docs.extraEntries.push({
+                workspace: 'markdown',
+                path,
+                content: base64Content,
+                encoding: 'base64',
+                source: entry.mode === 'image' ? 'workspace-image' : 'workspace-media'
             });
             return;
         }
@@ -4724,7 +4761,7 @@ function createWorkspaceImageFileFromPaste(file, options) {
     const alt = pastedImageFileName(file, index);
     const ext = detectImageExtensionFromPasteFile(file);
     const markdownDir = dirnameRepoPath(markdownFile.path);
-    const imageDir = joinRepoPathParts(markdownDir, 'images');
+    const imageDir = joinRepoPathParts(markdownDir, 'imgs');
     const desiredPath = joinRepoPathParts(imageDir, `${alt}${ext}`);
     const filePath = ensureUniqueWorkspacePath(desiredPath);
     if (!filePath) return null;
