@@ -57,7 +57,6 @@ function main() {
         { file: 'site/pages/article-studio.html', script: '/site/assets/js/accent-theme.js' },
         { file: 'site/pages/anim-renderer.html', script: '/site/assets/js/accent-theme.js' },
         { file: 'site/pages/shader-playground.html', script: '/site/assets/js/accent-theme.js' },
-        { file: 'site/pages/shader-gallery.html', script: '/site/assets/js/accent-theme.js' },
         { file: 'site/pages/shader-contribute.html', script: '/site/assets/js/accent-theme.js' }
     ];
 

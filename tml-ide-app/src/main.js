@@ -62,6 +62,7 @@ const dom = {
     btnShaderPreviewClose: document.getElementById('btn-shader-preview-close'),
     shaderPreviewCanvas: document.getElementById('shader-preview-canvas'),
     shaderPreviewViewport: document.getElementById('shader-preview-viewport'),
+    shaderPreviewAspectResizer: document.getElementById('shader-preview-aspect-resizer'),
     shaderPreviewStatus: document.getElementById('shader-preview-status'),
     shaderPreviewZoomOut: document.getElementById('shader-preview-zoom-out'),
     shaderPreviewZoomReset: document.getElementById('shader-preview-zoom-reset'),
@@ -125,6 +126,7 @@ const dom = {
     panelViews: Array.from(document.querySelectorAll('.panel-view[data-panel-view]')),
     bottomPanel: document.getElementById('bottom-panel'),
     btnToggleBottomPanel: document.getElementById('btn-toggle-bottom-panel'),
+    btnShowBottomPanel: document.getElementById('btn-show-bottom-panel'),
     btnShaderInsertTemplate: document.getElementById('btn-shader-insert-template'),
     btnPanelShaderCompile: document.getElementById('btn-panel-shader-compile'),
     shaderCompileLog: document.getElementById('shader-compile-log'),
@@ -212,7 +214,11 @@ const state = {
         dragStartX: 0,
         dragStartY: 0,
         dragOriginX: 0,
-        dragOriginY: 0
+        dragOriginY: 0,
+        aspectResizePointerId: -1,
+        aspectResizeStartX: 0,
+        aspectResizeStartWidth: 0,
+        viewportWidth: 0
     },
     animPreview: {
         compiledAnims: {},
@@ -391,6 +397,8 @@ const SHADER_MAX_TIME_DELTA = 0.2;
 const SHADER_PREVIEW_MIN_SCALE = 0.2;
 const SHADER_PREVIEW_MAX_SCALE = 8;
 const SHADER_PREVIEW_ZOOM_STEP = 0.2;
+const SHADER_PREVIEW_MIN_VIEWPORT_WIDTH = 220;
+const SHADER_PREVIEW_ASPECT_RESIZE_STEP = 20;
 const SHADER_VERTEX_SOURCE = [
     '#version 300 es',
     'precision highp float;',
@@ -3098,6 +3106,9 @@ function applyWorkbenchVisibility() {
         }
         dom.btnToggleBottomPanel.setAttribute('aria-label', state.ui.panelVisible ? '隐藏底部面板' : '显示底部面板');
     }
+    if (dom.btnShowBottomPanel) {
+        dom.btnShowBottomPanel.hidden = state.ui.panelVisible;
+    }
 }
 
 function showSidebar(nextVisible) {
@@ -3669,6 +3680,7 @@ function setShaderPreviewModalOpen(open, options) {
     const shouldOpen = !!open && allowOpen;
     if (!shouldOpen) {
         stopShaderPreviewDragging();
+        stopShaderPreviewAspectResizing();
         applyShaderPreviewViewTransform();
     }
     state.ui.shaderPreviewModalOpen = shouldOpen;
@@ -3689,9 +3701,12 @@ function setShaderPreviewModalOpen(open, options) {
     }
 
     installShaderPreviewViewportInteractions();
+    installShaderPreviewAspectResizerInteractions();
+    applyShaderPreviewViewportWidth({ redraw: false, status: false });
     syncShaderPreviewControls();
     ensureShaderPreviewLoop();
     drawShaderPreviewCanvas();
+    updateShaderPreviewStatus();
     if (opts.focus !== false && dom.shaderPresetImage) {
         dom.shaderPresetImage.focus();
     }
@@ -4420,6 +4435,7 @@ function updateShaderPreviewStatus() {
     const preset = shaderPreviewPresetLabel(state.shaderPreview.presetImage);
     const address = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
     const bg = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
+    const aspect = readShaderPreviewAspectText();
     const zoom = Math.round(clampShaderPreviewZoom(state.shaderPreview.viewScale) * 100);
     const uploads = [];
     for (let i = 0; i < SHADER_UPLOAD_SLOT_COUNT; i += 1) {
@@ -4430,13 +4446,86 @@ function updateShaderPreviewStatus() {
     const uploadText = uploads.length ? uploads.join(', ') : '无';
     const compileErrors = Array.isArray(state.shaderCompile.errors) ? state.shaderCompile.errors.length : 0;
     const compileText = compileErrors > 0 ? `错误 ${compileErrors}` : '通过';
-    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg} · 缩放: ${zoom}% · 上传: ${uploadText} · 实时编译: ${compileText}`;
+    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg} · 比例: ${aspect} · 缩放: ${zoom}% · 上传: ${uploadText} · 实时编译: ${compileText}`;
 }
 
 function clampShaderPreviewZoom(value) {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return 1;
     return Math.max(SHADER_PREVIEW_MIN_SCALE, Math.min(SHADER_PREVIEW_MAX_SCALE, numeric));
+}
+
+function readShaderPreviewAspectText() {
+    const viewport = dom.shaderPreviewViewport;
+    if (!viewport) return 'auto';
+    const rect = viewport.getBoundingClientRect();
+    if (!rect.width || !rect.height) return 'auto';
+    const ratio = rect.width / rect.height;
+    return `${rect.width.toFixed(0)}:${rect.height.toFixed(0)} (${ratio.toFixed(2)})`;
+}
+
+function shaderPreviewViewportBounds() {
+    const viewport = dom.shaderPreviewViewport;
+    if (!viewport) {
+        return null;
+    }
+    const shell = viewport.parentElement;
+    if (!shell) {
+        return null;
+    }
+    const shellRect = shell.getBoundingClientRect();
+    if (!shellRect.width) {
+        return null;
+    }
+    const handleWidth = dom.shaderPreviewAspectResizer
+        ? Number(dom.shaderPreviewAspectResizer.getBoundingClientRect().width || 0)
+        : 0;
+    const maxWidth = Math.max(
+        SHADER_PREVIEW_MIN_VIEWPORT_WIDTH,
+        Math.floor(shellRect.width - handleWidth - 1)
+    );
+    const minWidth = Math.max(120, Math.min(SHADER_PREVIEW_MIN_VIEWPORT_WIDTH, maxWidth));
+    return {
+        minWidth,
+        maxWidth
+    };
+}
+
+function clampShaderPreviewViewportWidth(value) {
+    const bounds = shaderPreviewViewportBounds();
+    if (!bounds) return 0;
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) return 0;
+    return Math.max(bounds.minWidth, Math.min(bounds.maxWidth, Math.round(numeric)));
+}
+
+function applyShaderPreviewViewportWidth(options) {
+    const opts = options || {};
+    if (!dom.shaderPreviewViewport) return;
+    const safeWidth = clampShaderPreviewViewportWidth(state.shaderPreview.viewportWidth);
+    state.shaderPreview.viewportWidth = safeWidth;
+    if (safeWidth > 0) {
+        dom.shaderPreviewViewport.style.flex = '0 0 auto';
+        dom.shaderPreviewViewport.style.width = `${safeWidth}px`;
+    } else {
+        dom.shaderPreviewViewport.style.flex = '';
+        dom.shaderPreviewViewport.style.width = '';
+    }
+    if (opts.redraw !== false) {
+        drawShaderPreviewCanvas();
+    }
+    if (opts.status !== false) {
+        updateShaderPreviewStatus();
+    }
+}
+
+function setShaderPreviewViewportWidth(value, options) {
+    state.shaderPreview.viewportWidth = value;
+    applyShaderPreviewViewportWidth(options);
+}
+
+function resetShaderPreviewViewportWidth(options) {
+    setShaderPreviewViewportWidth(0, options);
 }
 
 function stopShaderPreviewDragging() {
@@ -4455,6 +4544,28 @@ function stopShaderPreviewDragging() {
         }
     }
     state.shaderPreview.dragPointerId = -1;
+}
+
+function stopShaderPreviewAspectResizing() {
+    const handle = dom.shaderPreviewAspectResizer;
+    if (!handle) {
+        state.shaderPreview.aspectResizePointerId = -1;
+        return;
+    }
+    const pointerId = Number.isInteger(state.shaderPreview.aspectResizePointerId)
+        ? state.shaderPreview.aspectResizePointerId
+        : -1;
+    if (pointerId >= 0 && typeof handle.hasPointerCapture === 'function') {
+        if (handle.hasPointerCapture(pointerId)) {
+            try {
+                handle.releasePointerCapture(pointerId);
+            } catch (_) {
+                // ignore capture release errors
+            }
+        }
+    }
+    state.shaderPreview.aspectResizePointerId = -1;
+    handle.classList.remove('is-dragging');
 }
 
 function applyShaderPreviewViewTransform() {
@@ -4553,6 +4664,63 @@ function installShaderPreviewViewportInteractions() {
 
     dom.shaderPreviewViewport.addEventListener('dblclick', () => {
         resetShaderPreviewView();
+    });
+}
+
+function installShaderPreviewAspectResizerInteractions() {
+    if (!dom.shaderPreviewAspectResizer || dom.shaderPreviewAspectResizer.dataset.interactionsBound === '1') return;
+    dom.shaderPreviewAspectResizer.dataset.interactionsBound = '1';
+
+    const handle = dom.shaderPreviewAspectResizer;
+    handle.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0 || !dom.shaderPreviewViewport) return;
+        const rect = dom.shaderPreviewViewport.getBoundingClientRect();
+        state.shaderPreview.aspectResizePointerId = Number(event.pointerId);
+        state.shaderPreview.aspectResizeStartX = Number(event.clientX);
+        state.shaderPreview.aspectResizeStartWidth = Number(rect.width || 0);
+        if (typeof handle.setPointerCapture === 'function') {
+            try {
+                handle.setPointerCapture(event.pointerId);
+            } catch (_) {
+                // ignore capture failures
+            }
+        }
+        handle.classList.add('is-dragging');
+        event.preventDefault();
+    });
+
+    handle.addEventListener('pointermove', (event) => {
+        if (Number(state.shaderPreview.aspectResizePointerId) !== Number(event.pointerId)) return;
+        const deltaX = Number(event.clientX) - Number(state.shaderPreview.aspectResizeStartX || 0);
+        setShaderPreviewViewportWidth(Number(state.shaderPreview.aspectResizeStartWidth || 0) + deltaX);
+    });
+
+    const stop = () => {
+        stopShaderPreviewAspectResizing();
+    };
+    handle.addEventListener('pointerup', stop);
+    handle.addEventListener('pointercancel', stop);
+    handle.addEventListener('lostpointercapture', stop);
+    handle.addEventListener('dblclick', () => {
+        resetShaderPreviewViewportWidth();
+    });
+    handle.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') {
+            const current = Number(dom.shaderPreviewViewport && dom.shaderPreviewViewport.getBoundingClientRect().width || 0);
+            setShaderPreviewViewportWidth(current - SHADER_PREVIEW_ASPECT_RESIZE_STEP);
+            event.preventDefault();
+            return;
+        }
+        if (event.key === 'ArrowRight') {
+            const current = Number(dom.shaderPreviewViewport && dom.shaderPreviewViewport.getBoundingClientRect().width || 0);
+            setShaderPreviewViewportWidth(current + SHADER_PREVIEW_ASPECT_RESIZE_STEP);
+            event.preventDefault();
+            return;
+        }
+        if (event.key === 'Home' || event.key === 'Enter' || event.key === ' ') {
+            resetShaderPreviewViewportWidth();
+            event.preventDefault();
+        }
     });
 }
 
@@ -5123,8 +5291,11 @@ function runShaderCompileForActiveFile(options) {
         errors
     });
     drawShaderPreviewCanvas();
-    if (!opts.silent) {
-        setActivePanelTab(errors.length ? 'errors' : 'compile');
+    if (errors.length > 0) {
+        setActivePanelTab('errors');
+        showBottomPanel(true);
+    } else if (!opts.silent) {
+        setActivePanelTab('compile');
         showBottomPanel(true);
     }
 }
@@ -6377,6 +6548,12 @@ function bindUiEvents() {
             toggleBottomPanel();
         });
     }
+    if (dom.btnShowBottomPanel) {
+        dom.btnShowBottomPanel.addEventListener('click', () => {
+            showBottomPanel(true);
+            setActivePanelTab('problems');
+        });
+    }
 
     if (dom.commandPaletteBackdrop) {
         dom.commandPaletteBackdrop.addEventListener('click', () => {
@@ -6780,7 +6957,9 @@ function bindUiEvents() {
 
     window.addEventListener('resize', () => {
         if (activeFileMode() === 'shaderfx' && state.ui.shaderPreviewModalOpen) {
+            applyShaderPreviewViewportWidth({ redraw: false, status: false });
             drawShaderPreviewCanvas();
+            updateShaderPreviewStatus();
         }
     });
 
