@@ -1827,3 +1827,15 @@
 - `npm run build`：失败
 
 **备注**：前两项失败均为仓库当前文件缺失导致（`site/pages/article-studio.html`、`site/pages/shader-playground.html` 不存在），与本次改动无直接关系；`npm run build` 失败原因为当前环境缺失 `.NET 8.0` 运行时（`AstCompiler` 启动失败，exit 150）。本次改动在工作树 `.worktrees/fix-shader-ide-panels` 完成。
+
+### 验证记录 [2026-02-22 14:09]：IDE 底部错误面板恢复入口与自动打开修复
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/vscode-workbench-shell.test.js`：通过
+- `node /tmp/pwdebug/debug-ide-panel.js`：通过
+- `node /tmp/pwdebug/debug-shader-resize.js`：通过
+- `npm --prefix tml-ide-app run build`：通过
+
+**备注**：通过浏览器自动化脚本完成“点击隐藏底部 Panel -> 点击恢复按钮 -> Panel 恢复”的交互验证，并截图留档：`/tmp/pwdebug/ide-before.png`、`/tmp/pwdebug/ide-hidden-with-restore.png`、`/tmp/pwdebug/ide-restored.png`；同时验证 Shader 预览右侧拖拽可改变画布比例（宽度从 `802` 到 `900`），截图：`/tmp/pwdebug/shader-before-resize.png`、`/tmp/pwdebug/shader-after-resize.png`。

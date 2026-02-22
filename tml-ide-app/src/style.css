@@ -1174,6 +1174,24 @@ button:disabled {
     background: #2b2b2b;
 }
 
+.panel-restore-btn {
+    position: fixed;
+    right: 10px;
+    bottom: 28px;
+    z-index: 1120;
+    min-height: 24px;
+    padding: 0 10px;
+    border: 1px solid var(--vscode-border);
+    border-radius: 4px;
+    background: #2f3034;
+    color: #d6d6d8;
+    font-size: 11px;
+}
+
+.panel-restore-btn[hidden] {
+    display: none;
+}
+
 .app-statusbar {
     background: var(--vscode-bg-statusbar);
     border-top: 1px solid #0065a8;
@@ -1523,6 +1541,13 @@ button:disabled {
     .app-shell.is-sidebar-hidden .app-main,
     .app-shell.is-panel-hidden .app-main {
         grid-template-columns: 1fr;
+    }
+
+    .panel-restore-btn {
+        right: 6px;
+        bottom: 26px;
+        padding: 0 8px;
+        font-size: 10px;
     }
 
     .unified-submit-panel,

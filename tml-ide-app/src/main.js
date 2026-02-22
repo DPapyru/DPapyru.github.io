@@ -126,6 +126,7 @@ const dom = {
     panelViews: Array.from(document.querySelectorAll('.panel-view[data-panel-view]')),
     bottomPanel: document.getElementById('bottom-panel'),
     btnToggleBottomPanel: document.getElementById('btn-toggle-bottom-panel'),
+    btnShowBottomPanel: document.getElementById('btn-show-bottom-panel'),
     btnShaderInsertTemplate: document.getElementById('btn-shader-insert-template'),
     btnPanelShaderCompile: document.getElementById('btn-panel-shader-compile'),
     shaderCompileLog: document.getElementById('shader-compile-log'),
@@ -3105,6 +3106,9 @@ function applyWorkbenchVisibility() {
         }
         dom.btnToggleBottomPanel.setAttribute('aria-label', state.ui.panelVisible ? '隐藏底部面板' : '显示底部面板');
     }
+    if (dom.btnShowBottomPanel) {
+        dom.btnShowBottomPanel.hidden = state.ui.panelVisible;
+    }
 }
 
 function showSidebar(nextVisible) {
@@ -5287,8 +5291,11 @@ function runShaderCompileForActiveFile(options) {
         errors
     });
     drawShaderPreviewCanvas();
-    if (!opts.silent) {
-        setActivePanelTab(errors.length ? 'errors' : 'compile');
+    if (errors.length > 0) {
+        setActivePanelTab('errors');
+        showBottomPanel(true);
+    } else if (!opts.silent) {
+        setActivePanelTab('compile');
         showBottomPanel(true);
     }
 }
@@ -6539,6 +6546,12 @@ function bindUiEvents() {
     if (dom.btnToggleBottomPanel) {
         dom.btnToggleBottomPanel.addEventListener('click', () => {
             toggleBottomPanel();
+        });
+    }
+    if (dom.btnShowBottomPanel) {
+        dom.btnShowBottomPanel.addEventListener('click', () => {
+            showBottomPanel(true);
+            setActivePanelTab('problems');
         });
     }
 
