@@ -12,7 +12,8 @@ colors:
   Mad: "#ff5430"
 ---
 
-> 截图测试:  ![image](./images/image.png)
+> 截图测试:![image](./images/image-2.png)
+
 
 
 # 前言
