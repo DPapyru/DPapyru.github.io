@@ -1,567 +1,2476 @@
 {
     "schemaVersion": 1,
     "meta": {
-        "id": "star-shatter-role",
-        "title": "猜猜你是《星辰击碎者》（小天使的独立游戏世界观）什么类型的角色",
-        "description": "通过多维度选择，看看你在《星辰击碎者》世界观中最像哪类角色。"
+        "id": "inner-psyche-profile",
+        "title": "你的情绪触发与受伤模式测评",
+        "description": "通过 50 道生活与突发情境题，识别你的情绪效果、伤害类型与属性倾向。"
     },
     "dimensions": [
         {
-            "key": "logic",
-            "label": "理性"
+            "key": "emotion_arrogance",
+            "label": "情绪·傲慢"
         },
         {
-            "key": "action",
-            "label": "行动力"
+            "key": "emotion_envy",
+            "label": "情绪·嫉妒"
         },
         {
-            "key": "social",
-            "label": "社交"
+            "key": "emotion_wrath",
+            "label": "情绪·暴怒"
         },
         {
-            "key": "intuition",
-            "label": "直觉"
+            "key": "emotion_lust",
+            "label": "情绪·色欲"
+        },
+        {
+            "key": "emotion_sloth",
+            "label": "情绪·怠惰"
+        },
+        {
+            "key": "emotion_greed",
+            "label": "情绪·贪婪"
+        },
+        {
+            "key": "emotion_melancholy",
+            "label": "情绪·忧郁"
+        },
+        {
+            "key": "emotion_gluttony",
+            "label": "情绪·暴食"
+        },
+        {
+            "key": "damage_slash",
+            "label": "伤害·斩击"
+        },
+        {
+            "key": "damage_pierce",
+            "label": "伤害·刺击"
+        },
+        {
+            "key": "damage_strike",
+            "label": "伤害·打击"
+        },
+        {
+            "key": "element_fire",
+            "label": "属性·火"
+        },
+        {
+            "key": "element_thunder",
+            "label": "属性·雷"
+        },
+        {
+            "key": "element_wind",
+            "label": "属性·风"
+        },
+        {
+            "key": "element_ice",
+            "label": "属性·冰"
         }
     ],
     "theoreticalMax": {
-        "logic": 91,
-        "action": 83,
-        "social": 76,
-        "intuition": 81
+        "emotion_arrogance": 172,
+        "emotion_envy": 178,
+        "emotion_wrath": 182,
+        "emotion_lust": 186,
+        "emotion_sloth": 178,
+        "emotion_greed": 168,
+        "emotion_melancholy": 168,
+        "emotion_gluttony": 168,
+        "damage_slash": 285,
+        "damage_pierce": 283,
+        "damage_strike": 282,
+        "element_fire": 225,
+        "element_thunder": 223,
+        "element_wind": 225,
+        "element_ice": 227
     },
     "questions": [
         {
             "id": "q1",
             "type": "single",
-            "prompt": "陨落之城突然断电，你第一反应是？",
+            "prompt": "早高峰刚上地铁发现手机只剩 2% 电，且客户要求你 10 分钟内回复。你会？",
             "options": [
                 {
                     "id": "q1a",
-                    "text": "先确认电网结构图和故障路径",
+                    "text": "先稳住现场，确认事实和边界，再决定动作",
                     "scores": {
-                        "logic": 12,
-                        "action": 3
+                        "emotion_arrogance": 4,
+                        "damage_slash": 3,
+                        "element_fire": 3
                     }
                 },
                 {
                     "id": "q1b",
-                    "text": "带上工具立刻去最近配电站",
+                    "text": "先把表面问题压住，情绪先放在心里",
                     "scores": {
-                        "action": 11,
-                        "intuition": 3
+                        "emotion_envy": 6,
+                        "damage_pierce": 4,
+                        "element_thunder": 4
                     }
                 },
                 {
                     "id": "q1c",
-                    "text": "先联络各区同伴收集现场情况",
+                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
                     "scores": {
-                        "social": 10,
-                        "logic": 4
+                        "emotion_wrath": 8,
+                        "damage_strike": 6,
+                        "element_wind": 5
                     }
                 },
                 {
                     "id": "q1d",
-                    "text": "靠直觉判断“最可能出问题的节点”",
+                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
                     "scores": {
-                        "intuition": 11,
-                        "action": 4
+                        "emotion_lust": 10,
+                        "damage_slash": 7,
+                        "element_ice": 6
                     }
                 }
             ]
         },
         {
             "id": "q2",
-            "type": "multi",
-            "prompt": "组建临时小队时，你最看重哪些特质？（多选）",
+            "type": "single",
+            "prompt": "临睡前收到“明早汇报提前 1 小时”的通知，你通常怎么做？",
             "options": [
                 {
                     "id": "q2a",
-                    "text": "计划能力",
+                    "text": "先分步骤处理，尽量避免让事情继续扩散",
                     "scores": {
-                        "logic": 8
+                        "emotion_envy": 4,
+                        "damage_pierce": 3,
+                        "element_thunder": 3
                     }
                 },
                 {
                     "id": "q2b",
-                    "text": "执行速度",
+                    "text": "先做最小应对，回头再慢慢消化不舒服",
                     "scores": {
-                        "action": 8
+                        "emotion_wrath": 6,
+                        "damage_strike": 4,
+                        "element_wind": 4
                     }
                 },
                 {
                     "id": "q2c",
-                    "text": "沟通与协调",
+                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
                     "scores": {
-                        "social": 8
+                        "emotion_lust": 8,
+                        "damage_slash": 6,
+                        "element_ice": 5
                     }
                 },
                 {
                     "id": "q2d",
-                    "text": "临场应变",
+                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
                     "scores": {
-                        "intuition": 8
-                    }
-                },
-                {
-                    "id": "q2e",
-                    "text": "抗压稳定",
-                    "scores": {
-                        "logic": 4,
-                        "action": 4
+                        "emotion_sloth": 10,
+                        "damage_pierce": 7,
+                        "element_fire": 6
                     }
                 }
-            ],
-            "cap": {
-                "logic": 12,
-                "action": 12,
-                "social": 12,
-                "intuition": 12
-            }
+            ]
         },
         {
             "id": "q3",
-            "type": "scale",
-            "prompt": "我愿意在信息不全的情况下先行动，再边做边修正。",
-            "scale": [
-                1,
-                2,
-                3,
-                4,
-                5
-            ],
-            "levelScores": {
-                "1": {
-                    "logic": 8,
-                    "action": 0,
-                    "intuition": 0
+            "type": "single",
+            "prompt": "朋友聚餐时有人拿你旧失误开玩笑，现场气氛很热。你会？",
+            "options": [
+                {
+                    "id": "q3a",
+                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "scores": {
+                        "emotion_wrath": 4,
+                        "damage_strike": 3,
+                        "element_wind": 3
+                    }
                 },
-                "2": {
-                    "logic": 6,
-                    "action": 2,
-                    "intuition": 1
+                {
+                    "id": "q3b",
+                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "scores": {
+                        "emotion_lust": 6,
+                        "damage_slash": 4,
+                        "element_ice": 4
+                    }
                 },
-                "3": {
-                    "logic": 4,
-                    "action": 4,
-                    "intuition": 3
+                {
+                    "id": "q3c",
+                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_pierce": 6,
+                        "element_fire": 5
+                    }
                 },
-                "4": {
-                    "logic": 2,
-                    "action": 7,
-                    "intuition": 6
-                },
-                "5": {
-                    "logic": 0,
-                    "action": 10,
-                    "intuition": 9
+                {
+                    "id": "q3d",
+                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "scores": {
+                        "emotion_greed": 10,
+                        "damage_strike": 7,
+                        "element_thunder": 6
+                    }
                 }
-            }
+            ]
         },
         {
             "id": "q4",
             "type": "single",
-            "prompt": "团队出现严重分歧时，你通常会？",
+            "prompt": "周末刚准备休息，家里临时让你处理一件棘手琐事。你会？",
             "options": [
                 {
                     "id": "q4a",
-                    "text": "列出利弊，按证据说服",
+                    "text": "先找可信的人或资料校准，再做决定",
                     "scores": {
-                        "logic": 10,
-                        "social": 3
+                        "emotion_lust": 4,
+                        "damage_slash": 3,
+                        "element_ice": 3
                     }
                 },
                 {
                     "id": "q4b",
-                    "text": "定个短期目标，先做出结果",
+                    "text": "先把任务完成到及格线，再考虑内心感受",
                     "scores": {
-                        "action": 10,
-                        "logic": 3
+                        "emotion_sloth": 6,
+                        "damage_pierce": 4,
+                        "element_fire": 4
                     }
                 },
                 {
                     "id": "q4c",
-                    "text": "先稳定情绪，让大家回到同一频道",
+                    "text": "立即抬高处理力度，避免局势继续失控",
                     "scores": {
-                        "social": 11,
-                        "intuition": 3
+                        "emotion_greed": 8,
+                        "damage_strike": 6,
+                        "element_thunder": 5
                     }
                 },
                 {
                     "id": "q4d",
-                    "text": "观察气氛，抓关键节点切入",
+                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
                     "scores": {
-                        "intuition": 10,
-                        "social": 4
+                        "emotion_melancholy": 10,
+                        "damage_slash": 7,
+                        "element_wind": 6
                     }
                 }
             ]
         },
         {
             "id": "q5",
-            "type": "multi",
-            "prompt": "面对未知遗迹，你会准备什么？（多选）",
+            "type": "single",
+            "prompt": "你负责的文件被误删，备份也不完整，截止时间不变。你会？",
             "options": [
                 {
                     "id": "q5a",
-                    "text": "完整路线与撤离方案",
+                    "text": "先把节奏降下来，给自己一点观察窗口",
                     "scores": {
-                        "logic": 7
+                        "emotion_sloth": 4,
+                        "damage_pierce": 3,
+                        "element_fire": 3
                     }
                 },
                 {
                     "id": "q5b",
-                    "text": "轻装突进装备",
+                    "text": "先维持体面和秩序，之后再处理情绪残留",
                     "scores": {
-                        "action": 7
+                        "emotion_greed": 6,
+                        "damage_strike": 4,
+                        "element_thunder": 4
                     }
                 },
                 {
                     "id": "q5c",
-                    "text": "协作信号和后勤频道",
+                    "text": "马上表态并推动行动，不想把主动权交出去",
                     "scores": {
-                        "social": 7
+                        "emotion_melancholy": 8,
+                        "damage_slash": 6,
+                        "element_wind": 5
                     }
                 },
                 {
                     "id": "q5d",
-                    "text": "备用应急小工具",
+                    "text": "先抽离现场，靠即时满足或回避来止损",
                     "scores": {
-                        "intuition": 7
-                    }
-                },
-                {
-                    "id": "q5e",
-                    "text": "一套临场决策准则",
-                    "scores": {
-                        "logic": 4,
-                        "intuition": 4
+                        "emotion_gluttony": 10,
+                        "damage_pierce": 7,
+                        "element_ice": 6
                     }
                 }
-            ],
-            "cap": {
-                "logic": 11,
-                "action": 10,
-                "social": 10,
-                "intuition": 11
-            }
+            ]
         },
         {
             "id": "q6",
-            "type": "scale",
-            "prompt": "我更喜欢把复杂问题拆成清晰模块再推进。",
-            "scale": [
-                1,
-                2,
-                3,
-                4,
-                5
-            ],
-            "levelScores": {
-                "1": {
-                    "logic": 0,
-                    "action": 6
+            "type": "single",
+            "prompt": "会议进行到一半，领导突然让你当场给出新方案。你会？",
+            "options": [
+                {
+                    "id": "q6a",
+                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "scores": {
+                        "emotion_greed": 4,
+                        "damage_strike": 3,
+                        "element_thunder": 3
+                    }
                 },
-                "2": {
-                    "logic": 2,
-                    "action": 5
+                {
+                    "id": "q6b",
+                    "text": "先把表面问题压住，情绪先放在心里",
+                    "scores": {
+                        "emotion_melancholy": 6,
+                        "damage_slash": 4,
+                        "element_wind": 4
+                    }
                 },
-                "3": {
-                    "logic": 5,
-                    "action": 4
+                {
+                    "id": "q6c",
+                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "scores": {
+                        "emotion_gluttony": 8,
+                        "damage_pierce": 6,
+                        "element_ice": 5
+                    }
                 },
-                "4": {
-                    "logic": 8,
-                    "action": 2
-                },
-                "5": {
-                    "logic": 11,
-                    "action": 0
+                {
+                    "id": "q6d",
+                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "scores": {
+                        "emotion_arrogance": 10,
+                        "damage_strike": 7,
+                        "element_fire": 6
+                    }
                 }
-            }
+            ]
         },
         {
             "id": "q7",
             "type": "single",
-            "prompt": "你更像哪种战场定位？",
+            "prompt": "同事在群里只@你问责，却没提其他参与人。你会？",
             "options": [
                 {
                     "id": "q7a",
-                    "text": "后排指挥与分析",
+                    "text": "先分步骤处理，尽量避免让事情继续扩散",
                     "scores": {
-                        "logic": 11,
-                        "social": 4
+                        "emotion_melancholy": 4,
+                        "damage_slash": 3,
+                        "element_wind": 3
                     }
                 },
                 {
                     "id": "q7b",
-                    "text": "前线突破与执行",
+                    "text": "先做最小应对，回头再慢慢消化不舒服",
                     "scores": {
-                        "action": 12,
-                        "intuition": 3
+                        "emotion_gluttony": 6,
+                        "damage_pierce": 4,
+                        "element_ice": 4
                     }
                 },
                 {
                     "id": "q7c",
-                    "text": "协调支援与串联",
+                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
                     "scores": {
-                        "social": 12,
-                        "logic": 3
+                        "emotion_arrogance": 8,
+                        "damage_strike": 6,
+                        "element_fire": 5
                     }
                 },
                 {
                     "id": "q7d",
-                    "text": "游走侦察与机会捕捉",
+                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
                     "scores": {
-                        "intuition": 12,
-                        "action": 4
+                        "emotion_envy": 10,
+                        "damage_slash": 7,
+                        "element_thunder": 6
                     }
                 }
             ]
         },
         {
             "id": "q8",
-            "type": "scale",
-            "prompt": "我能快速读懂他人情绪并调整自己的沟通方式。",
-            "scale": [
-                1,
-                2,
-                3,
-                4,
-                5
-            ],
-            "levelScores": {
-                "1": {
-                    "social": 0,
-                    "logic": 4
+            "type": "single",
+            "prompt": "排队很久买到的东西，轮到你时店员说“系统故障要重来”。你会？",
+            "options": [
+                {
+                    "id": "q8a",
+                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "scores": {
+                        "emotion_gluttony": 4,
+                        "damage_pierce": 3,
+                        "element_ice": 3
+                    }
                 },
-                "2": {
-                    "social": 2,
-                    "logic": 3
+                {
+                    "id": "q8b",
+                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "scores": {
+                        "emotion_arrogance": 6,
+                        "damage_strike": 4,
+                        "element_fire": 4
+                    }
                 },
-                "3": {
-                    "social": 5,
-                    "intuition": 2
+                {
+                    "id": "q8c",
+                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "scores": {
+                        "emotion_envy": 8,
+                        "damage_slash": 6,
+                        "element_thunder": 5
+                    }
                 },
-                "4": {
-                    "social": 8,
-                    "intuition": 4
-                },
-                "5": {
-                    "social": 11,
-                    "intuition": 6
+                {
+                    "id": "q8d",
+                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "scores": {
+                        "emotion_wrath": 10,
+                        "damage_pierce": 7,
+                        "element_wind": 6
+                    }
                 }
-            }
+            ]
         },
         {
             "id": "q9",
-            "type": "multi",
-            "prompt": "如果只能保留三条“生存原则”，你会选？（多选）",
+            "type": "single",
+            "prompt": "准备已久的计划被一句“先等等”搁置，你通常会？",
             "options": [
                 {
                     "id": "q9a",
-                    "text": "数据先于情绪",
+                    "text": "先找可信的人或资料校准，再做决定",
                     "scores": {
-                        "logic": 8
+                        "emotion_arrogance": 4,
+                        "damage_strike": 3,
+                        "element_fire": 3
                     }
                 },
                 {
                     "id": "q9b",
-                    "text": "决策必须及时",
+                    "text": "先把任务完成到及格线，再考虑内心感受",
                     "scores": {
-                        "action": 8
+                        "emotion_envy": 6,
+                        "damage_slash": 4,
+                        "element_thunder": 4
                     }
                 },
                 {
                     "id": "q9c",
-                    "text": "队友优先",
+                    "text": "立即抬高处理力度，避免局势继续失控",
                     "scores": {
-                        "social": 8
+                        "emotion_wrath": 8,
+                        "damage_pierce": 6,
+                        "element_wind": 5
                     }
                 },
                 {
                     "id": "q9d",
-                    "text": "相信直觉",
+                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
                     "scores": {
-                        "intuition": 8
+                        "emotion_lust": 10,
+                        "damage_strike": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q10",
+            "type": "single",
+            "prompt": "临时合住的室友频繁打乱你的作息，你会？",
+            "options": [
+                {
+                    "id": "q10a",
+                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "scores": {
+                        "emotion_envy": 4,
+                        "damage_slash": 3,
+                        "element_thunder": 3
                     }
                 },
                 {
-                    "id": "q9e",
-                    "text": "保留冗余方案",
+                    "id": "q10b",
+                    "text": "先维持体面和秩序，之后再处理情绪残留",
                     "scores": {
-                        "logic": 4,
-                        "action": 4
+                        "emotion_wrath": 6,
+                        "damage_pierce": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q10c",
+                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_strike": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q10d",
+                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "scores": {
+                        "emotion_sloth": 10,
+                        "damage_slash": 7,
+                        "element_fire": 6
                     }
                 }
-            ],
-            "cap": {
-                "logic": 12,
-                "action": 12,
-                "social": 10,
-                "intuition": 10
-            }
+            ]
+        },
+        {
+            "id": "q11",
+            "type": "single",
+            "prompt": "出门前发现重要证件不见了，而出发时间已逼近。你会？",
+            "options": [
+                {
+                    "id": "q11a",
+                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "scores": {
+                        "emotion_wrath": 4,
+                        "damage_pierce": 3,
+                        "element_wind": 3
+                    }
+                },
+                {
+                    "id": "q11b",
+                    "text": "先把表面问题压住，情绪先放在心里",
+                    "scores": {
+                        "emotion_lust": 6,
+                        "damage_strike": 4,
+                        "element_ice": 4
+                    }
+                },
+                {
+                    "id": "q11c",
+                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_slash": 6,
+                        "element_fire": 5
+                    }
+                },
+                {
+                    "id": "q11d",
+                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "scores": {
+                        "emotion_greed": 10,
+                        "damage_pierce": 7,
+                        "element_thunder": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q12",
+            "type": "single",
+            "prompt": "合作方突然改需求并要求“今天就确认”，你会？",
+            "options": [
+                {
+                    "id": "q12a",
+                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "scores": {
+                        "emotion_lust": 4,
+                        "damage_strike": 3,
+                        "element_ice": 3
+                    }
+                },
+                {
+                    "id": "q12b",
+                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "scores": {
+                        "emotion_sloth": 6,
+                        "damage_slash": 4,
+                        "element_fire": 4
+                    }
+                },
+                {
+                    "id": "q12c",
+                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "scores": {
+                        "emotion_greed": 8,
+                        "damage_pierce": 6,
+                        "element_thunder": 5
+                    }
+                },
+                {
+                    "id": "q12d",
+                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "scores": {
+                        "emotion_melancholy": 10,
+                        "damage_strike": 7,
+                        "element_wind": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q13",
+            "type": "single",
+            "prompt": "你辛苦完成的成果被别人先发到群里，你会？",
+            "options": [
+                {
+                    "id": "q13a",
+                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "scores": {
+                        "emotion_sloth": 4,
+                        "damage_slash": 3,
+                        "element_fire": 3
+                    }
+                },
+                {
+                    "id": "q13b",
+                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "scores": {
+                        "emotion_greed": 6,
+                        "damage_pierce": 4,
+                        "element_thunder": 4
+                    }
+                },
+                {
+                    "id": "q13c",
+                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "scores": {
+                        "emotion_melancholy": 8,
+                        "damage_strike": 6,
+                        "element_wind": 5
+                    }
+                },
+                {
+                    "id": "q13d",
+                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "scores": {
+                        "emotion_gluttony": 10,
+                        "damage_slash": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q14",
+            "type": "single",
+            "prompt": "原本答应帮你的人临阵失联，你会？",
+            "options": [
+                {
+                    "id": "q14a",
+                    "text": "先找可信的人或资料校准，再做决定",
+                    "scores": {
+                        "emotion_greed": 4,
+                        "damage_pierce": 3,
+                        "element_thunder": 3
+                    }
+                },
+                {
+                    "id": "q14b",
+                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "scores": {
+                        "emotion_melancholy": 6,
+                        "damage_strike": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q14c",
+                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "scores": {
+                        "emotion_gluttony": 8,
+                        "damage_slash": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q14d",
+                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "scores": {
+                        "emotion_arrogance": 10,
+                        "damage_pierce": 7,
+                        "element_fire": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q15",
+            "type": "single",
+            "prompt": "旅行中导航失灵，还下起大雨，同行人都在等你决定。你会？",
+            "options": [
+                {
+                    "id": "q15a",
+                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "scores": {
+                        "emotion_melancholy": 4,
+                        "damage_strike": 3,
+                        "element_wind": 3
+                    }
+                },
+                {
+                    "id": "q15b",
+                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "scores": {
+                        "emotion_gluttony": 6,
+                        "damage_slash": 4,
+                        "element_ice": 4
+                    }
+                },
+                {
+                    "id": "q15c",
+                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "scores": {
+                        "emotion_arrogance": 8,
+                        "damage_pierce": 6,
+                        "element_fire": 5
+                    }
+                },
+                {
+                    "id": "q15d",
+                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "scores": {
+                        "emotion_envy": 10,
+                        "damage_strike": 7,
+                        "element_thunder": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q16",
+            "type": "single",
+            "prompt": "项目复盘时你被连续追问细节，语气也不友好。你会？",
+            "options": [
+                {
+                    "id": "q16a",
+                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "scores": {
+                        "emotion_gluttony": 4,
+                        "damage_slash": 3,
+                        "element_ice": 3
+                    }
+                },
+                {
+                    "id": "q16b",
+                    "text": "先把表面问题压住，情绪先放在心里",
+                    "scores": {
+                        "emotion_arrogance": 6,
+                        "damage_pierce": 4,
+                        "element_fire": 4
+                    }
+                },
+                {
+                    "id": "q16c",
+                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "scores": {
+                        "emotion_envy": 8,
+                        "damage_strike": 6,
+                        "element_thunder": 5
+                    }
+                },
+                {
+                    "id": "q16d",
+                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "scores": {
+                        "emotion_wrath": 10,
+                        "damage_slash": 7,
+                        "element_wind": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q17",
+            "type": "single",
+            "prompt": "社交平台看到熟人持续晒成绩，而你最近不顺。你会？",
+            "options": [
+                {
+                    "id": "q17a",
+                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "scores": {
+                        "emotion_arrogance": 4,
+                        "damage_pierce": 3,
+                        "element_fire": 3
+                    }
+                },
+                {
+                    "id": "q17b",
+                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "scores": {
+                        "emotion_envy": 6,
+                        "damage_strike": 4,
+                        "element_thunder": 4
+                    }
+                },
+                {
+                    "id": "q17c",
+                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "scores": {
+                        "emotion_wrath": 8,
+                        "damage_slash": 6,
+                        "element_wind": 5
+                    }
+                },
+                {
+                    "id": "q17d",
+                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "scores": {
+                        "emotion_lust": 10,
+                        "damage_pierce": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q18",
+            "type": "single",
+            "prompt": "你刚开始专注工作，手机连续弹出三条紧急提醒。你会？",
+            "options": [
+                {
+                    "id": "q18a",
+                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "scores": {
+                        "emotion_envy": 4,
+                        "damage_strike": 3,
+                        "element_thunder": 3
+                    }
+                },
+                {
+                    "id": "q18b",
+                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "scores": {
+                        "emotion_wrath": 6,
+                        "damage_slash": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q18c",
+                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_pierce": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q18d",
+                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "scores": {
+                        "emotion_sloth": 10,
+                        "damage_strike": 7,
+                        "element_fire": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q19",
+            "type": "single",
+            "prompt": "原定预算突然被砍半，但目标没有减少。你会？",
+            "options": [
+                {
+                    "id": "q19a",
+                    "text": "先找可信的人或资料校准，再做决定",
+                    "scores": {
+                        "emotion_wrath": 4,
+                        "damage_slash": 3,
+                        "element_wind": 3
+                    }
+                },
+                {
+                    "id": "q19b",
+                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "scores": {
+                        "emotion_lust": 6,
+                        "damage_pierce": 4,
+                        "element_ice": 4
+                    }
+                },
+                {
+                    "id": "q19c",
+                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_strike": 6,
+                        "element_fire": 5
+                    }
+                },
+                {
+                    "id": "q19d",
+                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "scores": {
+                        "emotion_greed": 10,
+                        "damage_slash": 7,
+                        "element_thunder": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q20",
+            "type": "single",
+            "prompt": "你解释了三次的事情仍被误解，对方还在重复指责。你会？",
+            "options": [
+                {
+                    "id": "q20a",
+                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "scores": {
+                        "emotion_lust": 4,
+                        "damage_pierce": 3,
+                        "element_ice": 3
+                    }
+                },
+                {
+                    "id": "q20b",
+                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "scores": {
+                        "emotion_sloth": 6,
+                        "damage_strike": 4,
+                        "element_fire": 4
+                    }
+                },
+                {
+                    "id": "q20c",
+                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "scores": {
+                        "emotion_greed": 8,
+                        "damage_slash": 6,
+                        "element_thunder": 5
+                    }
+                },
+                {
+                    "id": "q20d",
+                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "scores": {
+                        "emotion_melancholy": 10,
+                        "damage_pierce": 7,
+                        "element_wind": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q21",
+            "type": "single",
+            "prompt": "家人临时通知今晚必须参加聚会，你原本打算独处恢复。你会？",
+            "options": [
+                {
+                    "id": "q21a",
+                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "scores": {
+                        "emotion_sloth": 4,
+                        "damage_strike": 3,
+                        "element_fire": 3
+                    }
+                },
+                {
+                    "id": "q21b",
+                    "text": "先把表面问题压住，情绪先放在心里",
+                    "scores": {
+                        "emotion_greed": 6,
+                        "damage_slash": 4,
+                        "element_thunder": 4
+                    }
+                },
+                {
+                    "id": "q21c",
+                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "scores": {
+                        "emotion_melancholy": 8,
+                        "damage_pierce": 6,
+                        "element_wind": 5
+                    }
+                },
+                {
+                    "id": "q21d",
+                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "scores": {
+                        "emotion_gluttony": 10,
+                        "damage_strike": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q22",
+            "type": "single",
+            "prompt": "你准备的活动临时被改到陌生场地，设备也不齐。你会？",
+            "options": [
+                {
+                    "id": "q22a",
+                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "scores": {
+                        "emotion_greed": 4,
+                        "damage_slash": 3,
+                        "element_thunder": 3
+                    }
+                },
+                {
+                    "id": "q22b",
+                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "scores": {
+                        "emotion_melancholy": 6,
+                        "damage_pierce": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q22c",
+                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "scores": {
+                        "emotion_gluttony": 8,
+                        "damage_strike": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q22d",
+                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "scores": {
+                        "emotion_arrogance": 10,
+                        "damage_slash": 7,
+                        "element_fire": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q23",
+            "type": "single",
+            "prompt": "部门群里出现含糊的负面评价，很多人默认在说你。你会？",
+            "options": [
+                {
+                    "id": "q23a",
+                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "scores": {
+                        "emotion_melancholy": 4,
+                        "damage_pierce": 3,
+                        "element_wind": 3
+                    }
+                },
+                {
+                    "id": "q23b",
+                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "scores": {
+                        "emotion_gluttony": 6,
+                        "damage_strike": 4,
+                        "element_ice": 4
+                    }
+                },
+                {
+                    "id": "q23c",
+                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "scores": {
+                        "emotion_arrogance": 8,
+                        "damage_slash": 6,
+                        "element_fire": 5
+                    }
+                },
+                {
+                    "id": "q23d",
+                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "scores": {
+                        "emotion_envy": 10,
+                        "damage_pierce": 7,
+                        "element_thunder": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q24",
+            "type": "single",
+            "prompt": "你排好的一整天计划被突发电话和消息不断切碎。你会？",
+            "options": [
+                {
+                    "id": "q24a",
+                    "text": "先找可信的人或资料校准，再做决定",
+                    "scores": {
+                        "emotion_gluttony": 4,
+                        "damage_strike": 3,
+                        "element_ice": 3
+                    }
+                },
+                {
+                    "id": "q24b",
+                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "scores": {
+                        "emotion_arrogance": 6,
+                        "damage_slash": 4,
+                        "element_fire": 4
+                    }
+                },
+                {
+                    "id": "q24c",
+                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "scores": {
+                        "emotion_envy": 8,
+                        "damage_pierce": 6,
+                        "element_thunder": 5
+                    }
+                },
+                {
+                    "id": "q24d",
+                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "scores": {
+                        "emotion_wrath": 10,
+                        "damage_strike": 7,
+                        "element_wind": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q25",
+            "type": "single",
+            "prompt": "一位关系一般的人突然向你倾诉很多私人问题。你会？",
+            "options": [
+                {
+                    "id": "q25a",
+                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "scores": {
+                        "emotion_arrogance": 4,
+                        "damage_slash": 3,
+                        "element_fire": 3
+                    }
+                },
+                {
+                    "id": "q25b",
+                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "scores": {
+                        "emotion_envy": 6,
+                        "damage_pierce": 4,
+                        "element_thunder": 4
+                    }
+                },
+                {
+                    "id": "q25c",
+                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "scores": {
+                        "emotion_wrath": 8,
+                        "damage_strike": 6,
+                        "element_wind": 5
+                    }
+                },
+                {
+                    "id": "q25d",
+                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "scores": {
+                        "emotion_lust": 10,
+                        "damage_slash": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q26",
+            "type": "single",
+            "prompt": "你花钱买的课程效果一般，但退款窗口只剩今天。你会？",
+            "options": [
+                {
+                    "id": "q26a",
+                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "scores": {
+                        "emotion_envy": 4,
+                        "damage_pierce": 3,
+                        "element_thunder": 3
+                    }
+                },
+                {
+                    "id": "q26b",
+                    "text": "先把表面问题压住，情绪先放在心里",
+                    "scores": {
+                        "emotion_wrath": 6,
+                        "damage_strike": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q26c",
+                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_slash": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q26d",
+                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "scores": {
+                        "emotion_sloth": 10,
+                        "damage_pierce": 7,
+                        "element_fire": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q27",
+            "type": "single",
+            "prompt": "通勤路上发生小擦碰，对方语气强硬且不讲理。你会？",
+            "options": [
+                {
+                    "id": "q27a",
+                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "scores": {
+                        "emotion_wrath": 4,
+                        "damage_strike": 3,
+                        "element_wind": 3
+                    }
+                },
+                {
+                    "id": "q27b",
+                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "scores": {
+                        "emotion_lust": 6,
+                        "damage_slash": 4,
+                        "element_ice": 4
+                    }
+                },
+                {
+                    "id": "q27c",
+                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_pierce": 6,
+                        "element_fire": 5
+                    }
+                },
+                {
+                    "id": "q27d",
+                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "scores": {
+                        "emotion_greed": 10,
+                        "damage_strike": 7,
+                        "element_thunder": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q28",
+            "type": "single",
+            "prompt": "你在公开场合被点名临时发言，毫无准备。你会？",
+            "options": [
+                {
+                    "id": "q28a",
+                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "scores": {
+                        "emotion_lust": 4,
+                        "damage_slash": 3,
+                        "element_ice": 3
+                    }
+                },
+                {
+                    "id": "q28b",
+                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "scores": {
+                        "emotion_sloth": 6,
+                        "damage_pierce": 4,
+                        "element_fire": 4
+                    }
+                },
+                {
+                    "id": "q28c",
+                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "scores": {
+                        "emotion_greed": 8,
+                        "damage_strike": 6,
+                        "element_thunder": 5
+                    }
+                },
+                {
+                    "id": "q28d",
+                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "scores": {
+                        "emotion_melancholy": 10,
+                        "damage_slash": 7,
+                        "element_wind": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q29",
+            "type": "single",
+            "prompt": "重要约会前 30 分钟，你收到一条让人不安的消息。你会？",
+            "options": [
+                {
+                    "id": "q29a",
+                    "text": "先找可信的人或资料校准，再做决定",
+                    "scores": {
+                        "emotion_sloth": 4,
+                        "damage_pierce": 3,
+                        "element_fire": 3
+                    }
+                },
+                {
+                    "id": "q29b",
+                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "scores": {
+                        "emotion_greed": 6,
+                        "damage_strike": 4,
+                        "element_thunder": 4
+                    }
+                },
+                {
+                    "id": "q29c",
+                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "scores": {
+                        "emotion_melancholy": 8,
+                        "damage_slash": 6,
+                        "element_wind": 5
+                    }
+                },
+                {
+                    "id": "q29d",
+                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "scores": {
+                        "emotion_gluttony": 10,
+                        "damage_pierce": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q30",
+            "type": "single",
+            "prompt": "团队里两人激烈争执，都希望你立刻站队。你会？",
+            "options": [
+                {
+                    "id": "q30a",
+                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "scores": {
+                        "emotion_greed": 4,
+                        "damage_strike": 3,
+                        "element_thunder": 3
+                    }
+                },
+                {
+                    "id": "q30b",
+                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "scores": {
+                        "emotion_melancholy": 6,
+                        "damage_slash": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q30c",
+                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "scores": {
+                        "emotion_gluttony": 8,
+                        "damage_pierce": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q30d",
+                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "scores": {
+                        "emotion_arrogance": 10,
+                        "damage_strike": 7,
+                        "element_fire": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q31",
+            "type": "single",
+            "prompt": "你连续几天睡眠不足，今天又被临时安排额外任务。你会？",
+            "options": [
+                {
+                    "id": "q31a",
+                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "scores": {
+                        "emotion_melancholy": 4,
+                        "damage_slash": 3,
+                        "element_wind": 3
+                    }
+                },
+                {
+                    "id": "q31b",
+                    "text": "先把表面问题压住，情绪先放在心里",
+                    "scores": {
+                        "emotion_gluttony": 6,
+                        "damage_pierce": 4,
+                        "element_ice": 4
+                    }
+                },
+                {
+                    "id": "q31c",
+                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "scores": {
+                        "emotion_arrogance": 8,
+                        "damage_strike": 6,
+                        "element_fire": 5
+                    }
+                },
+                {
+                    "id": "q31d",
+                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "scores": {
+                        "emotion_envy": 10,
+                        "damage_slash": 7,
+                        "element_thunder": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q32",
+            "type": "single",
+            "prompt": "你提交的建议被“已读不回”，但别人类似建议被快速采纳。你会？",
+            "options": [
+                {
+                    "id": "q32a",
+                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "scores": {
+                        "emotion_gluttony": 4,
+                        "damage_pierce": 3,
+                        "element_ice": 3
+                    }
+                },
+                {
+                    "id": "q32b",
+                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "scores": {
+                        "emotion_arrogance": 6,
+                        "damage_strike": 4,
+                        "element_fire": 4
+                    }
+                },
+                {
+                    "id": "q32c",
+                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "scores": {
+                        "emotion_envy": 8,
+                        "damage_slash": 6,
+                        "element_thunder": 5
+                    }
+                },
+                {
+                    "id": "q32d",
+                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "scores": {
+                        "emotion_wrath": 10,
+                        "damage_pierce": 7,
+                        "element_wind": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q33",
+            "type": "single",
+            "prompt": "刚准备结束一天工作，系统突然提示“数据异常需处理”。你会？",
+            "options": [
+                {
+                    "id": "q33a",
+                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "scores": {
+                        "emotion_arrogance": 4,
+                        "damage_strike": 3,
+                        "element_fire": 3
+                    }
+                },
+                {
+                    "id": "q33b",
+                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "scores": {
+                        "emotion_envy": 6,
+                        "damage_slash": 4,
+                        "element_thunder": 4
+                    }
+                },
+                {
+                    "id": "q33c",
+                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "scores": {
+                        "emotion_wrath": 8,
+                        "damage_pierce": 6,
+                        "element_wind": 5
+                    }
+                },
+                {
+                    "id": "q33d",
+                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "scores": {
+                        "emotion_lust": 10,
+                        "damage_strike": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q34",
+            "type": "single",
+            "prompt": "你信任的人说了句“你太敏感了”，你会？",
+            "options": [
+                {
+                    "id": "q34a",
+                    "text": "先找可信的人或资料校准，再做决定",
+                    "scores": {
+                        "emotion_envy": 4,
+                        "damage_slash": 3,
+                        "element_thunder": 3
+                    }
+                },
+                {
+                    "id": "q34b",
+                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "scores": {
+                        "emotion_wrath": 6,
+                        "damage_pierce": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q34c",
+                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_strike": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q34d",
+                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "scores": {
+                        "emotion_sloth": 10,
+                        "damage_slash": 7,
+                        "element_fire": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q35",
+            "type": "single",
+            "prompt": "朋友临时爽约且没有提前说明，你会？",
+            "options": [
+                {
+                    "id": "q35a",
+                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "scores": {
+                        "emotion_wrath": 4,
+                        "damage_pierce": 3,
+                        "element_wind": 3
+                    }
+                },
+                {
+                    "id": "q35b",
+                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "scores": {
+                        "emotion_lust": 6,
+                        "damage_strike": 4,
+                        "element_ice": 4
+                    }
+                },
+                {
+                    "id": "q35c",
+                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_slash": 6,
+                        "element_fire": 5
+                    }
+                },
+                {
+                    "id": "q35d",
+                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "scores": {
+                        "emotion_greed": 10,
+                        "damage_pierce": 7,
+                        "element_thunder": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q36",
+            "type": "single",
+            "prompt": "你为某件事投入很多，却被一句“就这样吧”轻描淡写带过。你会？",
+            "options": [
+                {
+                    "id": "q36a",
+                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "scores": {
+                        "emotion_lust": 4,
+                        "damage_strike": 3,
+                        "element_ice": 3
+                    }
+                },
+                {
+                    "id": "q36b",
+                    "text": "先把表面问题压住，情绪先放在心里",
+                    "scores": {
+                        "emotion_sloth": 6,
+                        "damage_slash": 4,
+                        "element_fire": 4
+                    }
+                },
+                {
+                    "id": "q36c",
+                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "scores": {
+                        "emotion_greed": 8,
+                        "damage_pierce": 6,
+                        "element_thunder": 5
+                    }
+                },
+                {
+                    "id": "q36d",
+                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "scores": {
+                        "emotion_melancholy": 10,
+                        "damage_strike": 7,
+                        "element_wind": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q37",
+            "type": "single",
+            "prompt": "突然接到通知：你明天需要带新人完成关键流程。你会？",
+            "options": [
+                {
+                    "id": "q37a",
+                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "scores": {
+                        "emotion_sloth": 4,
+                        "damage_slash": 3,
+                        "element_fire": 3
+                    }
+                },
+                {
+                    "id": "q37b",
+                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "scores": {
+                        "emotion_greed": 6,
+                        "damage_pierce": 4,
+                        "element_thunder": 4
+                    }
+                },
+                {
+                    "id": "q37c",
+                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "scores": {
+                        "emotion_melancholy": 8,
+                        "damage_strike": 6,
+                        "element_wind": 5
+                    }
+                },
+                {
+                    "id": "q37d",
+                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "scores": {
+                        "emotion_gluttony": 10,
+                        "damage_slash": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q38",
+            "type": "single",
+            "prompt": "你在公共场合遇到曾让你很受伤的人，对方主动打招呼。你会？",
+            "options": [
+                {
+                    "id": "q38a",
+                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "scores": {
+                        "emotion_greed": 4,
+                        "damage_pierce": 3,
+                        "element_thunder": 3
+                    }
+                },
+                {
+                    "id": "q38b",
+                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "scores": {
+                        "emotion_melancholy": 6,
+                        "damage_strike": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q38c",
+                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "scores": {
+                        "emotion_gluttony": 8,
+                        "damage_slash": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q38d",
+                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "scores": {
+                        "emotion_arrogance": 10,
+                        "damage_pierce": 7,
+                        "element_fire": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q39",
+            "type": "single",
+            "prompt": "同一个小问题一周内反复出现，你已经解释过很多次。你会？",
+            "options": [
+                {
+                    "id": "q39a",
+                    "text": "先找可信的人或资料校准，再做决定",
+                    "scores": {
+                        "emotion_melancholy": 4,
+                        "damage_strike": 3,
+                        "element_wind": 3
+                    }
+                },
+                {
+                    "id": "q39b",
+                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "scores": {
+                        "emotion_gluttony": 6,
+                        "damage_slash": 4,
+                        "element_ice": 4
+                    }
+                },
+                {
+                    "id": "q39c",
+                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "scores": {
+                        "emotion_arrogance": 8,
+                        "damage_pierce": 6,
+                        "element_fire": 5
+                    }
+                },
+                {
+                    "id": "q39d",
+                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "scores": {
+                        "emotion_envy": 10,
+                        "damage_strike": 7,
+                        "element_thunder": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q40",
+            "type": "single",
+            "prompt": "你难得放松时，工作群突然连续@你需要即时反馈。你会？",
+            "options": [
+                {
+                    "id": "q40a",
+                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "scores": {
+                        "emotion_gluttony": 4,
+                        "damage_slash": 3,
+                        "element_ice": 3
+                    }
+                },
+                {
+                    "id": "q40b",
+                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "scores": {
+                        "emotion_arrogance": 6,
+                        "damage_pierce": 4,
+                        "element_fire": 4
+                    }
+                },
+                {
+                    "id": "q40c",
+                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "scores": {
+                        "emotion_envy": 8,
+                        "damage_strike": 6,
+                        "element_thunder": 5
+                    }
+                },
+                {
+                    "id": "q40d",
+                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "scores": {
+                        "emotion_wrath": 10,
+                        "damage_slash": 7,
+                        "element_wind": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q41",
+            "type": "single",
+            "prompt": "你被安排和不熟悉的人共同完成高压任务。你会？",
+            "options": [
+                {
+                    "id": "q41a",
+                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "scores": {
+                        "emotion_arrogance": 4,
+                        "damage_pierce": 3,
+                        "element_fire": 3
+                    }
+                },
+                {
+                    "id": "q41b",
+                    "text": "先把表面问题压住，情绪先放在心里",
+                    "scores": {
+                        "emotion_envy": 6,
+                        "damage_strike": 4,
+                        "element_thunder": 4
+                    }
+                },
+                {
+                    "id": "q41c",
+                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "scores": {
+                        "emotion_wrath": 8,
+                        "damage_slash": 6,
+                        "element_wind": 5
+                    }
+                },
+                {
+                    "id": "q41d",
+                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "scores": {
+                        "emotion_lust": 10,
+                        "damage_pierce": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q42",
+            "type": "single",
+            "prompt": "你在家中休息时，亲友突然把难题推给你决定。你会？",
+            "options": [
+                {
+                    "id": "q42a",
+                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "scores": {
+                        "emotion_envy": 4,
+                        "damage_strike": 3,
+                        "element_thunder": 3
+                    }
+                },
+                {
+                    "id": "q42b",
+                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "scores": {
+                        "emotion_wrath": 6,
+                        "damage_slash": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q42c",
+                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_pierce": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q42d",
+                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "scores": {
+                        "emotion_sloth": 10,
+                        "damage_strike": 7,
+                        "element_fire": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q43",
+            "type": "single",
+            "prompt": "线上讨论里有人截取你一句话并误读传播。你会？",
+            "options": [
+                {
+                    "id": "q43a",
+                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "scores": {
+                        "emotion_wrath": 4,
+                        "damage_slash": 3,
+                        "element_wind": 3
+                    }
+                },
+                {
+                    "id": "q43b",
+                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "scores": {
+                        "emotion_lust": 6,
+                        "damage_pierce": 4,
+                        "element_ice": 4
+                    }
+                },
+                {
+                    "id": "q43c",
+                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "scores": {
+                        "emotion_sloth": 8,
+                        "damage_strike": 6,
+                        "element_fire": 5
+                    }
+                },
+                {
+                    "id": "q43d",
+                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "scores": {
+                        "emotion_greed": 10,
+                        "damage_slash": 7,
+                        "element_thunder": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q44",
+            "type": "single",
+            "prompt": "临出发前发现交通方案全失效，只能现场改线。你会？",
+            "options": [
+                {
+                    "id": "q44a",
+                    "text": "先找可信的人或资料校准，再做决定",
+                    "scores": {
+                        "emotion_lust": 4,
+                        "damage_pierce": 3,
+                        "element_ice": 3
+                    }
+                },
+                {
+                    "id": "q44b",
+                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "scores": {
+                        "emotion_sloth": 6,
+                        "damage_strike": 4,
+                        "element_fire": 4
+                    }
+                },
+                {
+                    "id": "q44c",
+                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "scores": {
+                        "emotion_greed": 8,
+                        "damage_slash": 6,
+                        "element_thunder": 5
+                    }
+                },
+                {
+                    "id": "q44d",
+                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "scores": {
+                        "emotion_melancholy": 10,
+                        "damage_pierce": 7,
+                        "element_wind": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q45",
+            "type": "single",
+            "prompt": "你在做长期目标时，短期诱惑频繁出现。你会？",
+            "options": [
+                {
+                    "id": "q45a",
+                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "scores": {
+                        "emotion_sloth": 4,
+                        "damage_strike": 3,
+                        "element_fire": 3
+                    }
+                },
+                {
+                    "id": "q45b",
+                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "scores": {
+                        "emotion_greed": 6,
+                        "damage_slash": 4,
+                        "element_thunder": 4
+                    }
+                },
+                {
+                    "id": "q45c",
+                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "scores": {
+                        "emotion_melancholy": 8,
+                        "damage_pierce": 6,
+                        "element_wind": 5
+                    }
+                },
+                {
+                    "id": "q45d",
+                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "scores": {
+                        "emotion_gluttony": 10,
+                        "damage_strike": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q46",
+            "type": "single",
+            "prompt": "一次重要沟通突然变成指责现场，你会？",
+            "options": [
+                {
+                    "id": "q46a",
+                    "text": "先稳住现场，确认事实和边界，再决定动作",
+                    "scores": {
+                        "emotion_greed": 4,
+                        "damage_slash": 3,
+                        "element_thunder": 3
+                    }
+                },
+                {
+                    "id": "q46b",
+                    "text": "先把表面问题压住，情绪先放在心里",
+                    "scores": {
+                        "emotion_melancholy": 6,
+                        "damage_pierce": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q46c",
+                    "text": "马上介入并提高掌控强度，把局面拉回可控范围",
+                    "scores": {
+                        "emotion_gluttony": 8,
+                        "damage_strike": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q46d",
+                    "text": "不再解释，直接按当下感觉采取最快或最刺激的做法",
+                    "scores": {
+                        "emotion_arrogance": 10,
+                        "damage_slash": 7,
+                        "element_fire": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q47",
+            "type": "single",
+            "prompt": "你被要求在有限时间内同时处理三件互相冲突的事。你会？",
+            "options": [
+                {
+                    "id": "q47a",
+                    "text": "先分步骤处理，尽量避免让事情继续扩散",
+                    "scores": {
+                        "emotion_melancholy": 4,
+                        "damage_pierce": 3,
+                        "element_wind": 3
+                    }
+                },
+                {
+                    "id": "q47b",
+                    "text": "先做最小应对，回头再慢慢消化不舒服",
+                    "scores": {
+                        "emotion_gluttony": 6,
+                        "damage_strike": 4,
+                        "element_ice": 4
+                    }
+                },
+                {
+                    "id": "q47c",
+                    "text": "直接推进关键动作，宁可强硬也不想被动等待",
+                    "scores": {
+                        "emotion_arrogance": 8,
+                        "damage_slash": 6,
+                        "element_fire": 5
+                    }
+                },
+                {
+                    "id": "q47d",
+                    "text": "先退开或切断联系，用转移注意力的方式扛过去",
+                    "scores": {
+                        "emotion_envy": 10,
+                        "damage_pierce": 7,
+                        "element_thunder": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q48",
+            "type": "single",
+            "prompt": "一条模糊消息让你误以为事情要失控，你会？",
+            "options": [
+                {
+                    "id": "q48a",
+                    "text": "先问清楚再回应，尽量把判断放慢一点",
+                    "scores": {
+                        "emotion_gluttony": 4,
+                        "damage_strike": 3,
+                        "element_ice": 3
+                    }
+                },
+                {
+                    "id": "q48b",
+                    "text": "先顺着场面走，但心里会记下这次体验",
+                    "scores": {
+                        "emotion_arrogance": 6,
+                        "damage_slash": 4,
+                        "element_fire": 4
+                    }
+                },
+                {
+                    "id": "q48c",
+                    "text": "迅速接手并主导节奏，优先确保结果",
+                    "scores": {
+                        "emotion_envy": 8,
+                        "damage_pierce": 6,
+                        "element_thunder": 5
+                    }
+                },
+                {
+                    "id": "q48d",
+                    "text": "不想纠缠，直接用情绪化或补偿式方式让自己好受",
+                    "scores": {
+                        "emotion_wrath": 10,
+                        "damage_strike": 7,
+                        "element_wind": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q49",
+            "type": "single",
+            "prompt": "你帮助别人后对方没有任何回应或感谢，你会？",
+            "options": [
+                {
+                    "id": "q49a",
+                    "text": "先找可信的人或资料校准，再做决定",
+                    "scores": {
+                        "emotion_arrogance": 4,
+                        "damage_slash": 3,
+                        "element_fire": 3
+                    }
+                },
+                {
+                    "id": "q49b",
+                    "text": "先把任务完成到及格线，再考虑内心感受",
+                    "scores": {
+                        "emotion_envy": 6,
+                        "damage_pierce": 4,
+                        "element_thunder": 4
+                    }
+                },
+                {
+                    "id": "q49c",
+                    "text": "立即抬高处理力度，避免局势继续失控",
+                    "scores": {
+                        "emotion_wrath": 8,
+                        "damage_strike": 6,
+                        "element_wind": 5
+                    }
+                },
+                {
+                    "id": "q49d",
+                    "text": "先关掉沟通，靠囤积、刷屏或放空硬撑过去",
+                    "scores": {
+                        "emotion_lust": 10,
+                        "damage_slash": 7,
+                        "element_ice": 6
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q50",
+            "type": "single",
+            "prompt": "计划好的稳定节奏突然被连续变化打乱，你会？",
+            "options": [
+                {
+                    "id": "q50a",
+                    "text": "先把节奏降下来，给自己一点观察窗口",
+                    "scores": {
+                        "emotion_envy": 4,
+                        "damage_pierce": 3,
+                        "element_thunder": 3
+                    }
+                },
+                {
+                    "id": "q50b",
+                    "text": "先维持体面和秩序，之后再处理情绪残留",
+                    "scores": {
+                        "emotion_wrath": 6,
+                        "damage_strike": 4,
+                        "element_wind": 4
+                    }
+                },
+                {
+                    "id": "q50c",
+                    "text": "马上表态并推动行动，不想把主动权交出去",
+                    "scores": {
+                        "emotion_lust": 8,
+                        "damage_slash": 6,
+                        "element_ice": 5
+                    }
+                },
+                {
+                    "id": "q50d",
+                    "text": "先抽离现场，靠即时满足或回避来止损",
+                    "scores": {
+                        "emotion_sloth": 10,
+                        "damage_pierce": 7,
+                        "element_fire": 6
+                    }
+                }
+            ]
         }
     ],
     "titleRules": [
         {
-            "id": "title-strategist",
-            "title": "星穹策士",
-            "description": "你擅长把复杂局势拆解为可执行方案。",
+            "id": "emotion-arrogance",
+            "title": "情绪效果·傲慢",
+            "description": "傲慢的人站在顶峰，但是傲慢也会是最后的死因。体系流派：暴击/伤害减免",
             "rule": {
                 "op": "and",
                 "items": [
                     {
-                        "field": "logic",
+                        "field": "emotion_arrogance",
                         "cmp": "gte",
-                        "value": 72
-                    },
-                    {
-                        "op": "or",
-                        "items": [
-                            {
-                                "field": "social",
-                                "cmp": "gte",
-                                "value": 55
-                            },
-                            {
-                                "field": "action",
-                                "cmp": "gte",
-                                "value": 55
-                            }
-                        ]
+                        "value": 60
                     }
                 ]
             }
         },
         {
-            "id": "title-vanguard",
-            "title": "破晓先锋",
-            "description": "你在不确定局势中也能快速推进局面。",
+            "id": "emotion-envy",
+            "title": "情绪效果·嫉妒",
+            "description": "嫉妒的人看到一切，都会被心里的刺逐步收紧。体系流派：攻击增伤",
             "rule": {
                 "op": "and",
                 "items": [
                     {
-                        "field": "action",
+                        "field": "emotion_envy",
                         "cmp": "gte",
-                        "value": 72
-                    },
-                    {
-                        "op": "or",
-                        "items": [
-                            {
-                                "field": "intuition",
-                                "cmp": "gte",
-                                "value": 60
-                            },
-                            {
-                                "field": "logic",
-                                "cmp": "gte",
-                                "value": 45
-                            }
-                        ]
+                        "value": 60
                     }
                 ]
             }
         },
         {
-            "id": "title-linker",
-            "title": "星链协调者",
-            "description": "你能把分散的人与资源重新连接成体系。",
+            "id": "emotion-wrath",
+            "title": "情绪效果·暴怒",
+            "description": "暴怒的人会不停的摧毁一切，直到自己焚烧殆尽。体系流派：攻击泄愤与挨打增强",
             "rule": {
                 "op": "and",
                 "items": [
                     {
-                        "field": "social",
+                        "field": "emotion_wrath",
                         "cmp": "gte",
-                        "value": 70
-                    },
-                    {
-                        "op": "or",
-                        "items": [
-                            {
-                                "field": "logic",
-                                "cmp": "gte",
-                                "value": 50
-                            },
-                            {
-                                "field": "intuition",
-                                "cmp": "gte",
-                                "value": 50
-                            }
-                        ]
+                        "value": 60
                     }
                 ]
             }
         },
         {
-            "id": "title-seer",
-            "title": "裂隙观测者",
-            "description": "你凭借直觉和观察总能提前发现转机。",
+            "id": "emotion-lust",
+            "title": "情绪效果·色欲",
+            "description": "色欲的人会不停的通过血肉获得情绪。体系流派：持续攻击强化",
             "rule": {
                 "op": "and",
                 "items": [
                     {
-                        "field": "intuition",
+                        "field": "emotion_lust",
                         "cmp": "gte",
-                        "value": 72
-                    },
-                    {
-                        "op": "or",
-                        "items": [
-                            {
-                                "field": "action",
-                                "cmp": "gte",
-                                "value": 55
-                            },
-                            {
-                                "field": "social",
-                                "cmp": "gte",
-                                "value": 50
-                            }
-                        ]
+                        "value": 60
                     }
                 ]
             }
         },
         {
-            "id": "title-balanced",
-            "title": "四象调律者",
-            "description": "你在多个维度间维持罕见的平衡。",
+            "id": "emotion-sloth",
+            "title": "情绪效果·怠惰",
+            "description": "怠惰的人往往不会干任何事情。体系流派：间隔攻击",
             "rule": {
                 "op": "and",
                 "items": [
                     {
-                        "field": "logic",
+                        "field": "emotion_sloth",
                         "cmp": "gte",
-                        "value": 55
-                    },
+                        "value": 60
+                    }
+                ]
+            }
+        },
+        {
+            "id": "emotion-greed",
+            "title": "情绪效果·贪婪",
+            "description": "贪婪的人为了钱物什么都会干。体系流派：夺取Buff与失去Buff",
+            "rule": {
+                "op": "and",
+                "items": [
                     {
-                        "field": "action",
+                        "field": "emotion_greed",
                         "cmp": "gte",
-                        "value": 55
-                    },
+                        "value": 60
+                    }
+                ]
+            }
+        },
+        {
+            "id": "emotion-melancholy",
+            "title": "情绪效果·忧郁",
+            "description": "忧郁的人会忧郁到人生最后一刻。体系流派：自我虚弱与状态转换",
+            "rule": {
+                "op": "and",
+                "items": [
                     {
-                        "field": "social",
+                        "field": "emotion_melancholy",
                         "cmp": "gte",
-                        "value": 55
-                    },
+                        "value": 60
+                    }
+                ]
+            }
+        },
+        {
+            "id": "emotion-gluttony",
+            "title": "情绪效果·暴食",
+            "description": "暴食的人以无尽的摄入而活着。体系流派：间隔性强大",
+            "rule": {
+                "op": "and",
+                "items": [
                     {
-                        "field": "intuition",
+                        "field": "emotion_gluttony",
                         "cmp": "gte",
-                        "value": 55
+                        "value": 60
+                    }
+                ]
+            }
+        },
+        {
+            "id": "damage-slash",
+            "title": "伤害类型·斩击",
+            "description": "你斩的很快，而且越砍伤害越高，代价是什么呢？",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "damage_slash",
+                        "cmp": "gte",
+                        "value": 60
+                    }
+                ]
+            }
+        },
+        {
+            "id": "damage-pierce",
+            "title": "伤害类型·刺击",
+            "description": "你的刺击会无视一定护甲，代价是什么呢？",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "damage_pierce",
+                        "cmp": "gte",
+                        "value": 60
+                    }
+                ]
+            }
+        },
+        {
+            "id": "damage-strike",
+            "title": "伤害类型·打击",
+            "description": "你的打击会穿透护甲造成额外伤害，代价是什么呢？",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "damage_strike",
+                        "cmp": "gte",
+                        "value": 60
+                    }
+                ]
+            }
+        },
+        {
+            "id": "element-fire",
+            "title": "属性效果·火",
+            "description": "最后因此自焚。",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "element_fire",
+                        "cmp": "gte",
+                        "value": 60
+                    }
+                ]
+            }
+        },
+        {
+            "id": "element-thunder",
+            "title": "属性效果·雷",
+            "description": "最后彻底麻痹。",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "element_thunder",
+                        "cmp": "gte",
+                        "value": 60
+                    }
+                ]
+            }
+        },
+        {
+            "id": "element-wind",
+            "title": "属性效果·风",
+            "description": "最后彻底随缘。",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "element_wind",
+                        "cmp": "gte",
+                        "value": 60
+                    }
+                ]
+            }
+        },
+        {
+            "id": "element-ice",
+            "title": "属性效果·冰",
+            "description": "最后因此不动。",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "element_ice",
+                        "cmp": "gte",
+                        "value": 60
                     }
                 ]
             }
         },
         {
             "id": "fallback",
-            "title": "初星旅者",
-            "description": "你正站在属于自己的冒险起点。",
+            "title": "情绪稳定者",
+            "description": "你的情绪太稳定了。",
             "rule": {
                 "op": "and",
                 "items": [
                     {
-                        "field": "logic",
+                        "field": "emotion_arrogance",
                         "cmp": "gte",
                         "value": 0
                     }
@@ -570,5 +2479,5 @@
         }
     ],
     "fallbackTitleId": "fallback",
-    "generatedAt": "2026-02-22T08:47:44.626Z"
+    "generatedAt": "2026-02-22T09:21:58.973Z"
 }
