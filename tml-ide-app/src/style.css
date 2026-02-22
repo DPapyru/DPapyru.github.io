@@ -569,13 +569,40 @@ button:disabled {
     flex: 1;
 }
 
-.file-group-title {
-    margin: 6px 0 2px;
-    padding: 2px 8px;
+.repo-tree-node {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.repo-tree-toggle {
+    display: block;
+    width: calc(100% - 8px);
+    margin: 0 4px;
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: #b7bec9;
+    text-align: left;
+    padding: 4px 8px;
+    padding-left: calc(8px + var(--tree-depth, 0) * 14px);
+    font-size: 12px;
+}
+
+.repo-tree-toggle:hover {
+    background: #2a2d2e;
+}
+
+.repo-tree-hint {
+    margin: 0;
+    padding: 6px 10px;
     color: #8f959e;
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+.repo-tree-hint-error {
+    color: #e06c75;
 }
 
 .file-item {
@@ -588,11 +615,16 @@ button:disabled {
     color: #cccccc;
     text-align: left;
     padding: 4px 8px;
+    padding-left: calc(8px + var(--tree-depth, 0) * 14px);
     font-size: 12px;
 }
 
 .file-item:hover {
     background: #2a2d2e;
+}
+
+.repo-tree-file-unloaded {
+    color: #8f959e;
 }
 
 .file-item[aria-current="true"] {

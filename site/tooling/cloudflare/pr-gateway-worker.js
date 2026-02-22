@@ -237,9 +237,10 @@ function sanitizeExtraFilePath(input) {
   const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(p);
   const isArticleImageFile = /^site\/content\/.+\/imgs\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(p);
   const isArticleMediaFile = /^site\/content\/.+\/media\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:mp4|webm)$/i.test(p);
+  const isAnimRootCsharpFile = /^site\/content\/anims\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(p);
   const isArticleCsharpFile = /^site\/content\/.+\/code\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(p);
-  if (!isShaderGalleryFile && !isArticleImageFile && !isArticleMediaFile && !isArticleCsharpFile) {
-    throw new Error("extra file 只允许 site/content/shader-gallery/<slug>/(entry|shader).json、site/content/**/imgs/*.{png,jpg,jpeg,gif,webp,svg,bmp,avif}、site/content/**/media/*.{mp4,webm} 或 site/content/**/code/*.cs");
+  if (!isShaderGalleryFile && !isArticleImageFile && !isArticleMediaFile && !isAnimRootCsharpFile && !isArticleCsharpFile) {
+    throw new Error("extra file 只允许 site/content/shader-gallery/<slug>/(entry|shader).json、site/content/**/imgs/*.{png,jpg,jpeg,gif,webp,svg,bmp,avif}、site/content/**/media/*.{mp4,webm}、site/content/anims/*.cs 或 site/content/**/code/*.cs");
   }
 
   return p;

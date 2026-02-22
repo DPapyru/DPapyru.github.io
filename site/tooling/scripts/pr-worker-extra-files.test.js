@@ -40,6 +40,7 @@ test('oauth worker restricts extraFiles path and count', () => {
     assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
     assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
     assert.match(text, /site\/content\/\*\*\/media\/\*\.\{mp4,webm\}/);
+    assert.match(text, /site\/content\/anims\/\*\.cs/);
     assert.match(text, /site\/content\/\*\*\/code\/\*\.cs/);
     assert.match(text, /extraFiles\s*数量不能超过\s*8/);
     assert.match(text, /content\s*过大/);
@@ -64,6 +65,7 @@ test('shared-key worker supports shader gallery extra files', () => {
     assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
     assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
     assert.match(text, /site\/content\/\*\*\/media\/\*\.\{mp4,webm\}/);
+    assert.match(text, /site\/content\/anims\/\*\.cs/);
     assert.match(text, /site\/content\/\*\*\/code\/\*\.cs/);
     assert.match(text, /extraFiles\s*数量不能超过\s*8/);
     assert.match(text, /content\s*过大/);
@@ -103,4 +105,13 @@ test('shared-key worker writes extra files to github contents api', () => {
     assert.match(text, /for\s*\(const\s+file\s+of\s+extraFiles\)/);
     assert.match(text, /encodePathForUrl\(file\.path\)/);
     assert.match(text, /extraFiles:\s*extraFiles\.map/);
+});
+
+test('tml-ide unified submit keeps anims/code csharp paths when already valid', () => {
+    const file = path.resolve('tml-ide-app/src/main.js');
+    const source = fs.readFileSync(file, 'utf8');
+
+    assert.match(source, /site\\\/content\\\/anims\\\//);
+    assert.match(source, /function\s+toDirectCsharpRepoPath\s*\(/);
+    assert.match(source, /toDirectCsharpRepoPath\(item\.path\)\s*\|\|\s*toCodePathForArticle\(articlePath,\s*item\.path\)/);
 });

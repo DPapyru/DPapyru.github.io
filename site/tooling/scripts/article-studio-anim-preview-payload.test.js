@@ -19,3 +19,20 @@ test('article studio uses expected debounce and timeout for anim bridge compile'
     assert.match(source, /ANIMCS_COMPILE_DEBOUNCE_MS\s*=\s*400/);
     assert.match(source, /ANIMCS_COMPILE_TIMEOUT_MS\s*=\s*8000/);
 });
+
+test('tml-ide main preview payload includes anim bridge compile fields', () => {
+    const sourcePath = path.resolve('tml-ide-app/src/main.js');
+    const source = fs.readFileSync(sourcePath, 'utf8');
+
+    assert.match(source, /compiledAnims/);
+    assert.match(source, /animCompileErrors/);
+    assert.match(source, /animBridge/);
+});
+
+test('tml-ide main uses expected debounce and timeout for anim bridge compile', () => {
+    const sourcePath = path.resolve('tml-ide-app/src/main.js');
+    const source = fs.readFileSync(sourcePath, 'utf8');
+
+    assert.match(source, /ANIMCS_COMPILE_DEBOUNCE_MS\s*=\s*400/);
+    assert.match(source, /ANIMCS_COMPILE_TIMEOUT_MS\s*=\s*8000/);
+});
