@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "root": "site/content",
-  "generatedAt": "2026-02-22T00:01:58.361Z",
+  "generatedAt": "2026-02-22T08:48:08.245Z",
   "files": [
     {
       "path": "Modder入门/code/firstclass_makefirstweapon.cs",
@@ -86,14 +86,6 @@
     {
       "path": "anims/vector-move.cs",
       "kind": "csharp"
-    },
-    {
-      "path": "shader-gallery/README.md",
-      "kind": "markdown"
-    },
-    {
-      "path": "shader-gallery/pass-1/README.md",
-      "kind": "markdown"
     },
     {
       "path": "怎么贡献/ContentProjects解决方案说明.md",

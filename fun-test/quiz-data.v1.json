@@ -1,0 +1,574 @@
+{
+    "schemaVersion": 1,
+    "meta": {
+        "id": "star-shatter-role",
+        "title": "猜猜你是《星辰击碎者》（小天使的独立游戏世界观）什么类型的角色",
+        "description": "通过多维度选择，看看你在《星辰击碎者》世界观中最像哪类角色。"
+    },
+    "dimensions": [
+        {
+            "key": "logic",
+            "label": "理性"
+        },
+        {
+            "key": "action",
+            "label": "行动力"
+        },
+        {
+            "key": "social",
+            "label": "社交"
+        },
+        {
+            "key": "intuition",
+            "label": "直觉"
+        }
+    ],
+    "theoreticalMax": {
+        "logic": 91,
+        "action": 83,
+        "social": 76,
+        "intuition": 81
+    },
+    "questions": [
+        {
+            "id": "q1",
+            "type": "single",
+            "prompt": "陨落之城突然断电，你第一反应是？",
+            "options": [
+                {
+                    "id": "q1a",
+                    "text": "先确认电网结构图和故障路径",
+                    "scores": {
+                        "logic": 12,
+                        "action": 3
+                    }
+                },
+                {
+                    "id": "q1b",
+                    "text": "带上工具立刻去最近配电站",
+                    "scores": {
+                        "action": 11,
+                        "intuition": 3
+                    }
+                },
+                {
+                    "id": "q1c",
+                    "text": "先联络各区同伴收集现场情况",
+                    "scores": {
+                        "social": 10,
+                        "logic": 4
+                    }
+                },
+                {
+                    "id": "q1d",
+                    "text": "靠直觉判断“最可能出问题的节点”",
+                    "scores": {
+                        "intuition": 11,
+                        "action": 4
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q2",
+            "type": "multi",
+            "prompt": "组建临时小队时，你最看重哪些特质？（多选）",
+            "options": [
+                {
+                    "id": "q2a",
+                    "text": "计划能力",
+                    "scores": {
+                        "logic": 8
+                    }
+                },
+                {
+                    "id": "q2b",
+                    "text": "执行速度",
+                    "scores": {
+                        "action": 8
+                    }
+                },
+                {
+                    "id": "q2c",
+                    "text": "沟通与协调",
+                    "scores": {
+                        "social": 8
+                    }
+                },
+                {
+                    "id": "q2d",
+                    "text": "临场应变",
+                    "scores": {
+                        "intuition": 8
+                    }
+                },
+                {
+                    "id": "q2e",
+                    "text": "抗压稳定",
+                    "scores": {
+                        "logic": 4,
+                        "action": 4
+                    }
+                }
+            ],
+            "cap": {
+                "logic": 12,
+                "action": 12,
+                "social": 12,
+                "intuition": 12
+            }
+        },
+        {
+            "id": "q3",
+            "type": "scale",
+            "prompt": "我愿意在信息不全的情况下先行动，再边做边修正。",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {
+                    "logic": 8,
+                    "action": 0,
+                    "intuition": 0
+                },
+                "2": {
+                    "logic": 6,
+                    "action": 2,
+                    "intuition": 1
+                },
+                "3": {
+                    "logic": 4,
+                    "action": 4,
+                    "intuition": 3
+                },
+                "4": {
+                    "logic": 2,
+                    "action": 7,
+                    "intuition": 6
+                },
+                "5": {
+                    "logic": 0,
+                    "action": 10,
+                    "intuition": 9
+                }
+            }
+        },
+        {
+            "id": "q4",
+            "type": "single",
+            "prompt": "团队出现严重分歧时，你通常会？",
+            "options": [
+                {
+                    "id": "q4a",
+                    "text": "列出利弊，按证据说服",
+                    "scores": {
+                        "logic": 10,
+                        "social": 3
+                    }
+                },
+                {
+                    "id": "q4b",
+                    "text": "定个短期目标，先做出结果",
+                    "scores": {
+                        "action": 10,
+                        "logic": 3
+                    }
+                },
+                {
+                    "id": "q4c",
+                    "text": "先稳定情绪，让大家回到同一频道",
+                    "scores": {
+                        "social": 11,
+                        "intuition": 3
+                    }
+                },
+                {
+                    "id": "q4d",
+                    "text": "观察气氛，抓关键节点切入",
+                    "scores": {
+                        "intuition": 10,
+                        "social": 4
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q5",
+            "type": "multi",
+            "prompt": "面对未知遗迹，你会准备什么？（多选）",
+            "options": [
+                {
+                    "id": "q5a",
+                    "text": "完整路线与撤离方案",
+                    "scores": {
+                        "logic": 7
+                    }
+                },
+                {
+                    "id": "q5b",
+                    "text": "轻装突进装备",
+                    "scores": {
+                        "action": 7
+                    }
+                },
+                {
+                    "id": "q5c",
+                    "text": "协作信号和后勤频道",
+                    "scores": {
+                        "social": 7
+                    }
+                },
+                {
+                    "id": "q5d",
+                    "text": "备用应急小工具",
+                    "scores": {
+                        "intuition": 7
+                    }
+                },
+                {
+                    "id": "q5e",
+                    "text": "一套临场决策准则",
+                    "scores": {
+                        "logic": 4,
+                        "intuition": 4
+                    }
+                }
+            ],
+            "cap": {
+                "logic": 11,
+                "action": 10,
+                "social": 10,
+                "intuition": 11
+            }
+        },
+        {
+            "id": "q6",
+            "type": "scale",
+            "prompt": "我更喜欢把复杂问题拆成清晰模块再推进。",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {
+                    "logic": 0,
+                    "action": 6
+                },
+                "2": {
+                    "logic": 2,
+                    "action": 5
+                },
+                "3": {
+                    "logic": 5,
+                    "action": 4
+                },
+                "4": {
+                    "logic": 8,
+                    "action": 2
+                },
+                "5": {
+                    "logic": 11,
+                    "action": 0
+                }
+            }
+        },
+        {
+            "id": "q7",
+            "type": "single",
+            "prompt": "你更像哪种战场定位？",
+            "options": [
+                {
+                    "id": "q7a",
+                    "text": "后排指挥与分析",
+                    "scores": {
+                        "logic": 11,
+                        "social": 4
+                    }
+                },
+                {
+                    "id": "q7b",
+                    "text": "前线突破与执行",
+                    "scores": {
+                        "action": 12,
+                        "intuition": 3
+                    }
+                },
+                {
+                    "id": "q7c",
+                    "text": "协调支援与串联",
+                    "scores": {
+                        "social": 12,
+                        "logic": 3
+                    }
+                },
+                {
+                    "id": "q7d",
+                    "text": "游走侦察与机会捕捉",
+                    "scores": {
+                        "intuition": 12,
+                        "action": 4
+                    }
+                }
+            ]
+        },
+        {
+            "id": "q8",
+            "type": "scale",
+            "prompt": "我能快速读懂他人情绪并调整自己的沟通方式。",
+            "scale": [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "levelScores": {
+                "1": {
+                    "social": 0,
+                    "logic": 4
+                },
+                "2": {
+                    "social": 2,
+                    "logic": 3
+                },
+                "3": {
+                    "social": 5,
+                    "intuition": 2
+                },
+                "4": {
+                    "social": 8,
+                    "intuition": 4
+                },
+                "5": {
+                    "social": 11,
+                    "intuition": 6
+                }
+            }
+        },
+        {
+            "id": "q9",
+            "type": "multi",
+            "prompt": "如果只能保留三条“生存原则”，你会选？（多选）",
+            "options": [
+                {
+                    "id": "q9a",
+                    "text": "数据先于情绪",
+                    "scores": {
+                        "logic": 8
+                    }
+                },
+                {
+                    "id": "q9b",
+                    "text": "决策必须及时",
+                    "scores": {
+                        "action": 8
+                    }
+                },
+                {
+                    "id": "q9c",
+                    "text": "队友优先",
+                    "scores": {
+                        "social": 8
+                    }
+                },
+                {
+                    "id": "q9d",
+                    "text": "相信直觉",
+                    "scores": {
+                        "intuition": 8
+                    }
+                },
+                {
+                    "id": "q9e",
+                    "text": "保留冗余方案",
+                    "scores": {
+                        "logic": 4,
+                        "action": 4
+                    }
+                }
+            ],
+            "cap": {
+                "logic": 12,
+                "action": 12,
+                "social": 10,
+                "intuition": 10
+            }
+        }
+    ],
+    "titleRules": [
+        {
+            "id": "title-strategist",
+            "title": "星穹策士",
+            "description": "你擅长把复杂局势拆解为可执行方案。",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "logic",
+                        "cmp": "gte",
+                        "value": 72
+                    },
+                    {
+                        "op": "or",
+                        "items": [
+                            {
+                                "field": "social",
+                                "cmp": "gte",
+                                "value": 55
+                            },
+                            {
+                                "field": "action",
+                                "cmp": "gte",
+                                "value": 55
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "title-vanguard",
+            "title": "破晓先锋",
+            "description": "你在不确定局势中也能快速推进局面。",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "action",
+                        "cmp": "gte",
+                        "value": 72
+                    },
+                    {
+                        "op": "or",
+                        "items": [
+                            {
+                                "field": "intuition",
+                                "cmp": "gte",
+                                "value": 60
+                            },
+                            {
+                                "field": "logic",
+                                "cmp": "gte",
+                                "value": 45
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "title-linker",
+            "title": "星链协调者",
+            "description": "你能把分散的人与资源重新连接成体系。",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "social",
+                        "cmp": "gte",
+                        "value": 70
+                    },
+                    {
+                        "op": "or",
+                        "items": [
+                            {
+                                "field": "logic",
+                                "cmp": "gte",
+                                "value": 50
+                            },
+                            {
+                                "field": "intuition",
+                                "cmp": "gte",
+                                "value": 50
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "title-seer",
+            "title": "裂隙观测者",
+            "description": "你凭借直觉和观察总能提前发现转机。",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "intuition",
+                        "cmp": "gte",
+                        "value": 72
+                    },
+                    {
+                        "op": "or",
+                        "items": [
+                            {
+                                "field": "action",
+                                "cmp": "gte",
+                                "value": 55
+                            },
+                            {
+                                "field": "social",
+                                "cmp": "gte",
+                                "value": 50
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "id": "title-balanced",
+            "title": "四象调律者",
+            "description": "你在多个维度间维持罕见的平衡。",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "logic",
+                        "cmp": "gte",
+                        "value": 55
+                    },
+                    {
+                        "field": "action",
+                        "cmp": "gte",
+                        "value": 55
+                    },
+                    {
+                        "field": "social",
+                        "cmp": "gte",
+                        "value": 55
+                    },
+                    {
+                        "field": "intuition",
+                        "cmp": "gte",
+                        "value": 55
+                    }
+                ]
+            }
+        },
+        {
+            "id": "fallback",
+            "title": "初星旅者",
+            "description": "你正站在属于自己的冒险起点。",
+            "rule": {
+                "op": "and",
+                "items": [
+                    {
+                        "field": "logic",
+                        "cmp": "gte",
+                        "value": 0
+                    }
+                ]
+            }
+        }
+    ],
+    "fallbackTitleId": "fallback",
+    "generatedAt": "2026-02-22T08:47:44.626Z"
+}

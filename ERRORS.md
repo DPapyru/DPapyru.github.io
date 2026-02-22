@@ -1839,3 +1839,18 @@
 - `npm --prefix tml-ide-app run build`：通过
 
 **备注**：通过浏览器自动化脚本完成“点击隐藏底部 Panel -> 点击恢复按钮 -> Panel 恢复”的交互验证，并截图留档：`/tmp/pwdebug/ide-before.png`、`/tmp/pwdebug/ide-hidden-with-restore.png`、`/tmp/pwdebug/ide-restored.png`；同时验证 Shader 预览右侧拖拽可改变画布比例（宽度从 `802` 到 `900`），截图：`/tmp/pwdebug/shader-before-resize.png`、`/tmp/pwdebug/shader-after-resize.png`。
+
+### 验证记录 [2026-02-22 16:48]：新增 `/fun-test/` 独立娱乐测评页
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/generate-fun-test-quiz.test.js fun-test/quiz-engine.test.js`：通过
+- `npm run generate-index`：通过
+- `npm run build`：失败
+- `npm run check-generated`：失败
+
+**备注**：
+- 本次新增独立页面 `/fun-test/`，并接入 `YAML -> JSON` 题库生成脚本到 `generate-index` 流程。
+- `npm run build` 与 `npm run check-generated` 均在 `build:anims` 阶段失败，根因是当前环境缺少 `Microsoft.NETCore.App 8.0.0`（仅检测到 `10.0.2`），`AstCompiler` 无法启动（exit 150）。
+- 除 .NET 运行时依赖外，本次新增脚本与单元测试均通过。
