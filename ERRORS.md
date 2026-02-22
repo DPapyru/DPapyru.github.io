@@ -1870,3 +1870,19 @@
 - 本次新增独立页面 `/fun-test/`，并接入 `YAML -> JSON` 题库生成脚本到 `generate-index` 流程。
 - `npm run build` 与 `npm run check-generated` 均在 `build:anims` 阶段失败，根因是当前环境缺少 `Microsoft.NETCore.App 8.0.0`（仅检测到 `10.0.2`），`AstCompiler` 无法启动（exit 150）。
 - 除 .NET 运行时依赖外，本次新增脚本与单元测试均通过。
+
+### 验证记录 [2026-02-22 17:52]：IDE 底部问题栏/状态栏在桌面视口不显示修复
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/workbench-viewport-layout.test.js`：失败（修复前）
+- `node --test tml-ide-app/tests/workbench-viewport-layout.test.js`：通过（修复后）
+- `npm --prefix tml-ide-app test`：通过（64/64）
+- `npm --prefix tml-ide-app run build`：通过
+- `node /tmp/codex-playwright/ide_viewport_verify_after_fix.cjs`：通过（桌面分辨率 1920x1080 / 1600x900 / 1366x768 下 `panelVisible=true` 且 `statusVisible=true`）
+
+**备注**：
+- 根因定位：`.app-shell` 仅设置了 `min-height: 100vh`，在内容高度增长时容器被拉伸到视口之外，且 `body` 在桌面宽度为 `overflow: hidden`，导致底部问题栏/状态栏看起来“消失”。
+- 修复：在 `tml-ide-app/src/style.css` 为 `.app-shell` 增加 `height: 100vh`，并在 `@media (max-width: 1200px)` 明确回退 `height: auto; min-height: 100vh;`。
+- 浏览器确认截图：`/tmp/ide_after_fix_1600.png`、`/tmp/ide_static_after_fix_1600.png`。
