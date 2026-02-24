@@ -1951,3 +1951,24 @@
   - 截图验收：`test-results/tml-ide-shader-timer-acceptance/01-initial-modal.png`、`test-results/tml-ide-shader-timer-acceptance/02-paused-input-adjusted.png`、`test-results/tml-ide-shader-timer-acceptance/03-resumed-and-replay.png`
   - 调试结果：`test-results/tml-ide-shader-timer-acceptance/report.json`（全部检查项为 `true`）
 - `npm run build` 在 `build:anims` 阶段失败，根因与历史一致：当前环境缺少 `Microsoft.NETCore.App 8.0.0`（仅检测到 `10.0.2`），`AstCompiler` 启动失败（exit 150）。
+
+### 验证记录 [2026-02-24 16:53]：统一 IDE Shader 渲染模式切换为 FNA 预设（AlphaBlend/Additive/NonPremultiplied/Opaque）
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test -- shader-editor-migration.test.js`：通过（65/65）
+- `npm --prefix tml-ide-app test`：通过（65/65）
+- `npm run build`：失败（`build:anims` 阶段缺少 `Microsoft.NETCore.App 8.0.0`，`AstCompiler` 启动失败，exit 150）
+- `npm run check-generated`：失败（`gallery-check` 报错：`site/content/shader-gallery/shadertest/entry.json` 缺少 `cover.webp`）
+- `node --input-type=module`（Playwright 浏览器调试验收：渲染模式下拉/tooltip/状态栏切换） ：通过
+
+**备注**：
+- 本次修复工作树：`.worktrees/fix-shader-render-modes-fna`。
+- 浏览器调试验收覆盖：
+  - 渲染模式选项严格为 `alpha/additive/nonpremultiplied/opaque`
+  - `alpha` 下 `#shader-render-mode` tooltip 显示 `AlphaBlend 为 FNA 专属预设`
+  - 切换到 `opaque` 后 tooltip 不再显示 AlphaBlend 专属提示，状态栏包含 `渲染: Opaque`
+  - 切换到 `nonpremultiplied` 后状态栏包含 `渲染: NonPremultiplied`
+- 验收产物：`/tmp/tml-ide-shader-render-mode-acceptance/shader-render-modes-fna.png`、`/tmp/tml-ide-shader-render-mode-acceptance/report.json`。
+- `npm run build` 与 `npm run check-generated` 的失败均为仓库/环境既有问题，与本次 Shader 渲染模式改动无直接关系。

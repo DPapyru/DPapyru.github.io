@@ -19,6 +19,10 @@ test('index.html exposes shader template insertion action in compile panel', () 
     assert.match(html, /id="shader-preview-canvas"/);
     assert.match(html, /id="shader-preset-image"/);
     assert.match(html, /id="shader-render-mode"/);
+    assert.match(html, /<option value="nonpremultiplied">NonPremultiplied<\/option>/);
+    assert.match(html, /<option value="opaque">Opaque<\/option>/);
+    assert.doesNotMatch(html, /<option value="multiply">/);
+    assert.doesNotMatch(html, /<option value="screen">/);
     assert.match(html, /id="shader-address-mode"/);
     assert.match(html, /id="shader-bg-mode"/);
     assert.match(html, /id="shader-upload-0"/);
@@ -54,6 +58,11 @@ test('main.js defines shaderfx language assist and template flow', () => {
     assert.match(source, /function drawShaderPreviewCanvas/);
     assert.match(source, /function shaderPreviewImageCanvas/);
     assert.match(source, /shaderRenderMode/);
+    assert.match(source, /SHADER_PREVIEW_RENDER_MODES = new Set\(\['alpha', 'additive', 'nonpremultiplied', 'opaque'\]\)/);
+    assert.match(source, /function syncShaderRenderModeTooltip/);
+    assert.match(source, /AlphaBlend 为 FNA 专属预设/);
+    assert.doesNotMatch(source, /safe === 'multiply'/);
+    assert.doesNotMatch(source, /safe === 'screen'/);
     assert.match(source, /shaderBgMode/);
     assert.doesNotMatch(source, /function installShaderPipInteractions/);
     assert.match(source, /btnShaderInsertTemplate/);

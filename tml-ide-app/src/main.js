@@ -416,8 +416,10 @@ const ANIMCS_COMPILE_TIMEOUT_MS = 8000;
 let viewerPagePathCache = '';
 const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|animcs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif|mp4|webm|mov|m4v|avi|mkv)$/i;
 const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
-const SHADER_PREVIEW_RENDER_MODES = new Set(['alpha', 'additive', 'multiply', 'screen']);
+const SHADER_PREVIEW_RENDER_MODES = new Set(['alpha', 'additive', 'nonpremultiplied', 'opaque']);
 const SHADER_PREVIEW_ADDRESS_MODES = new Set(['clamp', 'wrap']);
+const SHADER_RENDER_MODE_TOOLTIP_DEFAULT = '切换 Shader 渲染模式';
+const SHADER_RENDER_MODE_TOOLTIP_ALPHA = 'AlphaBlend 为 FNA 专属预设';
 const SHADER_PREVIEW_PRESETS = new Set(['checker', 'noise', 'gradient', 'rings']);
 const SHADER_UPLOAD_SLOT_COUNT = 4;
 const SHADER_UPLOAD_MAX_SIZE = 4 * 1024 * 1024;
@@ -857,9 +859,17 @@ function shaderPreviewPresetLabel(value) {
 function shaderPreviewRenderModeLabel(value) {
     const safe = normalizeShaderPreviewRenderMode(value);
     if (safe === 'additive') return 'Additive';
-    if (safe === 'multiply') return 'Multiply';
-    if (safe === 'screen') return 'Screen';
+    if (safe === 'nonpremultiplied') return 'NonPremultiplied';
+    if (safe === 'opaque') return 'Opaque';
     return 'AlphaBlend';
+}
+
+function syncShaderRenderModeTooltip(value) {
+    if (!dom.shaderRenderMode) return;
+    const safe = normalizeShaderPreviewRenderMode(value);
+    dom.shaderRenderMode.title = safe === 'alpha'
+        ? SHADER_RENDER_MODE_TOOLTIP_ALPHA
+        : SHADER_RENDER_MODE_TOOLTIP_DEFAULT;
 }
 
 function normalizeShaderUploadSlotIndex(value) {
@@ -5538,6 +5548,7 @@ function syncShaderPreviewControls() {
     }
     if (dom.shaderRenderMode) {
         dom.shaderRenderMode.value = normalizeShaderPreviewRenderMode(state.shaderPreview.renderMode);
+        syncShaderRenderModeTooltip(state.shaderPreview.renderMode);
     }
     if (dom.shaderAddressMode) {
         dom.shaderAddressMode.value = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
@@ -5750,18 +5761,18 @@ function setShaderPreviewCanvasStyle(bgMode) {
 
 function applyShaderPreviewBlendMode(gl, mode) {
     const safeMode = normalizeShaderPreviewRenderMode(mode);
+    if (safeMode === 'opaque') {
+        gl.disable(gl.BLEND);
+        return;
+    }
     gl.enable(gl.BLEND);
     gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
     if (safeMode === 'additive') {
-        gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ONE, gl.ONE);
+        gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.SRC_ALPHA, gl.ONE);
         return;
     }
-    if (safeMode === 'multiply') {
-        gl.blendFuncSeparate(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-        return;
-    }
-    if (safeMode === 'screen') {
-        gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_COLOR, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    if (safeMode === 'nonpremultiplied') {
+        gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         return;
     }
     gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -7972,6 +7983,7 @@ function bindUiEvents() {
     if (dom.shaderRenderMode) {
         dom.shaderRenderMode.addEventListener('change', () => {
             state.shaderPreview.renderMode = normalizeShaderPreviewRenderMode(dom.shaderRenderMode.value);
+            syncShaderRenderModeTooltip(state.shaderPreview.renderMode);
             drawShaderPreviewCanvas();
             addEvent('info', `Shader 渲染模式已切换：${shaderPreviewRenderModeLabel(state.shaderPreview.renderMode)}`);
         });
