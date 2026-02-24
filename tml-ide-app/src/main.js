@@ -74,6 +74,12 @@ const dom = {
     shaderRenderMode: document.getElementById('shader-render-mode'),
     shaderAddressMode: document.getElementById('shader-address-mode'),
     shaderBgMode: document.getElementById('shader-bg-mode'),
+    shaderPreviewToggleRun: document.getElementById('shader-preview-toggle-run'),
+    shaderPreviewResetPlayback: document.getElementById('shader-preview-reset-playback'),
+    shaderPreviewITime: document.getElementById('shader-preview-itime'),
+    shaderPreviewITimeMinus: document.getElementById('shader-preview-itime-minus'),
+    shaderPreviewITimePlus: document.getElementById('shader-preview-itime-plus'),
+    shaderPreviewITimeReset: document.getElementById('shader-preview-itime-reset'),
     shaderUploadInputs: [
         document.getElementById('shader-upload-0'),
         document.getElementById('shader-upload-1'),
@@ -224,6 +230,10 @@ const state = {
         rafId: 0,
         autoCompileTimer: 0,
         runtime: null,
+        isRunning: true,
+        iTimeOffsetSec: 0,
+        fpsSamples: [],
+        fps: NaN,
         viewScale: 1,
         viewOffsetX: 0,
         viewOffsetY: 0,
@@ -418,6 +428,8 @@ const SHADER_PREVIEW_MAX_SCALE = 8;
 const SHADER_PREVIEW_ZOOM_STEP = 0.2;
 const SHADER_PREVIEW_MIN_VIEWPORT_WIDTH = 220;
 const SHADER_PREVIEW_ASPECT_RESIZE_STEP = 20;
+const SHADER_PREVIEW_ITIME_MIN = -120;
+const SHADER_PREVIEW_ITIME_MAX = 120;
 const SHADER_VERTEX_SOURCE = [
     '#version 300 es',
     'precision highp float;',
@@ -5108,6 +5120,114 @@ function shaderPreviewImageCanvas(preset) {
     return canvas;
 }
 
+function shaderPreviewNowMs() {
+    return Number(globalThis.performance && performance.now ? performance.now() : Date.now());
+}
+
+function shaderPreviewCurrentITime(runtime) {
+    const elapsed = runtime ? Number(runtime.elapsedSec || 0) : 0;
+    const offset = Number(state.shaderPreview.iTimeOffsetSec || 0);
+    return elapsed + offset;
+}
+
+function clampShaderPreviewITimeInput(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(SHADER_PREVIEW_ITIME_MIN, Math.min(SHADER_PREVIEW_ITIME_MAX, numeric));
+}
+
+function estimateShaderPreviewFps(nowMs) {
+    if (!Array.isArray(state.shaderPreview.fpsSamples)) {
+        state.shaderPreview.fpsSamples = [];
+    }
+    state.shaderPreview.fpsSamples.push(nowMs);
+    while (state.shaderPreview.fpsSamples.length && nowMs - state.shaderPreview.fpsSamples[0] > 1000) {
+        state.shaderPreview.fpsSamples.shift();
+    }
+    if (state.shaderPreview.fpsSamples.length < 2) {
+        state.shaderPreview.fps = NaN;
+        return NaN;
+    }
+    const span = state.shaderPreview.fpsSamples[state.shaderPreview.fpsSamples.length - 1] - state.shaderPreview.fpsSamples[0];
+    if (span <= 0) {
+        state.shaderPreview.fps = NaN;
+        return NaN;
+    }
+    const fps = (state.shaderPreview.fpsSamples.length - 1) * 1000 / span;
+    state.shaderPreview.fps = fps;
+    return fps;
+}
+
+function updateShaderPreviewRunButton() {
+    if (!dom.shaderPreviewToggleRun) return;
+    const running = !!state.shaderPreview.isRunning;
+    dom.shaderPreviewToggleRun.textContent = running ? '暂停' : '继续';
+    dom.shaderPreviewToggleRun.setAttribute('aria-pressed', running ? 'true' : 'false');
+}
+
+function syncShaderPreviewITimeControl() {
+    if (!dom.shaderPreviewITime) return;
+    if (document.activeElement === dom.shaderPreviewITime) return;
+    const runtime = state.shaderPreview.runtime;
+    dom.shaderPreviewITime.value = shaderPreviewCurrentITime(runtime).toFixed(3);
+}
+
+function setShaderPreviewRunning(nextRunning, options) {
+    const opts = options || {};
+    const running = !!nextRunning;
+    state.shaderPreview.isRunning = running;
+    if (running) {
+        const runtime = state.shaderPreview.runtime;
+        if (runtime) {
+            runtime.lastMs = shaderPreviewNowMs();
+        }
+    }
+    updateShaderPreviewRunButton();
+    if (opts.redraw !== false) {
+        drawShaderPreviewCanvas();
+    } else {
+        updateShaderPreviewStatus();
+    }
+}
+
+function resetShaderPreviewPlayback() {
+    const runtime = state.shaderPreview.runtime;
+    if (runtime) {
+        const current = shaderPreviewNowMs();
+        runtime.lastMs = current;
+        runtime.elapsedSec = 0;
+        runtime.frame = 0;
+    }
+    state.shaderPreview.iTimeOffsetSec = 0;
+    state.shaderPreview.fpsSamples = [];
+    state.shaderPreview.fps = NaN;
+    drawShaderPreviewCanvas();
+}
+
+function applyShaderPreviewITimeFromInput(rawValue) {
+    const clamped = clampShaderPreviewITimeInput(rawValue);
+    const runtime = state.shaderPreview.runtime;
+    const elapsed = runtime ? Number(runtime.elapsedSec || 0) : 0;
+    state.shaderPreview.iTimeOffsetSec = clamped - elapsed;
+    if (runtime) {
+        runtime.lastMs = shaderPreviewNowMs();
+    }
+    drawShaderPreviewCanvas();
+}
+
+function offsetShaderPreviewITime(deltaSec) {
+    const runtime = state.shaderPreview.runtime;
+    const current = shaderPreviewCurrentITime(runtime);
+    applyShaderPreviewITimeFromInput(current + Number(deltaSec || 0));
+}
+
+function resetShaderPreviewITimeOffset() {
+    const runtime = state.shaderPreview.runtime;
+    const elapsed = runtime ? Number(runtime.elapsedSec || 0) : 0;
+    state.shaderPreview.iTimeOffsetSec = -elapsed;
+    drawShaderPreviewCanvas();
+}
+
 function updateShaderPreviewStatus() {
     if (!dom.shaderPreviewStatus) return;
     const mode = shaderPreviewRenderModeLabel(state.shaderPreview.renderMode);
@@ -5116,6 +5236,13 @@ function updateShaderPreviewStatus() {
     const bg = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
     const aspect = readShaderPreviewAspectText();
     const zoom = Math.round(clampShaderPreviewZoom(state.shaderPreview.viewScale) * 100);
+    const runtime = state.shaderPreview.runtime;
+    const iTime = shaderPreviewCurrentITime(runtime);
+    const frame = runtime ? Math.max(0, Math.floor(Number(runtime.frame || 0))) : 0;
+    const runningText = state.shaderPreview.isRunning ? '运行中' : '已暂停';
+    const fpsText = Number.isFinite(Number(state.shaderPreview.fps))
+        ? Number(state.shaderPreview.fps).toFixed(1)
+        : '--';
     const uploads = [];
     for (let i = 0; i < SHADER_UPLOAD_SLOT_COUNT; i += 1) {
         if (getShaderUploadSlot(i)) {
@@ -5125,7 +5252,9 @@ function updateShaderPreviewStatus() {
     const uploadText = uploads.length ? uploads.join(', ') : '无';
     const compileErrors = Array.isArray(state.shaderCompile.errors) ? state.shaderCompile.errors.length : 0;
     const compileText = compileErrors > 0 ? `错误 ${compileErrors}` : '通过';
-    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg} · 比例: ${aspect} · 缩放: ${zoom}% · 上传: ${uploadText} · 实时编译: ${compileText}`;
+    dom.shaderPreviewStatus.textContent = `预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg} · 比例: ${aspect} · 缩放: ${zoom}% · 上传: ${uploadText} · 实时编译: ${compileText} · 播放: ${runningText} · iTime: ${iTime.toFixed(3)}s · 帧: ${frame} · fps: ${fpsText}`;
+    syncShaderPreviewITimeControl();
+    updateShaderPreviewRunButton();
 }
 
 function clampShaderPreviewZoom(value) {
@@ -5418,6 +5547,8 @@ function syncShaderPreviewControls() {
     }
     updateShaderUploadUi();
     applyShaderPreviewViewTransform();
+    syncShaderPreviewITimeControl();
+    updateShaderPreviewRunButton();
 }
 
 function parseShaderCompileLogErrors(logText) {
@@ -5712,11 +5843,17 @@ function drawShaderPreviewCanvas() {
         runtime.lastHeight = targetHeight;
     }
 
-    const nowMs = Number(globalThis.performance && performance.now ? performance.now() : Date.now());
+    const nowMs = shaderPreviewNowMs();
     const lastMs = Number(runtime.lastMs || nowMs);
-    const deltaSec = Math.max(0, Math.min(SHADER_MAX_TIME_DELTA, (nowMs - lastMs) / 1000));
+    const running = !!state.shaderPreview.isRunning;
+    const rawDeltaSec = Math.max(0, Math.min(SHADER_MAX_TIME_DELTA, (nowMs - lastMs) / 1000));
+    const deltaSec = running ? rawDeltaSec : 0;
     runtime.lastMs = nowMs;
-    runtime.elapsedSec = Number(runtime.elapsedSec || 0) + deltaSec;
+    if (running) {
+        runtime.elapsedSec = Number(runtime.elapsedSec || 0) + deltaSec;
+    }
+    estimateShaderPreviewFps(nowMs);
+    const iTimeValue = shaderPreviewCurrentITime(runtime);
 
     const safeBgMode = normalizeShaderPreviewBgMode(state.shaderPreview.bgMode);
     const safeAddressMode = normalizeShaderPreviewAddressMode(state.shaderPreview.addressMode);
@@ -5748,13 +5885,13 @@ function drawShaderPreviewCanvas() {
     const date = new Date();
     const iDate = [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()];
     if (runtime.uniforms.iResolution) gl.uniform3fv(runtime.uniforms.iResolution, resolution);
-    if (runtime.uniforms.iTime) gl.uniform1f(runtime.uniforms.iTime, runtime.elapsedSec);
+    if (runtime.uniforms.iTime) gl.uniform1f(runtime.uniforms.iTime, iTimeValue);
     if (runtime.uniforms.iTimeDelta) gl.uniform1f(runtime.uniforms.iTimeDelta, deltaSec);
     if (runtime.uniforms.iFrame) gl.uniform1i(runtime.uniforms.iFrame, runtime.frame);
     if (runtime.uniforms.iMouse) gl.uniform4fv(runtime.uniforms.iMouse, [0, 0, 0, 0]);
     if (runtime.uniforms.iDate) gl.uniform4fv(runtime.uniforms.iDate, iDate);
 
-    const channelTimes = [runtime.elapsedSec, runtime.elapsedSec, runtime.elapsedSec, runtime.elapsedSec];
+    const channelTimes = [iTimeValue, iTimeValue, iTimeValue, iTimeValue];
     const channelResolutions = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
     for (let i = 0; i < SHADER_UPLOAD_SLOT_COUNT; i += 1) {
         const sourceInfo = resolveShaderTextureSourceForSlot(i);
@@ -5777,7 +5914,9 @@ function drawShaderPreviewCanvas() {
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.bindVertexArray(null);
     gl.useProgram(null);
-    runtime.frame += 1;
+    if (running) {
+        runtime.frame += 1;
+    }
     updateShaderPreviewStatus();
 }
 
@@ -5953,6 +6092,9 @@ function runShaderCompileForActiveFile(options) {
                 runtime.lastMs = 0;
                 runtime.elapsedSec = 0;
                 runtime.frame = 0;
+                state.shaderPreview.iTimeOffsetSec = 0;
+                state.shaderPreview.fpsSamples = [];
+                state.shaderPreview.fps = NaN;
             }
         }
     }
@@ -7848,6 +7990,49 @@ function bindUiEvents() {
             state.shaderPreview.bgMode = normalizeShaderPreviewBgMode(dom.shaderBgMode.value);
             drawShaderPreviewCanvas();
             addEvent('info', `Shader 背景模式已切换：${state.shaderPreview.bgMode}`);
+        });
+    }
+
+    if (dom.shaderPreviewToggleRun) {
+        dom.shaderPreviewToggleRun.addEventListener('click', () => {
+            setShaderPreviewRunning(!state.shaderPreview.isRunning);
+        });
+    }
+
+    if (dom.shaderPreviewResetPlayback) {
+        dom.shaderPreviewResetPlayback.addEventListener('click', () => {
+            resetShaderPreviewPlayback();
+        });
+    }
+
+    if (dom.shaderPreviewITime) {
+        const applyITime = () => {
+            const raw = Number(dom.shaderPreviewITime.value);
+            if (!Number.isFinite(raw)) {
+                syncShaderPreviewITimeControl();
+                return;
+            }
+            applyShaderPreviewITimeFromInput(raw);
+        };
+        dom.shaderPreviewITime.addEventListener('change', applyITime);
+        dom.shaderPreviewITime.addEventListener('blur', applyITime);
+    }
+
+    if (dom.shaderPreviewITimeMinus) {
+        dom.shaderPreviewITimeMinus.addEventListener('click', () => {
+            offsetShaderPreviewITime(-1);
+        });
+    }
+
+    if (dom.shaderPreviewITimePlus) {
+        dom.shaderPreviewITimePlus.addEventListener('click', () => {
+            offsetShaderPreviewITime(1);
+        });
+    }
+
+    if (dom.shaderPreviewITimeReset) {
+        dom.shaderPreviewITimeReset.addEventListener('click', () => {
+            resetShaderPreviewITimeOffset();
         });
     }
 

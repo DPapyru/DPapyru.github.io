@@ -30,6 +30,12 @@ test('index.html exposes shader template insertion action in compile panel', () 
     assert.match(html, /id="shader-preview-zoom-out"/);
     assert.match(html, /id="shader-preview-zoom-reset"/);
     assert.match(html, /id="shader-preview-zoom-in"/);
+    assert.match(html, /id="shader-preview-toggle-run"/);
+    assert.match(html, /id="shader-preview-reset-playback"/);
+    assert.match(html, /id="shader-preview-itime"/);
+    assert.match(html, /id="shader-preview-itime-minus"/);
+    assert.match(html, /id="shader-preview-itime-plus"/);
+    assert.match(html, /id="shader-preview-itime-reset"/);
     assert.match(html, /拖动平移，滚轮缩放/);
     assert.doesNotMatch(html, /id="shader-sidepane"/);
     assert.doesNotMatch(html, /id="shader-pip"/);
@@ -67,6 +73,13 @@ test('main.js defines shaderfx language assist and template flow', () => {
     assert.match(source, /function setShaderPreviewZoom/);
     assert.match(source, /function applyShaderPreviewViewTransform/);
     assert.match(source, /function installShaderPreviewViewportInteractions/);
+    assert.match(source, /function setShaderPreviewRunning/);
+    assert.match(source, /function resetShaderPreviewPlayback/);
+    assert.match(source, /function applyShaderPreviewITimeFromInput/);
+    assert.match(source, /function estimateShaderPreviewFps/);
+    assert.match(source, /SHADER_PREVIEW_ITIME_MIN/);
+    assert.match(source, /SHADER_PREVIEW_ITIME_MAX/);
+    assert.match(source, /播放: \$\{runningText\}/);
     assert.match(source, /function handleShaderUploadChange/);
     assert.match(source, /function clearShaderUploadSlot/);
     assert.match(source, /function scheduleShaderRealtimeCompile/);
