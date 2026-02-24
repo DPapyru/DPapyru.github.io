@@ -1972,3 +1972,21 @@
   - 切换到 `nonpremultiplied` 后状态栏包含 `渲染: NonPremultiplied`
 - 验收产物：`/tmp/tml-ide-shader-render-mode-acceptance/shader-render-modes-fna.png`、`/tmp/tml-ide-shader-render-mode-acceptance/report.json`。
 - `npm run build` 与 `npm run check-generated` 的失败均为仓库/环境既有问题，与本次 Shader 渲染模式改动无直接关系。
+
+### 验证记录 [2026-02-25 00:10]：共享架构重置第一阶段（shared 服务层 + viewer 接入 + IDE 诊断能力共享）
+
+**级别**：L3（跨模块/构建链路相关）
+
+**命令与结果**：
+- `node --test shared/tests/*.test.js`：通过（11/11）
+- `node --test tml-ide-app/tests/fix-suggestions.test.js`：通过（5/5）
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：失败
+- `npm run check-generated`：失败
+
+**备注**：
+- 本次工作树：`.worktrees/feat-shared-architecture-reset`。
+- 已新增 `shared/services/*`、`shared/atoms/*`、`shared/compositions/*` 并在 `site/pages/viewer.html` 注入共享 Viewer 组合层脚本，保留 `viewer.html?file=...` 兼容入口。
+- `tml-ide-app/src/lib/diagnostic-suggestions.js` 已改为复用 `shared/services/ide-assist/diagnostic-suggestions.js`，实现主站与 IDE 共用诊断建议内核。
+- `npm run build` 失败原因与环境有关：`build:anims` 阶段调用 `AstCompiler` 时缺少 `Microsoft.NETCore.App 8.0.0`（当前仅检测到 10.0.2），报错 exit 150。
+- `npm run check-generated` 在 `gallery-check` 阶段失败：`site/content/shader-gallery/shadertest/entry.json` 缺少 `cover.webp`（仓库既有问题）。
