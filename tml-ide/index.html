@@ -6,8 +6,8 @@
     <title>tML IDE Playground</title>
     <meta name="description" content="独立 tModLoader C# IDE Playground，支持补全、悬停文档与双层诊断。">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
-  <script type="module" crossorigin src="/tml-ide/assets/index-zWb_5ECT.js"></script>
-  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-BNfE9liN.css">
+  <script type="module" crossorigin src="/tml-ide/assets/index-BfQvClP-.js"></script>
+  <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-txHZyQXh.css">
 </head>
 <body>
     <div id="app" class="app-shell">
@@ -274,6 +274,20 @@
                         <option value="black">黑色</option>
                         <option value="white">白色</option>
                     </select>
+                    <div class="shader-preview-timebox" aria-label="Shader 计时器控制">
+                        <label for="shader-preview-itime">计时器</label>
+                        <div class="shader-preview-time-row">
+                            <button id="shader-preview-toggle-run" type="button" aria-pressed="true">暂停</button>
+                            <button id="shader-preview-reset-playback" type="button" title="重置播放时间">重播</button>
+                        </div>
+                        <div class="shader-preview-time-row">
+                            <label class="shader-preview-time-label" for="shader-preview-itime">iTime</label>
+                            <button id="shader-preview-itime-minus" type="button" title="iTime -1">-1</button>
+                            <input id="shader-preview-itime" class="shader-preview-time-input" type="number" min="-120" max="120" step="0.1" value="0">
+                            <button id="shader-preview-itime-plus" type="button" title="iTime +1">+1</button>
+                            <button id="shader-preview-itime-reset" type="button" title="重置 iTime">归零</button>
+                        </div>
+                    </div>
                     <div class="shader-upload-grid" aria-label="Shader 纹理通道">
                         <div class="shader-upload-row">
                             <label for="shader-upload-0">uImage0</label>

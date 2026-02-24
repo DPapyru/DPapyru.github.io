@@ -1932,3 +1932,22 @@
 **备注**：
 - 本次新增回归测试 `tml-ide-app/tests/workbench-layout-stability.test.js`，约束壳层高度与主工作区高度，防止 `bottom-panel` 与 `activity-group-bottom` 在初始化后被挤出视口。
 - 为避免引入与本任务无关的大量生成差异，保留了必要运行时样式变更（`tml-ide/assets/index-C1p_yNlG.css`），未提交其他索引/资源重新生成产物。
+
+### 验证记录 [2026-02-23 18:50]：统一 IDE Shader 渲染预览回补计时器（暂停/重播/iTime/fps）
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过（64/64）
+- `npm --prefix tml-ide-app run build`：通过
+- `node`（Playwright 脚本，模拟点击/输入 + 截图验收）：通过
+- `npm run build`：失败
+
+**备注**：
+- 本次修复工作树：`.worktrees/fix-shader-preview-timer`。
+- 浏览器验收包含：
+  - 模拟点击验收：`#shader-preview-toggle-run`、`#shader-preview-reset-playback`、`#shader-preview-itime-plus`、`#shader-preview-itime-minus`、`#shader-preview-itime-reset`
+  - 模拟输入验收：`#shader-preview-itime` 输入 `12.3`
+  - 截图验收：`test-results/tml-ide-shader-timer-acceptance/01-initial-modal.png`、`test-results/tml-ide-shader-timer-acceptance/02-paused-input-adjusted.png`、`test-results/tml-ide-shader-timer-acceptance/03-resumed-and-replay.png`
+  - 调试结果：`test-results/tml-ide-shader-timer-acceptance/report.json`（全部检查项为 `true`）
+- `npm run build` 在 `build:anims` 阶段失败，根因与历史一致：当前环境缺少 `Microsoft.NETCore.App 8.0.0`（仅检测到 `10.0.2`），`AstCompiler` 启动失败（exit 150）。
