@@ -1,0 +1,12 @@
+{
+  "slug": "shadertest",
+  "title": "shadertest",
+  "author": "DPapyru",
+  "description": "由统一 IDE 自动生成，请补充描述。",
+  "shader": "shader.json",
+  "cover": "cover.webp",
+  "tags": [
+    "playground"
+  ],
+  "updated_at": "2026-02-22"
+}

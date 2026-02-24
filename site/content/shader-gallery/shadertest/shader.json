@@ -1,0 +1,25 @@
+{
+  "common": "",
+  "passes": [
+    {
+      "name": "Pass 1",
+      "type": "image",
+      "scale": 1,
+      "code": "// tModLoader 风格 .fx 默认模板（完整 HLSL）\n// 可用纹理: iChannel0-3（兼容 uImage0-3）\n// 后缀请使用 .fx\n\nsampler2D uImage0 : register(s0);\n\nfloat4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0\n{\n    float2 uv = texCoord;\n    float4 baseColor = tex2D(uImage0, uv);\n    return baseColor;\n}\n\ntechnique MainTechnique\n{\n    pass P0\n    {\n        PixelShader = compile ps_2_0 MainPS();\n    }\n}\n",
+      "channels": [
+        {
+          "kind": "none"
+        },
+        {
+          "kind": "none"
+        },
+        {
+          "kind": "none"
+        },
+        {
+          "kind": "none"
+        }
+      ]
+    }
+  ]
+}
