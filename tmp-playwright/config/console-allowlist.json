@@ -1,0 +1,17 @@
+{
+  "description": "已知本地验收噪声白名单（主要是 giscus 在本地非同源场景的提示）",
+  "rules": [
+    {
+      "type": "warning",
+      "pattern": "Failed to execute 'postMessage' on 'DOMWindow'"
+    },
+    {
+      "type": "warning",
+      "pattern": "\\[giscus\\] Discussion not found"
+    },
+    {
+      "type": "error",
+      "pattern": "Failed to load resource: the server responded with a status of 404 \\(\\)"
+    }
+  ]
+}

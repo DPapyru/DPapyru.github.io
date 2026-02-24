@@ -1,14 +1,13 @@
 import path from 'node:path';
 import { parseAcceptanceArgs, runSuiteAndExit } from './lib/acceptance-runner.mjs';
-import { buildIdePageDef } from './lib/suites.mjs';
+import { buildFolderPageDef } from './lib/suites.mjs';
 
 const args = parseAcceptanceArgs(process.argv.slice(2), {
-    suiteId: 'tml-ide-markdown-acceptance',
-    baseUrl: process.env.TML_IDE_URL || 'http://127.0.0.1:4173'
+    suiteId: 'folder-acceptance'
 });
 
 await runSuiteAndExit({
-    suiteId: 'tml-ide-markdown-acceptance',
+    suiteId: 'folder-acceptance',
     baseUrl: args.baseUrl,
     runId: args.runId,
     updateBaseline: args.updateBaseline,
@@ -18,15 +17,6 @@ await runSuiteAndExit({
     headless: args.headless,
     outRoot: path.resolve('test-results/fullpage-acceptance'),
     baselineRoot: path.resolve('test-baselines/fullpage'),
-    pages: [
-        buildIdePageDef({
-            pageId: 'tml-ide-markdown',
-            scenarioIds: [
-                'ide-file-create-and-input',
-                'ide-markdown-preview',
-                'ide-anim-completion'
-            ]
-        })
-    ]
+    pages: [buildFolderPageDef()]
 });
 

@@ -15,7 +15,11 @@
     "build": "npm run generate-index && npm run build:anims && npm --prefix tml-ide-app run build",
     "check-generated": "npm run gallery:check && npm run build && git diff --exit-code",
     "check-content": "node site/tooling/scripts/check-content.js",
-    "test": "node --test"
+    "test": "node --test",
+    "acceptance:fullpage": "node tmp-playwright/fullpage-acceptance.mjs",
+    "acceptance:fullpage:update-baseline": "node tmp-playwright/fullpage-acceptance.mjs --update-baseline",
+    "acceptance:fullpage:viewer": "node tmp-playwright/shared-viewer-acceptance.mjs",
+    "acceptance:fullpage:ide": "node tmp-playwright/tml-ide-unified-acceptance.mjs"
   },
   "keywords": [
     "tmodloader",
