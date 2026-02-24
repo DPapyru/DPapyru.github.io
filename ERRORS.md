@@ -1917,3 +1917,18 @@
 - 本次修复工作树：`.worktrees/fix-ide-paste-save`。
 - `npm run build` 与 `npm run check-generated` 均在 `build:anims` 阶段失败，根因是当前环境缺少 `Microsoft.NETCore.App 8.0.0`（仅检测到 `10.0.2`），`AstCompiler` 启动失败（exit 150）。
 - 失败与本次 `tml-ide-app` 粘贴图片入库/提交流程修复无直接关系；IDE 子项目测试与构建已通过。
+
+### 验证记录 [2026-02-22 15:50]：IDE 初始化后底部面板与活动栏底部组位置稳定修复
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/workbench-layout-stability.test.js`：通过
+- `node --test tml-ide-app/tests/workbench-layout-stability.test.js tml-ide-app/tests/vscode-theme.test.js tml-ide-app/tests/vscode-workbench-shell.test.js`：通过
+- `npm --prefix tml-ide-app test`：失败（57 项中 1 项失败，`tests/shader-editor-migration.test.js` 期望文案 `拖动平移，滚轮缩放` 与当前页面文案不一致，为仓库既有失败）
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：失败（`build:anims` 阶段缺少 `Microsoft.NETCore.App 8.0.0`，`AstCompiler` 启动失败，exit 150）
+
+**备注**：
+- 本次新增回归测试 `tml-ide-app/tests/workbench-layout-stability.test.js`，约束壳层高度与主工作区高度，防止 `bottom-panel` 与 `activity-group-bottom` 在初始化后被挤出视口。
+- 为避免引入与本任务无关的大量生成差异，保留了必要运行时样式变更（`tml-ide/assets/index-C1p_yNlG.css`），未提交其他索引/资源重新生成产物。
