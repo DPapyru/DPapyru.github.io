@@ -25,6 +25,14 @@ function resolveDotnetCommand() {
     return process.env.DOTNET_CMD || 'dotnet';
 }
 
+function resolveDotnetEnv() {
+    const env = Object.assign({}, process.env);
+    if (!env.DOTNET_ROLL_FORWARD) {
+        env.DOTNET_ROLL_FORWARD = 'Major';
+    }
+    return env;
+}
+
 function resolveAstCompilerProject() {
     return path.resolve(__dirname, '..', 'tools', 'animcs-compiler', 'AstCompiler', 'AstCompiler.csproj');
 }
@@ -61,7 +69,8 @@ function runAstCompiler(batchPayload) {
 
         const result = childProcess.spawnSync(resolveDotnetCommand(), args, {
             cwd: path.resolve(__dirname, '..', '..', '..'),
-            encoding: 'utf8'
+            encoding: 'utf8',
+            env: resolveDotnetEnv()
         });
 
         if (result.error) {

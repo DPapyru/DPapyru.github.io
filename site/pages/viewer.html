@@ -645,6 +645,11 @@
                 </script>
 			    <script src="/site/assets/js/site-config.js"></script>
 			    <script src="/site/assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
+                <script src="/shared/capabilities/markdown/core/markdown-safety.js"></script>
+                <script src="/shared/capabilities/markdown/core/markdown-link-resolver.js"></script>
+                <script src="/shared/capabilities/markdown/core/create-markdown-pipeline.js"></script>
+                <script src="/shared/capabilities/markdown/core/index.js"></script>
+                <script src="/shared/capabilities/markdown/compat/window-markdown-capability.js"></script>
 			    <script src="/site/assets/js/mermaid.min.js"></script> <!-- Mermaid流程图渲染 -->
 		    <script src="/site/assets/js/site-quiz.js"></script> <!-- Quiz 题目渲染 -->
 		    <script src="/site/assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
@@ -1481,106 +1486,129 @@
 	        async function initializeMarkedRender() {
 	            console.log('初始化MD渲染器...');
 
-	            const escapeHtml = function (text) {
-	                return String(text)
-	                    .replace(/&/g, '&amp;')
-	                    .replace(/</g, '&lt;')
-	                    .replace(/>/g, '&gt;')
-	                    .replace(/"/g, '&quot;')
-	                    .replace(/'/g, '&#39;');
-	            };
-
-	            const normalizeMarkedArgs = function (href, title, text) {
-	                if (href && typeof href === 'object') {
-	                    return {
-	                        href: href.href,
-	                        title: href.title,
-	                        text: href.text || href.raw || ''
-	                    };
-	                }
-	                return { href, title, text };
-	            };
-
-	            const isSafeUrl = function (href) {
-	                if (!href) return true;
-	                const trimmed = String(href).trim().toLowerCase();
-	                return !(
-	                    trimmed.startsWith('javascript:') ||
-	                    trimmed.startsWith('data:') ||
-	                    trimmed.startsWith('vbscript:')
-	                );
-	            };
+	            const markdownCapability = window.SharedMarkdownCapability || {};
+	            const escapeHtml = typeof markdownCapability.escapeHtml === 'function'
+	                ? markdownCapability.escapeHtml
+	                : function (text) {
+	                    return String(text)
+	                        .replace(/&/g, '&amp;')
+	                        .replace(/</g, '&lt;')
+	                        .replace(/>/g, '&gt;')
+	                        .replace(/"/g, '&quot;')
+	                        .replace(/'/g, '&#39;');
+	                };
+	            const createSafeMarkedRenderer = typeof markdownCapability.createSafeMarkedRenderer === 'function'
+	                ? markdownCapability.createSafeMarkedRenderer
+	                : null;
+	            const markdownResolver = typeof markdownCapability.createMarkdownPathResolver === 'function'
+	                ? markdownCapability.createMarkdownPathResolver({ docLookupMap: DOC_LOOKUP_MAP })
+	                : null;
 
 	            try {
-	                const renderer = (marked.Renderer && typeof marked.Renderer === 'function')
-	                    ? new marked.Renderer()
-	                    : null;
+	                const renderer = createSafeMarkedRenderer
+	                    ? createSafeMarkedRenderer({
+	                        marked: marked,
+	                        resolveLinkHref: function (linkContext) {
+	                            const rawHref = String((linkContext && linkContext.href) || '');
+	                            if (!rawHref) return '';
+	                            if (rawHref.startsWith('#')) return rawHref;
 
-		                if (renderer) {
-	                    // 禁止在 Markdown 中渲染原始 HTML（防止 XSS）
+	                            const hashIndex = rawHref.indexOf('#');
+	                            const hash = hashIndex >= 0 ? rawHref.slice(hashIndex) : '';
+	                            const baseHref = hashIndex >= 0 ? rawHref.slice(0, hashIndex) : rawHref;
+
+	                            if (!baseHref) return '';
+	                            if (
+	                                baseHref.includes('.html') ||
+	                                baseHref.startsWith('?') ||
+	                                baseHref.includes('viewer.html') ||
+	                                baseHref.includes('folder.html') ||
+	                                /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(baseHref)
+	                            ) {
+	                                return rawHref;
+	                            }
+
+	                            const resolvedDoc = markdownResolver && typeof markdownResolver.resolveDocLinkPath === 'function'
+	                                ? markdownResolver.resolveDocLinkPath(baseHref, CURRENT_DOC_PATH)
+	                                : resolveDocLinkPath(baseHref, CURRENT_DOC_PATH);
+	                            if (resolvedDoc) {
+	                                return `viewer.html?file=${encodeURIComponent(resolvedDoc)}${hash}`;
+	                            }
+
+	                            const resolvedRelative = markdownResolver && typeof markdownResolver.resolveRelativeHref === 'function'
+	                                ? markdownResolver.resolveRelativeHref(baseHref, CURRENT_DOC_PATH)
+	                                : resolveRelativeHref(baseHref, CURRENT_DOC_PATH);
+	                            return `viewer.html?file=${encodeURIComponent(resolvedRelative)}${hash}`;
+	                        },
+	                        resolveImageSrc: function (imageContext) {
+	                            const rawSrc = String((imageContext && imageContext.src) || '');
+	                            return markdownResolver && typeof markdownResolver.resolveRelativeHref === 'function'
+	                                ? markdownResolver.resolveRelativeHref(rawSrc, CURRENT_DOC_PATH)
+	                                : resolveRelativeHref(rawSrc, CURRENT_DOC_PATH);
+	                        },
+	                        renderImage: function (imageContext) {
+	                            const safe = imageContext || {};
+	                            const rawHrefNoQuery = String(safe.rawSrc || '').split('#')[0].split('?')[0];
+	                            const resolvedSrcNoQuery = String(safe.src || '').split('#')[0].split('?')[0];
+	                            const isVideo = /\.(mp4|webm)$/i.test(rawHrefNoQuery) || /\.(mp4|webm)$/i.test(resolvedSrcNoQuery);
+	                            if (isVideo) {
+	                                const previewMediaDataUrl = resolveStudioPreviewMediaDataUrl(safe.src);
+	                                const safeVideoSrc = escapeHtml(previewMediaDataUrl || safe.src);
+	                                const safeTitle = safe.title ? ` title="${escapeHtml(safe.title)}"` : '';
+	                                const mimeType = /\.webm$/i.test(rawHrefNoQuery) || /\.webm$/i.test(resolvedSrcNoQuery) ? 'video/webm' : 'video/mp4';
+	                                return `<video controls preload="metadata" playsinline${safeTitle}><source src="${safeVideoSrc}" type="${mimeType}" />您的浏览器不支持视频播放。</video>`;
+	                            }
+	                            const previewDataUrl = resolveStudioPreviewImageDataUrl(safe.src);
+	                            const safeSrc = escapeHtml(previewDataUrl || safe.src);
+	                            const safeAlt = escapeHtml(safe.alt || '');
+	                            const safeTitle = safe.title ? ` title="${escapeHtml(safe.title)}"` : '';
+	                            return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} loading="lazy" decoding="async" />`;
+	                        }
+	                    })
+	                    : ((marked.Renderer && typeof marked.Renderer === 'function')
+	                        ? new marked.Renderer()
+	                        : null);
+
+	                if (renderer && !createSafeMarkedRenderer) {
+	                    const normalizeMarkedArgs = function (href, title, text) {
+	                        if (href && typeof href === 'object') {
+	                            return {
+	                                href: href.href,
+	                                title: href.title,
+	                                text: href.text || href.raw || ''
+	                            };
+	                        }
+	                        return { href, title, text };
+	                    };
+	                    const isSafeUrl = function (href) {
+	                        if (!href) return true;
+	                        const trimmed = String(href).trim().toLowerCase();
+	                        return !(
+	                            trimmed.startsWith('javascript:') ||
+	                            trimmed.startsWith('data:') ||
+	                            trimmed.startsWith('vbscript:')
+	                        );
+	                    };
+
 	                    renderer.html = (html) => escapeHtml(html);
-
-	                    // 过滤危险链接协议
 	                    renderer.link = (href, title, text) => {
 	                        const normalized = normalizeMarkedArgs(href, title, text);
 	                        if (!isSafeUrl(normalized.href)) return escapeHtml(normalized.text || '');
-
-	                        const rawHref = String(normalized.href || '');
-	                        const safeText = normalized.text || '';
+	                        const safeHref = escapeHtml(normalized.href);
 	                        const safeTitle = normalized.title ? ` title="${escapeHtml(normalized.title)}"` : '';
-
-	                        if (rawHref.startsWith('#')) {
-	                            return `<a href="${escapeHtml(rawHref)}"${safeTitle}>${safeText}</a>`;
-	                        }
-
-	                        const hashIndex = rawHref.indexOf('#');
-	                        const hash = hashIndex >= 0 ? rawHref.slice(hashIndex) : '';
-	                        const baseHref = hashIndex >= 0 ? rawHref.slice(0, hashIndex) : rawHref;
-
-	                        if (!baseHref) return escapeHtml(safeText);
-
-	                        if (
-	                            baseHref.includes('.html') ||
-	                            baseHref.startsWith('?') ||
-	                            baseHref.includes('viewer.html') ||
-	                            baseHref.includes('folder.html') ||
-	                            /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(baseHref)
-	                        ) {
-	                            return `<a href="${escapeHtml(rawHref)}"${safeTitle}>${safeText}</a>`;
-	                        }
-
-	                        const resolvedDoc = resolveDocLinkPath(baseHref, CURRENT_DOC_PATH);
-	                        if (resolvedDoc) {
-	                            const finalHref = `viewer.html?file=${encodeURIComponent(resolvedDoc)}${hash}`;
-	                            return `<a href="${escapeHtml(finalHref)}"${safeTitle}>${safeText}</a>`;
-	                        }
-
-	                        const resolvedRelative = resolveRelativeHref(baseHref, CURRENT_DOC_PATH);
-	                        const finalHref = `viewer.html?file=${encodeURIComponent(resolvedRelative)}${hash}`;
-	                        return `<a href="${escapeHtml(finalHref)}"${safeTitle}>${safeText}</a>`;
+	                        return `<a href="${safeHref}"${safeTitle}>${normalized.text || ''}</a>`;
 	                    };
-
-		                    renderer.image = (href, title, text) => {
+	                    renderer.image = (href, title, text) => {
 	                        const normalized = normalizeMarkedArgs(href, title, text);
 	                        if (!isSafeUrl(normalized.href)) return '';
-	                        const resolvedSrc = resolveRelativeHref(normalized.href, CURRENT_DOC_PATH);
-	                        const rawHrefNoQuery = String(normalized.href || '').split('#')[0].split('?')[0];
-	                        const resolvedSrcNoQuery = String(resolvedSrc || '').split('#')[0].split('?')[0];
-	                        const isVideo = /\.(mp4|webm)$/i.test(rawHrefNoQuery) || /\.(mp4|webm)$/i.test(resolvedSrcNoQuery);
-	                        if (isVideo) {
-	                            const previewMediaDataUrl = resolveStudioPreviewMediaDataUrl(resolvedSrc);
-	                            const safeVideoSrc = escapeHtml(previewMediaDataUrl || resolvedSrc);
-	                            const safeTitle = normalized.title ? ` title="${escapeHtml(normalized.title)}"` : '';
-	                            const mimeType = /\.webm$/i.test(rawHrefNoQuery) || /\.webm$/i.test(resolvedSrcNoQuery) ? 'video/webm' : 'video/mp4';
-	                            return `<video controls preload="metadata" playsinline${safeTitle}><source src="${safeVideoSrc}" type="${mimeType}" />您的浏览器不支持视频播放。</video>`;
-	                        }
-	                        const previewDataUrl = resolveStudioPreviewImageDataUrl(resolvedSrc);
-	                        const safeSrc = escapeHtml(previewDataUrl || resolvedSrc);
+	                        const safeSrc = escapeHtml(normalized.href);
 	                        const safeAlt = escapeHtml(normalized.text || '');
 	                        const safeTitle = normalized.title ? ` title="${escapeHtml(normalized.title)}"` : '';
-	                        return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} loading="lazy" decoding="async" />`;
-		                    };
+	                        return `<img src="${safeSrc}" alt="${safeAlt}"${safeTitle} />`;
+	                    };
+	                }
 
+		                if (renderer) {
 		                    renderer.code = (code, lang) => {
 		                        // marked 版本差异兼容：有的版本传入 (code, lang)，有的版本传入 token 对象
 		                        if (code && typeof code === 'object') {
@@ -2113,6 +2141,18 @@
             if (!currentDocPath) return rawHref;
             if (!rawHref) return rawHref;
 
+            const markdownCapability = window.SharedMarkdownCapability;
+            if (markdownCapability && typeof markdownCapability.createMarkdownPathResolver === 'function') {
+                try {
+                    const resolver = markdownCapability.createMarkdownPathResolver({ docLookupMap: DOC_LOOKUP_MAP });
+                    if (resolver && typeof resolver.resolveRelativeHref === 'function') {
+                        return resolver.resolveRelativeHref(rawHref, currentDocPath);
+                    }
+                } catch (error) {
+                    console.warn('共享 Markdown 路径解析器调用失败（resolveRelativeHref）:', error);
+                }
+            }
+
             const hrefStr = String(rawHref);
             if (
                 hrefStr.startsWith('#') ||
@@ -2142,6 +2182,18 @@
 
 	        function resolveDocLinkPath(href, currentDocPath) {
 	            if (!href) return null;
+
+                const markdownCapability = window.SharedMarkdownCapability;
+                if (markdownCapability && typeof markdownCapability.createMarkdownPathResolver === 'function') {
+                    try {
+                        const resolver = markdownCapability.createMarkdownPathResolver({ docLookupMap: DOC_LOOKUP_MAP });
+                        if (resolver && typeof resolver.resolveDocLinkPath === 'function') {
+                            return resolver.resolveDocLinkPath(href, currentDocPath);
+                        }
+                    } catch (error) {
+                        console.warn('共享 Markdown 路径解析器调用失败（resolveDocLinkPath）:', error);
+                    }
+                }
 
             const hrefStr = String(href);
             if (hrefStr.startsWith('/') || /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(hrefStr)) return null;
@@ -7225,6 +7277,13 @@
             verifyAuthSession();
         })();
     </script>
+    <script src="/shared/services/routing/legacy-route-resolver.js"></script>
+    <script src="/shared/services/doc-tree/doc-tree-service.js"></script>
+    <script src="/shared/services/outline/heading-outline-service.js"></script>
+    <script src="/shared/atoms/doc/page-tree-nav.js"></script>
+    <script src="/shared/atoms/doc/article-outline.js"></script>
+    <script src="/shared/compositions/viewer/viewer-shell.js"></script>
+    <script src="/site/assets/js/shared-viewer-bootstrap.js"></script>
 </body>
 
 </html>

@@ -85,9 +85,20 @@ function resolveDotnetCommand() {
     return process.env.DOTNET_CMD || 'dotnet';
 }
 
+function resolveDotnetEnv() {
+    const env = Object.assign({}, process.env);
+    if (!env.DOTNET_ROLL_FORWARD) {
+        env.DOTNET_ROLL_FORWARD = 'Major';
+    }
+    return env;
+}
+
 function isDotnetAvailable() {
     const cmd = resolveDotnetCommand();
-    const result = childProcess.spawnSync(cmd, ['--version'], { stdio: 'ignore' });
+    const result = childProcess.spawnSync(cmd, ['--version'], {
+        stdio: 'ignore',
+        env: resolveDotnetEnv()
+    });
     if (result.error) return false;
     return result.status === 0;
 }
@@ -96,7 +107,8 @@ function runDotnet(args, options) {
     const cmd = resolveDotnetCommand();
     const result = childProcess.spawnSync(cmd, args, {
         stdio: 'inherit',
-        cwd: options && options.cwd ? options.cwd : undefined
+        cwd: options && options.cwd ? options.cwd : undefined,
+        env: resolveDotnetEnv()
     });
     if (result.error) {
         throw result.error;

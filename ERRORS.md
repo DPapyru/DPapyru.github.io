@@ -1972,3 +1972,99 @@
   - 切换到 `nonpremultiplied` 后状态栏包含 `渲染: NonPremultiplied`
 - 验收产物：`/tmp/tml-ide-shader-render-mode-acceptance/shader-render-modes-fna.png`、`/tmp/tml-ide-shader-render-mode-acceptance/report.json`。
 - `npm run build` 与 `npm run check-generated` 的失败均为仓库/环境既有问题，与本次 Shader 渲染模式改动无直接关系。
+
+### 验证记录 [2026-02-25 00:10]：共享架构重置第一阶段（shared 服务层 + viewer 接入 + IDE 诊断能力共享）
+
+**级别**：L3（跨模块/构建链路相关）
+
+**命令与结果**：
+- `node --test shared/tests/*.test.js`：通过（11/11）
+- `node --test tml-ide-app/tests/fix-suggestions.test.js`：通过（5/5）
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：失败
+- `npm run check-generated`：失败
+
+**备注**：
+- 本次工作树：`.worktrees/feat-shared-architecture-reset`。
+- 已新增 `shared/services/*`、`shared/atoms/*`、`shared/compositions/*` 并在 `site/pages/viewer.html` 注入共享 Viewer 组合层脚本，保留 `viewer.html?file=...` 兼容入口。
+- `tml-ide-app/src/lib/diagnostic-suggestions.js` 已改为复用 `shared/services/ide-assist/diagnostic-suggestions.js`，实现主站与 IDE 共用诊断建议内核。
+- `npm run build` 失败原因与环境有关：`build:anims` 阶段调用 `AstCompiler` 时缺少 `Microsoft.NETCore.App 8.0.0`（当前仅检测到 10.0.2），报错 exit 150。
+- `npm run check-generated` 在 `gallery-check` 阶段失败：`site/content/shader-gallery/shadertest/entry.json` 缺少 `cover.webp`（仓库既有问题）。
+
+### 验证记录 [2026-02-25 00:17]：viewer 共享壳层浏览器交互验收（调试/截图/点击/输入）
+
+**级别**：页面交互验收（Browser E2E）
+
+**命令与结果**：
+- `python3 -m http.server 4173`：通过（本地静态服务）
+- `node tmp-playwright/shared-viewer-debug.mjs`：通过（共享脚本加载与挂载调试）
+- `node tmp-playwright/shared-viewer-acceptance.mjs`：通过
+
+**关键检查项**：
+- `sharedViewerMounted = true`
+- 侧边导航链接可用：`sidebarLinks = 4`
+- 文章大纲链接可用：`outlineLinks = 9`
+- 输入动作：`#sidebar-quick-search` 输入 `武器`
+- 点击动作：
+  - 点击侧边导航后 URL 正常更新为 `viewer.html?file=...`
+  - 点击大纲后 hash 更新为 `#section-1`
+- 截图产物：
+  - `test-results/shared-viewer-acceptance/01-initial.png`
+  - `test-results/shared-viewer-acceptance/02-after-input.png`
+  - `test-results/shared-viewer-acceptance/03-after-sidebar-click.png`
+  - `test-results/shared-viewer-acceptance/04-after-outline-click.png`
+  - `test-results/shared-viewer-acceptance/report.json`
+
+**备注**：
+- 浏览器控制台存在 2 条资源 404（giscus discussion/本地非生产环境相关），不影响本次共享壳层交互路径验收。
+
+### 验证记录 [2026-02-25 07:53]：feat-shared-architecture-reset M1（site-app + Markdown capability）
+
+**级别**：L3（跨模块/构建链路相关）
+
+**命令与结果**：
+- `node --test shared/specs/markdown-pipeline-capability.test.js shared/specs/markdown-link-resolver.test.js`：通过（6/6）
+- `npm --prefix tml-ide-app test`：通过（65/65）
+- `npm run build:site-app`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：失败
+- `npm run check-generated`：失败
+- `npm run acceptance:fullpage:viewer`：失败
+
+**备注**：
+- 本次工作树：`.worktrees/feat-shared-architecture-reset`。
+- 新增 `site-app` 初始脚手架后，首次执行 `npm --prefix site-app ci` 失败（缺少 `package-lock.json`），随后执行 `npm --prefix site-app install` 生成锁文件并完成依赖安装。
+- `npm run build` 在 `build:anims` 阶段失败，根因与历史一致：环境缺少 `Microsoft.NETCore.App 8.0.0`（当前仅检测到 `10.0.2`），`AstCompiler` 启动失败（exit 150）。
+- `npm run check-generated` 在 `gallery-check` 阶段失败：`site/content/shader-gallery/shadertest/entry.json` 缺少 `cover.webp`（仓库既有问题）。
+- `npm run acceptance:fullpage:viewer` 首次失败原因为 `ERR_CONNECTION_REFUSED`（未启动本地 4173 静态服务）；启动 `python3 -m http.server 4173 --bind 127.0.0.1` 后重跑进入实际验收，但 3 个场景均出现 `visual diff 100% > 0.8%`（断言步骤通过，视觉基线未命中）。
+
+### 验证记录 [2026-02-25 08:11]：viewer 验收基线补齐（M1 迁移收口）
+
+**级别**：工作树任务验证（验收链路修正）
+
+**命令与结果**：
+- `node tmp-playwright/shared-viewer-acceptance.mjs --update-baseline`：通过
+- `node tmp-playwright/shared-viewer-acceptance.mjs`：通过
+
+**备注**：
+- 本次在本地静态服务 `python3 -m http.server 4173 --bind 127.0.0.1` 下执行。
+- 失败根因确认并修复：`test-baselines/fullpage/viewer/*.png` 缺失导致视觉差异默认 100%；补齐基线后，`viewer-search-input` / `viewer-sidebar-click` / `viewer-outline-click` 三个场景均通过，`visualDiffPercent = 0`。
+- 新增基线文件：
+  - `test-baselines/fullpage/viewer/viewer-search-input.png`
+  - `test-baselines/fullpage/viewer/viewer-sidebar-click.png`
+  - `test-baselines/fullpage/viewer/viewer-outline-click.png`
+
+### 验证记录 [2026-02-25 08:16]：构建阻断修复（.NET roll-forward + gallery cover）
+
+**级别**：L3（构建链路修复）
+
+**命令与结果**：
+- `npm run build:anims`：通过
+- `npm run build`：通过
+- `npm run gallery:check`：通过（1 entries scanned）
+- `npm run check-generated`：失败
+
+**备注**：
+- 在 `site/tooling/scripts/animcs-compiler.js` 与 `site/tooling/scripts/build-animcs.js` 中为 dotnet 子进程补充默认环境变量 `DOTNET_ROLL_FORWARD=Major`，用于兼容当前机器仅安装 .NET 10 运行时时的 `net8.0` 目标执行。
+- 新增 `site/content/shader-gallery/shadertest/cover.webp`，修复 `gallery-check` 对 `entry.json` 中 `cover` 资源存在性校验失败问题。
+- `npm run check-generated` 最终失败在 `git diff --exit-code` 阶段（当前工作树包含本轮功能改动与生成产物，非“零差异”状态）。

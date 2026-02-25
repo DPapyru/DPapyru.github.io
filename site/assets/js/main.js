@@ -603,42 +603,51 @@ function initMarkdownRenderer() {
             return;
         }
 
-        function escapeHtml(text) {
-            return String(text)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
+        const markdownCapability = window.SharedMarkdownCapability || {};
+        const escapeHtml = typeof markdownCapability.escapeHtml === 'function'
+            ? markdownCapability.escapeHtml
+            : function escapeHtmlFallback(text) {
+                return String(text)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            };
 
-        function normalizeMarkedArgs(href, title, text) {
-            if (href && typeof href === 'object') {
-                return {
-                    href: href.href,
-                    title: href.title,
-                    text: href.text || href.raw || ''
-                };
-            }
-            return { href, title, text };
-        }
-
-        function isSafeUrl(href) {
-            if (!href) return true;
-            const trimmed = String(href).trim().toLowerCase();
-            return !(
-                trimmed.startsWith('javascript:') ||
-                trimmed.startsWith('data:') ||
-                trimmed.startsWith('vbscript:')
-            );
-        }
-
-        const renderer = (marked.Renderer && typeof marked.Renderer === 'function')
-            ? new marked.Renderer()
+        const createSafeMarkedRenderer = typeof markdownCapability.createSafeMarkedRenderer === 'function'
+            ? markdownCapability.createSafeMarkedRenderer
             : null;
 
-        if (renderer) {
-            // 禁止 Markdown 原始 HTML
+        const renderer = createSafeMarkedRenderer
+            ? createSafeMarkedRenderer({ marked: marked })
+            : ((marked.Renderer && typeof marked.Renderer === 'function')
+                ? new marked.Renderer()
+                : null);
+
+        if (renderer && !createSafeMarkedRenderer) {
+            function normalizeMarkedArgs(href, title, text) {
+                if (href && typeof href === 'object') {
+                    return {
+                        href: href.href,
+                        title: href.title,
+                        text: href.text || href.raw || ''
+                    };
+                }
+                return { href, title, text };
+            }
+
+            function isSafeUrl(href) {
+                if (!href) return true;
+                const trimmed = String(href).trim().toLowerCase();
+                return !(
+                    trimmed.startsWith('javascript:') ||
+                    trimmed.startsWith('data:') ||
+                    trimmed.startsWith('vbscript:')
+                );
+            }
+
+            // 兼容旧页面：当共享能力未接入时使用本地安全策略。
             renderer.html = (html) => escapeHtml(html);
             renderer.link = (href, title, text) => {
                 const normalized = normalizeMarkedArgs(href, title, text);
