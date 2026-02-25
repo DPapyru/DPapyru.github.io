@@ -47,6 +47,7 @@ function normalizeMethod(method) {
         signature: String(method.signature || ''),
         returnType: String(method.returnType || 'void'),
         isStatic: !!method.isStatic,
+        isExtension: !!method.isExtension,
         params: params,
         minArgs: minArgs,
         maxArgs: maxArgs,
@@ -234,6 +235,10 @@ export function mergeApiIndex(baseIndex, patchIndex) {
                     return;
                 }
                 const prev = merged.get(key);
+                if (!prev.isExtension && item.isExtension) {
+                    merged.set(key, item);
+                    return;
+                }
                 if (!prev.summary && item.summary) {
                     merged.set(key, item);
                 }

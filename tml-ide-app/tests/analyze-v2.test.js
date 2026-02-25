@@ -4,13 +4,15 @@ import assert from 'node:assert/strict';
 import { analyzeV2WithIndex } from '../src/lib/analyze-v2.js';
 import { normalizeApiIndex } from '../src/lib/index-schema.js';
 
-function method(name, returnType, minArgs, maxArgs) {
+function method(name, returnType, minArgs, maxArgs, options) {
+    const opts = options && typeof options === 'object' ? options : {};
     return {
         kind: 'method',
         name,
         signature: `${returnType} ${name}()`,
         returnType,
-        isStatic: false,
+        isStatic: !!opts.isStatic,
+        isExtension: !!opts.isExtension,
         params: [],
         minArgs: Number(minArgs || 0),
         maxArgs: Number(maxArgs || minArgs || 0),
@@ -20,14 +22,16 @@ function method(name, returnType, minArgs, maxArgs) {
     };
 }
 
-function methodWithParams(name, returnType, params) {
+function methodWithParams(name, returnType, params, options) {
+    const opts = options && typeof options === 'object' ? options : {};
     const safeParams = Array.isArray(params) ? params : [];
     return {
         kind: 'method',
         name,
         signature: `${returnType} ${name}(${safeParams.map((item) => `${item.type} ${item.name}`).join(', ')})`,
         returnType,
-        isStatic: false,
+        isStatic: !!opts.isStatic,
+        isExtension: !!opts.isExtension,
         params: safeParams.map((item) => ({
             name: item.name,
             type: item.type,
@@ -102,6 +106,67 @@ function createAnalyzeIndex() {
                     fields: [field('active', 'bool')]
                 }
             },
+            'Terraria.Player.CompositeArmStretchAmount': {
+                fullName: 'Terraria.Player.CompositeArmStretchAmount',
+                namespace: 'Terraria',
+                name: 'CompositeArmStretchAmount',
+                summary: '',
+                members: {
+                    methods: [],
+                    properties: [],
+                    fields: [field('Full', 'Terraria.Player.CompositeArmStretchAmount')]
+                }
+            },
+            'Terraria.NPC': {
+                fullName: 'Terraria.NPC',
+                namespace: 'Terraria',
+                name: 'NPC',
+                summary: '',
+                members: {
+                    methods: [method('AddBuff', 'void', 2, 2)],
+                    properties: [],
+                    fields: []
+                }
+            },
+            'Terraria.NPC.HitInfo': {
+                fullName: 'Terraria.NPC.HitInfo',
+                namespace: 'Terraria',
+                name: 'HitInfo',
+                summary: '',
+                members: {
+                    methods: [],
+                    properties: [],
+                    fields: []
+                }
+            },
+            'Microsoft.Xna.Framework.Vector2': {
+                fullName: 'Microsoft.Xna.Framework.Vector2',
+                namespace: 'Microsoft.Xna.Framework',
+                name: 'Vector2',
+                summary: '',
+                members: {
+                    methods: [],
+                    properties: [],
+                    fields: []
+                }
+            },
+            'Terraria.Utils': {
+                fullName: 'Terraria.Utils',
+                namespace: 'Terraria',
+                name: 'Utils',
+                summary: '',
+                members: {
+                    methods: [
+                        methodWithParams('RotatedBy', 'Vector2', [
+                            { name: 'spinningpoint', type: 'Vector2' },
+                            { name: 'radians', type: 'double' },
+                            { name: 'center', type: 'Vector2', optional: true, defaultValue: null }
+                        ], { isStatic: true, isExtension: true })
+                    ],
+                    properties: [],
+                    fields: []
+                }
+            },
             'Example.TextValue': {
                 fullName: 'Example.TextValue',
                 namespace: 'Example',
@@ -168,6 +233,12 @@ function createAnalyzeIndex() {
                         methodWithParams('AnglerQuestReward', 'void', [
                             { name: 'rareMultiplier', type: 'float' },
                             { name: 'rewardItems', type: 'List<Item>' }
+                        ]),
+                        methodWithParams('OnHitNPC', 'void', [
+                            { name: 'player', type: 'Player' },
+                            { name: 'target', type: 'NPC' },
+                            { name: 'hit', type: 'HitInfo' },
+                            { name: 'damageDone', type: 'int' }
                         ])
                     ],
                     properties: [],
@@ -342,6 +413,152 @@ test('Analyze v2 override snippet includes parameter types and names', () => {
         String(candidate.insertText || ''),
         /AnglerQuestReward\(float rareMultiplier, List<Item> rewardItems\)/
     );
+});
+
+test('Analyze v2 completion resolves nested type member chains', () => {
+    const index = createAnalyzeIndex();
+    const source = [
+        'using Terraria;',
+        '',
+        'public class Demo {',
+        '    void Test() {',
+        '        Player.CompositeArmStretchAmount.',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const labels = completionLabels(index, source, 'Player.CompositeArmStretchAmount.');
+    assert.ok(labels.includes('Full'));
+});
+
+test('Analyze v2 diagnostics does not flag nested type references in method signatures', () => {
+    const index = createAnalyzeIndex();
+    const source = [
+        'using Terraria;',
+        'using Terraria.ModLoader;',
+        '',
+        'public class DemoBlade : ModItem',
+        '{',
+        '    public override void OnHitNPC(Player player, NPC target, NPC.HitInfo hit, int damageDone)',
+        '    {',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const result = analyzeV2WithIndex(index, {
+        text: source,
+        offset: source.indexOf('NPC.HitInfo') + 3,
+        maxItems: 120,
+        features: { completion: false, hover: false, diagnostics: true }
+    });
+    const unknownMembers = (result.diagnosticsRule || []).filter((item) => item.code === 'RULE_UNKNOWN_MEMBER');
+    const semicolonWarnings = (result.diagnosticsRule || []).filter((item) => item.code === 'RULE_MISSING_SEMICOLON');
+
+    assert.equal(unknownMembers.length, 0);
+    assert.equal(semicolonWarnings.length, 0);
+});
+
+test('Analyze v2 override snippet prefers nested type qualification when needed', () => {
+    const index = createAnalyzeIndex();
+    const source = [
+        'using Terraria;',
+        'using Terraria.ModLoader;',
+        '',
+        'public class DemoBlade : ModItem',
+        '{',
+        '    public override void OnHitN',
+        '}'
+    ].join('\n');
+
+    const offset = source.indexOf('OnHitN') + 'OnHitN'.length;
+    const result = analyzeV2WithIndex(index, {
+        text: source,
+        offset,
+        maxItems: 120,
+        features: { completion: true, hover: false, diagnostics: false }
+    });
+    const candidate = (result.completionItems || []).find((item) => item.label === 'OnHitNPC');
+
+    assert.ok(candidate);
+    assert.match(String(candidate.detail || ''), /OnHitNPC\(Player player, NPC target, NPC\.HitInfo hit, int damageDone\)/);
+    assert.match(String(candidate.insertText || ''), /OnHitNPC\(Player player, NPC target, NPC\.HitInfo hit, int damageDone\)/);
+});
+
+test('Analyze v2 completion and diagnostics support extension methods', () => {
+    const index = createAnalyzeIndex();
+    const source = [
+        'using Terraria;',
+        'using Microsoft.Xna.Framework;',
+        '',
+        'public class Demo {',
+        '    void Test(Vector2 velocity) {',
+        '        velocity.RotatedBy(0.15);',
+        '        velocity.',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const labels = completionLabels(index, source, 'velocity.');
+    assert.ok(labels.includes('RotatedBy'));
+
+    const result = analyzeV2WithIndex(index, {
+        text: source,
+        offset: source.indexOf('RotatedBy') + 2,
+        maxItems: 120,
+        features: { completion: false, hover: false, diagnostics: true }
+    });
+    const unknownMembers = (result.diagnosticsRule || []).filter((item) => item.code === 'RULE_UNKNOWN_MEMBER');
+    assert.equal(unknownMembers.length, 0);
+});
+
+test('Analyze v2 extension methods enforce argument count after dropping receiver', () => {
+    const index = createAnalyzeIndex();
+    const source = [
+        'using Terraria;',
+        'using Microsoft.Xna.Framework;',
+        '',
+        'public class Demo {',
+        '    void Test(Vector2 velocity) {',
+        '        velocity.RotatedBy();',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const result = analyzeV2WithIndex(index, {
+        text: source,
+        offset: source.indexOf('RotatedBy') + 4,
+        maxItems: 120,
+        features: { completion: false, hover: false, diagnostics: true }
+    });
+    assert.ok((result.diagnosticsRule || []).some((item) => item.code === 'RULE_ARG_COUNT'));
+});
+
+test('Analyze v2 extension method fallback works with legacy index shape', () => {
+    const modern = createAnalyzeIndex();
+    const legacyRaw = JSON.parse(JSON.stringify(modern));
+    Object.values(legacyRaw.types || {}).forEach((typeRecord) => {
+        const methods = typeRecord && typeRecord.members && Array.isArray(typeRecord.members.methods)
+            ? typeRecord.members.methods
+            : [];
+        methods.forEach((method) => {
+            delete method.isExtension;
+        });
+    });
+    const legacy = normalizeApiIndex(legacyRaw);
+
+    const source = [
+        'using Terraria;',
+        'using Microsoft.Xna.Framework;',
+        '',
+        'public class Demo {',
+        '    void Test(Vector2 velocity) {',
+        '        velocity.',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const labels = completionLabels(legacy, source, 'velocity.');
+    assert.ok(labels.includes('RotatedBy'));
 });
 
 test('Analyze v2 completion supports more than 200 members for large tML-like types', () => {

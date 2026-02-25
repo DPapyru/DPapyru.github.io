@@ -2190,3 +2190,18 @@
   - `shared-page-tree-link` 数量：0（确认不再被平铺列表覆盖）
   - 交互检查：目录点击折叠/展开正常，侧栏搜索输入 `AI` 后可见条目数为 5。
   - 验证截图：`test-results/tmp-viewer-fix-tree-restored.png`、`test-results/tmp-viewer-fix-interaction.png`
+
+### 验证记录 [2026-02-25 22:33]：main 合并 `feat/unified-scm-fx` + `fix/ide-completion-diagnostics`
+
+**级别**：L3（跨模块合并验收）
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过（26/26）
+- `npm run build`：失败
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：
+- `npm run build` 在 `build:anims` 阶段失败，错误为 `spawnSync dotnet EPERM`（环境级执行权限问题，非 JS 逻辑编译错误）。
+- `npm run check-generated` 失败于 `gallery-check`：`site/content/shader-gallery/newshader/entry.json` 引用的 `cover.webp` 不存在。
+- 为消除 merge 冲突残留构建产物，已执行 `npm --prefix tml-ide-app run build`，`tml-ide` 输出重新生成。
