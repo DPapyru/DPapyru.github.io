@@ -925,6 +925,18 @@ button:disabled {
     padding: 0;
 }
 
+.shader-preview-modal-backdrop:hover,
+.shader-preview-modal-backdrop:active,
+.shader-preview-modal-backdrop:focus,
+.shader-preview-modal-backdrop:focus-visible {
+    background: rgba(0, 0, 0, 0.56);
+}
+
+.shader-preview-modal-backdrop:focus,
+.shader-preview-modal-backdrop:focus-visible {
+    outline: none;
+}
+
 .shader-preview-dialog {
     position: relative;
     z-index: 1;
@@ -1477,6 +1489,18 @@ button:disabled {
     border-radius: 0;
     min-height: 0;
     padding: 0;
+}
+
+.command-palette-backdrop:hover,
+.command-palette-backdrop:active,
+.command-palette-backdrop:focus,
+.command-palette-backdrop:focus-visible {
+    background: rgba(0, 0, 0, 0.48);
+}
+
+.command-palette-backdrop:focus,
+.command-palette-backdrop:focus-visible {
+    outline: none;
 }
 
 .command-palette-dialog {

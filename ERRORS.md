@@ -2205,3 +2205,21 @@
 - `npm run build` 在 `build:anims` 阶段失败，错误为 `spawnSync dotnet EPERM`（环境级执行权限问题，非 JS 逻辑编译错误）。
 - `npm run check-generated` 失败于 `gallery-check`：`site/content/shader-gallery/newshader/entry.json` 引用的 `cover.webp` 不存在。
 - 为消除 merge 冲突残留构建产物，已执行 `npm --prefix tml-ide-app run build`，`tml-ide` 输出重新生成。
+
+### 验证记录 [2026-02-26 07:44]：IDE 弹窗外层点击后遮罩不透明修复
+
+**级别**：工作树任务验证（UI 样式修复 + 浏览器交互验收）
+
+**命令与结果**：
+- `node --input-type=module`（Playwright：打开 Shader 预览 → 悬停遮罩 → 点击遮罩关闭 → 重开并截图）：通过
+- `npm run build`：失败（首次：`site-app` 缺少 `@vitejs/plugin-react`）
+- `npm ci`（`site-app`）：通过
+- `npm run build`：通过
+
+**验收产物**：
+- `test-results/manual-popup-fix/shader-backdrop-hover-after-fix.png`
+- `test-results/manual-popup-fix/shader-backdrop-hover-reopen-after-fix.png`
+
+**备注**：
+- 修复后遮罩在悬停/点击外层时保持半透明（`rgba(0, 0, 0, 0.56)`，`alpha = 0.56`），不再变为不透明实色。
+- 点击弹窗外层遮罩仍可正常关闭弹窗，功能保持不变。
