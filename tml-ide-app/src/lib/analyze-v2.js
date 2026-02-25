@@ -22,6 +22,8 @@ const BUILTIN_TYPES = new Set([
     'float', 'double', 'decimal', 'string', 'object', 'char'
 ]);
 const MAX_COMPLETION_ITEMS = 5000;
+const EXTENSION_FALLBACK_STATIC_TYPE = 'Terraria.Utils';
+const extensionMethodCatalogCache = new WeakMap();
 
 function isIdentifierStart(ch) {
     return /[A-Za-z_]/.test(ch || '');
@@ -202,6 +204,15 @@ function resolveTypeByName(index, typeName, context) {
     if (safe.includes('.')) {
         const direct = getTypeByFullName(index, safe);
         if (direct) return direct;
+
+        const segments = safe.split('.').filter(Boolean);
+        if (segments.length > 1) {
+            const headType = resolveTypeByName(index, segments[0], context);
+            if (headType) {
+                const nested = getTypeByFullName(index, `${headType.fullName}.${segments.slice(1).join('.')}`);
+                if (nested) return nested;
+            }
+        }
     }
 
     const candidates = getTypeCandidatesByShortName(index, safe);
@@ -230,6 +241,14 @@ function resolveTypeByName(index, typeName, context) {
         });
 
     return ranked[0].candidate;
+}
+
+function resolveNestedTypeByOwner(index, ownerType, nestedMemberName) {
+    if (!ownerType) return null;
+    const ownerFull = String(ownerType.fullName || '').trim();
+    const nestedName = stripGenericsAndArrays(String(nestedMemberName || '').trim());
+    if (!ownerFull || !nestedName) return null;
+    return getTypeByFullName(index, `${ownerFull}.${nestedName}`);
 }
 
 function getClassScopeAtOffset(context, offset) {
@@ -276,6 +295,171 @@ function resolveIdentifierType(index, identifier, context, offset) {
     return null;
 }
 
+function isTypeAssignableTo(index, context, sourceType, targetTypeName) {
+    if (!sourceType) return false;
+
+    const safeTargetName = resolveDeclaredTypeName(targetTypeName);
+    if (!safeTargetName) return false;
+
+    const resolvedTarget = getTypeByFullName(index, safeTargetName) || resolveTypeByName(index, safeTargetName, context);
+    if (resolvedTarget) {
+        const targetFull = String(resolvedTarget.fullName || '');
+        const queue = [sourceType];
+        const seen = new Set();
+        while (queue.length) {
+            const current = queue.shift();
+            if (!current) continue;
+
+            const currentFull = String(current.fullName || '');
+            if (currentFull === targetFull) return true;
+            if (currentFull && seen.has(currentFull)) continue;
+            if (currentFull) seen.add(currentFull);
+
+            if (current.baseType) {
+                const baseType = getTypeByFullName(index, current.baseType) || resolveTypeByName(index, current.baseType, context);
+                if (baseType) queue.push(baseType);
+            }
+
+            if (Array.isArray(current.interfaces)) {
+                current.interfaces.forEach((name) => {
+                    const iface = getTypeByFullName(index, name) || resolveTypeByName(index, name, context);
+                    if (iface) queue.push(iface);
+                });
+            }
+        }
+        return false;
+    }
+
+    const targetShortName = safeTargetName.split('.').filter(Boolean).pop();
+    if (!targetShortName) return false;
+    return String(sourceType.name || '') === targetShortName;
+}
+
+function extensionDefaultValueText(value) {
+    if (value === null || value === undefined) return 'null';
+    if (typeof value === 'string') return `"${value}"`;
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    return String(value);
+}
+
+function buildMethodSignatureText(methodItem, params) {
+    const safeParams = Array.isArray(params) ? params : [];
+    const paramsText = safeParams.map((param, idx) => {
+        const safeParam = param && typeof param === 'object' ? param : {};
+        const type = String(safeParam.type || 'object').trim() || 'object';
+        const name = String(safeParam.name || '').trim() || `arg${idx + 1}`;
+        if (!safeParam.optional) {
+            return `${type} ${name}`;
+        }
+        if (Object.prototype.hasOwnProperty.call(safeParam, 'defaultValue')) {
+            return `${type} ${name} = ${extensionDefaultValueText(safeParam.defaultValue)}`;
+        }
+        return `${type} ${name}`;
+    }).join(', ');
+    return `${String(methodItem.returnType || 'void')} ${String(methodItem.name || '')}(${paramsText})`;
+}
+
+function getExtensionMethodCatalog(index) {
+    if (extensionMethodCatalogCache.has(index)) {
+        return extensionMethodCatalogCache.get(index);
+    }
+
+    const entries = [];
+    const allTypes = Object.values(index.types || {});
+    let hasFlaggedExtensions = false;
+
+    allTypes.forEach((typeRecord) => {
+        const methods = Array.isArray(typeRecord && typeRecord.members && typeRecord.members.methods)
+            ? typeRecord.members.methods
+            : [];
+        methods.forEach((method) => {
+            if (method && method.isExtension === true) {
+                hasFlaggedExtensions = true;
+            }
+        });
+    });
+
+    if (hasFlaggedExtensions) {
+        allTypes.forEach((typeRecord) => {
+            const methods = Array.isArray(typeRecord && typeRecord.members && typeRecord.members.methods)
+                ? typeRecord.members.methods
+                : [];
+            methods.forEach((method) => {
+                if (!method || method.isExtension !== true || method.isStatic !== true) return;
+                if (!Array.isArray(method.params) || method.params.length < 1) return;
+                entries.push({
+                    declaringType: typeRecord,
+                    method
+                });
+            });
+        });
+    } else {
+        const fallbackType = getTypeByFullName(index, EXTENSION_FALLBACK_STATIC_TYPE);
+        const methods = Array.isArray(fallbackType && fallbackType.members && fallbackType.members.methods)
+            ? fallbackType.members.methods
+            : [];
+        methods.forEach((method) => {
+            if (!method || method.isStatic !== true) return;
+            if (!Array.isArray(method.params) || method.params.length < 1) return;
+            entries.push({
+                declaringType: fallbackType,
+                method
+            });
+        });
+    }
+
+    extensionMethodCatalogCache.set(index, entries);
+    return entries;
+}
+
+function isExtensionNamespaceVisible(context, declaringType, ownerType) {
+    const namespace = String(declaringType && declaringType.namespace || '').trim();
+    if (!namespace) return true;
+    const usings = context && context.usings instanceof Set ? context.usings : new Set();
+    if (usings.has(namespace)) return true;
+    const ownerNamespace = String(ownerType && ownerType.namespace || '').trim();
+    if (ownerNamespace && ownerNamespace === namespace) return true;
+    return false;
+}
+
+function toInstanceStyleExtensionMethod(entry) {
+    const method = entry && entry.method && typeof entry.method === 'object' ? entry.method : {};
+    const params = Array.isArray(method.params) ? method.params.slice(1) : [];
+    const minArgs = Math.max(0, Number(method.minArgs || 0) - 1);
+    const maxArgs = Math.max(minArgs, Number(method.maxArgs || 0) - 1);
+
+    return {
+        kind: 'method',
+        name: String(method.name || ''),
+        signature: buildMethodSignatureText(method, params),
+        returnType: String(method.returnType || ''),
+        isStatic: false,
+        isExtension: true,
+        params,
+        minArgs,
+        maxArgs,
+        summary: String(method.summary || ''),
+        returnsDoc: String(method.returnsDoc || ''),
+        paramDocs: method.paramDocs && typeof method.paramDocs === 'object' ? method.paramDocs : {}
+    };
+}
+
+function collectExtensionMethodsForType(index, context, ownerType) {
+    if (!ownerType) return [];
+
+    const catalog = getExtensionMethodCatalog(index);
+    const result = [];
+    for (let i = 0; i < catalog.length; i++) {
+        const entry = catalog[i];
+        const method = entry.method;
+        if (!method || !Array.isArray(method.params) || method.params.length < 1) continue;
+        if (!isExtensionNamespaceVisible(context, entry.declaringType, ownerType)) continue;
+        if (!isTypeAssignableTo(index, context, ownerType, method.params[0] && method.params[0].type)) continue;
+        result.push(toInstanceStyleExtensionMethod(entry));
+    }
+    return result;
+}
+
 function collectMembersForTypeHierarchy(index, context, typeRecord) {
     if (!typeRecord) return [];
 
@@ -283,6 +467,12 @@ function collectMembersForTypeHierarchy(index, context, typeRecord) {
     const seenTypes = new Set();
     const seenMembers = new Set();
     const allMembers = [];
+    const pushMember = (item) => {
+        const key = `${item.kind}:${item.name}:${item.signature || ''}`;
+        if (seenMembers.has(key)) return;
+        seenMembers.add(key);
+        allMembers.push(item);
+    };
 
     while (queue.length) {
         const current = queue.shift();
@@ -291,13 +481,6 @@ function collectMembersForTypeHierarchy(index, context, typeRecord) {
         const fullName = String(current.fullName || '');
         if (fullName && seenTypes.has(fullName)) continue;
         if (fullName) seenTypes.add(fullName);
-
-        const pushMember = (item) => {
-            const key = `${item.kind}:${item.name}:${item.signature || ''}`;
-            if (seenMembers.has(key)) return;
-            seenMembers.add(key);
-            allMembers.push(item);
-        };
 
         current.members.methods.forEach(pushMember);
         current.members.properties.forEach(pushMember);
@@ -318,6 +501,8 @@ function collectMembersForTypeHierarchy(index, context, typeRecord) {
             if (parent) queue.push(parent);
         });
     }
+
+    collectExtensionMethodsForType(index, context, typeRecord).forEach(pushMember);
 
     return allMembers;
 }
@@ -568,7 +753,10 @@ function resolveMemberResultType(index, context, ownerType, memberName, callArgT
     if (!ownerType) return null;
 
     const candidates = collectMembersByName(index, context, ownerType, memberName);
-    if (!candidates.length) return null;
+    if (!candidates.length) {
+        if (typeof callArgText === 'string') return null;
+        return resolveNestedTypeByOwner(index, ownerType, memberName);
+    }
 
     if (typeof callArgText === 'string') {
         const methods = candidates.filter((item) => item.kind === 'method');
@@ -855,18 +1043,94 @@ function parseOverrideContext(text, offset) {
     };
 }
 
-function buildOverrideSnippet(methodItem) {
+function buildNestedTypeChain(index, typeRecord) {
+    if (!typeRecord || typeof typeRecord !== 'object') return [];
+
+    const fullName = String(typeRecord.fullName || '').trim();
+    const namespace = String(typeRecord.namespace || '').trim();
+    if (!fullName) return [];
+
+    const fullParts = fullName.split('.').filter(Boolean);
+    if (fullParts.length <= 1) return [];
+
+    const namespaceParts = namespace ? namespace.split('.').filter(Boolean) : [];
+    const namespacePrefixMatches = !namespaceParts.length
+        || fullParts.slice(0, namespaceParts.length).join('.') === namespaceParts.join('.');
+
+    if (namespacePrefixMatches) {
+        const relative = fullParts.slice(namespaceParts.length);
+        if (relative.length >= 2) {
+            return relative;
+        }
+    }
+
+    if (namespace) {
+        const parentType = getTypeByFullName(index, namespace);
+        if (parentType && fullName === `${namespace}.${typeRecord.name}`) {
+            const parentChain = buildNestedTypeChain(index, parentType);
+            if (parentChain.length) {
+                return parentChain.concat(String(typeRecord.name || '').trim());
+            }
+            const parentName = String(parentType.name || '').trim();
+            if (parentName) {
+                return [parentName, String(typeRecord.name || '').trim()].filter(Boolean);
+            }
+        }
+    }
+
+    return [];
+}
+
+function formatTypeForOverrideSnippet(index, context, rawType) {
+    const safe = String(rawType || '').trim();
+    if (!safe) return safe;
+
+    const hasNullable = safe.endsWith('?');
+    const baseType = stripNullable(safe);
+    if (!baseType || /[<>\[\],]/.test(baseType)) {
+        return safe;
+    }
+
+    const resolved = resolveTypeByName(index, baseType, context) || getTypeByFullName(index, baseType);
+    if (!resolved) {
+        return safe;
+    }
+
+    const nestedChain = buildNestedTypeChain(index, resolved);
+    if (nestedChain.length >= 2) {
+        const fullParts = String(resolved.fullName || '').split('.').filter(Boolean);
+        const topFullName = fullParts.slice(0, fullParts.length - nestedChain.length + 1).join('.');
+        const topName = nestedChain[0];
+        const topResolved = topName ? resolveTypeByName(index, topName, context) : null;
+        if (topResolved && String(topResolved.fullName || '') === topFullName) {
+            return `${nestedChain.join('.')}${hasNullable ? '?' : ''}`;
+        }
+    }
+
+    return `${resolved.name}${hasNullable ? '?' : ''}`;
+}
+
+function buildOverrideSignatureArgs(index, context, methodItem) {
     const params = Array.isArray(methodItem && methodItem.params) ? methodItem.params : [];
-    const signatureArgs = params
+    return params
         .map((item, idx) => {
             const name = String(item && item.name || '').trim();
-            const type = String(item && item.type || '').trim();
+            const type = formatTypeForOverrideSnippet(index, context, String(item && item.type || '').trim());
             const safeName = name || `arg${idx + 1}`;
             return type ? `${type} ${safeName}` : safeName;
         })
         .join(', ');
+}
 
+function buildOverrideSnippet(index, context, methodItem) {
+    const signatureArgs = buildOverrideSignatureArgs(index, context, methodItem);
     return `${methodItem.name}(${signatureArgs})\n{\n    $0\n}`;
+}
+
+function buildOverrideDetail(index, context, methodItem) {
+    const returnType = formatTypeForOverrideSnippet(index, context, String(methodItem && methodItem.returnType || 'void'));
+    const signatureArgs = buildOverrideSignatureArgs(index, context, methodItem);
+    return `${returnType} ${methodItem.name}(${signatureArgs})`;
 }
 
 function buildOverrideCompletionItems(index, context, text, offset, maxItems) {
@@ -884,7 +1148,7 @@ function buildOverrideCompletionItems(index, context, text, offset, maxItems) {
 
     const prefix = String(overrideContext.memberPrefix || '').toLowerCase();
     const methods = collectMembersForTypeHierarchy(index, context, baseType)
-        .filter((item) => item && item.kind === 'method' && !item.isStatic)
+        .filter((item) => item && item.kind === 'method' && !item.isStatic && !item.isExtension)
         .filter((item) => returnTypeMatches(index, context, overrideContext.returnType, item.returnType))
         .filter((item) => {
             if (!prefix) return true;
@@ -900,11 +1164,11 @@ function buildOverrideCompletionItems(index, context, text, offset, maxItems) {
         .slice(0, maxItems)
         .map((item) => ({
             label: item.name,
-            insertText: buildOverrideSnippet(item),
+            insertText: buildOverrideSnippet(index, context, item),
             insertTextMode: 'snippet',
             source: 'override',
             kind: 'method',
-            detail: item.signature || '',
+            detail: buildOverrideDetail(index, context, item),
             documentation: item.summary || '',
             sortText: `0_${item.name}`
         }));
@@ -1012,6 +1276,28 @@ function buildHover(index, context, text, offset, parsedTree) {
     };
 }
 
+function isLikelyMethodSignatureLine(trimmedLine) {
+    const line = String(trimmedLine || '').trim();
+    if (!line) return false;
+    if (!line.includes('(') || !line.includes(')')) return false;
+    if (/;|\{|}|=>/.test(line)) return false;
+    if (/^(if|for|foreach|while|switch|catch|else|try|do|return|throw|await|new|using|namespace)\b/.test(line)) {
+        return false;
+    }
+
+    const open = line.indexOf('(');
+    if (open <= 0) return false;
+
+    const head = line.slice(0, open).trim();
+    if (!head || /=/.test(head)) return false;
+
+    const tokens = head.split(/\s+/).filter(Boolean);
+    if (tokens.length < 2) return false;
+
+    const methodName = tokens[tokens.length - 1];
+    return /^[A-Za-z_][A-Za-z0-9_]*$/.test(methodName);
+}
+
 function buildRuleDiagnostics(index, context, text, parsedTree) {
     const diagnostics = [];
     const lineStarts = createLineIndex(text);
@@ -1073,7 +1359,8 @@ function buildRuleDiagnostics(index, context, text, parsedTree) {
             trimmed.startsWith('namespace ') ||
             trimmed.startsWith('#') ||
             /^\[/.test(trimmed) ||
-            /^(if|for|foreach|while|switch|catch|else|try|do)\b/.test(trimmed);
+            /^(if|for|foreach|while|switch|catch|else|try|do)\b/.test(trimmed) ||
+            isLikelyMethodSignatureLine(trimmed);
 
         if (likelyStatement && !ignore) {
             const lineOffset = cursor + line.length;
@@ -1119,6 +1406,8 @@ function buildRuleDiagnostics(index, context, text, parsedTree) {
 
         const candidates = collectMembersByName(index, context, ownerType, access.memberName);
         if (!candidates.length) {
+            const nestedType = resolveNestedTypeByOwner(index, ownerType, access.memberName);
+            if (nestedType) return;
             pushDiagnostic(
                 diagnostics,
                 lineStarts,

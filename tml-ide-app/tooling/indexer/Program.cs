@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 using System.Text.Json;
 using System.Xml.Linq;
@@ -391,6 +392,7 @@ static class Program
                     Signature = BuildMethodSignature(method),
                     ReturnType = FormatType(method.ReturnType),
                     IsStatic = method.IsStatic,
+                    IsExtension = method.IsDefined(typeof(ExtensionAttribute), inherit: false),
                     Params = parameters.Select(p => new ParameterEntry
                     {
                         Name = p.Name ?? "arg",
@@ -608,16 +610,22 @@ static class Program
         if (type == typeof(string)) return "string";
         if (type == typeof(object)) return "object";
 
+        var nestedPrefix = "";
+        if (type.IsNested && type.DeclaringType != null)
+        {
+            nestedPrefix = FormatType(type.DeclaringType) + ".";
+        }
+
         if (type.IsGenericType)
         {
             var name = type.Name;
             var tick = name.IndexOf('`');
             if (tick >= 0) name = name[..tick];
             var args = type.GetGenericArguments().Select(FormatType);
-            return $"{name}<{string.Join(", ", args)}>";
+            return $"{nestedPrefix}{name}<{string.Join(", ", args)}>";
         }
 
-        return type.Name;
+        return nestedPrefix + type.Name;
     }
 
     static object? FormatDefaultValue(object? value)
@@ -939,6 +947,7 @@ sealed class MethodEntry
     public string Signature { get; set; } = "";
     public string ReturnType { get; set; } = "";
     public bool IsStatic { get; set; }
+    public bool IsExtension { get; set; }
     public List<ParameterEntry> Params { get; set; } = new();
     public int MinArgs { get; set; }
     public int MaxArgs { get; set; }

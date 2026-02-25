@@ -2068,3 +2068,16 @@
 - 在 `site/tooling/scripts/animcs-compiler.js` 与 `site/tooling/scripts/build-animcs.js` 中为 dotnet 子进程补充默认环境变量 `DOTNET_ROLL_FORWARD=Major`，用于兼容当前机器仅安装 .NET 10 运行时时的 `net8.0` 目标执行。
 - 新增 `site/content/shader-gallery/shadertest/cover.webp`，修复 `gallery-check` 对 `entry.json` 中 `cover` 资源存在性校验失败问题。
 - `npm run check-generated` 最终失败在 `git diff --exit-code` 阶段（当前工作树包含本轮功能改动与生成产物，非“零差异”状态）。
+
+### 验证记录 [2026-02-25 18:22]：tml-ide 补全与诊断增强修复（嵌套类型 / 扩展方法 / override 签名）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/analyze-v2.test.js tml-ide-app/tests/analyze-v2-edge-expressions.test.js`：通过（20/20）
+- `node --test tml-ide-app/tests/fix-suggestions.test.js tml-ide-app/tests/language-core.test.js`：通过（11/11）
+- `npm --prefix tml-ide-app run test`：通过（71/71）
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 在 `gallery-check` 阶段失败，错误为 `site/content/shader-gallery/newshader/entry.json: cover 文件不存在: cover.webp`，与本次 IDE 补全/诊断修复无直接关系；已完成人工验收与截图，产物位于 `tmp-playwright/artifacts/tml-ide-fix-20260225/`。
