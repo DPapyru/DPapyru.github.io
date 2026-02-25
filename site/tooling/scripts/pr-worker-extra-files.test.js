@@ -3,129 +3,56 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-function getFunctionBody(source, name) {
-    const re = new RegExp(`function\\s+${name}\\s*\\([^)]*\\)\\s*\\{`, 'm');
-    const match = re.exec(source);
-    if (!match) return '';
-
-    let index = match.index + match[0].length;
-    let depth = 1;
-    while (index < source.length) {
-        const ch = source[index];
-        if (ch === '{') depth += 1;
-        else if (ch === '}') depth -= 1;
-        if (depth === 0) {
-            return source.slice(match.index, index + 1);
-        }
-        index += 1;
-    }
-
-    return '';
+function read(filePath) {
+    return fs.readFileSync(path.resolve(filePath), 'utf8');
 }
 
-test('oauth worker defines extraFiles sanitizer helpers', () => {
-    const file = path.resolve('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
-    const text = fs.readFileSync(file, 'utf8');
+test('workers use shared files[] parser module', () => {
+    const oauthText = read('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
+    const sharedText = read('site/tooling/cloudflare/pr-gateway-worker.js');
 
-    assert.match(text, /function\s+sanitizeExtraFilePath\s*\(/);
-    assert.match(text, /function\s+normalizeExtraFiles\s*\(/);
-    assert.match(text, /extraFiles\s*=\s*normalizeExtraFiles\(/);
+    assert.match(oauthText, /resolveRequestFiles/);
+    assert.match(sharedText, /resolveRequestFiles/);
+    assert.match(oauthText, /from "\.\/pr-file-ops\.js"/);
+    assert.match(sharedText, /from "\.\/pr-file-ops\.js"/);
 });
 
-test('oauth worker restricts extraFiles path and count', () => {
-    const file = path.resolve('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
-    const text = fs.readFileSync(file, 'utf8');
-
-    assert.match(text, /site\/content\/routes\/\*\.route\.json/);
-    assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
-    assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
-    assert.match(text, /site\/content\/\*\*\/media\/\*\.\{mp4,webm\}/);
-    assert.match(text, /site\/content\/anims\/\*\.cs/);
-    assert.match(text, /site\/content\/\*\*\/code\/\*\.cs/);
-    assert.match(text, /extraFiles\s*数量不能超过\s*8/);
-    assert.match(text, /content\s*过大/);
-    assert.match(text, /base64\s*content\s*过大/);
-    assert.match(text, /10MB/);
-});
-
-test('shared-key worker defines extraFiles sanitizer helpers', () => {
-    const file = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
-    const text = fs.readFileSync(file, 'utf8');
-
-    assert.match(text, /function\s+sanitizeExtraFilePath\s*\(/);
-    assert.match(text, /function\s+normalizeExtraFiles\s*\(/);
-    assert.match(text, /extraFiles\s*=\s*normalizeExtraFiles\(/);
-});
-
-test('shared-key worker supports shader gallery extra files', () => {
-    const file = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
-    const text = fs.readFileSync(file, 'utf8');
-
-    assert.match(text, /site\/content\/routes\/\*\.route\.json/);
-    assert.match(text, /site\/content\/shader-gallery\/<slug>\/\(entry\|shader\)\.json/);
-    assert.match(text, /site\/content\/\*\*\/imgs\/\*\.\{png,jpg,jpeg,gif,webp,svg,bmp,avif\}/);
-    assert.match(text, /site\/content\/\*\*\/media\/\*\.\{mp4,webm\}/);
-    assert.match(text, /site\/content\/anims\/\*\.cs/);
-    assert.match(text, /site\/content\/\*\*\/code\/\*\.cs/);
-    assert.match(text, /extraFiles\s*数量不能超过\s*8/);
-    assert.match(text, /content\s*过大/);
-    assert.match(text, /base64\s*content\s*过大/);
-    assert.match(text, /10MB/);
-});
-
-test('workers accept base64 encoded extra files', () => {
-    const oauthFile = path.resolve('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
-    const sharedFile = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
-    const oauthText = fs.readFileSync(oauthFile, 'utf8');
-    const sharedText = fs.readFileSync(sharedFile, 'utf8');
-
-    assert.match(oauthText, /encoding\s*===\s*"base64"/);
-    assert.match(sharedText, /encoding\s*===\s*"base64"/);
-    assert.match(oauthText, /extraBase64\s*=\s*file\.encoding\s*===\s*"base64"\s*\?\s*file\.content/);
-    assert.match(sharedText, /extraBase64\s*=\s*file\.encoding\s*===\s*"base64"\s*\?\s*file\.content/);
-});
-
-test('workers define preflight-check endpoint with auth', () => {
-    const oauthFile = path.resolve('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
-    const sharedFile = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
-    const oauthText = fs.readFileSync(oauthFile, 'utf8');
-    const sharedText = fs.readFileSync(sharedFile, 'utf8');
+test('workers expose preflight-check and duplicate path validation', () => {
+    const oauthText = read('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
+    const sharedText = read('site/tooling/cloudflare/pr-gateway-worker.js');
 
     assert.match(oauthText, /\/api\/preflight-check/);
     assert.match(sharedText, /\/api\/preflight-check/);
-    assert.match(oauthText, /resolveAuthUserFromBearer/);
-    assert.match(oauthText, /x-studio-key/);
-    assert.match(sharedText, /x-studio-key/);
+    assert.match(oauthText, /preflightDuplicatePathErrors/);
+    assert.match(sharedText, /preflightDuplicatePathErrors/);
 });
 
-test('shared-key worker writes extra files to github contents api', () => {
-    const file = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
-    const text = fs.readFileSync(file, 'utf8');
+test('workers handle delete no-op and return applied/skipped summaries', () => {
+    const oauthText = read('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
+    const sharedText = read('site/tooling/cloudflare/pr-gateway-worker.js');
 
-    assert.match(text, /for\s*\(const\s+file\s+of\s+extraFiles\)/);
-    assert.match(text, /encodePathForUrl\(file\.path\)/);
-    assert.match(text, /extraFiles:\s*extraFiles\.map/);
+    assert.match(oauthText, /if\s*\(file\.op\s*===\s*"delete"\)/);
+    assert.match(sharedText, /if\s*\(file\.op\s*===\s*"delete"\)/);
+    assert.match(oauthText, /skippedDeletes\.push/);
+    assert.match(sharedText, /skippedDeletes\.push/);
+    assert.match(oauthText, /appliedFiles/);
+    assert.match(sharedText, /appliedFiles/);
 });
 
-test('workers normalize workspace-tagged extra file paths before whitelist check', () => {
-    const oauthFile = path.resolve('site/tooling/cloudflare/pr-gateway-worker-oauth.js');
-    const sharedFile = path.resolve('site/tooling/cloudflare/pr-gateway-worker.js');
-    const oauthText = fs.readFileSync(oauthFile, 'utf8');
-    const sharedText = fs.readFileSync(sharedFile, 'utf8');
+test('shared file ops allow .fx only in shader-gallery and keep legacy conversion', () => {
+    const fileOps = read('site/tooling/cloudflare/pr-file-ops.js');
 
-    assert.match(oauthText, /function\s+normalizeIncomingExtraFilePath\s*\(/);
-    assert.match(sharedText, /function\s+normalizeIncomingExtraFilePath\s*\(/);
-    assert.ok(oauthText.includes('workspace-[a-z0-9-]+'));
-    assert.ok(sharedText.includes('workspace-[a-z0-9-]+'));
-    assert.match(oauthText, /extra file path 不在白名单/);
-    assert.match(sharedText, /extra file path 不在白名单/);
+    assert.match(fileOps, /isShaderFxFile/);
+    assert.match(fileOps, /site\/content\/shader-gallery\/\*\*\/\*\.fx/);
+    assert.match(fileOps, /targetPath/);
+    assert.match(fileOps, /extraFiles/);
+    assert.match(fileOps, /resolveRequestFiles/);
 });
 
-test('tml-ide unified submit keeps anims/code csharp paths when already valid', () => {
-    const file = path.resolve('tml-ide-app/src/main.js');
-    const source = fs.readFileSync(file, 'utf8');
+test('tml-ide unified submit sends files[] payload from scm changes', () => {
+    const source = read('tml-ide-app/src/main.js');
 
-    assert.match(source, /site\\\/content\\\/anims\\\//);
-    assert.match(source, /function\s+toDirectCsharpRepoPath\s*\(/);
-    assert.match(source, /toDirectCsharpRepoPath\(item\.path\)\s*\|\|\s*toCodePathForArticle\(articlePath,\s*item\.path\)/);
+    assert.match(source, /function\s+runUnifiedSubmitBatches\s*\(/);
+    assert.match(source, /payload\s*=\s*\{\s*prTitle,\s*files:/);
+    assert.match(source, /listScmChanges\(\)/);
 });

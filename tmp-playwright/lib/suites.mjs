@@ -44,7 +44,12 @@ async function ensureIdeFiles(page, fileNames) {
     await waitIdeReady(page);
     const existing = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('#file-list .file-item')).map((node) => {
-            return String(node.textContent || '').trim();
+            const labelNode = node.querySelector('.repo-tree-label');
+            if (labelNode) {
+                return String(labelNode.textContent || '').trim();
+            }
+            const raw = String(node.textContent || '').trim();
+            return raw.replace(/\s*[AMD]\s*$/, '');
         });
     });
     for (const fileName of fileNames) {
@@ -228,6 +233,149 @@ function buildIdeScenarios() {
                     });
                     const text = await page.evaluate(() => String(globalThis.__tmlIdeDebug.getEditorText() || ''));
                     assert('ide-markdown-input-applied', text.includes('自动化验收输入内容'), text);
+                });
+            }
+        },
+        {
+            id: 'ide-repo-tree-scm-badges',
+            run: async ({ page, step, assert }) => {
+                let modifyPath = '';
+                let deletePath = '';
+
+                await step('prepare-tree-and-added-file', async () => {
+                    await ensureIdeFiles(page, ['怎么贡献/scm-badge-added.md']);
+                    const picked = await page.evaluate(async () => {
+                        let changed = true;
+                        let guard = 0;
+                        while (changed && guard < 40) {
+                            guard += 1;
+                            changed = false;
+                            const toggles = Array.from(document.querySelectorAll('#file-list .repo-tree-toggle'));
+                            toggles.forEach((button) => {
+                                const arrow = String(button.querySelector('.repo-tree-chevron')?.textContent || '').trim();
+                                if (arrow === '▸') {
+                                    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                                    changed = true;
+                                }
+                            });
+                        }
+                        const repoPaths = Array.from(document.querySelectorAll('#file-list [data-node-type="file"]'))
+                            .map((node) => String(node.dataset.repoPath || '').trim())
+                            .filter(Boolean)
+                            .filter((path, index, list) => list.indexOf(path) === index);
+                        const textPaths = repoPaths.filter((path) => /\.(?:md|cs|animcs|fx)$/i.test(path));
+                        const addedPath = '怎么贡献/scm-badge-added.md';
+
+                        function toContentPath(pathValue) {
+                            return '/site/content/' + String(pathValue || '')
+                                .split('/')
+                                .filter(Boolean)
+                                .map((segment) => encodeURIComponent(segment))
+                                .join('/');
+                        }
+
+                        async function findBaselinePath(preferred, excluded) {
+                            const tried = new Set();
+                            const candidates = preferred.concat(textPaths);
+                            for (const candidate of candidates) {
+                                const pathValue = String(candidate || '').trim();
+                                if (!pathValue || excluded.has(pathValue) || tried.has(pathValue)) continue;
+                                tried.add(pathValue);
+                                try {
+                                    const response = await fetch(toContentPath(pathValue), { method: 'HEAD', cache: 'no-store' });
+                                    if (response.ok) return pathValue;
+                                } catch (_err) {
+                                    // ignore network probe error
+                                }
+                            }
+                            return '';
+                        }
+
+                        const modify = await findBaselinePath(
+                            ['Modder入门/制作第一把武器.md', 'anims/animgeom-toolkit-recipes.cs', 'Modder入门/code/program.cs'],
+                            new Set([addedPath])
+                        );
+                        const remove = await findBaselinePath(
+                            ['Modder入门/第一个Mod弹幕.md', 'anims/demo-basic.cs', 'Modder入门/第一把远程武器.md'],
+                            new Set([addedPath, modify])
+                        );
+                        return { modify, remove };
+                    });
+                    modifyPath = String(picked && picked.modify || '');
+                    deletePath = String(picked && picked.remove || '');
+                    assert('ide-tree-modify-path-found', firstTruthy(modifyPath), modifyPath);
+                    assert('ide-tree-delete-path-found', firstTruthy(deletePath), deletePath);
+                    await page.waitForTimeout(240);
+                });
+
+                await step('create-modified-status', async () => {
+                    const clicked = await page.evaluate((targetPath) => {
+                        const node = Array.from(document.querySelectorAll('#file-list [data-node-type="file"]'))
+                            .find((item) => String(item.dataset.repoPath || '') === targetPath);
+                        if (!node) return false;
+                        node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                        return true;
+                    }, modifyPath);
+                    assert('ide-tree-modify-path-clicked', clicked, modifyPath);
+                    await page.waitForFunction((targetPath) => {
+                        const active = document.querySelector('#active-file-name');
+                        return !!(active && String(active.textContent || '').trim() === targetPath);
+                    }, modifyPath, { timeout: 15000 });
+                    await page.evaluate(() => {
+                        globalThis.__tmlIdeDebug.setEditorText([
+                            '# SCM Badge',
+                            '',
+                            'modified status marker',
+                            '',
+                            'A/M/D debug flow'
+                        ].join('\n'));
+                    });
+                    await page.waitForFunction((targetPath) => {
+                        return !!document.querySelector('#file-list .repo-tree-change-badge[data-status="M"]');
+                    }, modifyPath, { timeout: 15000 });
+                });
+
+                await step('create-deleted-status', async () => {
+                    const clicked = await page.evaluate((targetPath) => {
+                        const node = Array.from(document.querySelectorAll('#file-list [data-node-type="file"]'))
+                            .find((item) => String(item.dataset.repoPath || '') === targetPath);
+                        if (!node) return false;
+                        node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                        return true;
+                    }, deletePath);
+                    assert('ide-tree-delete-path-clicked', clicked, deletePath);
+                    await page.waitForFunction((targetPath) => {
+                        const active = document.querySelector('#active-file-name');
+                        return !!(active && String(active.textContent || '').trim() === targetPath);
+                    }, deletePath, { timeout: 15000 });
+                    page.once('dialog', async (dialog) => {
+                        if (dialog.type() === 'confirm') {
+                            await dialog.accept();
+                            return;
+                        }
+                        await dialog.dismiss();
+                    });
+                    await page.click('#btn-delete-file');
+                    await page.waitForFunction((targetPath) => {
+                        return !!document.querySelector('#file-list .repo-tree-change-badge[data-status="D"]');
+                    }, deletePath, { timeout: 15000 });
+                });
+
+                await step('assert-tree-badge-statuses', async () => {
+                    const summary = await page.evaluate(() => {
+                        const badges = Array.from(document.querySelectorAll('#file-list .repo-tree-change-badge'));
+                        const statuses = badges
+                            .map((badge) => String(badge.dataset.status || badge.textContent || '').trim())
+                            .filter(Boolean);
+                        return {
+                            statuses,
+                            rightAligned: badges.every((badge) => badge.parentElement && badge.parentElement.lastElementChild === badge)
+                        };
+                    });
+                    assert('ide-tree-badge-has-A', summary.statuses.includes('A'), JSON.stringify(summary.statuses));
+                    assert('ide-tree-badge-has-M', summary.statuses.includes('M'), JSON.stringify(summary.statuses));
+                    assert('ide-tree-badge-has-D', summary.statuses.includes('D'), JSON.stringify(summary.statuses));
+                    assert('ide-tree-badge-right-side', summary.rightAligned, JSON.stringify(summary));
                 });
             }
         },

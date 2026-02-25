@@ -2,6 +2,7 @@
     'use strict';
 
     if (window.__sharedViewerBootstrapLoaded) return;
+    if (window.__disableSharedViewerBootstrap === true) return;
     window.__sharedViewerBootstrapLoaded = true;
 
     function startSharedViewer() {

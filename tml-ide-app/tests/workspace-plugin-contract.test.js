@@ -23,11 +23,11 @@ test('shader plugin strips legacy site header and ignores bridge script', () => 
     assert.match(source, /shader-playground\.v1/);
 });
 
-test('main shell uses split submit channels for docs and shader', () => {
+test('main shell uses unified files[] submit flow and keeps compatibility wrappers', () => {
     const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
+    assert.match(source, /function runUnifiedSubmitBatches\(/);
+    assert.match(source, /files:\s*Array\.isArray\(batch\.files\)/);
     assert.match(source, /function buildSplitSubmitPlan\(/);
-    assert.match(source, /runSubmitChannel\('docs'/);
-    assert.match(source, /runSubmitChannel\('shader'/);
-    assert.match(source, /runSplitUnifiedSubmit\(plan,\s*\{\}\)/);
-    assert.doesNotMatch(source, /runUnifiedSubmitBatches\(/);
+    assert.match(source, /function runSplitUnifiedSubmit\(/);
+    assert.match(source, /listScmChanges\(\)/);
 });

@@ -1953,130 +1953,37 @@
         async function scanAllDocuments() {
             console.log('=== scanAllDocuments() 诊断开始 ===');
             try {
-                // 完全依赖配置文件，因为部署时会调用 generate-index.js 生成新的 config.json
-                try {
-                    const config = VIEWER_DOC_CONFIG || (window.SiteConfig ? await window.SiteConfig.load() : null);
-                    if (config) {
-                        console.log('成功加载配置文件:', config);
+                const config = VIEWER_DOC_CONFIG || (window.SiteConfig ? await window.SiteConfig.load() : null);
+                const allFiles = config && Array.isArray(config.all_files) ? config.all_files : [];
+                ALL_DOCS = allFiles
+                    .filter(function (doc) {
+                        return doc && doc.hide !== true;
+                    })
+                    .map(function (doc) {
+                        const fallbackFilename = String(doc && (doc.filename || doc.path) || '');
+                        return {
+                            ...doc,
+                            filename: fallbackFilename,
+                            path: doc.path || fallbackFilename,
+                            title: doc.title || fallbackFilename.replace('.md', ''),
+                            author: doc.author || '未知',
+                            category: doc.category || '入门',
+                            topic: doc.topic || 'mod-basics',
+                            order: parseInt(doc.order, 10) || 999,
+                            description: doc.description || '',
+                            last_updated: doc.last_updated || '未知'
+                        };
+                    });
 
-                        // 从配置文件中提取文档列表
-                        ALL_DOCS = config.all_files || [];
-                        console.log('从配置文件加载的文档数量:', ALL_DOCS.length);
-                        console.log('从配置文件加载的文档:', ALL_DOCS);
-
-	                        // 如果配置文件中有文档，直接使用
-	                        if (ALL_DOCS.length > 0) {
-	                            // 确保每个文档都有必要的属性
-	                            ALL_DOCS = ALL_DOCS.map(doc => {
-	                                return {
-	                                    ...doc,
-	                                    path: doc.path || doc.filename,
-	                                    title: doc.title || doc.filename.replace('.md', ''),
-	                                    author: doc.author || '未知',
-	                                    category: doc.category || '入门',
-	                                    topic: doc.topic || 'mod-basics',
-	                                    order: parseInt(doc.order) || 999,
-	                                    description: doc.description || '',
-	                                    last_updated: doc.last_updated || '未知'
-	                                };
-	                            });
-
-                            console.log('处理后的文档列表:', ALL_DOCS);
-                            console.log('=== scanAllDocuments() 诊断结束 ===');
-                            buildDocLookupMap();
-                            return;
-                        } else {
-                            console.warn('配置文件中没有找到文档');
-                        }
-                    } else {
-                        console.warn('无法获取配置文件，文档列表为空');
-                    }
-                } catch (configError) {
-                    console.warn('加载配置文件失败:', configError);
-                }
-
-                // 如果配置文件加载失败或没有文档，尝试扫描常见的文档文件
-                console.warn('配置文件不可用，尝试扫描常见文档文件');
-		                const commonFiles = [
-		                    'Modder入门/DPapyru-从这里开始.md',
-		                    '怎么贡献/教学文章写作指南.md',
-		                    '怎么贡献/TopicSystem使用指南.md',
-		                    '螺线翻译tml教程/0-开始/0-Home 主页.md'
-		                ];
-
-                ALL_DOCS = [];
-
-                for (const filename of commonFiles) {
-                    try {
-                        console.log(`尝试处理文档: ${filename}`);
-                        // 获取文档内容和元数据
-                        const docUrl = `./${filename}`;
-                        const docResponse = await fetch(docUrl, { cache: 'no-store' });
-
-                        if (docResponse.ok) {
-                            const content = await docResponse.text();
-                            const { metadata } = parseFrontMatter(content);
-
-                            // 处理分类映射
-                            let category = metadata.category || '入门';
-                            if (category && MAIN_CATEGORIES[category] && MAIN_CATEGORIES[category].mapsTo) {
-                                const oldCategory = category;
-                                category = MAIN_CATEGORIES[category].mapsTo;
-                                console.log(`文档 ${filename} 的分类从 ${oldCategory} 映射到 ${category}`);
-                            }
-
-	                            const docInfo = {
-	                                filename: filename,
-	                                title: metadata.title || filename.replace('.md', ''),
-	                                author: metadata.author || '未知',
-	                                category: category,
-	                                topic: metadata.topic || 'mod-basics',
-	                                order: parseOrder(metadata.order),
-	                                description: metadata.description || ''
-	                            };
-
-                            ALL_DOCS.push(docInfo);
-                            console.log('成功添加文档:', docInfo.title);
-                        } else {
-                            console.warn(`文档 ${filename} 请求失败: ${docResponse.status} ${docResponse.statusText}`);
-                        }
-                    } catch (error) {
-                        console.warn(`无法处理文档 ${filename}:`, error);
-                    }
-                }
-
-                // 按分类和排序
-	                ALL_DOCS.sort((a, b) => {
-	                    if (a.category !== b.category) {
-	                        return (MAIN_CATEGORIES[a.category]?.order ?? 999) - (MAIN_CATEGORIES[b.category]?.order ?? 999);
-	                    }
-	                    return a.order - b.order;
-	                });
-
-                console.log('扫描到的文档数量:', ALL_DOCS.length);
-                console.log('扫描到的文档:', ALL_DOCS);
-                console.log('=== scanAllDocuments() 诊断结束 ===');
+                console.log('从配置文件加载的文档数量:', ALL_DOCS.length);
+                console.log('从配置文件加载的文档:', ALL_DOCS);
                 buildDocLookupMap();
-
             } catch (error) {
-                console.error('扫描文档失败:', error);
-                console.log('=== scanAllDocuments() 因错误结束 ===');
-                // 提供一些默认文档
-		                ALL_DOCS = [
-		                    {
-		                        filename: 'Modder入门/DPapyru-从这里开始.md',
-		                        path: 'Modder入门/DPapyru-从这里开始.md',
-		                        title: '从这里开始：Modder 入门总览',
-		                        author: 'DPapyru',
-		                        category: 'Modder入门',
-	                        topic: 'mod-basics',
-	                        order: 1,
-	                        description: '解释 Modder入门的阅读方式，并按 C#/tML 熟练度与偏好给出建议入口',
-	                        last_updated: '未知'
-	                    }
-	                ];
-                console.log('使用默认文档配置');
+                console.error('从 config.all_files 加载文档失败:', error);
+                ALL_DOCS = [];
                 buildDocLookupMap();
+            } finally {
+                console.log('=== scanAllDocuments() 诊断结束 ===');
             }
         }
 
@@ -5339,246 +5246,8 @@
 	                return;
 	            }
 
-	            // Learn 风格：按 site/content/ 文件夹结构生成树形导航
-	            if (window.__FORCE_LEARN_TREE_NAV !== false) {
-	                renderLearnFolderTreeNavigation(categorySidebar, { docs: ALL_DOCS, defaultCollapseDepth: 1 });
-	            } else {
-
-            console.log('DOC_CONFIG已加载，开始生成分类导航');
-            console.log('ALL_DOCS数量:', ALL_DOCS.length);
-            console.log('可用分类:', Object.keys(MAIN_CATEGORIES));
-
-            // 添加分割线
-            const divider = document.createElement('div');
-            divider.className = 'sidebar-divider';
-            categorySidebar.appendChild(divider);
-
-            // 生成分类导航
-            let visibleCategories = 0;
-            Object.keys(MAIN_CATEGORIES).forEach(categoryKey => {
-                const category = MAIN_CATEGORIES[categoryKey];
-                console.log(`处理分类: ${categoryKey} (${category.title})`);
-
-                // 检查该分类是否有文档，如果没有则跳过
-                if (!categoryHasDocuments(categoryKey)) {
-                    console.log(`跳过空分类: ${categoryKey}`);
-                    return; // 跳过空分类
-                }
-
-                visibleCategories++;
-                console.log(`显示分类: ${categoryKey}`);
-
-                // 创建分类导航项
-                const categoryItem = document.createElement('li');
-                categoryItem.className = 'category-item';
-
-                // 创建分类标题
-                const categoryHeader = document.createElement('h4');
-                categoryHeader.className = 'category-header';
-
-                // 添加分类标题文本
-                const titleSpan = document.createElement('span');
-                titleSpan.className = 'category-title-text';
-                titleSpan.textContent = category.title;
-                categoryHeader.appendChild(titleSpan);
-
-                // 添加展开/收起按钮
-                const toggleBtn = document.createElement('button');
-                toggleBtn.className = 'category-toggle';
-                toggleBtn.setAttribute('aria-label', '展开/收起分类');
-                toggleBtn.innerHTML = '▼';
-                categoryHeader.appendChild(toggleBtn);
-
-                categoryItem.appendChild(categoryHeader);
-
-                // 创建主题子菜单
-                const topicList = document.createElement('ul');
-                topicList.className = 'topic-list';
-
-                // 获取该分类下的所有主题
-                const categoryTopics = VIEWER_DOC_CONFIG.categories[categoryKey]?.topics || {};
-
-                if (Object.keys(categoryTopics).length > 0) {
-                    Object.keys(categoryTopics).forEach(topicKey => {
-                        const topic = categoryTopics[topicKey];
-
-                        // 检查主题是否有文档，如果没有则跳过
-                        if (!topic.files || topic.files.length === 0) {
-                            return; // 跳过空主题
-                        }
-
-                        // 创建主题标题
-                        const topicHeader = document.createElement('h5');
-                        topicHeader.className = 'topic-header';
-
-                        // 添加主题标题文本
-                        const topicTitleSpan = document.createElement('span');
-                        topicTitleSpan.className = 'topic-title-text';
-                        topicTitleSpan.textContent = topic.title;
-                        topicHeader.appendChild(topicTitleSpan);
-
-                        // 添加展开/收起按钮
-                        const topicToggleBtn = document.createElement('button');
-                        topicToggleBtn.className = 'topic-toggle';
-                        topicToggleBtn.setAttribute('aria-label', '展开/收起主题');
-                        topicToggleBtn.innerHTML = '▼';
-                        topicHeader.appendChild(topicToggleBtn);
-
-                        // 为主题标题添加点击事件
-                        topicHeader.addEventListener('click', function () {
-                            toggleTopic(categoryKey, topicKey, topicHeader, topicHeader.nextElementSibling);
-                        });
-
-                        // 为主题标题的按钮添加点击事件
-                        topicToggleBtn.addEventListener('click', function (e) {
-                            e.stopPropagation();
-                            toggleTopic(categoryKey, topicKey, topicHeader, topicHeader.nextElementSibling);
-                        });
-
-                        topicList.appendChild(topicHeader);
-
-                        // 创建文档列表
-                        const fileList = document.createElement('ul');
-                        fileList.className = 'file-list';
-
-                        // 确保topic.files存在且是数组
-                        const files = topic.files || [];
-                        files.forEach(file => {
-                            const fileItem = document.createElement('li');
-                            fileItem.className = 'file-item';
-
-	                            const fileLink = document.createElement('a');
-	                            fileLink.href = `?file=${encodeURIComponent(file.path || file.filename)}`;
-	                            fileLink.textContent = file.title;
-	                            fileLink.title = `${file.author || '未知'} - ${file.description || file.title}`;
-
-                            fileItem.appendChild(fileLink);
-                            fileList.appendChild(fileItem);
-                        });
-
-                        topicList.appendChild(fileList);
-                    });
-                }
-
-                categoryItem.appendChild(topicList);
-                categorySidebar.appendChild(categoryItem);
-
-                // 为分类标题添加点击事件
-                categoryHeader.addEventListener('click', function () {
-                    toggleCategory(categoryKey, categoryHeader, topicList);
-                });
-
-                // 为分类标题的按钮添加点击事件
-                toggleBtn.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    toggleCategory(categoryKey, categoryHeader, topicList);
-                });
-
-                // 恢复分类的展开/收起状态
-                const isCollapsed = getCollapsedState('category', categoryKey);
-                if (isCollapsed) {
-                    topicList.classList.add('collapsed');
-                    toggleBtn.classList.add('collapsed');
-                    // toggleBtn.innerHTML = '▶';
-                } else {
-                    toggleBtn.innerHTML = '▼';
-                }
-            });
-
-            // 添加分割线
-            const allDocsDivider = document.createElement('div');
-            allDocsDivider.className = 'sidebar-divider';
-            categorySidebar.appendChild(allDocsDivider);
-
-            // 添加"所有文档"部分
-            const allDocsItem = document.createElement('li');
-            allDocsItem.className = 'category-item all-docs';
-
-            const allDocsHeader = document.createElement('h4');
-            allDocsHeader.className = 'category-header';
-
-            // 添加"所有文档"标题文本
-            const allDocsTitleSpan = document.createElement('span');
-            allDocsTitleSpan.className = 'category-title-text';
-            allDocsTitleSpan.textContent = '所有文档';
-            allDocsHeader.appendChild(allDocsTitleSpan);
-
-            // 添加展开/收起按钮
-            const allDocsToggleBtn = document.createElement('button');
-            allDocsToggleBtn.className = 'category-toggle';
-            allDocsToggleBtn.setAttribute('aria-label', '展开/收起所有文档');
-            allDocsToggleBtn.innerHTML = '▼';
-            allDocsHeader.appendChild(allDocsToggleBtn);
-
-            allDocsItem.appendChild(allDocsHeader);
-
-            const allDocsList = document.createElement('ul');
-            allDocsList.className = 'file-list';
-
-            // 确保ALL_DOCS存在且是数组
-            const allDocs = ALL_DOCS || [];
-            if (allDocs.length === 0) {
-                // 如果没有文档，显示提示信息
-                const noDocsItem = document.createElement('li');
-                noDocsItem.className = 'no-docs';
-                noDocsItem.textContent = '未找到任何文档';
-                allDocsList.appendChild(noDocsItem);
-            } else {
-                // 按分类和排序组织文档
-                const sortedDocs = [...allDocs].sort((a, b) => {
-                    // 先按分类排序
-                    const categoryOrderA = MAIN_CATEGORIES[a.category]?.order ?? 999;
-                    const categoryOrderB = MAIN_CATEGORIES[b.category]?.order ?? 999;
-                    if (categoryOrderA !== categoryOrderB) {
-                        return categoryOrderA - categoryOrderB;
-                    }
-                    // 同一分类内按排序值排序
-                    return (a.order ?? 999) - (b.order ?? 999);
-                });
-
-                sortedDocs.forEach(doc => {
-                    const docItem = document.createElement('li');
-                    docItem.className = 'file-item';
-
-	                    const docLink = document.createElement('a');
-	                    docLink.href = `?file=${encodeURIComponent(doc.path || doc.filename)}`;
-	                    docLink.textContent = doc.title;
-
-                    // 添加更详细的标题信息
-                    const categoryTitle = MAIN_CATEGORIES[doc.category]?.title || doc.category;
-                    const topicTitle = VIEWER_DOC_CONFIG.topics[doc.topic]?.title || doc.topic;
-                    const pathInfo = doc.path && doc.path !== doc.filename ? ` [路径: ${doc.path}]` : '';
-                    docLink.title = `${doc.author || '未知作者'} - ${doc.description || doc.title} [${categoryTitle} - ${topicTitle}]${pathInfo}`;
-
-                    docItem.appendChild(docLink);
-                    allDocsList.appendChild(docItem);
-                });
-            }
-
-            allDocsItem.appendChild(allDocsList);
-            categorySidebar.appendChild(allDocsItem);
-
-            // 为"所有文档"标题添加点击事件
-            allDocsHeader.addEventListener('click', function () {
-                toggleAllDocs(allDocsHeader, allDocsList);
-            });
-
-            // 为"所有文档"标题的按钮添加点击事件
-            allDocsToggleBtn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                toggleAllDocs(allDocsHeader, allDocsList);
-            });
-
-            // 恢复"所有文档"的展开/收起状态
-	            const isAllDocsCollapsed = getCollapsedState('all-docs', 'all-docs');
-	            if (isAllDocsCollapsed) {
-	                allDocsList.classList.add('collapsed');
-	                allDocsToggleBtn.classList.add('collapsed');
-	                // allDocsToggleBtn.innerHTML = '▶';
-	            } else {
-	                allDocsToggleBtn.innerHTML = '▼';
-	            }
-	            }
+	            // 固定全量导航：始终基于 ALL_DOCS 渲染 site/content 树
+	            renderLearnFolderTreeNavigation(categorySidebar, { docs: ALL_DOCS, defaultCollapseDepth: 1 });
 	        }
 
         // 展开/收起分类
@@ -7276,6 +6945,9 @@
             setupEvents();
             verifyAuthSession();
         })();
+    </script>
+    <script>
+        window.__disableSharedViewerBootstrap = true;
     </script>
     <script src="/shared/services/routing/legacy-route-resolver.js"></script>
     <script src="/shared/services/doc-tree/doc-tree-service.js"></script>

@@ -20,9 +20,22 @@ test('buildDocTree groups docs by folder segments', () => {
     assert.equal(tree.children.Modder入门.docs.length, 2);
 });
 
-test('flattenVisibleDocs supports current-folder filtering', () => {
+test('flattenVisibleDocs defaults to all docs', () => {
     const tree = buildDocTree(DOCS);
-    const docs = flattenVisibleDocs(tree, { folderPath: 'Modder入门' });
+    const docs = flattenVisibleDocs(tree);
+    assert.deepEqual(
+        docs.map((item) => item.path),
+        [
+            '怎么贡献/教学文章写作指南.md',
+            'Modder入门/DPapyru-给新人的前言.md',
+            'Modder入门/制作第一把武器.md'
+        ]
+    );
+});
+
+test('flattenVisibleDocs supports explicit folder scope filtering', () => {
+    const tree = buildDocTree(DOCS);
+    const docs = flattenVisibleDocs(tree, { scope: 'folder', folderPath: 'Modder入门' });
     assert.deepEqual(
         docs.map((item) => item.path),
         ['Modder入门/DPapyru-给新人的前言.md', 'Modder入门/制作第一把武器.md']

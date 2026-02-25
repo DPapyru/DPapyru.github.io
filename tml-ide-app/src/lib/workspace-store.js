@@ -49,11 +49,24 @@ function normalizeWorkspaceName(value) {
     return safe === 'markdown' || safe === 'shader' || safe === 'csharp' ? safe : 'csharp';
 }
 
+function migrateLegacyWorkspacePath(pathValue) {
+    const safe = String(pathValue || '')
+        .trim()
+        .replace(/\\/g, '/')
+        .replace(/^\/+/, '');
+    if (!safe) return '';
+    if (safe.includes('/')) return safe;
+    if (/\.cs$/i.test(safe)) {
+        return `anims/${safe}`;
+    }
+    return safe;
+}
+
 function normalizeWorkspaceFiles(files) {
     return (Array.isArray(files) ? files : [])
         .map((item, idx) => ({
             id: String(item && item.id || `file-${idx + 1}`),
-            path: String(item && item.path || `File${idx + 1}.cs`),
+            path: migrateLegacyWorkspacePath(String(item && item.path || `File${idx + 1}.cs`)),
             content: String(item && item.content || '')
         }))
         .filter((item) => !!item.path);
@@ -244,7 +257,7 @@ export function createDefaultWorkspace() {
         files: [
             {
                 id: 'file-program',
-                path: 'Program.cs',
+                path: 'anims/Program.cs',
                 content: [
                     'using Terraria;',
                     'using Terraria.ModLoader;',

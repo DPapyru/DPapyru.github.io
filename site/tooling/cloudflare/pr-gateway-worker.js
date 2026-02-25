@@ -1,3 +1,9 @@
+import {
+  resolveRequestFiles,
+  preflightDuplicatePathErrors,
+  toLegacyCompatibleResponseView
+} from "./pr-file-ops.js";
+
 const GH_API = "https://api.github.com";
 
 export default {
@@ -40,22 +46,20 @@ export default {
         return json(result, hasErrors ? 409 : 200, origin, env);
       }
 
-      const targetPath = sanitizeTargetPath(body.targetPath);
-      const markdown = String(body.markdown || "");
+      const normalized = resolveRequestFiles(body);
+      const files = Array.isArray(normalized.files) ? normalized.files : [];
+      if (!files.length) {
+        return json({ ok: false, error: "files 不能为空" }, 400, origin, env);
+      }
+
       const prTitleInput = String(body.prTitle || "");
       const prBodyInput = String(body.prBody || "");
       const existingPrNumber = parseExistingPrNumber(body.existingPrNumber);
-      const extraFiles = normalizeExtraFiles(body.extraFiles || []);
-
-      if (!markdown.trim()) {
-        return json({ ok: false, error: "markdown 不能为空" }, 400, origin, env);
-      }
-      if (markdown.length > 300000) {
-        return json({ ok: false, error: "markdown 过大（>300KB）" }, 400, origin, env);
-      }
 
       const baseBranch = env.GITHUB_BASE_BRANCH || "main";
-      const repoPath = `site/content/${targetPath}`;
+      const primaryPath = String(normalized.primaryPath || files[0].path || "");
+      const repoPath = primaryPath || "site/content/unified-submit.md";
+      const branchSeed = repoPath.replace(/^site\/content\//i, "");
 
       const appJwt = await createAppJwt(env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY);
       const installationToken = await getInstallationToken(env, appJwt);
@@ -79,7 +83,7 @@ export default {
         currentPrUrl = String(existingPr.html_url || "");
       } else {
         const baseHeadSha = await getBranchHeadSha(env, baseBranch, installationToken);
-        branch = makeBranchName(targetPath);
+        branch = makeBranchName(branchSeed || "unified-submit");
 
         await ghFetch(
           `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/git/refs`,
@@ -94,27 +98,34 @@ export default {
         );
       }
 
-      const existingSha = await getExistingFileSha(env, repoPath, branch, installationToken);
-      const contentBase64 = utf8ToBase64(markdown);
+      const appliedFiles = [];
+      const skippedDeletes = [];
 
-      await ghFetch(
-        `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${encodePathForUrl(repoPath)}`,
-        installationToken,
-        {
-          method: "PUT",
-          body: JSON.stringify({
-            message: `docs: update ${targetPath} via article studio`,
-            content: contentBase64,
-            branch,
-            sha: existingSha || undefined
-          })
+      for (const file of files) {
+        if (file.op === "delete") {
+          const existingSha = await getExistingFileSha(env, file.path, branch, installationToken);
+          if (!existingSha) {
+            skippedDeletes.push(file.path);
+            continue;
+          }
+          await ghFetch(
+            `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${encodePathForUrl(file.path)}`,
+            installationToken,
+            {
+              method: "DELETE",
+              body: JSON.stringify({
+                message: `docs: delete ${file.path} via article studio`,
+                branch,
+                sha: existingSha
+              })
+            }
+          );
+          appliedFiles.push(file.path);
+          continue;
         }
-      );
 
-      for (const file of extraFiles) {
-        const extraSha = await getExistingFileSha(env, file.path, branch, installationToken);
-        const extraBase64 = file.encoding === "base64" ? file.content : utf8ToBase64(file.content);
-
+        const existingSha = await getExistingFileSha(env, file.path, branch, installationToken);
+        const contentBase64 = file.encoding === "base64" ? file.content : utf8ToBase64(String(file.content || ""));
         await ghFetch(
           `${GH_API}/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${encodePathForUrl(file.path)}`,
           installationToken,
@@ -122,22 +133,23 @@ export default {
             method: "PUT",
             body: JSON.stringify({
               message: `docs: update ${file.path} via article studio`,
-              content: extraBase64,
+              content: contentBase64,
               branch,
-              sha: extraSha || undefined
+              sha: existingSha || undefined
             })
           }
         );
+        appliedFiles.push(file.path);
       }
 
-      const prTitle = (prTitleInput || `docs: 更新 ${targetPath}`).slice(0, 120);
+      const prTitle = (prTitleInput || `docs: 更新 ${repoPath.replace(/^site\/content\//i, "")}`).slice(0, 120);
       const prBody =
         prBodyInput ||
         [
           "Created by Article Studio.",
           "",
           `- File: \`${repoPath}\``,
-          `- Extra files: ${extraFiles.length}`,
+          `- Files: ${files.length}`,
           `- Branch: \`${branch}\``
         ].join("\n");
 
@@ -160,14 +172,18 @@ export default {
         currentPrUrl = String(pr.html_url || "");
       }
 
+      const legacyView = toLegacyCompatibleResponseView(files);
+
       return json(
         {
           ok: true,
           prUrl: currentPrUrl,
           prNumber: currentPrNumber,
           branch,
-          filePath: repoPath,
-          extraFiles: extraFiles.map((f) => f.path),
+          filePath: legacyView.filePath,
+          extraFiles: legacyView.extraFiles,
+          appliedFiles,
+          skippedDeletes,
           reusedExistingPr
         },
         200,
@@ -307,44 +323,14 @@ function normalizeExtraFiles(input) {
 
 async function handlePreflightCheck(body, env) {
   const mode = String(body && body.mode || "hard").trim().toLowerCase() === "soft" ? "soft" : "hard";
-  const targetPath = sanitizeTargetPath(body && body.targetPath);
-  const markdown = String(body && body.markdown || "");
-  const extraFiles = normalizeExtraFiles(body && body.extraFiles || []);
+  const normalized = resolveRequestFiles(body);
+  const files = Array.isArray(normalized.files) ? normalized.files : [];
   const errors = [];
   const warnings = [];
 
-  if (!markdown.trim()) {
-    errors.push({
-      code: "empty_markdown",
-      path: `site/content/${targetPath}`,
-      message: "markdown 不能为空"
-    });
-  }
+  errors.push(...preflightDuplicatePathErrors(files));
 
-  if (markdown.length > 300000) {
-    errors.push({
-      code: "markdown_too_large",
-      path: `site/content/${targetPath}`,
-      message: "markdown 过大（>300KB）"
-    });
-  }
-
-  const localSeen = new Set();
-  for (const file of extraFiles) {
-    const key = String(file.path || "").toLowerCase();
-    if (!key) continue;
-    if (localSeen.has(key)) {
-      errors.push({
-        code: "duplicate_extra_path",
-        path: file.path,
-        message: "extraFiles 中出现重复路径"
-      });
-      continue;
-    }
-    localSeen.add(key);
-  }
-
-  const csharpFiles = extraFiles.filter((file) => /\.cs$/i.test(String(file.path || "")));
+  const csharpFiles = files.filter((file) => file.op === "upsert" && /\.cs$/i.test(String(file.path || "")));
   if (csharpFiles.length > 0) {
     const appJwt = await createAppJwt(env.GITHUB_APP_ID, env.GITHUB_PRIVATE_KEY);
     const installationToken = await getInstallationToken(env, appJwt);
@@ -365,8 +351,8 @@ async function handlePreflightCheck(body, env) {
   return {
     ok: errors.length === 0,
     mode,
-    targetPath,
-    checkedFiles: extraFiles.map((file) => file.path),
+    targetPath: String(normalized.targetPath || ""),
+    checkedFiles: files.map((file) => file.path),
     warnings,
     errors
   };

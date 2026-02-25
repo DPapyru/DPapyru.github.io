@@ -64,8 +64,9 @@
         const tree = deps.tree.buildDocTree(allDocs);
         const current = findCurrentDoc(allDocs, resolved.path) || { path: resolved.path, title: '' };
         const folderPath = folderPathForDoc(current);
-        const visibleDocs = deps.tree.flattenVisibleDocs(tree, { folderPath: folderPath });
-        const neighbors = deps.tree.findDocNeighbors(tree, current.path, { folderPath: folderPath });
+        const scope = String(opts.scope || 'all').trim().toLowerCase() === 'folder' ? 'folder' : 'all';
+        const visibleDocs = deps.tree.flattenVisibleDocs(tree, { scope: scope, folderPath: folderPath });
+        const neighbors = deps.tree.findDocNeighbors(tree, current.path, { scope: scope, folderPath: folderPath });
         const outline = deps.outline.extractHeadingOutlineFromElements(opts.headingElements || []);
 
         return {
@@ -74,6 +75,7 @@
             visibleDocs,
             neighbors,
             outline,
+            scope,
             resolveReason: resolved.reason
         };
     }
