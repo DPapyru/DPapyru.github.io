@@ -2068,3 +2068,125 @@
 - 在 `site/tooling/scripts/animcs-compiler.js` 与 `site/tooling/scripts/build-animcs.js` 中为 dotnet 子进程补充默认环境变量 `DOTNET_ROLL_FORWARD=Major`，用于兼容当前机器仅安装 .NET 10 运行时时的 `net8.0` 目标执行。
 - 新增 `site/content/shader-gallery/shadertest/cover.webp`，修复 `gallery-check` 对 `entry.json` 中 `cover` 资源存在性校验失败问题。
 - `npm run check-generated` 最终失败在 `git diff --exit-code` 阶段（当前工作树包含本轮功能改动与生成产物，非“零差异”状态）。
+
+### 验证记录 [2026-02-25 18:26]：Viewer 全量导航 + IDE 单通道 SCM/`.fx` 提交改造
+
+**级别**：L3（跨模块改动）
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过（70/70）
+- `npm run test`：失败
+- `npm run build`：失败
+- `npm run check-generated`：失败
+
+**备注**：
+- `npm run test` 失败项与仓库现状相关：`site/assets/js/shader-command-params.test.js`、`site/assets/js/shader-contribute.test.js`、`site/assets/js/shader-hlsl-adapter.test.js` 报目标函数未导出；`site/tooling/scripts/markdown-ref-standard-links.test.js`、`site/tooling/scripts/page-common-alignment.test.js`、`site/tooling/scripts/workbench-shell.test.js` 报缺失文件（如 `site/assets/js/article-studio.js`、`site/pages/shader-playground.html`、`site/pages/article-studio.html`）。
+- `npm run build` 失败于 `npm --prefix site-app run build`，错误为 `vite: not found`（环境依赖缺失）。
+- `npm run check-generated` 失败于 `gallery-check`：`site/content/shader-gallery/newshader/entry.json` 引用的 `cover.webp` 不存在。
+
+### 验证记录 [2026-02-25 18:31]：Viewer 导航数据源收敛（仅 `config.all_files`）后复验
+
+**级别**：L3（跨模块改动复验）
+
+**命令与结果**：
+- `npm --prefix tml-ide-app test`：通过（70/70）
+- `npm run test`：失败（186 通过，17 失败）
+- `npm run build`：失败
+- `npm run check-generated`：失败
+
+**备注**：
+- `npm run test` 失败仍集中在仓库既有缺失：`site/assets/js/article-studio.js`、`site/pages/shader-playground.html`、`site/pages/article-studio.html` 等文件缺失，以及 `shader-*` 测试期望函数未导出。
+- `npm run build` 失败仍为 `site-app` 构建阶段缺少 `vite`（`sh: 1: vite: not found`）。
+- `npm run check-generated` 失败仍为 `gallery-check`：`site/content/shader-gallery/newshader/entry.json` 缺少 `cover.webp`。
+
+### 验证记录 [2026-02-25 18:41]：IDE SCM 改动可见性修复（legacy `Program.cs` 路径迁移）
+
+**级别**：工作树任务验证
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/workspace-store.test.js`：通过（5/5）
+- `npm --prefix tml-ide-app test`：通过（71/71）
+- `node --test shared/specs/doc-tree-service.test.js shared/specs/viewer-shell.test.js site/tooling/scripts/viewer-nav-all-docs.test.js`：通过（7/7）
+
+**备注**：
+- 新增 legacy 路径迁移：根路径 C# 文件（如 `Program.cs`）在导入/加载时统一迁移到 `anims/Program.cs`，确保进入 `site/content` 白名单并可被 SCM 正确追踪为 A/M/D。
+- viewer 侧继续保持目录来源仅 `config.all_files`（不回退运行时扫描），并保持侧边目录渲染路径不变。
+
+### 验证记录 [2026-02-25 21:29]：feat-unified-scm-fx 侧边目录回退 + IDE 树右侧 A/M/D 徽标
+
+**级别**：L3（跨模块改动 + 浏览器验收）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/viewer-sidebar-tree-contract.test.js`：通过（2/2）
+- `node --test tml-ide-app/tests/repo-tree-scm-badge-contract.test.js`：通过（2/2）
+- `npm --prefix tml-ide-app run dev -- --host 127.0.0.1 --port 4173`：通过（本地验收服务）
+- `npm run acceptance:fullpage:viewer -- --headed --run-id viewer-tree-debug-v2`：失败
+- `npm run acceptance:fullpage:ide -- --headed --run-id ide-tree-scm-debug-v2`：失败
+- `node --input-type=module ... buildIdePageDef({ scenarioIds: ['ide-repo-tree-scm-badges'] })`：失败（仅视觉基线阈值/控制台噪音；功能断言通过）
+- `npm test`：失败（191 通过，17 失败）
+- `npm run build`：失败
+- `npm run check-generated`：失败
+
+**关键验收结论**：
+- IDE 新增场景 `ide-repo-tree-scm-badges` 中，`A/M/D` 右侧徽标断言全部通过：
+  - `ide-tree-badge-has-A`：passed
+  - `ide-tree-badge-has-M`：passed
+  - `ide-tree-badge-has-D`：passed
+  - `ide-tree-badge-right-side`：passed
+- 浏览器交互链路（输入/点击/删除）均执行成功并产生截图。
+
+**验收产物**：
+- `test-results/fullpage-acceptance/viewer-tree-debug-v2/report.json`
+- `test-results/fullpage-acceptance/ide-tree-scm-debug-v2/report.json`
+- `test-results/fullpage-acceptance/ide-tree-scm-debug-v2/tml-ide/02-ide-repo-tree-scm-badges.png`
+- `test-results/fullpage-acceptance/ide-tree-scm-badge-only/report.json`
+- `test-results/fullpage-acceptance/ide-tree-scm-badge-only/tml-ide/01-ide-repo-tree-scm-badges.png`
+
+**失败原因备注**：
+- `acceptance:fullpage:*` 失败主要来自：
+  - 视觉基线阈值（`visual diff 100% > 0.8%`）
+  - 现有控制台 404 噪音（blocked console errors）
+  - 与本次改动无关的既有场景失败（如 `viewer-outline-click` hash 断言、`ide-markdown-preview`、`ide-shader-preview`、`ide-anim-completion`）
+- `npm test` 失败与仓库既有缺失一致：`shader-*` 测试函数未导出、`site/assets/js/article-studio.js`/`site/pages/shader-playground.html`/`site/pages/article-studio.html` 缺失。
+- `npm run build` 失败于 `site-app`：`vite: not found`。
+- `npm run check-generated` 失败于 `gallery-check`：`site/content/shader-gallery/newshader/entry.json` 引用的 `cover.webp` 不存在。
+
+### 验证记录 [2026-02-25 21:56]：pnpm 工作区兼容 + vite 构建链路恢复
+
+**级别**：L3（构建链路与包管理兼容）
+
+**命令与结果**：
+- `CI=true pnpm install --no-frozen-lockfile`：通过
+- `pnpm run build:site-app`：通过
+- `pnpm run build`：通过
+- `npm run build:site-app`：通过
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：通过
+
+**备注**：
+- 新增 `pnpm-workspace.yaml`，将 `site-app` 与 `tml-ide-app` 纳入工作区，`pnpm-lock.yaml` 已同步包含 3 个 importer（根、`site-app`、`tml-ide-app`）。
+- 先前 `npm run build` 在 `site-app` 阶段出现的 `@rollup/rollup-linux-x64-gnu` 缺失问题未再出现，`vite` 构建链路恢复。
+- `pnpm install` 输出了 `Ignored build scripts` 提示（`esbuild`/`sharp`），属于 pnpm v10 安全策略提示；本次构建未受影响。
+- `pnpm run build*` 期间出现的 `npm warn Unknown env config ...` 为 pnpm 注入环境变量与 npm 的提示信息，不影响构建通过。
+
+### 验证记录 [2026-02-25 22:12]：viewer 侧边目录树被 shared bootstrap 覆盖修复
+
+**级别**：工作树任务验证（页面渲染修复）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/viewer-sidebar-tree-contract.test.js`：通过（2/2）
+- `node --test shared/specs/viewer-shell.test.js`：通过（2/2）
+- `python3 -m http.server 4173 --bind 127.0.0.1` + Playwright DOM检查：通过（目录节点恢复）
+- `python3 -m http.server 4173 --bind 127.0.0.1` + Playwright 点击/输入交互检查：通过
+
+**备注**：
+- 根因：`site/assets/js/shared-viewer-bootstrap.js` 在 viewer 页面自动挂载 `SharedViewerComposition.mountViewerShell()`，会把 `#category-sidebar` 重绘为 `shared-page-tree-nav` 平铺列表，覆盖原有 `renderLearnFolderTreeNavigation` 树目录。
+- 修复：
+  - 在 `site/assets/js/shared-viewer-bootstrap.js` 增加禁用开关判断：`window.__disableSharedViewerBootstrap === true` 时不挂载。
+  - 在 `site/pages/viewer.html` 显式设置 `window.__disableSharedViewerBootstrap = true;`，使该页面保留原树形目录渲染。
+- 浏览器实测恢复结果：
+  - `#category-sidebar` 中 `learn-tree-folder` 数量：26
+  - `#category-sidebar` 中 `learn-tree-file` 数量：152
+  - `shared-page-tree-link` 数量：0（确认不再被平铺列表覆盖）
+  - 交互检查：目录点击折叠/展开正常，侧栏搜索输入 `AI` 后可见条目数为 5。
+  - 验证截图：`test-results/tmp-viewer-fix-tree-restored.png`、`test-results/tmp-viewer-fix-interaction.png`

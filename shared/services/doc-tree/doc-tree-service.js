@@ -107,7 +107,10 @@
 
     function flattenVisibleDocs(root, options) {
         const opts = options && typeof options === 'object' ? options : {};
-        const anchorNode = findNodeByFolderPath(root, opts.folderPath || '');
+        const scope = String(opts.scope || 'all').trim().toLowerCase();
+        const anchorNode = scope === 'folder'
+            ? findNodeByFolderPath(root, opts.folderPath || '')
+            : root;
         if (!anchorNode) return [];
 
         const output = [];

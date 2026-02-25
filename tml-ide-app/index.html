@@ -50,17 +50,37 @@
             </aside>
 
             <aside class="side-bar panel panel-files" aria-label="Primary Side Bar">
-                <div class="panel-head">
-                    <h2>文件目录</h2>
-                    <span id="workspace-version" class="pill">workspace.v1</span>
-                </div>
-                <div class="panel-actions">
-                    <button id="btn-add-file" type="button">新增文件</button>
-                    <button id="btn-rename-file" type="button">重命名</button>
-                    <button id="btn-delete-file" type="button">删除</button>
-                </div>
-                <ul id="file-list" class="file-list" aria-label="工程文件列表"></ul>
-                <p class="panel-tip">支持 .cs/.animcs/.md/.fx 以及常见图片与视频资源，内容自动保存到浏览器 IndexedDB。</p>
+                <section id="sidebar-explorer-view" class="sidebar-view sidebar-view-active">
+                    <div class="panel-head">
+                        <h2>文件目录</h2>
+                        <span id="workspace-version" class="pill">workspace.v1</span>
+                    </div>
+                    <div class="panel-actions">
+                        <button id="btn-add-file" type="button">新增文件</button>
+                        <button id="btn-rename-file" type="button">重命名</button>
+                        <button id="btn-delete-file" type="button">删除</button>
+                    </div>
+                    <ul id="file-list" class="file-list" aria-label="工程文件列表"></ul>
+                    <p class="panel-tip">支持 .cs/.animcs/.md/.fx 以及常见图片与视频资源，内容自动保存到浏览器 IndexedDB。</p>
+                </section>
+
+                <section id="sidebar-scm-view" class="sidebar-view" hidden>
+                    <div class="panel-head">
+                        <h2>源代码管理</h2>
+                        <span id="scm-summary" class="pill">0 changes</span>
+                    </div>
+                    <div class="panel-actions">
+                        <button id="btn-scm-refresh" type="button">刷新改动</button>
+                    </div>
+                    <ul id="scm-change-list" class="scm-change-list" aria-label="改动列表"></ul>
+                    <section class="scm-diff-section">
+                        <header class="scm-diff-head">
+                            <h3 id="scm-diff-title">Diff 预览</h3>
+                            <button id="btn-scm-restore" type="button" disabled>恢复</button>
+                        </header>
+                        <pre id="scm-diff-preview" class="scm-diff-preview">选择改动文件以查看 Git Diff。</pre>
+                    </section>
+                </section>
             </aside>
 
             <section id="panel-editor" class="panel panel-editor">
@@ -200,15 +220,11 @@
                 </select>
             </section>
             <section class="unified-submit-section">
-                <label for="unified-shader-slug">Shader 投稿 Slug（手动）</label>
-                <input id="unified-shader-slug" type="text" placeholder="例如：my-shader">
-            </section>
-            <section class="unified-submit-section">
                 <div id="unified-summary" class="unified-summary">待收集 staged 改动。</div>
                 <div class="unified-submit-actions">
                     <button id="btn-unified-collect" type="button">收集改动</button>
-                    <button id="btn-unified-submit" type="button">提交全部（双通道）</button>
-                    <button id="btn-unified-resume" type="button">重试失败通道</button>
+                    <button id="btn-unified-submit" type="button">提交全部</button>
+                    <button id="btn-unified-resume" type="button">重试失败批次</button>
                 </div>
             </section>
             <section class="unified-submit-section">

@@ -25,6 +25,17 @@ test('workspace import normalizes malformed payload', () => {
     assert.equal(parsed.schemaVersion, 1);
     assert.equal(parsed.files.length, 1);
     assert.equal(parsed.activeFileId, parsed.files[0].id);
+    assert.equal(parsed.files[0].path, 'anims/A.cs');
+});
+
+test('workspace import migrates legacy root csharp path into anims namespace', () => {
+    const parsed = importWorkspaceJson(JSON.stringify({
+        files: [
+            { id: 'f1', path: 'Program.cs', content: 'class Program {}' }
+        ]
+    }));
+    assert.equal(parsed.files.length, 1);
+    assert.equal(parsed.files[0].path, 'anims/Program.cs');
 });
 
 function installStorage(seed) {

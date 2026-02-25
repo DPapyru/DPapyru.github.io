@@ -13,6 +13,8 @@ import { buildPatchIndexFromXml } from './lib/language-core.js';
 import { createEmptyApiIndex, mergeApiIndex, normalizeApiIndex } from './lib/index-schema.js';
 import { buildFragmentSource as buildShaderFragmentSource } from './lib/shader-hlsl-adapter.js';
 import { buildSuggestions as buildDiagnosticSuggestions } from './lib/diagnostic-suggestions.js';
+import { createChangeTracker } from './lib/change-tracker.js';
+import { buildUnifiedDiff } from './lib/unified-diff.js';
 import * as sharedMarkdownCapabilityExports from '../../shared/capabilities/markdown/core/index.js';
 import { createPluginRegistry } from './core/plugin-registry.js';
 import { createShellEventBus } from './core/shell-event-bus.js';
@@ -65,7 +67,15 @@ const dom = {
     btnShaderCompile: document.getElementById('btn-shader-compile'),
     btnShaderPreviewPopup: document.getElementById('btn-shader-preview-popup'),
     btnShaderExport: document.getElementById('btn-shader-export'),
+    sidebarExplorerView: document.getElementById('sidebar-explorer-view'),
+    sidebarScmView: document.getElementById('sidebar-scm-view'),
     fileList: document.getElementById('file-list'),
+    scmSummary: document.getElementById('scm-summary'),
+    scmChangeList: document.getElementById('scm-change-list'),
+    scmDiffTitle: document.getElementById('scm-diff-title'),
+    scmDiffPreview: document.getElementById('scm-diff-preview'),
+    btnScmRestore: document.getElementById('btn-scm-restore'),
+    btnScmRefresh: document.getElementById('btn-scm-refresh'),
     activeFileName: document.getElementById('active-file-name'),
     panelEditor: document.getElementById('panel-editor'),
     editor: document.getElementById('editor'),
@@ -193,7 +203,6 @@ const dom = {
     unifiedPrTitle: document.getElementById('unified-pr-title'),
     unifiedExistingPrNumber: document.getElementById('unified-existing-pr-number'),
     unifiedAnchorSelect: document.getElementById('unified-anchor-select'),
-    unifiedShaderSlug: document.getElementById('unified-shader-slug'),
     unifiedSummary: document.getElementById('unified-summary'),
     btnUnifiedCollect: document.getElementById('btn-unified-collect'),
     btnUnifiedSubmit: document.getElementById('btn-unified-submit'),
@@ -214,6 +223,14 @@ const state = {
         generatedAt: '',
         files: [],
         expandedDirs: new Set()
+    },
+    scm: {
+        tracker: createChangeTracker({
+            normalizePath: normalizeRepoPath
+        }),
+        softDeletedPaths: new Set(),
+        selectedPath: '',
+        baselinePromises: new Map()
     },
     unifiedWorkspaceState: null,
     editor: null,
@@ -849,6 +866,315 @@ function languageForFile(pathValue) {
     if (mode === 'video') return 'plaintext';
     if (mode === 'image') return 'plaintext';
     return 'csharp';
+}
+
+function toScmRepoPath(pathValue) {
+    const relative = normalizeEditableWorkspacePathInput(pathValue);
+    if (!relative) return '';
+    return toSiteContentRepoPath(relative);
+}
+
+function toScmPathKey(pathValue) {
+    const relative = normalizeContentRelativePath(pathValue);
+    return relative ? relative.toLowerCase() : '';
+}
+
+function isBinaryFileMode(mode) {
+    return mode === 'image' || mode === 'video';
+}
+
+function scmTrackerModeForPath(pathValue) {
+    return isBinaryFileMode(detectFileMode(pathValue)) ? 'binary' : 'text';
+}
+
+function syncSoftDeletedFlag(repoPath) {
+    const path = normalizeRepoPath(repoPath);
+    if (!path) return;
+    const key = toScmPathKey(path);
+    if (!key) return;
+    const change = state.scm.tracker.getChange(path);
+    if (change && change.status === 'D') {
+        state.scm.softDeletedPaths.add(key);
+    } else {
+        state.scm.softDeletedPaths.delete(key);
+    }
+}
+
+function removeWorkspaceFileById(fileId) {
+    const safeId = String(fileId || '');
+    if (!safeId) return;
+    state.workspace.files = state.workspace.files.filter((file) => file.id !== safeId);
+    removeModelForFile(safeId);
+}
+
+async function readScmBaselineFromSite(pathValue) {
+    const relativePath = normalizeEditableWorkspacePathInput(pathValue);
+    if (!relativePath) {
+        return {
+            exists: false,
+            content: '',
+            mode: 'text'
+        };
+    }
+
+    const mode = detectFileMode(relativePath);
+    const url = toSiteContentFetchUrl(relativePath);
+    if (!url) {
+        return {
+            exists: false,
+            content: '',
+            mode: scmTrackerModeForPath(relativePath)
+        };
+    }
+
+    const response = await fetch(url, { cache: 'no-store' });
+    if (response.status === 404) {
+        return {
+            exists: false,
+            content: '',
+            mode: scmTrackerModeForPath(relativePath)
+        };
+    }
+    if (!response.ok) {
+        throw new Error(`SCM 基线读取失败（HTTP ${response.status}）`);
+    }
+
+    if (isBinaryFileMode(mode)) {
+        const blob = await response.blob();
+        const dataUrl = await readBlobAsDataUrl(blob);
+        return {
+            exists: true,
+            content: dataUrl,
+            mode: 'binary'
+        };
+    }
+
+    const content = String(await response.text()).replace(/\r\n/g, '\n');
+    return {
+        exists: true,
+        content,
+        mode: scmTrackerModeForPath(relativePath)
+    };
+}
+
+function ensureScmBaseline(pathValue, options) {
+    const relativePath = normalizeEditableWorkspacePathInput(pathValue);
+    if (!relativePath) return Promise.resolve(null);
+
+    const repoPath = toScmRepoPath(relativePath);
+    if (!repoPath) return Promise.resolve(null);
+    if (state.scm.baselinePromises.has(repoPath)) {
+        return state.scm.baselinePromises.get(repoPath);
+    }
+
+    const opts = options && typeof options === 'object' ? options : {};
+    const hasSeed = Object.prototype.hasOwnProperty.call(opts, 'exists');
+    const promise = (hasSeed
+        ? Promise.resolve({
+            exists: !!opts.exists,
+            content: String(opts.content || ''),
+            mode: String(opts.mode || scmTrackerModeForPath(relativePath))
+        })
+        : readScmBaselineFromSite(relativePath))
+        .then((baseline) => {
+            if (!baseline) return null;
+            state.scm.tracker.setBaseline(repoPath, baseline, { preserveCurrent: true });
+            syncSoftDeletedFlag(repoPath);
+            return baseline;
+        })
+        .catch((error) => {
+            addEvent('warn', `SCM 基线加载失败：${relativePath} · ${error.message}`);
+            return null;
+        })
+        .finally(() => {
+            state.scm.baselinePromises.delete(repoPath);
+            renderScmPanel();
+            renderRepoExplorerTree();
+        });
+
+    state.scm.baselinePromises.set(repoPath, promise);
+    return promise;
+}
+
+function trackWorkspaceFileChange(file) {
+    const target = file && typeof file === 'object' ? file : null;
+    if (!target || !target.path) return;
+    const repoPath = toScmRepoPath(target.path);
+    if (!repoPath) return;
+
+    const trackerMode = scmTrackerModeForPath(target.path);
+    state.scm.tracker.upsert(repoPath, String(target.content || ''), { mode: trackerMode });
+    syncSoftDeletedFlag(repoPath);
+    ensureScmBaseline(target.path);
+    renderScmPanel();
+    renderRepoExplorerTree();
+}
+
+function markWorkspaceFileDeleted(pathValue) {
+    const repoPath = toScmRepoPath(pathValue);
+    if (!repoPath) return;
+    state.scm.tracker.markDeleted(repoPath);
+    syncSoftDeletedFlag(repoPath);
+    ensureScmBaseline(pathValue);
+    renderScmPanel();
+    renderRepoExplorerTree();
+}
+
+function listScmChanges() {
+    return state.scm.tracker.listChanges()
+        .filter((item) => item && (item.status === 'A' || item.status === 'M' || item.status === 'D'))
+        .sort((left, right) => stableRepoPathCompare(left.path, right.path));
+}
+
+function renderScmPanel() {
+    if (!dom.scmChangeList) return;
+
+    const changes = listScmChanges();
+    if (dom.scmSummary) {
+        dom.scmSummary.textContent = `${changes.length} changes`;
+    }
+
+    if (!changes.length) {
+        state.scm.selectedPath = '';
+    } else if (!changes.some((item) => item.path === state.scm.selectedPath)) {
+        state.scm.selectedPath = changes[0].path;
+    }
+
+    dom.scmChangeList.innerHTML = '';
+    if (changes.length <= 0) {
+        const empty = document.createElement('li');
+        empty.className = 'repo-tree-hint';
+        empty.textContent = '工作区没有待提交改动。';
+        dom.scmChangeList.appendChild(empty);
+        renderScmDiffPreview(null);
+        return;
+    }
+
+    changes.forEach((change) => {
+        const li = document.createElement('li');
+        const button = document.createElement('button');
+        const isActive = change.path === state.scm.selectedPath;
+        button.type = 'button';
+        button.className = isActive ? 'scm-change-btn scm-change-btn-active' : 'scm-change-btn';
+        button.dataset.path = change.path;
+
+        const status = document.createElement('span');
+        status.className = 'scm-change-status';
+        status.dataset.status = change.status;
+        status.textContent = change.status;
+        button.appendChild(status);
+
+        const pathText = document.createElement('span');
+        pathText.className = 'scm-change-path';
+        pathText.textContent = normalizeContentRelativePath(change.path);
+        pathText.title = change.path;
+        button.appendChild(pathText);
+
+        button.addEventListener('click', () => {
+            state.scm.selectedPath = change.path;
+            renderScmPanel();
+        });
+
+        li.appendChild(button);
+        dom.scmChangeList.appendChild(li);
+    });
+
+    const active = changes.find((item) => item.path === state.scm.selectedPath) || null;
+    renderScmDiffPreview(active);
+}
+
+function renderScmDiffPreview(change) {
+    if (dom.btnScmRestore) {
+        dom.btnScmRestore.disabled = !(change && change.path);
+        dom.btnScmRestore.dataset.path = change && change.path ? change.path : '';
+    }
+
+    if (!dom.scmDiffPreview || !dom.scmDiffTitle) return;
+    if (!change) {
+        dom.scmDiffTitle.textContent = 'Diff 预览';
+        dom.scmDiffPreview.textContent = '选择改动文件以查看 Git Diff。';
+        return;
+    }
+
+    dom.scmDiffTitle.textContent = `[${change.status}] ${normalizeContentRelativePath(change.path)}`;
+    dom.scmDiffPreview.textContent = buildUnifiedDiff({
+        path: change.path,
+        oldText: change.oldContent,
+        newText: change.newContent,
+        oldExists: change.oldExists,
+        newExists: change.newExists,
+        isBinary: !!change.isBinary
+    });
+}
+
+function applyScmRestore(pathValue) {
+    const repoPath = normalizeRepoPath(pathValue);
+    if (!repoPath) return;
+    const change = state.scm.tracker.getChange(repoPath);
+    if (!change) return;
+
+    const relativePath = normalizeContentRelativePath(repoPath);
+    const baseline = state.scm.tracker.getBaseline(repoPath) || {
+        exists: false,
+        content: '',
+        mode: scmTrackerModeForPath(relativePath)
+    };
+    state.scm.tracker.restore(repoPath);
+    syncSoftDeletedFlag(repoPath);
+
+    const existing = findWorkspaceFileByContentPath(relativePath);
+    if (baseline.exists) {
+        if (existing) {
+            existing.path = relativePath;
+            existing.content = baseline.content;
+            const model = ensureModelForFile(existing);
+            if (model && model.getValue() !== String(baseline.content || '')) {
+                model.setValue(String(baseline.content || ''));
+            }
+            trackWorkspaceFileChange(existing);
+        } else {
+            const nextFile = {
+                id: createFileId(),
+                path: relativePath,
+                content: baseline.content
+            };
+            state.workspace.files.push(nextFile);
+            ensureModelForFile(nextFile);
+            trackWorkspaceFileChange(nextFile);
+            if (!state.workspace.activeFileId) {
+                state.workspace.activeFileId = nextFile.id;
+            }
+        }
+    } else if (existing) {
+        removeWorkspaceFileById(existing.id);
+        if (state.workspace.activeFileId === existing.id) {
+            const fallback = state.workspace.files[0] || null;
+            state.workspace.activeFileId = fallback ? fallback.id : '';
+        }
+    }
+
+    updateFileListUi();
+    if (state.workspace.activeFileId) {
+        switchActiveFile(state.workspace.activeFileId);
+    }
+    renderScmPanel();
+    scheduleWorkspaceSave();
+    scheduleUnifiedStateSave();
+}
+
+function applySidebarActivityView() {
+    const scmActive = state.ui.activeActivity === 'scm';
+    if (dom.sidebarExplorerView) {
+        dom.sidebarExplorerView.hidden = scmActive;
+        dom.sidebarExplorerView.classList.toggle('sidebar-view-active', !scmActive);
+    }
+    if (dom.sidebarScmView) {
+        dom.sidebarScmView.hidden = !scmActive;
+        dom.sidebarScmView.classList.toggle('sidebar-view-active', scmActive);
+    }
+    if (scmActive) {
+        renderScmPanel();
+    }
 }
 
 function normalizeShaderPreviewPreset(value) {
@@ -2179,14 +2505,12 @@ function rememberUnifiedStateSnapshot() {
     const prTitle = String(dom.unifiedPrTitle ? dom.unifiedPrTitle.value : '').trim();
     const existingPrNumber = String(dom.unifiedExistingPrNumber ? dom.unifiedExistingPrNumber.value : '').trim();
     const anchorPath = String(dom.unifiedAnchorSelect ? dom.unifiedAnchorSelect.value : '').trim();
-    const shaderSlug = sanitizeShaderSlug(dom.unifiedShaderSlug ? dom.unifiedShaderSlug.value : '');
 
     state.unifiedWorkspaceState.submit = {
         workerApiUrl,
         prTitle,
         existingPrNumber,
         anchorPath,
-        shaderSlug,
         resume: state.unified.resumeState,
         lastCollection: state.unified.collection
     };
@@ -2422,103 +2746,81 @@ function buildUnifiedCollectionFromWorkspace() {
         blockedEntries: []
     };
     const blockedEntries = [];
+    const files = [];
+    const scmChanges = listScmChanges();
 
-    const entries = listWorkspaceEntries();
-    entries.forEach((entry) => {
-        if (!entry.path) return;
-        if (!entry.content.trim()) {
-            blockedEntries.push({ ...entry, reason: '内容为空' });
-            return;
-        }
-        if (entry.mode === 'markdown') {
-            const repoPath = normalizeMarkdownRepoPath(entry.path);
-            if (!repoPath) {
-                blockedEntries.push({ ...entry, reason: 'Markdown 路径非法' });
-                return;
-            }
-            docs.markdownEntries.push({
-                workspace: 'markdown',
-                path: repoPath,
-                content: entry.content,
-                encoding: 'utf8',
-                source: 'workspace-markdown',
-                isMainMarkdown: true
-            });
-            return;
-        }
-        if (entry.mode === 'shaderfx') {
-            shader.fxEntries.push({
-                workspace: 'shader',
-                path: normalizeRepoPath(entry.path),
-                content: entry.content,
-                source: 'workspace-shaderfx'
-            });
-            return;
-        }
-        if (entry.mode === 'image' || entry.mode === 'video') {
-            const path = normalizeRepoPath(entry.path);
-            if (!isAllowedExtraFilePath(path)) {
-                blockedEntries.push({ ...entry, reason: '资源目标路径非法（仅允许 **/imgs/* 或 **/media/*）' });
-                return;
-            }
+    scmChanges.forEach((change) => {
+        const path = normalizeRepoPath(change && change.path || '');
+        if (!path) return;
+        const mode = detectFileMode(path);
+        const isShaderFx = mode === 'shaderfx';
 
-            const mediaTypePrefix = entry.mode === 'image' ? 'image/' : 'video/';
-            const base64Content = extractBase64ContentFromDataUrl(entry.content, mediaTypePrefix);
-            if (!base64Content) {
-                blockedEntries.push({ ...entry, reason: '资源内容不是合法的 base64 DataURL' });
-                return;
-            }
-
-            docs.extraEntries.push({
-                workspace: 'markdown',
+        if (change.status === 'D') {
+            const entry = {
                 path,
+                op: 'delete',
+                status: change.status,
+                source: 'scm-delete'
+            };
+            files.push(entry);
+            if (isShaderFx) shader.fxEntries.push(entry);
+            else if (mode === 'markdown') docs.markdownEntries.push(entry);
+            else docs.extraEntries.push(entry);
+            return;
+        }
+
+        if (isBinaryFileMode(mode)) {
+            const mediaTypePrefix = mode === 'image' ? 'image/' : 'video/';
+            const base64Content = extractBase64ContentFromDataUrl(change.newContent, mediaTypePrefix);
+            if (!base64Content) {
+                const blocked = {
+                    path,
+                    status: change.status,
+                    source: 'scm-binary',
+                    reason: '二进制文件内容不是合法 DataURL'
+                };
+                blockedEntries.push(blocked);
+                docs.blockedEntries.push(blocked);
+                return;
+            }
+            const entry = {
+                path,
+                op: 'upsert',
+                status: change.status,
                 content: base64Content,
                 encoding: 'base64',
-                source: entry.mode === 'image' ? 'workspace-image' : 'workspace-media'
-            });
+                source: mode === 'image' ? 'scm-image' : 'scm-video'
+            };
+            files.push(entry);
+            docs.extraEntries.push(entry);
             return;
         }
-    });
 
-    const csharpFiles = entries.filter((item) => item.mode === 'csharp');
-    if (csharpFiles.length > 0) {
-        let articlePath = resolveActiveMarkdownPath({ docs });
-        const anchorPath = normalizeRepoPath(String(dom.unifiedAnchorSelect ? dom.unifiedAnchorSelect.value : '').trim());
-        if (!articlePath && isMarkdownContentPath(anchorPath)) {
-            articlePath = anchorPath;
-        }
-        if (!articlePath) {
-            csharpFiles.forEach((item) => {
-                blockedEntries.push({ ...item, reason: '仅 C# 提交时必须选择目标 Markdown 锚点' });
-            });
+        const textContent = String(change.newContent || '');
+        const entry = {
+            path,
+            op: 'upsert',
+            status: change.status,
+            content: textContent,
+            encoding: 'utf8',
+            source: 'scm-text'
+        };
+        files.push(entry);
+        if (isShaderFx) {
+            shader.fxEntries.push(entry);
+        } else if (mode === 'markdown') {
+            docs.markdownEntries.push(entry);
         } else {
-            csharpFiles.forEach((item) => {
-                const path = toDirectCsharpRepoPath(item.path) || toCodePathForArticle(articlePath, item.path);
-                if (!isAllowedExtraFilePath(path)) {
-                    blockedEntries.push({ ...item, reason: 'C# 目标路径非法' });
-                    return;
-                }
-                docs.extraEntries.push({
-                    workspace: 'csharp',
-                    path,
-                    content: item.content,
-                    encoding: 'utf8',
-                    source: 'workspace-csharp'
-                });
-            });
+            docs.extraEntries.push(entry);
         }
-    }
-
-    blockedEntries.forEach((item) => {
-        if (item.mode === 'shaderfx') shader.blockedEntries.push(item);
-        else docs.blockedEntries.push(item);
     });
 
     return {
         collectedAt: new Date().toISOString(),
         docs,
         shader,
-        blockedEntries
+        blockedEntries,
+        files
     };
 }
 
@@ -2595,20 +2897,25 @@ function updateAnchorSelectOptions(collection) {
 
 function updateUnifiedSummary(collection) {
     if (!dom.unifiedSummary) return;
-    const markdownCount = collection && collection.docs ? collection.docs.markdownEntries.length : 0;
-    const csharpCount = collection && collection.docs ? collection.docs.extraEntries.length : 0;
-    const shaderFxCount = collection && collection.shader ? collection.shader.fxEntries.length : 0;
+    const filesCount = collection && Array.isArray(collection.files) ? collection.files.length : 0;
+    const addCount = collection && Array.isArray(collection.files)
+        ? collection.files.filter((item) => item.status === 'A').length
+        : 0;
+    const modifyCount = collection && Array.isArray(collection.files)
+        ? collection.files.filter((item) => item.status === 'M').length
+        : 0;
+    const deleteCount = collection && Array.isArray(collection.files)
+        ? collection.files.filter((item) => item.status === 'D').length
+        : 0;
     const blockedCount = collection && Array.isArray(collection.blockedEntries) ? collection.blockedEntries.length : 0;
-    dom.unifiedSummary.textContent = `文档: md ${markdownCount} + cs ${csharpCount} · Shader(.fx): ${shaderFxCount} · 阻塞: ${blockedCount}`;
+    dom.unifiedSummary.textContent = `改动 ${filesCount}（A ${addCount} / M ${modifyCount} / D ${deleteCount}） · 阻塞 ${blockedCount}`;
 }
 
 function persistUnifiedCollection(collection) {
     state.unified.collection = collection;
-    const docsEntries = collection && collection.docs
-        ? collection.docs.extraEntries.concat(collection.docs.markdownEntries)
+    state.unified.sendableEntries = collection && Array.isArray(collection.files)
+        ? collection.files
         : [];
-    const shaderEntries = collection && collection.shader ? collection.shader.fxEntries : [];
-    state.unified.sendableEntries = docsEntries.concat(shaderEntries);
     state.unified.blockedEntries = collection && Array.isArray(collection.blockedEntries) ? collection.blockedEntries : [];
     state.unified.markdownEntries = collection && collection.docs ? collection.docs.markdownEntries : [];
     renderUnifiedFileList(dom.unifiedSendableList, state.unified.sendableEntries, '暂无可提交文件。');
@@ -2625,7 +2932,7 @@ async function collectUnifiedChanges(options) {
     persistUnifiedCollection(collection);
     if (!silent) {
         setUnifiedSubmitStatus('已收集 staged 改动', 'success');
-        pushUnifiedSubmitLog(`收集完成：文档 ${collection.docs.markdownEntries.length + collection.docs.extraEntries.length}，Shader ${collection.shader.fxEntries.length}，阻塞 ${collection.blockedEntries.length}`);
+        pushUnifiedSubmitLog(`收集完成：改动 ${collection.files.length}，阻塞 ${collection.blockedEntries.length}`);
     }
     return collection;
 }
@@ -2660,6 +2967,7 @@ function createWorkspaceMarkdownFile(pathValue) {
     };
     state.workspace.files.push(nextFile);
     ensureModelForFile(nextFile);
+    trackWorkspaceFileChange(nextFile);
     return nextFile;
 }
 
@@ -2687,11 +2995,19 @@ async function ensureTutorialMarkdownRouteLoaded() {
         const nextText = String(markdownContent || '').replace(/\r\n/g, '\n');
         targetFile.path = workspacePath;
         targetFile.content = nextText;
+        if (!hasWorkspaceContent) {
+            ensureScmBaseline(workspacePath, {
+                exists: true,
+                content: nextText,
+                mode: 'text'
+            });
+        }
 
         const model = ensureModelForFile(targetFile);
         if (model && model.getValue() !== nextText) {
             model.setValue(nextText);
         }
+        trackWorkspaceFileChange(targetFile);
 
         updateFileListUi();
         switchActiveFile(targetFile.id);
@@ -2744,169 +3060,45 @@ function relativeTargetPath(pathValue) {
 }
 
 async function buildUnifiedSubmitBatches(collection) {
-    const safeCollection = collection || state.unified.collection || { docs: { markdownEntries: [], extraEntries: [] } };
-    const markdownEntries = Array.isArray(safeCollection.docs.markdownEntries) ? safeCollection.docs.markdownEntries.slice() : [];
-    const extraEntries = Array.isArray(safeCollection.docs.extraEntries) ? safeCollection.docs.extraEntries.slice() : [];
-
-    if (!markdownEntries.length && !extraEntries.length) {
-        return { batches: [], anchorPath: '' };
+    const safeCollection = collection || state.unified.collection || { files: [] };
+    const files = Array.isArray(safeCollection.files) ? safeCollection.files.slice() : [];
+    if (!files.length) {
+        return { batches: [] };
     }
 
-    const batches = markdownEntries.map((entry) => ({
-        targetPath: entry.path,
-        markdown: entry.content,
-        extraFiles: []
-    }));
-
-    if (batches.length > 0) {
-        let cursor = 0;
-        extraEntries.forEach((entry) => {
-            while (cursor < batches.length && batches[cursor].extraFiles.length >= 8) {
-                cursor += 1;
+    const batchSize = 20;
+    const batches = [];
+    for (let i = 0; i < files.length; i += batchSize) {
+        const slice = files.slice(i, i + batchSize).map((item) => {
+            const path = normalizeRepoPath(item.path);
+            const op = String(item.op || '').toLowerCase() === 'delete' ? 'delete' : 'upsert';
+            if (op === 'delete') {
+                return { path, op: 'delete' };
             }
-            if (cursor >= batches.length) {
-                batches.push({
-                    targetPath: batches[0].targetPath,
-                    markdown: batches[0].markdown,
-                    extraFiles: []
-                });
-                cursor = batches.length - 1;
-            }
-            batches[cursor].extraFiles.push(entry);
-        });
-    } else {
-        for (let i = 0; i < extraEntries.length; i += 8) {
-            batches.push({
-                targetPath: '',
-                markdown: '',
-                extraFiles: extraEntries.slice(i, i + 8)
-            });
+            return {
+                path,
+                op: 'upsert',
+                content: String(item.content || ''),
+                encoding: item.encoding === 'base64' ? 'base64' : 'utf8'
+            };
+        }).filter((item) => !!item.path);
+        if (slice.length > 0) {
+            batches.push({ files: slice });
         }
     }
-
-    const selectedAnchorPath = String(dom.unifiedAnchorSelect ? dom.unifiedAnchorSelect.value : '').trim();
-    const needsAnchor = batches.some((batch) => !batch.targetPath || !batch.markdown.trim());
-    let anchorInfo = null;
-    if (needsAnchor) {
-        if (!selectedAnchorPath) {
-            throw new Error('仅 C# 提交时必须先选择目标 Markdown 锚点');
-        }
-        anchorInfo = await resolveAnchorMarkdownForBatch(safeCollection, selectedAnchorPath);
-    }
-
-    const normalizedBatches = batches.map((batch) => {
-        const targetPath = batch.targetPath && batch.markdown.trim()
-            ? batch.targetPath
-            : (anchorInfo ? anchorInfo.path : '');
-        const markdown = batch.targetPath && batch.markdown.trim()
-            ? batch.markdown
-            : (anchorInfo ? anchorInfo.markdown : '');
-        if (!targetPath || !markdown.trim()) {
-            throw new Error('构建提交批次失败：缺少目标 Markdown');
-        }
-
-        return {
-            targetPath: relativeTargetPath(targetPath),
-            markdown,
-            extraFiles: batch.extraFiles.map((item) => ({
-                path: item.path,
-                content: item.content,
-                encoding: item.encoding
-            }))
-        };
-    });
-
-    return {
-        batches: normalizedBatches,
-        anchorPath: anchorInfo ? anchorInfo.path : ''
-    };
+    return { batches };
 }
 
 function buildShaderSubmitBatch(collection) {
-    const fxEntries = collection && collection.shader && Array.isArray(collection.shader.fxEntries)
-        ? collection.shader.fxEntries
-        : [];
-    if (!fxEntries.length) return null;
-
-    const slug = sanitizeShaderSlug(dom.unifiedShaderSlug ? dom.unifiedShaderSlug.value : '');
-    if (!slug) {
-        throw new Error('请填写 Shader 投稿 Slug');
-    }
-
-    const active = getActiveFile();
-    const activePath = active && detectFileMode(active.path) === 'shaderfx' ? normalizeRepoPath(active.path) : '';
-    const primary = fxEntries.find((item) => normalizeRepoPath(item.path) === activePath) || fxEntries[0];
-    const secondary = fxEntries.filter((item) => item !== primary);
-    const dateStr = new Date().toISOString().slice(0, 10);
-    const title = slug.replace(/-/g, ' ');
-
-    const readmeLines = [
-        `# ${title || slug}`,
-        '',
-        '由统一 IDE 自动生成的 Shader 投稿草稿。',
-        '',
-        '## 主 Shader',
-        '',
-        '```fx',
-        String(primary.content || ''),
-        '```'
-    ];
-    if (secondary.length > 0) {
-        readmeLines.push('', '## 其他 .fx 文件');
-        secondary.forEach((item) => {
-            readmeLines.push('', `### ${String(item.path || '').split('/').pop() || 'shader.fx'}`, '', '```fx', String(item.content || ''), '```');
-        });
-    }
-
-    const entryJson = {
-        slug,
-        title: title || slug,
-        author: normalizeAuthSession().user || 'unknown',
-        description: '由统一 IDE 自动生成，请补充描述。',
-        shader: 'shader.json',
-        cover: 'cover.webp',
-        tags: ['playground'],
-        updated_at: dateStr
-    };
-
-    const shaderJson = {
-        common: '',
-        passes: [
-            {
-                name: 'Pass 1',
-                type: 'image',
-                scale: 1,
-                code: String(primary.content || ''),
-                channels: [{ kind: 'none' }, { kind: 'none' }, { kind: 'none' }, { kind: 'none' }]
-            }
-        ]
-    };
-
-    return {
-        batches: [
-            {
-                targetPath: `shader-gallery/${slug}/README.md`,
-                markdown: readmeLines.join('\n'),
-                extraFiles: [
-                    {
-                        path: `site/content/shader-gallery/${slug}/entry.json`,
-                        content: JSON.stringify(entryJson, null, 2),
-                        encoding: 'utf8'
-                    },
-                    {
-                        path: `site/content/shader-gallery/${slug}/shader.json`,
-                        content: JSON.stringify(shaderJson, null, 2),
-                        encoding: 'utf8'
-                    }
-                ]
-            }
-        ]
-    };
+    const safeCollection = collection || state.unified.collection || { files: [] };
+    const hasFxChange = Array.isArray(safeCollection.files) && safeCollection.files.some((item) => /\.fx$/i.test(String(item && item.path || '')));
+    if (!hasFxChange) return null;
+    return { batches: [] };
 }
 
 async function buildSplitSubmitPlan(collection) {
     const docsPlan = await buildUnifiedSubmitBatches(collection);
-    const shaderPlan = buildShaderSubmitBatch(collection);
+    const shaderPlan = null;
     return {
         docsBatches: docsPlan && Array.isArray(docsPlan.batches) ? docsPlan.batches : [],
         shaderBatches: shaderPlan && Array.isArray(shaderPlan.batches) ? shaderPlan.batches : []
@@ -2961,20 +3153,16 @@ function setUnifiedSubmitting(submitting) {
     if (dom.btnUnifiedCollect) dom.btnUnifiedCollect.disabled = submitting;
 }
 
-function channelPrefix(channel) {
-    return channel === 'shader' ? 'Shader' : '文档';
-}
-
-async function runSubmitChannel(channel, batches, options) {
+async function runUnifiedSubmitBatches(batches, options) {
     const opts = options || {};
     if (!Array.isArray(batches) || batches.length === 0) {
-        return { channel, skipped: true, prNumber: '' };
+        return { skipped: true, prNumber: '' };
     }
     const workerApiUrl = opts.workerApiUrl;
     const authToken = opts.authToken;
     let existingPrNumber = String(opts.existingPrNumber || '').trim();
     const baseTitle = String(dom.unifiedPrTitle ? dom.unifiedPrTitle.value : '').trim();
-    const prTitle = `${channelPrefix(channel)}: ${baseTitle || '统一IDE提交'}`;
+    const prTitle = baseTitle || 'docs: 统一IDE提交';
     const startIndex = Math.max(0, Number(opts.startIndex || 0));
     let nextIndex = startIndex;
     try {
@@ -2982,32 +3170,42 @@ async function runSubmitChannel(channel, batches, options) {
             nextIndex = i;
             const batch = batches[i];
             const payload = {
-                targetPath: String(batch.targetPath || ''),
-                markdown: String(batch.markdown || ''),
-                prTitle
+                prTitle,
+                files: Array.isArray(batch.files)
+                    ? batch.files.map((item) => {
+                        const path = normalizeRepoPath(item && item.path || '');
+                        const op = String(item && item.op || '').toLowerCase() === 'delete' ? 'delete' : 'upsert';
+                        if (op === 'delete') {
+                            return { path, op: 'delete' };
+                        }
+                        return {
+                            path,
+                            op: 'upsert',
+                            content: String(item && item.content || ''),
+                            encoding: item && item.encoding === 'base64' ? 'base64' : 'utf8'
+                        };
+                    }).filter((item) => !!item.path)
+                    : []
             };
             if (existingPrNumber) payload.existingPrNumber = existingPrNumber;
-            if (Array.isArray(batch.extraFiles) && batch.extraFiles.length > 0) {
-                payload.extraFiles = batch.extraFiles.slice(0, 8).map((item) => ({
-                    path: item.path,
-                    content: item.content,
-                    encoding: item.encoding === 'base64' ? 'base64' : 'utf8'
-                }));
+            if (!payload.files.length) {
+                nextIndex = i + 1;
+                continue;
             }
 
-            pushUnifiedSubmitLog(`[${channelPrefix(channel)}] 批次 ${i + 1}/${batches.length} -> ${payload.targetPath}`);
+            pushUnifiedSubmitLog(`[Unified] 批次 ${i + 1}/${batches.length} · files ${payload.files.length}`);
             const responseData = await submitBatchRequest(workerApiUrl, authToken, payload);
             if (responseData.prNumber) {
                 existingPrNumber = String(responseData.prNumber);
             }
-            pushUnifiedSubmitLog(`[${channelPrefix(channel)}] 批次 ${i + 1} 成功：PR #${existingPrNumber || '?'}`);
+            const skippedDeletes = Array.isArray(responseData.skippedDeletes) ? responseData.skippedDeletes.length : 0;
+            const appliedFiles = Array.isArray(responseData.appliedFiles) ? responseData.appliedFiles.length : payload.files.length;
+            pushUnifiedSubmitLog(`[Unified] 批次 ${i + 1} 成功：应用 ${appliedFiles}，跳过删除 ${skippedDeletes}，PR #${existingPrNumber || '?'}`);
             nextIndex = i + 1;
         }
         return {
-            channel,
             skipped: false,
             prNumber: existingPrNumber,
-            resume: null,
             nextIndex
         };
     } catch (error) {
@@ -3018,6 +3216,16 @@ async function runSubmitChannel(channel, batches, options) {
         };
         throw wrapped;
     }
+}
+
+async function runSubmitChannel(channel, batches, options) {
+    const result = await runUnifiedSubmitBatches(batches, options);
+    return {
+        channel,
+        skipped: !!result.skipped,
+        prNumber: result.prNumber || '',
+        nextIndex: Number(result.nextIndex || 0)
+    };
 }
 
 async function runSplitUnifiedSubmit(plan, options) {
@@ -3035,67 +3243,36 @@ async function runSplitUnifiedSubmit(plan, options) {
     }
 
     const docsResume = opts.resume && opts.resume.docs ? opts.resume.docs : null;
-    const shaderResume = opts.resume && opts.resume.shader ? opts.resume.shader : null;
+    const fallbackShaderResume = opts.resume && opts.resume.shader ? opts.resume.shader : null;
+    const mergedBatches = []
+        .concat(Array.isArray(plan.docsBatches) ? plan.docsBatches : [])
+        .concat(Array.isArray(plan.shaderBatches) ? plan.shaderBatches : []);
+    const resumeState = docsResume || fallbackShaderResume || null;
     setUnifiedSubmitting(true);
-    setUnifiedSubmitStatus('双通道提交进行中...', 'info');
+    setUnifiedSubmitStatus('统一提交进行中...', 'info');
     try {
-        const docsTask = runSubmitChannel('docs', plan.docsBatches || [], {
+        const unifiedResult = await runUnifiedSubmitBatches(mergedBatches, {
             workerApiUrl,
             authToken: auth.token,
-            existingPrNumber: docsResume ? docsResume.existingPrNumber : '',
-            startIndex: docsResume ? docsResume.nextIndex : 0
+            existingPrNumber: resumeState ? resumeState.existingPrNumber : '',
+            startIndex: resumeState ? resumeState.nextIndex : 0
         });
-        const shaderTask = runSubmitChannel('shader', plan.shaderBatches || [], {
-            workerApiUrl,
-            authToken: auth.token,
-            existingPrNumber: shaderResume ? shaderResume.existingPrNumber : '',
-            startIndex: shaderResume ? shaderResume.nextIndex : 0
-        });
-
-        const [docsResult, shaderResult] = await Promise.allSettled([docsTask, shaderTask]);
-        const nextResume = { docs: null, shader: null };
-        const errors = [];
-
-        if (docsResult.status === 'fulfilled') {
-            if (!docsResult.value.skipped) {
-                pushUnifiedSubmitLog(`[文档] 完成：PR #${docsResult.value.prNumber || '?'}`);
-            }
-        } else {
-            const reason = docsResult.reason;
-            const resume = {
-                batches: plan.docsBatches || [],
-                nextIndex: Number(reason && reason.meta ? reason.meta.nextIndex : 0),
-                existingPrNumber: String(reason && reason.meta ? reason.meta.existingPrNumber : ''),
-                failedAt: new Date().toISOString(),
-                message: String(reason && reason.message ? reason.message : reason)
-            };
-            nextResume.docs = resume;
-            errors.push(`文档通道失败：${resume.message}`);
+        state.unified.resumeState = { docs: null, shader: null };
+        if (!unifiedResult.skipped) {
+            pushUnifiedSubmitLog(`[Unified] 完成：PR #${unifiedResult.prNumber || '?'}`);
         }
-
-        if (shaderResult.status === 'fulfilled') {
-            if (!shaderResult.value.skipped) {
-                pushUnifiedSubmitLog(`[Shader] 完成：PR #${shaderResult.value.prNumber || '?'}`);
-            }
-        } else {
-            const reason = shaderResult.reason;
-            const resume = {
-                batches: plan.shaderBatches || [],
-                nextIndex: Number(reason && reason.meta ? reason.meta.nextIndex : 0),
-                existingPrNumber: String(reason && reason.meta ? reason.meta.existingPrNumber : ''),
-                failedAt: new Date().toISOString(),
-                message: String(reason && reason.message ? reason.message : reason)
-            };
-            nextResume.shader = resume;
-            errors.push(`Shader 通道失败：${resume.message}`);
-        }
-
-        state.unified.resumeState = nextResume.docs || nextResume.shader ? nextResume : { docs: null, shader: null };
-        if (errors.length > 0) {
-            setUnifiedSubmitStatus(errors.join('；'), 'error');
-            throw new Error(errors.join('；'));
-        }
-        setUnifiedSubmitStatus('双通道提交成功', 'success');
+        setUnifiedSubmitStatus('统一提交成功', 'success');
+    } catch (error) {
+        const resume = {
+            batches: mergedBatches,
+            nextIndex: Number(error && error.meta ? error.meta.nextIndex : 0),
+            existingPrNumber: String(error && error.meta ? error.meta.existingPrNumber : ''),
+            failedAt: new Date().toISOString(),
+            message: String(error && error.message ? error.message : error)
+        };
+        state.unified.resumeState = { docs: resume, shader: null };
+        setUnifiedSubmitStatus(`统一提交失败：${resume.message}`, 'error');
+        throw error;
     } finally {
         setUnifiedSubmitting(false);
         scheduleUnifiedStateSave();
@@ -3164,7 +3341,7 @@ function initializeUnifiedState(loadedState) {
                 markdown: { staged: null, legacyState: null, viewerPreview: null },
                 shader: { staged: null, contributeState: null, playgroundState: null, contributionDraft: null }
             },
-            submit: { workerApiUrl: '', prTitle: '', existingPrNumber: '', anchorPath: '', shaderSlug: '', resume: null, lastCollection: null }
+            submit: { workerApiUrl: '', prTitle: '', existingPrNumber: '', anchorPath: '', resume: null, lastCollection: null }
         };
     state.unifiedWorkspaceState = initial;
     const markdownSnapshot = initial.snapshots && initial.snapshots.markdown ? initial.snapshots.markdown : null;
@@ -3186,9 +3363,6 @@ function initializeUnifiedState(loadedState) {
     }
     if (dom.unifiedExistingPrNumber) {
         dom.unifiedExistingPrNumber.value = String(initial.submit && initial.submit.existingPrNumber || '');
-    }
-    if (dom.unifiedShaderSlug) {
-        dom.unifiedShaderSlug.value = sanitizeShaderSlug(initial.submit && initial.submit.shaderSlug || '');
     }
     if (dom.unifiedBatchProgress && state.unified.submitLogs.length === 0) {
         dom.unifiedBatchProgress.textContent = '尚未提交。';
@@ -3259,6 +3433,7 @@ function setActiveActivity(activity) {
         button.classList.toggle('activity-btn-active', isActive);
         button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
     });
+    applySidebarActivityView();
 }
 
 function focusExplorer() {
@@ -3603,7 +3778,7 @@ function onActivityClicked(activity) {
     }
 
     if (safeActivity === 'scm') {
-        addEvent('info', 'Source Control 视图在独立版中仅保留入口布局');
+        renderScmPanel();
     }
 }
 
@@ -3792,6 +3967,8 @@ function createFileFromPathInput(pathInput) {
     };
     state.workspace.files.push(file);
     ensureModelForFile(file);
+    trackWorkspaceFileChange(file);
+    ensureScmBaseline(fileName);
     switchActiveFile(file.id);
     updateFileListUi();
     scheduleWorkspaceSave();
@@ -4488,6 +4665,8 @@ function ensureMarkdownDraftTargetFile(targetPath) {
     };
     state.workspace.files.push(nextFile);
     ensureModelForFile(nextFile);
+    trackWorkspaceFileChange(nextFile);
+    ensureScmBaseline(safePath);
     updateFileListUi();
     addEvent('info', `已创建草稿目标文件：${safePath}`);
     return nextFile;
@@ -4859,6 +5038,8 @@ async function insertPastedMarkdownImages(fileList) {
         }
         state.workspace.files.push(record.file);
         ensureModelForFile(record.file);
+        trackWorkspaceFileChange(record.file);
+        ensureScmBaseline(record.file.path);
         createdFileIds.push(record.file.id);
         snippets.push(`![${record.alt}](${record.markdownPath})`);
     }
@@ -4870,6 +5051,11 @@ async function insertPastedMarkdownImages(fileList) {
     const inserted = insertMarkdownBlockSnippet(`\n${snippets.join('\n\n')}\n`);
     if (!inserted) {
         if (createdFileIds.length) {
+            state.workspace.files.forEach((file) => {
+                if (createdFileIds.includes(file.id)) {
+                    markWorkspaceFileDeleted(file.path);
+                }
+            });
             state.workspace.files = state.workspace.files.filter((file) => !createdFileIds.includes(file.id));
             createdFileIds.forEach((fileId) => removeModelForFile(fileId));
             updateFileListUi();
@@ -6463,23 +6649,44 @@ function renderRepoExplorerTree() {
 
     const active = getActiveFile();
     const tree = buildRepoExplorerTree(entries);
+    const createTreeGlyph = (className, glyph) => {
+        const span = document.createElement('span');
+        span.className = className;
+        span.setAttribute('aria-hidden', 'true');
+        span.textContent = glyph;
+        return span;
+    };
+
     const renderNodes = (nodes, depth) => {
         nodes.forEach((node) => {
             if (!node || !node.path) return;
 
             const li = document.createElement('li');
-            li.className = 'repo-tree-node';
+            li.className = node.type === 'dir'
+                ? 'repo-tree-node repo-tree-node-dir'
+                : 'repo-tree-node repo-tree-node-file';
 
             if (node.type === 'dir') {
                 const expanded = state.repoExplorer.expandedDirs.has(node.path);
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'repo-tree-toggle';
+                btn.className = 'repo-tree-toggle repo-tree-item';
                 btn.style.setProperty('--tree-depth', String(depth));
-                btn.textContent = `${expanded ? '▾' : '▸'} ${node.name}`;
                 btn.title = node.path;
                 btn.dataset.repoPath = String(node.path || '');
                 btn.dataset.nodeType = 'dir';
+
+                const row = document.createElement('span');
+                row.className = 'repo-tree-item-main';
+                row.appendChild(createTreeGlyph('repo-tree-glyph repo-tree-chevron', expanded ? '▾' : '▸'));
+                row.appendChild(createTreeGlyph('repo-tree-glyph repo-tree-folder-icon', expanded ? '' : ''));
+
+                const label = document.createElement('span');
+                label.className = 'repo-tree-label';
+                label.textContent = node.name;
+                row.appendChild(label);
+                btn.appendChild(row);
+
                 btn.addEventListener('click', () => {
                     if (expanded) {
                         state.repoExplorer.expandedDirs.delete(node.path);
@@ -6502,16 +6709,37 @@ function renderRepoExplorerTree() {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = loaded
-                ? 'file-item repo-tree-file'
-                : 'file-item repo-tree-file repo-tree-file-unloaded';
+                ? 'file-item repo-tree-item repo-tree-file'
+                : 'file-item repo-tree-item repo-tree-file repo-tree-file-unloaded';
             btn.style.setProperty('--tree-depth', String(depth));
-            btn.textContent = node.name;
             btn.title = loaded
                 ? node.path
                 : `${node.path}（点击加载）`;
             btn.dataset.repoPath = String(node.path || '');
             btn.dataset.nodeType = 'file';
             btn.setAttribute('aria-current', isActive ? 'true' : 'false');
+
+            const row = document.createElement('span');
+            row.className = 'repo-tree-item-main';
+            row.appendChild(createTreeGlyph('repo-tree-glyph repo-tree-file-icon', '󰈔'));
+
+            const label = document.createElement('span');
+            label.className = 'repo-tree-label';
+            label.textContent = node.name;
+            row.appendChild(label);
+            btn.appendChild(row);
+
+            const repoPath = toScmRepoPath(node.path);
+            const change = repoPath ? state.scm.tracker.getChange(repoPath) : null;
+            if (change && (change.status === 'A' || change.status === 'M' || change.status === 'D')) {
+                const badge = document.createElement('span');
+                badge.className = 'repo-tree-change-badge';
+                badge.dataset.status = change.status;
+                badge.textContent = change.status;
+                badge.setAttribute('aria-label', `SCM ${change.status}`);
+                btn.appendChild(badge);
+            }
+
             btn.addEventListener('click', () => {
                 openRepoExplorerFile(node.path).catch((error) => {
                     addEvent('error', `打开文件失败：${error.message}`);
@@ -6580,6 +6808,11 @@ async function openRepoExplorerFile(pathValue, options) {
         try {
             const content = await loadWorkspaceFileContentFromSite(relativePath);
             file.content = content;
+            ensureScmBaseline(relativePath, {
+                exists: true,
+                content,
+                mode: scmTrackerModeForPath(relativePath)
+            });
         } catch (error) {
             if (createdNow) {
                 state.workspace.files = state.workspace.files.filter((entry) => entry.id !== file.id);
@@ -6593,6 +6826,7 @@ async function openRepoExplorerFile(pathValue, options) {
     if (model && model.getValue() !== String(file.content || '')) {
         model.setValue(String(file.content || ''));
     }
+    trackWorkspaceFileChange(file);
     switchActiveFile(file.id);
     updateFileListUi();
     scheduleWorkspaceSave();
@@ -6661,6 +6895,7 @@ async function loadIdeEditableIndex(options) {
 
 function updateFileListUi() {
     renderRepoExplorerTree();
+    renderScmPanel();
 
     const active = getActiveFile();
     if (dom.activeFileName) {
@@ -6713,6 +6948,7 @@ function ensureModelForFile(file) {
     );
     model.onDidChangeContent(function () {
         file.content = model.getValue();
+        trackWorkspaceFileChange(file);
         scheduleWorkspaceSave();
         if (detectFileMode(file.path) === 'csharp') {
             scheduleDiagnostics();
@@ -7390,13 +7626,27 @@ function applyWorkspace(nextWorkspace) {
         }
     });
 
+    state.scm.tracker = createChangeTracker({
+        normalizePath: normalizeRepoPath
+    });
+    state.scm.softDeletedPaths.clear();
+    state.scm.baselinePromises.clear();
+    state.scm.selectedPath = '';
+
     state.workspace = nextWorkspace;
     state.workspace.files.forEach((file) => {
         ensureModelForFile(file);
+        trackWorkspaceFileChange(file);
     });
 
     updateFileListUi();
-    switchActiveFile(state.workspace.activeFileId);
+    if (!state.workspace.files.some((file) => file.id === state.workspace.activeFileId)) {
+        state.workspace.activeFileId = state.workspace.files[0] ? state.workspace.files[0].id : '';
+    }
+    if (state.workspace.activeFileId) {
+        switchActiveFile(state.workspace.activeFileId);
+    }
+    renderScmPanel();
     scheduleWorkspaceSave();
     scheduleUnifiedStateSave();
 }
@@ -7527,13 +7777,6 @@ function bindUiEvents() {
         });
     }
 
-    if (dom.unifiedShaderSlug) {
-        dom.unifiedShaderSlug.addEventListener('input', () => {
-            dom.unifiedShaderSlug.value = sanitizeShaderSlug(dom.unifiedShaderSlug.value);
-            scheduleUnifiedStateSave();
-        });
-    }
-
     if (dom.btnUnifiedAuthLogin) {
         dom.btnUnifiedAuthLogin.addEventListener('click', () => {
             const workerApiUrl = normalizeWorkerApiUrl(dom.unifiedWorkerUrl ? dom.unifiedWorkerUrl.value : '');
@@ -7573,13 +7816,12 @@ function bindUiEvents() {
             try {
                 const collection = await collectUnifiedChanges({ requestSubapp: false });
                 const plan = await buildSplitSubmitPlan(collection);
-                const docsCount = Array.isArray(plan.docsBatches) ? plan.docsBatches.length : 0;
-                const shaderCount = Array.isArray(plan.shaderBatches) ? plan.shaderBatches.length : 0;
-                if (docsCount <= 0 && shaderCount <= 0) {
+                const batchCount = Array.isArray(plan.docsBatches) ? plan.docsBatches.length : 0;
+                if (batchCount <= 0) {
                     setUnifiedSubmitStatus('没有可提交文件', 'info');
                     return;
                 }
-                pushUnifiedSubmitLog(`批次规划完成：文档 ${docsCount}，Shader ${shaderCount}`);
+                pushUnifiedSubmitLog(`批次规划完成：${batchCount} 批`);
                 await runSplitUnifiedSubmit(plan, {});
             } catch (error) {
                 setUnifiedSubmitStatus(`提交失败：${error.message}`, 'error');
@@ -7593,28 +7835,42 @@ function bindUiEvents() {
             const docsResume = resume.docs && Array.isArray(resume.docs.batches) && resume.docs.batches.length
                 ? resume.docs
                 : null;
-            const shaderResume = resume.shader && Array.isArray(resume.shader.batches) && resume.shader.batches.length
-                ? resume.shader
-                : null;
-            if (!docsResume && !shaderResume) {
-                setUnifiedSubmitStatus('没有可重试的失败通道', 'info');
+            if (!docsResume) {
+                setUnifiedSubmitStatus('没有可重试的失败批次', 'info');
                 return;
             }
             try {
-                pushUnifiedSubmitLog('开始重试失败通道');
+                pushUnifiedSubmitLog('开始重试失败批次');
                 const plan = {
-                    docsBatches: docsResume ? docsResume.batches : [],
-                    shaderBatches: shaderResume ? shaderResume.batches : []
+                    docsBatches: docsResume.batches,
+                    shaderBatches: []
                 };
                 await runSplitUnifiedSubmit(plan, {
                     resume: {
                         docs: docsResume,
-                        shader: shaderResume
+                        shader: null
                     }
                 });
             } catch (error) {
                 setUnifiedSubmitStatus(`续传失败：${error.message}`, 'error');
             }
+        });
+    }
+
+    if (dom.btnScmRefresh) {
+        dom.btnScmRefresh.addEventListener('click', () => {
+            state.workspace.files.forEach((file) => {
+                trackWorkspaceFileChange(file);
+            });
+            renderScmPanel();
+        });
+    }
+
+    if (dom.btnScmRestore) {
+        dom.btnScmRestore.addEventListener('click', () => {
+            const path = String(dom.btnScmRestore.dataset.path || '').trim();
+            if (!path) return;
+            applyScmRestore(path);
         });
     }
 
@@ -8126,6 +8382,8 @@ function bindUiEvents() {
 
         state.workspace.files.push(file);
         ensureModelForFile(file);
+        trackWorkspaceFileChange(file);
+        ensureScmBaseline(fileName);
         switchActiveFile(file.id);
         updateFileListUi();
         scheduleWorkspaceSave();
@@ -8153,8 +8411,19 @@ function bindUiEvents() {
             return;
         }
 
+        const oldPath = normalizeContentRelativePath(active.path);
         active.path = next;
         ensureModelForFile(active);
+        state.scm.tracker.rename(
+            toSiteContentRepoPath(oldPath),
+            toSiteContentRepoPath(next),
+            String(active.content || ''),
+            { mode: scmTrackerModeForPath(next) }
+        );
+        syncSoftDeletedFlag(toSiteContentRepoPath(oldPath));
+        syncSoftDeletedFlag(toSiteContentRepoPath(next));
+        ensureScmBaseline(oldPath);
+        ensureScmBaseline(next);
         updateFileListUi();
         applyEditorModeUi();
         scheduleWorkspaceSave();
@@ -8172,11 +8441,13 @@ function bindUiEvents() {
         const ok = globalThis.confirm(`确认删除 ${active.path} ?`);
         if (!ok) return;
 
-        state.workspace.files = state.workspace.files.filter((file) => file.id !== active.id);
-        removeModelForFile(active.id);
-        state.workspace.activeFileId = state.workspace.files[0].id;
+        markWorkspaceFileDeleted(active.path);
+        removeWorkspaceFileById(active.id);
+        state.workspace.activeFileId = state.workspace.files[0] ? state.workspace.files[0].id : '';
         updateFileListUi();
-        switchActiveFile(state.workspace.activeFileId);
+        if (state.workspace.activeFileId) {
+            switchActiveFile(state.workspace.activeFileId);
+        }
         scheduleWorkspaceSave();
         addEvent('info', `已删除文件：${active.path}`);
     });
@@ -8531,10 +8802,13 @@ async function bootstrap() {
                 requestSubapp: opts.requestSubapp !== false,
                 silent: true
             });
+            const files = Array.isArray(collection.files) ? collection.files : [];
             return {
                 docsMarkdown: collection.docs.markdownEntries.length,
                 docsCode: collection.docs.extraEntries.length,
                 shaderFx: collection.shader.fxEntries.length,
+                total: files.length,
+                deleted: files.filter((item) => item.status === 'D').length,
                 blocked: collection.blockedEntries.length
             };
         },
@@ -8571,12 +8845,16 @@ async function bootstrap() {
             const collection = state.unified.collection || {
                 docs: { markdownEntries: [], extraEntries: [] },
                 shader: { fxEntries: [] },
-                blockedEntries: []
+                blockedEntries: [],
+                files: []
             };
+            const files = Array.isArray(collection.files) ? collection.files : [];
             return {
                 docsMarkdown: collection.docs.markdownEntries.length,
                 docsCode: collection.docs.extraEntries.length,
                 shaderFx: collection.shader.fxEntries.length,
+                total: files.length,
+                deleted: files.filter((item) => item.status === 'D').length,
                 blocked: collection.blockedEntries.length,
                 resume: state.unified.resumeState
             };
@@ -8596,19 +8874,16 @@ async function bootstrap() {
             const docsResume = resume.docs && Array.isArray(resume.docs.batches) && resume.docs.batches.length
                 ? resume.docs
                 : null;
-            const shaderResume = resume.shader && Array.isArray(resume.shader.batches) && resume.shader.batches.length
-                ? resume.shader
-                : null;
-            if (!docsResume && !shaderResume) {
-                throw new Error('没有可重试通道');
+            if (!docsResume) {
+                throw new Error('没有可重试批次');
             }
             await runSplitUnifiedSubmit({
-                docsBatches: docsResume ? docsResume.batches : [],
-                shaderBatches: shaderResume ? shaderResume.batches : []
+                docsBatches: docsResume.batches,
+                shaderBatches: []
             }, {
                 resume: {
                     docs: docsResume,
-                    shader: shaderResume
+                    shader: null
                 }
             });
             return this.getUnifiedSnapshot();

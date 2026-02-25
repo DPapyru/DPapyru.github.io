@@ -1,3 +1,11 @@
+@font-face {
+    font-family: 'JetBrainsMonoNerdFontBold';
+    src: url('/site/assets/fonts/JetBrainsMonoNerdFont-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     --vscode-bg-editor: #1e1e1e;
     --vscode-bg-sidebar: #252526;
@@ -17,6 +25,7 @@
     --vscode-accent-hover: #1593e5;
     --vscode-danger: #f48771;
     --radius-sm: 2px;
+    --repo-tree-mono-font: "JetBrainsMonoNerdFontBold", "JetBrains Mono", "Cascadia Code", Consolas, monospace;
 }
 
 * {
@@ -443,6 +452,21 @@ button:disabled {
     border-right: 1px solid var(--vscode-border);
 }
 
+.sidebar-view {
+    display: none;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+}
+
+.sidebar-view.sidebar-view-active {
+    display: flex;
+}
+
+.sidebar-view[hidden] {
+    display: none !important;
+}
+
 .panel-editor {
     background: var(--vscode-bg-editor);
     position: relative;
@@ -575,28 +599,105 @@ button:disabled {
     flex: 1;
 }
 
-.repo-tree-node {
+.scm-change-list {
     margin: 0;
-    padding: 0;
+    padding: 4px 0;
     list-style: none;
+    overflow: auto;
+    flex: 1;
 }
 
-.repo-tree-toggle {
-    display: block;
+.scm-change-btn {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
     width: calc(100% - 8px);
     margin: 0 4px;
     border: 1px solid transparent;
     border-radius: 0;
     background: transparent;
-    color: #b7bec9;
+    color: #d0d0d0;
     text-align: left;
     padding: 4px 8px;
-    padding-left: calc(8px + var(--tree-depth, 0) * 14px);
     font-size: 12px;
 }
 
-.repo-tree-toggle:hover {
+.scm-change-btn:hover {
     background: #2a2d2e;
+}
+
+.scm-change-btn.scm-change-btn-active {
+    background: var(--vscode-bg-selection);
+    border-color: #0e639c;
+    color: #ffffff;
+}
+
+.scm-change-status {
+    min-width: 16px;
+    font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    font-weight: 600;
+    color: #8fc3ff;
+}
+
+.scm-change-status[data-status="A"] {
+    color: #93db99;
+}
+
+.scm-change-status[data-status="D"] {
+    color: #ffb4a0;
+}
+
+.scm-change-path {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scm-diff-section {
+    border-top: 1px solid var(--vscode-border-soft);
+    min-height: 190px;
+    display: flex;
+    flex-direction: column;
+}
+
+.scm-diff-head {
+    min-height: 30px;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid var(--vscode-border-soft);
+    background: #242527;
+}
+
+.scm-diff-head h3 {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #c5c5c5;
+}
+
+.scm-diff-preview {
+    margin: 0;
+    padding: 8px 10px;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    white-space: pre;
+    background: #131416;
+    color: #d4d4d4;
+    font-size: 11px;
+    line-height: 1.42;
+    font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+}
+
+.repo-tree-node {
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 .repo-tree-hint {
@@ -611,8 +712,11 @@ button:disabled {
     color: #e06c75;
 }
 
-.file-item {
-    display: block;
+.repo-tree-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     width: calc(100% - 8px);
     margin: 0 4px;
     border: 1px solid transparent;
@@ -625,8 +729,47 @@ button:disabled {
     font-size: 12px;
 }
 
-.file-item:hover {
+.repo-tree-item:hover {
     background: #2a2d2e;
+}
+
+.repo-tree-toggle {
+    color: #b7bec9;
+}
+
+.repo-tree-item-main {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.repo-tree-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.repo-tree-glyph {
+    font-family: var(--repo-tree-mono-font);
+    font-size: 13px;
+    line-height: 1;
+}
+
+.repo-tree-chevron {
+    width: 12px;
+    display: inline-flex;
+    justify-content: center;
+    color: #8f959e;
+}
+
+.repo-tree-folder-icon {
+    color: #d7ba7d;
+}
+
+.repo-tree-file-icon {
+    color: #9cdcfe;
 }
 
 .repo-tree-file-unloaded {
@@ -637,6 +780,46 @@ button:disabled {
     background: var(--vscode-bg-selection);
     border-color: #0e639c;
     color: #ffffff;
+}
+
+.repo-tree-change-badge {
+    min-width: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 1px solid #505156;
+    border-radius: 3px;
+    background: #222529;
+    font-family: var(--repo-tree-mono-font);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.25;
+    color: #8fc3ff;
+}
+
+.repo-tree-change-badge[data-status="A"] {
+    color: #93db99;
+    border-color: #3f6f48;
+    background: rgba(55, 101, 65, 0.28);
+}
+
+.repo-tree-change-badge[data-status="M"] {
+    color: #ffcb6b;
+    border-color: #7f5e21;
+    background: rgba(127, 94, 33, 0.24);
+}
+
+.repo-tree-change-badge[data-status="D"] {
+    color: #ffb4a0;
+    border-color: #7e4438;
+    background: rgba(126, 68, 56, 0.26);
+}
+
+.repo-tree-file[aria-current="true"] .repo-tree-change-badge {
+    border-color: rgba(143, 195, 255, 0.72);
+    background: rgba(16, 40, 64, 0.66);
 }
 
 .panel-tip {
