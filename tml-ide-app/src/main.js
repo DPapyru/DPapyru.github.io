@@ -13,6 +13,7 @@ import { buildPatchIndexFromXml } from './lib/language-core.js';
 import { createEmptyApiIndex, mergeApiIndex, normalizeApiIndex } from './lib/index-schema.js';
 import { buildFragmentSource as buildShaderFragmentSource } from './lib/shader-hlsl-adapter.js';
 import { buildSuggestions as buildDiagnosticSuggestions } from './lib/diagnostic-suggestions.js';
+import * as sharedMarkdownCapabilityExports from '../../shared/capabilities/markdown/core/index.js';
 import { createPluginRegistry } from './core/plugin-registry.js';
 import { createShellEventBus } from './core/shell-event-bus.js';
 import { createStorageService } from './core/storage-service.js';
@@ -31,6 +32,20 @@ import {
     loadUnifiedWorkspaceState,
     saveUnifiedWorkspaceState
 } from './lib/workspace-store.js';
+
+const sharedMarkdownCapabilityDefault = sharedMarkdownCapabilityExports && typeof sharedMarkdownCapabilityExports === 'object'
+    ? Reflect.get(sharedMarkdownCapabilityExports, 'default')
+    : null;
+
+const sharedMarkdownCapability = sharedMarkdownCapabilityDefault && typeof sharedMarkdownCapabilityDefault === 'object'
+    ? sharedMarkdownCapabilityDefault
+    : (sharedMarkdownCapabilityExports && typeof sharedMarkdownCapabilityExports === 'object'
+        ? sharedMarkdownCapabilityExports
+        : {});
+
+const markdownPathResolver = typeof sharedMarkdownCapability.createMarkdownPathResolver === 'function'
+    ? sharedMarkdownCapability.createMarkdownPathResolver()
+    : null;
 
 self.MonacoEnvironment = {
     getWorker() {
@@ -768,6 +783,10 @@ function findWorkspaceFileByContentPath(pathValue) {
 }
 
 function resolveRelativeRepoPath(baseDir, relativePath) {
+    if (markdownPathResolver && typeof markdownPathResolver.resolveRelativeRepoPath === 'function') {
+        return markdownPathResolver.resolveRelativeRepoPath(baseDir, relativePath);
+    }
+
     const baseSegments = splitRepoPathSegments(baseDir);
     const raw = String(relativePath || '').trim();
     if (!raw) return '';
@@ -796,6 +815,10 @@ function resolveRelativeRepoPath(baseDir, relativePath) {
 }
 
 function resolveContentPathFromMarkdown(markdownPath, rawPath) {
+    if (markdownPathResolver && typeof markdownPathResolver.resolveContentPathFromMarkdown === 'function') {
+        return markdownPathResolver.resolveContentPathFromMarkdown(markdownPath, rawPath);
+    }
+
     const source = String(rawPath || '').split('#')[0].split('?')[0].trim();
     if (!source) return '';
     if (/^(?:https?:|data:|mailto:|tel:|javascript:|#)/i.test(source)) return '';
