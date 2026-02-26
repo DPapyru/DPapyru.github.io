@@ -11,6 +11,23 @@ function normalizeLineEndings(text) {
     return String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }
 
+const DEFAULT_RUNTIME_UNIFORM_LINES = [
+    'uniform vec2 uResolution;',
+    'uniform float uTime;',
+    'uniform vec3 iResolution;',
+    'uniform float iTime;',
+    'uniform float iTimeDelta;',
+    'uniform int iFrame;',
+    'uniform vec4 iMouse;',
+    'uniform vec4 iDate;',
+    'uniform float iChannelTime[4];',
+    'uniform vec3 iChannelResolution[4];',
+    'uniform sampler2D iChannel0;',
+    'uniform sampler2D iChannel1;',
+    'uniform sampler2D iChannel2;',
+    'uniform sampler2D iChannel3;'
+];
+
 function isVec2Type(typeName) {
     return /^(?:float2|half2|fixed2|vec2)$/i.test(String(typeName || ''));
 }

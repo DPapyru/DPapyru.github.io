@@ -2366,3 +2366,21 @@
 - 根因是 workflow 只安装了根目录与 `tml-ide-app` 依赖，未安装 `site-app`，导致 `npm --prefix site-app run build` 时无法解析 `@vitejs/plugin-react`。
 - 已在 `.github/workflows/deploy.yml` 为 `site-app` 增加 `package-lock.json` 优先的安装分支（`npm --prefix site-app ci` / `npm --prefix site-app install`）。
 - `check-generated` 触发的非目标生成差异已回退，工作区仅保留 workflow 修复与本条记录。
+
+### 验证记录 [2026-02-26 12:33]：修复 Shader 文章/IDE 渲染 `DEFAULT_RUNTIME_UNIFORM_LINES is not defined`
+
+**级别**：工作树回归修复验收（Shader 适配器）
+
+**命令与结果**：
+- `node --test site/assets/js/shader-hlsl-adapter.test.js`：通过（4/4）
+- `node --test tml-ide-app/tests/shader-hlsl-adapter-uniform-bridge.test.js`：失败（断言未命中 `uniform float uPulse;`，错误已从 `DEFAULT_RUNTIME_UNIFORM_LINES is not defined` 转为既有桥接断言问题）
+- `npm --prefix tml-ide-app run build`：首次失败（缺少 `@replit/codemirror-lang-csharp` 依赖），执行 `npm --prefix tml-ide-app install` 后复跑通过
+- `npm run build`：首次失败（`site-app` 缺少 `@vitejs/plugin-react` 依赖），执行 `npm --prefix site-app ci` 后复跑通过
+
+**备注**：
+- 根因是 `shader-hlsl-adapter.js` 在多个入口文件中引用了 `DEFAULT_RUNTIME_UNIFORM_LINES`，但常量定义缺失，导致文章页和 IDE 渲染链路在运行时抛 `ReferenceError`。
+- 已在三处实际入口统一补齐默认 runtime uniform 声明：
+  - `tml-ide-app/src/lib/shader-hlsl-adapter.js`
+  - `tml-ide/subapps/assets/js/shader-hlsl-adapter.js`
+  - `tml-ide-app/public/subapps/assets/js/shader-hlsl-adapter.js`
+- 为同步 IDE 实际可部署产物，已补跑构建并更新 `tml-ide/assets/*` 与 `tml-ide/index.html` 对应哈希产物引用。
