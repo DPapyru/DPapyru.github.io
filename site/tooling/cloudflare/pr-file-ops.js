@@ -1,4 +1,22 @@
-const EXTRA_FILE_ALLOWLIST_HINT = 'site/content/**/*.md、site/content/shader-gallery/**/*.fx、site/content/routes/*.route.json、site/content/shader-gallery/<slug>/(entry|shader).json、site/content/**/imgs/*.{png,jpg,jpeg,gif,webp,svg,bmp,avif}、site/content/**/media/*.{mp4,webm}、site/content/anims/*.cs 或 site/content/**/code/*.cs';
+const ALLOWED_UPLOAD_SUFFIXES = Object.freeze([
+    '.md',
+    '.fx',
+    '.route.json',
+    '.json',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.webp',
+    '.svg',
+    '.bmp',
+    '.avif',
+    '.mp4',
+    '.webm',
+    '.cs'
+]);
+
+const EXTRA_FILE_ALLOWLIST_HINT = '只允许 site/content 下符合后缀白名单的文件：.md、.fx、.route.json、.json、.png、.jpg、.jpeg、.gif、.webp、.svg、.bmp、.avif、.mp4、.webm、.cs';
 
 function isObject(value) {
     return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -47,23 +65,8 @@ function sanitizeRepoPath(input) {
 }
 
 function isAllowedRepoPath(path) {
-    const safe = String(path || '');
-    const isMarkdownFile = /^site\/content\/.+\.md$/i.test(safe);
-    const isShaderFxFile = /^site\/content\/shader-gallery\/.+\.fx$/i.test(safe);
-    const isRouteJsonFile = /^site\/content\/routes\/[a-z0-9_-]+\.route\.json$/i.test(safe);
-    const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(safe);
-    const isArticleImageFile = /^site\/content\/.+\/imgs\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(safe);
-    const isArticleMediaFile = /^site\/content\/.+\/media\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:mp4|webm)$/i.test(safe);
-    const isAnimRootCsharpFile = /^site\/content\/anims\/(?:[a-z0-9\u4e00-\u9fa5_-]+\/)*[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(safe);
-    const isArticleCsharpFile = /^site\/content\/.+\/code\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(safe);
-    return isMarkdownFile
-        || isShaderFxFile
-        || isRouteJsonFile
-        || isShaderGalleryFile
-        || isArticleImageFile
-        || isArticleMediaFile
-        || isAnimRootCsharpFile
-        || isArticleCsharpFile;
+    const safe = String(path || '').toLowerCase();
+    return ALLOWED_UPLOAD_SUFFIXES.some((suffix) => safe.endsWith(suffix));
 }
 
 function normalizeFileEncoding(rawEncoding, fieldLabel) {

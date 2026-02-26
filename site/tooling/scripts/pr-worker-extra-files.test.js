@@ -39,11 +39,12 @@ test('workers handle delete no-op and return applied/skipped summaries', () => {
     assert.match(sharedText, /appliedFiles/);
 });
 
-test('shared file ops allow .fx only in shader-gallery and keep legacy conversion', () => {
+test('shared file ops use suffix allowlist and keep legacy conversion', () => {
     const fileOps = read('site/tooling/cloudflare/pr-file-ops.js');
 
-    assert.match(fileOps, /isShaderFxFile/);
-    assert.match(fileOps, /site\/content\/shader-gallery\/\*\*\/\*\.fx/);
+    assert.match(fileOps, /ALLOWED_UPLOAD_SUFFIXES/);
+    assert.match(fileOps, /safe\.endsWith\(suffix\)/);
+    assert.match(fileOps, /\.fx/);
     assert.match(fileOps, /targetPath/);
     assert.match(fileOps, /extraFiles/);
     assert.match(fileOps, /resolveRequestFiles/);
