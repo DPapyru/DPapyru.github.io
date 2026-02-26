@@ -42,8 +42,9 @@ colors:
 
 ## 向量基础介绍
 
-{{anim:anims/vector-basic.cs}}
+[待补充说明](anims:anims/vector-basic.cs)
 
 ## 向量合成和分解
 
-{{anim:anims/vector-add-resolution.cs}}
+[待补充说明](anims:anims/vector-add-resolution.cs)
+

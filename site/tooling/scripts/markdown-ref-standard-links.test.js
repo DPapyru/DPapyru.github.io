@@ -3,38 +3,35 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const embedLinks = require('../../../shared/services/markdown/markdown-embed-links.js');
+
 function walkMarkdownFiles(rootDir) {
     const results = [];
     const stack = [rootDir];
-
     while (stack.length > 0) {
         const current = stack.pop();
         const entries = fs.readdirSync(current, { withFileTypes: true });
-
-        for (const entry of entries) {
+        entries.forEach((entry) => {
             const fullPath = path.join(current, entry.name);
             if (entry.isDirectory()) {
                 stack.push(fullPath);
-                continue;
+                return;
             }
-
             if (entry.isFile() && fullPath.endsWith('.md')) {
                 results.push(fullPath);
             }
-        }
+        });
     }
-
     return results;
 }
 
-test('content markdown does not use ref transclusion syntax', () => {
-    const contentRoot = path.resolve('site/content');
-    const markdownFiles = walkMarkdownFiles(contentRoot);
+test('content markdown no longer uses legacy transclusion syntax', () => {
+    const markdownFiles = walkMarkdownFiles(path.resolve('site/content'));
     const offenders = [];
 
     markdownFiles.forEach((filePath) => {
         const source = fs.readFileSync(filePath, 'utf8');
-        if (/\{\{ref:/.test(source)) {
+        if (/\{\{(?:ref|cs|anim):/.test(source)) {
             offenders.push(path.relative(process.cwd(), filePath));
         }
     });
@@ -42,30 +39,58 @@ test('content markdown does not use ref transclusion syntax', () => {
     assert.deepEqual(offenders, []);
 });
 
-test('article-studio ref insert action uses markdown links', () => {
-    const studioJs = fs.readFileSync(path.resolve('site/assets/js/article-studio.js'), 'utf8');
+test('standalone protocol embed parser supports cs/anims/fx and rejects inline markdown links', () => {
+    assert.deepEqual(
+        embedLinks.parseStandaloneEmbedLink('[类型示例](cs:./code/Demo.cs#cs:t:Foo.Bar)'),
+        {
+            kind: 'cs',
+            label: '类型示例',
+            href: 'cs:./code/Demo.cs#cs:t:Foo.Bar',
+            target: './code/Demo.cs#cs:t:Foo.Bar'
+        }
+    );
 
-    assert.match(studioJs, /insertBlockSnippet\(`\[\$\{selectedTitle\}\]\(目标文档\.md\)\\n`,\s*'目标文档\.md'\);/);
-    assert.doesNotMatch(studioJs, /\{\{ref:目标文档\.md\|/);
+    assert.deepEqual(
+        embedLinks.parseStandaloneEmbedLink('[动画](anims:anims/demo-basic.cs)'),
+        {
+            kind: 'anims',
+            label: '动画',
+            href: 'anims:anims/demo-basic.cs',
+            target: 'anims/demo-basic.cs'
+        }
+    );
+
+    assert.deepEqual(
+        embedLinks.parseStandaloneEmbedLink('[Shader](fx:./shader/demo.fx)'),
+        {
+            kind: 'fx',
+            label: 'Shader',
+            href: 'fx:./shader/demo.fx',
+            target: './shader/demo.fx'
+        }
+    );
+
+    assert.equal(embedLinks.parseStandaloneEmbedLink('行内 [说明](cs:./code/Demo.cs)'), null);
 });
 
-test('viewer transclusion parser no longer handles ref kind', () => {
+test('viewer uses new standalone embed parser and callout transform hook', () => {
     const viewerHtml = fs.readFileSync(path.resolve('site/pages/viewer.html'), 'utf8');
 
-    assert.doesNotMatch(viewerHtml, /kind !== 'ref' && kind !== 'cs'/);
+    assert.match(viewerHtml, /parseStandaloneEmbedLink/);
+    assert.match(viewerHtml, /kind !== 'cs' && kind !== 'anims' && kind !== 'fx'/);
+    assert.match(viewerHtml, /applyMarkdownCalloutBlocks\(markdownContent\)/);
+    assert.match(viewerHtml, /installFxEmbedInteractions\(markdownContent\)/);
 });
 
-test('content avoids markdown links for csharp selector embeds', () => {
-    const contentRoot = path.resolve('site/content');
-    const markdownFiles = walkMarkdownFiles(contentRoot);
-    const offenders = [];
+test('tml-ide markdown insertion snippets use protocol embeds', () => {
+    const source = fs.readFileSync(path.resolve('tml-ide-app/src/main.js'), 'utf8');
 
-    markdownFiles.forEach((filePath) => {
-        const source = fs.readFileSync(filePath, 'utf8');
-        if (/\[[^\]]+\]\([^\)\n]+\.cs#cs:[^\)\n]+\)/.test(source)) {
-            offenders.push(path.relative(process.cwd(), filePath));
-        }
-    });
-
-    assert.deepEqual(offenders, []);
+    assert.match(source, /readMarkdownSelectionText\('动画说明'\)/);
+    assert.match(source, /readMarkdownSelectionText\('代码说明'\)/);
+    assert.match(source, /readMarkdownSelectionText\('Shader 说明'\)/);
+    assert.match(source, /anims:anims\/你的动画文件\.cs/);
+    assert.match(source, /cs:\.\/code\/demo\.cs#cs:t:命名空间\.类型名/);
+    assert.match(source, /fx:\.\/shaders\/demo\.fx/);
+    assert.doesNotMatch(source, /\{\{anim:/);
+    assert.doesNotMatch(source, /\{\{cs:/);
 });

@@ -2205,3 +2205,125 @@
 - `npm run build` 在 `build:anims` 阶段失败，错误为 `spawnSync dotnet EPERM`（环境级执行权限问题，非 JS 逻辑编译错误）。
 - `npm run check-generated` 失败于 `gallery-check`：`site/content/shader-gallery/newshader/entry.json` 引用的 `cover.webp` 不存在。
 - 为消除 merge 冲突残留构建产物，已执行 `npm --prefix tml-ide-app run build`，`tml-ide` 输出重新生成。
+
+### 验证记录 [2026-02-26 08:37]：统一 Markdown/FX/IDE 体验升级（决策版实现）
+
+**级别**：L3（跨模块改动 + 浏览器交互验收）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/markdown-ref-standard-links.test.js site/tooling/scripts/front-matter-utils.test.js site/tooling/scripts/fx-using-images.test.js site/tooling/scripts/migrate-markdown-embed-syntax.test.js site/tooling/scripts/viewer-callout-runtime.test.js site/assets/js/shader-hlsl-adapter.test.js tml-ide-app/tests/markdown-editor-migration.test.js`：通过（18/18）
+- `npm --prefix site-app ci`：通过
+- `npm --prefix tml-ide-app ci`：通过
+- `npm run build`：首次失败（`site-app` 缺少 `vite`），安装依赖后复跑通过
+- `npm run check-generated`：失败（`git diff --exit-code`，工作树存在有效改动与生成时间戳差异）
+- `npm run acceptance:fullpage:viewer`：失败（基线视觉差异 + 既有 `viewer-outline-click` hash 断言）
+- `npm run acceptance:fullpage:ide`：失败（验收脚本仍按旧“新增文件弹窗”交互断言）
+- 手工 Playwright 验收（模拟输入/点击 + 截图 + 控制台错误统计）：通过（`consoleErrors: 0`）
+
+**手工验收产物**：
+- `test-results/manual-acceptance/20260226003550/report.json`
+- `test-results/manual-acceptance/20260226003550/viewer-manual.png`
+- `test-results/manual-acceptance/20260226003550/ide-manual.png`
+
+**备注**：
+- 为消除 IDE 启动期 `404` 控制台噪音，补齐 `site/content/anims/Program.cs`（与默认工作区 `anims/Program.cs` 路径一致）。
+- 为通过 `gallery-check`，补齐 `site/content/shader-gallery/newshader/cover.webp`。
+- legacy fullpage 验收脚本失败原因与本次 UI 升级一致（快速创建从旧 prompt/旧弹窗切换为新 modal，且视觉基线未更新），功能链路已通过手工脚本完成输入/点击与截图验收。
+
+### 验证记录 [2026-02-26 09:27]：反馈修复（viewer FX 实时预览 + IDE 可视化渲染态）
+
+**级别**：工作树回归修复验收（渲染链路 + 交互）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/viewer-callout-runtime.test.js tml-ide-app/tests/markdown-editor-migration.test.js`：先失败（新增断言红灯）后通过
+- `node --test site/tooling/scripts/viewer-callout-runtime.test.js site/tooling/scripts/markdown-ref-standard-links.test.js tml-ide-app/tests/markdown-editor-migration.test.js`：通过（9/9）
+- `npm run build`：失败（既有环境问题：`build-anims` 阶段 `anims/Program.cs` 缺少 Terraria 引用）
+- `npm --prefix tml-ide-app run build`：通过
+- 手工 Playwright 验收（模拟输入/点击 + 截图 + runtime 错误拦截）：通过（`pageErrorCount: 0`，`responseErrorCount: 0`）
+
+**手工验收产物**：
+- `test-results/manual-acceptance/20260226092739-fx-visual-fix/report.json`
+- `test-results/manual-acceptance/20260226092739-fx-visual-fix/viewer-fx-card.png`
+- `test-results/manual-acceptance/20260226092739-fx-visual-fix/viewer-fx-modal.png`
+- `test-results/manual-acceptance/20260226092739-fx-visual-fix/ide-markdown-visual.png`
+
+**备注**：
+- viewer 修复点：`fx` 卡片新增内嵌 canvas 实时预览，且修复中文路径二次编码导致的 `404`（`encodeContentPath` 后不再 `encodeURI`）。
+- IDE 修复点：可视化区由“摘要文本”改为“渲染态块”，协议链接与 callout 均按样式展示。
+- 为让教程中的 `fx` 示例可直接渲染，补充示例文件：`site/content/怎么贡献/shaders/demo.fx`。
+
+### 验证记录 [2026-02-26 09:50]：反馈二次确认（Shader 实时预览 + 可视化引用样式）
+
+**级别**：工作树回归验收（截图 + 模拟输入 + 模拟点击 + 控制台检查）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/viewer-callout-runtime.test.js site/tooling/scripts/markdown-ref-standard-links.test.js tml-ide-app/tests/markdown-editor-migration.test.js`：通过（9/9）
+- `npm --prefix tml-ide-app run build`：通过
+- `npm run build`：失败（既有问题：`build-anims` 阶段 `anims/Program.cs` 缺少 Terraria 引用）
+- 手工 Playwright 验收（模拟点击/输入 + 截图 + 控制台/响应错误统计）：通过（`pageErrorCount: 0`，`responseErrorCount: 0`，`consoleErrorCount: 0`）
+
+**手工验收产物**：
+- `test-results/manual-acceptance/20260226014724-fx-visual-fix/report.json`
+- `test-results/manual-acceptance/20260226014724-fx-visual-fix/viewer-fx-card.png`
+- `test-results/manual-acceptance/20260226014724-fx-visual-fix/viewer-fx-modal.png`
+- `test-results/manual-acceptance/20260226014724-fx-visual-fix/ide-markdown-visual.png`
+
+**备注**：
+- 本轮 viewer 验收通过 `studio_preview` payload 注入包含独占行 `fx:` 与 `> [!NOTE]` 的 Markdown，用于直接验证“图1 Shader 卡片实时预览”与“提示框渲染”。
+- 本轮 IDE 验收通过 `__tmlIdeDebug.setEditorText(...)` 注入同源 Markdown，再执行“打开可视化模式 -> 选中块 -> 输入并应用”，确认可视化区域展示的是引用后的样式块（`fxEmbedCount: 1`，`legacySummaryCount: 0`）。
+- 已在验收脚本中屏蔽 giscus 外链与缺失字体噪音请求，确保控制台验收口径聚焦本次功能链路。
+
+### 验证记录 [2026-02-26 10:11]：修复“新建未提交 .fx 无法预览（404）”
+
+**级别**：工作树回归修复验收（IDE payload -> viewer studio_preview fetch bridge）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-anim-preview-payload.test.js site/tooling/scripts/viewer-studio-preview-animcs.test.js site/tooling/scripts/viewer-callout-runtime.test.js site/tooling/scripts/markdown-ref-standard-links.test.js tml-ide-app/tests/markdown-editor-migration.test.js`：通过（17/17）
+- `npm --prefix tml-ide-app run build`：通过
+- 手工 Playwright 验收（模拟点击/输入：新建 `.fx` + 新建 `.md` 引用 + 点击“新标签预览”）：通过
+
+**手工验收产物**：
+- `test-results/manual-acceptance/20260226021238-new-fx-unsaved-preview/report.json`
+- `test-results/manual-acceptance/20260226021238-new-fx-unsaved-preview/viewer-unsaved-fx-card.png`
+- `test-results/manual-acceptance/20260226021238-new-fx-unsaved-preview/ide-unsaved-fx-filetree.png`
+
+**备注**：
+- 修复后，`articleStudioViewerPreview.v1` payload 新增 `uploadedFxFiles`，viewer 在 `studio_preview` 模式下会优先从 payload 提供 `.fx` 源码，不再强依赖磁盘文件存在。
+- 验收报告关键结果：`viewerState.status = 实时预览中`，`payloadState.fxCount = 2`，viewer 侧 `responseErrorCount = 0`、`consoleErrorCount = 0`。
+
+### 验证记录 [2026-02-26 10:31]：修复 FX 卡片“打开编辑器”按钮无响应
+
+**级别**：工作树回归修复验收（viewer 交互链路）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/viewer-callout-runtime.test.js site/tooling/scripts/viewer-studio-preview-animcs.test.js site/tooling/scripts/article-studio-anim-preview-payload.test.js`：通过（11/11）
+- `npm --prefix tml-ide-app run build`：通过
+- 手工 Playwright 验收（模拟点击：FX 卡片 `打开编辑器`）：通过
+
+**手工验收产物**：
+- `test-results/manual-acceptance/20260226023245-fx-open-button-fix/report.json`
+- `test-results/manual-acceptance/20260226023245-fx-open-button-fix/viewer-open-button-modal.png`
+
+**备注**：
+- 根因：`openFxEmbedModal` 在源码 fetch 失败时直接 `return`，导致按钮点击后 modal 不打开，用户侧表现为“无反应”。
+- 修复：改为“点击即打开 modal 并显示加载状态”；若源码加载失败，保留 modal 并显示失败状态文案。同时在卡片编译成功后缓存源码到 `FX_EMBED_SESSION`，打开编辑器时优先复用缓存，减少二次加载失败概率。
+
+### 验证记录 [2026-02-26 10:53]：修复 FX 弹窗位置失效（被 workbench 全局层级规则覆盖）
+
+**级别**：工作树回归修复验收（浏览器调试 + 模拟点击/输入 + 截图）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/viewer-callout-runtime.test.js site/tooling/scripts/markdown-ref-standard-links.test.js`：通过（7/7）
+- `python3 -m http.server 4173` + Playwright 调试：通过（定位到 `.fx-embed-modal` 计算样式被覆盖）
+- 手工 Playwright 验收（模拟点击 `打开编辑器` + 模拟输入 editor）：通过（桌面/移动端弹窗均贴合视口，控制台/页面/响应错误均为 0）
+
+**手工验收产物**：
+- `test-results/manual-acceptance/20260226105114-fx-modal-position-fix/report.json`
+- `test-results/manual-acceptance/20260226105114-fx-modal-position-fix/viewer-fx-card-before-open.png`
+- `test-results/manual-acceptance/20260226105114-fx-modal-position-fix/viewer-fx-modal-after-open.png`
+- `test-results/manual-acceptance/20260226105114-fx-modal-position-fix/viewer-fx-modal-mobile.png`
+
+**备注**：
+- 根因：`site/assets/css/layout.css` 的规则 `body.workbench-page > :where(:not(.skip-link):not(.viewer-ai-fab-wrap):not(.modal))` 对 `body` 直系子节点施加 `position: relative; z-index: 1;`，覆盖了 FX 弹窗容器的 `position: fixed`。
+- 修复：在 `site/pages/viewer.html` 将 FX 弹窗样式增强为 `body.workbench-page > .fx-embed-modal` / `body.workbench-page > .fx-embed-modal.is-open`，提高优先级并锁定 fixed 层。
+- 调试结果：修复后 `report.json` 中 `desktopModalFixed=true`、`mobileModalInViewport=true`，且 `consoleErrorCount=0`、`pageErrorCount=0`、`responseErrorCount=0`。

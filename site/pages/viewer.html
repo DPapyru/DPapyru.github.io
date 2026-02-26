@@ -319,6 +319,311 @@
             text-decoration: underline;
         }
 
+        .md-callout {
+            border: 1px solid rgba(112, 148, 255, 0.42);
+            border-left-width: 4px;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin: 14px 0;
+            background: rgba(35, 47, 78, 0.35);
+        }
+
+        .md-callout-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            margin: 0 0 8px 0;
+        }
+
+        .md-callout-note {
+            border-color: rgba(123, 154, 255, 0.52);
+            background: rgba(54, 77, 148, 0.28);
+        }
+
+        .md-callout-tip {
+            border-color: rgba(57, 215, 136, 0.56);
+            background: rgba(33, 113, 84, 0.24);
+        }
+
+        .md-callout-important {
+            border-color: rgba(182, 129, 255, 0.56);
+            background: rgba(93, 52, 156, 0.24);
+        }
+
+        .md-callout-warning {
+            border-color: rgba(255, 178, 67, 0.62);
+            background: rgba(132, 84, 27, 0.3);
+        }
+
+        .md-callout-caution {
+            border-color: rgba(255, 97, 97, 0.62);
+            background: rgba(142, 40, 40, 0.31);
+        }
+
+        .fx-embed-card {
+            border: 1px solid rgba(101, 145, 255, 0.38);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 14px 0;
+            background: linear-gradient(135deg, rgba(26, 36, 62, 0.92), rgba(21, 26, 37, 0.92));
+        }
+
+        .fx-embed-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .fx-embed-card-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            color: #dbe8ff;
+            background: rgba(77, 130, 255, 0.28);
+            border: 1px solid rgba(110, 153, 255, 0.5);
+        }
+
+        .fx-embed-card-title {
+            font-weight: 700;
+            color: #eaf1ff;
+            margin-bottom: 8px;
+        }
+
+        .fx-embed-card-path {
+            color: rgba(214, 226, 255, 0.92);
+            font-size: 0.84rem;
+            padding: 3px 8px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.24);
+            border: 1px solid rgba(115, 139, 196, 0.35);
+            overflow-wrap: anywhere;
+        }
+
+        .fx-embed-card-preview {
+            position: relative;
+            margin-top: 10px;
+            border: 1px solid rgba(118, 157, 255, 0.34);
+            border-radius: 10px;
+            background: rgba(9, 12, 20, 0.95);
+            overflow: hidden;
+            min-height: 180px;
+            aspect-ratio: 16 / 9;
+        }
+
+        .fx-embed-card-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 25% 25%, rgba(71, 109, 202, 0.22), rgba(8, 11, 18, 0.98));
+        }
+
+        .fx-embed-card-status {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            color: rgba(213, 227, 255, 0.92);
+        }
+
+        body.workbench-page > .fx-embed-modal,
+        .fx-embed-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            display: none;
+        }
+
+        body.workbench-page > .fx-embed-modal.is-open,
+        .fx-embed-modal.is-open {
+            display: block;
+        }
+
+        .fx-embed-backdrop {
+            position: absolute;
+            inset: 0;
+            border: 0;
+            margin: 0;
+            background: rgba(5, 8, 14, 0.74);
+            cursor: pointer;
+        }
+
+        .fx-embed-dialog {
+            position: relative;
+            width: min(1280px, calc(100vw - 30px));
+            height: min(86vh, 860px);
+            margin: 5vh auto 0;
+            border-radius: 14px;
+            border: 1px solid rgba(118, 157, 255, 0.36);
+            background: #101522;
+            color: #e9f0ff;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 26px 70px rgba(0, 0, 0, 0.55);
+        }
+
+        .fx-embed-head {
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(118, 157, 255, 0.3);
+            background: rgba(11, 17, 31, 0.96);
+        }
+
+        .fx-embed-head-title {
+            font-weight: 700;
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fx-embed-head-path {
+            font-size: 0.82rem;
+            color: rgba(211, 225, 255, 0.9);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(128, 157, 211, 0.4);
+            border-radius: 8px;
+            padding: 2px 8px;
+            max-width: 40%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fx-embed-head button {
+            border: 1px solid rgba(127, 155, 216, 0.56);
+            background: rgba(20, 26, 44, 0.9);
+            color: #eef3ff;
+            border-radius: 8px;
+            padding: 4px 10px;
+            cursor: pointer;
+        }
+
+        .fx-embed-body {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(300px, 0.9fr) minmax(300px, 1fr);
+        }
+
+        .fx-embed-editor-pane {
+            border-right: 1px solid rgba(110, 142, 205, 0.36);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .fx-embed-editor {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            border: 0;
+            outline: none;
+            resize: none;
+            background: #0d1220;
+            color: #dde7ff;
+            font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", monospace;
+            font-size: 13px;
+            line-height: 1.55;
+            padding: 12px;
+            tab-size: 4;
+        }
+
+        .fx-embed-preview-pane {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .fx-embed-controls {
+            padding: 10px 12px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            border-bottom: 1px solid rgba(110, 142, 205, 0.34);
+            background: rgba(12, 20, 35, 0.94);
+        }
+
+        .fx-embed-upload {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .fx-embed-upload label {
+            width: 62px;
+            color: rgba(223, 233, 255, 0.95);
+            font-size: 0.83rem;
+        }
+
+        .fx-embed-upload input[type="file"] {
+            max-width: 190px;
+            color: rgba(214, 228, 255, 0.92);
+        }
+
+        .fx-embed-upload button {
+            border: 1px solid rgba(118, 143, 192, 0.55);
+            background: rgba(20, 26, 44, 0.88);
+            color: #edf3ff;
+            border-radius: 6px;
+            padding: 2px 8px;
+            cursor: pointer;
+        }
+
+        .fx-embed-viewport {
+            flex: 1;
+            min-height: 0;
+            background: radial-gradient(circle at 22% 18%, rgba(54, 72, 122, 0.38), rgba(9, 11, 16, 0.96) 70%);
+            position: relative;
+        }
+
+        .fx-embed-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .fx-embed-status {
+            border-top: 1px solid rgba(110, 142, 205, 0.34);
+            padding: 8px 10px;
+            font-size: 0.82rem;
+            color: rgba(213, 227, 255, 0.95);
+            background: rgba(12, 20, 35, 0.96);
+            min-height: 34px;
+        }
+
+        @media (max-width: 860px) {
+            .fx-embed-dialog {
+                width: calc(100vw - 14px);
+                height: calc(100vh - 14px);
+                margin: 7px auto 0;
+            }
+
+            .fx-embed-body {
+                grid-template-columns: 1fr;
+            }
+
+            .fx-embed-editor-pane {
+                border-right: 0;
+                border-bottom: 1px solid rgba(110, 142, 205, 0.36);
+                min-height: 45%;
+            }
+
+            .fx-embed-head-path {
+                max-width: 100%;
+            }
+
+            .fx-embed-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .viewer-ai-input:focus,
         .viewer-ai-endpoint:focus,
         .viewer-ai-close:focus-visible,
@@ -645,11 +950,13 @@
                 </script>
 			    <script src="/site/assets/js/site-config.js"></script>
 			    <script src="/site/assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
-                <script src="/shared/capabilities/markdown/core/markdown-safety.js"></script>
+			    <script src="/shared/capabilities/markdown/core/markdown-safety.js"></script>
                 <script src="/shared/capabilities/markdown/core/markdown-link-resolver.js"></script>
                 <script src="/shared/capabilities/markdown/core/create-markdown-pipeline.js"></script>
                 <script src="/shared/capabilities/markdown/core/index.js"></script>
                 <script src="/shared/capabilities/markdown/compat/window-markdown-capability.js"></script>
+                <script src="/shared/services/markdown/markdown-embed-links.js"></script>
+                <script src="/shared/services/shader/fx-using-images.js"></script>
 			    <script src="/site/assets/js/mermaid.min.js"></script> <!-- Mermaid流程图渲染 -->
 		    <script src="/site/assets/js/site-quiz.js"></script> <!-- Quiz 题目渲染 -->
 		    <script src="/site/assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
@@ -812,6 +1119,17 @@
                         return item.assetPath && item.dataUrl;
                     })
                     : [];
+                const uploadedFxFiles = Array.isArray(parsed.uploadedFxFiles)
+                    ? parsed.uploadedFxFiles.map(function (item) {
+                        return {
+                            assetPath: normalizeStudioPreviewPath(item && item.assetPath || ''),
+                            content: String(item && item.content || ''),
+                            name: String(item && item.name || '')
+                        };
+                    }).filter(function (item) {
+                        return item.assetPath;
+                    })
+                    : [];
 	                const uploadedCsharpFiles = Array.isArray(parsed.uploadedCsharpFiles)
 	                    ? parsed.uploadedCsharpFiles.map(function (item) {
 	                        return {
@@ -831,6 +1149,7 @@
 	                    markdown: String(parsed.markdown || ''),
 	                    uploadedImages: uploadedImages,
 	                    uploadedMedia: uploadedMedia,
+                        uploadedFxFiles: uploadedFxFiles,
 	                    uploadedCsharpFiles: uploadedCsharpFiles,
                         compiledAnims: compiledAnims,
                         animCompileErrors: animCompileErrors,
@@ -1040,6 +1359,18 @@
                                     }
                                 }));
                             }
+
+                            const fxMatch = (payload.uploadedFxFiles || []).find(function (item) {
+                                return normalizeStudioPreviewPath(item.assetPath || '') === requestPath;
+                            });
+                            if (fxMatch && typeof fxMatch.content === 'string') {
+                                return Promise.resolve(new Response(fxMatch.content, {
+                                    status: 200,
+                                    headers: {
+                                        'content-type': 'text/x-hlsl; charset=utf-8'
+                                    }
+                                }));
+                            }
 	                        }
 	                    }
 	                } catch (_) {
@@ -1096,6 +1427,7 @@
 	                        markdown: String(payload.markdown || ''),
 	                        uploadedImages: Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [],
 	                        uploadedMedia: Array.isArray(payload.uploadedMedia) ? payload.uploadedMedia : [],
+	                        uploadedFxFiles: Array.isArray(payload.uploadedFxFiles) ? payload.uploadedFxFiles : [],
 	                        uploadedCsharpFiles: Array.isArray(payload.uploadedCsharpFiles) ? payload.uploadedCsharpFiles : [],
                             compiledAnims: payload.compiledAnims && typeof payload.compiledAnims === 'object' ? payload.compiledAnims : {},
                             animCompileErrors: payload.animCompileErrors && typeof payload.animCompileErrors === 'object' ? payload.animCompileErrors : {},
@@ -1188,6 +1520,859 @@
                 scope.querySelectorAll('.animcs-embed[data-animcs-src]').forEach(function (embed) {
                     embed.__ANIMCS_RESOLVE_ENTRY = resolver;
                 });
+            }
+
+            const FX_EMBED_SESSION = new Map();
+            const FX_EMBED_IMAGE_CACHE = new Map();
+            const FX_EMBED_CARD_RUNTIMES = new Map();
+            let FX_EMBED_MODAL = null;
+            let FX_EMBED_CARD_RAF_ID = 0;
+            let FX_EMBED_ADAPTER_PROMISE = null;
+            const FX_EMBED_VERTEX_SOURCE = [
+                '#version 300 es',
+                'layout(location = 0) in vec2 aPosition;',
+                'layout(location = 1) in vec2 aUv;',
+                'out vec2 vUv;',
+                'void main() {',
+                '    vUv = aUv;',
+                '    gl_Position = vec4(aPosition, 0.0, 1.0);',
+                '}'
+            ].join('\n');
+
+            function encodeContentPath(pathValue) {
+                return String(pathValue || '')
+                    .split('/')
+                    .filter(Boolean)
+                    .map((part) => encodeURIComponent(part))
+                    .join('/');
+            }
+
+            function loadFxEmbedAdapter() {
+                if (FX_EMBED_ADAPTER_PROMISE) return FX_EMBED_ADAPTER_PROMISE;
+                FX_EMBED_ADAPTER_PROMISE = import('/tml-ide-app/src/lib/shader-hlsl-adapter.js').then((module) => {
+                    if (module && typeof module.buildFragmentSource === 'function') {
+                        return module.buildFragmentSource;
+                    }
+                    if (module && module.default && typeof module.default.buildFragmentSource === 'function') {
+                        return module.default.buildFragmentSource;
+                    }
+                    throw new Error('buildFragmentSource 不可用');
+                });
+                return FX_EMBED_ADAPTER_PROMISE;
+            }
+
+            function createFxEmbedModalDom() {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'fx-embed-modal';
+                wrapper.innerHTML = [
+                    '<button class="fx-embed-backdrop" type="button" aria-label="关闭 Shader 编辑器"></button>',
+                    '<section class="fx-embed-dialog" role="dialog" aria-modal="true" aria-label="FX Shader 编辑器">',
+                    '  <header class="fx-embed-head">',
+                    '    <span class="fx-embed-head-title">Shader 编辑器</span>',
+                    '    <code class="fx-embed-head-path"></code>',
+                    '    <button class="fx-embed-close" type="button">关闭</button>',
+                    '  </header>',
+                    '  <div class="fx-embed-body">',
+                    '    <section class="fx-embed-editor-pane">',
+                    '      <textarea class="fx-embed-editor" spellcheck="false"></textarea>',
+                    '    </section>',
+                    '    <section class="fx-embed-preview-pane">',
+                    '      <div class="fx-embed-controls">',
+                    '        <div class="fx-embed-upload"><label>uImage0</label><input type="file" accept="image/*" data-slot="0"><button type="button" data-clear="0">清空</button></div>',
+                    '        <div class="fx-embed-upload"><label>uImage1</label><input type="file" accept="image/*" data-slot="1"><button type="button" data-clear="1">清空</button></div>',
+                    '        <div class="fx-embed-upload"><label>uImage2</label><input type="file" accept="image/*" data-slot="2"><button type="button" data-clear="2">清空</button></div>',
+                    '        <div class="fx-embed-upload"><label>uImage3</label><input type="file" accept="image/*" data-slot="3"><button type="button" data-clear="3">清空</button></div>',
+                    '      </div>',
+                    '      <div class="fx-embed-viewport"><canvas class="fx-embed-canvas" width="960" height="540"></canvas></div>',
+                    '      <div class="fx-embed-status">就绪</div>',
+                    '    </section>',
+                    '  </div>',
+                    '</section>'
+                ].join('');
+                document.body.appendChild(wrapper);
+                return {
+                    root: wrapper,
+                    backdrop: wrapper.querySelector('.fx-embed-backdrop'),
+                    dialog: wrapper.querySelector('.fx-embed-dialog'),
+                    title: wrapper.querySelector('.fx-embed-head-title'),
+                    path: wrapper.querySelector('.fx-embed-head-path'),
+                    close: wrapper.querySelector('.fx-embed-close'),
+                    editor: wrapper.querySelector('.fx-embed-editor'),
+                    canvas: wrapper.querySelector('.fx-embed-canvas'),
+                    status: wrapper.querySelector('.fx-embed-status'),
+                    uploadInputs: Array.from(wrapper.querySelectorAll('input[data-slot]')),
+                    clearButtons: Array.from(wrapper.querySelectorAll('button[data-clear]'))
+                };
+            }
+
+            function normalizeFxEmbedPath(pathValue) {
+                let source = String(pathValue || '').trim().replace(/^\.?\//, '').replace(/^docs\//, '');
+                for (let i = 0; i < 3; i++) {
+                    try {
+                        const decoded = decodeURIComponent(source);
+                        if (decoded === source) break;
+                        source = decoded;
+                    } catch (_) {
+                        break;
+                    }
+                }
+                const safe = normalizePath(source);
+                if (!safe || !/\.fx$/i.test(safe)) return '';
+                return safe;
+            }
+
+            function setFxEmbedCardStatus(runtime, text, isError) {
+                if (!runtime || !runtime.statusNode) return;
+                runtime.statusNode.textContent = String(text || '');
+                runtime.statusNode.style.color = isError
+                    ? 'rgba(255, 169, 169, 0.95)'
+                    : 'rgba(213, 227, 255, 0.95)';
+            }
+
+            function createFxEmbedCardRuntime(card) {
+                const canvas = card && card.querySelector ? card.querySelector('.fx-embed-card-canvas') : null;
+                const statusNode = card && card.querySelector ? card.querySelector('[data-fx-embed-card-status]') : null;
+                const runtime = {
+                    card,
+                    path: normalizeFxEmbedPath(card && card.getAttribute ? card.getAttribute('data-fx-embed-path') : ''),
+                    canvas,
+                    statusNode,
+                    gl: null,
+                    vao: null,
+                    vbo: null,
+                    program: null,
+                    uniforms: null,
+                    usingMap: {},
+                    channelTextures: [null, null, null, null],
+                    lastMs: 0,
+                    elapsedSec: 0,
+                    frame: 0
+                };
+
+                if (!canvas || !runtime.path) {
+                    setFxEmbedCardStatus(runtime, '预览初始化失败：缺少路径或画布', true);
+                    return runtime;
+                }
+
+                const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, preserveDrawingBuffer: false });
+                if (!gl) {
+                    setFxEmbedCardStatus(runtime, '当前环境不支持 WebGL2 预览', true);
+                    return runtime;
+                }
+
+                const vao = gl.createVertexArray();
+                const vbo = gl.createBuffer();
+                if (!vao || !vbo) {
+                    setFxEmbedCardStatus(runtime, '预览初始化失败：WebGL 资源创建失败', true);
+                    return runtime;
+                }
+
+                gl.bindVertexArray(vao);
+                gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+                const vertices = new Float32Array([
+                    -1, -1, 0, 0,
+                    3, -1, 2, 0,
+                    -1, 3, 0, 2
+                ]);
+                gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+                gl.enableVertexAttribArray(0);
+                gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+                gl.enableVertexAttribArray(1);
+                gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+                gl.bindVertexArray(null);
+
+                runtime.gl = gl;
+                runtime.vao = vao;
+                runtime.vbo = vbo;
+                return runtime;
+            }
+
+            function disposeFxEmbedCardRuntime(runtime) {
+                if (!runtime || !runtime.gl) return;
+                const gl = runtime.gl;
+                if (runtime.program) {
+                    gl.deleteProgram(runtime.program);
+                    runtime.program = null;
+                }
+                if (Array.isArray(runtime.channelTextures)) {
+                    runtime.channelTextures.forEach(function (entry) {
+                        if (entry && entry.texture) {
+                            gl.deleteTexture(entry.texture);
+                        }
+                    });
+                }
+                if (runtime.vbo) {
+                    gl.deleteBuffer(runtime.vbo);
+                    runtime.vbo = null;
+                }
+                if (runtime.vao) {
+                    gl.deleteVertexArray(runtime.vao);
+                    runtime.vao = null;
+                }
+                runtime.gl = null;
+            }
+
+            function pruneFxEmbedCardRuntimes() {
+                FX_EMBED_CARD_RUNTIMES.forEach(function (runtime, card) {
+                    if (card && card.isConnected) return;
+                    disposeFxEmbedCardRuntime(runtime);
+                    FX_EMBED_CARD_RUNTIMES.delete(card);
+                });
+            }
+
+            function resolveFxEmbedCardUsingImage(runtime, slot) {
+                if (!runtime || !runtime.path) return null;
+                const usingPath = runtime.usingMap && runtime.usingMap[slot];
+                if (!usingPath) return null;
+                const resolveUsing = fxUsingImagesApi && typeof fxUsingImagesApi.resolveUsingPathToRepoPath === 'function'
+                    ? fxUsingImagesApi.resolveUsingPathToRepoPath
+                    : null;
+                const resolvedPath = resolveUsing
+                    ? resolveUsing(runtime.path, usingPath)
+                    : '';
+                if (!resolvedPath) return null;
+                const previewDataUrl = resolveStudioPreviewImageDataUrl(resolvedPath);
+                const src = previewDataUrl || `/site/content/${encodeContentPath(resolvedPath)}`;
+                const img = ensureFxEmbedImage(`card:${runtime.path}:${slot}:${resolvedPath}:${src}`, src);
+                if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return null;
+                return img;
+            }
+
+            function ensureFxEmbedCardChannelTexture(runtime, slot, source, key) {
+                const gl = runtime.gl;
+                const prev = runtime.channelTextures[slot];
+                if (prev && prev.key === key && prev.texture) return prev;
+                if (prev && prev.texture) gl.deleteTexture(prev.texture);
+                const texture = createFxEmbedTexture(gl, source);
+                const width = source ? Number(source.naturalWidth || source.width || 1) : 1;
+                const height = source ? Number(source.naturalHeight || source.height || 1) : 1;
+                const next = {
+                    key,
+                    texture,
+                    width: Math.max(1, width || 1),
+                    height: Math.max(1, height || 1)
+                };
+                runtime.channelTextures[slot] = next;
+                return next;
+            }
+
+            function drawFxEmbedCardCanvas(runtime) {
+                if (!runtime || !runtime.gl || !runtime.program || !runtime.uniforms || !runtime.canvas || !runtime.card || !runtime.card.isConnected) return false;
+                const canvas = runtime.canvas;
+                const gl = runtime.gl;
+                const rect = canvas.getBoundingClientRect();
+                if (!rect.width || !rect.height) return false;
+                const dpr = Math.max(1, Number(window.devicePixelRatio || 1));
+                const w = Math.max(1, Math.round(rect.width * dpr));
+                const h = Math.max(1, Math.round(rect.height * dpr));
+                if (canvas.width !== w || canvas.height !== h) {
+                    canvas.width = w;
+                    canvas.height = h;
+                }
+
+                const now = performance.now();
+                if (!runtime.lastMs) runtime.lastMs = now;
+                const delta = Math.max(0, Math.min(0.1, (now - runtime.lastMs) / 1000));
+                runtime.lastMs = now;
+                runtime.elapsedSec += delta;
+                runtime.frame += 1;
+
+                gl.viewport(0, 0, w, h);
+                gl.clearColor(0, 0, 0, 0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.disable(gl.DEPTH_TEST);
+                gl.disable(gl.CULL_FACE);
+                gl.enable(gl.BLEND);
+                gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+                gl.useProgram(runtime.program);
+                gl.bindVertexArray(runtime.vao);
+
+                const date = new Date();
+                if (runtime.uniforms.iResolution) gl.uniform3fv(runtime.uniforms.iResolution, [w, h, 1]);
+                if (runtime.uniforms.iTime) gl.uniform1f(runtime.uniforms.iTime, runtime.elapsedSec);
+                if (runtime.uniforms.iTimeDelta) gl.uniform1f(runtime.uniforms.iTimeDelta, delta);
+                if (runtime.uniforms.iFrame) gl.uniform1i(runtime.uniforms.iFrame, runtime.frame);
+                if (runtime.uniforms.iMouse) gl.uniform4fv(runtime.uniforms.iMouse, [0, 0, 0, 0]);
+                if (runtime.uniforms.iDate) gl.uniform4fv(runtime.uniforms.iDate, [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()]);
+
+                const channelTimes = [runtime.elapsedSec, runtime.elapsedSec, runtime.elapsedSec, runtime.elapsedSec];
+                const channelRes = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
+                for (let i = 0; i < 4; i++) {
+                    const image = resolveFxEmbedCardUsingImage(runtime, i);
+                    const channel = ensureFxEmbedCardChannelTexture(runtime, i, image, image ? `image:${i}:${String(image.src || '')}` : `empty:${i}`);
+                    gl.activeTexture(gl.TEXTURE0 + i);
+                    gl.bindTexture(gl.TEXTURE_2D, channel.texture);
+                    channelRes[i * 3] = channel.width;
+                    channelRes[i * 3 + 1] = channel.height;
+                    channelRes[i * 3 + 2] = 1;
+                }
+
+                if (runtime.uniforms.iChannelTime) gl.uniform1fv(runtime.uniforms.iChannelTime, channelTimes);
+                if (runtime.uniforms.iChannelResolution) gl.uniform3fv(runtime.uniforms.iChannelResolution, channelRes);
+                if (runtime.uniforms.iChannel0) gl.uniform1i(runtime.uniforms.iChannel0, 0);
+                if (runtime.uniforms.iChannel1) gl.uniform1i(runtime.uniforms.iChannel1, 1);
+                if (runtime.uniforms.iChannel2) gl.uniform1i(runtime.uniforms.iChannel2, 2);
+                if (runtime.uniforms.iChannel3) gl.uniform1i(runtime.uniforms.iChannel3, 3);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+                gl.bindVertexArray(null);
+                gl.useProgram(null);
+                return true;
+            }
+
+            function ensureFxEmbedCardLoop() {
+                if (FX_EMBED_CARD_RAF_ID) return;
+                const tick = function () {
+                    pruneFxEmbedCardRuntimes();
+                    if (!FX_EMBED_CARD_RUNTIMES.size) {
+                        FX_EMBED_CARD_RAF_ID = 0;
+                        return;
+                    }
+                    FX_EMBED_CARD_RAF_ID = requestAnimationFrame(tick);
+                    FX_EMBED_CARD_RUNTIMES.forEach(function (runtime) {
+                        drawFxEmbedCardCanvas(runtime);
+                    });
+                };
+                FX_EMBED_CARD_RAF_ID = requestAnimationFrame(tick);
+            }
+
+            async function compileFxEmbedCardRuntime(runtime) {
+                if (!runtime || !runtime.path || !runtime.gl) return;
+                setFxEmbedCardStatus(runtime, '正在加载 Shader 源码...', false);
+                const url = `/site/content/${encodeContentPath(runtime.path)}`;
+                const response = await fetch(url, { cache: 'no-store' });
+                if (!response.ok) {
+                    setFxEmbedCardStatus(runtime, `源码加载失败：HTTP ${response.status} ${response.statusText}`, true);
+                    return;
+                }
+                const rawSource = await response.text();
+                const previousSession = FX_EMBED_SESSION.get(runtime.path);
+                const preservedUploads = previousSession && Array.isArray(previousSession.uploads)
+                    ? previousSession.uploads.map(function (item) {
+                        return item && item.dataUrl
+                            ? { name: String(item.name || ''), dataUrl: String(item.dataUrl || '') }
+                            : null;
+                    })
+                    : [null, null, null, null];
+                FX_EMBED_SESSION.set(runtime.path, {
+                    source: String(rawSource || ''),
+                    uploads: preservedUploads
+                });
+                const parser = fxUsingImagesApi && typeof fxUsingImagesApi.usingMapFromSource === 'function'
+                    ? fxUsingImagesApi.usingMapFromSource
+                    : null;
+                runtime.usingMap = parser ? parser(rawSource) : {};
+                const previewSourceIndex = rawSource.search(/\btechnique(?:10|11)?\b/i);
+                const previewSource = previewSourceIndex >= 0 ? rawSource.slice(0, previewSourceIndex) : rawSource;
+                const buildFragmentSource = await loadFxEmbedAdapter();
+                const fragmentResult = buildFragmentSource('', previewSource);
+                if (!fragmentResult || fragmentResult.ok !== true) {
+                    setFxEmbedCardStatus(runtime, String(fragmentResult && fragmentResult.error ? fragmentResult.error : 'HLSL 入口解析失败'), true);
+                    return;
+                }
+                const programResult = createFxEmbedProgram(runtime.gl, String(fragmentResult.source || ''));
+                if (!programResult.ok) {
+                    setFxEmbedCardStatus(runtime, String(programResult.error || 'Shader 编译失败'), true);
+                    return;
+                }
+                if (runtime.program) runtime.gl.deleteProgram(runtime.program);
+                runtime.program = programResult.program;
+                runtime.uniforms = programResult.uniforms;
+                runtime.lastMs = 0;
+                runtime.elapsedSec = 0;
+                runtime.frame = 0;
+                setFxEmbedCardStatus(runtime, '实时预览中', false);
+                drawFxEmbedCardCanvas(runtime);
+                ensureFxEmbedCardLoop();
+            }
+
+            function installFxEmbedCardPreviews(container) {
+                const root = container || document.getElementById('markdown-content');
+                if (!root || typeof root.querySelectorAll !== 'function') return;
+                pruneFxEmbedCardRuntimes();
+                root.querySelectorAll('.fx-embed-card[data-fx-embed-path]').forEach(function (card) {
+                    if (FX_EMBED_CARD_RUNTIMES.has(card)) return;
+                    const runtime = createFxEmbedCardRuntime(card);
+                    FX_EMBED_CARD_RUNTIMES.set(card, runtime);
+                    if (!runtime.gl) return;
+                    compileFxEmbedCardRuntime(runtime).catch(function (error) {
+                        setFxEmbedCardStatus(runtime, `预览失败：${String(error && error.message ? error.message : error)}`, true);
+                    });
+                });
+            }
+
+            function setFxEmbedStatus(text, isError) {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom.status) return;
+                FX_EMBED_MODAL.dom.status.textContent = String(text || '');
+                FX_EMBED_MODAL.dom.status.style.color = isError
+                    ? 'rgba(255, 169, 169, 0.95)'
+                    : 'rgba(213, 227, 255, 0.95)';
+            }
+
+            function createFxEmbedShader(gl, type, source) {
+                const shader = gl.createShader(type);
+                if (!shader) return { ok: false, error: 'createShader 失败' };
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    const log = gl.getShaderInfoLog(shader) || '编译失败';
+                    gl.deleteShader(shader);
+                    return { ok: false, error: log };
+                }
+                return { ok: true, shader };
+            }
+
+            function createFxEmbedProgram(gl, fragmentSource) {
+                const vertex = createFxEmbedShader(gl, gl.VERTEX_SHADER, FX_EMBED_VERTEX_SOURCE);
+                if (!vertex.ok) return vertex;
+                const fragment = createFxEmbedShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+                if (!fragment.ok) {
+                    gl.deleteShader(vertex.shader);
+                    return fragment;
+                }
+                const program = gl.createProgram();
+                if (!program) {
+                    gl.deleteShader(vertex.shader);
+                    gl.deleteShader(fragment.shader);
+                    return { ok: false, error: 'createProgram 失败' };
+                }
+                gl.attachShader(program, vertex.shader);
+                gl.attachShader(program, fragment.shader);
+                gl.linkProgram(program);
+                gl.deleteShader(vertex.shader);
+                gl.deleteShader(fragment.shader);
+                if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                    const log = gl.getProgramInfoLog(program) || '链接失败';
+                    gl.deleteProgram(program);
+                    return { ok: false, error: log };
+                }
+                return {
+                    ok: true,
+                    program,
+                    uniforms: {
+                        iResolution: gl.getUniformLocation(program, 'iResolution'),
+                        iTime: gl.getUniformLocation(program, 'iTime'),
+                        iTimeDelta: gl.getUniformLocation(program, 'iTimeDelta'),
+                        iFrame: gl.getUniformLocation(program, 'iFrame'),
+                        iMouse: gl.getUniformLocation(program, 'iMouse'),
+                        iDate: gl.getUniformLocation(program, 'iDate'),
+                        iChannelTime: gl.getUniformLocation(program, 'iChannelTime'),
+                        iChannelResolution: gl.getUniformLocation(program, 'iChannelResolution'),
+                        iChannel0: gl.getUniformLocation(program, 'iChannel0'),
+                        iChannel1: gl.getUniformLocation(program, 'iChannel1'),
+                        iChannel2: gl.getUniformLocation(program, 'iChannel2'),
+                        iChannel3: gl.getUniformLocation(program, 'iChannel3')
+                    }
+                };
+            }
+
+            function createFxEmbedTexture(gl, image) {
+                const texture = gl.createTexture();
+                if (!texture) return null;
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                if (image) {
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+                } else {
+                    const pixels = new Uint8Array([255, 255, 255, 255]);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+                }
+                gl.bindTexture(gl.TEXTURE_2D, null);
+                return texture;
+            }
+
+            function ensureFxEmbedRuntime() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom.canvas) return null;
+                if (FX_EMBED_MODAL.runtime && FX_EMBED_MODAL.runtime.gl) return FX_EMBED_MODAL.runtime;
+                const canvas = FX_EMBED_MODAL.dom.canvas;
+                const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, preserveDrawingBuffer: false });
+                if (!gl) return null;
+
+                const vao = gl.createVertexArray();
+                const vbo = gl.createBuffer();
+                if (!vao || !vbo) return null;
+
+                gl.bindVertexArray(vao);
+                gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+                const vertices = new Float32Array([
+                    -1, -1, 0, 0,
+                    3, -1, 2, 0,
+                    -1, 3, 0, 2
+                ]);
+                gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+                gl.enableVertexAttribArray(0);
+                gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+                gl.enableVertexAttribArray(1);
+                gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+                gl.bindVertexArray(null);
+
+                FX_EMBED_MODAL.runtime = {
+                    gl,
+                    vao,
+                    vbo,
+                    program: null,
+                    uniforms: null,
+                    lastMs: 0,
+                    elapsedSec: 0,
+                    frame: 0,
+                    channelTextures: [null, null, null, null]
+                };
+                return FX_EMBED_MODAL.runtime;
+            }
+
+            function ensureFxEmbedImage(key, src) {
+                if (!key || !src) return null;
+                if (FX_EMBED_IMAGE_CACHE.has(key)) return FX_EMBED_IMAGE_CACHE.get(key);
+                const image = new Image();
+                image.decoding = 'async';
+                image.src = src;
+                image.onload = function () {
+                    if (FX_EMBED_MODAL && FX_EMBED_MODAL.opened) {
+                        drawFxEmbedCanvas();
+                    }
+                };
+                FX_EMBED_IMAGE_CACHE.set(key, image);
+                return image;
+            }
+
+            function resolveFxEmbedUploadImage(slot) {
+                if (!FX_EMBED_MODAL) return null;
+                const item = FX_EMBED_MODAL.uploads[slot];
+                if (!item || !item.dataUrl) return null;
+                const img = ensureFxEmbedImage(`upload:${slot}:${item.dataUrl}`, item.dataUrl);
+                if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return null;
+                return img;
+            }
+
+            function resolveFxEmbedUsingImage(slot) {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.path) return null;
+                const usingPath = FX_EMBED_MODAL.usingMap[slot];
+                if (!usingPath) return null;
+                const resolveUsing = fxUsingImagesApi && typeof fxUsingImagesApi.resolveUsingPathToRepoPath === 'function'
+                    ? fxUsingImagesApi.resolveUsingPathToRepoPath
+                    : null;
+                const resolvedPath = resolveUsing
+                    ? resolveUsing(FX_EMBED_MODAL.path, usingPath)
+                    : '';
+                if (!resolvedPath) return null;
+                const previewDataUrl = resolveStudioPreviewImageDataUrl(resolvedPath);
+                const src = previewDataUrl || `/site/content/${encodeContentPath(resolvedPath)}`;
+                const img = ensureFxEmbedImage(`using:${slot}:${resolvedPath}:${src}`, src);
+                if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return null;
+                return img;
+            }
+
+            function resolveFxEmbedImageBySlot(slot) {
+                return resolveFxEmbedUploadImage(slot) || resolveFxEmbedUsingImage(slot) || null;
+            }
+
+            function ensureFxEmbedChannelTexture(runtime, slot, source, key) {
+                const gl = runtime.gl;
+                const prev = runtime.channelTextures[slot];
+                if (prev && prev.key === key && prev.texture) return prev;
+                if (prev && prev.texture) gl.deleteTexture(prev.texture);
+                const texture = createFxEmbedTexture(gl, source);
+                const width = source ? Number(source.naturalWidth || source.width || 1) : 1;
+                const height = source ? Number(source.naturalHeight || source.height || 1) : 1;
+                const next = {
+                    key,
+                    texture,
+                    width: Math.max(1, width || 1),
+                    height: Math.max(1, height || 1)
+                };
+                runtime.channelTextures[slot] = next;
+                return next;
+            }
+
+            function drawFxEmbedCanvas() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.opened) return;
+                const runtime = ensureFxEmbedRuntime();
+                if (!runtime || !runtime.gl || !runtime.program || !runtime.uniforms) return;
+                const canvas = FX_EMBED_MODAL.dom.canvas;
+                const gl = runtime.gl;
+                const rect = canvas.getBoundingClientRect();
+                if (!rect.width || !rect.height) return;
+                const dpr = Math.max(1, Number(window.devicePixelRatio || 1));
+                const w = Math.max(1, Math.round(rect.width * dpr));
+                const h = Math.max(1, Math.round(rect.height * dpr));
+                if (canvas.width !== w || canvas.height !== h) {
+                    canvas.width = w;
+                    canvas.height = h;
+                }
+
+                const now = performance.now();
+                if (!runtime.lastMs) runtime.lastMs = now;
+                const delta = Math.max(0, Math.min(0.1, (now - runtime.lastMs) / 1000));
+                runtime.lastMs = now;
+                runtime.elapsedSec += delta;
+                runtime.frame += 1;
+
+                gl.viewport(0, 0, w, h);
+                gl.clearColor(0, 0, 0, 0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.disable(gl.DEPTH_TEST);
+                gl.disable(gl.CULL_FACE);
+                gl.enable(gl.BLEND);
+                gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+                gl.useProgram(runtime.program);
+                gl.bindVertexArray(runtime.vao);
+
+                const date = new Date();
+                if (runtime.uniforms.iResolution) gl.uniform3fv(runtime.uniforms.iResolution, [w, h, 1]);
+                if (runtime.uniforms.iTime) gl.uniform1f(runtime.uniforms.iTime, runtime.elapsedSec);
+                if (runtime.uniforms.iTimeDelta) gl.uniform1f(runtime.uniforms.iTimeDelta, delta);
+                if (runtime.uniforms.iFrame) gl.uniform1i(runtime.uniforms.iFrame, runtime.frame);
+                if (runtime.uniforms.iMouse) gl.uniform4fv(runtime.uniforms.iMouse, [0, 0, 0, 0]);
+                if (runtime.uniforms.iDate) gl.uniform4fv(runtime.uniforms.iDate, [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()]);
+
+                const channelTimes = [runtime.elapsedSec, runtime.elapsedSec, runtime.elapsedSec, runtime.elapsedSec];
+                const channelRes = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
+                for (let i = 0; i < 4; i++) {
+                    const image = resolveFxEmbedImageBySlot(i);
+                    const channel = ensureFxEmbedChannelTexture(runtime, i, image, image ? `image:${i}:${String(image.src || '')}` : `empty:${i}`);
+                    gl.activeTexture(gl.TEXTURE0 + i);
+                    gl.bindTexture(gl.TEXTURE_2D, channel.texture);
+                    channelRes[i * 3] = channel.width;
+                    channelRes[i * 3 + 1] = channel.height;
+                    channelRes[i * 3 + 2] = 1;
+                }
+
+                if (runtime.uniforms.iChannelTime) gl.uniform1fv(runtime.uniforms.iChannelTime, channelTimes);
+                if (runtime.uniforms.iChannelResolution) gl.uniform3fv(runtime.uniforms.iChannelResolution, channelRes);
+                if (runtime.uniforms.iChannel0) gl.uniform1i(runtime.uniforms.iChannel0, 0);
+                if (runtime.uniforms.iChannel1) gl.uniform1i(runtime.uniforms.iChannel1, 1);
+                if (runtime.uniforms.iChannel2) gl.uniform1i(runtime.uniforms.iChannel2, 2);
+                if (runtime.uniforms.iChannel3) gl.uniform1i(runtime.uniforms.iChannel3, 3);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+                gl.bindVertexArray(null);
+                gl.useProgram(null);
+            }
+
+            function ensureFxEmbedLoop() {
+                if (!FX_EMBED_MODAL || FX_EMBED_MODAL.rafId || !FX_EMBED_MODAL.opened) return;
+                const tick = function () {
+                    if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.opened) {
+                        if (FX_EMBED_MODAL) FX_EMBED_MODAL.rafId = 0;
+                        return;
+                    }
+                    FX_EMBED_MODAL.rafId = requestAnimationFrame(tick);
+                    drawFxEmbedCanvas();
+                };
+                FX_EMBED_MODAL.rafId = requestAnimationFrame(tick);
+            }
+
+            function stopFxEmbedLoop() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.rafId) return;
+                cancelAnimationFrame(FX_EMBED_MODAL.rafId);
+                FX_EMBED_MODAL.rafId = 0;
+            }
+
+            async function compileFxEmbedSource() {
+                if (!FX_EMBED_MODAL) return;
+                const runtime = ensureFxEmbedRuntime();
+                if (!runtime || !runtime.gl) {
+                    setFxEmbedStatus('当前环境不支持 WebGL2', true);
+                    return;
+                }
+
+                const rawSource = String(FX_EMBED_MODAL.dom.editor.value || '');
+                const parser = fxUsingImagesApi && typeof fxUsingImagesApi.usingMapFromSource === 'function'
+                    ? fxUsingImagesApi.usingMapFromSource
+                    : null;
+                FX_EMBED_MODAL.usingMap = parser ? parser(rawSource) : {};
+                const previewSourceIndex = rawSource.search(/\btechnique(?:10|11)?\b/i);
+                const previewSource = previewSourceIndex >= 0 ? rawSource.slice(0, previewSourceIndex) : rawSource;
+
+                try {
+                    const buildFragmentSource = await loadFxEmbedAdapter();
+                    const fragmentResult = buildFragmentSource('', previewSource);
+                    if (!fragmentResult || fragmentResult.ok !== true) {
+                        setFxEmbedStatus(String(fragmentResult && fragmentResult.error ? fragmentResult.error : 'HLSL 入口解析失败'), true);
+                        return;
+                    }
+                    const programResult = createFxEmbedProgram(runtime.gl, String(fragmentResult.source || ''));
+                    if (!programResult.ok) {
+                        setFxEmbedStatus(String(programResult.error || 'Shader 编译失败'), true);
+                        return;
+                    }
+                    if (runtime.program) runtime.gl.deleteProgram(runtime.program);
+                    runtime.program = programResult.program;
+                    runtime.uniforms = programResult.uniforms;
+                    runtime.lastMs = 0;
+                    runtime.elapsedSec = 0;
+                    runtime.frame = 0;
+                    setFxEmbedStatus('编译成功，实时渲染中', false);
+                    drawFxEmbedCanvas();
+                    ensureFxEmbedLoop();
+                } catch (error) {
+                    setFxEmbedStatus(`编译失败：${String(error && error.message ? error.message : error)}`, true);
+                }
+            }
+
+            function scheduleFxEmbedCompile() {
+                if (!FX_EMBED_MODAL) return;
+                if (FX_EMBED_MODAL.compileTimer) {
+                    clearTimeout(FX_EMBED_MODAL.compileTimer);
+                }
+                FX_EMBED_MODAL.compileTimer = setTimeout(function () {
+                    FX_EMBED_MODAL.compileTimer = 0;
+                    compileFxEmbedSource().catch(function () {});
+                }, 300);
+            }
+
+            function setFxEmbedModalOpen(open) {
+                if (!FX_EMBED_MODAL) return;
+                const shouldOpen = !!open;
+                FX_EMBED_MODAL.opened = shouldOpen;
+                FX_EMBED_MODAL.dom.root.classList.toggle('is-open', shouldOpen);
+                if (shouldOpen) {
+                    ensureFxEmbedLoop();
+                    return;
+                }
+                stopFxEmbedLoop();
+            }
+
+            function cacheFxEmbedSession() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.path) return;
+                FX_EMBED_SESSION.set(FX_EMBED_MODAL.path, {
+                    source: String(FX_EMBED_MODAL.dom.editor.value || ''),
+                    uploads: FX_EMBED_MODAL.uploads.map(function (item) {
+                        return item && item.dataUrl
+                            ? { name: String(item.name || ''), dataUrl: String(item.dataUrl || '') }
+                            : null;
+                    })
+                });
+            }
+
+            function closeFxEmbedModal() {
+                cacheFxEmbedSession();
+                setFxEmbedModalOpen(false);
+            }
+
+            function ensureFxEmbedModal() {
+                if (FX_EMBED_MODAL) return FX_EMBED_MODAL;
+                const domFx = createFxEmbedModalDom();
+                FX_EMBED_MODAL = {
+                    dom: domFx,
+                    runtime: null,
+                    opened: false,
+                    path: '',
+                    title: '',
+                    usingMap: {},
+                    uploads: [null, null, null, null],
+                    compileTimer: 0,
+                    rafId: 0
+                };
+
+                domFx.backdrop.addEventListener('click', closeFxEmbedModal);
+                domFx.close.addEventListener('click', closeFxEmbedModal);
+                domFx.editor.addEventListener('input', function () {
+                    scheduleFxEmbedCompile();
+                });
+                domFx.uploadInputs.forEach(function (input) {
+                    if (!input) return;
+                    input.addEventListener('change', async function () {
+                        const slot = Number(input.getAttribute('data-slot'));
+                        const file = input.files && input.files[0] ? input.files[0] : null;
+                        if (!file) return;
+                        if (!String(file.type || '').startsWith('image/')) {
+                            setFxEmbedStatus(`uImage${slot} 仅支持图片`, true);
+                            input.value = '';
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = function () {
+                            FX_EMBED_MODAL.uploads[slot] = {
+                                name: String(file.name || `slot-${slot}.png`),
+                                dataUrl: String(reader.result || '')
+                            };
+                            input.value = '';
+                            setFxEmbedStatus(`uImage${slot} 已上传：${file.name}`, false);
+                            drawFxEmbedCanvas();
+                        };
+                        reader.onerror = function () {
+                            setFxEmbedStatus(`uImage${slot} 读取失败`, true);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                });
+                domFx.clearButtons.forEach(function (button) {
+                    if (!button) return;
+                    button.addEventListener('click', function () {
+                        const slot = Number(button.getAttribute('data-clear'));
+                        FX_EMBED_MODAL.uploads[slot] = null;
+                        setFxEmbedStatus(`uImage${slot} 已清空`, false);
+                        drawFxEmbedCanvas();
+                    });
+                });
+                window.addEventListener('keydown', function (event) {
+                    if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.opened) return;
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        closeFxEmbedModal();
+                    }
+                });
+                return FX_EMBED_MODAL;
+            }
+
+            async function openFxEmbedModal(pathValue, labelText) {
+                const modal = ensureFxEmbedModal();
+                const path = normalizeFxEmbedPath(pathValue);
+                if (!path) return;
+                modal.path = path;
+                modal.title = String(labelText || '').trim() || `Shader: ${String(path).split('/').pop() || path}`;
+                modal.dom.title.textContent = modal.title;
+                modal.dom.path.textContent = path;
+                setFxEmbedModalOpen(true);
+                setFxEmbedStatus('正在加载 Shader 源码...', false);
+
+                const session = FX_EMBED_SESSION.get(path);
+                if (session && typeof session.source === 'string') {
+                    modal.dom.editor.value = String(session.source || '');
+                    modal.uploads = Array.isArray(session.uploads)
+                        ? session.uploads.map((item) => item && item.dataUrl ? { name: String(item.name || ''), dataUrl: String(item.dataUrl || '') } : null)
+                        : [null, null, null, null];
+                } else {
+                    const url = `/site/content/${encodeContentPath(path)}`;
+                    const response = await fetch(url, { cache: 'no-store' });
+                    if (!response.ok) {
+                        modal.dom.editor.value = '';
+                        modal.uploads = [null, null, null, null];
+                        setFxEmbedStatus(`源码加载失败：HTTP ${response.status} ${response.statusText}`, true);
+                        return;
+                    }
+                    modal.dom.editor.value = await response.text();
+                    modal.uploads = [null, null, null, null];
+                }
+                scheduleFxEmbedCompile();
+            }
+
+            function installFxEmbedInteractions(container) {
+                const root = container || document.getElementById('markdown-content');
+                if (!root) return;
+                if (!root.__FX_EMBED_BINDING_INSTALLED) {
+                    root.__FX_EMBED_BINDING_INSTALLED = true;
+                    root.addEventListener('click', function (event) {
+                        const target = event && event.target ? event.target : null;
+                        if (!target || !target.closest) return;
+                        const trigger = target.closest('[data-fx-embed-open]');
+                        if (!trigger) return;
+                        const card = target.closest('.fx-embed-card');
+                        if (!card) return;
+                        event.preventDefault();
+                        const path = String(card.getAttribute('data-fx-embed-path') || '').trim();
+                        const title = String(card.getAttribute('data-fx-embed-title') || '').trim();
+                        openFxEmbedModal(path, title).catch(function (error) {
+                            console.warn('打开 FX 编辑器失败:', error);
+                        });
+                    });
+                }
+                installFxEmbedCardPreviews(root);
             }
 
 	        
@@ -1634,6 +2819,47 @@
                             }
 
                             return `<div class="animts-embed animcs-embed" data-animcs-src="${escapeHtml(normalized)}"></div>`;
+                        }
+
+                        if (language === 'fxembed') {
+                            let payload = null;
+                            try {
+                                payload = JSON.parse(String(code || ''));
+                            } catch (_) {
+                                payload = null;
+                            }
+
+                            const safePathRaw = payload && typeof payload.path === 'string'
+                                ? payload.path
+                                : String(code || '').split(/\r?\n/).map((line) => String(line || '').trim()).find(Boolean) || '';
+                            const safeLabelRaw = payload && typeof payload.label === 'string'
+                                ? payload.label
+                                : '';
+
+                            const normalizedPath = normalizePath(String(safePathRaw || '').replace(/^\.?\//, '').replace(/^docs\//, ''));
+                            if (!normalizedPath || !/\.fx$/i.test(normalizedPath)) {
+                                return `<pre><code class="language-plaintext">${escapeHtml('fx 引用路径必须为 *.fx 文件')}</code></pre>`;
+                            }
+
+                            const fallbackTitle = `Shader: ${String(normalizedPath).split('/').pop() || normalizedPath}`;
+                            const title = String(safeLabelRaw || '').trim() || fallbackTitle;
+                            const safePath = escapeHtml(normalizedPath);
+                            const safeTitle = escapeHtml(title);
+
+                            return [
+                                `<div class="fx-embed-card" data-fx-embed-path="${safePath}" data-fx-embed-title="${safeTitle}">`,
+                                '  <div class="fx-embed-card-head">',
+                                '    <span class="fx-embed-card-tag">Shader .fx</span>',
+                                '    <button class="btn btn-small btn-outline fx-embed-open" type="button" data-fx-embed-open>打开编辑器</button>',
+                                '  </div>',
+                                `  <div class="fx-embed-card-title">${safeTitle}</div>`,
+                                `  <div class="fx-embed-card-path">${safePath}</div>`,
+                                '  <div class="fx-embed-card-preview">',
+                                '    <canvas class="fx-embed-card-canvas" width="640" height="360"></canvas>',
+                                '  </div>',
+                                '  <div class="fx-embed-card-status" data-fx-embed-card-status>预览初始化中...</div>',
+                                '</div>'
+                            ].join('');
                         }
 
 		                        if (language === 'mermaid') {
@@ -2161,7 +3387,8 @@
 	            return null;
 	        }
 
-	        const TRANSCLUSION_DIRECTIVE_RE = /^\s*\{\{([a-zA-Z]+)\s*:\s*([^}\n\r]+)\}\}\s*$/;
+	        const markdownEmbedApi = window.SharedMarkdownEmbedLinks || {};
+	        const fxUsingImagesApi = window.SharedFxUsingImages || {};
 	        const TRANSCLUSION_MAX_DEPTH = 4;
 	        const TRANSCLUSION_MAX_FILES = 30;
 	        const TRANSCLUSION_CACHE = new Map();
@@ -2452,28 +3679,18 @@
 	        }
 
 	        function parseTransclusionDirective(line) {
-	            const match = String(line || '').match(TRANSCLUSION_DIRECTIVE_RE);
-	            if (!match) return null;
-
-	            const kind = String(match[1] || '').trim().toLowerCase();
-	            const rawPayload = String(match[2] || '').trim();
-	            if (!rawPayload) return null;
-
-	            if (kind === 'anim') {
-	                return { kind, target: rawPayload, title: '' };
-	            }
-
-            if (kind !== 'cs') return null;
-
-	            const pipeIndex = rawPayload.indexOf('|');
-	            if (pipeIndex < 0) {
-	                return { kind, target: rawPayload, title: '' };
-	            }
-
-	            const target = rawPayload.slice(0, pipeIndex).trim();
-	            const title = rawPayload.slice(pipeIndex + 1).trim();
+	            const source = String(line || '');
+	            const parser = markdownEmbedApi && typeof markdownEmbedApi.parseStandaloneEmbedLink === 'function'
+	                ? markdownEmbedApi.parseStandaloneEmbedLink
+	                : null;
+	            const parsed = parser ? parser(source) : null;
+	            if (!parsed) return null;
+	            const kind = String(parsed.kind || '').trim().toLowerCase();
+	            if (kind !== 'cs' && kind !== 'anims' && kind !== 'fx') return null;
+	            const target = String(parsed.target || '').trim();
+	            const label = String(parsed.label || '').trim();
 	            if (!target) return null;
-	            return { kind, target, title };
+	            return { kind, target, label };
 	        }
 
 	        function extractMarkdownSectionByHeading(markdown, selector) {
@@ -3497,7 +4714,7 @@
                     lineIndex: i,
                     kind: directive.kind,
                     target: directive.target,
-                    title: directive.title,
+                    label: directive.label,
                     wrapperLevel: Math.min(6, currentHeadingLevel + 1)
                 });
 
@@ -3543,7 +4760,7 @@
             }
 
             const replacements = await Promise.all(matches.map(async (m) => {
-                if (m.kind === 'anim') {
+                if (m.kind === 'anims') {
                     const normalizedAnimPath = normalizePath(String(m.target || '').trim().replace(/^\.?\//, '').replace(/^docs\//, ''));
                     if (
                         !normalizedAnimPath ||
@@ -3556,6 +4773,26 @@
                         return `\n\n> 无法载入动画：非法路径 \`${m.target}\`\n\n`;
                     }
                     return `\n\n${buildFencedCodeBlock('animcs', normalizedAnimPath)}\n\n`;
+                }
+
+                if (m.kind === 'fx') {
+                    const rawBase = String(m.target || '').trim().replace(/^\.?\//, '').replace(/^docs\//, '');
+                    const resolved = resolveRelativeHref(rawBase, currentDocPath);
+                    const normalizedFxPath = normalizePath(String(resolved || '').replace(/^\.?\//, '').replace(/^docs\//, ''));
+                    if (
+                        !normalizedFxPath
+                        || normalizedFxPath.includes('\0')
+                        || normalizedFxPath.includes('\\\\')
+                        || /(^|\/)\.\.(\/|$)/.test(normalizedFxPath)
+                        || !/\.fx$/i.test(normalizedFxPath)
+                    ) {
+                        return `\n\n> 无法载入 Shader：非法路径 \`${m.target}\`\n\n`;
+                    }
+                    const payload = JSON.stringify({
+                        path: normalizedFxPath,
+                        label: String(m.label || '').trim()
+                    });
+                    return `\n\n${buildFencedCodeBlock('fxembed', payload)}\n\n`;
                 }
 
                 if (isUnsafeTransclusionTarget(m.target)) {
@@ -3955,6 +5192,8 @@
 		                        console.log('Markdown渲染完成，HTML长度:', renderedHTML.length);
 		                        markdownContent.innerHTML = renderedHTML;
                                 installStudioPreviewAnimResolver(markdownContent);
+                                installFxEmbedInteractions(markdownContent);
+                                applyMarkdownCalloutBlocks(markdownContent);
 
 		                        // 移除正文内重复的“章节进度”导航（统一使用页脚导航）
 		                        removeDuplicateChapterProgress(markdownContent);
@@ -4812,6 +6051,78 @@
 	                bq.remove();
 	            });
 	        }
+
+        const MARKDOWN_CALLOUT_LEVEL_MAP = Object.freeze({
+            NOTE: { className: 'md-callout-note', title: '提示' },
+            TIP: { className: 'md-callout-tip', title: '技巧' },
+            IMPORTANT: { className: 'md-callout-important', title: '重要' },
+            WARNING: { className: 'md-callout-warning', title: '警告' },
+            CAUTION: { className: 'md-callout-caution', title: '注意' }
+        });
+
+        function parseMarkdownCalloutMarker(lineText) {
+            const text = String(lineText || '').trim();
+            if (!text) return null;
+            const match = text.match(/^\[!([A-Za-z]+)\]\s*(.*)$/);
+            if (!match) return null;
+            const level = String(match[1] || '').trim().toUpperCase();
+            const meta = MARKDOWN_CALLOUT_LEVEL_MAP[level];
+            if (!meta) return null;
+            return {
+                level: level,
+                className: meta.className,
+                defaultTitle: meta.title,
+                customTitle: String(match[2] || '').trim()
+            };
+        }
+
+        function stripMarkdownCalloutMarker(text) {
+            return String(text || '').replace(/^\s*\[![A-Za-z]+\]\s*/, '');
+        }
+
+        function applyMarkdownCalloutBlocks(container) {
+            const root = container || document.getElementById('markdown-content');
+            if (!root || typeof root.querySelectorAll !== 'function') return;
+            const blockquotes = Array.from(root.querySelectorAll('blockquote'));
+            if (blockquotes.length <= 0) return;
+
+            blockquotes.forEach(function (blockquote) {
+                if (!blockquote || blockquote.classList.contains('md-callout')) return;
+                const firstParagraph = blockquote.querySelector('p');
+                const markerSource = firstParagraph || blockquote;
+                if (!markerSource) return;
+
+                const textLines = String(markerSource.textContent || '')
+                    .split(/\r?\n/)
+                    .map((line) => String(line || '').trim());
+                const firstNonEmptyLine = textLines.find((line) => !!line) || '';
+                const marker = parseMarkdownCalloutMarker(firstNonEmptyLine);
+                if (!marker) return;
+
+                blockquote.classList.add('md-callout', marker.className);
+                const titleEl = document.createElement('div');
+                titleEl.className = 'md-callout-title';
+                titleEl.textContent = marker.customTitle || marker.defaultTitle;
+                blockquote.insertBefore(titleEl, blockquote.firstChild);
+
+                if (firstParagraph) {
+                    const original = String(firstParagraph.textContent || '');
+                    const stripped = stripMarkdownCalloutMarker(original);
+                    if (stripped !== original) {
+                        firstParagraph.textContent = stripped;
+                    }
+                    if (!String(firstParagraph.textContent || '').trim()) {
+                        firstParagraph.remove();
+                    }
+                } else {
+                    const original = String(blockquote.textContent || '');
+                    const stripped = stripMarkdownCalloutMarker(original);
+                    if (stripped !== original) {
+                        blockquote.textContent = stripped;
+                    }
+                }
+            });
+        }
 
         // 将难度代码转换为中文文本
         function getDifficultyText(difficulty) {
@@ -6175,6 +7486,7 @@
                 if (useMarkdown) {
                     dom.output.classList.add('viewer-ai-output--markdown');
                     dom.output.innerHTML = renderAiMarkdown(text);
+                    applyMarkdownCalloutBlocks(dom.output);
                     return;
                 }
 

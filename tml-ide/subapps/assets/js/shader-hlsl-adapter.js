@@ -33,6 +33,130 @@
         return /^(?:float4|half4|fixed4|vec4)$/i.test(String(typeName || ''));
     }
 
+    function normalizeTypeName(typeName) {
+        return String(typeName || '').trim().toLowerCase();
+    }
+
+    function isFloatLikeType(typeName) {
+        return /^(?:float|vec2|vec3|vec4|mat2|mat3|mat4)$/i.test(normalizeTypeName(typeName));
+    }
+
+    function isIntLikeType(typeName) {
+        return /^(?:int|uint|ivec2|ivec3|ivec4|uvec2|uvec3|uvec4)$/i.test(normalizeTypeName(typeName));
+    }
+
+    function vectorSizeFromType(typeName) {
+        const safe = normalizeTypeName(typeName);
+        if (safe === 'vec2' || safe === 'ivec2' || safe === 'uvec2') return 2;
+        if (safe === 'vec3' || safe === 'ivec3' || safe === 'uvec3') return 3;
+        if (safe === 'vec4' || safe === 'ivec4' || safe === 'uvec4') return 4;
+        return 1;
+    }
+
+    function collectVariableTypeMap(sourceText) {
+        const map = new Map();
+        const declRe = /\b(?:const\s+)?(float|vec2|vec3|vec4|int|uint|ivec2|ivec3|ivec4|uvec2|uvec3|uvec4)\s+([A-Za-z_][A-Za-z0-9_]*)(?!\s*\()/g;
+        let match;
+        while ((match = declRe.exec(String(sourceText || ''))) !== null) {
+            const typeName = normalizeTypeName(match[1]);
+            const name = String(match[2] || '');
+            if (!typeName || !name) continue;
+            map.set(name, typeName);
+        }
+        return map;
+    }
+
+    function castIntIdentifierForTarget(name, sourceType, targetType) {
+        const safeName = String(name || '');
+        const from = normalizeTypeName(sourceType);
+        const to = normalizeTypeName(targetType);
+        if (!safeName || !from || !to) return safeName;
+        const targetVecSize = vectorSizeFromType(to);
+        if (from === 'int' || from === 'uint') {
+            return 'float(' + safeName + ')';
+        }
+        if ((from === 'ivec2' || from === 'uvec2') && targetVecSize === 2) {
+            return 'vec2(' + safeName + ')';
+        }
+        if ((from === 'ivec3' || from === 'uvec3') && targetVecSize === 3) {
+            return 'vec3(' + safeName + ')';
+        }
+        if ((from === 'ivec4' || from === 'uvec4') && targetVecSize === 4) {
+            return 'vec4(' + safeName + ')';
+        }
+        return safeName;
+    }
+
+    function promoteImplicitIntsInExpression(exprText, targetType, variableTypes) {
+        let expr = String(exprText || '');
+        if (!expr) return expr;
+        if (!isFloatLikeType(targetType)) return expr;
+        if (/[<>&|^]/.test(expr)) return expr;
+
+        expr = expr.replace(/(^|[^A-Za-z0-9_.])(\d+)(?:u|U)?(?=[^A-Za-z0-9_.]|$)/g, '$1$2.0');
+
+        if (!(variableTypes instanceof Map) || variableTypes.size <= 0) return expr;
+        variableTypes.forEach((varType, varName) => {
+            if (!isIntLikeType(varType)) return;
+            const castExpr = castIntIdentifierForTarget(varName, varType, targetType);
+            if (castExpr === varName) return;
+            const pattern = new RegExp('\\b' + escapeRegExp(varName) + '\\b', 'g');
+            expr = expr.replace(pattern, castExpr);
+        });
+        return expr;
+    }
+
+    function applyImplicitIntToFloatCasts(sourceText) {
+        const source = String(sourceText || '');
+        if (!source) return source;
+        const variableTypes = collectVariableTypeMap(source);
+        let transformed = source;
+
+        transformed = transformed.replace(
+            /\b(?:const\s+)?(float|vec2|vec3|vec4)\s+([A-Za-z_][A-Za-z0-9_]*)(?!\s*\()(\s*=\s*)([^;\n]+)(;)/g,
+            function (_full, typeName, name, equalsPart, expr, tail) {
+                const nextExpr = promoteImplicitIntsInExpression(expr, typeName, variableTypes);
+                return typeName + ' ' + name + equalsPart + nextExpr + tail;
+            }
+        );
+
+        transformed = transformed.replace(
+            /(\b([A-Za-z_][A-Za-z0-9_]*)(\s*\.[xyzwrgba]{1,4})?\s*=\s*(?![=]))([^;\n]+)(;)/g,
+            function (full, prefix, lhsName, swizzle, expr, tail) {
+                const lhsType = normalizeTypeName(variableTypes.get(lhsName) || '');
+                if (!isFloatLikeType(lhsType)) return full;
+                const swizzleText = String(swizzle || '').replace(/\s+/g, '');
+                const swizzleLength = swizzleText.indexOf('.') === 0 ? Math.max(0, swizzleText.length - 1) : swizzleText.length;
+                const targetType = swizzleText
+                    ? (swizzleLength <= 1 ? 'float' : (swizzleLength === 2 ? 'vec2' : (swizzleLength === 3 ? 'vec3' : 'vec4')))
+                    : lhsType;
+                const nextExpr = promoteImplicitIntsInExpression(expr, targetType, variableTypes);
+                return prefix + nextExpr + tail;
+            }
+        );
+
+        transformed = transformed.replace(
+            /(\b([A-Za-z_][A-Za-z0-9_]*)(\s*\.[xyzwrgba]{1,4})?\s*([+\-*/])=\s*)([^;\n]+)(;)/g,
+            function (full, prefix, lhsName, swizzle, _op, expr, tail) {
+                const lhsType = normalizeTypeName(variableTypes.get(lhsName) || '');
+                if (!isFloatLikeType(lhsType)) return full;
+                const swizzleText = String(swizzle || '').replace(/\s+/g, '');
+                const swizzleLength = swizzleText.indexOf('.') === 0 ? Math.max(0, swizzleText.length - 1) : swizzleText.length;
+                const targetType = swizzleText
+                    ? (swizzleLength <= 1 ? 'float' : (swizzleLength === 2 ? 'vec2' : (swizzleLength === 3 ? 'vec3' : 'vec4')))
+                    : lhsType;
+                const nextExpr = promoteImplicitIntsInExpression(expr, targetType, variableTypes);
+                return prefix + nextExpr + tail;
+            }
+        );
+
+        transformed = transformed
+            .replace(/\bfloat\s*\(\s*float\s*\(\s*([^()]+?)\s*\)\s*\)/g, 'float($1)')
+            .replace(/\bvec([234])\s*\(\s*vec\1\s*\(\s*([^()]+?)\s*\)\s*\)/g, 'vec$1($2)');
+
+        return transformed;
+    }
+
     function inferCoordArg(name, semantic) {
         const sem = String(semantic || '').toUpperCase();
         const lower = String(name || '').toLowerCase();
@@ -231,6 +355,7 @@
         transformed = transformed.replace(/\bclip\s*\(\s*([^\)]+)\s*\)\s*;/g, 'if (($1) < 0.0) discard;');
         transformed = transformed.replace(/\brcp\s*\(\s*([^()]+)\s*\)/g, '(1.0 / ($1))');
         transformed = transformed.replace(/\blog10\s*\(\s*([^()]+)\s*\)/g, '(log($1) / log(10.0))');
+        transformed = applyImplicitIntToFloatCasts(transformed);
 
         return transformed;
     }

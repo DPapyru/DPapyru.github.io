@@ -16,6 +16,9 @@ import { buildSuggestions as buildDiagnosticSuggestions } from './lib/diagnostic
 import { createChangeTracker } from './lib/change-tracker.js';
 import { buildUnifiedDiff } from './lib/unified-diff.js';
 import * as sharedMarkdownCapabilityExports from '../../shared/capabilities/markdown/core/index.js';
+import '../../shared/services/markdown/markdown-embed-links.js';
+import '../../shared/services/markdown/front-matter-utils.js';
+import '../../shared/services/shader/fx-using-images.js';
 import { createPluginRegistry } from './core/plugin-registry.js';
 import { createShellEventBus } from './core/shell-event-bus.js';
 import { createStorageService } from './core/storage-service.js';
@@ -48,6 +51,15 @@ const sharedMarkdownCapability = sharedMarkdownCapabilityDefault && typeof share
 const markdownPathResolver = typeof sharedMarkdownCapability.createMarkdownPathResolver === 'function'
     ? sharedMarkdownCapability.createMarkdownPathResolver()
     : null;
+const markdownEmbedLinksApi = globalThis.SharedMarkdownEmbedLinks && typeof globalThis.SharedMarkdownEmbedLinks === 'object'
+    ? globalThis.SharedMarkdownEmbedLinks
+    : {};
+const frontMatterUtilsApi = globalThis.SharedFrontMatterUtils && typeof globalThis.SharedFrontMatterUtils === 'object'
+    ? globalThis.SharedFrontMatterUtils
+    : {};
+const fxUsingImagesApi = globalThis.SharedFxUsingImages && typeof globalThis.SharedFxUsingImages === 'object'
+    ? globalThis.SharedFxUsingImages
+    : {};
 
 self.MonacoEnvironment = {
     getWorker() {
@@ -63,6 +75,7 @@ const dom = {
     btnOpenUnifiedSubmit: document.getElementById('btn-open-unified-submit'),
     btnRouteSubmitPanel: document.getElementById('btn-route-submit-panel'),
     btnMarkdownTogglePreview: document.getElementById('btn-markdown-toggle-preview'),
+    btnMarkdownMetadata: document.getElementById('btn-markdown-metadata'),
     btnMarkdownOpenViewer: document.getElementById('btn-markdown-open-viewer'),
     btnShaderCompile: document.getElementById('btn-shader-compile'),
     btnShaderPreviewPopup: document.getElementById('btn-shader-preview-popup'),
@@ -81,6 +94,14 @@ const dom = {
     editor: document.getElementById('editor'),
     markdownPreviewPane: document.getElementById('markdown-preview-pane'),
     markdownPreviewFrame: document.getElementById('markdown-preview-frame'),
+    markdownVisualCanvas: document.getElementById('markdown-visual-canvas'),
+    markdownVisualInspector: document.getElementById('markdown-visual-inspector'),
+    markdownVisualSelectedType: document.getElementById('markdown-visual-selected-type'),
+    markdownVisualEmpty: document.getElementById('markdown-visual-empty'),
+    markdownVisualContent: document.getElementById('markdown-visual-content'),
+    btnMarkdownVisualApply: document.getElementById('btn-markdown-visual-apply'),
+    btnMarkdownVisualSource: document.getElementById('btn-markdown-visual-source'),
+    markdownVisualHelp: document.getElementById('markdown-visual-help'),
     imagePreviewPane: document.getElementById('image-preview-pane'),
     imagePreviewImage: document.getElementById('image-preview-image'),
     videoPreviewPane: document.getElementById('video-preview-pane'),
@@ -210,7 +231,24 @@ const dom = {
     unifiedSendableList: document.getElementById('unified-sendable-list'),
     unifiedBlockedList: document.getElementById('unified-blocked-list'),
     unifiedBatchProgress: document.getElementById('unified-batch-progress'),
-    unifiedSubmitStatus: document.getElementById('unified-submit-status')
+    unifiedSubmitStatus: document.getElementById('unified-submit-status'),
+    markdownMetaDrawer: document.getElementById('markdown-meta-drawer'),
+    btnMarkdownMetaClose: document.getElementById('btn-markdown-meta-close'),
+    markdownMetaStatus: document.getElementById('markdown-meta-status'),
+    markdownMetaFields: Array.from(document.querySelectorAll('[data-meta-field]')),
+    quickCreateModal: document.getElementById('quick-create-modal'),
+    quickCreateBackdrop: document.getElementById('quick-create-backdrop'),
+    btnQuickCreateClose: document.getElementById('btn-quick-create-close'),
+    btnQuickCreateSubmit: document.getElementById('btn-quick-create-submit'),
+    quickCreateType: document.getElementById('quick-create-type'),
+    quickCreateDirectory: document.getElementById('quick-create-directory'),
+    quickCreateName: document.getElementById('quick-create-name'),
+    quickCreateHint: document.getElementById('quick-create-hint'),
+    shaderSlotPickerModal: document.getElementById('shader-slot-picker-modal'),
+    shaderSlotPickerBackdrop: document.getElementById('shader-slot-picker-backdrop'),
+    shaderSlotPickerList: document.getElementById('shader-slot-picker-list'),
+    shaderSlotPickerTip: document.getElementById('shader-slot-picker-tip'),
+    btnShaderSlotPickerCancel: document.getElementById('btn-shader-slot-picker-cancel')
 };
 
 const state = {
@@ -277,7 +315,28 @@ const state = {
         aspectResizePointerId: -1,
         aspectResizeStartX: 0,
         aspectResizeStartWidth: 0,
-        viewportWidth: 0
+        viewportWidth: 0,
+        usingMissingWarnedKeys: new Set(),
+        usingImageCache: new Map()
+    },
+    markdownVisual: {
+        blocks: [],
+        selectedBlockId: '',
+        selectedBlockIndex: -1,
+        refreshTimer: 0
+    },
+    markdownMeta: {
+        syncing: false,
+        syncTimer: 0,
+        activeFileId: ''
+    },
+    quickCreate: {
+        pendingBaseDir: '',
+        pendingType: 'markdown'
+    },
+    shaderSlotPicker: {
+        open: false,
+        resolver: null
     },
     animPreview: {
         compiledAnims: {},
@@ -332,6 +391,8 @@ const state = {
         activePanelTab: 'problems',
         markdownPreviewMode: 'edit',
         markdownFocusMode: false,
+        markdownMetaDrawerOpen: false,
+        quickCreateOpen: false,
         shaderPreviewModalOpen: false,
         paletteOpen: false,
         paletteMode: 'commands',
@@ -347,7 +408,8 @@ const VSCODE_SHORTCUTS = Object.freeze({
     TOGGLE_PANEL: 'Ctrl+J',
     QUICK_FIX: 'Ctrl+.',
     SAVE_WORKSPACE: 'Ctrl+S',
-    FOCUS_EXPLORER: 'Ctrl+Shift+E'
+    FOCUS_EXPLORER: 'Ctrl+Shift+E',
+    MARKDOWN_META: 'Ctrl+Shift+M'
 });
 const COMPLETION_MAX_ITEMS = 5000;
 const ANALYZE_COMPLETION_PROFILE_TMOD = 'tmod';
@@ -424,6 +486,7 @@ const MARKDOWN_FALLBACK_ANCHORS = Object.freeze([
 ]);
 const MARKDOWN_PASTE_MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 const MARKDOWN_PASTE_MAX_IMAGE_COUNT = 8;
+const SHADER_PASTE_MAX_IMAGE_COUNT = 4;
 const IMAGE_FILE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp', '.avif']);
 const VIDEO_FILE_EXTENSIONS = new Set(['.mp4', '.webm', '.mov', '.m4v', '.avi', '.mkv']);
 const MARKDOWN_PASTE_EXTENSION_BY_MIME = Object.freeze({
@@ -519,6 +582,25 @@ const SHADER_COMPLETION_WORDS = Object.freeze(Array.from(new Set([
 const SHADER_COMPLETION_RESERVED = new Set(SHADER_COMPLETION_WORDS.map((word) => String(word).toLowerCase()));
 const shaderPreviewPresetCache = new Map();
 const shaderUploadImageCache = new Map();
+const QUICK_CREATE_TYPE_META = Object.freeze({
+    markdown: Object.freeze({ ext: '.md', defaultFileName: '新文章.md' }),
+    shaderfx: Object.freeze({ ext: '.fx', defaultFileName: 'effect.fx' }),
+    animcs: Object.freeze({ ext: '.cs', defaultFileName: 'new-anim.cs' }),
+    codecs: Object.freeze({ ext: '.cs', defaultFileName: 'snippet.cs' }),
+    image: Object.freeze({ ext: '.png', defaultFileName: 'image.png' }),
+    video: Object.freeze({ ext: '.mp4', defaultFileName: 'video.mp4' })
+});
+const MARKDOWN_VISUAL_BLOCK_READONLY_TYPES = new Set(['code', 'table', 'front-matter']);
+const MARKDOWN_CALL_OUT_LEVELS = Object.freeze(['NOTE', 'TIP', 'IMPORTANT', 'WARNING', 'CAUTION']);
+const MARKDOWN_VISUAL_IMAGE_LINE_RE = /^\s*!\[([^\]]*)\]\(([^)\n\r]+)\)\s*$/;
+const MARKDOWN_VISUAL_INLINE_LINK_RE = /\[([^\]\n\r]+)\]\(([^)\n\r]+)\)/g;
+const MARKDOWN_VISUAL_CALLOUT_LEVEL_MAP = Object.freeze({
+    NOTE: Object.freeze({ className: 'note', title: '提示' }),
+    TIP: Object.freeze({ className: 'tip', title: '技巧' }),
+    IMPORTANT: Object.freeze({ className: 'important', title: '重要' }),
+    WARNING: Object.freeze({ className: 'warning', title: '警告' }),
+    CAUTION: Object.freeze({ className: 'caution', title: '注意' })
+});
 
 // Keep Monaco colors aligned with site viewer's Rider dark Prism theme.
 const RIDER_CODE_COLORS = Object.freeze({
@@ -668,6 +750,10 @@ function normalizeRepoPath(pathValue) {
         .replace(/\\/g, '/')
         .replace(/^\/+/, '')
         .replace(/\/{2,}/g, '/');
+}
+
+function escapeRegExp(text) {
+    return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function fileExt(pathValue) {
@@ -1554,12 +1640,11 @@ function buildAnimCompileErrorsPayload() {
     return payload;
 }
 
-function parseAnimSourcePathFromCsDirective(rawValue) {
+function parseAnimSourcePathFromCsTarget(rawValue) {
     const text = String(rawValue || '').trim();
     if (!text) return '';
-    const pathPart = text.split('|')[0].trim();
-    if (!pathPart) return '';
-    return pathPart;
+    const hashIndex = text.indexOf('#');
+    return (hashIndex >= 0 ? text.slice(0, hashIndex) : text).trim();
 }
 
 function collectReferencedAnimPaths(markdownPath, markdownContent) {
@@ -1574,17 +1659,23 @@ function collectReferencedAnimPaths(markdownPath, markdownContent) {
         result.add(normalized);
     };
 
-    const animDirectiveRe = /\{\{anim:([^}\n]+)\}\}/g;
-    let animMatch = null;
-    while ((animMatch = animDirectiveRe.exec(source)) !== null) {
-        appendPath(animMatch[1]);
-    }
-
-    const csDirectiveRe = /\{\{cs:([^}\n]+)\}\}/g;
-    let csMatch = null;
-    while ((csMatch = csDirectiveRe.exec(source)) !== null) {
-        appendPath(parseAnimSourcePathFromCsDirective(csMatch[1]));
-    }
+    source.split(/\r?\n/).forEach((line) => {
+        const parser = markdownEmbedLinksApi && typeof markdownEmbedLinksApi.parseStandaloneEmbedLink === 'function'
+            ? markdownEmbedLinksApi.parseStandaloneEmbedLink
+            : null;
+        const parsed = parser ? parser(line) : null;
+        if (!parsed) return;
+        const kind = String(parsed.kind || '').trim().toLowerCase();
+        const target = String(parsed.target || '').trim();
+        if (!target) return;
+        if (kind === 'anims') {
+            appendPath(target);
+            return;
+        }
+        if (kind === 'cs') {
+            appendPath(parseAnimSourcePathFromCsTarget(target));
+        }
+    });
 
     const animcsFenceRe = /```animcs\s*([\s\S]*?)```/g;
     let fenceMatch = null;
@@ -1617,9 +1708,11 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
     const uploadedImages = [];
     const uploadedMedia = [];
     const uploadedCsharpFiles = [];
+    const uploadedFxFiles = [];
     const imagePathSet = new Set();
     const mediaPathSet = new Set();
     const csharpPathSet = new Set();
+    const fxPathSet = new Set();
 
     updateAnimPreviewReferenceContext(safeMarkdownPath || markdownPath, markdownContent);
 
@@ -1650,6 +1743,18 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
             if (!variantPath || csharpPathSet.has(variantPath)) return;
             csharpPathSet.add(variantPath);
             uploadedCsharpFiles.push({
+                assetPath: variantPath,
+                content,
+                name
+            });
+        });
+    };
+
+    const appendUploadedFxFile = (assetPath, content, name) => {
+        pathVariants(assetPath).forEach((variantPath) => {
+            if (!variantPath || fxPathSet.has(variantPath)) return;
+            fxPathSet.add(variantPath);
+            uploadedFxFiles.push({
                 assetPath: variantPath,
                 content,
                 name
@@ -1689,6 +1794,10 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
         }
         if (mode === 'csharp') {
             appendUploadedCsharpFile(assetPath, String(file.content || ''), String(file.path).split('/').pop() || '');
+            return;
+        }
+        if (mode === 'shaderfx') {
+            appendUploadedFxFile(assetPath, String(file.content || ''), String(file.path).split('/').pop() || '');
         }
     });
 
@@ -1698,6 +1807,7 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
         uploadedImages,
         uploadedMedia,
         uploadedCsharpFiles,
+        uploadedFxFiles,
         compiledAnims: buildCompiledAnimsPayload(),
         animCompileErrors: buildAnimCompileErrorsPayload(),
         animBridge: {
@@ -3536,6 +3646,16 @@ function buildCommandPaletteItems(query) {
             }
         },
         {
+            id: 'markdown.meta',
+            label: 'Markdown: Toggle Metadata Drawer',
+            detail: '打开/关闭 front matter 编辑抽屉',
+            shortcut: VSCODE_SHORTCUTS.MARKDOWN_META,
+            run() {
+                if (activeFileMode() !== 'markdown') return;
+                toggleMarkdownMetaDrawer();
+            }
+        },
+        {
             id: 'file.rename',
             label: 'File: Rename File',
             detail: '重命名当前文件',
@@ -3822,6 +3942,14 @@ function handleGlobalShortcuts(event) {
         return;
     }
 
+    if (key === 'm' && event.shiftKey) {
+        event.preventDefault();
+        if (activeFileMode() === 'markdown') {
+            toggleMarkdownMetaDrawer();
+        }
+        return;
+    }
+
     if (key === 'e' && event.shiftKey) {
         event.preventDefault();
         focusExplorer();
@@ -3949,7 +4077,8 @@ function runContextCommandAsync(fn) {
         });
 }
 
-function createFileFromPathInput(pathInput) {
+function createFileFromPathInput(pathInput, options) {
+    const opts = options && typeof options === 'object' ? options : {};
     const fileName = normalizeEditableWorkspacePathInput(pathInput);
     if (!fileName) {
         addEvent('error', '路径必须位于 site/content 白名单（.md / anims/*.cs / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
@@ -3963,7 +4092,9 @@ function createFileFromPathInput(pathInput) {
     const file = {
         id: createFileId(),
         path: fileName,
-        content: detectFileMode(fileName) === 'shaderfx' ? shaderDefaultTemplate() : ''
+        content: Object.prototype.hasOwnProperty.call(opts, 'initialContent')
+            ? String(opts.initialContent || '')
+            : (detectFileMode(fileName) === 'shaderfx' ? shaderDefaultTemplate() : '')
     };
     state.workspace.files.push(file);
     ensureModelForFile(file);
@@ -4148,10 +4279,17 @@ function contextFileTreeMenuCommands() {
             when: (ctx) => !!(ctx && ctx.repoPath),
             run(ctx) {
                 const parent = parentDirOfRepoPath(ctx.repoPath);
-                const placeholder = parent ? `${parent}/new-file.cs` : 'new-file.cs';
-                const input = globalThis.prompt('请输入新文件名（site/content 下白名单路径）', placeholder);
-                if (!input) return;
-                createFileFromPathInput(input);
+                const safeParent = normalizeContentRelativePath(parent);
+                let type = 'markdown';
+                if (/(^|\/)anims(\/|$)/i.test(safeParent)) type = 'animcs';
+                else if (/(^|\/)code(\/|$)/i.test(safeParent)) type = 'codecs';
+                else if (/(^|\/)imgs(\/|$)/i.test(safeParent)) type = 'image';
+                else if (/(^|\/)media(\/|$)/i.test(safeParent)) type = 'video';
+                else if (/\.fx$/i.test(String(ctx.repoPath || '')) || /(^|\/)fx(\/|$)|(^|\/)shader(s)?(\/|$)/i.test(safeParent)) type = 'shaderfx';
+                openQuickCreateModal({
+                    baseDir: parent,
+                    type
+                });
             }
         },
         {
@@ -4556,6 +4694,9 @@ function updateHeaderModeActions() {
     const isMarkdown = mode === 'markdown';
     const isShader = mode === 'shaderfx';
     if (dom.btnMarkdownTogglePreview) dom.btnMarkdownTogglePreview.hidden = !isMarkdown;
+    if (dom.btnMarkdownMetadata) {
+        dom.btnMarkdownMetadata.hidden = !isMarkdown;
+    }
     if (dom.btnMarkdownOpenViewer) dom.btnMarkdownOpenViewer.hidden = !isMarkdown;
     if (dom.btnShaderCompile) dom.btnShaderCompile.hidden = !isShader;
     if (dom.btnShaderPreviewPopup) {
@@ -4610,7 +4751,14 @@ function setMarkdownPreviewMode(mode) {
     if (dom.editor) dom.editor.hidden = showingPreview;
     if (dom.markdownPreviewPane) dom.markdownPreviewPane.hidden = !showingPreview;
     if (dom.btnMarkdownTogglePreview) {
-        dom.btnMarkdownTogglePreview.textContent = next === 'preview' ? '返回编辑' : '预览';
+        dom.btnMarkdownTogglePreview.textContent = next === 'preview' ? '返回编辑' : '可视化';
+    }
+    if (showingPreview) {
+        scheduleMarkdownVisualRefresh();
+    } else {
+        state.markdownVisual.selectedBlockId = '';
+        state.markdownVisual.selectedBlockIndex = -1;
+        updateMarkdownVisualInspector(null);
     }
     if (state.editor) {
         requestAnimationFrame(() => {
@@ -4637,6 +4785,1031 @@ function getMarkdownContextForAction(actionLabel) {
     if (ctx) return ctx;
     addEvent('error', `${String(actionLabel || '该操作')}仅支持 Markdown 文件`);
     return null;
+}
+
+function basenameRepoPath(pathValue) {
+    const safe = normalizeRepoPath(pathValue);
+    if (!safe) return '';
+    const index = safe.lastIndexOf('/');
+    if (index < 0) return safe;
+    return safe.slice(index + 1);
+}
+
+function normalizeQuickCreateType(value) {
+    const safe = String(value || '').trim().toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(QUICK_CREATE_TYPE_META, safe)) {
+        return safe;
+    }
+    return 'markdown';
+}
+
+function quickCreateTypeMeta(typeValue) {
+    const type = normalizeQuickCreateType(typeValue);
+    return QUICK_CREATE_TYPE_META[type] || QUICK_CREATE_TYPE_META.markdown;
+}
+
+function guessQuickCreateDirectory(baseDir, typeValue) {
+    const type = normalizeQuickCreateType(typeValue);
+    const safeBase = normalizeContentRelativePath(baseDir);
+    const ensureSubdir = (name) => {
+        if (!safeBase) return name;
+        if (new RegExp(`(^|/)${escapeRegExp(name)}(/|$)`, 'i').test(safeBase)) {
+            return safeBase;
+        }
+        return joinRepoPathParts(safeBase, name);
+    };
+    if (type === 'animcs') return ensureSubdir('anims');
+    if (type === 'codecs') return ensureSubdir('code');
+    if (type === 'image') return ensureSubdir('imgs');
+    if (type === 'video') return ensureSubdir('media');
+    return safeBase;
+}
+
+function ensureQuickCreateFileName(fileNameValue, typeValue) {
+    let name = String(fileNameValue || '').trim();
+    if (!name) return '';
+    name = name.replace(/^\/+/, '').replace(/\/+$/, '');
+    if (name.includes('/')) return '';
+    const ext = fileExt(name);
+    if (ext) return name;
+    const meta = quickCreateTypeMeta(typeValue);
+    return `${name}${meta.ext}`;
+}
+
+function markdownMinimalTemplate(pathValue) {
+    const stem = basenameRepoPath(pathValue)
+        .replace(/\.md$/i, '')
+        .replace(/[_-]+/g, ' ')
+        .trim();
+    const title = stem || '新文章';
+    return [
+        '---',
+        `title: ${title}`,
+        '---',
+        '',
+        `# ${title}`,
+        ''
+    ].join('\n');
+}
+
+function quickCreateInitialContent(typeValue, pathValue) {
+    const type = normalizeQuickCreateType(typeValue);
+    if (type === 'markdown') {
+        return markdownMinimalTemplate(pathValue);
+    }
+    if (type === 'shaderfx') {
+        return shaderDefaultTemplate();
+    }
+    return '';
+}
+
+function setQuickCreateModalOpen(open) {
+    const shouldOpen = !!open;
+    state.ui.quickCreateOpen = shouldOpen;
+    if (dom.quickCreateModal) {
+        dom.quickCreateModal.hidden = !shouldOpen;
+    }
+    if (!shouldOpen) return;
+    requestAnimationFrame(() => {
+        if (dom.quickCreateName) {
+            dom.quickCreateName.focus();
+            dom.quickCreateName.select();
+        }
+    });
+}
+
+function closeQuickCreateModal() {
+    setQuickCreateModalOpen(false);
+}
+
+function openQuickCreateModal(options) {
+    const opts = options && typeof options === 'object' ? options : {};
+    const active = getActiveFile();
+    const fallbackDir = active ? dirnameRepoPath(active.path) : '';
+    const baseDir = normalizeContentRelativePath(String(opts.baseDir || fallbackDir || ''));
+    const type = normalizeQuickCreateType(opts.type || state.quickCreate.pendingType || 'markdown');
+    state.quickCreate.pendingBaseDir = baseDir;
+    state.quickCreate.pendingType = type;
+
+    if (dom.quickCreateType) {
+        dom.quickCreateType.value = type;
+    }
+    if (dom.quickCreateDirectory) {
+        dom.quickCreateDirectory.value = guessQuickCreateDirectory(baseDir, type);
+    }
+    if (dom.quickCreateName) {
+        dom.quickCreateName.value = quickCreateTypeMeta(type).defaultFileName;
+    }
+    if (dom.quickCreateHint) {
+        dom.quickCreateHint.textContent = '创建后将立即加入工作区并自动保存。';
+    }
+    setQuickCreateModalOpen(true);
+}
+
+function submitQuickCreateModal() {
+    const type = normalizeQuickCreateType(dom.quickCreateType && dom.quickCreateType.value);
+    const dirInput = normalizeContentRelativePath(dom.quickCreateDirectory && dom.quickCreateDirectory.value);
+    const fileName = ensureQuickCreateFileName(dom.quickCreateName && dom.quickCreateName.value, type);
+    if (!fileName) {
+        addEvent('error', '文件名不能为空，且不能包含路径分隔符');
+        return;
+    }
+
+    const targetPath = joinRepoPathParts(dirInput, fileName);
+    if (!targetPath) {
+        addEvent('error', '目标路径无效');
+        return;
+    }
+    const initialContent = quickCreateInitialContent(type, targetPath);
+    const created = createFileFromPathInput(targetPath, { initialContent: initialContent });
+    if (!created) return;
+    closeQuickCreateModal();
+}
+
+function getMetaFieldNode(fieldName) {
+    const safe = String(fieldName || '').trim();
+    if (!safe || !Array.isArray(dom.markdownMetaFields)) return null;
+    return dom.markdownMetaFields.find((node) => {
+        return node && String(node.getAttribute('data-meta-field') || '') === safe;
+    }) || null;
+}
+
+function getMetaFieldValue(fieldName) {
+    const node = getMetaFieldNode(fieldName);
+    if (!node) return '';
+    return String(node.value || '');
+}
+
+function setMetaFieldValue(fieldName, value) {
+    const node = getMetaFieldNode(fieldName);
+    if (!node) return;
+    node.value = String(value || '');
+}
+
+function parseFrontMatterSafely(markdownText) {
+    if (frontMatterUtilsApi && typeof frontMatterUtilsApi.parseFrontMatter === 'function') {
+        return frontMatterUtilsApi.parseFrontMatter(markdownText);
+    }
+    const text = String(markdownText || '').replace(/\r\n/g, '\n');
+    const match = text.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
+    if (!match) {
+        return {
+            hasFrontMatter: false,
+            frontMatter: '',
+            metadata: {},
+            body: text
+        };
+    }
+    return {
+        hasFrontMatter: true,
+        frontMatter: String(match[1] || ''),
+        metadata: {},
+        body: text.slice(match[0].length)
+    };
+}
+
+function applyFrontMatterDefaults(metadata) {
+    if (frontMatterUtilsApi && typeof frontMatterUtilsApi.applyMetadataDefaults === 'function') {
+        return frontMatterUtilsApi.applyMetadataDefaults(metadata);
+    }
+    const safe = metadata && typeof metadata === 'object' ? metadata : {};
+    return {
+        title: String(safe.title || '').trim(),
+        author: String(safe.author || '').trim(),
+        topic: String(safe.topic || 'article-contribution').trim() || 'article-contribution',
+        description: String(safe.description || '').trim(),
+        order: String(safe.order || '').trim(),
+        difficulty: String(safe.difficulty || 'beginner').trim() || 'beginner',
+        time: String(safe.time || '').trim(),
+        prev_chapter: String(safe.prev_chapter || '').trim(),
+        next_chapter: String(safe.next_chapter || '').trim(),
+        min_c: String(safe.min_c || '').trim(),
+        min_t: String(safe.min_t || '').trim(),
+        colors: safe.colors && typeof safe.colors === 'object' ? safe.colors : {},
+        colorChange: safe.colorChange && typeof safe.colorChange === 'object' ? safe.colorChange : {}
+    };
+}
+
+function mergeFrontMatterSafely(markdownText, metadata) {
+    if (frontMatterUtilsApi && typeof frontMatterUtilsApi.mergeFrontMatter === 'function') {
+        return frontMatterUtilsApi.mergeFrontMatter(markdownText, metadata);
+    }
+    const parsed = parseFrontMatterSafely(markdownText);
+    const body = String(parsed.body || '').replace(/^\s+/, '');
+    const meta = applyFrontMatterDefaults(metadata);
+    return [
+        '---',
+        `title: ${meta.title || '新文章'}`,
+        `author: ${meta.author || ''}`,
+        `topic: ${meta.topic || 'article-contribution'}`,
+        `description: ${meta.description || ''}`,
+        `order: ${meta.order || ''}`,
+        `difficulty: ${meta.difficulty || 'beginner'}`,
+        `time: ${meta.time || ''}`,
+        '---',
+        '',
+        body
+    ].join('\n');
+}
+
+function ensureFrontMatterSafely(markdownText, metadata) {
+    if (frontMatterUtilsApi && typeof frontMatterUtilsApi.ensureFrontMatter === 'function') {
+        return frontMatterUtilsApi.ensureFrontMatter(markdownText, metadata);
+    }
+    const parsed = parseFrontMatterSafely(markdownText);
+    if (parsed.hasFrontMatter) return String(markdownText || '');
+    return mergeFrontMatterSafely(markdownText, metadata);
+}
+
+function parseMetadataColorsField(value) {
+    const result = {};
+    String(value || '').split(/\r?\n/).forEach((line) => {
+        const text = String(line || '').trim();
+        if (!text) return;
+        const match = text.match(/^([A-Za-z0-9_-]+)\s*=\s*(.+)$/);
+        if (!match) return;
+        const key = String(match[1] || '').trim();
+        const color = String(match[2] || '').trim();
+        if (!key || !color) return;
+        result[key] = color;
+    });
+    return result;
+}
+
+function formatMetadataColorsField(colors) {
+    const safe = colors && typeof colors === 'object' ? colors : {};
+    return Object.entries(safe)
+        .map((entry) => `${entry[0]}=${entry[1]}`)
+        .join('\n');
+}
+
+function parseMetadataColorChangeField(value) {
+    const result = {};
+    String(value || '').split(/\r?\n/).forEach((line) => {
+        const text = String(line || '').trim();
+        if (!text) return;
+        const match = text.match(/^([A-Za-z0-9_-]+)\s*=\s*(.+)$/);
+        if (!match) return;
+        const key = String(match[1] || '').trim();
+        const colors = String(match[2] || '')
+            .split(',')
+            .map((item) => String(item || '').trim())
+            .filter(Boolean);
+        if (!key || colors.length <= 0) return;
+        result[key] = colors;
+    });
+    return result;
+}
+
+function formatMetadataColorChangeField(colorChange) {
+    const safe = colorChange && typeof colorChange === 'object' ? colorChange : {};
+    return Object.entries(safe)
+        .map((entry) => {
+            const list = Array.isArray(entry[1]) ? entry[1].map((item) => String(item || '').trim()).filter(Boolean) : [];
+            return list.length > 0 ? `${entry[0]}=${list.join(',')}` : '';
+        })
+        .filter(Boolean)
+        .join('\n');
+}
+
+function setMarkdownMetaStatus(text, isError) {
+    if (!dom.markdownMetaStatus) return;
+    dom.markdownMetaStatus.textContent = String(text || '');
+    dom.markdownMetaStatus.style.color = isError ? '#f48771' : '#8fa3b8';
+}
+
+function readMarkdownMetaForm() {
+    return {
+        title: getMetaFieldValue('title').trim(),
+        author: getMetaFieldValue('author').trim(),
+        topic: getMetaFieldValue('topic').trim(),
+        description: getMetaFieldValue('description').trim(),
+        order: getMetaFieldValue('order').trim(),
+        difficulty: getMetaFieldValue('difficulty').trim(),
+        time: getMetaFieldValue('time').trim(),
+        prev_chapter: getMetaFieldValue('prev_chapter').trim(),
+        next_chapter: getMetaFieldValue('next_chapter').trim(),
+        min_c: getMetaFieldValue('min_c').trim(),
+        min_t: getMetaFieldValue('min_t').trim(),
+        colors: parseMetadataColorsField(getMetaFieldValue('colors')),
+        colorChange: parseMetadataColorChangeField(getMetaFieldValue('colorChange'))
+    };
+}
+
+function fillMarkdownMetaForm(metadata) {
+    const meta = applyFrontMatterDefaults(metadata);
+    setMetaFieldValue('title', meta.title || '');
+    setMetaFieldValue('author', meta.author || '');
+    setMetaFieldValue('topic', meta.topic || 'article-contribution');
+    setMetaFieldValue('description', meta.description || '');
+    setMetaFieldValue('order', meta.order || '');
+    setMetaFieldValue('difficulty', meta.difficulty || 'beginner');
+    setMetaFieldValue('time', meta.time || '');
+    setMetaFieldValue('prev_chapter', meta.prev_chapter || '');
+    setMetaFieldValue('next_chapter', meta.next_chapter || '');
+    setMetaFieldValue('min_c', meta.min_c || '');
+    setMetaFieldValue('min_t', meta.min_t || '');
+    setMetaFieldValue('colors', formatMetadataColorsField(meta.colors));
+    setMetaFieldValue('colorChange', formatMetadataColorChangeField(meta.colorChange));
+}
+
+function ensureMarkdownFrontMatterForActiveFile() {
+    const ctx = getActiveMarkdownContext();
+    if (!ctx) return null;
+    const source = String(ctx.model.getValue() || '');
+    const parsed = parseFrontMatterSafely(source);
+    const title = basenameRepoPath(ctx.active.path).replace(/\.md$/i, '') || '新文章';
+    const ensured = parsed && parsed.hasFrontMatter
+        ? source
+        : [
+            '---',
+            `title: ${title}`,
+            '---',
+            '',
+            String(source || '').replace(/^\s+/, '')
+        ].join('\n');
+    if (ensured !== source) {
+        state.markdownMeta.syncing = true;
+        ctx.model.setValue(ensured);
+        state.markdownMeta.syncing = false;
+    }
+    return ctx;
+}
+
+function syncMarkdownMetaDrawerFromModel() {
+    if (!state.ui.markdownMetaDrawerOpen) return;
+    const ctx = getActiveMarkdownContext();
+    if (!ctx) return;
+    if (state.markdownMeta.syncing) return;
+    const parsed = parseFrontMatterSafely(ctx.model.getValue());
+    const metadata = applyFrontMatterDefaults(parsed.metadata || {});
+    state.markdownMeta.syncing = true;
+    fillMarkdownMetaForm(metadata);
+    state.markdownMeta.syncing = false;
+    state.markdownMeta.activeFileId = String(ctx.active.id || '');
+    setMarkdownMetaStatus(`已同步：${ctx.active.path}`, false);
+}
+
+function scheduleMarkdownMetaSyncFromModel() {
+    if (!state.ui.markdownMetaDrawerOpen) return;
+    if (state.markdownMeta.syncTimer) {
+        clearTimeout(state.markdownMeta.syncTimer);
+    }
+    state.markdownMeta.syncTimer = setTimeout(() => {
+        state.markdownMeta.syncTimer = 0;
+        syncMarkdownMetaDrawerFromModel();
+    }, 100);
+}
+
+function applyMarkdownMetaFormToModel() {
+    if (!state.ui.markdownMetaDrawerOpen || state.markdownMeta.syncing) return;
+    const ctx = getActiveMarkdownContext();
+    if (!ctx) return;
+    const metadata = readMarkdownMetaForm();
+    const current = String(ctx.model.getValue() || '');
+    const merged = mergeFrontMatterSafely(current, metadata);
+    if (merged === current) {
+        setMarkdownMetaStatus('元数据无变更', false);
+        return;
+    }
+    state.markdownMeta.syncing = true;
+    ctx.model.setValue(merged);
+    state.markdownMeta.syncing = false;
+    setMarkdownMetaStatus(`已更新 front matter · ${nowStamp()}`, false);
+}
+
+function setMarkdownMetaDrawerOpen(open, options) {
+    const opts = options && typeof options === 'object' ? options : {};
+    const shouldOpen = !!open;
+    state.ui.markdownMetaDrawerOpen = shouldOpen;
+    if (dom.markdownMetaDrawer) {
+        dom.markdownMetaDrawer.classList.toggle('markdown-meta-drawer-open', shouldOpen);
+        dom.markdownMetaDrawer.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+    }
+    if (!shouldOpen) {
+        if (state.markdownMeta.syncTimer) {
+            clearTimeout(state.markdownMeta.syncTimer);
+            state.markdownMeta.syncTimer = 0;
+        }
+        setMarkdownMetaStatus('已关闭', false);
+        return;
+    }
+    const ctx = ensureMarkdownFrontMatterForActiveFile();
+    if (!ctx) {
+        if (!opts.silent) {
+            addEvent('error', '元数据编辑仅支持 Markdown 文件');
+        }
+        state.ui.markdownMetaDrawerOpen = false;
+        if (dom.markdownMetaDrawer) {
+            dom.markdownMetaDrawer.classList.remove('markdown-meta-drawer-open');
+            dom.markdownMetaDrawer.setAttribute('aria-hidden', 'true');
+        }
+        return;
+    }
+    syncMarkdownMetaDrawerFromModel();
+    if (opts.focus !== false) {
+        requestAnimationFrame(() => {
+            const titleNode = getMetaFieldNode('title');
+            if (titleNode) titleNode.focus();
+        });
+    }
+}
+
+function toggleMarkdownMetaDrawer() {
+    setMarkdownMetaDrawerOpen(!state.ui.markdownMetaDrawerOpen);
+}
+
+function markdownVisualBlockTypeLabel(type) {
+    const safe = String(type || '').trim();
+    if (safe === 'heading') return '标题';
+    if (safe === 'list') return '列表';
+    if (safe === 'quote') return '引用';
+    if (safe === 'code') return '代码块';
+    if (safe === 'table') return '表格';
+    if (safe === 'front-matter') return '元数据';
+    return '段落';
+}
+
+function parseMarkdownVisualBlocks(sourceText) {
+    const lines = String(sourceText || '').replace(/\r\n/g, '\n').split('\n');
+    const blocks = [];
+    let i = 0;
+
+    const pushBlock = (type, startLine, endLine, blockLines, meta) => {
+        const text = blockLines.join('\n');
+        const block = {
+            id: `${type}:${startLine}:${endLine}:${blocks.length + 1}`,
+            type,
+            startLine,
+            endLine,
+            text,
+            meta: meta && typeof meta === 'object' ? meta : {}
+        };
+        blocks.push(block);
+    };
+
+    if (lines[0] && String(lines[0]).trim() === '---') {
+        let end = -1;
+        for (let j = 1; j < lines.length; j += 1) {
+            if (String(lines[j] || '').trim() === '---') {
+                end = j;
+                break;
+            }
+        }
+        if (end > 0) {
+            pushBlock('front-matter', 1, end + 1, lines.slice(0, end + 1), {});
+            i = end + 1;
+        }
+    }
+
+    const isBoundary = (line) => {
+        const text = String(line || '');
+        if (!text.trim()) return true;
+        if (/^#{1,6}\s+/.test(text)) return true;
+        if (/^>\s?/.test(text)) return true;
+        if (/^\s*(?:[-*+]\s+|\d+\.\s+)/.test(text)) return true;
+        if (/^\s*(```+|~~~+)/.test(text)) return true;
+        if (/^\|.*\|/.test(text.trim())) return true;
+        return false;
+    };
+
+    while (i < lines.length) {
+        const line = String(lines[i] || '');
+        if (!line.trim()) {
+            i += 1;
+            continue;
+        }
+
+        const lineNo = i + 1;
+        const fenceMatch = line.match(/^\s*(```+|~~~+)/);
+        if (fenceMatch) {
+            const fence = fenceMatch[1];
+            let end = i + 1;
+            while (end < lines.length) {
+                if (String(lines[end] || '').match(new RegExp(`^\\s*${escapeRegExp(fence)}\\s*$`))) {
+                    end += 1;
+                    break;
+                }
+                end += 1;
+            }
+            pushBlock('code', lineNo, end, lines.slice(i, end), {});
+            i = end;
+            continue;
+        }
+
+        const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+        if (headingMatch) {
+            pushBlock('heading', lineNo, lineNo, [line], { level: headingMatch[1].length });
+            i += 1;
+            continue;
+        }
+
+        if (/^\|.*\|/.test(line.trim())) {
+            let end = i + 1;
+            while (end < lines.length && /^\|.*\|/.test(String(lines[end] || '').trim())) {
+                end += 1;
+            }
+            pushBlock('table', lineNo, end, lines.slice(i, end), {});
+            i = end;
+            continue;
+        }
+
+        if (/^>\s?/.test(line)) {
+            let end = i + 1;
+            while (end < lines.length && /^>\s?/.test(String(lines[end] || ''))) {
+                end += 1;
+            }
+            pushBlock('quote', lineNo, end, lines.slice(i, end), {});
+            i = end;
+            continue;
+        }
+
+        const listMatch = line.match(/^(\s*(?:[-*+]|\d+\.)\s+)/);
+        if (listMatch) {
+            let end = i + 1;
+            while (end < lines.length) {
+                const nextLine = String(lines[end] || '');
+                if (!nextLine.trim()) {
+                    end += 1;
+                    continue;
+                }
+                if (/^\s*(?:[-*+]\s+|\d+\.\s+)/.test(nextLine)) {
+                    end += 1;
+                    continue;
+                }
+                break;
+            }
+            pushBlock('list', lineNo, end, lines.slice(i, end), {
+                marker: listMatch[1]
+            });
+            i = end;
+            continue;
+        }
+
+        let end = i + 1;
+        while (end < lines.length && !isBoundary(lines[end])) {
+            end += 1;
+        }
+        pushBlock('paragraph', lineNo, end, lines.slice(i, end), {});
+        i = end;
+    }
+
+    return blocks;
+}
+
+function visualEditableTextFromBlock(block) {
+    const safe = block && typeof block === 'object' ? block : null;
+    if (!safe) return '';
+    if (safe.type === 'heading') {
+        return String(safe.text || '').replace(/^#{1,6}\s+/, '');
+    }
+    if (safe.type === 'quote') {
+        return String(safe.text || '').split('\n').map((line) => String(line || '').replace(/^>\s?/, '')).join('\n');
+    }
+    if (safe.type === 'list') {
+        return String(safe.text || '')
+            .split('\n')
+            .map((line) => String(line || '').replace(/^\s*(?:[-*+]\s+|\d+\.\s+)/, ''))
+            .join('\n');
+    }
+    return String(safe.text || '');
+}
+
+function summarizeVisualBlockText(block) {
+    const text = String(visualEditableTextFromBlock(block) || '').trim();
+    if (!text) return '(空内容)';
+    if (text.length <= 220) return text;
+    return `${text.slice(0, 220)}...`;
+}
+
+function encodeMarkdownVisualContentPath(pathValue) {
+    return String(pathValue || '')
+        .split('/')
+        .filter(Boolean)
+        .map((part) => encodeURIComponent(part))
+        .join('/');
+}
+
+function resolveMarkdownVisualImageSource(markdownPath, rawPath) {
+    const source = String(rawPath || '').trim();
+    if (!source) return '';
+    if (/^(?:data:|https?:|blob:)/i.test(source)) return source;
+    if (source.startsWith('/site/content/')) return source;
+    if (/^site\/content\//i.test(source)) return `/${source}`;
+    const resolvedPath = resolveContentPathFromMarkdown(markdownPath, source);
+    if (!resolvedPath) return '';
+    const localFile = findWorkspaceFileByContentPath(resolvedPath);
+    if (localFile && detectFileMode(localFile.path) === 'image') {
+        const dataUrl = String(localFile.content || '').trim();
+        if (dataUrl.startsWith('data:image/')) return dataUrl;
+    }
+    return `/site/content/${encodeMarkdownVisualContentPath(resolvedPath)}`;
+}
+
+function appendMarkdownVisualInlineContent(container, text) {
+    const safeContainer = container && typeof container.appendChild === 'function' ? container : null;
+    if (!safeContainer) return;
+    const source = String(text || '');
+    let cursor = 0;
+    MARKDOWN_VISUAL_INLINE_LINK_RE.lastIndex = 0;
+    let match = null;
+    while ((match = MARKDOWN_VISUAL_INLINE_LINK_RE.exec(source)) !== null) {
+        const prefix = source.slice(cursor, match.index);
+        if (prefix) {
+            safeContainer.appendChild(document.createTextNode(prefix));
+        }
+        const label = String(match[1] || '').trim() || String(match[2] || '').trim();
+        const href = String(match[2] || '').trim();
+        const link = document.createElement('span');
+        link.className = 'markdown-visual-inline-link';
+        link.textContent = label || href || '(链接)';
+        if (href) {
+            link.setAttribute('data-href', href);
+        }
+        safeContainer.appendChild(link);
+        cursor = match.index + String(match[0] || '').length;
+    }
+    if (cursor < source.length) {
+        safeContainer.appendChild(document.createTextNode(source.slice(cursor)));
+    }
+}
+
+function renderMarkdownVisualEmbedPreview(embed) {
+    const safeEmbed = embed && typeof embed === 'object' ? embed : null;
+    const kind = safeEmbed ? String(safeEmbed.kind || '').trim().toLowerCase() : '';
+    const label = safeEmbed ? String(safeEmbed.label || '').trim() : '';
+    const target = safeEmbed ? String(safeEmbed.target || '').trim() : '';
+    const wrapper = document.createElement('article');
+    wrapper.className = `markdown-visual-embed-preview markdown-visual-embed-${kind || 'link'}`;
+    const tag = document.createElement('span');
+    tag.className = 'markdown-visual-embed-tag';
+    tag.textContent = kind === 'fx'
+        ? 'Shader 引用'
+        : (kind === 'anims' ? '动画引用' : (kind === 'cs' ? '代码引用' : '引用'));
+    const title = document.createElement('div');
+    title.className = 'markdown-visual-embed-title';
+    title.textContent = label || '待补充说明';
+    const pathNode = document.createElement('code');
+    pathNode.className = 'markdown-visual-embed-path';
+    pathNode.textContent = target || '(路径为空)';
+    wrapper.append(tag, title, pathNode);
+    if (kind === 'fx') {
+        const stage = document.createElement('div');
+        stage.className = 'markdown-visual-embed-fx-stage';
+        stage.textContent = 'FX 引用卡片';
+        wrapper.appendChild(stage);
+    }
+    return wrapper;
+}
+
+function renderMarkdownVisualImagePreview(markdownPath, lineText) {
+    const match = String(lineText || '').match(MARKDOWN_VISUAL_IMAGE_LINE_RE);
+    if (!match) return null;
+    const alt = String(match[1] || '').trim();
+    const rawSrc = String(match[2] || '').trim();
+    const src = resolveMarkdownVisualImageSource(markdownPath, rawSrc);
+    const figure = document.createElement('figure');
+    figure.className = 'markdown-visual-image-preview';
+    if (src) {
+        const image = document.createElement('img');
+        image.src = src;
+        image.alt = alt || 'Markdown 图片';
+        image.loading = 'lazy';
+        figure.appendChild(image);
+    } else {
+        const miss = document.createElement('div');
+        miss.className = 'markdown-visual-image-missing';
+        miss.textContent = `图片未解析：${rawSrc || '(空路径)'}`;
+        figure.appendChild(miss);
+    }
+    const caption = document.createElement('figcaption');
+    caption.textContent = alt || rawSrc || '图片';
+    figure.appendChild(caption);
+    return figure;
+}
+
+function renderMarkdownVisualQuotePreview(block) {
+    const lines = String(block && block.text || '')
+        .split('\n')
+        .map((line) => String(line || '').replace(/^>\s?/, ''));
+    const nonEmptyIndex = lines.findIndex((line) => String(line || '').trim());
+    const markerLine = nonEmptyIndex >= 0 ? String(lines[nonEmptyIndex] || '').trim() : '';
+    const markerMatch = markerLine.match(/^\[!([A-Za-z]+)\]\s*(.*)$/);
+    const calloutMeta = markerMatch ? MARKDOWN_VISUAL_CALLOUT_LEVEL_MAP[String(markerMatch[1] || '').toUpperCase()] : null;
+    const wrapper = document.createElement('div');
+    if (calloutMeta) {
+        wrapper.className = `markdown-visual-quote markdown-visual-callout markdown-visual-callout-${calloutMeta.className}`;
+        const title = document.createElement('div');
+        title.className = 'markdown-visual-callout-title';
+        title.textContent = calloutMeta.title;
+        wrapper.appendChild(title);
+    } else {
+        wrapper.className = 'markdown-visual-quote';
+    }
+
+    const bodyLines = lines.slice();
+    if (calloutMeta && nonEmptyIndex >= 0) {
+        bodyLines[nonEmptyIndex] = String(markerMatch[2] || '');
+    }
+    const body = document.createElement('div');
+    body.className = 'markdown-visual-quote-body';
+    const visible = bodyLines.filter((line) => String(line || '').trim().length > 0);
+    if (visible.length <= 0) {
+        const empty = document.createElement('p');
+        empty.className = 'markdown-visual-paragraph';
+        empty.textContent = '(空引用)';
+        body.appendChild(empty);
+    } else {
+        visible.forEach((line) => {
+            const p = document.createElement('p');
+            p.className = 'markdown-visual-paragraph';
+            appendMarkdownVisualInlineContent(p, line);
+            body.appendChild(p);
+        });
+    }
+    wrapper.appendChild(body);
+    return wrapper;
+}
+
+function renderMarkdownVisualListPreview(block) {
+    const lines = String(block && block.text || '').split('\n');
+    const ordered = /^\s*\d+\.\s+/.test(String(lines[0] || ''));
+    const list = document.createElement(ordered ? 'ol' : 'ul');
+    list.className = 'markdown-visual-list';
+    let count = 0;
+    lines.forEach((line) => {
+        const clean = String(line || '').trim();
+        if (!clean) return;
+        if (!/^\s*(?:[-*+]\s+|\d+\.\s+)/.test(clean)) return;
+        const item = document.createElement('li');
+        appendMarkdownVisualInlineContent(item, clean.replace(/^\s*(?:[-*+]\s+|\d+\.\s+)/, ''));
+        list.appendChild(item);
+        count += 1;
+    });
+    if (!count) {
+        const fallback = document.createElement('li');
+        fallback.textContent = '(空列表)';
+        list.appendChild(fallback);
+    }
+    return list;
+}
+
+function renderMarkdownVisualParagraphPreview(block, markdownPath) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'markdown-visual-paragraph-group';
+    const parser = markdownEmbedLinksApi && typeof markdownEmbedLinksApi.parseStandaloneEmbedLink === 'function'
+        ? markdownEmbedLinksApi.parseStandaloneEmbedLink
+        : null;
+    const lines = String(block && block.text || '').split('\n');
+    const textBuffer = [];
+    const flushTextBuffer = () => {
+        if (!textBuffer.length) return;
+        const p = document.createElement('p');
+        p.className = 'markdown-visual-paragraph';
+        textBuffer.forEach((line, index) => {
+            if (index > 0) p.appendChild(document.createElement('br'));
+            appendMarkdownVisualInlineContent(p, line);
+        });
+        wrapper.appendChild(p);
+        textBuffer.length = 0;
+    };
+    lines.forEach((line) => {
+        const parsedEmbed = parser ? parser(line) : null;
+        if (parsedEmbed) {
+            flushTextBuffer();
+            wrapper.appendChild(renderMarkdownVisualEmbedPreview(parsedEmbed));
+            return;
+        }
+        const imageNode = renderMarkdownVisualImagePreview(markdownPath, line);
+        if (imageNode) {
+            flushTextBuffer();
+            wrapper.appendChild(imageNode);
+            return;
+        }
+        textBuffer.push(String(line || ''));
+    });
+    flushTextBuffer();
+    if (!wrapper.children.length) {
+        const empty = document.createElement('p');
+        empty.className = 'markdown-visual-paragraph';
+        empty.textContent = '(空段落)';
+        wrapper.appendChild(empty);
+    }
+    return wrapper;
+}
+
+function renderMarkdownVisualCodePreview(block) {
+    const pre = document.createElement('pre');
+    pre.className = 'markdown-visual-readonly';
+    const lines = String(block && block.text || '').split('\n');
+    const clipped = lines.slice(0, 10).join('\n');
+    pre.textContent = lines.length > 10 ? `${clipped}\n...` : clipped;
+    return pre;
+}
+
+function renderMarkdownVisualBlockPreview(block, markdownPath) {
+    const safe = block && typeof block === 'object' ? block : { type: 'paragraph', text: '' };
+    const wrapper = document.createElement('div');
+    wrapper.className = 'markdown-visual-block-render';
+    if (safe.type === 'heading') {
+        const level = Math.max(1, Math.min(6, Number(safe.meta && safe.meta.level || 2)));
+        const heading = document.createElement(`h${level}`);
+        heading.className = 'markdown-visual-heading';
+        appendMarkdownVisualInlineContent(heading, String(safe.text || '').replace(/^#{1,6}\s+/, ''));
+        wrapper.appendChild(heading);
+        return wrapper;
+    }
+    if (safe.type === 'quote') {
+        wrapper.appendChild(renderMarkdownVisualQuotePreview(safe));
+        return wrapper;
+    }
+    if (safe.type === 'list') {
+        wrapper.appendChild(renderMarkdownVisualListPreview(safe));
+        return wrapper;
+    }
+    if (safe.type === 'code' || safe.type === 'table' || safe.type === 'front-matter') {
+        wrapper.appendChild(renderMarkdownVisualCodePreview(safe));
+        return wrapper;
+    }
+    wrapper.appendChild(renderMarkdownVisualParagraphPreview(safe, markdownPath));
+    return wrapper;
+}
+
+function updateMarkdownVisualInspector(block) {
+    const safe = block && typeof block === 'object' ? block : null;
+    const selectedType = safe ? markdownVisualBlockTypeLabel(safe.type) : '未选择';
+    if (dom.markdownVisualSelectedType) {
+        dom.markdownVisualSelectedType.textContent = selectedType;
+    }
+    if (!safe) {
+        if (dom.markdownVisualEmpty) dom.markdownVisualEmpty.hidden = false;
+        if (dom.markdownVisualContent) {
+            dom.markdownVisualContent.value = '';
+            dom.markdownVisualContent.disabled = true;
+        }
+        if (dom.btnMarkdownVisualApply) dom.btnMarkdownVisualApply.disabled = true;
+        if (dom.btnMarkdownVisualSource) dom.btnMarkdownVisualSource.disabled = true;
+        return;
+    }
+    const readOnly = MARKDOWN_VISUAL_BLOCK_READONLY_TYPES.has(safe.type);
+    if (dom.markdownVisualEmpty) {
+        dom.markdownVisualEmpty.hidden = true;
+    }
+    if (dom.markdownVisualContent) {
+        dom.markdownVisualContent.disabled = readOnly;
+        dom.markdownVisualContent.value = visualEditableTextFromBlock(safe);
+    }
+    if (dom.btnMarkdownVisualApply) dom.btnMarkdownVisualApply.disabled = readOnly;
+    if (dom.btnMarkdownVisualSource) dom.btnMarkdownVisualSource.disabled = false;
+    if (dom.markdownVisualHelp) {
+        dom.markdownVisualHelp.textContent = readOnly
+            ? '该块类型当前仅支持源码编辑。'
+            : '修改内容后点击“应用修改”。';
+    }
+}
+
+function renderMarkdownVisualEditor() {
+    if (!dom.markdownVisualCanvas) return;
+    if (state.ui.markdownPreviewMode !== 'preview') return;
+    const ctx = getActiveMarkdownContext();
+    if (!ctx) {
+        dom.markdownVisualCanvas.innerHTML = '';
+        state.markdownVisual.blocks = [];
+        state.markdownVisual.selectedBlockId = '';
+        state.markdownVisual.selectedBlockIndex = -1;
+        updateMarkdownVisualInspector(null);
+        return;
+    }
+
+    const blocks = parseMarkdownVisualBlocks(ctx.model.getValue());
+    state.markdownVisual.blocks = blocks;
+    dom.markdownVisualCanvas.innerHTML = '';
+    if (blocks.length <= 0) {
+        const empty = document.createElement('p');
+        empty.className = 'markdown-visual-empty-canvas';
+        empty.textContent = '暂无可编辑块。';
+        dom.markdownVisualCanvas.appendChild(empty);
+        updateMarkdownVisualInspector(null);
+        return;
+    }
+
+    blocks.forEach((block, index) => {
+        const item = document.createElement('article');
+        const readOnly = MARKDOWN_VISUAL_BLOCK_READONLY_TYPES.has(block.type);
+        item.className = readOnly ? 'markdown-visual-block is-readonly' : 'markdown-visual-block';
+        item.dataset.blockId = block.id;
+        item.dataset.blockIndex = String(index);
+        if (block.id === state.markdownVisual.selectedBlockId) {
+            item.classList.add('is-selected');
+            state.markdownVisual.selectedBlockIndex = index;
+        }
+
+        const head = document.createElement('header');
+        head.className = 'markdown-visual-block-head';
+        const typeNode = document.createElement('span');
+        typeNode.className = 'markdown-visual-block-type';
+        typeNode.textContent = markdownVisualBlockTypeLabel(block.type);
+        const lineNode = document.createElement('span');
+        lineNode.className = 'markdown-visual-block-line';
+        lineNode.textContent = `Ln ${block.startLine}`;
+        head.append(typeNode, lineNode);
+        item.appendChild(head);
+
+        const previewNode = renderMarkdownVisualBlockPreview(block, ctx.active.path);
+        item.appendChild(previewNode);
+
+        item.addEventListener('click', () => {
+            state.markdownVisual.selectedBlockId = block.id;
+            state.markdownVisual.selectedBlockIndex = index;
+            renderMarkdownVisualEditor();
+        });
+
+        dom.markdownVisualCanvas.appendChild(item);
+    });
+
+    let selected = blocks.find((block) => block.id === state.markdownVisual.selectedBlockId) || null;
+    if (!selected) {
+        selected = blocks[0];
+        state.markdownVisual.selectedBlockId = selected.id;
+        state.markdownVisual.selectedBlockIndex = 0;
+        const first = dom.markdownVisualCanvas.querySelector('.markdown-visual-block');
+        if (first) first.classList.add('is-selected');
+    }
+    updateMarkdownVisualInspector(selected);
+}
+
+function scheduleMarkdownVisualRefresh() {
+    if (state.ui.markdownPreviewMode !== 'preview') return;
+    if (state.markdownVisual.refreshTimer) {
+        clearTimeout(state.markdownVisual.refreshTimer);
+    }
+    state.markdownVisual.refreshTimer = setTimeout(() => {
+        state.markdownVisual.refreshTimer = 0;
+        renderMarkdownVisualEditor();
+    }, 90);
+}
+
+function findSelectedMarkdownVisualBlock() {
+    const blocks = Array.isArray(state.markdownVisual.blocks) ? state.markdownVisual.blocks : [];
+    if (blocks.length <= 0) return null;
+    return blocks.find((block) => block.id === state.markdownVisual.selectedBlockId) || null;
+}
+
+function buildMarkdownTextFromVisualBlock(block, editedText) {
+    const safe = block && typeof block === 'object' ? block : null;
+    if (!safe) return '';
+    const source = String(editedText || '').replace(/\r\n/g, '\n');
+    if (safe.type === 'heading') {
+        const title = source.split('\n').map((line) => String(line || '').trim()).find(Boolean) || '小节标题';
+        const level = Math.max(1, Math.min(6, Number(safe.meta && safe.meta.level || 2)));
+        return `${'#'.repeat(level)} ${title}`;
+    }
+    if (safe.type === 'quote') {
+        const quoteLines = source.split('\n');
+        const normalized = quoteLines.length ? quoteLines : [''];
+        return normalized.map((line) => `> ${String(line || '')}`).join('\n');
+    }
+    if (safe.type === 'list') {
+        const marker = String(safe.meta && safe.meta.marker || '- ').replace(/\s*$/, ' ');
+        const rows = source.split('\n').map((line) => String(line || '').trim()).filter(Boolean);
+        if (!rows.length) return `${marker}列表项`;
+        return rows.map((line) => `${marker}${line.replace(/^\s*(?:[-*+]|\d+\.)\s+/, '')}`).join('\n');
+    }
+    if (safe.type === 'paragraph') {
+        return source.trim() ? source : '段落内容';
+    }
+    return String(safe.text || '');
+}
+
+function jumpToMarkdownVisualBlockSource(block) {
+    const safe = block && typeof block === 'object' ? block : null;
+    if (!safe || !state.editor) return;
+    setMarkdownPreviewMode('edit');
+    const model = state.editor.getModel();
+    if (!model) return;
+    const lineNumber = Math.max(1, Math.min(model.getLineCount(), Number(safe.startLine || 1)));
+    state.editor.setPosition({ lineNumber, column: 1 });
+    state.editor.revealLineInCenter(lineNumber);
+    state.editor.focus();
+}
+
+function applySelectedMarkdownVisualEdit() {
+    const ctx = getActiveMarkdownContext();
+    const block = findSelectedMarkdownVisualBlock();
+    if (!ctx || !block || !dom.markdownVisualContent) return;
+    if (MARKDOWN_VISUAL_BLOCK_READONLY_TYPES.has(block.type)) {
+        jumpToMarkdownVisualBlockSource(block);
+        return;
+    }
+    const nextBlockText = buildMarkdownTextFromVisualBlock(block, dom.markdownVisualContent.value);
+    const lines = String(ctx.model.getValue() || '').replace(/\r\n/g, '\n').split('\n');
+    const start = Math.max(0, Number(block.startLine || 1) - 1);
+    const end = Math.max(start, Number(block.endLine || block.startLine || 1));
+    const replacement = String(nextBlockText || '').replace(/\r\n/g, '\n').split('\n');
+    lines.splice(start, Math.max(1, end - start), ...replacement);
+    const nextText = lines.join('\n');
+    ctx.model.setValue(nextText);
+    scheduleMarkdownVisualRefresh();
 }
 
 function normalizeMarkdownDraftPath(pathValue) {
@@ -4829,8 +6002,23 @@ function applyMarkdownInsertAction(action) {
         insertMarkdownBlockSnippet(`[${selectedTitle}](目标文档.md)\n`, '目标文档.md');
         return;
     }
+    if (key === 'cs-embed') {
+        const selectedTitle = readMarkdownSelectionText('代码说明');
+        insertMarkdownBlockSnippet(`[${selectedTitle}](cs:./code/demo.cs#cs:t:命名空间.类型名)\n`, 'cs:./code/demo.cs#cs:t:命名空间.类型名');
+        return;
+    }
     if (key === 'anim') {
-        insertMarkdownBlockSnippet('{{anim:anims/你的动画文件.cs}}\n', 'anims/你的动画文件.cs');
+        const selectedTitle = readMarkdownSelectionText('动画说明');
+        insertMarkdownBlockSnippet(`[${selectedTitle}](anims:anims/你的动画文件.cs)\n`, 'anims:anims/你的动画文件.cs');
+        return;
+    }
+    if (key === 'fx-embed') {
+        const selectedTitle = readMarkdownSelectionText('Shader 说明');
+        insertMarkdownBlockSnippet(`[${selectedTitle}](fx:./shaders/demo.fx)\n`, 'fx:./shaders/demo.fx');
+        return;
+    }
+    if (key === 'callout-note') {
+        insertMarkdownBlockSnippet('> [!NOTE]\n> 这里填写提示内容。\n', '[!NOTE]');
         return;
     }
     if (key === 'animcs-block') {
@@ -5074,6 +6262,181 @@ function isMarkdownEditorFocused() {
         return true;
     }
     return !!(state.editor && typeof state.editor.hasTextFocus === 'function' && state.editor.hasTextFocus());
+}
+
+function isShaderEditorFocused() {
+    if (activeFileMode() !== 'shaderfx') return false;
+    const active = globalThis.document ? document.activeElement : null;
+    if (dom.editor && active && dom.editor.contains(active)) {
+        return true;
+    }
+    return !!(state.editor && typeof state.editor.hasTextFocus === 'function' && state.editor.hasTextFocus());
+}
+
+function setShaderSlotPickerOpen(open) {
+    const shouldOpen = !!open;
+    state.shaderSlotPicker.open = shouldOpen;
+    if (dom.shaderSlotPickerModal) {
+        dom.shaderSlotPickerModal.hidden = !shouldOpen;
+    }
+}
+
+function closeShaderSlotPicker(slotIndex) {
+    const resolver = state.shaderSlotPicker.resolver;
+    state.shaderSlotPicker.resolver = null;
+    setShaderSlotPickerOpen(false);
+    if (typeof resolver === 'function') {
+        resolver(slotIndex);
+    }
+}
+
+async function chooseShaderUsingSlot(usingMap) {
+    const map = usingMap && typeof usingMap === 'object' ? usingMap : {};
+    if (!dom.shaderSlotPickerModal || !dom.shaderSlotPickerList) {
+        const fallback = Number.parseInt(globalThis.prompt('using:img0~img3 槽位已满，请输入要覆盖的槽位（0-3）', '0') || '', 10);
+        if (!Number.isInteger(fallback) || fallback < 0 || fallback >= SHADER_UPLOAD_SLOT_COUNT) return -1;
+        return fallback;
+    }
+
+    dom.shaderSlotPickerList.innerHTML = '';
+    for (let i = 0; i < SHADER_UPLOAD_SLOT_COUNT; i += 1) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'shader-slot-picker-item';
+        const currentPath = String(map[i] || '').trim();
+        const left = document.createElement('span');
+        left.textContent = `img${i}`;
+        const right = document.createElement('code');
+        right.textContent = currentPath || '(空)';
+        button.append(left, right);
+        button.addEventListener('click', () => {
+            closeShaderSlotPicker(i);
+        });
+        dom.shaderSlotPickerList.appendChild(button);
+    }
+    if (dom.shaderSlotPickerTip) {
+        dom.shaderSlotPickerTip.textContent = '当前 using:img 槽位已满，请选择要覆盖的槽位。';
+    }
+
+    setShaderSlotPickerOpen(true);
+    return new Promise((resolve) => {
+        state.shaderSlotPicker.resolver = (slotIndex) => {
+            resolve(Number.isInteger(slotIndex) ? slotIndex : -1);
+        };
+    });
+}
+
+function createWorkspaceImageFileForShaderPaste(file, options) {
+    const opts = options || {};
+    const shaderFile = opts.shaderFile || getActiveFile();
+    if (!shaderFile || detectFileMode(shaderFile.path) !== 'shaderfx') {
+        return null;
+    }
+
+    const imageDataUrl = String(opts.dataUrl || '');
+    if (!imageDataUrl.startsWith('data:image/')) {
+        return null;
+    }
+
+    const index = Math.max(0, Number(opts.index || 0));
+    const stem = pastedImageFileName(file, index);
+    const ext = detectImageExtensionFromPasteFile(file);
+    const shaderDir = dirnameRepoPath(shaderFile.path);
+    const imageDir = joinRepoPathParts(shaderDir, 'imgs');
+    const desiredPath = joinRepoPathParts(imageDir, `${stem}${ext}`);
+    const filePath = ensureUniqueWorkspacePath(desiredPath);
+    if (!filePath) return null;
+
+    const makeUsingPath = fxUsingImagesApi && typeof fxUsingImagesApi.makeUsingPathFromImageRepoPath === 'function'
+        ? fxUsingImagesApi.makeUsingPathFromImageRepoPath
+        : null;
+    const usingPath = makeUsingPath
+        ? makeUsingPath(shaderFile.path, filePath)
+        : (relativeRepoPathFromFile(shaderFile.path, filePath) || `./${basenameRepoPath(filePath)}`);
+
+    return {
+        file: {
+            id: createFileId(),
+            path: filePath,
+            content: imageDataUrl
+        },
+        usingPath
+    };
+}
+
+async function insertPastedShaderImages(fileList) {
+    const ctx = getActiveShaderContext();
+    if (!ctx) return 0;
+    const files = Array.from(fileList || []);
+    if (!files.length) return 0;
+
+    const limited = files.slice(0, SHADER_PASTE_MAX_IMAGE_COUNT);
+    const parser = fxUsingImagesApi && typeof fxUsingImagesApi.usingMapFromSource === 'function'
+        ? fxUsingImagesApi.usingMapFromSource
+        : null;
+    const firstEmptySlot = fxUsingImagesApi && typeof fxUsingImagesApi.firstEmptySlot === 'function'
+        ? fxUsingImagesApi.firstEmptySlot
+        : null;
+    const upsertUsingLine = fxUsingImagesApi && typeof fxUsingImagesApi.upsertUsingLine === 'function'
+        ? fxUsingImagesApi.upsertUsingLine
+        : null;
+    if (!parser || !firstEmptySlot || !upsertUsingLine) {
+        addEvent('error', 'using:img 解析器不可用，无法自动写入槽位');
+        return 0;
+    }
+
+    let source = String(ctx.model.getValue() || '');
+    const usingMap = parser(source);
+    let createdCount = 0;
+
+    for (let i = 0; i < limited.length; i += 1) {
+        const file = limited[i];
+        if (!file) continue;
+        if (Number(file.size || 0) > SHADER_UPLOAD_MAX_SIZE) {
+            addEvent('warn', `已跳过过大图片：${file.name || `image-${i + 1}`}`);
+            continue;
+        }
+        let slot = firstEmptySlot(usingMap);
+        if (!Number.isInteger(slot) || slot < 0) {
+            slot = await chooseShaderUsingSlot(usingMap);
+            if (!Number.isInteger(slot) || slot < 0 || slot >= SHADER_UPLOAD_SLOT_COUNT) {
+                addEvent('warn', `已取消粘贴：${file.name || `image-${i + 1}`}`);
+                continue;
+            }
+        }
+
+        const dataUrl = await readFileAsDataUrl(file);
+        if (!dataUrl || !dataUrl.startsWith('data:image/')) {
+            addEvent('warn', `图片编码失败，已跳过：${file.name || `image-${i + 1}`}`);
+            continue;
+        }
+        const record = createWorkspaceImageFileForShaderPaste(file, {
+            index: i,
+            dataUrl,
+            shaderFile: ctx.active
+        });
+        if (!record || !record.file || !record.usingPath) {
+            addEvent('warn', `图片写入工作区失败，已跳过：${file.name || `image-${i + 1}`}`);
+            continue;
+        }
+
+        state.workspace.files.push(record.file);
+        ensureModelForFile(record.file);
+        trackWorkspaceFileChange(record.file);
+        ensureScmBaseline(record.file.path);
+        source = upsertUsingLine(source, slot, record.usingPath);
+        usingMap[slot] = record.usingPath;
+        createdCount += 1;
+        addEvent('info', `已写入 using:img${slot} -> ${record.usingPath}`);
+    }
+
+    if (!createdCount) return 0;
+    if (source !== String(ctx.model.getValue() || '')) {
+        ctx.model.setValue(source);
+    }
+    updateFileListUi();
+    scheduleWorkspaceSave();
+    return createdCount;
 }
 
 function getActiveShaderContext() {
@@ -6020,7 +7383,128 @@ function ensureShaderChannelTexture(runtime, slotIndex, source, sourceKey) {
     return next;
 }
 
-function resolveShaderTextureSourceForSlot(slotIndex) {
+function buildActiveShaderUsingContext() {
+    const active = getActiveFile();
+    if (!active || detectFileMode(active.path) !== 'shaderfx') return null;
+    const model = state.editor && typeof state.editor.getModel === 'function'
+        ? state.editor.getModel()
+        : null;
+    const source = model ? model.getValue() : String(active.content || '');
+    const parser = fxUsingImagesApi && typeof fxUsingImagesApi.usingMapFromSource === 'function'
+        ? fxUsingImagesApi.usingMapFromSource
+        : null;
+    return {
+        activePath: normalizeContentRelativePath(active.path),
+        usingMap: parser ? parser(source) : {}
+    };
+}
+
+function resolveShaderUsingRepoPath(activePath, usingPath) {
+    const basePath = normalizeContentRelativePath(activePath);
+    const raw = String(usingPath || '').trim();
+    if (!basePath || !raw) return '';
+    const resolver = fxUsingImagesApi && typeof fxUsingImagesApi.resolveUsingPathToRepoPath === 'function'
+        ? fxUsingImagesApi.resolveUsingPathToRepoPath
+        : null;
+    if (resolver) {
+        return normalizeContentRelativePath(resolver(basePath, raw));
+    }
+    const baseDir = dirnameRepoPath(basePath);
+    return normalizeContentRelativePath(resolveRelativeRepoPath(baseDir, raw));
+}
+
+function resolveShaderUsingSourceData(repoPath) {
+    const workspaceFile = findWorkspaceFileByContentPath(repoPath);
+    if (workspaceFile && detectFileMode(workspaceFile.path) === 'image') {
+        const dataUrl = String(workspaceFile.content || '').trim();
+        if (dataUrl.startsWith('data:image/')) {
+            return dataUrl;
+        }
+    }
+    return toSiteContentFetchUrl(repoPath);
+}
+
+function ensureShaderUsingImage(repoPath, src) {
+    const safePath = normalizeContentRelativePath(repoPath);
+    const safeSrc = String(src || '').trim();
+    if (!safePath || !safeSrc) return null;
+    if (!(state.shaderPreview.usingImageCache instanceof Map)) {
+        state.shaderPreview.usingImageCache = new Map();
+    }
+    const cacheKey = `${safePath}|${safeSrc}`;
+    const cached = state.shaderPreview.usingImageCache.get(cacheKey);
+    if (cached && cached.image && cached.ready) {
+        return cached.image;
+    }
+    if (cached && cached.loading) {
+        return null;
+    }
+    const image = new Image();
+    image.decoding = 'async';
+    const entry = {
+        image,
+        loading: true,
+        ready: false,
+        error: false
+    };
+    image.addEventListener('load', () => {
+        entry.loading = false;
+        entry.ready = true;
+        drawShaderPreviewCanvas();
+    });
+    image.addEventListener('error', () => {
+        entry.loading = false;
+        entry.error = true;
+        const warnKey = `${safePath}:load`;
+        if (!(state.shaderPreview.usingMissingWarnedKeys instanceof Set)) {
+            state.shaderPreview.usingMissingWarnedKeys = new Set();
+        }
+        if (!state.shaderPreview.usingMissingWarnedKeys.has(warnKey)) {
+            state.shaderPreview.usingMissingWarnedKeys.add(warnKey);
+            addEvent('warn', `using 纹理加载失败：${safePath}`);
+        }
+        drawShaderPreviewCanvas();
+    });
+    image.src = safeSrc;
+    state.shaderPreview.usingImageCache.set(cacheKey, entry);
+    return null;
+}
+
+function resolveShaderUsingTextureSourceForSlot(slotIndex, usingContext) {
+    const safeIndex = normalizeShaderUploadSlotIndex(slotIndex);
+    if (safeIndex < 0) return null;
+    const context = usingContext && typeof usingContext === 'object' ? usingContext : null;
+    if (!context) return null;
+    const usingPath = context.usingMap && Object.prototype.hasOwnProperty.call(context.usingMap, safeIndex)
+        ? String(context.usingMap[safeIndex] || '').trim()
+        : '';
+    if (!usingPath) return null;
+
+    const repoPath = resolveShaderUsingRepoPath(context.activePath, usingPath);
+    if (!repoPath) {
+        const warnKey = `resolve:${context.activePath}:${safeIndex}:${usingPath}`;
+        if (!(state.shaderPreview.usingMissingWarnedKeys instanceof Set)) {
+            state.shaderPreview.usingMissingWarnedKeys = new Set();
+        }
+        if (!state.shaderPreview.usingMissingWarnedKeys.has(warnKey)) {
+            state.shaderPreview.usingMissingWarnedKeys.add(warnKey);
+            addEvent('warn', `using:img${safeIndex} 路径无效：${usingPath}`);
+        }
+        return { source: null, key: `using-invalid:${safeIndex}:${usingPath}` };
+    }
+
+    const source = resolveShaderUsingSourceData(repoPath);
+    if (!source) {
+        return { source: null, key: `using-empty:${safeIndex}:${repoPath}` };
+    }
+    const image = ensureShaderUsingImage(repoPath, source);
+    if (!image || !image.complete || !image.naturalWidth || !image.naturalHeight) {
+        return { source: null, key: `using-pending:${safeIndex}:${repoPath}` };
+    }
+    return { source: image, key: `using:${safeIndex}:${repoPath}:${String(image.src || '')}` };
+}
+
+function resolveShaderTextureSourceForSlot(slotIndex, usingContext) {
     const safeIndex = normalizeShaderUploadSlotIndex(slotIndex);
     if (safeIndex < 0) return { source: null, key: 'empty' };
     const upload = getShaderUploadSlot(safeIndex);
@@ -6029,6 +7513,10 @@ function resolveShaderTextureSourceForSlot(slotIndex) {
         if (image) {
             return { source: image, key: `upload:${upload.dataUrl}` };
         }
+    }
+    const usingResolved = resolveShaderUsingTextureSourceForSlot(safeIndex, usingContext);
+    if (usingResolved) {
+        return usingResolved;
     }
     if (safeIndex === 0) {
         const presetCanvas = shaderPreviewImageCanvas(state.shaderPreview.presetImage);
@@ -6113,8 +7601,9 @@ function drawShaderPreviewCanvas() {
 
     const channelTimes = [iTimeValue, iTimeValue, iTimeValue, iTimeValue];
     const channelResolutions = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
+    const usingContext = buildActiveShaderUsingContext();
     for (let i = 0; i < SHADER_UPLOAD_SLOT_COUNT; i += 1) {
-        const sourceInfo = resolveShaderTextureSourceForSlot(i);
+        const sourceInfo = resolveShaderTextureSourceForSlot(i, usingContext);
         const channel = ensureShaderChannelTexture(runtime, i, sourceInfo.source, sourceInfo.key);
         gl.activeTexture(gl.TEXTURE0 + i);
         gl.bindTexture(gl.TEXTURE_2D, channel.texture);
@@ -6183,10 +7672,11 @@ function applyEditorModeUi() {
             state.ui.markdownFocusMode = false;
             showSidebar(true);
         }
+        setMarkdownMetaDrawerOpen(false, { silent: true });
     } else {
         setMarkdownPreviewMode(state.ui.markdownPreviewMode);
         if (state.ui.markdownPreviewMode === 'preview') {
-            openMarkdownViewerPreview(false).catch(() => {});
+            scheduleMarkdownVisualRefresh();
         }
     }
     if (dom.imagePreviewPane) {
@@ -6257,21 +7747,16 @@ async function openMarkdownViewerPreview(newTab) {
         reason: '打开预览'
     });
     await saveWorkspaceImmediate();
-    const url = await buildViewerPageUrl(repoPath, {
-        studioPreview: true,
-        studioEmbed: !newTab
-    });
     if (newTab) {
+        const url = await buildViewerPageUrl(repoPath, {
+            studioPreview: true,
+            studioEmbed: false
+        });
         globalThis.open(url, '_blank', 'noopener,noreferrer');
         return;
     }
-    if (dom.markdownPreviewFrame) {
-        const current = String(dom.markdownPreviewFrame.getAttribute('src') || '').trim();
-        if (current !== url) {
-            dom.markdownPreviewFrame.src = url;
-        }
-        postMarkdownViewerPreviewPayload(previewPayload);
-    }
+    postMarkdownViewerPreviewPayload(previewPayload);
+    scheduleMarkdownVisualRefresh();
 }
 
 function runShaderCompileForActiveFile(options) {
@@ -6964,6 +8449,18 @@ function ensureModelForFile(file) {
                     refreshAnimRefs: true
                 });
             }
+            if (state.ui.markdownPreviewMode === 'preview') {
+                const active = getActiveFile();
+                if (active && active.id === file.id) {
+                    scheduleMarkdownVisualRefresh();
+                }
+            }
+            if (state.ui.markdownMetaDrawerOpen) {
+                const active = getActiveFile();
+                if (active && active.id === file.id && !state.markdownMeta.syncing) {
+                    scheduleMarkdownMetaSyncFromModel();
+                }
+            }
             return;
         }
         if (detectFileMode(file.path) === 'shaderfx') {
@@ -6986,6 +8483,14 @@ function switchActiveFile(fileId) {
     scheduleWorkspaceSave();
     applyEditorModeUi();
     const mode = detectFileMode(target.path);
+    if (mode === 'markdown') {
+        if (state.ui.markdownMetaDrawerOpen) {
+            syncMarkdownMetaDrawerFromModel();
+        }
+        if (state.ui.markdownPreviewMode === 'preview') {
+            scheduleMarkdownVisualRefresh();
+        }
+    }
     if (mode === 'csharp') {
         runDiagnostics();
     } else if (mode === 'shaderfx') {
@@ -7905,6 +9410,58 @@ function bindUiEvents() {
         });
     }
 
+    if (dom.quickCreateBackdrop) {
+        dom.quickCreateBackdrop.addEventListener('click', () => {
+            closeQuickCreateModal();
+        });
+    }
+
+    if (dom.btnQuickCreateClose) {
+        dom.btnQuickCreateClose.addEventListener('click', () => {
+            closeQuickCreateModal();
+        });
+    }
+
+    if (dom.btnQuickCreateSubmit) {
+        dom.btnQuickCreateSubmit.addEventListener('click', () => {
+            submitQuickCreateModal();
+        });
+    }
+
+    if (dom.quickCreateType) {
+        dom.quickCreateType.addEventListener('change', () => {
+            const type = normalizeQuickCreateType(dom.quickCreateType.value);
+            state.quickCreate.pendingType = type;
+            const baseDir = normalizeContentRelativePath(dom.quickCreateDirectory ? dom.quickCreateDirectory.value : state.quickCreate.pendingBaseDir);
+            if (dom.quickCreateDirectory) {
+                dom.quickCreateDirectory.value = guessQuickCreateDirectory(baseDir || state.quickCreate.pendingBaseDir, type);
+            }
+            if (dom.quickCreateName && !String(dom.quickCreateName.value || '').trim()) {
+                dom.quickCreateName.value = quickCreateTypeMeta(type).defaultFileName;
+            }
+        });
+    }
+
+    if (dom.quickCreateName) {
+        dom.quickCreateName.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            submitQuickCreateModal();
+        });
+    }
+
+    if (dom.shaderSlotPickerBackdrop) {
+        dom.shaderSlotPickerBackdrop.addEventListener('click', () => {
+            closeShaderSlotPicker(-1);
+        });
+    }
+
+    if (dom.btnShaderSlotPickerCancel) {
+        dom.btnShaderSlotPickerCancel.addEventListener('click', () => {
+            closeShaderSlotPicker(-1);
+        });
+    }
+
     if (dom.commandPaletteInput) {
         dom.commandPaletteInput.addEventListener('input', () => {
             state.ui.paletteSelectedIndex = 0;
@@ -7945,6 +9502,21 @@ function bindUiEvents() {
             closeCommandPalette();
             return;
         }
+        if (state.ui.quickCreateOpen && event.key === 'Escape') {
+            event.preventDefault();
+            closeQuickCreateModal();
+            return;
+        }
+        if (state.shaderSlotPicker.open && event.key === 'Escape') {
+            event.preventDefault();
+            closeShaderSlotPicker(-1);
+            return;
+        }
+        if (state.ui.markdownMetaDrawerOpen && event.key === 'Escape') {
+            event.preventDefault();
+            setMarkdownMetaDrawerOpen(false);
+            return;
+        }
         if (state.ui.shaderPreviewModalOpen && event.key === 'Escape') {
             event.preventDefault();
             setShaderPreviewModalOpen(false, { focusEditor: false, focus: false });
@@ -7968,6 +9540,13 @@ function bindUiEvents() {
         });
     }
 
+    if (dom.btnMarkdownMetadata) {
+        dom.btnMarkdownMetadata.addEventListener('click', () => {
+            if (activeFileMode() !== 'markdown') return;
+            toggleMarkdownMetaDrawer();
+        });
+    }
+
     if (dom.btnMarkdownOpenViewer) {
         dom.btnMarkdownOpenViewer.addEventListener('click', async () => {
             try {
@@ -7975,6 +9554,47 @@ function bindUiEvents() {
             } catch (error) {
                 addEvent('error', `新标签预览失败：${error.message}`);
             }
+        });
+    }
+
+    if (dom.btnMarkdownMetaClose) {
+        dom.btnMarkdownMetaClose.addEventListener('click', () => {
+            setMarkdownMetaDrawerOpen(false);
+        });
+    }
+
+    if (Array.isArray(dom.markdownMetaFields)) {
+        dom.markdownMetaFields.forEach((field) => {
+            if (!field) return;
+            field.addEventListener('input', () => {
+                applyMarkdownMetaFormToModel();
+            });
+            field.addEventListener('change', () => {
+                applyMarkdownMetaFormToModel();
+            });
+        });
+    }
+
+    if (dom.btnMarkdownVisualApply) {
+        dom.btnMarkdownVisualApply.addEventListener('click', () => {
+            applySelectedMarkdownVisualEdit();
+        });
+    }
+
+    if (dom.btnMarkdownVisualSource) {
+        dom.btnMarkdownVisualSource.addEventListener('click', () => {
+            const block = findSelectedMarkdownVisualBlock();
+            if (!block) return;
+            jumpToMarkdownVisualBlockSource(block);
+        });
+    }
+
+    if (dom.markdownVisualContent) {
+        dom.markdownVisualContent.addEventListener('keydown', (event) => {
+            if (!(event.ctrlKey || event.metaKey)) return;
+            if (String(event.key || '').toLowerCase() !== 'enter') return;
+            event.preventDefault();
+            applySelectedMarkdownVisualEdit();
         });
     }
 
@@ -8210,7 +9830,9 @@ function bindUiEvents() {
     }
 
     window.addEventListener('paste', async (event) => {
-        if (!isMarkdownEditorFocused()) return;
+        const markdownFocused = isMarkdownEditorFocused();
+        const shaderFocused = !markdownFocused && isShaderEditorFocused();
+        if (!markdownFocused && !shaderFocused) return;
         const clipboardData = event && event.clipboardData ? event.clipboardData : null;
         if (!clipboardData) return;
         const imageFiles = collectClipboardImageFiles(clipboardData);
@@ -8218,9 +9840,13 @@ function bindUiEvents() {
 
         event.preventDefault();
         try {
-            const insertedCount = await insertPastedMarkdownImages(imageFiles);
+            const insertedCount = markdownFocused
+                ? await insertPastedMarkdownImages(imageFiles)
+                : await insertPastedShaderImages(imageFiles);
             if (!insertedCount) {
                 addEvent('warn', '粘贴图片失败：未写入任何图片');
+            } else if (shaderFocused) {
+                addEvent('info', `FX 粘贴图片完成：${insertedCount} 张`);
             }
         } catch (error) {
             addEvent('error', `粘贴图片失败：${error.message}`);
@@ -8358,36 +9984,11 @@ function bindUiEvents() {
     });
 
     dom.btnAddFile.addEventListener('click', function () {
-        const input = globalThis.prompt('请输入新文件名（site/content 下白名单路径）', '怎么贡献/新文章.md');
-        if (!input) return;
-
-        const fileName = normalizeEditableWorkspacePathInput(input);
-        if (!fileName) {
-            addEvent('error', '路径必须位于 site/content 白名单（.md / anims/*.cs / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
-            return;
-        }
-
-        const exists = state.workspace.files.some((file) => isSameContentRelativePath(file.path, fileName));
-        if (exists) {
-            addEvent('error', `文件已存在：${fileName}`);
-            return;
-        }
-
-        const initialContent = detectFileMode(fileName) === 'shaderfx' ? shaderDefaultTemplate() : '';
-        const file = {
-            id: createFileId(),
-            path: fileName,
-            content: initialContent
-        };
-
-        state.workspace.files.push(file);
-        ensureModelForFile(file);
-        trackWorkspaceFileChange(file);
-        ensureScmBaseline(fileName);
-        switchActiveFile(file.id);
-        updateFileListUi();
-        scheduleWorkspaceSave();
-        addEvent('info', `已新增文件：${fileName}`);
+        const active = getActiveFile();
+        openQuickCreateModal({
+            baseDir: active ? dirnameRepoPath(active.path) : '',
+            type: 'markdown'
+        });
     });
 
     dom.btnRenameFile.addEventListener('click', function () {
