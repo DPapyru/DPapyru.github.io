@@ -12,7 +12,9 @@ colors:
   Mad: "#ff5430"
 ---
 
-> 截图测试: ![image](./imgs/image-2.png)
+> 这里塞一个Shader作为测试
+
+[Shader 说明](fx:./shader/TestShader.fx)
 
 # 前言
 
@@ -42,9 +44,8 @@ colors:
 
 ## 向量基础介绍
 
-[待补充说明](anims:anims/vector-basic.cs)
+{{anim:anims/vector-basic.cs}}
 
 ## 向量合成和分解
 
-[待补充说明](anims:anims/vector-add-resolution.cs)
-
+{{anim:anims/vector-add-resolution.cs}}
