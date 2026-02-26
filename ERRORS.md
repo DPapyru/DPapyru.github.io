@@ -2352,3 +2352,17 @@
 - 根因为 `.github/workflows/deploy.yml` 在仅存在 `package.json` 时直接执行 `npm ci`，而仓库根目录无 `package-lock.json`。
 - 已将根目录安装逻辑改为：存在 `package-lock.json` 时 `npm ci`，否则回退 `npm install`。
 - `check-generated` 触发的非目标生成差异已回退，工作区仅保留本次 workflow 修复文件。
+
+### 验证记录 [2026-02-26 11:59]：修复 GitHub Pages 构建缺少 `site-app` 依赖安装
+
+**级别**：L3 验收（构建链路改动）
+
+**命令与结果**：
+- （红灯复现）按 `deploy.yml` 现有安装逻辑执行后运行 `npm run build`：失败（`site-app` 构建报 `Cannot find package '@vitejs/plugin-react'`）
+- （绿灯验证）补充 `site-app` 安装逻辑后执行同一套安装与 `npm run build`：通过
+- `npm run check-generated`：失败（`git diff --exit-code` 未通过，差异为本次 workflow 改动 + 生成文件时间戳/lastmod 变化）
+
+**备注**：
+- 根因是 workflow 只安装了根目录与 `tml-ide-app` 依赖，未安装 `site-app`，导致 `npm --prefix site-app run build` 时无法解析 `@vitejs/plugin-react`。
+- 已在 `.github/workflows/deploy.yml` 为 `site-app` 增加 `package-lock.json` 优先的安装分支（`npm --prefix site-app ci` / `npm --prefix site-app install`）。
+- `check-generated` 触发的非目标生成差异已回退，工作区仅保留 workflow 修复与本条记录。

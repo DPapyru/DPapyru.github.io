@@ -62,6 +62,16 @@ jobs:
           else
             echo "No tml-ide-app/package.json found, skipping tml-ide-app install"
           fi
+
+          if [ -f site-app/package-lock.json ]; then
+            echo "Installing site-app dependencies..."
+            npm --prefix site-app ci
+          elif [ -f site-app/package.json ]; then
+            echo "No site-app package-lock.json found, falling back to npm install"
+            npm --prefix site-app install
+          else
+            echo "No site-app/package.json found, skipping site-app install"
+          fi
           
       - name: Build generated assets (if needed)
         run: |
