@@ -79,7 +79,7 @@ anims/vec2-basic-ops.cs
 也可使用：
 
 ```text
-[待补充说明](anims:anims/vec2-basic-ops.cs)
+{{anim:anims/vec2-basic-ops.cs}}
 ```
 
 ## 推荐模块（首版 6 个）
@@ -122,4 +122,3 @@ anims/vec2-basic-ops.cs
 4. 编译失败后不恢复
 
 继续修改触发下一次自动编译；必要时先修复最先出现的语法错误。
-
