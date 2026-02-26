@@ -2384,3 +2384,25 @@
   - `tml-ide/subapps/assets/js/shader-hlsl-adapter.js`
   - `tml-ide-app/public/subapps/assets/js/shader-hlsl-adapter.js`
 - 为同步 IDE 实际可部署产物，已补跑构建并更新 `tml-ide/assets/*` 与 `tml-ide/index.html` 对应哈希产物引用。
+
+### 验证记录 [2026-02-26 13:51]：文章内 FX 弹窗接入 Shader 高亮与补全（轻量方案）
+
+**级别**：工作树功能实现验收（viewer fxembed）
+
+**命令与结果**：
+- `npm ci`（仓库根目录）：失败（缺少 `package-lock.json`，仅存在 `pnpm-lock.yaml`）
+- `npm install --no-package-lock`（仓库根目录）：通过（作为安装兜底）
+- `node --test site/tooling/scripts/viewer-callout-runtime.test.js`：通过（4/4）
+- `node --test site/tooling/scripts/animcs-shader-adapter-contract.test.js`：通过（2/2）
+- `npm run build`：首次失败（`site-app` 缺少 `@vitejs/plugin-react` 依赖）；执行 `npm --prefix site-app ci` 与 `npm --prefix tml-ide-app ci` 后复跑通过
+- `npm run check-generated`：失败（`git diff --exit-code` 未通过；包含本次实现改动且在工作树环境中触发生成链路差异）
+
+**备注**：
+- 本次实际保留改动仅两处：
+  - `site/pages/viewer.html`
+  - `site/tooling/scripts/viewer-callout-runtime.test.js`
+- 功能点已覆盖：
+  - 弹窗编辑区叠层高亮（`shader-editor-assist.js` + token 样式）
+  - 自动补全与手动触发（`Ctrl + Space`）、`Tab/Shift+Tab` 缩进、补全面板方向键/回车交互
+  - 移动端粗指针设备默认禁用补全，仅保留高亮
+  - 保持原实时编译与渲染链路不变

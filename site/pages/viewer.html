@@ -518,20 +518,154 @@
             min-height: 0;
         }
 
-        .fx-embed-editor {
+        .fx-embed-editor-surface {
+            position: relative;
             flex: 1;
             min-height: 0;
+            background: #0d1220;
+        }
+
+        .fx-embed-editor-stack {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            overflow: hidden;
+            --fx-embed-editor-font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", monospace;
+            --fx-embed-editor-font-size: 13px;
+            --fx-embed-editor-line-height: 1.55;
+            --fx-embed-editor-letter-spacing: 0;
+        }
+
+        .fx-embed-editor-highlight {
+            position: absolute;
+            inset: 0;
+            margin: 0;
+            padding: 12px;
+            border: 0;
+            background: transparent;
+            color: #dde7ff;
+            pointer-events: none;
+            overflow: hidden;
+            white-space: pre;
+            font-family: var(--fx-embed-editor-font-family);
+            font-size: var(--fx-embed-editor-font-size);
+            line-height: var(--fx-embed-editor-line-height);
+            letter-spacing: var(--fx-embed-editor-letter-spacing);
+            tab-size: 4;
+            z-index: 1;
+        }
+
+        .fx-embed-editor-highlight-code {
+            display: block;
+            min-height: 100%;
+            transform: translate(0, 0);
+            will-change: transform;
+        }
+
+        .fx-embed-editor {
+            position: absolute;
+            inset: 0;
             width: 100%;
             border: 0;
             outline: none;
             resize: none;
-            background: #0d1220;
-            color: #dde7ff;
-            font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", monospace;
-            font-size: 13px;
-            line-height: 1.55;
+            margin: 0;
             padding: 12px;
+            box-sizing: border-box;
+            background: transparent;
+            color: transparent;
+            caret-color: #dde7ff;
+            -webkit-text-fill-color: transparent;
+            font-family: var(--fx-embed-editor-font-family);
+            font-size: var(--fx-embed-editor-font-size);
+            line-height: var(--fx-embed-editor-line-height);
+            letter-spacing: var(--fx-embed-editor-letter-spacing);
             tab-size: 4;
+            white-space: pre;
+            overflow-wrap: normal;
+            word-break: normal;
+            z-index: 2;
+        }
+
+        .fx-embed-editor::selection {
+            background: rgba(112, 162, 255, 0.28);
+            -webkit-text-fill-color: transparent;
+        }
+
+        .fx-embed-autocomplete {
+            position: absolute;
+            min-width: 220px;
+            max-width: min(420px, calc(100% - 16px));
+            max-height: min(220px, calc(100% - 16px));
+            overflow: auto;
+            padding: 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(104, 141, 221, 0.62);
+            background: rgba(10, 16, 29, 0.96);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+            display: none;
+            z-index: 6;
+        }
+
+        .fx-embed-autocomplete.show {
+            display: block;
+        }
+
+        .fx-embed-autocomplete-item {
+            width: 100%;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #dce8ff;
+            text-align: left;
+            padding: 6px 8px;
+            font-family: var(--fx-embed-editor-font-family);
+            font-size: 12px;
+            line-height: 1.35;
+            cursor: pointer;
+        }
+
+        .fx-embed-autocomplete-item:hover,
+        .fx-embed-autocomplete-item[data-selected="true"] {
+            background: rgba(88, 132, 240, 0.27);
+            color: #f3f7ff;
+        }
+
+        .fx-embed-editor-highlight .shaderpg-token-keyword {
+            color: #7ea6ff;
+        }
+
+        .fx-embed-editor-highlight .shaderpg-token-type {
+            color: #6dd3cb;
+        }
+
+        .fx-embed-editor-highlight .shaderpg-token-function {
+            color: #ffcf7d;
+        }
+
+        .fx-embed-editor-highlight .shaderpg-token-builtin {
+            color: #c9a6ff;
+        }
+
+        .fx-embed-editor-highlight .shaderpg-token-number {
+            color: #f2a6a6;
+        }
+
+        .fx-embed-editor-highlight .shaderpg-token-comment {
+            color: #7f9bbf;
+        }
+
+        .fx-embed-editor-highlight .shaderpg-token-string {
+            color: #91d790;
+        }
+
+        .fx-embed-editor-highlight .shaderpg-token-preproc {
+            color: #ff9e80;
+        }
+
+        .fx-embed-modal[data-disable-autocomplete='1'] .fx-embed-autocomplete {
+            display: none !important;
         }
 
         .fx-embed-preview-pane {
@@ -621,6 +755,10 @@
 
             .fx-embed-controls {
                 grid-template-columns: 1fr;
+            }
+
+            .fx-embed-autocomplete {
+                display: none !important;
             }
         }
 
@@ -959,9 +1097,10 @@
                 <script src="/shared/services/shader/fx-using-images.js"></script>
 			    <script src="/site/assets/js/mermaid.min.js"></script> <!-- Mermaid流程图渲染 -->
 		    <script src="/site/assets/js/site-quiz.js"></script> <!-- Quiz 题目渲染 -->
-		    <script src="/site/assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
-		    <script src="/site/assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
+                <script src="/site/assets/js/prism.min.js"></script> <!-- 代码高亮库 -->
+                <script src="/site/assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
                 <script src="/tml-ide/subapps/assets/js/shader-hlsl-adapter.js"></script> <!-- HLSL 适配器（与 IDE 一致） -->
+                <script src="/tml-ide/subapps/assets/js/shader-editor-assist.js"></script> <!-- Shader 编辑器高亮与补全 -->
                 <script src="/site/assets/js/animcs-js-runtime.js"></script> <!-- C# 动画运行时（JS 输出） -->
     <script>
         // Mermaid 兜底加载：如果本地资源缺失/加载失败，则尝试从 CDN 加载（不影响已有本地加载）
@@ -1552,6 +1691,10 @@
             let FX_EMBED_MODAL = null;
             let FX_EMBED_CARD_RAF_ID = 0;
             let FX_EMBED_ADAPTER_PROMISE = null;
+            const FX_EMBED_EDITOR_ASSIST = (typeof window !== 'undefined' && window.ShaderEditorAssist)
+                ? window.ShaderEditorAssist
+                : null;
+            const FX_EMBED_DISABLE_AUTOCOMPLETE = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
             const FX_EMBED_VERTEX_SOURCE = [
                 '#version 300 es',
                 'layout(location = 0) in vec2 aPosition;',
@@ -1598,7 +1741,13 @@
                     '  </header>',
                     '  <div class="fx-embed-body">',
                     '    <section class="fx-embed-editor-pane">',
-                    '      <textarea class="fx-embed-editor" spellcheck="false"></textarea>',
+                    '      <div class="fx-embed-editor-surface">',
+                    '        <div class="fx-embed-editor-stack">',
+                    '          <pre class="fx-embed-editor-highlight" aria-hidden="true"><code class="fx-embed-editor-highlight-code"></code></pre>',
+                    '          <textarea class="fx-embed-editor" spellcheck="false" wrap="off"></textarea>',
+                    '        </div>',
+                    '        <div class="fx-embed-autocomplete" role="listbox" aria-label="Shader 自动补全"></div>',
+                    '      </div>',
                     '    </section>',
                     '    <section class="fx-embed-preview-pane">',
                     '      <div class="fx-embed-controls">',
@@ -1621,7 +1770,12 @@
                     title: wrapper.querySelector('.fx-embed-head-title'),
                     path: wrapper.querySelector('.fx-embed-head-path'),
                     close: wrapper.querySelector('.fx-embed-close'),
+                    editorSurface: wrapper.querySelector('.fx-embed-editor-surface'),
+                    editorStack: wrapper.querySelector('.fx-embed-editor-stack'),
+                    editorHighlight: wrapper.querySelector('.fx-embed-editor-highlight'),
+                    editorHighlightCode: wrapper.querySelector('.fx-embed-editor-highlight-code'),
                     editor: wrapper.querySelector('.fx-embed-editor'),
+                    autocomplete: wrapper.querySelector('.fx-embed-autocomplete'),
                     canvas: wrapper.querySelector('.fx-embed-canvas'),
                     status: wrapper.querySelector('.fx-embed-status'),
                     uploadInputs: Array.from(wrapper.querySelectorAll('input[data-slot]')),
@@ -1931,6 +2085,242 @@
                 FX_EMBED_MODAL.dom.status.style.color = isError
                     ? 'rgba(255, 169, 169, 0.95)'
                     : 'rgba(213, 227, 255, 0.95)';
+            }
+
+            function clampFxEmbed(value, min, max) {
+                return Math.max(min, Math.min(max, value));
+            }
+
+            function isFxEmbedIdentifierChar(ch) {
+                return /[A-Za-z0-9_]/.test(String(ch || ''));
+            }
+
+            function getFxEmbedEditorAssist() {
+                if (!FX_EMBED_EDITOR_ASSIST || typeof FX_EMBED_EDITOR_ASSIST !== 'object') return null;
+                return FX_EMBED_EDITOR_ASSIST;
+            }
+
+            function getFxEmbedCaretVisualPosition(textarea, cursorPos) {
+                const raw = String(textarea && textarea.value || '');
+                const pos = clampFxEmbed(Number(cursorPos || 0), 0, raw.length);
+                const cs = window.getComputedStyle(textarea);
+                const mirror = document.createElement('div');
+                const marker = document.createElement('span');
+                const props = [
+                    'boxSizing', 'width', 'height',
+                    'overflowX', 'overflowY',
+                    'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth',
+                    'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+                    'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize',
+                    'lineHeight', 'fontFamily', 'letterSpacing', 'textTransform',
+                    'textIndent', 'textDecoration', 'wordSpacing', 'tabSize',
+                    'fontVariantLigatures', 'fontFeatureSettings', 'fontKerning',
+                    'fontVariantNumeric', 'fontSynthesis', 'textRendering'
+                ];
+
+                props.forEach((name) => {
+                    mirror.style[name] = cs[name];
+                });
+
+                mirror.style.position = 'absolute';
+                mirror.style.visibility = 'hidden';
+                mirror.style.left = '-99999px';
+                mirror.style.top = '0';
+                mirror.style.pointerEvents = 'none';
+                mirror.style.whiteSpace = 'pre';
+                mirror.style.wordBreak = 'normal';
+                mirror.style.overflow = 'hidden';
+
+                mirror.textContent = raw.slice(0, pos);
+                marker.textContent = '\u200b';
+                mirror.appendChild(marker);
+                document.body.appendChild(mirror);
+
+                const left = marker.offsetLeft - textarea.scrollLeft;
+                const top = marker.offsetTop - textarea.scrollTop;
+                const lineHeight = parseFloat(cs.lineHeight) || (parseFloat(cs.fontSize) || 12) * 1.55;
+                document.body.removeChild(mirror);
+                return { left: left, top: top, lineHeight: lineHeight };
+            }
+
+            function positionFxEmbedAutocompleteAtCursor() {
+                if (!FX_EMBED_MODAL || FX_EMBED_MODAL.disableAutocomplete) return;
+                const domFx = FX_EMBED_MODAL.dom;
+                const completionState = FX_EMBED_MODAL.completionState;
+                if (!domFx || !domFx.autocomplete || !domFx.editorSurface || !domFx.editor || !completionState.visible) return;
+
+                const caret = getFxEmbedCaretVisualPosition(domFx.editor, domFx.editor.selectionStart || 0);
+                const editorRect = domFx.editor.getBoundingClientRect();
+                const surfaceRect = domFx.editorSurface.getBoundingClientRect();
+                let left = (editorRect.left - surfaceRect.left) + caret.left + 6;
+                let top = (editorRect.top - surfaceRect.top) + caret.top + caret.lineHeight + 6;
+
+                const panelWidth = domFx.autocomplete.offsetWidth || 260;
+                const panelHeight = domFx.autocomplete.offsetHeight || 180;
+                const surfaceWidth = domFx.editorSurface.clientWidth || 0;
+                const surfaceHeight = domFx.editorSurface.clientHeight || 0;
+                const edgePadding = 8;
+                const maxLeft = Math.max(edgePadding, surfaceWidth - panelWidth - edgePadding);
+                const maxTop = Math.max(edgePadding, surfaceHeight - panelHeight - edgePadding);
+
+                left = clampFxEmbed(left, edgePadding, maxLeft);
+                if (top > maxTop) {
+                    top = (editorRect.top - surfaceRect.top) + caret.top - panelHeight - 6;
+                }
+                top = clampFxEmbed(top, edgePadding, maxTop);
+
+                domFx.autocomplete.style.left = Math.round(left) + 'px';
+                domFx.autocomplete.style.top = Math.round(top) + 'px';
+            }
+
+            function hideFxEmbedAutocomplete() {
+                if (!FX_EMBED_MODAL || FX_EMBED_MODAL.disableAutocomplete) return;
+                const completionState = FX_EMBED_MODAL.completionState;
+                completionState.items = [];
+                completionState.selected = 0;
+                completionState.start = 0;
+                completionState.end = 0;
+                completionState.visible = false;
+
+                const panel = FX_EMBED_MODAL.dom && FX_EMBED_MODAL.dom.autocomplete;
+                if (!panel) return;
+                panel.classList.remove('show');
+                panel.replaceChildren();
+                panel.style.left = '';
+                panel.style.top = '';
+            }
+
+            function syncFxEmbedEditorScroll() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom) return;
+                const domFx = FX_EMBED_MODAL.dom;
+                if (!domFx.editor || !domFx.editorHighlightCode) return;
+                const x = -Math.round(Number(domFx.editor.scrollLeft || 0));
+                const y = -Math.round(Number(domFx.editor.scrollTop || 0));
+                domFx.editorHighlightCode.style.transform = `translate(${x}px, ${y}px)`;
+                if (!FX_EMBED_MODAL.disableAutocomplete && FX_EMBED_MODAL.completionState.visible) {
+                    positionFxEmbedAutocompleteAtCursor();
+                }
+            }
+
+            function refreshFxEmbedEditorHighlight() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.editorHighlightCode || !FX_EMBED_MODAL.dom.editor) return;
+                const assist = getFxEmbedEditorAssist();
+                if (!assist || typeof assist.highlightHlslToHtml !== 'function') {
+                    FX_EMBED_MODAL.dom.editorHighlightCode.textContent = String(FX_EMBED_MODAL.dom.editor.value || '');
+                    syncFxEmbedEditorScroll();
+                    return;
+                }
+                FX_EMBED_MODAL.dom.editorHighlightCode.innerHTML = assist.highlightHlslToHtml(FX_EMBED_MODAL.dom.editor.value || '');
+                syncFxEmbedEditorScroll();
+            }
+
+            function applyFxEmbedCompletionAtSelected() {
+                if (!FX_EMBED_MODAL || FX_EMBED_MODAL.disableAutocomplete) return false;
+                const assist = getFxEmbedEditorAssist();
+                if (!assist || typeof assist.applyCompletion !== 'function') return false;
+                const completionState = FX_EMBED_MODAL.completionState;
+                const selected = completionState.items[completionState.selected];
+                if (!selected || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.editor) return false;
+
+                const res = assist.applyCompletion(
+                    FX_EMBED_MODAL.dom.editor.value,
+                    FX_EMBED_MODAL.dom.editor.selectionStart,
+                    selected
+                );
+                FX_EMBED_MODAL.dom.editor.value = res.text;
+                FX_EMBED_MODAL.dom.editor.selectionStart = res.cursor;
+                FX_EMBED_MODAL.dom.editor.selectionEnd = res.cursor;
+                refreshFxEmbedEditorHighlight();
+                hideFxEmbedAutocomplete();
+                return true;
+            }
+
+            function renderFxEmbedAutocomplete() {
+                if (!FX_EMBED_MODAL || FX_EMBED_MODAL.disableAutocomplete) return;
+                const domFx = FX_EMBED_MODAL.dom;
+                const completionState = FX_EMBED_MODAL.completionState;
+                if (!domFx || !domFx.autocomplete || !completionState.visible || completionState.items.length === 0) {
+                    hideFxEmbedAutocomplete();
+                    return;
+                }
+
+                domFx.autocomplete.replaceChildren();
+                completionState.items.forEach((word, idx) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'fx-embed-autocomplete-item';
+                    button.textContent = word;
+                    button.setAttribute('data-selected', idx === completionState.selected ? 'true' : 'false');
+                    button.addEventListener('mousedown', function (event) {
+                        event.preventDefault();
+                        completionState.selected = idx;
+                        if (applyFxEmbedCompletionAtSelected()) {
+                            scheduleFxEmbedCompile();
+                        }
+                    });
+                    domFx.autocomplete.appendChild(button);
+                });
+
+                domFx.autocomplete.classList.add('show');
+                positionFxEmbedAutocompleteAtCursor();
+            }
+
+            function showFxEmbedAutocompleteForCurrentCursor(forceOpen) {
+                if (!FX_EMBED_MODAL || FX_EMBED_MODAL.disableAutocomplete) return;
+                const assist = getFxEmbedEditorAssist();
+                if (
+                    !assist ||
+                    typeof assist.getCompletionRange !== 'function' ||
+                    typeof assist.collectCompletionItems !== 'function' ||
+                    !FX_EMBED_MODAL.dom ||
+                    !FX_EMBED_MODAL.dom.editor
+                ) {
+                    hideFxEmbedAutocomplete();
+                    return;
+                }
+
+                const editor = FX_EMBED_MODAL.dom.editor;
+                let range = assist.getCompletionRange(editor.value, editor.selectionStart);
+                if (!range && forceOpen) {
+                    const cursor = Number(editor.selectionStart || 0);
+                    range = { start: cursor, end: cursor, prefix: '' };
+                }
+                if (!range || (!range.prefix && !forceOpen)) {
+                    hideFxEmbedAutocomplete();
+                    return;
+                }
+
+                const items = assist.collectCompletionItems(range.prefix || '', editor.value, editor.selectionStart);
+                if (!items || items.length === 0) {
+                    hideFxEmbedAutocomplete();
+                    return;
+                }
+
+                const completionState = FX_EMBED_MODAL.completionState;
+                completionState.items = items;
+                completionState.selected = 0;
+                completionState.start = range.start;
+                completionState.end = range.end;
+                completionState.visible = true;
+                renderFxEmbedAutocomplete();
+            }
+
+            function indentFxEmbedEditorSelection(useShift) {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.editor) return false;
+                const assist = getFxEmbedEditorAssist();
+                if (!assist || typeof assist.indentTextBlock !== 'function') return false;
+                const editor = FX_EMBED_MODAL.dom.editor;
+                const res = assist.indentTextBlock(
+                    editor.value,
+                    Number(editor.selectionStart || 0),
+                    Number(editor.selectionEnd || 0),
+                    !!useShift
+                );
+                editor.value = res.text;
+                editor.selectionStart = res.start;
+                editor.selectionEnd = res.end;
+                refreshFxEmbedEditorHighlight();
+                return true;
             }
 
             function createFxEmbedShader(gl, type, source) {
@@ -2255,9 +2645,12 @@
                 FX_EMBED_MODAL.opened = shouldOpen;
                 FX_EMBED_MODAL.dom.root.classList.toggle('is-open', shouldOpen);
                 if (shouldOpen) {
+                    refreshFxEmbedEditorHighlight();
+                    syncFxEmbedEditorScroll();
                     ensureFxEmbedLoop();
                     return;
                 }
+                hideFxEmbedAutocomplete();
                 stopFxEmbedLoop();
             }
 
@@ -2289,15 +2682,94 @@
                     title: '',
                     usingMap: {},
                     uploads: [null, null, null, null],
+                    disableAutocomplete: FX_EMBED_DISABLE_AUTOCOMPLETE,
+                    completionState: {
+                        items: [],
+                        selected: 0,
+                        start: 0,
+                        end: 0,
+                        visible: false
+                    },
                     compileTimer: 0,
                     rafId: 0
                 };
+                if (FX_EMBED_MODAL.disableAutocomplete) {
+                    domFx.root.setAttribute('data-disable-autocomplete', '1');
+                }
 
                 domFx.backdrop.addEventListener('click', closeFxEmbedModal);
                 domFx.close.addEventListener('click', closeFxEmbedModal);
                 domFx.editor.addEventListener('input', function () {
+                    refreshFxEmbedEditorHighlight();
+                    if (!FX_EMBED_MODAL.disableAutocomplete) {
+                        showFxEmbedAutocompleteForCurrentCursor(false);
+                    }
                     scheduleFxEmbedCompile();
                 });
+                domFx.editor.addEventListener('scroll', syncFxEmbedEditorScroll);
+                domFx.editor.addEventListener('click', function () {
+                    if (FX_EMBED_MODAL.disableAutocomplete) return;
+                    showFxEmbedAutocompleteForCurrentCursor(false);
+                });
+                domFx.editor.addEventListener('keyup', function (event) {
+                    if (FX_EMBED_MODAL.disableAutocomplete) return;
+                    const key = String(event.key || '');
+                    if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter' || key === 'Escape' || key === 'Tab') {
+                        return;
+                    }
+                    showFxEmbedAutocompleteForCurrentCursor(false);
+                });
+                domFx.editor.addEventListener('keydown', function (event) {
+                    const key = String(event.key || '');
+                    const completionState = FX_EMBED_MODAL.completionState;
+
+                    if (key === 'Tab' && (event.shiftKey || FX_EMBED_MODAL.disableAutocomplete || !completionState.visible || completionState.items.length === 0)) {
+                        if (indentFxEmbedEditorSelection(event.shiftKey)) {
+                            event.preventDefault();
+                            hideFxEmbedAutocomplete();
+                            scheduleFxEmbedCompile();
+                        }
+                        return;
+                    }
+
+                    if (FX_EMBED_MODAL.disableAutocomplete || completionState.items.length === 0 || !completionState.visible) {
+                        // Ctrl + Space 手动触发自动补全。
+                        if ((event.ctrlKey || event.metaKey) && key === ' ') {
+                            event.preventDefault();
+                            showFxEmbedAutocompleteForCurrentCursor(true);
+                        }
+                        return;
+                    }
+
+                    if (key === 'ArrowDown') {
+                        event.preventDefault();
+                        completionState.selected = (completionState.selected + 1) % completionState.items.length;
+                        renderFxEmbedAutocomplete();
+                        return;
+                    }
+                    if (key === 'ArrowUp') {
+                        event.preventDefault();
+                        completionState.selected = (completionState.selected - 1 + completionState.items.length) % completionState.items.length;
+                        renderFxEmbedAutocomplete();
+                        return;
+                    }
+                    if (key === 'Enter' || key === 'Tab') {
+                        event.preventDefault();
+                        if (applyFxEmbedCompletionAtSelected()) {
+                            scheduleFxEmbedCompile();
+                        }
+                        return;
+                    }
+                    if (key === 'Escape') {
+                        event.preventDefault();
+                        hideFxEmbedAutocomplete();
+                        return;
+                    }
+                    if (!isFxEmbedIdentifierChar(key) && key !== 'Backspace' && key !== 'Delete') {
+                        hideFxEmbedAutocomplete();
+                    }
+                });
+                window.addEventListener('resize', syncFxEmbedEditorScroll);
                 domFx.uploadInputs.forEach(function (input) {
                     if (!input) return;
                     input.addEventListener('change', async function () {
@@ -2354,6 +2826,7 @@
                 modal.dom.path.textContent = path;
                 setFxEmbedModalOpen(true);
                 setFxEmbedStatus('正在加载 Shader 源码...', false);
+                hideFxEmbedAutocomplete();
 
                 const session = FX_EMBED_SESSION.get(path);
                 if (session && typeof session.source === 'string') {
@@ -2373,6 +2846,8 @@
                     modal.dom.editor.value = await response.text();
                     modal.uploads = [null, null, null, null];
                 }
+                refreshFxEmbedEditorHighlight();
+                syncFxEmbedEditorScroll();
                 scheduleFxEmbedCompile();
             }
 
