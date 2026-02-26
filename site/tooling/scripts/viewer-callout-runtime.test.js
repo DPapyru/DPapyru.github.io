@@ -33,3 +33,15 @@ test('viewer fx embed card includes inline realtime preview runtime hooks', () =
     assert.match(viewer, /setFxEmbedModalOpen\(true\)/);
     assert.match(viewer, /正在加载 Shader 源码/);
 });
+
+test('viewer fx embed modal editor uses shader assist highlight and autocomplete hooks', () => {
+    const viewer = fs.readFileSync(path.resolve('site/pages/viewer.html'), 'utf8');
+
+    assert.match(viewer, /\/tml-ide\/subapps\/assets\/js\/shader-editor-assist\.js/);
+    assert.match(viewer, /fx-embed-editor-highlight/);
+    assert.match(viewer, /fx-embed-editor-highlight-code/);
+    assert.match(viewer, /fx-embed-autocomplete/);
+    assert.match(viewer, /collectCompletionItems/);
+    assert.match(viewer, /indentTextBlock/);
+    assert.match(viewer, /Ctrl \+ Space/);
+});
