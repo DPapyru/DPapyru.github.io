@@ -1,7 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { buildFragmentSource } = require('../../../tml-ide-app/public/subapps/assets/js/shader-hlsl-adapter.js');
+const shaderAdapterModule = require('../../../tml-ide-app/public/subapps/assets/js/shader-hlsl-adapter.js');
+const shaderAdapterApi = shaderAdapterModule && typeof shaderAdapterModule.buildFragmentSource === 'function'
+    ? shaderAdapterModule
+    : (globalThis.ShaderHlslAdapter && typeof globalThis.ShaderHlslAdapter.buildFragmentSource === 'function'
+        ? globalThis.ShaderHlslAdapter
+        : {});
+const { buildFragmentSource } = shaderAdapterApi;
 
 test('buildFragmentSource maps uv/fragCoord to top-left origin', () => {
     const source = [
@@ -51,4 +57,23 @@ test('buildFragmentSource avoids reserved double-underscore helper names', () =>
     assert.match(result.source, /_shaderpgFlipUv\(/);
     assert.match(result.source, /_shaderpgFlipUvGrad\(/);
     assert.match(result.source, /_shaderpgFlipProj\(/);
+});
+
+test('buildFragmentSource promotes common int->float mixed arithmetic', () => {
+    const source = [
+        'float4 MainPS(float2 texCoord : TEXCOORD0) : COLOR0',
+        '{',
+        '    int k = 2;',
+        '    float a = k + 1;',
+        '    float b = texCoord.x * k;',
+        '    float2 uv2 = texCoord + k;',
+        '    return float4(a + b + uv2.x, uv2.y, 0, 1);',
+        '}'
+    ].join('\n');
+
+    const result = buildFragmentSource('', source);
+    assert.equal(result.ok, true);
+    assert.match(result.source, /float a = float\(k\) \+ 1\.0;/);
+    assert.match(result.source, /float b = texCoord\.x \* float\(k\);/);
+    assert.match(result.source, /vec2 uv2 = texCoord \+ float\(k\);/);
 });

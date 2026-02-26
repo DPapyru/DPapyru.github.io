@@ -19,8 +19,9 @@ next_chapter: 在线写作IDE使用教程.md
 ## 使用前请先记住
 
 1. 指令行必须独占一行
-2. 尽量使用相对路径
-3. 先在 viewer 预览，再决定提交
+2. 引用统一使用协议前缀：`cs:` / `anims:` / `fx:`
+3. 旧语法“双花括号 cs/anim 引用”已移除
+4. 先在 viewer 预览，再决定提交
 
 ## 文档链接（标准 Markdown）
 
@@ -43,14 +44,14 @@ next_chapter: 在线写作IDE使用教程.md
 ### 引用整份 C# 文件
 
 ```text
-{{cs:./Demo.cs}}
+[待补充说明](cs:./Demo.cs)
 ```
 
 ### 引用 C# 片段
 
 ```text
-{{cs:./Demo.cs#cs:t:命名空间.类型名|类型示例}}
-{{cs:./Demo.cs#cs:m:命名空间.类型名.方法名(参数类型)|方法示例}}
+[类型示例](cs:./Demo.cs#cs:t:命名空间.类型名)
+[方法示例](cs:./Demo.cs#cs:m:命名空间.类型名.方法名(参数类型))
 ```
 
 常见选择器：
@@ -67,7 +68,7 @@ next_chapter: 在线写作IDE使用教程.md
 语法：
 
 ```text
-{{anim:anims/demo-basic.cs}}
+[待补充说明](anims:anims/demo-basic.cs)
 ```
 
 要求：
@@ -75,6 +76,42 @@ next_chapter: 在线写作IDE使用教程.md
 1. 路径以 `anims/` 开头
 2. 扩展名为 `.cs`
 3. 在使用前执行 `npm run build`
+
+## FX 引用指令
+
+语法：
+
+```text
+[待补充说明](fx:./shaders/demo.fx)
+```
+
+要求：
+
+1. 路径指向 `.fx` 文件
+2. 指令独占一行
+3. 在教程页会渲染为 Shader 卡片，点击后可打开弹窗 IDE 预览
+
+## 提示框语法（Callout）
+
+语法（GitHub 五级）：
+
+```text
+> [!NOTE]
+> 说明内容
+```
+
+可用级别：
+
+- `NOTE`
+- `TIP`
+- `IMPORTANT`
+- `WARNING`
+- `CAUTION`
+
+说明：
+
+1. 级别必须写英文大写
+2. viewer 会渲染为中文标题提示框
 
 ## Quiz 题目语法
 
@@ -244,7 +281,7 @@ colorChange:
 
 ### 错误2：动画不显示
 
-确认已执行 `npm run build`，且 `{{anim:...}}` 路径合法。
+确认已执行 `npm run build`，且 `[说明](anims:anims/xxx.cs)` 路径合法。
 
 ## 下一步
 

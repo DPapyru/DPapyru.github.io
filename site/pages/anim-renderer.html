@@ -359,10 +359,10 @@
             copySnippetBtn.addEventListener('click', async function () {
                 const p = String(currentPath || pathSelect.value || '').trim();
                 if (!p) return;
-                const snippet = '{{anim:' + p + '}}\n';
+                const snippet = '[待补充说明](anims:' + p + ')\n';
                 try {
                     await navigator.clipboard.writeText(snippet);
-                    setStatus('已复制 anim 指令到剪贴板');
+                    setStatus('已复制 anims 协议引用到剪贴板');
                 } catch (_) {
                     // Fallback for file:// where clipboard API may be blocked
                     const ta = document.createElement('textarea');

@@ -22,6 +22,7 @@
             </div>
             <div class="app-header-actions">
                 <button id="btn-markdown-toggle-preview" type="button">预览</button>
+                <button id="btn-markdown-metadata" type="button">元数据</button>
                 <button id="btn-markdown-open-viewer" type="button">新标签预览</button>
                 <button id="btn-shader-compile" type="button">编译 .fx</button>
                 <button id="btn-shader-preview-popup" type="button">渲染预览</button>
@@ -93,7 +94,30 @@
                 </div>
                 <div id="editor" class="editor" aria-label="C# 编辑器"></div>
                 <section id="markdown-preview-pane" class="markdown-preview-pane" hidden>
-                    <iframe id="markdown-preview-frame" class="markdown-preview-frame" title="Markdown 预览" loading="lazy"></iframe>
+                    <div class="markdown-visual-layout">
+                        <section class="markdown-visual-canvas-wrap" aria-label="Markdown 可视化编辑区">
+                            <header class="markdown-visual-head">
+                                <span>可视化编辑</span>
+                                <span class="markdown-visual-head-tip">点击块后在右侧修改，代码块/表格请跳转源码编辑。</span>
+                            </header>
+                            <div id="markdown-visual-canvas" class="markdown-visual-canvas"></div>
+                        </section>
+                        <aside id="markdown-visual-inspector" class="markdown-visual-inspector" aria-label="Markdown 块属性">
+                            <header class="markdown-visual-inspector-head">
+                                <h3>块属性</h3>
+                                <span id="markdown-visual-selected-type" class="pill">未选择</span>
+                            </header>
+                            <p id="markdown-visual-empty" class="markdown-visual-empty">点击左侧块开始编辑。</p>
+                            <label for="markdown-visual-content" class="markdown-visual-label">内容</label>
+                            <textarea id="markdown-visual-content" class="markdown-visual-content" spellcheck="false" disabled></textarea>
+                            <div class="markdown-visual-actions">
+                                <button id="btn-markdown-visual-apply" type="button" disabled>应用修改</button>
+                                <button id="btn-markdown-visual-source" type="button" disabled>跳转源码编辑</button>
+                            </div>
+                            <p id="markdown-visual-help" class="markdown-visual-help">段落、标题、列表、引用块支持可视化修改。</p>
+                        </aside>
+                    </div>
+                    <iframe id="markdown-preview-frame" class="markdown-preview-frame" title="Markdown 预览" loading="lazy" hidden></iframe>
                 </section>
                 <section id="image-preview-pane" class="image-preview-pane" hidden>
                     <img id="image-preview-image" class="image-preview-image" alt="图片预览">
@@ -160,7 +184,10 @@
                                 <button type="button" data-md-insert="list">列表</button>
                                 <button type="button" data-md-insert="quote">引用</button>
                                 <button type="button" data-md-insert="ref">引用文档</button>
+                                <button type="button" data-md-insert="cs-embed">C# 引用</button>
                                 <button type="button" data-md-insert="anim">动画片段</button>
+                                <button type="button" data-md-insert="fx-embed">FX 引用</button>
+                                <button type="button" data-md-insert="callout-note">提示框</button>
                                 <button type="button" data-md-insert="animcs-block">animcs 代码块</button>
                                 <button type="button" data-md-insert="color-inline">单色文本</button>
                                 <button type="button" data-md-insert="color-change-inline">颜色动画文本</button>
@@ -242,6 +269,49 @@
             <section class="unified-submit-section">
                 <div id="unified-submit-status" class="unified-submit-status">就绪</div>
             </section>
+        </aside>
+
+        <aside id="markdown-meta-drawer" class="markdown-meta-drawer" aria-hidden="true">
+            <header class="markdown-meta-head">
+                <h2>Markdown 元数据</h2>
+                <button id="btn-markdown-meta-close" type="button">关闭</button>
+            </header>
+            <section class="markdown-meta-section">
+                <label for="meta-title">title *</label>
+                <input id="meta-title" data-meta-field="title" type="text" spellcheck="false">
+                <label for="meta-author">author</label>
+                <input id="meta-author" data-meta-field="author" type="text" spellcheck="false">
+                <label for="meta-topic">topic</label>
+                <input id="meta-topic" data-meta-field="topic" type="text" spellcheck="false">
+                <label for="meta-description">description</label>
+                <textarea id="meta-description" data-meta-field="description" rows="3" spellcheck="false"></textarea>
+                <label for="meta-order">order</label>
+                <input id="meta-order" data-meta-field="order" type="number" min="0" step="1">
+                <label for="meta-difficulty">difficulty</label>
+                <select id="meta-difficulty" data-meta-field="difficulty">
+                    <option value="beginner">beginner</option>
+                    <option value="intermediate">intermediate</option>
+                    <option value="advanced">advanced</option>
+                </select>
+                <label for="meta-time">time</label>
+                <input id="meta-time" data-meta-field="time" type="text" spellcheck="false">
+            </section>
+            <details class="markdown-meta-section">
+                <summary>高级字段</summary>
+                <label for="meta-prev-chapter">prev_chapter</label>
+                <input id="meta-prev-chapter" data-meta-field="prev_chapter" type="text" spellcheck="false">
+                <label for="meta-next-chapter">next_chapter</label>
+                <input id="meta-next-chapter" data-meta-field="next_chapter" type="text" spellcheck="false">
+                <label for="meta-min-c">min_c</label>
+                <input id="meta-min-c" data-meta-field="min_c" type="number" min="0" step="1">
+                <label for="meta-min-t">min_t</label>
+                <input id="meta-min-t" data-meta-field="min_t" type="number" min="0" step="1">
+                <label for="meta-colors">colors（每行 key=#hex）</label>
+                <textarea id="meta-colors" data-meta-field="colors" rows="4" spellcheck="false"></textarea>
+                <label for="meta-color-change">colorChange（每行 key=#a,#b）</label>
+                <textarea id="meta-color-change" data-meta-field="colorChange" rows="4" spellcheck="false"></textarea>
+            </details>
+            <div id="markdown-meta-status" class="markdown-meta-status">未打开</div>
         </aside>
 
         <button id="btn-show-bottom-panel" class="panel-restore-btn" type="button" hidden>显示问题面板</button>
@@ -355,6 +425,49 @@
                 </section>
             </div>
             <div id="shader-preview-status" class="shader-preview-status">预览就绪</div>
+        </section>
+    </div>
+
+    <div id="quick-create-modal" class="quick-create-modal" hidden>
+        <button id="quick-create-backdrop" class="quick-create-backdrop" type="button" aria-label="关闭快速创建"></button>
+        <section class="quick-create-dialog" role="dialog" aria-modal="true" aria-label="快速创建文件">
+            <header class="quick-create-head">
+                <h2>快速创建</h2>
+                <button id="btn-quick-create-close" type="button">关闭</button>
+            </header>
+            <div class="quick-create-body">
+                <label for="quick-create-type">类型</label>
+                <select id="quick-create-type">
+                    <option value="markdown">Markdown (.md)</option>
+                    <option value="shaderfx">Shader (.fx)</option>
+                    <option value="animcs">动画 C# (anims/*.cs)</option>
+                    <option value="codecs">代码 C# (**/code/*.cs)</option>
+                    <option value="image">图片 (**/imgs/*)</option>
+                    <option value="video">视频 (**/media/*)</option>
+                </select>
+                <label for="quick-create-directory">目录（相对 site/content）</label>
+                <input id="quick-create-directory" type="text" spellcheck="false" placeholder="例如：怎么贡献">
+                <label for="quick-create-name">文件名</label>
+                <input id="quick-create-name" type="text" spellcheck="false" placeholder="例如：新文章.md">
+                <p id="quick-create-hint" class="quick-create-hint">创建后将立即加入工作区并自动保存。</p>
+            </div>
+            <footer class="quick-create-actions">
+                <button id="btn-quick-create-submit" type="button">创建</button>
+            </footer>
+        </section>
+    </div>
+
+    <div id="shader-slot-picker-modal" class="shader-slot-picker-modal" hidden>
+        <button id="shader-slot-picker-backdrop" class="shader-slot-picker-backdrop" type="button" aria-label="关闭槽位选择"></button>
+        <section class="shader-slot-picker-dialog" role="dialog" aria-modal="true" aria-label="选择 using 图片槽位">
+            <header class="shader-slot-picker-head">
+                <h3>选择 using:img 槽位</h3>
+            </header>
+            <p id="shader-slot-picker-tip" class="shader-slot-picker-tip">当前槽位已满，请选择要覆盖的槽位。</p>
+            <div id="shader-slot-picker-list" class="shader-slot-picker-list"></div>
+            <footer class="shader-slot-picker-actions">
+                <button id="btn-shader-slot-picker-cancel" type="button">取消</button>
+            </footer>
         </section>
     </div>
 

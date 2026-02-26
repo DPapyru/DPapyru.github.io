@@ -18,3 +18,11 @@ test('viewer injects animcs resolver for studio preview embeds', () => {
 
     assert.match(viewer, /__ANIMCS_RESOLVE_ENTRY/);
 });
+
+test('viewer studio preview fetch bridge maps unsaved fx payload files', () => {
+    const viewerPath = path.resolve('site/pages/viewer.html');
+    const viewer = fs.readFileSync(viewerPath, 'utf8');
+
+    assert.match(viewer, /uploadedFxFiles/);
+    assert.match(viewer, /content-type': 'text\/x-hlsl; charset=utf-8'/);
+});

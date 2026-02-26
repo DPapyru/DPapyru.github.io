@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "root": "site/content",
-  "generatedAt": "2026-02-26T01:53:54.643Z",
+  "generatedAt": "2026-02-26T03:06:23.025Z",
   "files": [
     {
       "path": "Modder入门/code/firstclass_makefirstweapon.cs",
@@ -118,6 +118,10 @@
     {
       "path": "怎么贡献/ContentProjects解决方案说明.md",
       "kind": "markdown"
+    },
+    {
+      "path": "怎么贡献/shaders/demo.fx",
+      "kind": "shaderfx"
     },
     {
       "path": "怎么贡献/使用网页特殊动画模块.md",

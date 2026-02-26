@@ -38,3 +38,11 @@ test('tml-ide main uses expected debounce and timeout for anim bridge compile', 
     assert.match(source, /ANIMCS_COMPILE_DEBOUNCE_MS\s*=\s*400/);
     assert.match(source, /ANIMCS_COMPILE_TIMEOUT_MS\s*=\s*8000/);
 });
+
+test('tml-ide main preview payload includes unsaved fx files for studio preview', () => {
+    const sourcePath = path.resolve('tml-ide-app/src/main.js');
+    const source = fs.readFileSync(sourcePath, 'utf8');
+
+    assert.match(source, /uploadedFxFiles/);
+    assert.match(source, /mode === 'shaderfx'/);
+});
