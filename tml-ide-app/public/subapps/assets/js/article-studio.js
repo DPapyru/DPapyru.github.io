@@ -189,6 +189,7 @@
         uploadedImages: [],
         uploadedMedia: [],
         uploadedCsharpFiles: [],
+        uploadedShaderFiles: [],
         csharpSymbolEntries: [],
         csharpEditorTargetId: '',
         csharpEditorDraft: '',
@@ -5984,6 +5985,17 @@
                 : [],
             uploadedCsharpFiles: Array.isArray(state.uploadedCsharpFiles)
                 ? state.uploadedCsharpFiles.map(function (item) {
+                    return {
+                        assetPath: normalizePath(item && item.assetPath || ''),
+                        content: String(item && item.content || ''),
+                        name: String(item && item.name || '')
+                    };
+                }).filter(function (item) {
+                    return item.assetPath && item.content;
+                })
+                : [],
+            uploadedShaderFiles: Array.isArray(state.uploadedShaderFiles)
+                ? state.uploadedShaderFiles.map(function (item) {
                     return {
                         assetPath: normalizePath(item && item.assetPath || ''),
                         content: String(item && item.content || ''),

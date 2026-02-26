@@ -1,6 +1,6 @@
 // Generated from anims/matrix-mat4-transform.cs
 export function create(runtime) {
-    const { Vec2, Vec3, Mat4, Color, MathF, AnimGeom } = runtime;
+    const { Vec2, Vec3, Mat4, Color, MathF, AnimGeom, PrimitiveType, BlendMode, VertexPositionColorTexture } = runtime;
     class MatrixMat4Transform {
         constructor() {
             this._ctx = null;

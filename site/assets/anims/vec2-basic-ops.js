@@ -1,6 +1,6 @@
 // Generated from anims/vec2-basic-ops.cs
 export function create(runtime) {
-    const { Vec2, Vec3, Mat4, Color, MathF, AnimGeom } = runtime;
+    const { Vec2, Vec3, Mat4, Color, MathF, AnimGeom, PrimitiveType, BlendMode, VertexPositionColorTexture } = runtime;
     class Vec2BasicOps {
         constructor() {
             this._ctx = null;

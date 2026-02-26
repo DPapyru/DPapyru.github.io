@@ -227,6 +227,22 @@ namespace AnimRuntime
         void Circle(AnimRuntime.Math.Vec2 center, float radius, AnimRuntime.Math.Color color, float width = 1f);
         void FillCircle(AnimRuntime.Math.Vec2 center, float radius, AnimRuntime.Math.Color color);
         void Text(string text, AnimRuntime.Math.Vec2 position, AnimRuntime.Math.Color color, float size = 12f);
+        void UseEffect(string shaderPath);
+        void ClearEffect();
+        void SetBlendMode(BlendMode mode);
+        void SetTexture(int slot, string texturePath);
+        void SetFloat(string name, float value);
+        void SetVec2(string name, AnimRuntime.Math.Vec2 value);
+        void SetColor(string name, AnimRuntime.Math.Color value);
+        void DrawUserIndexedPrimitives(
+            PrimitiveType primitiveType,
+            VertexPositionColorTexture[] vertices,
+            int vertexOffset,
+            int numVertices,
+            int[] indices,
+            int indexOffset,
+            int primitiveCount
+        );
     }
 
     public static class AnimGeom
@@ -234,6 +250,36 @@ namespace AnimRuntime
         public static AnimRuntime.Math.Vec2 ToScreen(AnimRuntime.Math.Vec2 v, AnimRuntime.Math.Vec2 center, float scale) => default;
         public static void DrawAxes(ICanvas2D g, AnimRuntime.Math.Vec2 center, float scale, AnimRuntime.Math.Color? axisColor = null, AnimRuntime.Math.Color? gridColor = null) { }
         public static void DrawArrow(ICanvas2D g, AnimRuntime.Math.Vec2 from, AnimRuntime.Math.Vec2 to, AnimRuntime.Math.Color color, float width = 1f, float headSize = 8f) { }
+    }
+
+    public enum PrimitiveType
+    {
+        TriangleList = 0
+    }
+
+    public enum BlendMode
+    {
+        AlphaBlend = 0,
+        Additive = 1,
+        Opaque = 2
+    }
+
+    public struct VertexPositionColorTexture
+    {
+        public AnimRuntime.Math.Vec3 Position;
+        public AnimRuntime.Math.Color Color;
+        public AnimRuntime.Math.Vec2 TextureCoordinate;
+
+        public VertexPositionColorTexture(
+            AnimRuntime.Math.Vec3 position,
+            AnimRuntime.Math.Color color,
+            AnimRuntime.Math.Vec2 textureCoordinate
+        )
+        {
+            Position = position;
+            Color = color;
+            TextureCoordinate = textureCoordinate;
+        }
     }
 }
 
@@ -355,7 +401,7 @@ internal sealed class JsEmitter
 
         WriteLine("export function create(runtime) {");
         _indentLevel += 1;
-        WriteLine("const { Vec2, Vec3, Mat4, Color, MathF, AnimGeom } = runtime;");
+        WriteLine("const { Vec2, Vec3, Mat4, Color, MathF, AnimGeom, PrimitiveType, BlendMode, VertexPositionColorTexture } = runtime;");
         WriteLine($"class {_className} {{");
         _indentLevel += 1;
 
@@ -913,6 +959,9 @@ internal sealed class JsEmitter
             "AnimRuntime.Math.Vec3" => "new Vec3(0, 0, 0)",
             "AnimRuntime.Math.Mat4" => "Mat4.Identity()",
             "AnimRuntime.Math.Color" => "new Color(0, 0, 0, 255)",
+            "AnimRuntime.PrimitiveType" => "PrimitiveType.TriangleList",
+            "AnimRuntime.BlendMode" => "BlendMode.AlphaBlend",
+            "AnimRuntime.VertexPositionColorTexture" => "new VertexPositionColorTexture(new Vec3(0, 0, 0), new Color(0, 0, 0, 255), new Vec2(0, 0))",
             _ => "null"
         };
     }

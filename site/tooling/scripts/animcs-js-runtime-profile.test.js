@@ -127,3 +127,43 @@ test('canvas api supports Text drawing', () => {
 
     assert.ok(calls.some((entry) => Array.isArray(entry) && entry[0] === 'fillText' && entry[1] === 'M'));
 });
+
+test('createPlayer exposes mesh shader draw APIs on canvas runtime', () => {
+    const seen = {};
+    const fakeCanvas = {
+        width: 160,
+        height: 120,
+        addEventListener() {},
+        removeEventListener() {},
+        getContext() { return null; }
+    };
+    const mod = {
+        create(runtimeApi) {
+            seen.runtimeApi = runtimeApi;
+            return {
+                OnInit() {},
+                OnUpdate() {},
+                OnRender(g) {
+                    seen.canvasApi = g;
+                },
+                OnDispose() {}
+            };
+        }
+    };
+    const player = runtime.createPlayer(mod, { canvas: fakeCanvas, width: 160, height: 120 });
+    player.start();
+    player.stop();
+
+    assert.equal(typeof seen.runtimeApi.PrimitiveType, 'object');
+    assert.equal(typeof seen.runtimeApi.BlendMode, 'object');
+    assert.equal(typeof seen.runtimeApi.VertexPositionColorTexture, 'function');
+
+    assert.equal(typeof seen.canvasApi.UseEffect, 'function');
+    assert.equal(typeof seen.canvasApi.ClearEffect, 'function');
+    assert.equal(typeof seen.canvasApi.SetBlendMode, 'function');
+    assert.equal(typeof seen.canvasApi.SetTexture, 'function');
+    assert.equal(typeof seen.canvasApi.SetFloat, 'function');
+    assert.equal(typeof seen.canvasApi.SetVec2, 'function');
+    assert.equal(typeof seen.canvasApi.SetColor, 'function');
+    assert.equal(typeof seen.canvasApi.DrawUserIndexedPrimitives, 'function');
+});

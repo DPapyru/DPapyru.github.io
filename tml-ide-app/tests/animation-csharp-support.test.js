@@ -28,3 +28,19 @@ test('main.js separates animation completion profile from normal tModLoader C#',
     assert.match(source, /filterAnalyzeItemsForAnimation/);
     assert.match(source, /mergeCompletionItems/);
 });
+
+test('main.js exposes vertex shader draw domain members for animation completion', () => {
+    const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
+
+    assert.match(source, /PrimitiveType/);
+    assert.match(source, /BlendMode/);
+    assert.match(source, /VertexPositionColorTexture/);
+    assert.match(source, /UseEffect/);
+    assert.match(source, /ClearEffect/);
+    assert.match(source, /SetBlendMode/);
+    assert.match(source, /SetTexture/);
+    assert.match(source, /SetFloat/);
+    assert.match(source, /SetVec2/);
+    assert.match(source, /SetColor/);
+    assert.match(source, /DrawUserIndexedPrimitives/);
+});

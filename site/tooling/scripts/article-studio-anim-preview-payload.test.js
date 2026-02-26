@@ -10,6 +10,7 @@ test('article studio preview payload includes realtime anim compile fields', () 
     assert.match(source, /compiledAnims/);
     assert.match(source, /animCompileErrors/);
     assert.match(source, /animBridge/);
+    assert.match(source, /uploadedShaderFiles/);
 });
 
 test('article studio uses expected debounce and timeout for anim bridge compile', () => {
@@ -27,6 +28,7 @@ test('tml-ide main preview payload includes anim bridge compile fields', () => {
     assert.match(source, /compiledAnims/);
     assert.match(source, /animCompileErrors/);
     assert.match(source, /animBridge/);
+    assert.match(source, /uploadedShaderFiles/);
 });
 
 test('tml-ide main uses expected debounce and timeout for anim bridge compile', () => {

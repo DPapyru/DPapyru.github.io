@@ -31,6 +31,14 @@
         return adapter.buildFragmentSource(String(commonCode || ''), String(passCode || ''));
     }
 
+    function buildProgramSource(effectSource, options) {
+        const adapter = getShaderAdapter();
+        if (!adapter || typeof adapter.buildProgramSource !== 'function') {
+            return { ok: false, error: 'Shader adapter program API unavailable' };
+        }
+        return adapter.buildProgramSource(String(effectSource || ''), options || {});
+    }
+
     function buildPreviewPayload(sourcePayload) {
         const payload = sourcePayload && typeof sourcePayload === 'object' ? sourcePayload : {};
         const passes = Array.isArray(payload.passes) ? payload.passes : [];
@@ -54,6 +62,7 @@
     return {
         getShaderAdapter,
         buildFragmentSource,
+        buildProgramSource,
         buildPreviewPayload
     };
 });

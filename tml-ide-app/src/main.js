@@ -360,6 +360,9 @@ const ANIMATION_TYPE_LABELS = Object.freeze([
     'Vec3',
     'Mat4',
     'Color',
+    'PrimitiveType',
+    'BlendMode',
+    'VertexPositionColorTexture',
     'MathF',
     'AnimGeom',
     'IAnimScript'
@@ -380,13 +383,30 @@ const ANIMATION_STATIC_OWNER_TO_TYPE = Object.freeze({
     Vec3: 'Vec3',
     Mat4: 'Mat4',
     Color: 'Color',
+    PrimitiveType: 'PrimitiveType',
+    BlendMode: 'BlendMode',
+    VertexPositionColorTexture: 'VertexPositionColorTexture',
     MathF: 'MathF',
     AnimGeom: 'AnimGeom'
 });
 const ANIMATION_MEMBER_LABELS_BY_TYPE = Object.freeze({
     AnimContext: Object.freeze(['Width', 'Height', 'Time', 'Input']),
     AnimInput: Object.freeze(['X', 'Y', 'DeltaX', 'DeltaY', 'IsDown', 'WasPressed', 'WasReleased', 'IsInside', 'Mode', 'ModeLocked', 'WheelDelta']),
-    ICanvas2D: Object.freeze(['Clear', 'Line', 'Circle', 'FillCircle', 'Text']),
+    ICanvas2D: Object.freeze([
+        'Clear',
+        'Line',
+        'Circle',
+        'FillCircle',
+        'Text',
+        'UseEffect',
+        'ClearEffect',
+        'SetBlendMode',
+        'SetTexture',
+        'SetFloat',
+        'SetVec2',
+        'SetColor',
+        'DrawUserIndexedPrimitives'
+    ]),
     Vec2: Object.freeze(['X', 'Y', 'Add', 'Sub', 'MulScalar', 'DivScalar']),
     Vec3: Object.freeze(['X', 'Y', 'Z', 'Add', 'Sub', 'MulScalar', 'DivScalar', 'Length', 'Normalize']),
     Mat4: Object.freeze([
@@ -397,11 +417,15 @@ const ANIMATION_MEMBER_LABELS_BY_TYPE = Object.freeze({
         'Identity', 'Translation', 'Scale', 'RotationX', 'RotationY', 'RotationZ', 'PerspectiveFovRh', 'Mul', 'MulVec2', 'MulVec3'
     ]),
     Color: Object.freeze(['R', 'G', 'B', 'A']),
+    PrimitiveType: Object.freeze(['TriangleList']),
+    BlendMode: Object.freeze(['AlphaBlend', 'Additive', 'Opaque']),
+    VertexPositionColorTexture: Object.freeze(['Position', 'Color', 'TextureCoordinate']),
     MathF: Object.freeze(['Sin', 'Cos', 'Tan', 'Min', 'Max', 'Sqrt', 'Abs', 'Round']),
     AnimGeom: Object.freeze(['ToScreen', 'DrawAxes', 'DrawArrow'])
 });
 const ANIMATION_METHOD_LABELS = new Set([
     'Clear', 'Line', 'Circle', 'FillCircle', 'Text',
+    'UseEffect', 'ClearEffect', 'SetBlendMode', 'SetTexture', 'SetFloat', 'SetVec2', 'SetColor', 'DrawUserIndexedPrimitives',
     'Add', 'Sub', 'MulScalar', 'DivScalar', 'Length', 'Normalize',
     'Identity', 'Translation', 'Scale', 'RotationX', 'RotationY', 'RotationZ', 'PerspectiveFovRh', 'Mul', 'MulVec2', 'MulVec3',
     'Sin', 'Cos', 'Tan', 'Min', 'Max', 'Sqrt', 'Abs', 'Round',
@@ -1432,6 +1456,19 @@ function isAnimSourcePath(pathValue) {
     return true;
 }
 
+function normalizeAnimShaderPath(pathValue) {
+    return normalizeContentRelativePath(pathValue).replace(/^\.\//, '');
+}
+
+function isAnimShaderPath(pathValue) {
+    const normalized = normalizeAnimShaderPath(pathValue);
+    if (!normalized) return false;
+    if (!/^anims\/shaders\//i.test(normalized)) return false;
+    if (!/\.fx$/i.test(normalized)) return false;
+    if (/(^|\/)\.\.(\/|$)/.test(normalized)) return false;
+    return true;
+}
+
 function normalizeAnimBridgeEndpoint(input) {
     let value = String(input || '').trim();
     if (!value) return '';
@@ -1617,9 +1654,11 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
     const uploadedImages = [];
     const uploadedMedia = [];
     const uploadedCsharpFiles = [];
+    const uploadedShaderFiles = [];
     const imagePathSet = new Set();
     const mediaPathSet = new Set();
     const csharpPathSet = new Set();
+    const shaderPathSet = new Set();
 
     updateAnimPreviewReferenceContext(safeMarkdownPath || markdownPath, markdownContent);
 
@@ -1670,6 +1709,18 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
         });
     };
 
+    const appendUploadedShaderFile = (assetPath, content, name) => {
+        pathVariants(assetPath).forEach((variantPath) => {
+            if (!variantPath || shaderPathSet.has(variantPath)) return;
+            shaderPathSet.add(variantPath);
+            uploadedShaderFiles.push({
+                assetPath: variantPath,
+                content,
+                name
+            });
+        });
+    };
+
     state.workspace.files.forEach((file) => {
         if (!file || !file.path) return;
         const mode = detectFileMode(file.path);
@@ -1689,6 +1740,10 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
         }
         if (mode === 'csharp') {
             appendUploadedCsharpFile(assetPath, String(file.content || ''), String(file.path).split('/').pop() || '');
+            return;
+        }
+        if (mode === 'shaderfx' && isAnimShaderPath(assetPath)) {
+            appendUploadedShaderFile(assetPath, String(file.content || ''), String(file.path).split('/').pop() || '');
         }
     });
 
@@ -1698,6 +1753,7 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
         uploadedImages,
         uploadedMedia,
         uploadedCsharpFiles,
+        uploadedShaderFiles,
         compiledAnims: buildCompiledAnimsPayload(),
         animCompileErrors: buildAnimCompileErrorsPayload(),
         animBridge: {
@@ -6411,12 +6467,12 @@ function animationLocalTypeHints(text, offset) {
     const map = new Map();
     let match = null;
 
-    const explicitRe = /\b(AnimContext|AnimInput|ICanvas2D|Vec2|Vec3|Mat4|Color)\s+([A-Za-z_][A-Za-z0-9_]*)\b/g;
+    const explicitRe = /\b(AnimContext|AnimInput|ICanvas2D|Vec2|Vec3|Mat4|Color|PrimitiveType|BlendMode|VertexPositionColorTexture)\s+([A-Za-z_][A-Za-z0-9_]*)\b/g;
     while ((match = explicitRe.exec(scopeText)) !== null) {
         map.set(String(match[2] || ''), String(match[1] || ''));
     }
 
-    const varNewRe = /\bvar\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*new\s+(Vec2|Vec3|Mat4|Color)\b/g;
+    const varNewRe = /\bvar\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*new\s+(Vec2|Vec3|Mat4|Color|VertexPositionColorTexture)\b/g;
     while ((match = varNewRe.exec(scopeText)) !== null) {
         map.set(String(match[1] || ''), String(match[2] || ''));
     }

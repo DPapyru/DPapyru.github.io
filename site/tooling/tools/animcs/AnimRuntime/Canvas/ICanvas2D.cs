@@ -9,4 +9,20 @@ public interface ICanvas2D
     void Circle(Vec2 center, float radius, Color color, float width = 1f);
     void FillCircle(Vec2 center, float radius, Color color);
     void Text(string text, Vec2 position, Color color, float size = 12f);
+    void UseEffect(string shaderPath);
+    void ClearEffect();
+    void SetBlendMode(BlendMode mode);
+    void SetTexture(int slot, string texturePath);
+    void SetFloat(string name, float value);
+    void SetVec2(string name, Vec2 value);
+    void SetColor(string name, Color value);
+    void DrawUserIndexedPrimitives(
+        PrimitiveType primitiveType,
+        VertexPositionColorTexture[] vertices,
+        int vertexOffset,
+        int numVertices,
+        int[] indices,
+        int indexOffset,
+        int primitiveCount
+    );
 }

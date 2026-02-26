@@ -6,6 +6,7 @@
     "anims/demo-eoc-ai.cs",
     "anims/demo-math-transform.cs",
     "anims/demo-mode-state.cs",
+    "anims/fna-vertex-demo.cs",
     "anims/mat4-trs-compose.cs",
     "anims/mat4-view-projection.cs",
     "anims/matrix-mat4-transform.cs",
@@ -102,6 +103,10 @@
           }
         ]
       }
+    },
+    "anims/fna-vertex-demo.cs": {
+      "js": "fna-vertex-demo.js",
+      "entry": "fna-vertex-demo"
     },
     "anims/mat4-trs-compose.cs": {
       "js": "mat4-trs-compose.js",

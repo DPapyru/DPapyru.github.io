@@ -11,6 +11,9 @@
     const EMBED_SELECTOR = '.animcs-embed[data-animcs-src]';
     const DEFAULT_STAGE_HEIGHT = 240;
     const manifestCache = new Map();
+    const globalScope = typeof globalThis !== 'undefined'
+        ? globalThis
+        : (typeof window !== 'undefined' ? window : null);
     const LEGACY_EOC_MODE_OPTIONS = [
         { value: 0, text: '自动' },
         { value: 1, text: '一阶-徘徊' },
@@ -657,6 +660,27 @@
         this.A = a == null ? 255 : Math.round(Number(a));
     }
 
+    function VertexPositionColorTexture(position, color, textureCoordinate) {
+        const pos = position || {};
+        const col = color || {};
+        const uv = textureCoordinate || {};
+        this.Position = new Vec3(
+            Number(pos.X || 0),
+            Number(pos.Y || 0),
+            Number(pos.Z || 0)
+        );
+        this.Color = new Color(
+            Number(col.R == null ? 255 : col.R),
+            Number(col.G == null ? 255 : col.G),
+            Number(col.B == null ? 255 : col.B),
+            Number(col.A == null ? 255 : col.A)
+        );
+        this.TextureCoordinate = new Vec2(
+            Number(uv.X == null ? uv.U : uv.X) || 0,
+            Number(uv.Y == null ? uv.V : uv.Y) || 0
+        );
+    }
+
     function AnimContext(width, height) {
         this.Width = width;
         this.Height = height;
@@ -796,13 +820,617 @@
         Round: Math.round
     };
 
+    const PrimitiveType = Object.freeze({
+        TriangleList: 0
+    });
+
+    const BlendMode = Object.freeze({
+        AlphaBlend: 0,
+        Additive: 1,
+        Opaque: 2
+    });
+
+    const DEFAULT_MESH_VERTEX_SOURCE = [
+        '#version 300 es',
+        'precision highp float;',
+        'layout(location = 0) in vec3 aPosition;',
+        'layout(location = 1) in vec4 aColor;',
+        'layout(location = 2) in vec2 aTexCoord;',
+        'out vec4 vColor;',
+        'out vec2 vUv;',
+        'uniform vec2 uResolution;',
+        'void main() {',
+        '    vec2 safeResolution = max(uResolution, vec2(1.0));',
+        '    vec2 clipPos = vec2(',
+        '        (aPosition.x / safeResolution.x) * 2.0 - 1.0,',
+        '        1.0 - (aPosition.y / safeResolution.y) * 2.0',
+        '    );',
+        '    gl_Position = vec4(clipPos, aPosition.z, 1.0);',
+        '    vColor = aColor;',
+        '    vUv = vec2(aTexCoord.x, 1.0 - aTexCoord.y);',
+        '}',
+        ''
+    ].join('\n');
+
+    const DEFAULT_MESH_FRAGMENT_SOURCE = [
+        '#version 300 es',
+        'precision highp float;',
+        'in vec4 vColor;',
+        'in vec2 vUv;',
+        'out vec4 fragColor;',
+        'uniform sampler2D iChannel0;',
+        'void main() {',
+        '    vec4 base = texture(iChannel0, vec2(vUv.x, 1.0 - vUv.y));',
+        '    fragColor = base * vColor;',
+        '}',
+        ''
+    ].join('\n');
+
     function colorToRgba(color) {
         if (!color) return 'rgba(0,0,0,1)';
         const a = typeof color.A === 'number' ? color.A : 255;
         return `rgba(${color.R || 0}, ${color.G || 0}, ${color.B || 0}, ${a / 255})`;
     }
 
-    function createCanvasApi(canvas, ctx) {
+    function clamp01(value) {
+        return Math.max(0, Math.min(1, Number(value || 0)));
+    }
+
+    function normalizeBlendMode(mode) {
+        const raw = Number(mode);
+        if (raw === BlendMode.Additive) return BlendMode.Additive;
+        if (raw === BlendMode.Opaque) return BlendMode.Opaque;
+        return BlendMode.AlphaBlend;
+    }
+
+    function normalizeContentPath(input, expectedExtRe) {
+        let value = String(input || '').trim().replace(/\\/g, '/');
+        if (!value) return '';
+        value = value.replace(/^https?:\/\/[^/]+/i, '');
+        value = value.replace(/^\/+/, '');
+        value = value.replace(/^site\/content\//i, '');
+        value = value.replace(/^content\//i, '');
+        value = value.replace(/\/{2,}/g, '/');
+        if (!/^anims\//i.test(value)) return '';
+        if (/(^|\/)\.\.(\/|$)/.test(value)) return '';
+        if (expectedExtRe && !expectedExtRe.test(value)) return '';
+        return value;
+    }
+
+    function toContentFetchUrl(path) {
+        return `/site/content/${String(path || '').replace(/^\/+/, '')}`;
+    }
+
+    function resolveShaderAdapter() {
+        if (globalScope && globalScope.ShaderHlslAdapter) {
+            return globalScope.ShaderHlslAdapter;
+        }
+        if (typeof module !== 'undefined' && module.exports) {
+            try {
+                return require('../../../tml-ide-app/public/subapps/assets/js/shader-hlsl-adapter.js');
+            } catch (_error) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    function resolveTextureSlotIndex(slot) {
+        const n = Math.floor(Number(slot));
+        if (!Number.isFinite(n) || n < 0 || n > 3) return -1;
+        return n;
+    }
+
+    function createMeshState() {
+        const textureSlots = [];
+        for (let i = 0; i < 4; i += 1) {
+            textureSlots.push({
+                path: '',
+                image: null,
+                promise: null,
+                error: ''
+            });
+        }
+
+        return {
+            adapter: resolveShaderAdapter(),
+            effectPath: '',
+            effectSource: '',
+            effectPromise: null,
+            effectError: '',
+            blendMode: BlendMode.AlphaBlend,
+            floatUniforms: Object.create(null),
+            vec2Uniforms: Object.create(null),
+            colorUniforms: Object.create(null),
+            textureSlots: textureSlots,
+            glState: null,
+            frame: 0
+        };
+    }
+
+    function ensureGlState(meshState, canvas) {
+        if (!meshState || !canvas) return null;
+        if (meshState.glState && meshState.glState.failed) return null;
+        if (meshState.glState && meshState.glState.gl) {
+            const state = meshState.glState;
+            const w = Math.max(1, Number(canvas.width || 1));
+            const h = Math.max(1, Number(canvas.height || 1));
+            if (state.glCanvas.width !== w) state.glCanvas.width = w;
+            if (state.glCanvas.height !== h) state.glCanvas.height = h;
+            return state;
+        }
+        if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
+            meshState.glState = { failed: true };
+            return null;
+        }
+
+        const glCanvas = document.createElement('canvas');
+        glCanvas.width = Math.max(1, Number(canvas.width || 1));
+        glCanvas.height = Math.max(1, Number(canvas.height || 1));
+        const gl = glCanvas.getContext('webgl2', {
+            alpha: true,
+            antialias: true,
+            preserveDrawingBuffer: true
+        });
+        if (!gl) {
+            meshState.glState = { failed: true };
+            return null;
+        }
+
+        const vao = gl.createVertexArray();
+        const vbo = gl.createBuffer();
+        const ibo = gl.createBuffer();
+        if (!vao || !vbo || !ibo) {
+            meshState.glState = { failed: true };
+            return null;
+        }
+
+        gl.bindVertexArray(vao);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+        gl.enableVertexAttribArray(0);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 36, 0);
+        gl.enableVertexAttribArray(1);
+        gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 36, 12);
+        gl.enableVertexAttribArray(2);
+        gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 36, 28);
+        gl.bindVertexArray(null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+        const whiteTexture = gl.createTexture();
+        if (!whiteTexture) {
+            meshState.glState = { failed: true };
+            return null;
+        }
+        gl.bindTexture(gl.TEXTURE_2D, whiteTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+        meshState.glState = {
+            glCanvas,
+            gl,
+            vao,
+            vbo,
+            ibo,
+            whiteTexture,
+            textureCache: new Map(),
+            programCache: new Map()
+        };
+        return meshState.glState;
+    }
+
+    function compileProgram(gl, vertexSource, fragmentSource) {
+        const compileShader = (type, source) => {
+            const shader = gl.createShader(type);
+            if (!shader) return { ok: false, error: 'createShader failed' };
+            gl.shaderSource(shader, String(source || ''));
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                const log = gl.getShaderInfoLog(shader) || 'shader compile failed';
+                gl.deleteShader(shader);
+                return { ok: false, error: log };
+            }
+            return { ok: true, shader };
+        };
+
+        const vs = compileShader(gl.VERTEX_SHADER, vertexSource);
+        if (!vs.ok) return { ok: false, error: `VS: ${vs.error}` };
+        const fs = compileShader(gl.FRAGMENT_SHADER, fragmentSource);
+        if (!fs.ok) {
+            gl.deleteShader(vs.shader);
+            return { ok: false, error: `PS: ${fs.error}` };
+        }
+
+        const program = gl.createProgram();
+        if (!program) {
+            gl.deleteShader(vs.shader);
+            gl.deleteShader(fs.shader);
+            return { ok: false, error: 'createProgram failed' };
+        }
+
+        gl.attachShader(program, vs.shader);
+        gl.attachShader(program, fs.shader);
+        gl.linkProgram(program);
+        gl.deleteShader(vs.shader);
+        gl.deleteShader(fs.shader);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            const log = gl.getProgramInfoLog(program) || 'program link failed';
+            gl.deleteProgram(program);
+            return { ok: false, error: log };
+        }
+
+        return { ok: true, program };
+    }
+
+    function loadTextureImage(slot, path) {
+        if (!slot || !path) return;
+        if (slot.path === path && (slot.image || slot.promise)) return;
+        slot.path = path;
+        slot.image = null;
+        slot.error = '';
+        slot.promise = null;
+        if (typeof Image === 'undefined') {
+            slot.error = 'Image API unavailable';
+            return;
+        }
+
+        slot.promise = new Promise((resolve) => {
+            const image = new Image();
+            image.crossOrigin = 'anonymous';
+            image.onload = () => {
+                slot.image = image;
+                slot.error = '';
+                slot.promise = null;
+                resolve(image);
+            };
+            image.onerror = () => {
+                slot.image = null;
+                slot.error = 'texture load failed';
+                slot.promise = null;
+                resolve(null);
+            };
+            image.src = toContentFetchUrl(path);
+        });
+    }
+
+    function requestEffectSource(meshState) {
+        if (!meshState || !meshState.effectPath) return;
+        if (meshState.effectPromise) return;
+        if (meshState.effectSource) return;
+        if (typeof fetch !== 'function') {
+            meshState.effectError = 'fetch API unavailable';
+            return;
+        }
+
+        const targetPath = meshState.effectPath;
+        meshState.effectPromise = fetch(toContentFetchUrl(targetPath), { cache: 'no-store' })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.text();
+            })
+            .then((text) => {
+                if (meshState.effectPath !== targetPath) return;
+                meshState.effectSource = String(text || '');
+                meshState.effectError = '';
+            })
+            .catch((error) => {
+                if (meshState.effectPath !== targetPath) return;
+                meshState.effectError = String(error && error.message || error);
+                meshState.effectSource = '';
+            })
+            .finally(() => {
+                if (meshState.effectPath === targetPath) {
+                    meshState.effectPromise = null;
+                }
+            });
+    }
+
+    function createCanvasApi(canvas, ctx, renderState) {
+        const runtimeState = renderState && typeof renderState === 'object' ? renderState : { time: 0, delta: 0, frame: 0 };
+        const meshState = createMeshState();
+
+        function resolveProgram(glState) {
+            const gl = glState.gl;
+            if (!meshState.effectPath) {
+                const key = '__default__';
+                if (glState.programCache.has(key)) return glState.programCache.get(key);
+                const compiled = compileProgram(gl, DEFAULT_MESH_VERTEX_SOURCE, DEFAULT_MESH_FRAGMENT_SOURCE);
+                if (!compiled.ok) {
+                    meshState.effectError = compiled.error;
+                    return null;
+                }
+                const record = {
+                    program: compiled.program,
+                    uniformCache: Object.create(null)
+                };
+                glState.programCache.set(key, record);
+                return record;
+            }
+
+            if (!meshState.effectSource && !meshState.effectError) {
+                requestEffectSource(meshState);
+                return null;
+            }
+            if (!meshState.effectSource) {
+                return null;
+            }
+            const key = `${meshState.effectPath}:${meshState.effectSource.length}`;
+            if (glState.programCache.has(key)) return glState.programCache.get(key);
+
+            const adapter = meshState.adapter;
+            if (!adapter || typeof adapter.buildProgramSource !== 'function') {
+                meshState.effectError = 'shader adapter unavailable';
+                return null;
+            }
+            const built = adapter.buildProgramSource(meshState.effectSource, {
+                vertexEntry: 'MainVS'
+            });
+            if (!built || built.ok !== true) {
+                meshState.effectError = String(built && built.error ? built.error : 'buildProgramSource failed');
+                return null;
+            }
+            const compiled = compileProgram(gl, built.vertexSource || '', built.fragmentSource || '');
+            if (!compiled.ok) {
+                meshState.effectError = compiled.error;
+                return null;
+            }
+            const record = {
+                program: compiled.program,
+                uniformCache: Object.create(null)
+            };
+            glState.programCache.set(key, record);
+            meshState.effectError = '';
+            return record;
+        }
+
+        function applyBlendFor2d(mode) {
+            if (!ctx) return;
+            const safe = normalizeBlendMode(mode);
+            if (safe === BlendMode.Additive) {
+                ctx.globalCompositeOperation = 'lighter';
+                return;
+            }
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        function drawMeshFallback(vertices, vertexOffset, numVertices, indices, indexOffset, primitiveCount) {
+            if (!ctx) return false;
+            if (!Array.isArray(vertices) || !Array.isArray(indices)) return false;
+            if (primitiveCount <= 0) return false;
+            const startVertex = Math.max(0, Math.floor(Number(vertexOffset) || 0));
+            const countVertex = Math.max(0, Math.floor(Number(numVertices) || 0));
+            const startIndex = Math.max(0, Math.floor(Number(indexOffset) || 0));
+            const need = primitiveCount * 3;
+            if (countVertex <= 0 || need <= 0) return false;
+            if ((startVertex + countVertex) > vertices.length) return false;
+            if ((startIndex + need) > indices.length) return false;
+
+            ctx.save();
+            applyBlendFor2d(meshState.blendMode);
+            for (let tri = 0; tri < primitiveCount; tri += 1) {
+                const i0 = Number(indices[startIndex + tri * 3]) - startVertex;
+                const i1 = Number(indices[startIndex + tri * 3 + 1]) - startVertex;
+                const i2 = Number(indices[startIndex + tri * 3 + 2]) - startVertex;
+                if (i0 < 0 || i1 < 0 || i2 < 0 || i0 >= countVertex || i1 >= countVertex || i2 >= countVertex) continue;
+                const v0 = vertices[startVertex + i0];
+                const v1 = vertices[startVertex + i1];
+                const v2 = vertices[startVertex + i2];
+                if (!v0 || !v1 || !v2) continue;
+                const c0 = v0.Color || {};
+                const c1 = v1.Color || {};
+                const c2 = v2.Color || {};
+                const r = Math.round((((c0.R || 0) + (c1.R || 0) + (c2.R || 0)) / 3));
+                const g = Math.round((((c0.G || 0) + (c1.G || 0) + (c2.G || 0)) / 3));
+                const b = Math.round((((c0.B || 0) + (c1.B || 0) + (c2.B || 0)) / 3));
+                const a = (((c0.A == null ? 255 : c0.A) + (c1.A == null ? 255 : c1.A) + (c2.A == null ? 255 : c2.A)) / 3) / 255;
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${clamp01(a)})`;
+                ctx.beginPath();
+                ctx.moveTo(Number(v0.Position && v0.Position.X || 0), Number(v0.Position && v0.Position.Y || 0));
+                ctx.lineTo(Number(v1.Position && v1.Position.X || 0), Number(v1.Position && v1.Position.Y || 0));
+                ctx.lineTo(Number(v2.Position && v2.Position.X || 0), Number(v2.Position && v2.Position.Y || 0));
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.restore();
+            return true;
+        }
+
+        function drawMeshWebGl(vertices, vertexOffset, numVertices, indices, indexOffset, primitiveCount) {
+            const glState = ensureGlState(meshState, canvas);
+            if (!glState) return false;
+            const gl = glState.gl;
+            const programRecord = resolveProgram(glState);
+            if (!programRecord || !programRecord.program) return false;
+            if (!Array.isArray(vertices) || !Array.isArray(indices)) return false;
+            const startVertex = Math.max(0, Math.floor(Number(vertexOffset) || 0));
+            const countVertex = Math.max(0, Math.floor(Number(numVertices) || 0));
+            const startIndex = Math.max(0, Math.floor(Number(indexOffset) || 0));
+            const need = primitiveCount * 3;
+            if (primitiveCount <= 0 || countVertex <= 0) return false;
+            if ((startVertex + countVertex) > vertices.length) return false;
+            if ((startIndex + need) > indices.length) return false;
+
+            const packed = new Float32Array(countVertex * 9);
+            for (let i = 0; i < countVertex; i += 1) {
+                const vertex = vertices[startVertex + i] || {};
+                const pos = vertex.Position || {};
+                const col = vertex.Color || {};
+                const uv = vertex.TextureCoordinate || {};
+                const base = i * 9;
+                packed[base] = Number(pos.X || 0);
+                packed[base + 1] = Number(pos.Y || 0);
+                packed[base + 2] = Number(pos.Z || 0);
+                packed[base + 3] = clamp01((col.R == null ? 255 : col.R) / 255);
+                packed[base + 4] = clamp01((col.G == null ? 255 : col.G) / 255);
+                packed[base + 5] = clamp01((col.B == null ? 255 : col.B) / 255);
+                packed[base + 6] = clamp01((col.A == null ? 255 : col.A) / 255);
+                packed[base + 7] = Number(uv.X == null ? uv.U : uv.X) || 0;
+                packed[base + 8] = Number(uv.Y == null ? uv.V : uv.Y) || 0;
+            }
+
+            const maxIndex = countVertex - 1;
+            const logical = [];
+            for (let i = 0; i < need; i += 1) {
+                const value = Math.floor(Number(indices[startIndex + i]) - startVertex);
+                if (!Number.isFinite(value) || value < 0 || value > maxIndex) {
+                    return false;
+                }
+                logical.push(value);
+            }
+            const useUint32 = logical.some((item) => item > 65535);
+            const indexArray = useUint32 ? new Uint32Array(logical) : new Uint16Array(logical);
+
+            gl.viewport(0, 0, glState.glCanvas.width, glState.glCanvas.height);
+            if (meshState.blendMode === BlendMode.Opaque) {
+                gl.disable(gl.BLEND);
+            } else {
+                gl.enable(gl.BLEND);
+                if (meshState.blendMode === BlendMode.Additive) {
+                    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.SRC_ALPHA, gl.ONE);
+                } else {
+                    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                }
+            }
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.useProgram(programRecord.program);
+            gl.bindVertexArray(glState.vao);
+            gl.bindBuffer(gl.ARRAY_BUFFER, glState.vbo);
+            gl.bufferData(gl.ARRAY_BUFFER, packed, gl.DYNAMIC_DRAW);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, glState.ibo);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArray, gl.DYNAMIC_DRAW);
+
+            const uniformCache = programRecord.uniformCache;
+            const getUniform = (name) => {
+                if (Object.prototype.hasOwnProperty.call(uniformCache, name)) return uniformCache[name];
+                uniformCache[name] = gl.getUniformLocation(programRecord.program, name);
+                return uniformCache[name];
+            };
+
+            const setUniform1f = (name, value) => {
+                const loc = getUniform(name);
+                if (loc != null) gl.uniform1f(loc, Number(value || 0));
+            };
+            const setUniform2f = (name, x, y) => {
+                const loc = getUniform(name);
+                if (loc != null) gl.uniform2f(loc, Number(x || 0), Number(y || 0));
+            };
+            const setUniform4f = (name, x, y, z, w) => {
+                const loc = getUniform(name);
+                if (loc != null) gl.uniform4f(loc, Number(x || 0), Number(y || 0), Number(z || 0), Number(w || 0));
+            };
+
+            const width = Number(canvas && canvas.width || 1);
+            const height = Number(canvas && canvas.height || 1);
+            setUniform2f('uResolution', width, height);
+            setUniform1f('uTime', runtimeState.time || 0);
+            setUniform1f('iTime', runtimeState.time || 0);
+            setUniform1f('iTimeDelta', runtimeState.delta || 0);
+            const frameValue = Math.max(0, Math.floor(runtimeState.frame || meshState.frame || 0));
+            const frameLoc = getUniform('iFrame');
+            if (frameLoc != null) gl.uniform1i(frameLoc, frameValue);
+            const iResolutionLoc = getUniform('iResolution');
+            if (iResolutionLoc != null) gl.uniform3f(iResolutionLoc, width, height, 1);
+            setUniform4f('iMouse', 0, 0, 0, 0);
+            const now = new Date();
+            setUniform4f('iDate', now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds());
+
+            const channelTimeLoc = getUniform('iChannelTime');
+            if (channelTimeLoc != null) {
+                const t = Number(runtimeState.time || 0);
+                gl.uniform1fv(channelTimeLoc, new Float32Array([t, t, t, t]));
+            }
+
+            const channelResolutionLoc = getUniform('iChannelResolution');
+            const channelResolution = new Float32Array(12);
+            for (let i = 0; i < 4; i += 1) {
+                channelResolution[i * 3] = 1;
+                channelResolution[i * 3 + 1] = 1;
+                channelResolution[i * 3 + 2] = 1;
+            }
+
+            for (let slot = 0; slot < 4; slot += 1) {
+                const slotState = meshState.textureSlots[slot];
+                let texture = glState.whiteTexture;
+                if (slotState && slotState.image) {
+                    const key = slotState.path;
+                    let cached = glState.textureCache.get(key);
+                    if (!cached) {
+                        const tex = gl.createTexture();
+                        if (tex) {
+                            gl.bindTexture(gl.TEXTURE_2D, tex);
+                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+                            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, slotState.image);
+                            gl.bindTexture(gl.TEXTURE_2D, null);
+                            cached = {
+                                texture: tex,
+                                width: Number(slotState.image.width || 1),
+                                height: Number(slotState.image.height || 1)
+                            };
+                            glState.textureCache.set(key, cached);
+                        }
+                    }
+                    if (cached && cached.texture) {
+                        texture = cached.texture;
+                        channelResolution[slot * 3] = cached.width;
+                        channelResolution[slot * 3 + 1] = cached.height;
+                    }
+                }
+
+                gl.activeTexture(gl.TEXTURE0 + slot);
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                const loc = getUniform(`iChannel${slot}`);
+                if (loc != null) gl.uniform1i(loc, slot);
+            }
+
+            if (channelResolutionLoc != null) {
+                gl.uniform3fv(channelResolutionLoc, channelResolution);
+            }
+
+            Object.keys(meshState.floatUniforms).forEach((name) => {
+                setUniform1f(name, meshState.floatUniforms[name]);
+            });
+            Object.keys(meshState.vec2Uniforms).forEach((name) => {
+                const value = meshState.vec2Uniforms[name] || { X: 0, Y: 0 };
+                setUniform2f(name, value.X, value.Y);
+            });
+            Object.keys(meshState.colorUniforms).forEach((name) => {
+                const value = meshState.colorUniforms[name] || { R: 255, G: 255, B: 255, A: 255 };
+                setUniform4f(
+                    name,
+                    clamp01((value.R == null ? 255 : value.R) / 255),
+                    clamp01((value.G == null ? 255 : value.G) / 255),
+                    clamp01((value.B == null ? 255 : value.B) / 255),
+                    clamp01((value.A == null ? 255 : value.A) / 255)
+                );
+            });
+
+            gl.drawElements(gl.TRIANGLES, logical.length, useUint32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
+            gl.bindVertexArray(null);
+            gl.useProgram(null);
+
+            if (ctx) {
+                ctx.save();
+                applyBlendFor2d(meshState.blendMode);
+                ctx.drawImage(glState.glCanvas, 0, 0, canvas.width, canvas.height);
+                ctx.restore();
+            }
+            meshState.frame += 1;
+            return true;
+        }
+
         const api = {
             Clear: function (color) {
                 if (!ctx || !canvas) return;
@@ -851,6 +1479,70 @@
                 ctx.textBaseline = 'top';
                 ctx.fillText(textValue, Number(position.X || 0), Number(position.Y || 0));
                 ctx.restore();
+            },
+            UseEffect: function (shaderPath) {
+                const normalized = normalizeContentPath(shaderPath, /\.fx$/i);
+                meshState.effectPath = normalized;
+                meshState.effectSource = '';
+                meshState.effectError = '';
+                meshState.effectPromise = null;
+                if (normalized) {
+                    requestEffectSource(meshState);
+                }
+            },
+            ClearEffect: function () {
+                meshState.effectPath = '';
+                meshState.effectSource = '';
+                meshState.effectError = '';
+                meshState.effectPromise = null;
+            },
+            SetBlendMode: function (mode) {
+                meshState.blendMode = normalizeBlendMode(mode);
+            },
+            SetTexture: function (slot, texturePath) {
+                const index = resolveTextureSlotIndex(slot);
+                if (index < 0) return;
+                const normalized = normalizeContentPath(texturePath, /\.(?:png|jpe?g|gif|webp|bmp|avif|svg)$/i);
+                const slotState = meshState.textureSlots[index];
+                if (!normalized) {
+                    slotState.path = '';
+                    slotState.image = null;
+                    slotState.promise = null;
+                    slotState.error = '';
+                    return;
+                }
+                loadTextureImage(slotState, normalized);
+            },
+            SetFloat: function (name, value) {
+                const key = String(name || '').trim();
+                if (!key) return;
+                meshState.floatUniforms[key] = Number(value || 0);
+            },
+            SetVec2: function (name, value) {
+                const key = String(name || '').trim();
+                if (!key) return;
+                const safe = value || {};
+                meshState.vec2Uniforms[key] = {
+                    X: Number(safe.X || 0),
+                    Y: Number(safe.Y || 0)
+                };
+            },
+            SetColor: function (name, value) {
+                const key = String(name || '').trim();
+                if (!key) return;
+                const safe = value || {};
+                meshState.colorUniforms[key] = {
+                    R: Number(safe.R == null ? 255 : safe.R),
+                    G: Number(safe.G == null ? 255 : safe.G),
+                    B: Number(safe.B == null ? 255 : safe.B),
+                    A: Number(safe.A == null ? 255 : safe.A)
+                };
+            },
+            DrawUserIndexedPrimitives: function (primitiveType, vertices, vertexOffset, numVertices, indices, indexOffset, primitiveCount) {
+                if (Number(primitiveType) !== PrimitiveType.TriangleList) return;
+                if (!drawMeshWebGl(vertices, vertexOffset, numVertices, indices, indexOffset, primitiveCount)) {
+                    drawMeshFallback(vertices, vertexOffset, numVertices, indices, indexOffset, primitiveCount);
+                }
             }
         };
         return api;
@@ -919,15 +1611,19 @@
         const width = canvas ? canvas.width : (opts.width || 1);
         const height = canvas ? canvas.height : (opts.height || 1);
         const context = new AnimContext(width, height);
+        const runtimeRenderState = { time: 0, delta: 0, frame: 0 };
         const runtimeApi = {
             Vec2,
             Vec3,
             Mat4,
             Color,
+            PrimitiveType,
+            BlendMode,
+            VertexPositionColorTexture,
             MathF,
             AnimGeom: createAnimGeomApi(Vec2, Color, MathF)
         };
-        const canvasApi = createCanvasApi(canvas, ctx);
+        const canvasApi = createCanvasApi(canvas, ctx, runtimeRenderState);
         const controlState = opts.controlState || null;
         let detachPointer = null;
         if (canvas && context.Input) {
@@ -955,6 +1651,9 @@
             const dt = lastTime ? (time - lastTime) : 0;
             lastTime = time;
             context.Time = time;
+            runtimeRenderState.time = time;
+            runtimeRenderState.delta = dt;
+            runtimeRenderState.frame += 1;
             if (canvas && ctx && opts.stage) {
                 const size = updateCanvasSize(canvas, opts.stage);
                 context.Width = size.width;
@@ -1165,6 +1864,14 @@
     }
 
     return {
+        Vec2,
+        Vec3,
+        Mat4,
+        Color,
+        PrimitiveType,
+        BlendMode,
+        VertexPositionColorTexture,
+        MathF,
         normalizeAnimPath,
         parseModeOptionsDsl,
         normalizeAnimProfile,

@@ -15,6 +15,10 @@ function isVec2Type(typeName) {
     return /^(?:float2|half2|fixed2|vec2)$/i.test(String(typeName || ''));
 }
 
+function isVec3Type(typeName) {
+    return /^(?:float3|half3|fixed3|vec3)$/i.test(String(typeName || ''));
+}
+
 function isVec4Type(typeName) {
     return /^(?:float4|half4|fixed4|vec4)$/i.test(String(typeName || ''));
 }
@@ -136,6 +140,51 @@ export function detectEntryFunction(sourceText) {
     return best;
 }
 
+function stripTechniqueSections(sourceText) {
+    const text = normalizeLineEndings(sourceText);
+    const techniqueIndex = text.search(/\btechnique(?:10|11)?\b/i);
+    return techniqueIndex >= 0 ? text.slice(0, techniqueIndex) : text;
+}
+
+function detectVertexEntryFunction(sourceText, entryName) {
+    const source = normalizeLineEndings(sourceText);
+    const safeName = String(entryName || 'MainVS').trim() || 'MainVS';
+    const fnRe = new RegExp(
+        `\\b(?:float4|half4|fixed4|vec4)\\s+${escapeRegExp(safeName)}\\s*\\(([^)]*)\\)\\s*(?::\\s*(SV_[A-Za-z0-9_]+|POSITION0|POSITION))?`,
+        'i'
+    );
+    const match = source.match(fnRe);
+    if (!match) return null;
+    const params = parseParams(match[1]);
+    if (!params) return null;
+
+    const callArgs = [];
+    for (const param of params) {
+        if (isVec3Type(param.type)) {
+            callArgs.push('position');
+            continue;
+        }
+        if (isVec2Type(param.type)) {
+            callArgs.push('texCoord');
+            continue;
+        }
+        if (isVec4Type(param.type)) {
+            if (/COLOR/i.test(String(param.semantic || '')) || /color/i.test(String(param.name || ''))) {
+                callArgs.push('vertexColor');
+            } else {
+                callArgs.push('constVec4');
+            }
+            continue;
+        }
+        return null;
+    }
+
+    return {
+        name: safeName,
+        callArgs
+    };
+}
+
 function applyHlslTransforms(sourceText) {
     let transformed = normalizeLineEndings(sourceText);
     transformed = transformed.replace(/\s*:\s*register\s*\(\s*[A-Za-z]\d+\s*\)/gi, '');
@@ -218,6 +267,11 @@ function mapCallArgExpr(arg, context) {
 }
 
 export function buildFragmentSource(common, passCode) {
+    return buildFragmentSourceWithOptions(common, passCode, {});
+}
+
+function buildFragmentSourceWithOptions(common, passCode, options) {
+    const opts = options && typeof options === 'object' ? options : {};
     const userSource = `${String(common || '')}\n\n${String(passCode || '')}`;
     const normalized = normalizeLineEndings(userSource);
     const entry = detectEntryFunction(normalized);
@@ -236,6 +290,7 @@ export function buildFragmentSource(common, passCode) {
         'precision highp int;',
         '',
         'in vec2 vUv;',
+        opts.vertexColorVarying ? 'in vec4 vColor;' : '',
         'out vec4 fragColor;',
         '',
         'uniform vec3 iResolution;',
@@ -281,7 +336,7 @@ export function buildFragmentSource(common, passCode) {
         'void main() {',
         '    vec2 uv = vec2(vUv.x, 1.0 - vUv.y);',
         '    vec2 fragCoord = uv * iResolution.xy;',
-        '    vec4 vertexColor = vec4(1.0);'
+        opts.vertexColorVarying ? '    vec4 vertexColor = vColor;' : '    vec4 vertexColor = vec4(1.0);'
     ];
     if (entry.kind === 'out') {
         glue.push('    vec4 outColor = vec4(0.0);');
@@ -295,6 +350,102 @@ export function buildFragmentSource(common, passCode) {
     return {
         ok: true,
         source: `${prelude}\n#line 1\n${transformed}\n\n${glue.join('\n')}\n`
+    };
+}
+
+export function buildVertexSource(effectSource, options) {
+    const opts = options && typeof options === 'object' ? options : {};
+    const sourceBody = stripTechniqueSections(effectSource);
+    const entryName = String(opts.vertexEntry || 'MainVS').trim() || 'MainVS';
+    const entry = detectVertexEntryFunction(sourceBody, entryName);
+    if (!entry) {
+        return {
+            ok: false,
+            error: `未找到可用的顶点着色入口。需要 ${entryName}(...) 且返回 float4。`
+        };
+    }
+
+    const transformed = applyHlslTransforms(sourceBody);
+    const mappedArgs = [];
+    for (const arg of entry.callArgs) {
+        if (arg === 'position') {
+            mappedArgs.push('position');
+            continue;
+        }
+        if (arg === 'texCoord') {
+            mappedArgs.push('texCoord');
+            continue;
+        }
+        if (arg === 'vertexColor') {
+            mappedArgs.push('vertexColorIn');
+            continue;
+        }
+        if (arg === 'constVec4') {
+            mappedArgs.push('vec4(1.0)');
+            continue;
+        }
+        return { ok: false, error: `顶点入口参数暂不支持：${String(arg)}` };
+    }
+
+    const source = [
+        '#version 300 es',
+        'precision highp float;',
+        'precision highp int;',
+        '',
+        'layout(location = 0) in vec3 aPosition;',
+        'layout(location = 1) in vec4 aColor;',
+        'layout(location = 2) in vec2 aTexCoord;',
+        '',
+        'out vec4 vColor;',
+        'out vec2 vUv;',
+        '',
+        'uniform vec2 uResolution;',
+        'uniform float uTime;',
+        '',
+        '#line 1',
+        transformed,
+        '',
+        'void main() {',
+        '    vec3 position = aPosition;',
+        '    vec4 vertexColorIn = aColor;',
+        '    vec2 texCoord = aTexCoord;',
+        `    vec4 vsOut = ${entry.name}(${mappedArgs.join(', ')});`,
+        '    vec2 pixelPos = vsOut.xy;',
+        '    vec2 safeResolution = max(uResolution, vec2(1.0));',
+        '    vec2 clipPos = vec2(',
+        '        (pixelPos.x / safeResolution.x) * 2.0 - 1.0,',
+        '        1.0 - (pixelPos.y / safeResolution.y) * 2.0',
+        '    );',
+        '    gl_Position = vec4(clipPos, vsOut.z, 1.0);',
+        '    vColor = vertexColorIn;',
+        '    vUv = vec2(texCoord.x, 1.0 - texCoord.y);',
+        '}',
+        ''
+    ].join('\n');
+
+    return {
+        ok: true,
+        source
+    };
+}
+
+export function buildProgramSource(effectSource, options) {
+    const opts = options && typeof options === 'object' ? options : {};
+    const sourceBody = stripTechniqueSections(effectSource);
+    const vertex = buildVertexSource(sourceBody, {
+        vertexEntry: opts.vertexEntry || 'MainVS'
+    });
+    if (!vertex.ok) return vertex;
+
+    const fragment = buildFragmentSourceWithOptions('', sourceBody, {
+        vertexColorVarying: true
+    });
+    if (!fragment.ok) return fragment;
+
+    return {
+        ok: true,
+        vertexSource: vertex.source,
+        fragmentSource: fragment.source
     };
 }
 

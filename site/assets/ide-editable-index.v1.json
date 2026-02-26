@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "root": "site/content",
-  "generatedAt": "2026-02-25T14:31:38.497Z",
+  "generatedAt": "2026-02-26T01:01:48.820Z",
   "files": [
     {
       "path": "Modder入门/code/firstclass_makefirstweapon.cs",
@@ -60,6 +60,10 @@
       "kind": "csharp"
     },
     {
+      "path": "anims/fna-vertex-demo.cs",
+      "kind": "csharp"
+    },
+    {
       "path": "anims/mat4-trs-compose.cs",
       "kind": "csharp"
     },
@@ -70,6 +74,10 @@
     {
       "path": "anims/matrix-mat4-transform.cs",
       "kind": "csharp"
+    },
+    {
+      "path": "anims/shaders/fna-vertex-demo.fx",
+      "kind": "shaderfx"
     },
     {
       "path": "anims/vec2-basic-ops.cs",

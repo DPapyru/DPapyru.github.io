@@ -2223,3 +2223,18 @@
 **备注**：
 - 修复后遮罩在悬停/点击外层时保持半透明（`rgba(0, 0, 0, 0.56)`，`alpha = 0.56`），不再变为不透明实色。
 - 点击弹窗外层遮罩仍可正常关闭弹窗，功能保持不变。
+
+### 验证记录 [2026-02-26 09:03]：Animcs 顶点绘制 + FX 统一顶点着色器格式（首版）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/article-studio-anim-preview-payload.test.js`：通过
+- `node --test site/tooling/scripts/animcs-js-runtime-profile.test.js`：通过
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过
+- `ANIMCS_AST_INTEGRATION=1 node --test site/tooling/scripts/animcs-compiler-ast.test.js`：通过
+- `npm run build:animcs`：通过
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 在 `gallery-check` 阶段失败，报错为 `site/content/shader-gallery/newshader/entry.json: cover 文件不存在: cover.webp`；与本次 animcs 顶点/FX 功能改动无直接关系。工作树：`/mnt/f/DPapyru.github.io/.worktrees/feat-animcs-vertex-fx`。

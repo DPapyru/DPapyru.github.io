@@ -181,3 +181,52 @@ public sealed class ControlFlowDemo : IAnimScript
     assert.match(js, /case 6:/);
     assert.match(js, /default:/);
 });
+
+maybeTest('compileAnimToJs supports FNA-style vertex draw API signatures', { timeout: 30_000 }, () => {
+    const source = `
+using AnimRuntime;
+using AnimRuntime.Math;
+
+[AnimEntry("fna-vertex-demo-test")]
+public sealed class FnaVertexDemoTest : IAnimScript
+{
+    private VertexPositionColorTexture[] _vertices = new VertexPositionColorTexture[4];
+    private int[] _indices = new[] { 0, 1, 2, 2, 1, 3 };
+
+    public void OnInit(AnimContext ctx) {}
+    public void OnUpdate(float dt) {}
+
+    public void OnRender(ICanvas2D g)
+    {
+        g.UseEffect("anims/shaders/fna-vertex-demo.fx");
+        g.SetBlendMode(BlendMode.AlphaBlend);
+        g.SetFloat("uPulse", 0.75f);
+        g.SetVec2("uPan", new Vec2(0.1f, 0.2f));
+        g.SetColor("uTint", new Color(255, 120, 80, 220));
+        g.SetTexture(0, "anims/imgs/demo.png");
+        g.DrawUserIndexedPrimitives(
+            PrimitiveType.TriangleList,
+            _vertices,
+            0,
+            4,
+            _indices,
+            0,
+            2
+        );
+        g.ClearEffect();
+    }
+
+    public void OnDispose() {}
+}
+`;
+
+    const js = compiler.compileAnimToJs(source);
+    assert.match(js, /UseEffect\(/);
+    assert.match(js, /SetBlendMode\(/);
+    assert.match(js, /SetFloat\(/);
+    assert.match(js, /SetVec2\(/);
+    assert.match(js, /SetColor\(/);
+    assert.match(js, /SetTexture\(/);
+    assert.match(js, /DrawUserIndexedPrimitives\(/);
+    assert.match(js, /ClearEffect\(/);
+});

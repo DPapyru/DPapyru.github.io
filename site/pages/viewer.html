@@ -725,6 +725,27 @@
                 return value;
             }
 
+            function normalizeStudioPreviewShaderPath(input) {
+                const value = normalizeStudioPreviewPath(input || '').replace(/^\.\//, '');
+                if (!value) return '';
+                if (!/^anims\/shaders\//i.test(value) || !/\.fx$/i.test(value)) return '';
+                if (/(^|\/)\.\.(\/|$)/.test(value)) return '';
+                return value;
+            }
+
+            function normalizeStudioPreviewUploadedShaderFiles(rawList) {
+                if (!Array.isArray(rawList)) return [];
+                return rawList.map(function (item) {
+                    return {
+                        assetPath: normalizeStudioPreviewShaderPath(item && item.assetPath || ''),
+                        content: String(item && item.content || ''),
+                        name: String(item && item.name || '')
+                    };
+                }).filter(function (item) {
+                    return item.assetPath && item.content;
+                });
+            }
+
             function normalizeStudioPreviewCompiledAnims(rawMap) {
                 const result = {};
                 if (!rawMap || typeof rawMap !== 'object') return result;
@@ -817,24 +838,26 @@
 	                        return {
 	                            assetPath: normalizeStudioPreviewPath(item && item.assetPath || ''),
                             content: String(item && item.content || ''),
-                            name: String(item && item.name || '')
-                        };
+	                            name: String(item && item.name || '')
+	                        };
 	                    }).filter(function (item) {
 	                        return item.assetPath && item.content;
 	                    })
 	                    : [];
-                    const compiledAnims = normalizeStudioPreviewCompiledAnims(parsed.compiledAnims);
-                    const animCompileErrors = normalizeStudioPreviewAnimCompileErrors(parsed.animCompileErrors);
-                    const animBridge = normalizeStudioPreviewAnimBridge(parsed.animBridge);
+                    const uploadedShaderFiles = normalizeStudioPreviewUploadedShaderFiles(parsed.uploadedShaderFiles);
+	                    const compiledAnims = normalizeStudioPreviewCompiledAnims(parsed.compiledAnims);
+	                    const animCompileErrors = normalizeStudioPreviewAnimCompileErrors(parsed.animCompileErrors);
+	                    const animBridge = normalizeStudioPreviewAnimBridge(parsed.animBridge);
 	                return {
 	                    targetPath: targetPath,
 	                    markdown: String(parsed.markdown || ''),
 	                    uploadedImages: uploadedImages,
 	                    uploadedMedia: uploadedMedia,
 	                    uploadedCsharpFiles: uploadedCsharpFiles,
-                        compiledAnims: compiledAnims,
-                        animCompileErrors: animCompileErrors,
-                        animBridge: animBridge,
+                        uploadedShaderFiles: uploadedShaderFiles,
+	                        compiledAnims: compiledAnims,
+	                        animCompileErrors: animCompileErrors,
+	                        animBridge: animBridge,
 	                    updatedAt: String(parsed.updatedAt || '')
 	                };
 	            } catch (_) {
@@ -1029,20 +1052,32 @@
                                 return nativeFetch(mediaMatch.dataUrl, init);
                             }
 
-                            const csharpMatch = (payload.uploadedCsharpFiles || []).find(function (item) {
-                                return normalizeStudioPreviewPath(item.assetPath || '') === requestPath;
-                            });
-                            if (csharpMatch && csharpMatch.content) {
-                                return Promise.resolve(new Response(csharpMatch.content, {
-                                    status: 200,
-                                    headers: {
-                                        'content-type': 'text/x-csharp; charset=utf-8'
-                                    }
-                                }));
-                            }
-	                        }
-	                    }
-	                } catch (_) {
+	                            const csharpMatch = (payload.uploadedCsharpFiles || []).find(function (item) {
+	                                return normalizeStudioPreviewPath(item.assetPath || '') === requestPath;
+	                            });
+	                            if (csharpMatch && csharpMatch.content) {
+	                                return Promise.resolve(new Response(csharpMatch.content, {
+	                                    status: 200,
+	                                    headers: {
+	                                        'content-type': 'text/x-csharp; charset=utf-8'
+	                                    }
+	                                }));
+	                            }
+
+                                const shaderMatch = (payload.uploadedShaderFiles || []).find(function (item) {
+                                    return normalizeStudioPreviewShaderPath(item.assetPath || '') === requestPath;
+                                });
+                                if (shaderMatch && shaderMatch.content) {
+                                    return Promise.resolve(new Response(shaderMatch.content, {
+                                        status: 200,
+                                        headers: {
+                                            'content-type': 'text/x-shader; charset=utf-8'
+                                        }
+                                    }));
+                                }
+		                        }
+		                    }
+		                } catch (_) {
 	                    // ignore and fallback
 	                }
 
@@ -1091,17 +1126,18 @@
 	                if (!targetPath) return;
 
 	                try {
-	                    window.localStorage.setItem(STUDIO_PREVIEW_STORAGE_KEY, JSON.stringify({
-	                        targetPath: targetPath,
-	                        markdown: String(payload.markdown || ''),
-	                        uploadedImages: Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [],
-	                        uploadedMedia: Array.isArray(payload.uploadedMedia) ? payload.uploadedMedia : [],
-	                        uploadedCsharpFiles: Array.isArray(payload.uploadedCsharpFiles) ? payload.uploadedCsharpFiles : [],
+		                    window.localStorage.setItem(STUDIO_PREVIEW_STORAGE_KEY, JSON.stringify({
+		                        targetPath: targetPath,
+		                        markdown: String(payload.markdown || ''),
+		                        uploadedImages: Array.isArray(payload.uploadedImages) ? payload.uploadedImages : [],
+		                        uploadedMedia: Array.isArray(payload.uploadedMedia) ? payload.uploadedMedia : [],
+		                        uploadedCsharpFiles: Array.isArray(payload.uploadedCsharpFiles) ? payload.uploadedCsharpFiles : [],
+                                uploadedShaderFiles: normalizeStudioPreviewUploadedShaderFiles(payload.uploadedShaderFiles),
                             compiledAnims: payload.compiledAnims && typeof payload.compiledAnims === 'object' ? payload.compiledAnims : {},
                             animCompileErrors: payload.animCompileErrors && typeof payload.animCompileErrors === 'object' ? payload.animCompileErrors : {},
                             animBridge: payload.animBridge && typeof payload.animBridge === 'object' ? payload.animBridge : null,
-	                        updatedAt: String(payload.updatedAt || new Date().toISOString())
-	                    }));
+		                        updatedAt: String(payload.updatedAt || new Date().toISOString())
+		                    }));
 	                } catch (_) {
 	                    // ignore storage failures
 	                }
