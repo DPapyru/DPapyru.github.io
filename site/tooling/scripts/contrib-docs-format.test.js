@@ -19,3 +19,12 @@ test('contrib docs avoid broken nested animcs fences', () => {
         assert.match(source, /````text[\s\S]*```animcs[\s\S]*```[\s\S]*````/m);
     });
 });
+
+test('vertex draw section includes live animcs demo and key draw calls', () => {
+    const source = fs.readFileSync(path.resolve('site/content/怎么贡献/使用网页特殊动画模块.md'), 'utf8');
+
+    assert.match(source, /##\s*顶点绘制\s*\+\s*FX（首版）/);
+    assert.match(source, /```animcs\s*\nanims\/fna-vertex-demo\.cs\s*\n```/m);
+    assert.match(source, /DrawUserIndexedPrimitives/);
+    assert.match(source, /UseEffect\("anims\/shaders\/fna-vertex-demo\.fx"\)/);
+});

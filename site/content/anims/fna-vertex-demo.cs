@@ -34,7 +34,7 @@ public sealed class FnaVertexDemo : IAnimScript
         var spin = _ctx.Time * 0.9f;
 
         _vertices[0] = BuildVertex(centerX, centerY, radius, spin + 0f, new Color(255, 120, 120, 235), new Vec2(0f, 0f));
-        _vertices[1] = BuildVertex(centerX, centerY, radius, spin + 2.0943952f, new Color(120, 255, 170, 235), new Vec2(1f, 0f));
+        _vertices[1] = BuildVertex(centerX, centerY, radius, spin + 2.0943952f, new Color(120, 0, 250, 235), new Vec2(1f, 0f));
         _vertices[2] = BuildVertex(centerX, centerY, radius, spin + 4.1887903f, new Color(120, 170, 255, 235), new Vec2(0.5f, 1f));
 
         g.UseEffect("anims/shaders/fna-vertex-demo.fx");

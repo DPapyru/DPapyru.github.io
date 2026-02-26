@@ -37,6 +37,73 @@
         return /^(?:float4|half4|fixed4|vec4)$/i.test(String(typeName || ''));
     }
 
+    const DEFAULT_RUNTIME_UNIFORM_LINES = [
+        'uniform vec2 uResolution;',
+        'uniform float uTime;',
+        'uniform vec3 iResolution;',
+        'uniform float iTime;',
+        'uniform float iTimeDelta;',
+        'uniform int iFrame;',
+        'uniform vec4 iMouse;',
+        'uniform vec4 iDate;',
+        'uniform float iChannelTime[4];',
+        'uniform vec3 iChannelResolution[4];',
+        'uniform sampler2D iChannel0;',
+        'uniform sampler2D iChannel1;',
+        'uniform sampler2D iChannel2;',
+        'uniform sampler2D iChannel3;'
+    ];
+
+    const DEFAULT_RUNTIME_UNIFORM_NAMES = new Set(DEFAULT_RUNTIME_UNIFORM_LINES
+        .map((line) => {
+            const match = String(line || '').match(/\b([A-Za-z_][A-Za-z0-9_]*)\s*;/);
+            return match ? match[1] : '';
+        })
+        .filter(Boolean));
+
+    const TOP_LEVEL_SCALAR_OR_VECTOR_DECL_RE = /^(\s*)(?:uniform\s+)?(mat[234]|vec[234]|ivec[234]|uvec[234]|bvec[234]|float|int|uint|bool)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(\[\s*(?:\d+)?\s*\])?\s*;\s*$/;
+
+    function countChar(text, needle) {
+        const source = String(text || '');
+        let count = 0;
+        for (let i = 0; i < source.length; i += 1) {
+            if (source[i] === needle) count += 1;
+        }
+        return count;
+    }
+
+    function normalizeTopLevelUniformDeclarations(sourceText) {
+        const lines = normalizeLineEndings(sourceText).split('\n');
+        const normalized = [];
+        let braceDepth = 0;
+
+        for (const line of lines) {
+            if (braceDepth === 0) {
+                const match = line.match(TOP_LEVEL_SCALAR_OR_VECTOR_DECL_RE);
+                if (match) {
+                    const indent = match[1] || '';
+                    const type = match[2];
+                    const name = match[3];
+                    const arraySuffix = match[4] || '';
+
+                    if (!DEFAULT_RUNTIME_UNIFORM_NAMES.has(name)) {
+                        normalized.push(`${indent}uniform ${type} ${name}${arraySuffix};`);
+                    }
+                } else {
+                    normalized.push(line);
+                }
+            } else {
+                normalized.push(line);
+            }
+
+            braceDepth += countChar(line, '{');
+            braceDepth -= countChar(line, '}');
+            if (braceDepth < 0) braceDepth = 0;
+        }
+
+        return normalized.join('\n');
+    }
+
     function inferCoordArg(name, semantic) {
         const sem = String(semantic || '').toUpperCase();
         const lower = String(name || '').toLowerCase();
@@ -280,6 +347,7 @@
         transformed = transformed.replace(/\bclip\s*\(\s*([^\)]+)\s*\)\s*;/g, 'if (($1) < 0.0) discard;');
         transformed = transformed.replace(/\brcp\s*\(\s*([^()]+)\s*\)/g, '(1.0 / ($1))');
         transformed = transformed.replace(/\blog10\s*\(\s*([^()]+)\s*\)/g, '(log($1) / log(10.0))');
+        transformed = normalizeTopLevelUniformDeclarations(transformed);
 
         return transformed;
     }
@@ -321,18 +389,7 @@
             opts.vertexColorVarying ? 'in vec4 vColor;' : '',
             'out vec4 fragColor;',
             '',
-            'uniform vec3 iResolution;',
-            'uniform float iTime;',
-            'uniform float iTimeDelta;',
-            'uniform int iFrame;',
-            'uniform vec4 iMouse;',
-            'uniform vec4 iDate;',
-            'uniform float iChannelTime[4];',
-            'uniform vec3 iChannelResolution[4];',
-            'uniform sampler2D iChannel0;',
-            'uniform sampler2D iChannel1;',
-            'uniform sampler2D iChannel2;',
-            'uniform sampler2D iChannel3;',
+            ...DEFAULT_RUNTIME_UNIFORM_LINES,
             '',
             'float saturate(float x) { return clamp(x, 0.0, 1.0); }',
             'vec2 saturate(vec2 x) { return clamp(x, vec2(0.0), vec2(1.0)); }',
@@ -430,8 +487,7 @@
             'out vec4 vColor;',
             'out vec2 vUv;',
             '',
-            'uniform vec2 uResolution;',
-            'uniform float uTime;',
+            ...DEFAULT_RUNTIME_UNIFORM_LINES,
             '',
             '#line 1',
             transformed,

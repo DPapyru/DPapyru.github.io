@@ -25,7 +25,7 @@ export function create(runtime) {
             let radius = MathF.Min(width, height) * 0.24;
             let spin = this._ctx.Time * 0.9;
             this._vertices[0] = FnaVertexDemo.BuildVertex(centerX, centerY, radius, spin + 0, new Color(255, 120, 120, 235), new Vec2(0, 0));
-            this._vertices[1] = FnaVertexDemo.BuildVertex(centerX, centerY, radius, spin + 2.0943952, new Color(120, 255, 170, 235), new Vec2(1, 0));
+            this._vertices[1] = FnaVertexDemo.BuildVertex(centerX, centerY, radius, spin + 2.0943952, new Color(120, 0, 250, 235), new Vec2(1, 0));
             this._vertices[2] = FnaVertexDemo.BuildVertex(centerX, centerY, radius, spin + 4.1887903, new Color(120, 170, 255, 235), new Vec2(0.5, 1));
             g.UseEffect("anims/shaders/fna-vertex-demo.fx");
             g.SetBlendMode(BlendMode.AlphaBlend);

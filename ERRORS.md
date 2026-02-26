@@ -2238,3 +2238,49 @@
 - `npm run check-generated`：失败
 
 **备注**：`check-generated` 在 `gallery-check` 阶段失败，报错为 `site/content/shader-gallery/newshader/entry.json: cover 文件不存在: cover.webp`；与本次 animcs 顶点/FX 功能改动无直接关系。工作树：`/mnt/f/DPapyru.github.io/.worktrees/feat-animcs-vertex-fx`。
+
+### 验证记录 [2026-02-26 09:30]：使用网页特殊动画模块补充顶点绘制代码与文内实际效果
+
+**级别**：文档与测试一致性验证（main 直接修改）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/contrib-docs-format.test.js`：失败（新增断言后首次执行，缺少 `anims/fna-vertex-demo.cs` 的 `animcs` 演示块）
+- `node --test site/tooling/scripts/contrib-docs-format.test.js`：通过（2/2）
+
+**备注**：
+- 文章 `site/content/怎么贡献/使用网页特殊动画模块.md` 的“顶点绘制 + FX（首版）”章节新增了文内可运行效果块（` ```animcs ... ``` `），并补充了 C# 顶点绘制与 FX 代码片段。
+- `site/tooling/scripts/contrib-docs-format.test.js` 新增断言，确保该章节持续包含实际演示与关键绘制调用。
+
+### 验证记录 [2026-02-26 09:40]：Anim FX 顶点/片元 uniform 一一对应修复（uTime 缺失问题）
+
+**级别**：运行时适配器一致性修复（main 直接修改）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/shader-hlsl-adapter-uniform-bridge.test.js`：失败（新增测试首轮，复现顶点/片元 uniform 不一致）
+- `node --test tml-ide-app/tests/shader-hlsl-adapter-uniform-bridge.test.js`：通过（1/1）
+- `node --test tml-ide-app/tests/shader-editor-migration.test.js`：通过（4/4）
+- `node --input-type=module`（调用 `buildProgramSource` 检查 `fna-vertex-demo.fx` 生成结果）：通过
+
+**备注**：
+- `shader-hlsl-adapter` 现统一注入同一组运行时默认 uniform（`uResolution/uTime/iResolution/iTime/iTimeDelta/iFrame/iMouse/iDate/iChannel*`）到顶点与片元两个阶段。
+- 顶层 `float/vec/mat` 声明会自动标准化为 `uniform`，并移除与默认 runtime uniform 同名的重复声明，避免 `uTime`/`iTime` “找不到或重复定义”。
+
+### 验证记录 [2026-02-26 09:48]：anims FX 使用原生 HLSL 且与 IDE 适配链路一致
+
+**级别**：运行时与页面接入一致性修复（main 直接修改）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/animcs-shader-adapter-contract.test.js`：失败（新增测试首轮，viewer/anim-renderer 未加载 shader-hlsl-adapter）
+- `node --test site/tooling/scripts/animcs-js-runtime-resolver.test.js`：失败（新增断言首轮，runtime 仍指向 `tml-ide-app/public` 适配器路径）
+- `node --test site/tooling/scripts/animcs-shader-adapter-contract.test.js`：通过（2/2）
+- `node --test site/tooling/scripts/animcs-js-runtime-resolver.test.js`：通过（3/3）
+- `node --test tml-ide-app/tests/shader-hlsl-adapter-uniform-bridge.test.js`：通过（1/1）
+- `node --test site/tooling/scripts/viewer-studio-preview-animcs.test.js`：通过（2/2）
+- `node --test tml-ide-app/tests/shader-editor-migration.test.js`：通过（4/4）
+- `node -`（直接调用 `tml-ide/subapps/assets/js/shader-hlsl-adapter.js` 编译 `fna-vertex-demo.fx`）：通过
+- `npm run build:anims`：通过
+- `npm run build`：通过
+
+**备注**：
+- `site/pages/viewer.html` 与 `site/pages/anim-renderer.html` 现显式先加载 `/tml-ide/subapps/assets/js/shader-hlsl-adapter.js`，再加载 `animcs-js-runtime.js`。
+- `site/assets/js/animcs-js-runtime.js` 与 `shared/services/shader/shader-runtime-adapter.js` 的 Node 回退路径统一到 `tml-ide/subapps/assets/js/shader-hlsl-adapter.js`，与 IDE 页面保持同源适配器。

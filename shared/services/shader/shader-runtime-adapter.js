@@ -15,7 +15,7 @@
         }
         if (typeof module !== 'undefined' && module.exports) {
             try {
-                return require('../../../tml-ide-app/public/subapps/assets/js/shader-hlsl-adapter.js');
+                return require('../../../tml-ide/subapps/assets/js/shader-hlsl-adapter.js');
             } catch (_error) {
                 return null;
             }

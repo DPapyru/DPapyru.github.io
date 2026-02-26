@@ -16,3 +16,10 @@ test('animcs runtime can surface resolver-side compile diagnostics', () => {
 
     assert.match(runtimeCode, /compile diagnostics/i);
 });
+
+test('animcs runtime resolves shader adapter from IDE hlsl adapter path', () => {
+    const runtimePath = path.resolve('site/assets/js/animcs-js-runtime.js');
+    const runtimeCode = fs.readFileSync(runtimePath, 'utf8');
+
+    assert.match(runtimeCode, /tml-ide\/subapps\/assets\/js\/shader-hlsl-adapter\.js/);
+});

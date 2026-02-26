@@ -12,5 +12,6 @@ float4 MainPS(float2 texCoord : TEXCOORD0, float4 vertexColor : COLOR0) : COLOR0
 {
     float pulse = 0.55 + 0.45 * sin(uTime * 3.0 + texCoord.y * 10.0);
     float3 tint = uTint.rgb * pulse;
+    tint.r *= 2.3f;
     return float4(tint, uTint.a) * vertexColor;
 }
