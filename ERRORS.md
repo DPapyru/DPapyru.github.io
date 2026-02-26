@@ -2339,3 +2339,16 @@
 **备注**：
 - 本次以 `git merge --no-ff -X theirs feat-unified-md-fx-ui` 合入工作树分支，并处理了 `tml-ide/assets/index-snYazUPW.js` 的重命名冲突。
 - `npm run build` 通过后，`tml-ide/assets` 的哈希产物文件名更新为最新构建输出。
+
+### 验证记录 [2026-02-26 11:38]：修复 GitHub Pages workflow 根目录 `npm ci` 失败
+
+**级别**：L3 验收（构建链路改动）
+
+**命令与结果**：
+- `npm run build`：通过
+- `npm run check-generated`：失败（`git diff --exit-code` 未通过，差异为生成文件时间戳/lastmod 变化，非本次 workflow 逻辑回归）
+
+**备注**：
+- 根因为 `.github/workflows/deploy.yml` 在仅存在 `package.json` 时直接执行 `npm ci`，而仓库根目录无 `package-lock.json`。
+- 已将根目录安装逻辑改为：存在 `package-lock.json` 时 `npm ci`，否则回退 `npm install`。
+- `check-generated` 触发的非目标生成差异已回退，工作区仅保留本次 workflow 修复文件。

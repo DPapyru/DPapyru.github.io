@@ -43,7 +43,12 @@ jobs:
         run: |
           if [ -f package.json ]; then
             echo "Installing root dependencies..."
-            npm ci
+            if [ -f package-lock.json ]; then
+              npm ci
+            else
+              echo "No root package-lock.json found, falling back to npm install"
+              npm install
+            fi
           else
             echo "No root package.json found, skipping root install"
           fi
