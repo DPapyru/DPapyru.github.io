@@ -3539,6 +3539,7 @@
                     FX_EMBED_MODAL.dom.bgModeSelect.value = normalizeFxEmbedPreviewBgMode(FX_EMBED_MODAL.bgMode);
                 }
                 updateFxEmbedUploadUi();
+                applyFxEmbedViewportWidth({ redraw: false, status: false });
                 applyFxEmbedViewTransform();
                 syncFxEmbedITimeControl();
                 syncFxEmbedRunButton();

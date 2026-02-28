@@ -2443,3 +2443,19 @@
 
 **备注**：
 - 本轮为合并前复验，未对失败项做额外回退；按“提交后再合并”流程直接纳入本次提交。
+
+### 验证记录 [2026-03-01 06:23]：viewer Shader 编辑器恢复态未重应用 viewport 宽度修复
+
+**级别**：L3
+
+**命令与结果**：
+- `npm ci`：失败（根目录缺少 `package-lock.json` / `npm-shrinkwrap.json`，`EUSAGE`）
+- `node --test site/tooling/scripts/viewer-shader-editor-parity.test.js`：失败（新增回归测试 RED 阶段）
+- `node --test site/tooling/scripts/viewer-shader-editor-parity.test.js site/tooling/scripts/viewer-callout-runtime.test.js`：通过（9 passed, 0 failed）
+- `npm run build`：失败（`site-app` 缺少 `@vitejs/plugin-react`，`ERR_MODULE_NOT_FOUND`）
+- `npm install`：失败（网络/权限限制，`connect EPERM 127.0.0.1:7897`）
+- `npm run check-generated`：失败（`build:anims` 阶段 `spawnSync dotnet EPERM`）
+
+**备注**：
+- 本次修复在工作树 `/mnt/f/DPapyru.github.io/.worktrees/fix-viewer-fxembed-viewport-width-restore` 实施，目标改动仅 `site/pages/viewer.html` 与 `site/tooling/scripts/viewer-shader-editor-parity.test.js`。
+- 运行 `build/check-generated` 期间产生的非目标生成/行尾副作用已回收，不纳入本次改动。
