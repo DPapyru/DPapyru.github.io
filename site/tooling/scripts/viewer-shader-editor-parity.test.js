@@ -40,3 +40,16 @@ test('viewer shader modal defines viewport zoom drag and aspect resize interacti
     assert.match(viewer, /resetFxEmbedView/);
     assert.match(viewer, /setFxEmbedViewportWidth/);
 });
+
+test('viewer shader modal reapplies viewport width while syncing restored state', () => {
+    const viewer = readViewer();
+
+    assert.match(
+        viewer,
+        /function syncFxEmbedControls\(\)\s*{[\s\S]*?applyFxEmbedViewportWidth\(\{ redraw: false, status: false \}\);[\s\S]*?applyFxEmbedViewTransform\(\);/
+    );
+    assert.match(
+        viewer,
+        /modal\.viewportWidth[\s\S]*?syncFxEmbedControls\(\);/
+    );
+});
