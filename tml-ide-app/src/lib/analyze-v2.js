@@ -976,11 +976,47 @@ function offsetToPosition(lineStarts, offset) {
     };
 }
 
-function pushDiagnostic(diags, lineStarts, startOffset, endOffset, code, severity, message) {
+function normalizeHintIds(value, fallback) {
+    const raw = Array.isArray(value) ? value : fallback;
+    return (Array.isArray(raw) ? raw : [])
+        .map((item) => String(item || '').trim())
+        .filter(Boolean);
+}
+
+function buildRuleDiagnosticMetadata(code, overrides) {
+    const safeOverrides = overrides && typeof overrides === 'object' ? overrides : {};
+    const safeCode = String(code || '').trim();
+
+    const defaultsByCode = {
+        RULE_MISSING_SEMICOLON: { confidence: 0.72, hintIds: ['rule.add-semicolon'] },
+        RULE_UNKNOWN_MEMBER: { confidence: 0.93, hintIds: ['rule.member-check'] },
+        RULE_UNKNOWN_TYPE: { confidence: 0.8, hintIds: ['rule.type-using'] },
+        RULE_ARG_COUNT: { confidence: 0.86, hintIds: ['rule.arg-count'] },
+        RULE_UNCLOSED_SYMBOL: { confidence: 0.97, hintIds: ['rule.symbol-balance'] },
+        RULE_UNEXPECTED_CLOSING: { confidence: 0.97, hintIds: ['rule.symbol-balance'] }
+    };
+    const defaults = defaultsByCode[safeCode] || { confidence: 0.65, hintIds: ['rule.generic'] };
+
+    const numericConfidence = Number(safeOverrides.confidence);
+    const confidence = Number.isFinite(numericConfidence)
+        ? Math.max(0, Math.min(1, numericConfidence))
+        : defaults.confidence;
+
+    return {
+        source: 'rule',
+        confidence,
+        hintIds: normalizeHintIds(safeOverrides.hintIds, defaults.hintIds)
+    };
+}
+
+function pushDiagnostic(diags, lineStarts, startOffset, endOffset, code, severity, message, metadata) {
     const safeStart = Math.max(0, Number(startOffset) || 0);
     const safeEnd = Math.max(safeStart + 1, Number(endOffset) || safeStart + 1);
     const startPos = offsetToPosition(lineStarts, safeStart);
     const endPos = offsetToPosition(lineStarts, safeEnd);
+    const diagnosticMetadata = metadata && typeof metadata === 'object'
+        ? metadata
+        : buildRuleDiagnosticMetadata(code);
 
     diags.push({
         code,
@@ -989,8 +1025,64 @@ function pushDiagnostic(diags, lineStarts, startOffset, endOffset, code, severit
         startLineNumber: startPos.line,
         startColumn: startPos.column,
         endLineNumber: endPos.line,
-        endColumn: endPos.column
+        endColumn: endPos.column,
+        source: String(diagnosticMetadata.source || 'rule'),
+        confidence: Number.isFinite(Number(diagnosticMetadata.confidence))
+            ? Number(diagnosticMetadata.confidence)
+            : 0.65,
+        hintIds: normalizeHintIds(diagnosticMetadata.hintIds, ['rule.generic'])
     });
+}
+
+function completionMatchKind(label, prefix) {
+    const safeLabel = String(label || '').toLowerCase();
+    const safePrefix = String(prefix || '').toLowerCase();
+    if (!safePrefix) return 'none';
+    if (safeLabel === safePrefix) return 'exact';
+    if (safeLabel.startsWith(safePrefix)) return 'prefix';
+    if (safeLabel.includes(safePrefix)) return 'contains';
+    return 'fuzzy';
+}
+
+function completionMatchWeight(matchKind) {
+    if (matchKind === 'exact') return 130;
+    if (matchKind === 'prefix') return 110;
+    if (matchKind === 'contains') return 90;
+    if (matchKind === 'none') return 75;
+    return 60;
+}
+
+function completionSourceWeight(source) {
+    if (source === 'override') return 220;
+    if (source === 'member') return 200;
+    if (source === 'type') return 130;
+    if (source === 'keyword') return 90;
+    return 60;
+}
+
+function completionKindWeight(kind) {
+    if (kind === 'method') return 18;
+    if (kind === 'property') return 14;
+    if (kind === 'field') return 12;
+    if (kind === 'class') return 8;
+    if (kind === 'keyword') return 4;
+    return 0;
+}
+
+function completionScore(source, kind, label, prefix, tieBreaker) {
+    return completionSourceWeight(source)
+        + completionMatchWeight(completionMatchKind(label, prefix))
+        + completionKindWeight(kind)
+        - Math.min(25, Math.max(0, Number(tieBreaker) || 0));
+}
+
+function completionConfidence(source, matchKind, isExtension) {
+    let base = source === 'member' ? 0.91 : source === 'override' ? 0.93 : source === 'type' ? 0.74 : 0.62;
+    if (matchKind === 'exact') base += 0.05;
+    else if (matchKind === 'prefix') base += 0.03;
+    else if (matchKind === 'fuzzy') base -= 0.12;
+    if (isExtension) base -= 0.04;
+    return Math.max(0, Math.min(1, base));
 }
 
 function normalizeTypeIdentity(typeName) {
@@ -1162,16 +1254,24 @@ function buildOverrideCompletionItems(index, context, text, offset, maxItems) {
 
     return methods
         .slice(0, maxItems)
-        .map((item) => ({
-            label: item.name,
-            insertText: buildOverrideSnippet(index, context, item),
-            insertTextMode: 'snippet',
-            source: 'override',
-            kind: 'method',
-            detail: buildOverrideDetail(index, context, item),
-            documentation: item.summary || '',
-            sortText: `0_${item.name}`
-        }));
+        .map((item, idx) => {
+            const matchKind = completionMatchKind(item.name, prefix);
+            const score = completionScore('override', 'method', item.name, prefix, idx);
+            return {
+                label: item.name,
+                insertText: buildOverrideSnippet(index, context, item),
+                insertTextMode: 'snippet',
+                source: 'override',
+                kind: 'method',
+                detail: buildOverrideDetail(index, context, item),
+                documentation: item.summary || '',
+                sortText: `0_${String(9999 - score).padStart(4, '0')}_${item.name}`,
+                score,
+                matchKind,
+                ownerType: String(baseType.fullName || ''),
+                confidence: completionConfidence('override', matchKind, false)
+            };
+        });
 }
 
 function buildCompletionItems(index, context, text, offset, maxItems, parsedTree) {
@@ -1180,18 +1280,27 @@ function buildCompletionItems(index, context, text, offset, maxItems, parsedTree
         const ownerType = resolveAccessPathType(index, memberAccess.objectExpression, context, offset);
         if (!ownerType) return [];
 
-        return getMemberCompletionCandidates(index, context, ownerType, memberAccess.memberPrefix)
+        const prefix = memberAccess.memberPrefix || '';
+        return getMemberCompletionCandidates(index, context, ownerType, prefix)
             .slice(0, maxItems)
-            .map((item) => ({
-                label: item.name,
-                insertText: item.name,
-                insertTextMode: 'plain',
-                source: 'member',
-                kind: item.kind,
-                detail: item.signature || item.type || item.returnType || '',
-                documentation: item.summary || '',
-                sortText: `1_${item.name}`
-            }));
+            .map((item, idx) => {
+                const matchKind = completionMatchKind(item.name, prefix);
+                const score = completionScore('member', item.kind, item.name, prefix, idx);
+                return {
+                    label: item.name,
+                    insertText: item.name,
+                    insertTextMode: 'plain',
+                    source: 'member',
+                    kind: item.kind,
+                    detail: item.signature || item.type || item.returnType || '',
+                    documentation: item.summary || '',
+                    sortText: `1_${String(9999 - score).padStart(4, '0')}_${item.name}`,
+                    score,
+                    matchKind,
+                    ownerType: String(ownerType.fullName || ''),
+                    confidence: completionConfidence('member', matchKind, !!item.isExtension)
+                };
+            });
     }
 
     const overrideItems = buildOverrideCompletionItems(index, context, text, offset, maxItems);
@@ -1207,32 +1316,48 @@ function buildCompletionItems(index, context, text, offset, maxItems, parsedTree
         })
         .sort((a, b) => a.localeCompare(b))
         .slice(0, maxItems)
-        .map((typeName) => ({
-            label: typeName,
-            insertText: typeName,
-            insertTextMode: 'plain',
-            source: 'type',
-            kind: 'class',
-            detail: (index.lookup.byShortName[typeName] || [])[0] || '',
-            documentation: '',
-            sortText: `2_${typeName}`
-        }));
+        .map((typeName, idx) => {
+            const matchKind = completionMatchKind(typeName, prefix);
+            const score = completionScore('type', 'class', typeName, prefix, idx);
+            return {
+                label: typeName,
+                insertText: typeName,
+                insertTextMode: 'plain',
+                source: 'type',
+                kind: 'class',
+                detail: (index.lookup.byShortName[typeName] || [])[0] || '',
+                documentation: '',
+                sortText: `2_${String(9999 - score).padStart(4, '0')}_${typeName}`,
+                score,
+                matchKind,
+                ownerType: '',
+                confidence: completionConfidence('type', matchKind, false)
+            };
+        });
 
     const keywordItems = KEYWORDS
         .filter((word) => {
             if (!prefix) return true;
             return word.startsWith(prefix);
         })
-        .map((word) => ({
-            label: word,
-            insertText: word,
-            insertTextMode: 'plain',
-            source: 'keyword',
-            kind: 'keyword',
-            detail: 'C# keyword',
-            documentation: '',
-            sortText: `3_${word}`
-        }));
+        .map((word, idx) => {
+            const matchKind = completionMatchKind(word, prefix);
+            const score = completionScore('keyword', 'keyword', word, prefix, idx);
+            return {
+                label: word,
+                insertText: word,
+                insertTextMode: 'plain',
+                source: 'keyword',
+                kind: 'keyword',
+                detail: 'C# keyword',
+                documentation: '',
+                sortText: `3_${String(9999 - score).padStart(4, '0')}_${word}`,
+                score,
+                matchKind,
+                ownerType: '',
+                confidence: completionConfidence('keyword', matchKind, false)
+            };
+        });
 
     return typeItems.concat(keywordItems).slice(0, maxItems);
 }
@@ -1322,7 +1447,8 @@ function buildRuleDiagnostics(index, context, text, parsedTree) {
                     i + 1,
                     'RULE_UNEXPECTED_CLOSING',
                     DIAGNOSTIC_SEVERITY.ERROR,
-                    `意外的闭合符号 '${ch}'`
+                    `意外的闭合符号 '${ch}'`,
+                    buildRuleDiagnosticMetadata('RULE_UNEXPECTED_CLOSING')
                 );
             }
         }
@@ -1336,7 +1462,8 @@ function buildRuleDiagnostics(index, context, text, parsedTree) {
             left.offset + 1,
             'RULE_UNCLOSED_SYMBOL',
             DIAGNOSTIC_SEVERITY.ERROR,
-            `符号 '${left.ch}' 未闭合`
+            `符号 '${left.ch}' 未闭合`,
+            buildRuleDiagnosticMetadata('RULE_UNCLOSED_SYMBOL')
         );
     });
 
@@ -1371,7 +1498,8 @@ function buildRuleDiagnostics(index, context, text, parsedTree) {
                 Math.max(cursor + 1, lineOffset),
                 'RULE_MISSING_SEMICOLON',
                 DIAGNOSTIC_SEVERITY.WARNING,
-                '疑似缺少分号'
+                '疑似缺少分号',
+                buildRuleDiagnosticMetadata('RULE_MISSING_SEMICOLON')
             );
         }
 
@@ -1394,7 +1522,8 @@ function buildRuleDiagnostics(index, context, text, parsedTree) {
                 m.index + rawType.length,
                 'RULE_UNKNOWN_TYPE',
                 DIAGNOSTIC_SEVERITY.WARNING,
-                `未识别的类型：${rawType}`
+                `未识别的类型：${rawType}`,
+                buildRuleDiagnosticMetadata('RULE_UNKNOWN_TYPE')
             );
         }
     }
@@ -1415,7 +1544,8 @@ function buildRuleDiagnostics(index, context, text, parsedTree) {
                 access.memberStartOffset + access.memberName.length,
                 'RULE_UNKNOWN_MEMBER',
                 DIAGNOSTIC_SEVERITY.ERROR,
-                `${ownerType.name} 中不存在成员：${access.memberName}`
+                `${ownerType.name} 中不存在成员：${access.memberName}`,
+                buildRuleDiagnosticMetadata('RULE_UNKNOWN_MEMBER')
             );
             return;
         }
@@ -1433,7 +1563,8 @@ function buildRuleDiagnostics(index, context, text, parsedTree) {
                     access.endOffset,
                     'RULE_ARG_COUNT',
                     DIAGNOSTIC_SEVERITY.WARNING,
-                    `${access.memberName}(...) 参数个数疑似不匹配，当前 ${argCount}`
+                    `${access.memberName}(...) 参数个数疑似不匹配，当前 ${argCount}`,
+                    buildRuleDiagnosticMetadata('RULE_ARG_COUNT')
                 );
             }
         }

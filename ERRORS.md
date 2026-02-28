@@ -2406,3 +2406,17 @@
   - 自动补全与手动触发（`Ctrl + Space`）、`Tab/Shift+Tab` 缩进、补全面板方向键/回车交互
   - 移动端粗指针设备默认禁用补全，仅保留高亮
   - 保持原实时编译与渲染链路不变
+
+### 验证记录 [2026-02-28 22:29]：IDE 补全/报错增强（Problems 来源与自动修复弹窗策略）
+
+**级别**：工作树功能实现验收（`tml-ide-app`）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/analyze-v2.test.js tml-ide-app/tests/fix-popup-auto.test.js`：通过（18/18）
+- `npm --prefix tml-ide-app run test`：失败（1 项既有失败：`tml-ide-app/tests/shader-hlsl-adapter-uniform-bridge.test.js`）
+- `npm run build`：失败（`site-app` 构建缺少 `@vitejs/plugin-react`，报 `ERR_MODULE_NOT_FOUND`）
+- `npm run check-generated`：失败（依赖 `npm run build`，同样在 `site-app` 阶段因 `@vitejs/plugin-react` 缺失终止）
+
+**备注**：
+- 本次目标改动集中在 IDE C# 诊断/补全面板链路：保留诊断 source、Problems 列表展示 source、fix popup 自动打开策略与冷却配置接线。
+- `build/check-generated` 触发的非目标生成文件变更已回退，仅保留本次功能改动与本条验证记录。
