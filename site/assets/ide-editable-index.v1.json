@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "root": "site/content",
-  "generatedAt": "2026-02-26T03:06:23.025Z",
+  "generatedAt": "2026-02-28T21:50:24.233Z",
   "files": [
     {
       "path": "Modder入门/code/firstclass_makefirstweapon.cs",
@@ -24,6 +24,14 @@
       "kind": "image"
     },
     {
+      "path": "Modder入门/shader/TestShader.fx",
+      "kind": "shaderfx"
+    },
+    {
+      "path": "Modder入门/shader/imgs/image.png",
+      "kind": "image"
+    },
+    {
       "path": "Modder入门/制作第一把武器.md",
       "kind": "markdown"
     },
@@ -38,6 +46,10 @@
     {
       "path": "Modder入门/第一把远程武器.md",
       "kind": "markdown"
+    },
+    {
+      "path": "Shader广场/测试新Shader.fx",
+      "kind": "shaderfx"
     },
     {
       "path": "anims/animgeom-toolkit-recipes.cs",

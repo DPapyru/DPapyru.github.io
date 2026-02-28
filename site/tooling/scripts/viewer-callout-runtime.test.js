@@ -45,3 +45,16 @@ test('viewer fx embed modal editor uses shader assist highlight and autocomplete
     assert.match(viewer, /indentTextBlock/);
     assert.match(viewer, /Ctrl \+ Space/);
 });
+
+test('viewer fx embed modal exposes shader preview operation controls', () => {
+    const viewer = fs.readFileSync(path.resolve('site/pages/viewer.html'), 'utf8');
+
+    assert.match(viewer, /fx-embed-timebox/);
+    assert.match(viewer, /data-fx-embed-toggle-run/);
+    assert.match(viewer, /data-fx-embed-reset-playback/);
+    assert.match(viewer, /data-fx-embed-itime-input/);
+    assert.match(viewer, /data-fx-embed-zoom-in/);
+    assert.match(viewer, /data-fx-embed-zoom-out/);
+    assert.match(viewer, /data-fx-embed-aspect-resizer/);
+    assert.match(viewer, /setBoundFxEmbedTextureAddressMode/);
+});

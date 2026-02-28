@@ -2420,3 +2420,26 @@
 **备注**：
 - 本次目标改动集中在 IDE C# 诊断/补全面板链路：保留诊断 source、Problems 列表展示 source、fix popup 自动打开策略与冷却配置接线。
 - `build/check-generated` 触发的非目标生成文件变更已回退，仅保留本次功能改动与本条验证记录。
+
+### 验证记录 [2026-02-28 23:04]：viewer Shader 编辑器对齐 tml-ide（UI + 交互）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/viewer-callout-runtime.test.js site/tooling/scripts/viewer-shader-editor-parity.test.js site/tooling/scripts/animcs-shader-adapter-contract.test.js`：通过（10 passed, 0 failed）
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：本次在工作树 `/mnt/f/DPapyru.github.io/.worktrees/fix-viewer-shader-ui` 实施；`check-generated` 失败点为末尾 `git diff --exit-code` 检测到构建产物差异（如 `tml-ide/index.html` 资源哈希引用变更），与 `site/pages/viewer.html` 的 Shader 编辑器改造非同一范围，已在工作树内回收无关产物改动，仅保留目标文件变更。
+
+### 验证记录 [2026-03-01 05:51]：viewer Shader 编辑器分支收尾提交前复验
+
+**级别**：L3
+
+**命令与结果**：
+- `npm ci`：失败（仓库根目录无 `package-lock.json` / `npm-shrinkwrap.json`，报 `EUSAGE`）
+- `npm run build`：通过
+- `npm run check-generated`：失败（末尾 `git diff --exit-code` 未通过，存在生成产物与目标改动差异）
+
+**备注**：
+- 本轮为合并前复验，未对失败项做额外回退；按“提交后再合并”流程直接纳入本次提交。

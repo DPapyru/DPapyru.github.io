@@ -452,67 +452,82 @@
 
         .fx-embed-dialog {
             position: relative;
-            width: min(1280px, calc(100vw - 30px));
-            height: min(86vh, 860px);
-            margin: 5vh auto 0;
-            border-radius: 14px;
-            border: 1px solid rgba(118, 157, 255, 0.36);
-            background: #101522;
-            color: #e9f0ff;
-            display: flex;
-            flex-direction: column;
+            z-index: 1;
+            width: min(1220px, calc(100vw - 24px));
+            height: min(88vh, 820px);
+            margin: 4vh auto 0;
+            border: 1px solid rgba(120, 144, 178, 0.52);
+            border-radius: 8px;
+            background: #181b21;
+            color: #d7dce5;
+            box-shadow: 0 20px 52px rgba(0, 0, 0, 0.58);
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            min-height: 0;
             overflow: hidden;
-            box-shadow: 0 26px 70px rgba(0, 0, 0, 0.55);
         }
 
         .fx-embed-head {
-            padding: 10px 12px;
+            min-height: 32px;
             display: flex;
             align-items: center;
             gap: 10px;
-            border-bottom: 1px solid rgba(118, 157, 255, 0.3);
-            background: rgba(11, 17, 31, 0.96);
+            padding: 0 10px;
+            border-bottom: 1px solid rgba(118, 135, 160, 0.45);
+            background: #23262d;
+            font-size: 12px;
+            font-weight: 600;
+            color: #d8dce4;
         }
 
         .fx-embed-head-title {
-            font-weight: 700;
+            flex: 0 0 auto;
+        }
+
+        .fx-embed-head-path {
             flex: 1;
             min-width: 0;
+            font-size: 11px;
+            font-weight: 500;
+            color: #9fb1c7;
+            border: 1px solid rgba(114, 132, 160, 0.5);
+            border-radius: 2px;
+            background: #2a2d35;
+            padding: 1px 6px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .fx-embed-head-path {
-            font-size: 0.82rem;
-            color: rgba(211, 225, 255, 0.9);
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(128, 157, 211, 0.4);
-            border-radius: 8px;
-            padding: 2px 8px;
-            max-width: 40%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .fx-embed-head button {
-            border: 1px solid rgba(127, 155, 216, 0.56);
-            background: rgba(20, 26, 44, 0.9);
-            color: #eef3ff;
-            border-radius: 8px;
-            padding: 4px 10px;
+        .fx-embed-head button,
+        .fx-embed-preview-controls button,
+        .fx-embed-zoom-actions button,
+        .fx-embed-upload-row button {
+            min-height: 22px;
+            border: 1px solid rgba(122, 139, 164, 0.62);
+            border-radius: 2px;
+            background: #30333b;
+            color: #d4d8df;
+            font-size: 11px;
+            padding: 0 8px;
             cursor: pointer;
         }
 
+        .fx-embed-head button:hover,
+        .fx-embed-preview-controls button:hover,
+        .fx-embed-zoom-actions button:hover,
+        .fx-embed-upload-row button:hover {
+            background: #3a3f49;
+        }
+
         .fx-embed-body {
-            flex: 1;
             min-height: 0;
             display: grid;
-            grid-template-columns: minmax(300px, 0.9fr) minmax(300px, 1fr);
+            grid-template-columns: minmax(300px, 0.95fr) minmax(0, 1.35fr);
         }
 
         .fx-embed-editor-pane {
-            border-right: 1px solid rgba(110, 142, 205, 0.36);
+            border-right: 1px solid rgba(116, 133, 156, 0.44);
             display: flex;
             flex-direction: column;
             min-height: 0;
@@ -522,7 +537,7 @@
             position: relative;
             flex: 1;
             min-height: 0;
-            background: #0d1220;
+            background: #101217;
         }
 
         .fx-embed-editor-stack {
@@ -544,7 +559,7 @@
             padding: 12px;
             border: 0;
             background: transparent;
-            color: #dde7ff;
+            color: #dce2eb;
             pointer-events: none;
             overflow: hidden;
             white-space: pre;
@@ -589,7 +604,7 @@
         }
 
         .fx-embed-editor::selection {
-            background: rgba(112, 162, 255, 0.28);
+            background: rgba(76, 124, 212, 0.32);
             -webkit-text-fill-color: transparent;
         }
 
@@ -600,10 +615,10 @@
             max-height: min(220px, calc(100% - 16px));
             overflow: auto;
             padding: 6px;
-            border-radius: 10px;
-            border: 1px solid rgba(104, 141, 221, 0.62);
-            background: rgba(10, 16, 29, 0.96);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+            border-radius: 6px;
+            border: 1px solid rgba(110, 136, 172, 0.8);
+            background: #1a1d24;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
             display: none;
             z-index: 6;
         }
@@ -615,7 +630,7 @@
         .fx-embed-autocomplete-item {
             width: 100%;
             border: 0;
-            border-radius: 7px;
+            border-radius: 4px;
             background: transparent;
             color: #dce8ff;
             text-align: left;
@@ -628,7 +643,7 @@
 
         .fx-embed-autocomplete-item:hover,
         .fx-embed-autocomplete-item[data-selected="true"] {
-            background: rgba(88, 132, 240, 0.27);
+            background: rgba(84, 119, 181, 0.42);
             color: #f3f7ff;
         }
 
@@ -669,92 +684,263 @@
         }
 
         .fx-embed-preview-pane {
-            display: flex;
-            flex-direction: column;
             min-height: 0;
-        }
-
-        .fx-embed-controls {
-            padding: 10px 12px;
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px;
-            border-bottom: 1px solid rgba(110, 142, 205, 0.34);
-            background: rgba(12, 20, 35, 0.94);
+            grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
         }
 
-        .fx-embed-upload {
+        .fx-embed-preview-controls {
+            display: grid;
+            align-content: start;
+            gap: 6px;
+            padding: 8px 10px;
+            border-right: 1px solid rgba(116, 133, 156, 0.44);
+            overflow: auto;
+        }
+
+        .fx-embed-preview-controls label {
+            margin: 0;
+            font-size: 11px;
+            color: #adb4c0;
+        }
+
+        .fx-embed-preview-controls select,
+        .fx-embed-time-input {
+            width: 100%;
+            min-height: 24px;
+            border: 1px solid rgba(122, 139, 164, 0.62);
+            border-radius: 2px;
+            background: #2f323a;
+            color: #d6dbe4;
+            font: inherit;
+            font-size: 11px;
+            padding: 2px 6px;
+        }
+
+        .fx-embed-timebox {
+            display: grid;
+            gap: 6px;
+            margin-top: 2px;
+            padding: 6px;
+            border: 1px solid rgba(116, 133, 156, 0.44);
+            border-radius: 2px;
+            background: #22262e;
+        }
+
+        .fx-embed-time-row {
             display: flex;
             align-items: center;
             gap: 6px;
             flex-wrap: wrap;
         }
 
-        .fx-embed-upload label {
-            width: 62px;
-            color: rgba(223, 233, 255, 0.95);
-            font-size: 0.83rem;
+        .fx-embed-time-label {
+            margin: 0;
+            color: #c9d0db;
+            font-size: 10px;
         }
 
-        .fx-embed-upload input[type="file"] {
-            max-width: 190px;
-            color: rgba(214, 228, 255, 0.92);
+        .fx-embed-time-input {
+            flex: 1 1 92px;
+            min-width: 92px;
         }
 
-        .fx-embed-upload button {
-            border: 1px solid rgba(118, 143, 192, 0.55);
-            background: rgba(20, 26, 44, 0.88);
-            color: #edf3ff;
-            border-radius: 6px;
-            padding: 2px 8px;
+        .fx-embed-upload-grid {
+            display: grid;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .fx-embed-upload-row {
+            display: grid;
+            grid-template-columns: 52px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .fx-embed-upload-row label {
+            color: #c8ced9;
+            font-size: 10px;
+        }
+
+        .fx-embed-upload-row input[type="file"] {
+            width: 100%;
+            color: #d6dbe4;
+            font-size: 10px;
+        }
+
+        .fx-embed-upload-row input[type="file"]::file-selector-button {
+            margin-right: 6px;
+            border: 1px solid rgba(122, 139, 164, 0.62);
+            border-radius: 2px;
+            background: #2f323a;
+            color: #d6dbe4;
+            min-height: 22px;
+            padding: 0 6px;
+            font-size: 10px;
             cursor: pointer;
         }
 
-        .fx-embed-viewport {
-            flex: 1;
+        .fx-embed-upload-row button:disabled {
+            opacity: 0.55;
+            cursor: default;
+        }
+
+        .fx-embed-upload-name {
+            grid-column: 2 / 4;
+            min-height: 14px;
+            font-size: 10px;
+            color: #8ea5c0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fx-embed-stage {
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
             min-height: 0;
-            background: radial-gradient(circle at 22% 18%, rgba(54, 72, 122, 0.38), rgba(9, 11, 16, 0.96) 70%);
-            position: relative;
+        }
+
+        .fx-embed-stage-head {
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            border-bottom: 1px solid rgba(116, 133, 156, 0.44);
+            background: #191c22;
+            gap: 8px;
+        }
+
+        .fx-embed-stage-tip {
+            color: #96a8bd;
+            font-size: 10px;
+        }
+
+        .fx-embed-zoom-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .fx-embed-stage-shell {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+            margin: 10px;
+            min-height: 0;
+        }
+
+        .fx-embed-viewport {
+            flex: 1 1 auto;
+            min-width: 260px;
+            border: 1px solid rgba(120, 144, 178, 0.56);
+            border-radius: 4px;
+            overflow: hidden;
+            min-height: 0;
+            background: #111318;
+            touch-action: none;
+            cursor: grab;
+        }
+
+        .fx-embed-viewport.is-dragging {
+            cursor: grabbing;
+        }
+
+        .fx-embed-aspect-resizer {
+            flex: 0 0 8px;
+            border: 1px solid rgba(120, 144, 178, 0.56);
+            border-radius: 4px;
+            background: linear-gradient(to right, #2b2f37 0, #333844 50%, #2b2f37 100%);
+            cursor: ew-resize;
+            touch-action: none;
+        }
+
+        .fx-embed-aspect-resizer.is-dragging {
+            border-color: rgba(110, 165, 255, 0.95);
+            background: linear-gradient(to right, #21517a 0, #2f7db6 50%, #21517a 100%);
+        }
+
+        .fx-embed-aspect-resizer:focus-visible {
+            outline: 1px solid rgba(110, 165, 255, 0.95);
+            outline-offset: 1px;
         }
 
         .fx-embed-canvas {
             width: 100%;
             height: 100%;
+            min-height: 220px;
             display: block;
+            transform-origin: 0 0;
+            will-change: transform;
         }
 
         .fx-embed-status {
-            border-top: 1px solid rgba(110, 142, 205, 0.34);
-            padding: 8px 10px;
-            font-size: 0.82rem;
-            color: rgba(213, 227, 255, 0.95);
-            background: rgba(12, 20, 35, 0.96);
-            min-height: 34px;
+            min-height: 30px;
+            border-top: 1px solid rgba(116, 133, 156, 0.44);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: #a1b6cf;
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background: #1b1f26;
         }
 
-        @media (max-width: 860px) {
+        @media (max-width: 980px) {
             .fx-embed-dialog {
-                width: calc(100vw - 14px);
-                height: calc(100vh - 14px);
-                margin: 7px auto 0;
+                width: calc(100vw - 12px);
+                height: min(92vh, 780px);
+                margin-top: 3vh;
             }
 
             .fx-embed-body {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-rows: minmax(260px, 45%) minmax(0, 1fr);
             }
 
             .fx-embed-editor-pane {
                 border-right: 0;
-                border-bottom: 1px solid rgba(110, 142, 205, 0.36);
-                min-height: 45%;
+                border-bottom: 1px solid rgba(116, 133, 156, 0.44);
+            }
+
+            .fx-embed-preview-pane {
+                grid-template-columns: minmax(0, 1fr);
+                grid-template-rows: auto minmax(0, 1fr);
+            }
+
+            .fx-embed-preview-controls {
+                border-right: 0;
+                border-bottom: 1px solid rgba(116, 133, 156, 0.44);
+            }
+
+            .fx-embed-stage-shell {
+                margin: 8px;
+            }
+
+            .fx-embed-aspect-resizer {
+                display: none;
+            }
+
+            .fx-embed-canvas {
+                min-height: 180px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .fx-embed-head {
+                gap: 6px;
             }
 
             .fx-embed-head-path {
-                max-width: 100%;
+                max-width: 44vw;
             }
 
-            .fx-embed-controls {
-                grid-template-columns: 1fr;
+            .fx-embed-stage-head {
+                padding: 0 8px;
             }
 
             .fx-embed-autocomplete {
@@ -1687,6 +1873,7 @@
 
             const FX_EMBED_SESSION = new Map();
             const FX_EMBED_IMAGE_CACHE = new Map();
+            const FX_EMBED_PRESET_CACHE = new Map();
             const FX_EMBED_CARD_RUNTIMES = new Map();
             let FX_EMBED_MODAL = null;
             let FX_EMBED_CARD_RAF_ID = 0;
@@ -1705,6 +1892,20 @@
                 '    gl_Position = vec4(aPosition, 0.0, 1.0);',
                 '}'
             ].join('\n');
+            const FX_EMBED_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
+            const FX_EMBED_PREVIEW_RENDER_MODES = new Set(['alpha', 'additive', 'nonpremultiplied', 'opaque']);
+            const FX_EMBED_PREVIEW_ADDRESS_MODES = new Set(['clamp', 'wrap']);
+            const FX_EMBED_PREVIEW_PRESETS = new Set(['checker', 'noise', 'gradient', 'rings']);
+            const FX_EMBED_UPLOAD_SLOT_COUNT = 4;
+            const FX_EMBED_UPLOAD_MAX_SIZE = 4 * 1024 * 1024;
+            const FX_EMBED_MAX_TIME_DELTA = 0.2;
+            const FX_EMBED_MIN_SCALE = 0.2;
+            const FX_EMBED_MAX_SCALE = 8;
+            const FX_EMBED_ZOOM_STEP = 0.2;
+            const FX_EMBED_MIN_VIEWPORT_WIDTH = 220;
+            const FX_EMBED_ASPECT_RESIZE_STEP = 20;
+            const FX_EMBED_ITIME_MIN = -120;
+            const FX_EMBED_ITIME_MAX = 120;
 
             function encodeContentPath(pathValue) {
                 return String(pathValue || '')
@@ -1750,16 +1951,72 @@
                     '      </div>',
                     '    </section>',
                     '    <section class="fx-embed-preview-pane">',
-                    '      <div class="fx-embed-controls">',
-                    '        <div class="fx-embed-upload"><label>uImage0</label><input type="file" accept="image/*" data-slot="0"><button type="button" data-clear="0">清空</button></div>',
-                    '        <div class="fx-embed-upload"><label>uImage1</label><input type="file" accept="image/*" data-slot="1"><button type="button" data-clear="1">清空</button></div>',
-                    '        <div class="fx-embed-upload"><label>uImage2</label><input type="file" accept="image/*" data-slot="2"><button type="button" data-clear="2">清空</button></div>',
-                    '        <div class="fx-embed-upload"><label>uImage3</label><input type="file" accept="image/*" data-slot="3"><button type="button" data-clear="3">清空</button></div>',
-                    '      </div>',
-                    '      <div class="fx-embed-viewport"><canvas class="fx-embed-canvas" width="960" height="540"></canvas></div>',
-                    '      <div class="fx-embed-status">就绪</div>',
+                    '      <aside class="fx-embed-preview-controls" data-fx-embed-preview-controls>',
+                    '        <label>预设图片</label>',
+                    '        <select data-fx-embed-preset>',
+                    '          <option value="checker">棋盘格（builtin:checker）</option>',
+                    '          <option value="noise">噪声（builtin:noise）</option>',
+                    '          <option value="gradient">渐变</option>',
+                    '          <option value="rings">同心环</option>',
+                    '        </select>',
+                    '        <label>渲染模式</label>',
+                    '        <select data-fx-embed-render-mode>',
+                    '          <option value="alpha">AlphaBlend</option>',
+                    '          <option value="additive">Additive</option>',
+                    '          <option value="nonpremultiplied">NonPremultiplied</option>',
+                    '          <option value="opaque">Opaque</option>',
+                    '        </select>',
+                    '        <label>采样模式</label>',
+                    '        <select data-fx-embed-address-mode>',
+                    '          <option value="clamp">Clamp</option>',
+                    '          <option value="wrap">Wrap</option>',
+                    '        </select>',
+                    '        <label>背景模式</label>',
+                    '        <select data-fx-embed-bg-mode>',
+                    '          <option value="transparent">透明棋盘</option>',
+                    '          <option value="black">黑色</option>',
+                    '          <option value="white">白色</option>',
+                    '        </select>',
+                    '        <div class="fx-embed-timebox" aria-label="Shader 计时器控制">',
+                    '          <label>计时器</label>',
+                    '          <div class="fx-embed-time-row">',
+                    '            <button type="button" data-fx-embed-toggle-run aria-pressed="true">暂停</button>',
+                    '            <button type="button" data-fx-embed-reset-playback title="重置播放时间">重播</button>',
+                    '          </div>',
+                    '          <div class="fx-embed-time-row">',
+                    '            <label class="fx-embed-time-label">iTime</label>',
+                    '            <button type="button" data-fx-embed-itime-minus title="iTime -1">-1</button>',
+                    '            <input class="fx-embed-time-input" type="number" min="-120" max="120" step="0.1" value="0" data-fx-embed-itime-input>',
+                    '            <button type="button" data-fx-embed-itime-plus title="iTime +1">+1</button>',
+                    '            <button type="button" data-fx-embed-itime-reset title="重置 iTime">归零</button>',
+                    '          </div>',
+                    '        </div>',
+                    '        <div class="fx-embed-upload-grid" aria-label="Shader 纹理通道">',
+                    '          <div class="fx-embed-upload-row"><label>uImage0</label><input type="file" accept="image/*" data-slot="0"><button type="button" data-clear="0">清空</button><span class="fx-embed-upload-name" data-fx-embed-upload-name="0">未上传</span></div>',
+                    '          <div class="fx-embed-upload-row"><label>uImage1</label><input type="file" accept="image/*" data-slot="1"><button type="button" data-clear="1">清空</button><span class="fx-embed-upload-name" data-fx-embed-upload-name="1">未上传</span></div>',
+                    '          <div class="fx-embed-upload-row"><label>uImage2</label><input type="file" accept="image/*" data-slot="2"><button type="button" data-clear="2">清空</button><span class="fx-embed-upload-name" data-fx-embed-upload-name="2">未上传</span></div>',
+                    '          <div class="fx-embed-upload-row"><label>uImage3</label><input type="file" accept="image/*" data-slot="3"><button type="button" data-clear="3">清空</button><span class="fx-embed-upload-name" data-fx-embed-upload-name="3">未上传</span></div>',
+                    '        </div>',
+                    '      </aside>',
+                    '      <section class="fx-embed-stage">',
+                    '        <header class="fx-embed-stage-head">',
+                    '          <span class="fx-embed-stage-tip">拖动平移，滚轮缩放；拖动右侧分隔条可调整比例</span>',
+                    '          <div class="fx-embed-zoom-actions" role="group" aria-label="预览缩放">',
+                    '            <button type="button" data-fx-embed-zoom-out aria-label="缩小预览">-</button>',
+                    '            <button type="button" data-fx-embed-zoom-reset aria-label="重置缩放">100%</button>',
+                    '            <button type="button" data-fx-embed-zoom-in aria-label="放大预览">+</button>',
+                    '          </div>',
+                    '        </header>',
+                    '        <div class="fx-embed-stage-shell">',
+                    '          <div class="fx-embed-viewport" data-fx-embed-viewport>',
+                    '            <canvas class="fx-embed-canvas" width="960" height="540"></canvas>',
+                    '          </div>',
+                    '          <div class="fx-embed-aspect-resizer" data-fx-embed-aspect-resizer role="separator" tabindex="0" aria-orientation="vertical" aria-label="拖动调整画布比例" title="拖动调整画布比例（双击重置）"></div>',
+                    '        </div>',
+                    '      </section>',
                     '    </section>',
                     '  </div>',
+                    '  <div class="fx-embed-status">预览就绪</div>',
                     '</section>'
                 ].join('');
                 document.body.appendChild(wrapper);
@@ -1778,8 +2035,24 @@
                     autocomplete: wrapper.querySelector('.fx-embed-autocomplete'),
                     canvas: wrapper.querySelector('.fx-embed-canvas'),
                     status: wrapper.querySelector('.fx-embed-status'),
+                    presetSelect: wrapper.querySelector('[data-fx-embed-preset]'),
+                    renderModeSelect: wrapper.querySelector('[data-fx-embed-render-mode]'),
+                    addressModeSelect: wrapper.querySelector('[data-fx-embed-address-mode]'),
+                    bgModeSelect: wrapper.querySelector('[data-fx-embed-bg-mode]'),
+                    toggleRunButton: wrapper.querySelector('[data-fx-embed-toggle-run]'),
+                    resetPlaybackButton: wrapper.querySelector('[data-fx-embed-reset-playback]'),
+                    iTimeInput: wrapper.querySelector('[data-fx-embed-itime-input]'),
+                    iTimeMinusButton: wrapper.querySelector('[data-fx-embed-itime-minus]'),
+                    iTimePlusButton: wrapper.querySelector('[data-fx-embed-itime-plus]'),
+                    iTimeResetButton: wrapper.querySelector('[data-fx-embed-itime-reset]'),
+                    zoomOutButton: wrapper.querySelector('[data-fx-embed-zoom-out]'),
+                    zoomResetButton: wrapper.querySelector('[data-fx-embed-zoom-reset]'),
+                    zoomInButton: wrapper.querySelector('[data-fx-embed-zoom-in]'),
+                    viewport: wrapper.querySelector('[data-fx-embed-viewport]'),
+                    aspectResizer: wrapper.querySelector('[data-fx-embed-aspect-resizer]'),
                     uploadInputs: Array.from(wrapper.querySelectorAll('input[data-slot]')),
-                    clearButtons: Array.from(wrapper.querySelectorAll('button[data-clear]'))
+                    clearButtons: Array.from(wrapper.querySelectorAll('button[data-clear]')),
+                    uploadNames: Array.from(wrapper.querySelectorAll('[data-fx-embed-upload-name]'))
                 };
             }
 
@@ -2081,14 +2354,202 @@
 
             function setFxEmbedStatus(text, isError) {
                 if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom.status) return;
-                FX_EMBED_MODAL.dom.status.textContent = String(text || '');
-                FX_EMBED_MODAL.dom.status.style.color = isError
-                    ? 'rgba(255, 169, 169, 0.95)'
-                    : 'rgba(213, 227, 255, 0.95)';
+                FX_EMBED_MODAL.statusText = String(text || '');
+                FX_EMBED_MODAL.statusIsError = !!isError;
+                updateFxEmbedStatus();
             }
 
             function clampFxEmbed(value, min, max) {
                 return Math.max(min, Math.min(max, value));
+            }
+
+            function fxEmbedNowMs() {
+                return Number(window.performance && performance.now ? performance.now() : Date.now());
+            }
+
+            function normalizeFxEmbedPreviewPreset(value) {
+                const safe = String(value || '').trim().toLowerCase();
+                return FX_EMBED_PREVIEW_PRESETS.has(safe) ? safe : 'checker';
+            }
+
+            function normalizeFxEmbedPreviewRenderMode(value) {
+                const safe = String(value || '').trim().toLowerCase();
+                return FX_EMBED_PREVIEW_RENDER_MODES.has(safe) ? safe : 'alpha';
+            }
+
+            function normalizeFxEmbedPreviewAddressMode(value) {
+                const safe = String(value || '').trim().toLowerCase();
+                return FX_EMBED_PREVIEW_ADDRESS_MODES.has(safe) ? safe : 'clamp';
+            }
+
+            function normalizeFxEmbedPreviewBgMode(value) {
+                const safe = String(value || '').trim().toLowerCase();
+                return FX_EMBED_PREVIEW_BG_MODES.has(safe) ? safe : 'transparent';
+            }
+
+            function fxEmbedPreviewPresetLabel(value) {
+                const safe = normalizeFxEmbedPreviewPreset(value);
+                if (safe === 'noise') return '噪声';
+                if (safe === 'gradient') return '渐变';
+                if (safe === 'rings') return '同心环';
+                return '棋盘格';
+            }
+
+            function fxEmbedPreviewRenderModeLabel(value) {
+                const safe = normalizeFxEmbedPreviewRenderMode(value);
+                if (safe === 'additive') return 'Additive';
+                if (safe === 'nonpremultiplied') return 'NonPremultiplied';
+                if (safe === 'opaque') return 'Opaque';
+                return 'AlphaBlend';
+            }
+
+            function normalizeFxEmbedUploadSlotIndex(value) {
+                const index = Number(value);
+                if (!Number.isInteger(index) || index < 0 || index >= FX_EMBED_UPLOAD_SLOT_COUNT) return -1;
+                return index;
+            }
+
+            function fxEmbedUploadSlotLabel(index) {
+                const safeIndex = normalizeFxEmbedUploadSlotIndex(index);
+                if (safeIndex < 0) return 'uImage?';
+                return `uImage${safeIndex}`;
+            }
+
+            function clampFxEmbedITimeInput(value) {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) return 0;
+                return clampFxEmbed(numeric, FX_EMBED_ITIME_MIN, FX_EMBED_ITIME_MAX);
+            }
+
+            function clampFxEmbedZoom(value) {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric)) return 1;
+                return clampFxEmbed(numeric, FX_EMBED_MIN_SCALE, FX_EMBED_MAX_SCALE);
+            }
+
+            function getFxEmbedUploadSlot(index) {
+                if (!FX_EMBED_MODAL || !Array.isArray(FX_EMBED_MODAL.uploads)) return null;
+                const safeIndex = normalizeFxEmbedUploadSlotIndex(index);
+                if (safeIndex < 0) return null;
+                return FX_EMBED_MODAL.uploads[safeIndex] || null;
+            }
+
+            function updateFxEmbedUploadUi() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom) return;
+                for (let i = 0; i < FX_EMBED_UPLOAD_SLOT_COUNT; i++) {
+                    const entry = getFxEmbedUploadSlot(i);
+                    const clearButton = Array.isArray(FX_EMBED_MODAL.dom.clearButtons) ? FX_EMBED_MODAL.dom.clearButtons[i] : null;
+                    const nameNode = Array.isArray(FX_EMBED_MODAL.dom.uploadNames) ? FX_EMBED_MODAL.dom.uploadNames[i] : null;
+                    if (clearButton) {
+                        clearButton.disabled = !(entry && entry.dataUrl);
+                    }
+                    if (nameNode) {
+                        nameNode.textContent = entry && entry.name ? entry.name : '未上传';
+                        nameNode.title = entry && entry.name ? entry.name : '';
+                    }
+                }
+            }
+
+            function fxEmbedPresetImageCanvas(preset) {
+                const safePreset = normalizeFxEmbedPreviewPreset(preset);
+                if (FX_EMBED_PRESET_CACHE.has(safePreset)) {
+                    return FX_EMBED_PRESET_CACHE.get(safePreset);
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = 256;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return null;
+
+                if (safePreset === 'noise') {
+                    const imageData = ctx.createImageData(256, 256);
+                    for (let i = 0; i < imageData.data.length; i += 4) {
+                        const value = (Math.random() * 255) | 0;
+                        imageData.data[i] = value;
+                        imageData.data[i + 1] = value;
+                        imageData.data[i + 2] = value;
+                        imageData.data[i + 3] = 255;
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                } else if (safePreset === 'gradient') {
+                    const grad = ctx.createLinearGradient(0, 0, 256, 256);
+                    grad.addColorStop(0, '#1f93ff');
+                    grad.addColorStop(0.5, '#7f4dff');
+                    grad.addColorStop(1, '#ffd65a');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, 256, 256);
+                } else if (safePreset === 'rings') {
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(0, 0, 256, 256);
+                    for (let i = 0; i < 10; i++) {
+                        const ratio = i / 10;
+                        ctx.strokeStyle = `hsla(${Math.round(ratio * 300)}, 85%, 65%, 0.9)`;
+                        ctx.lineWidth = 2 + (i % 2);
+                        ctx.beginPath();
+                        ctx.arc(128, 128, 14 + i * 12, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                } else {
+                    for (let y = 0; y < 16; y++) {
+                        for (let x = 0; x < 16; x++) {
+                            const value = (x + y) % 2 ? 36 : 220;
+                            ctx.fillStyle = `rgb(${value}, ${value}, ${value})`;
+                            ctx.fillRect(x * 16, y * 16, 16, 16);
+                        }
+                    }
+                }
+                FX_EMBED_PRESET_CACHE.set(safePreset, canvas);
+                return canvas;
+            }
+
+            function getFxEmbedUploadImage(index) {
+                const entry = getFxEmbedUploadSlot(index);
+                if (!entry || !entry.dataUrl) return null;
+                const img = ensureFxEmbedImage(`upload:${index}:${entry.dataUrl}`, entry.dataUrl);
+                if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return null;
+                return img;
+            }
+
+            function fxEmbedCurrentITime(runtime) {
+                const elapsed = runtime ? Number(runtime.elapsedSec || 0) : 0;
+                const offset = FX_EMBED_MODAL ? Number(FX_EMBED_MODAL.iTimeOffsetSec || 0) : 0;
+                return elapsed + offset;
+            }
+
+            function estimateFxEmbedFps(nowMs) {
+                if (!FX_EMBED_MODAL) return NaN;
+                if (!Array.isArray(FX_EMBED_MODAL.fpsSamples)) {
+                    FX_EMBED_MODAL.fpsSamples = [];
+                }
+                FX_EMBED_MODAL.fpsSamples.push(nowMs);
+                while (FX_EMBED_MODAL.fpsSamples.length && nowMs - FX_EMBED_MODAL.fpsSamples[0] > 1000) {
+                    FX_EMBED_MODAL.fpsSamples.shift();
+                }
+                if (FX_EMBED_MODAL.fpsSamples.length < 2) {
+                    FX_EMBED_MODAL.fps = NaN;
+                    return NaN;
+                }
+                const span = FX_EMBED_MODAL.fpsSamples[FX_EMBED_MODAL.fpsSamples.length - 1] - FX_EMBED_MODAL.fpsSamples[0];
+                if (span <= 0) {
+                    FX_EMBED_MODAL.fps = NaN;
+                    return NaN;
+                }
+                const fps = (FX_EMBED_MODAL.fpsSamples.length - 1) * 1000 / span;
+                FX_EMBED_MODAL.fps = fps;
+                return fps;
+            }
+
+            function syncFxEmbedRunButton() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.toggleRunButton) return;
+                const running = !!FX_EMBED_MODAL.isRunning;
+                FX_EMBED_MODAL.dom.toggleRunButton.textContent = running ? '暂停' : '继续';
+                FX_EMBED_MODAL.dom.toggleRunButton.setAttribute('aria-pressed', running ? 'true' : 'false');
+            }
+
+            function syncFxEmbedITimeControl() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.iTimeInput) return;
+                if (document.activeElement === FX_EMBED_MODAL.dom.iTimeInput) return;
+                FX_EMBED_MODAL.dom.iTimeInput.value = fxEmbedCurrentITime(FX_EMBED_MODAL.runtime).toFixed(3);
             }
 
             function isFxEmbedIdentifierChar(ch) {
@@ -2384,15 +2845,16 @@
                 const texture = gl.createTexture();
                 if (!texture) return null;
                 gl.bindTexture(gl.TEXTURE_2D, texture);
-                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
                 if (image) {
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
                     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
                 } else {
-                    const pixels = new Uint8Array([255, 255, 255, 255]);
+                    const pixels = new Uint8Array([0, 0, 0, 0]);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
                     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
                 }
                 gl.bindTexture(gl.TEXTURE_2D, null);
@@ -2480,8 +2942,70 @@
                 return img;
             }
 
-            function resolveFxEmbedImageBySlot(slot) {
-                return resolveFxEmbedUploadImage(slot) || resolveFxEmbedUsingImage(slot) || null;
+            function resolveFxEmbedTextureSourceBySlot(slot) {
+                const safeSlot = normalizeFxEmbedUploadSlotIndex(slot);
+                if (safeSlot < 0) return { source: null, key: 'empty' };
+                const uploadImage = getFxEmbedUploadImage(safeSlot);
+                if (uploadImage) {
+                    return { source: uploadImage, key: `upload:${safeSlot}:${String(uploadImage.src || '')}` };
+                }
+                const usingImage = resolveFxEmbedUsingImage(safeSlot);
+                if (usingImage) {
+                    return { source: usingImage, key: `using:${safeSlot}:${String(usingImage.src || '')}` };
+                }
+                if (safeSlot === 0 && FX_EMBED_MODAL) {
+                    const presetCanvas = fxEmbedPresetImageCanvas(FX_EMBED_MODAL.presetImage);
+                    if (presetCanvas) {
+                        return { source: presetCanvas, key: `preset:${normalizeFxEmbedPreviewPreset(FX_EMBED_MODAL.presetImage)}` };
+                    }
+                }
+                return { source: null, key: `empty:${safeSlot}` };
+            }
+
+            function setFxEmbedCanvasStyle(bgMode) {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.canvas) return;
+                const safeBgMode = normalizeFxEmbedPreviewBgMode(bgMode);
+                if (safeBgMode === 'transparent') {
+                    FX_EMBED_MODAL.dom.canvas.style.background = [
+                        'linear-gradient(45deg, #1f1f21 25%, transparent 25%) 0 0 / 16px 16px',
+                        'linear-gradient(-45deg, #1f1f21 25%, transparent 25%) 0 0 / 16px 16px',
+                        'linear-gradient(45deg, transparent 75%, #1f1f21 75%) 0 0 / 16px 16px',
+                        'linear-gradient(-45deg, transparent 75%, #1f1f21 75%) 0 0 / 16px 16px',
+                        '#2a2d31'
+                    ].join(',');
+                    return;
+                }
+                if (safeBgMode === 'white') {
+                    FX_EMBED_MODAL.dom.canvas.style.background = '#ffffff';
+                    return;
+                }
+                FX_EMBED_MODAL.dom.canvas.style.background = '#000000';
+            }
+
+            function applyFxEmbedBlendMode(gl, mode) {
+                const safeMode = normalizeFxEmbedPreviewRenderMode(mode);
+                if (safeMode === 'opaque') {
+                    gl.disable(gl.BLEND);
+                    return;
+                }
+                gl.enable(gl.BLEND);
+                gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
+                if (safeMode === 'additive') {
+                    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.SRC_ALPHA, gl.ONE);
+                    return;
+                }
+                if (safeMode === 'nonpremultiplied') {
+                    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                    return;
+                }
+                gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+            }
+
+            function setBoundFxEmbedTextureAddressMode(gl, mode) {
+                const safeMode = normalizeFxEmbedPreviewAddressMode(mode);
+                const wrapValue = safeMode === 'wrap' ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, wrapValue);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, wrapValue);
             }
 
             function ensureFxEmbedChannelTexture(runtime, slot, source, key) {
@@ -2502,13 +3026,340 @@
                 return next;
             }
 
+            function readFxEmbedAspectText() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.viewport) return 'auto';
+                const rect = FX_EMBED_MODAL.dom.viewport.getBoundingClientRect();
+                if (!rect.width || !rect.height) return 'auto';
+                const ratio = rect.width / rect.height;
+                return `${rect.width.toFixed(0)}:${rect.height.toFixed(0)} (${ratio.toFixed(2)})`;
+            }
+
+            function updateFxEmbedStatus() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.status) return;
+                const runtime = FX_EMBED_MODAL.runtime;
+                const mode = fxEmbedPreviewRenderModeLabel(FX_EMBED_MODAL.renderMode);
+                const preset = fxEmbedPreviewPresetLabel(FX_EMBED_MODAL.presetImage);
+                const address = normalizeFxEmbedPreviewAddressMode(FX_EMBED_MODAL.addressMode);
+                const bg = normalizeFxEmbedPreviewBgMode(FX_EMBED_MODAL.bgMode);
+                const zoom = Math.round(clampFxEmbedZoom(FX_EMBED_MODAL.viewScale) * 100);
+                const aspect = readFxEmbedAspectText();
+                const iTime = fxEmbedCurrentITime(runtime);
+                const frame = runtime ? Math.max(0, Math.floor(Number(runtime.frame || 0))) : 0;
+                const runningText = FX_EMBED_MODAL.isRunning ? '运行中' : '已暂停';
+                const fpsText = Number.isFinite(Number(FX_EMBED_MODAL.fps))
+                    ? Number(FX_EMBED_MODAL.fps).toFixed(1)
+                    : '--';
+                const uploaded = [];
+                for (let i = 0; i < FX_EMBED_UPLOAD_SLOT_COUNT; i++) {
+                    if (getFxEmbedUploadSlot(i)) uploaded.push(`uImage${i}`);
+                }
+                const uploadText = uploaded.length ? uploaded.join(', ') : '无';
+                const statusLead = String(FX_EMBED_MODAL.statusText || '预览就绪');
+                FX_EMBED_MODAL.dom.status.textContent = `${statusLead} · 预设: ${preset} · 渲染: ${mode} · 采样: ${address} · 背景: ${bg} · 比例: ${aspect} · 缩放: ${zoom}% · 上传: ${uploadText} · 播放: ${runningText} · iTime: ${iTime.toFixed(3)}s · 帧: ${frame} · fps: ${fpsText}`;
+                FX_EMBED_MODAL.dom.status.style.color = FX_EMBED_MODAL.statusIsError
+                    ? 'rgba(255, 169, 169, 0.95)'
+                    : 'rgba(161, 182, 207, 0.95)';
+                syncFxEmbedITimeControl();
+                syncFxEmbedRunButton();
+                if (FX_EMBED_MODAL.dom.zoomResetButton) {
+                    FX_EMBED_MODAL.dom.zoomResetButton.textContent = `${zoom}%`;
+                }
+            }
+
+            function stopFxEmbedDragging() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.viewport) return;
+                const pointerId = Number.isInteger(FX_EMBED_MODAL.dragPointerId) ? FX_EMBED_MODAL.dragPointerId : -1;
+                const viewport = FX_EMBED_MODAL.dom.viewport;
+                if (pointerId >= 0 && typeof viewport.hasPointerCapture === 'function' && viewport.hasPointerCapture(pointerId)) {
+                    try {
+                        viewport.releasePointerCapture(pointerId);
+                    } catch (_) {}
+                }
+                FX_EMBED_MODAL.dragPointerId = -1;
+            }
+
+            function stopFxEmbedAspectResizing() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.aspectResizer) return;
+                const handle = FX_EMBED_MODAL.dom.aspectResizer;
+                const pointerId = Number.isInteger(FX_EMBED_MODAL.aspectResizePointerId) ? FX_EMBED_MODAL.aspectResizePointerId : -1;
+                if (pointerId >= 0 && typeof handle.hasPointerCapture === 'function' && handle.hasPointerCapture(pointerId)) {
+                    try {
+                        handle.releasePointerCapture(pointerId);
+                    } catch (_) {}
+                }
+                FX_EMBED_MODAL.aspectResizePointerId = -1;
+                handle.classList.remove('is-dragging');
+            }
+
+            function applyFxEmbedViewTransform() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.canvas) return;
+                const scale = clampFxEmbedZoom(FX_EMBED_MODAL.viewScale);
+                const offsetX = Number.isFinite(FX_EMBED_MODAL.viewOffsetX) ? FX_EMBED_MODAL.viewOffsetX : 0;
+                const offsetY = Number.isFinite(FX_EMBED_MODAL.viewOffsetY) ? FX_EMBED_MODAL.viewOffsetY : 0;
+                FX_EMBED_MODAL.viewScale = scale;
+                FX_EMBED_MODAL.viewOffsetX = offsetX;
+                FX_EMBED_MODAL.viewOffsetY = offsetY;
+                FX_EMBED_MODAL.dom.canvas.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+                if (FX_EMBED_MODAL.dom.viewport) {
+                    FX_EMBED_MODAL.dom.viewport.classList.toggle('is-dragging', FX_EMBED_MODAL.dragPointerId >= 0);
+                }
+                if (FX_EMBED_MODAL.dom.zoomResetButton) {
+                    FX_EMBED_MODAL.dom.zoomResetButton.textContent = `${Math.round(scale * 100)}%`;
+                }
+            }
+
+            function setFxEmbedZoom(value, anchorClientX, anchorClientY) {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.viewport) return;
+                const viewport = FX_EMBED_MODAL.dom.viewport;
+                const prevScale = clampFxEmbedZoom(FX_EMBED_MODAL.viewScale);
+                const nextScale = clampFxEmbedZoom(value);
+                const rect = viewport.getBoundingClientRect();
+                const anchorX = Number.isFinite(anchorClientX) ? anchorClientX - rect.left : rect.width * 0.5;
+                const anchorY = Number.isFinite(anchorClientY) ? anchorClientY - rect.top : rect.height * 0.5;
+                const prevOffsetX = Number.isFinite(FX_EMBED_MODAL.viewOffsetX) ? FX_EMBED_MODAL.viewOffsetX : 0;
+                const prevOffsetY = Number.isFinite(FX_EMBED_MODAL.viewOffsetY) ? FX_EMBED_MODAL.viewOffsetY : 0;
+                const worldX = (anchorX - prevOffsetX) / prevScale;
+                const worldY = (anchorY - prevOffsetY) / prevScale;
+                FX_EMBED_MODAL.viewScale = nextScale;
+                FX_EMBED_MODAL.viewOffsetX = anchorX - worldX * nextScale;
+                FX_EMBED_MODAL.viewOffsetY = anchorY - worldY * nextScale;
+                applyFxEmbedViewTransform();
+                updateFxEmbedStatus();
+            }
+
+            function resetFxEmbedView() {
+                if (!FX_EMBED_MODAL) return;
+                FX_EMBED_MODAL.viewScale = 1;
+                FX_EMBED_MODAL.viewOffsetX = 0;
+                FX_EMBED_MODAL.viewOffsetY = 0;
+                applyFxEmbedViewTransform();
+                updateFxEmbedStatus();
+            }
+
+            function fxEmbedViewportBounds() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.viewport) return null;
+                const viewport = FX_EMBED_MODAL.dom.viewport;
+                const shell = viewport.parentElement;
+                if (!shell) return null;
+                const shellRect = shell.getBoundingClientRect();
+                if (!shellRect.width) return null;
+                const handleWidth = FX_EMBED_MODAL.dom.aspectResizer
+                    ? Number(FX_EMBED_MODAL.dom.aspectResizer.getBoundingClientRect().width || 0)
+                    : 0;
+                const maxWidth = Math.max(FX_EMBED_MIN_VIEWPORT_WIDTH, Math.floor(shellRect.width - handleWidth - 1));
+                const minWidth = Math.max(120, Math.min(FX_EMBED_MIN_VIEWPORT_WIDTH, maxWidth));
+                return { minWidth, maxWidth };
+            }
+
+            function clampFxEmbedViewportWidth(value) {
+                const bounds = fxEmbedViewportBounds();
+                if (!bounds) return 0;
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric) || numeric <= 0) return 0;
+                return clampFxEmbed(Math.round(numeric), bounds.minWidth, bounds.maxWidth);
+            }
+
+            function applyFxEmbedViewportWidth(options) {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.viewport) return;
+                const opts = options || {};
+                const safeWidth = clampFxEmbedViewportWidth(FX_EMBED_MODAL.viewportWidth);
+                FX_EMBED_MODAL.viewportWidth = safeWidth;
+                const viewport = FX_EMBED_MODAL.dom.viewport;
+                if (safeWidth > 0) {
+                    viewport.style.flex = '0 0 auto';
+                    viewport.style.width = `${safeWidth}px`;
+                } else {
+                    viewport.style.flex = '';
+                    viewport.style.width = '';
+                }
+                if (opts.redraw !== false) {
+                    drawFxEmbedCanvas();
+                }
+                if (opts.status !== false) {
+                    updateFxEmbedStatus();
+                }
+            }
+
+            function setFxEmbedViewportWidth(value, options) {
+                if (!FX_EMBED_MODAL) return;
+                FX_EMBED_MODAL.viewportWidth = value;
+                applyFxEmbedViewportWidth(options);
+            }
+
+            function resetFxEmbedViewportWidth(options) {
+                setFxEmbedViewportWidth(0, options);
+            }
+
+            function setFxEmbedPreviewRunning(nextRunning, options) {
+                if (!FX_EMBED_MODAL) return;
+                const opts = options || {};
+                FX_EMBED_MODAL.isRunning = !!nextRunning;
+                if (FX_EMBED_MODAL.isRunning && FX_EMBED_MODAL.runtime) {
+                    FX_EMBED_MODAL.runtime.lastMs = fxEmbedNowMs();
+                }
+                syncFxEmbedRunButton();
+                if (opts.redraw !== false) {
+                    drawFxEmbedCanvas();
+                } else {
+                    updateFxEmbedStatus();
+                }
+            }
+
+            function resetFxEmbedPlayback() {
+                if (!FX_EMBED_MODAL) return;
+                const runtime = FX_EMBED_MODAL.runtime;
+                if (runtime) {
+                    runtime.lastMs = fxEmbedNowMs();
+                    runtime.elapsedSec = 0;
+                    runtime.frame = 0;
+                }
+                FX_EMBED_MODAL.iTimeOffsetSec = 0;
+                FX_EMBED_MODAL.fpsSamples = [];
+                FX_EMBED_MODAL.fps = NaN;
+                drawFxEmbedCanvas();
+            }
+
+            function applyFxEmbedITimeFromInput(rawValue) {
+                if (!FX_EMBED_MODAL) return;
+                const clamped = clampFxEmbedITimeInput(rawValue);
+                const runtime = FX_EMBED_MODAL.runtime;
+                const elapsed = runtime ? Number(runtime.elapsedSec || 0) : 0;
+                FX_EMBED_MODAL.iTimeOffsetSec = clamped - elapsed;
+                if (runtime) {
+                    runtime.lastMs = fxEmbedNowMs();
+                }
+                drawFxEmbedCanvas();
+            }
+
+            function offsetFxEmbedITime(deltaSec) {
+                if (!FX_EMBED_MODAL) return;
+                const current = fxEmbedCurrentITime(FX_EMBED_MODAL.runtime);
+                applyFxEmbedITimeFromInput(current + Number(deltaSec || 0));
+            }
+
+            function resetFxEmbedITimeOffset() {
+                if (!FX_EMBED_MODAL) return;
+                const runtime = FX_EMBED_MODAL.runtime;
+                const elapsed = runtime ? Number(runtime.elapsedSec || 0) : 0;
+                FX_EMBED_MODAL.iTimeOffsetSec = -elapsed;
+                drawFxEmbedCanvas();
+            }
+
+            function installFxEmbedViewportInteractions() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.viewport) return;
+                const viewport = FX_EMBED_MODAL.dom.viewport;
+                if (viewport.dataset.interactionsBound === '1') return;
+                viewport.dataset.interactionsBound = '1';
+
+                viewport.addEventListener('pointerdown', function (event) {
+                    if (event.button !== 0) return;
+                    FX_EMBED_MODAL.dragPointerId = Number(event.pointerId);
+                    FX_EMBED_MODAL.dragStartX = Number(event.clientX);
+                    FX_EMBED_MODAL.dragStartY = Number(event.clientY);
+                    FX_EMBED_MODAL.dragOriginX = Number(FX_EMBED_MODAL.viewOffsetX || 0);
+                    FX_EMBED_MODAL.dragOriginY = Number(FX_EMBED_MODAL.viewOffsetY || 0);
+                    if (typeof viewport.setPointerCapture === 'function') {
+                        try {
+                            viewport.setPointerCapture(event.pointerId);
+                        } catch (_) {}
+                    }
+                    event.preventDefault();
+                    applyFxEmbedViewTransform();
+                });
+
+                viewport.addEventListener('pointermove', function (event) {
+                    if (Number(FX_EMBED_MODAL.dragPointerId) !== Number(event.pointerId)) return;
+                    const deltaX = Number(event.clientX) - Number(FX_EMBED_MODAL.dragStartX || 0);
+                    const deltaY = Number(event.clientY) - Number(FX_EMBED_MODAL.dragStartY || 0);
+                    FX_EMBED_MODAL.viewOffsetX = Number(FX_EMBED_MODAL.dragOriginX || 0) + deltaX;
+                    FX_EMBED_MODAL.viewOffsetY = Number(FX_EMBED_MODAL.dragOriginY || 0) + deltaY;
+                    applyFxEmbedViewTransform();
+                });
+
+                const endDrag = function () {
+                    stopFxEmbedDragging();
+                    applyFxEmbedViewTransform();
+                };
+                viewport.addEventListener('pointerup', endDrag);
+                viewport.addEventListener('pointercancel', endDrag);
+                viewport.addEventListener('lostpointercapture', endDrag);
+                viewport.addEventListener('wheel', function (event) {
+                    event.preventDefault();
+                    const factor = Math.exp((-Number(event.deltaY || 0) * FX_EMBED_ZOOM_STEP) / 100);
+                    setFxEmbedZoom(Number(FX_EMBED_MODAL.viewScale || 1) * factor, event.clientX, event.clientY);
+                }, { passive: false });
+                viewport.addEventListener('dblclick', function () {
+                    resetFxEmbedView();
+                });
+            }
+
+            function installFxEmbedAspectResizerInteractions() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.aspectResizer || !FX_EMBED_MODAL.dom.viewport) return;
+                const handle = FX_EMBED_MODAL.dom.aspectResizer;
+                if (handle.dataset.interactionsBound === '1') return;
+                handle.dataset.interactionsBound = '1';
+
+                handle.addEventListener('pointerdown', function (event) {
+                    if (event.button !== 0 || !FX_EMBED_MODAL.dom.viewport) return;
+                    const rect = FX_EMBED_MODAL.dom.viewport.getBoundingClientRect();
+                    FX_EMBED_MODAL.aspectResizePointerId = Number(event.pointerId);
+                    FX_EMBED_MODAL.aspectResizeStartX = Number(event.clientX);
+                    FX_EMBED_MODAL.aspectResizeStartWidth = Number(rect.width || 0);
+                    if (typeof handle.setPointerCapture === 'function') {
+                        try {
+                            handle.setPointerCapture(event.pointerId);
+                        } catch (_) {}
+                    }
+                    handle.classList.add('is-dragging');
+                    event.preventDefault();
+                });
+
+                handle.addEventListener('pointermove', function (event) {
+                    if (Number(FX_EMBED_MODAL.aspectResizePointerId) !== Number(event.pointerId)) return;
+                    const deltaX = Number(event.clientX) - Number(FX_EMBED_MODAL.aspectResizeStartX || 0);
+                    setFxEmbedViewportWidth(Number(FX_EMBED_MODAL.aspectResizeStartWidth || 0) + deltaX);
+                });
+
+                const stop = function () {
+                    stopFxEmbedAspectResizing();
+                };
+                handle.addEventListener('pointerup', stop);
+                handle.addEventListener('pointercancel', stop);
+                handle.addEventListener('lostpointercapture', stop);
+                handle.addEventListener('dblclick', function () {
+                    resetFxEmbedViewportWidth();
+                });
+                handle.addEventListener('keydown', function (event) {
+                    if (event.key === 'ArrowLeft') {
+                        const current = Number(FX_EMBED_MODAL.dom.viewport.getBoundingClientRect().width || 0);
+                        setFxEmbedViewportWidth(current - FX_EMBED_ASPECT_RESIZE_STEP);
+                        event.preventDefault();
+                        return;
+                    }
+                    if (event.key === 'ArrowRight') {
+                        const current = Number(FX_EMBED_MODAL.dom.viewport.getBoundingClientRect().width || 0);
+                        setFxEmbedViewportWidth(current + FX_EMBED_ASPECT_RESIZE_STEP);
+                        event.preventDefault();
+                        return;
+                    }
+                    if (event.key === 'Home' || event.key === 'Enter' || event.key === ' ') {
+                        resetFxEmbedViewportWidth();
+                        event.preventDefault();
+                    }
+                });
+            }
+
             function drawFxEmbedCanvas() {
-                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.opened) return;
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.opened || !FX_EMBED_MODAL.dom || !FX_EMBED_MODAL.dom.canvas) return;
                 const runtime = ensureFxEmbedRuntime();
-                if (!runtime || !runtime.gl || !runtime.program || !runtime.uniforms) return;
+                if (!runtime || !runtime.gl) {
+                    updateFxEmbedStatus();
+                    return;
+                }
                 const canvas = FX_EMBED_MODAL.dom.canvas;
                 const gl = runtime.gl;
-                const rect = canvas.getBoundingClientRect();
+                const viewportNode = FX_EMBED_MODAL.dom.viewport || canvas;
+                const rect = viewportNode.getBoundingClientRect();
                 if (!rect.width || !rect.height) return;
                 const dpr = Math.max(1, Number(window.devicePixelRatio || 1));
                 const w = Math.max(1, Math.round(rect.width * dpr));
@@ -2518,38 +3369,65 @@
                     canvas.height = h;
                 }
 
-                const now = performance.now();
-                if (!runtime.lastMs) runtime.lastMs = now;
-                const delta = Math.max(0, Math.min(0.1, (now - runtime.lastMs) / 1000));
+                const now = fxEmbedNowMs();
+                const lastMs = Number(runtime.lastMs || now);
+                const running = !!FX_EMBED_MODAL.isRunning;
+                const rawDelta = Math.max(0, Math.min(FX_EMBED_MAX_TIME_DELTA, (now - lastMs) / 1000));
+                const delta = running ? rawDelta : 0;
                 runtime.lastMs = now;
-                runtime.elapsedSec += delta;
-                runtime.frame += 1;
+                if (running) {
+                    runtime.elapsedSec = Number(runtime.elapsedSec || 0) + delta;
+                }
+                estimateFxEmbedFps(now);
+                const iTimeValue = fxEmbedCurrentITime(runtime);
+                const bgMode = normalizeFxEmbedPreviewBgMode(FX_EMBED_MODAL.bgMode);
+                const addressMode = normalizeFxEmbedPreviewAddressMode(FX_EMBED_MODAL.addressMode);
+                setFxEmbedCanvasStyle(bgMode);
 
                 gl.viewport(0, 0, w, h);
-                gl.clearColor(0, 0, 0, 0);
+                if (bgMode === 'white') {
+                    gl.clearColor(1, 1, 1, 1);
+                } else if (bgMode === 'black') {
+                    gl.clearColor(0, 0, 0, 1);
+                } else {
+                    gl.clearColor(0, 0, 0, 0);
+                }
                 gl.clear(gl.COLOR_BUFFER_BIT);
+
+                if (!runtime.program || !runtime.uniforms) {
+                    updateFxEmbedStatus();
+                    return;
+                }
+
                 gl.disable(gl.DEPTH_TEST);
                 gl.disable(gl.CULL_FACE);
-                gl.enable(gl.BLEND);
-                gl.blendFuncSeparate(gl.ONE, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-                gl.useProgram(runtime.program);
+                applyFxEmbedBlendMode(gl, FX_EMBED_MODAL.renderMode);
                 gl.bindVertexArray(runtime.vao);
+                gl.useProgram(runtime.program);
 
                 const date = new Date();
                 if (runtime.uniforms.iResolution) gl.uniform3fv(runtime.uniforms.iResolution, [w, h, 1]);
-                if (runtime.uniforms.iTime) gl.uniform1f(runtime.uniforms.iTime, runtime.elapsedSec);
+                if (runtime.uniforms.iTime) gl.uniform1f(runtime.uniforms.iTime, iTimeValue);
                 if (runtime.uniforms.iTimeDelta) gl.uniform1f(runtime.uniforms.iTimeDelta, delta);
                 if (runtime.uniforms.iFrame) gl.uniform1i(runtime.uniforms.iFrame, runtime.frame);
                 if (runtime.uniforms.iMouse) gl.uniform4fv(runtime.uniforms.iMouse, [0, 0, 0, 0]);
-                if (runtime.uniforms.iDate) gl.uniform4fv(runtime.uniforms.iDate, [date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()]);
+                if (runtime.uniforms.iDate) {
+                    gl.uniform4fv(runtime.uniforms.iDate, [
+                        date.getFullYear(),
+                        date.getMonth() + 1,
+                        date.getDate(),
+                        date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()
+                    ]);
+                }
 
-                const channelTimes = [runtime.elapsedSec, runtime.elapsedSec, runtime.elapsedSec, runtime.elapsedSec];
+                const channelTimes = [iTimeValue, iTimeValue, iTimeValue, iTimeValue];
                 const channelRes = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
-                for (let i = 0; i < 4; i++) {
-                    const image = resolveFxEmbedImageBySlot(i);
-                    const channel = ensureFxEmbedChannelTexture(runtime, i, image, image ? `image:${i}:${String(image.src || '')}` : `empty:${i}`);
+                for (let i = 0; i < FX_EMBED_UPLOAD_SLOT_COUNT; i++) {
+                    const sourceInfo = resolveFxEmbedTextureSourceBySlot(i);
+                    const channel = ensureFxEmbedChannelTexture(runtime, i, sourceInfo.source, sourceInfo.key);
                     gl.activeTexture(gl.TEXTURE0 + i);
                     gl.bindTexture(gl.TEXTURE_2D, channel.texture);
+                    setBoundFxEmbedTextureAddressMode(gl, addressMode);
                     channelRes[i * 3] = channel.width;
                     channelRes[i * 3 + 1] = channel.height;
                     channelRes[i * 3 + 2] = 1;
@@ -2565,6 +3443,10 @@
                 gl.drawArrays(gl.TRIANGLES, 0, 3);
                 gl.bindVertexArray(null);
                 gl.useProgram(null);
+                if (running) {
+                    runtime.frame += 1;
+                }
+                updateFxEmbedStatus();
             }
 
             function ensureFxEmbedLoop() {
@@ -2617,9 +3499,12 @@
                     if (runtime.program) runtime.gl.deleteProgram(runtime.program);
                     runtime.program = programResult.program;
                     runtime.uniforms = programResult.uniforms;
-                    runtime.lastMs = 0;
+                    runtime.lastMs = fxEmbedNowMs();
                     runtime.elapsedSec = 0;
                     runtime.frame = 0;
+                    FX_EMBED_MODAL.iTimeOffsetSec = 0;
+                    FX_EMBED_MODAL.fpsSamples = [];
+                    FX_EMBED_MODAL.fps = NaN;
                     setFxEmbedStatus('编译成功，实时渲染中', false);
                     drawFxEmbedCanvas();
                     ensureFxEmbedLoop();
@@ -2639,15 +3524,46 @@
                 }, 300);
             }
 
+            function syncFxEmbedControls() {
+                if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.dom) return;
+                if (FX_EMBED_MODAL.dom.presetSelect) {
+                    FX_EMBED_MODAL.dom.presetSelect.value = normalizeFxEmbedPreviewPreset(FX_EMBED_MODAL.presetImage);
+                }
+                if (FX_EMBED_MODAL.dom.renderModeSelect) {
+                    FX_EMBED_MODAL.dom.renderModeSelect.value = normalizeFxEmbedPreviewRenderMode(FX_EMBED_MODAL.renderMode);
+                }
+                if (FX_EMBED_MODAL.dom.addressModeSelect) {
+                    FX_EMBED_MODAL.dom.addressModeSelect.value = normalizeFxEmbedPreviewAddressMode(FX_EMBED_MODAL.addressMode);
+                }
+                if (FX_EMBED_MODAL.dom.bgModeSelect) {
+                    FX_EMBED_MODAL.dom.bgModeSelect.value = normalizeFxEmbedPreviewBgMode(FX_EMBED_MODAL.bgMode);
+                }
+                updateFxEmbedUploadUi();
+                applyFxEmbedViewTransform();
+                syncFxEmbedITimeControl();
+                syncFxEmbedRunButton();
+                updateFxEmbedStatus();
+            }
+
             function setFxEmbedModalOpen(open) {
                 if (!FX_EMBED_MODAL) return;
                 const shouldOpen = !!open;
+                if (!shouldOpen) {
+                    stopFxEmbedDragging();
+                    stopFxEmbedAspectResizing();
+                    applyFxEmbedViewTransform();
+                }
                 FX_EMBED_MODAL.opened = shouldOpen;
                 FX_EMBED_MODAL.dom.root.classList.toggle('is-open', shouldOpen);
                 if (shouldOpen) {
                     refreshFxEmbedEditorHighlight();
                     syncFxEmbedEditorScroll();
+                    installFxEmbedViewportInteractions();
+                    installFxEmbedAspectResizerInteractions();
+                    applyFxEmbedViewportWidth({ redraw: false, status: false });
+                    syncFxEmbedControls();
                     ensureFxEmbedLoop();
+                    drawFxEmbedCanvas();
                     return;
                 }
                 hideFxEmbedAutocomplete();
@@ -2662,7 +3578,18 @@
                         return item && item.dataUrl
                             ? { name: String(item.name || ''), dataUrl: String(item.dataUrl || '') }
                             : null;
-                    })
+                    }),
+                    preview: {
+                        presetImage: normalizeFxEmbedPreviewPreset(FX_EMBED_MODAL.presetImage),
+                        renderMode: normalizeFxEmbedPreviewRenderMode(FX_EMBED_MODAL.renderMode),
+                        addressMode: normalizeFxEmbedPreviewAddressMode(FX_EMBED_MODAL.addressMode),
+                        bgMode: normalizeFxEmbedPreviewBgMode(FX_EMBED_MODAL.bgMode),
+                        isRunning: !!FX_EMBED_MODAL.isRunning,
+                        viewScale: clampFxEmbedZoom(FX_EMBED_MODAL.viewScale),
+                        viewOffsetX: Number(FX_EMBED_MODAL.viewOffsetX || 0),
+                        viewOffsetY: Number(FX_EMBED_MODAL.viewOffsetY || 0),
+                        viewportWidth: Number(FX_EMBED_MODAL.viewportWidth || 0)
+                    }
                 });
             }
 
@@ -2682,6 +3609,28 @@
                     title: '',
                     usingMap: {},
                     uploads: [null, null, null, null],
+                    presetImage: 'checker',
+                    renderMode: 'alpha',
+                    addressMode: 'clamp',
+                    bgMode: 'transparent',
+                    isRunning: true,
+                    iTimeOffsetSec: 0,
+                    fpsSamples: [],
+                    fps: NaN,
+                    viewScale: 1,
+                    viewOffsetX: 0,
+                    viewOffsetY: 0,
+                    dragPointerId: -1,
+                    dragStartX: 0,
+                    dragStartY: 0,
+                    dragOriginX: 0,
+                    dragOriginY: 0,
+                    aspectResizePointerId: -1,
+                    aspectResizeStartX: 0,
+                    aspectResizeStartWidth: 0,
+                    viewportWidth: 0,
+                    statusText: '预览就绪',
+                    statusIsError: false,
                     disableAutocomplete: FX_EMBED_DISABLE_AUTOCOMPLETE,
                     completionState: {
                         items: [],
@@ -2769,15 +3718,121 @@
                         hideFxEmbedAutocomplete();
                     }
                 });
-                window.addEventListener('resize', syncFxEmbedEditorScroll);
+                window.addEventListener('resize', function () {
+                    syncFxEmbedEditorScroll();
+                    if (!FX_EMBED_MODAL || !FX_EMBED_MODAL.opened) return;
+                    applyFxEmbedViewportWidth({ redraw: false, status: false });
+                    drawFxEmbedCanvas();
+                    updateFxEmbedStatus();
+                });
+
+                if (domFx.presetSelect) {
+                    domFx.presetSelect.addEventListener('change', function () {
+                        FX_EMBED_MODAL.presetImage = normalizeFxEmbedPreviewPreset(domFx.presetSelect.value);
+                        drawFxEmbedCanvas();
+                        setFxEmbedStatus(`预设图片已切换：${fxEmbedPreviewPresetLabel(FX_EMBED_MODAL.presetImage)}`, false);
+                    });
+                }
+
+                if (domFx.renderModeSelect) {
+                    domFx.renderModeSelect.addEventListener('change', function () {
+                        FX_EMBED_MODAL.renderMode = normalizeFxEmbedPreviewRenderMode(domFx.renderModeSelect.value);
+                        drawFxEmbedCanvas();
+                        setFxEmbedStatus(`渲染模式已切换：${fxEmbedPreviewRenderModeLabel(FX_EMBED_MODAL.renderMode)}`, false);
+                    });
+                }
+
+                if (domFx.addressModeSelect) {
+                    domFx.addressModeSelect.addEventListener('change', function () {
+                        FX_EMBED_MODAL.addressMode = normalizeFxEmbedPreviewAddressMode(domFx.addressModeSelect.value);
+                        drawFxEmbedCanvas();
+                        setFxEmbedStatus(`采样模式已切换：${FX_EMBED_MODAL.addressMode}`, false);
+                    });
+                }
+
+                if (domFx.bgModeSelect) {
+                    domFx.bgModeSelect.addEventListener('change', function () {
+                        FX_EMBED_MODAL.bgMode = normalizeFxEmbedPreviewBgMode(domFx.bgModeSelect.value);
+                        drawFxEmbedCanvas();
+                        setFxEmbedStatus(`背景模式已切换：${FX_EMBED_MODAL.bgMode}`, false);
+                    });
+                }
+
+                if (domFx.toggleRunButton) {
+                    domFx.toggleRunButton.addEventListener('click', function () {
+                        setFxEmbedPreviewRunning(!FX_EMBED_MODAL.isRunning);
+                    });
+                }
+
+                if (domFx.resetPlaybackButton) {
+                    domFx.resetPlaybackButton.addEventListener('click', function () {
+                        resetFxEmbedPlayback();
+                    });
+                }
+
+                if (domFx.iTimeInput) {
+                    const applyITime = function () {
+                        const raw = Number(domFx.iTimeInput.value);
+                        if (!Number.isFinite(raw)) {
+                            syncFxEmbedITimeControl();
+                            return;
+                        }
+                        applyFxEmbedITimeFromInput(raw);
+                    };
+                    domFx.iTimeInput.addEventListener('change', applyITime);
+                    domFx.iTimeInput.addEventListener('blur', applyITime);
+                }
+
+                if (domFx.iTimeMinusButton) {
+                    domFx.iTimeMinusButton.addEventListener('click', function () {
+                        offsetFxEmbedITime(-1);
+                    });
+                }
+
+                if (domFx.iTimePlusButton) {
+                    domFx.iTimePlusButton.addEventListener('click', function () {
+                        offsetFxEmbedITime(1);
+                    });
+                }
+
+                if (domFx.iTimeResetButton) {
+                    domFx.iTimeResetButton.addEventListener('click', function () {
+                        resetFxEmbedITimeOffset();
+                    });
+                }
+
+                if (domFx.zoomOutButton) {
+                    domFx.zoomOutButton.addEventListener('click', function () {
+                        setFxEmbedZoom(Number(FX_EMBED_MODAL.viewScale || 1) * (1 - FX_EMBED_ZOOM_STEP));
+                    });
+                }
+
+                if (domFx.zoomResetButton) {
+                    domFx.zoomResetButton.addEventListener('click', function () {
+                        resetFxEmbedView();
+                    });
+                }
+
+                if (domFx.zoomInButton) {
+                    domFx.zoomInButton.addEventListener('click', function () {
+                        setFxEmbedZoom(Number(FX_EMBED_MODAL.viewScale || 1) * (1 + FX_EMBED_ZOOM_STEP));
+                    });
+                }
+
                 domFx.uploadInputs.forEach(function (input) {
                     if (!input) return;
                     input.addEventListener('change', async function () {
-                        const slot = Number(input.getAttribute('data-slot'));
+                        const slot = normalizeFxEmbedUploadSlotIndex(input.getAttribute('data-slot'));
+                        if (slot < 0) return;
                         const file = input.files && input.files[0] ? input.files[0] : null;
                         if (!file) return;
                         if (!String(file.type || '').startsWith('image/')) {
                             setFxEmbedStatus(`uImage${slot} 仅支持图片`, true);
+                            input.value = '';
+                            return;
+                        }
+                        if (Number(file.size || 0) > FX_EMBED_UPLOAD_MAX_SIZE) {
+                            setFxEmbedStatus(`${fxEmbedUploadSlotLabel(slot)} 图片过大（>${Math.round(FX_EMBED_UPLOAD_MAX_SIZE / (1024 * 1024))}MB）`, true);
                             input.value = '';
                             return;
                         }
@@ -2788,6 +3843,7 @@
                                 dataUrl: String(reader.result || '')
                             };
                             input.value = '';
+                            updateFxEmbedUploadUi();
                             setFxEmbedStatus(`uImage${slot} 已上传：${file.name}`, false);
                             drawFxEmbedCanvas();
                         };
@@ -2800,8 +3856,10 @@
                 domFx.clearButtons.forEach(function (button) {
                     if (!button) return;
                     button.addEventListener('click', function () {
-                        const slot = Number(button.getAttribute('data-clear'));
+                        const slot = normalizeFxEmbedUploadSlotIndex(button.getAttribute('data-clear'));
+                        if (slot < 0) return;
                         FX_EMBED_MODAL.uploads[slot] = null;
+                        updateFxEmbedUploadUi();
                         setFxEmbedStatus(`uImage${slot} 已清空`, false);
                         drawFxEmbedCanvas();
                     });
@@ -2834,6 +3892,26 @@
                     modal.uploads = Array.isArray(session.uploads)
                         ? session.uploads.map((item) => item && item.dataUrl ? { name: String(item.name || ''), dataUrl: String(item.dataUrl || '') } : null)
                         : [null, null, null, null];
+                    const preview = session.preview && typeof session.preview === 'object' ? session.preview : null;
+                    modal.presetImage = normalizeFxEmbedPreviewPreset(preview && preview.presetImage);
+                    modal.renderMode = normalizeFxEmbedPreviewRenderMode(preview && preview.renderMode);
+                    modal.addressMode = normalizeFxEmbedPreviewAddressMode(preview && preview.addressMode);
+                    modal.bgMode = normalizeFxEmbedPreviewBgMode(preview && preview.bgMode);
+                    modal.isRunning = preview && Object.prototype.hasOwnProperty.call(preview, 'isRunning')
+                        ? !!preview.isRunning
+                        : true;
+                    modal.viewScale = preview && Number.isFinite(Number(preview.viewScale))
+                        ? clampFxEmbedZoom(preview.viewScale)
+                        : 1;
+                    modal.viewOffsetX = preview && Number.isFinite(Number(preview.viewOffsetX))
+                        ? Number(preview.viewOffsetX)
+                        : 0;
+                    modal.viewOffsetY = preview && Number.isFinite(Number(preview.viewOffsetY))
+                        ? Number(preview.viewOffsetY)
+                        : 0;
+                    modal.viewportWidth = preview && Number.isFinite(Number(preview.viewportWidth))
+                        ? Number(preview.viewportWidth)
+                        : 0;
                 } else {
                     const url = `/site/content/${encodeContentPath(path)}`;
                     const response = await fetch(url, { cache: 'no-store' });
@@ -2845,9 +3923,23 @@
                     }
                     modal.dom.editor.value = await response.text();
                     modal.uploads = [null, null, null, null];
+                    modal.presetImage = 'checker';
+                    modal.renderMode = 'alpha';
+                    modal.addressMode = 'clamp';
+                    modal.bgMode = 'transparent';
+                    modal.isRunning = true;
+                    modal.viewScale = 1;
+                    modal.viewOffsetX = 0;
+                    modal.viewOffsetY = 0;
+                    modal.viewportWidth = 0;
                 }
+                modal.iTimeOffsetSec = 0;
+                modal.fpsSamples = [];
+                modal.fps = NaN;
+                updateFxEmbedUploadUi();
                 refreshFxEmbedEditorHighlight();
                 syncFxEmbedEditorScroll();
+                syncFxEmbedControls();
                 scheduleFxEmbedCompile();
             }
 
