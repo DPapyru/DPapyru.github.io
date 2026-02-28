@@ -498,6 +498,7 @@ const ANIMATION_TYPE_LABEL_SET = new Set(ANIMATION_TYPE_LABELS);
 const ANIMATION_MEMBER_LABEL_SET = new Set(Object.values(ANIMATION_MEMBER_LABELS_BY_TYPE).flat());
 const UNIFIED_STATE_SAVE_DELAY = 240;
 const FIX_POPUP_AUTO_DELAY = 300;
+const FIX_POPUP_AUTO_COOLDOWN = 1200;
 const WORKSPACE_VALUES = Object.freeze(['csharp', 'markdown', 'shader']);
 const WORKSPACE_LAST_KEY = 'tml-ide:last-workspace';
 const OAUTH_TOKEN_KEY = 'articleStudioOAuthToken.v1';
@@ -4596,6 +4597,7 @@ function ensureContextControllers() {
             suggestionsNode: dom.fixPopupSuggestions,
             actionsNode: dom.fixPopupActions,
             autoDelay: FIX_POPUP_AUTO_DELAY,
+            autoCooldown: FIX_POPUP_AUTO_COOLDOWN,
             buildSuggestions: buildDiagnosticSuggestions,
             getSuggestionContext: buildFixSuggestionContext,
             resolveIssueAtCursor,
@@ -8591,7 +8593,16 @@ function convertCompletionKind(kind) {
 function issueSourceFromCode(code) {
     const safeCode = String(code || '').trim().toUpperCase();
     if (safeCode.startsWith('ROSLYN_')) return 'roslyn';
+    if (safeCode.startsWith('SHADER_')) return 'shader';
     return 'rule';
+}
+
+function normalizeIssueSource(source, code) {
+    const safeSource = String(source || '').trim().toLowerCase();
+    if (safeSource === 'rule' || safeSource === 'roslyn' || safeSource === 'shader') {
+        return safeSource;
+    }
+    return issueSourceFromCode(code);
 }
 
 function issueKey(issue) {
@@ -8611,7 +8622,7 @@ function normalizeIssueFromDiagnostic(diag, file) {
     const safeDiag = diag && typeof diag === 'object' ? diag : {};
     const safeFile = file && typeof file === 'object' ? file : null;
     return {
-        source: issueSourceFromCode(safeDiag.code),
+        source: normalizeIssueSource(safeDiag.source, safeDiag.code),
         code: String(safeDiag.code || 'RULE_UNKNOWN'),
         severity: safeDiag.severity === DIAGNOSTIC_SEVERITY.ERROR
             ? DIAGNOSTIC_SEVERITY.ERROR
@@ -8685,6 +8696,7 @@ function problemKey(problem) {
     const safe = problem && typeof problem === 'object' ? problem : {};
     return [
         String(safe.code || ''),
+        String(safe.source || ''),
         String(safe.severity || ''),
         String(safe.startLineNumber || 1),
         String(safe.startColumn || 1),
@@ -8699,6 +8711,7 @@ function locateIssueForProblem(problem) {
     }
     const found = state.activeIssues.find((item) => {
         return String(item.code || '') === String(problem.code || '')
+            && String(item.source || '') === String(problem.source || '')
             && Number(item.startLineNumber || 1) === Number(problem.startLineNumber || 1)
             && Number(item.startColumn || 1) === Number(problem.startColumn || 1)
             && String(item.message || '') === String(problem.message || '');
@@ -8804,6 +8817,7 @@ function normalizeProblems(diags) {
     return (Array.isArray(diags) ? diags : [])
         .filter((item) => item && (item.severity === DIAGNOSTIC_SEVERITY.ERROR || item.severity === DIAGNOSTIC_SEVERITY.WARNING))
         .map((item) => ({
+            source: normalizeIssueSource(item.source, item.code),
             code: String(item.code || 'RULE_UNKNOWN'),
             severity: item.severity === DIAGNOSTIC_SEVERITY.ERROR ? DIAGNOSTIC_SEVERITY.ERROR : DIAGNOSTIC_SEVERITY.WARNING,
             message: String(item.message || ''),
@@ -8861,11 +8875,12 @@ function renderProblems(diags) {
         const item = document.createElement('li');
         item.className = 'problem-item';
         item.setAttribute('data-severity', problem.severity);
+        item.setAttribute('data-source', problem.source);
         const key = problemKey(problem);
         item.dataset.problemKey = key;
         state.issueByProblemKey.set(key, locateIssueForProblem(problem) || {
             ...problem,
-            source: issueSourceFromCode(problem.code),
+            source: normalizeIssueSource(problem.source, problem.code),
             fileId: String((getActiveFile() && getActiveFile().id) || ''),
             filePath: String((getActiveFile() && getActiveFile().path) || '')
         });
@@ -8884,6 +8899,10 @@ function renderProblems(diags) {
         severity.className = 'problem-severity';
         severity.textContent = problem.severity === DIAGNOSTIC_SEVERITY.ERROR ? 'error' : 'warning';
 
+        const source = document.createElement('span');
+        source.className = 'problem-source';
+        source.textContent = problem.source;
+
         const code = document.createElement('span');
         code.className = 'problem-code';
         code.textContent = problem.code;
@@ -8897,6 +8916,7 @@ function renderProblems(diags) {
         message.textContent = problem.message;
 
         btn.appendChild(severity);
+        btn.appendChild(source);
         btn.appendChild(code);
         btn.appendChild(loc);
         btn.appendChild(message);

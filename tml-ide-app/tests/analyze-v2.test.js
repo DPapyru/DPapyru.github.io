@@ -586,3 +586,59 @@ test('Analyze v2 completion supports more than 200 members for large tML-like ty
     assert.ok(labels.includes('Member259'));
     assert.ok(labels.length >= 260);
 });
+
+test('Analyze v2 member completion emits ranking metadata for UI decisions', () => {
+    const index = createAnalyzeIndex();
+    const source = [
+        'using Terraria;',
+        '',
+        'public class Demo {',
+        '    void Test(Player player) {',
+        '        player.',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const offset = source.indexOf('player.') + 'player.'.length;
+    const result = analyzeV2WithIndex(index, {
+        text: source,
+        offset,
+        maxItems: 120,
+        features: { completion: true, hover: false, diagnostics: false }
+    });
+
+    const candidate = (result.completionItems || []).find((item) => item.label === 'HeldItem');
+    assert.ok(candidate);
+    assert.equal(candidate.source, 'member');
+    assert.equal(candidate.ownerType, 'Terraria.Player');
+    assert.equal(typeof candidate.score, 'number');
+    assert.equal(typeof candidate.matchKind, 'string');
+    assert.equal(typeof candidate.confidence, 'number');
+});
+
+test('Analyze v2 rule diagnostics emits source and actionable hint metadata', () => {
+    const index = createAnalyzeIndex();
+    const source = [
+        'using Terraria;',
+        '',
+        'public class Demo {',
+        '    void Test(Player player) {',
+        '        player.AddBuff(1)',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const result = analyzeV2WithIndex(index, {
+        text: source,
+        offset: source.indexOf('AddBuff') + 'AddBuff'.length,
+        maxItems: 120,
+        features: { completion: false, hover: false, diagnostics: true }
+    });
+
+    const semicolon = (result.diagnosticsRule || []).find((item) => item.code === 'RULE_MISSING_SEMICOLON');
+    assert.ok(semicolon);
+    assert.equal(semicolon.source, 'rule');
+    assert.equal(typeof semicolon.confidence, 'number');
+    assert.ok(Array.isArray(semicolon.hintIds));
+    assert.ok(semicolon.hintIds.includes('rule.add-semicolon'));
+});

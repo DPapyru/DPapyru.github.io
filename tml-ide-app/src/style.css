@@ -1921,6 +1921,38 @@ button:disabled {
     color: #ffce7a;
 }
 
+.problem-source {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    border: 1px solid var(--vscode-border-soft);
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-size: 10px;
+    line-height: 1.2;
+    color: #bdbdbd;
+    background: #2b2b2b;
+    text-transform: lowercase;
+}
+
+.problem-item[data-source="rule"] .problem-source {
+    border-color: #3f495d;
+    color: #b8d0ff;
+    background: #222a38;
+}
+
+.problem-item[data-source="roslyn"] .problem-source {
+    border-color: #345150;
+    color: #9ce3db;
+    background: #1e3232;
+}
+
+.problem-item[data-source="shader"] .problem-source {
+    border-color: #5a3f2a;
+    color: #ffd5ad;
+    background: #352818;
+}
+
 .problem-code {
     color: #9ed4ff;
     font-size: 11px;

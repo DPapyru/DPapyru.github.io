@@ -16,6 +16,34 @@ function issueKey(issue) {
     ].join('|');
 }
 
+export function isAutoIssueEligible(issue) {
+    const safe = issue && typeof issue === 'object' ? issue : {};
+    const severity = String(safe.severity || '').toLowerCase();
+    return severity === 'warning' || severity === 'error';
+}
+
+export function shouldAutoOpenIssue(input) {
+    const safe = input && typeof input === 'object' ? input : {};
+    const targetIssue = safe.issue && typeof safe.issue === 'object' ? safe.issue : null;
+    if (!isAutoIssueEligible(targetIssue)) return false;
+
+    const key = issueKey(targetIssue);
+    if (!key) return false;
+
+    const isOpen = safe.isOpen === true;
+    const lastOpenReason = String(safe.lastOpenReason || '');
+    const lastAutoIssueKey = String(safe.lastAutoIssueKey || '');
+    if (isOpen && lastOpenReason === 'auto' && lastAutoIssueKey === key) {
+        return false;
+    }
+
+    const nowMs = Math.max(0, toNumber(safe.nowMs, Date.now()));
+    const cooldownMs = Math.max(0, toNumber(safe.cooldownMs, 1200));
+    const lastOpenedAtByKey = safe.lastOpenedAtByKey instanceof Map ? safe.lastOpenedAtByKey : new Map();
+    const lastOpenedAt = Math.max(0, toNumber(lastOpenedAtByKey.get(key), 0));
+    return (nowMs - lastOpenedAt) >= cooldownMs;
+}
+
 function clampToViewport(root, x, y) {
     const safeX = Math.max(0, toNumber(x, 0));
     const safeY = Math.max(0, toNumber(y, 0));
@@ -50,6 +78,7 @@ export function createFixPopupController(options) {
     const onShowProblems = typeof opts.onShowProblems === 'function' ? opts.onShowProblems : () => {};
     const onCopyText = typeof opts.onCopyText === 'function' ? opts.onCopyText : async () => false;
     const autoDelay = Math.max(120, toNumber(opts.autoDelay, 300));
+    const autoCooldown = Math.max(0, toNumber(opts.autoCooldown, 1200));
 
     const state = {
         open: false,
@@ -60,7 +89,8 @@ export function createFixPopupController(options) {
         selectedIndex: 0,
         autoTimer: 0,
         lastAutoIssueKey: '',
-        lastOpenReason: ''
+        lastOpenReason: '',
+        lastAutoOpenedAtByKey: new Map()
     };
 
     function cancelAuto() {
@@ -215,6 +245,13 @@ export function createFixPopupController(options) {
         state.suggestions = suggestions;
         state.selectedIndex = 0;
         state.lastOpenReason = reason;
+        if (reason === 'auto') {
+            const key = issueKey(issue);
+            if (key) {
+                state.lastAutoIssueKey = key;
+                state.lastAutoOpenedAtByKey.set(key, Date.now());
+            }
+        }
 
         root.hidden = false;
         root.setAttribute('aria-hidden', 'false');
@@ -253,7 +290,7 @@ export function createFixPopupController(options) {
             state.autoTimer = 0;
             const resolved = resolveIssueAtCursor({
                 allowInfo: false,
-                preferCurrent: true,
+                preferCurrent: false,
                 closeWhenMissing: false
             }) || null;
             if (!resolved || !resolved.issue) {
@@ -262,11 +299,17 @@ export function createFixPopupController(options) {
                 }
                 return;
             }
-            const key = issueKey(resolved.issue);
-            if (key && key === state.lastAutoIssueKey && state.open && state.lastOpenReason === 'auto') {
+            if (!shouldAutoOpenIssue({
+                issue: resolved.issue,
+                isOpen: state.open,
+                lastOpenReason: state.lastOpenReason,
+                lastAutoIssueKey: state.lastAutoIssueKey,
+                lastOpenedAtByKey: state.lastAutoOpenedAtByKey,
+                nowMs: Date.now(),
+                cooldownMs: autoCooldown
+            })) {
                 return;
             }
-            state.lastAutoIssueKey = key;
             open({
                 issue: resolved.issue,
                 x: resolved.x,
