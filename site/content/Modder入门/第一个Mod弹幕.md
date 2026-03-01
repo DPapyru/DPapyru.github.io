@@ -12,10 +12,6 @@ colors:
   Mad: "#ff5430"
 ---
 
-> 这里塞一个Shader作为测试
-
-[Shader 说明](fx:./shader/TestShader.fx)
-
 # 前言
 
 > ***倾听我们阴暗的振翅声……我们在阴影中筑巢***
@@ -38,14 +34,17 @@ colors:
 
 ## `SetDefaults()`
 
+[弹幕设置](cs:./code/firstproj.cs#cs:m:ExMod.Content.Projectiles.FirstProj.SetDefaults)
+
 ## `AI()`
 
 # AI教学前置-数学中的向量详解
 
 ## 向量基础介绍
 
-{{anim:anims/vector-basic.cs}}
+[动画1](anim:anims/vector-basic.cs)
 
 ## 向量合成和分解
 
-{{anim:anims/vector-add-resolution.cs}}
+[动画2](anim:anims/vector-add-resolution.cs)
+
