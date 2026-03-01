@@ -100,10 +100,19 @@ jobs:
         run: |
           echo "Preparing build directory for GitHub Pages"
           mkdir -p ./build
-          # 复制所有文件和目录，除了build目录本身
-          find . -maxdepth 1 -not -name "." -not -name "./build" -exec cp -r {} ./build/ \;
-          rm -rf ./build/.git
-          rm -rf ./build/.github
+          # 复制发布文件，排除依赖与缓存目录，避免上传阶段打包瞬时文件失败
+          rsync -a --delete \
+            --exclude 'build/' \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.worktrees/' \
+            --exclude 'node_modules/' \
+            --exclude 'site-app/node_modules/' \
+            --exclude 'tml-ide-app/node_modules/' \
+            --exclude '.pnpm-store/' \
+            --exclude 'tmp-playwright/' \
+            --exclude 'test-results/' \
+            ./ ./build/
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
