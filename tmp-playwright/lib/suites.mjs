@@ -243,7 +243,7 @@ function buildIdeScenarios() {
                 let deletePath = '';
 
                 await step('prepare-tree-and-added-file', async () => {
-                    await ensureIdeFiles(page, ['怎么贡献/scm-badge-added.md']);
+                    await ensureIdeFiles(page, ['如何贡献/scm-badge-added.md']);
                     const picked = await page.evaluate(async () => {
                         let changed = true;
                         let guard = 0;
@@ -264,7 +264,7 @@ function buildIdeScenarios() {
                             .filter(Boolean)
                             .filter((path, index, list) => list.indexOf(path) === index);
                         const textPaths = repoPaths.filter((path) => /\.(?:md|cs|animcs|fx)$/i.test(path));
-                        const addedPath = '怎么贡献/scm-badge-added.md';
+                        const addedPath = '如何贡献/scm-badge-added.md';
 
                         function toContentPath(pathValue) {
                             return '/site/content/' + String(pathValue || '')

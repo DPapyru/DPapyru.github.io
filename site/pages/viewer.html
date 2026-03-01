@@ -1081,7 +1081,7 @@
 		                    <h3 class="sidebar-title">贡献者</h3>
 		                    <div class="contributors">
 		                        <p>欢迎参与贡献！</p>
-                        <a href="viewer.html?file=怎么贡献/教学文章写作指南.md" class="btn btn-small">如何贡献</a>
+                        <a href="viewer.html?file=如何贡献/教学文章写作指南.md" class="btn btn-small">如何贡献</a>
                     </div>
                 </div>
             </div>
@@ -1163,7 +1163,7 @@
 	                    <div class="tutorial-navigation">
                         <a href="folder.html" class="btn btn-outline prev-tutorial">← 返回文档列表</a>
 	                        <a href="?file=Modder入门/DPapyru-从这里开始.md" class="btn btn-secondary">查看教程</a>
-                        <a href="?file=怎么贡献/教学文章写作指南.md" class="btn btn-primary next-tutorial">贡献指南 →</a>
+                        <a href="?file=如何贡献/教学文章写作指南.md" class="btn btn-primary next-tutorial">贡献指南 →</a>
                     </div>
                     <!-- 教程反馈：用户反馈和问题提交 -->
                     <div class="tutorial-feedback">
@@ -4514,7 +4514,7 @@
                     // 转换分类格式以匹配viewer.html的期望
                     Object.keys(categories).forEach(categoryKey => {
                         const category = categories[categoryKey];
-                        const isSpecial = ["怎么贡献", "Modder入门"].includes(categoryKey);
+                        const isSpecial = ["如何贡献", "Modder入门"].includes(categoryKey);
                         
                         MAIN_CATEGORIES[categoryKey] = {
                             title: category.title,
@@ -4562,7 +4562,7 @@
                 '进阶': '📚',
                 '高级': '🔥',
                 '个人分享': '💡',
-                '怎么贡献': '🤝',
+                '如何贡献': '🤝',
                 'Modder入门': '🎮'
             };
             return iconMap[categoryKey] || '📄';
@@ -4581,7 +4581,7 @@
                 '进阶': '#2196F3',
                 '高级': '#FF5722',
                 '个人分享': '#FFC107',
-                '怎么贡献': '#9C27B0',
+                '如何贡献': '#9C27B0',
                 'Modder入门': '#00BCD4'
             };
             return colorMap[categoryKey] || '#28a745';
@@ -4600,7 +4600,7 @@
                 '进阶': 2,
                 '高级': 3,
                 '个人分享': 4,
-                '怎么贡献': 5,
+                '如何贡献': 5,
                 'Modder入门': 6
             };
             return orderMap[categoryKey] || 999;
@@ -4637,9 +4637,9 @@
                     "color": "#FFC107",
                     "order": 4
                 },
-                "怎么贡献": {
-                    "title": "怎么贡献",
-                    "description": "介绍贡献者应该怎么贡献文章",
+                "如何贡献": {
+                    "title": "如何贡献",
+                    "description": "介绍贡献者应该如何贡献文章",
                     "icon": "🤝",
                     "color": "#9C27B0",
                     "order": 5,
@@ -4739,7 +4739,7 @@
                 settings: {
                     defaultCategory: "入门",
                     defaultTopic: "mod-basics",
-                    specialCategories: ["怎么贡献", "Modder入门"]
+                    specialCategories: ["如何贡献", "Modder入门"]
                 }
             };
 

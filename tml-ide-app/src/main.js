@@ -505,8 +505,8 @@ const OAUTH_TOKEN_KEY = 'articleStudioOAuthToken.v1';
 const OAUTH_USER_KEY = 'articleStudioOAuthUser.v1';
 const DEFAULT_WORKER_API_URL = 'https://greenhome-pr.3577415213.workers.dev/api/create-pr';
 const MARKDOWN_FALLBACK_ANCHORS = Object.freeze([
-    'site/content/怎么贡献/新文章.md',
-    'site/content/怎么贡献/贡献者规范.md',
+    'site/content/如何贡献/新文章.md',
+    'site/content/如何贡献/贡献者规范.md',
     'site/content/基础概念/教程结构说明.md'
 ]);
 const MARKDOWN_PASTE_MAX_IMAGE_SIZE = 2 * 1024 * 1024;
@@ -6576,6 +6576,45 @@ function parseMarkdownDraftPayload(rawText) {
     };
 }
 
+function markdownLineHasProtocolEmbedLink(lineText) {
+    const source = String(lineText || '');
+    if (!source) return false;
+    const parseEmbedHref = markdownEmbedLinksApi && typeof markdownEmbedLinksApi.parseEmbedHref === 'function'
+        ? markdownEmbedLinksApi.parseEmbedHref
+        : null;
+    if (!parseEmbedHref) return false;
+
+    let index = 0;
+    while (index < source.length) {
+        const open = source.indexOf('[', index);
+        if (open < 0) break;
+        const close = source.indexOf(']', open + 1);
+        if (close < 0) break;
+        let cursor = close + 1;
+        while (cursor < source.length && /\s/.test(source[cursor])) cursor += 1;
+        if (source[cursor] !== '(') {
+            index = close + 1;
+            continue;
+        }
+        cursor += 1;
+        const hrefStart = cursor;
+        let depth = 1;
+        while (cursor < source.length && depth > 0) {
+            const ch = source[cursor];
+            if (ch === '(') depth += 1;
+            if (ch === ')') depth -= 1;
+            cursor += 1;
+        }
+        if (depth !== 0) break;
+        const href = source.slice(hrefStart, cursor - 1).trim();
+        if (parseEmbedHref(href)) {
+            return true;
+        }
+        index = cursor;
+    }
+    return false;
+}
+
 function runMarkdownDraftCheck(markdownText) {
     const text = String(markdownText || '').replace(/\r\n/g, '\n');
     const errors = [];
@@ -6605,6 +6644,15 @@ function runMarkdownDraftCheck(markdownText) {
     if (/\b(?:TODO|TBD)\b|待补充|占位/i.test(text)) {
         warnings.push('检测到占位词（TODO/TBD/待补充），发布前请清理。');
     }
+    if (/\{\{(?:cs|anim|ref):/i.test(text)) {
+        errors.push('检测到旧语法 `{{cs:...}}/{{anim:...}}/{{ref:...}}`，请改为 `[]()` 协议链接语法。');
+    }
+    if (/\[\s*]\(\s*\)/.test(text)) {
+        errors.push('检测到空链接 `[]()`，请补齐链接文本与目标。');
+    }
+    if (/\[[^\]\n\r]+\]\(\s*\)/.test(text)) {
+        errors.push('检测到空目标链接 `[文本]()`，请补齐目标路径。');
+    }
     const imageRefs = Array.from(text.matchAll(/!\[[^\]]*]\(([^)]+)\)/g)).map((item) => String(item[1] || '').trim());
     imageRefs.forEach((ref) => {
         if (!ref) return;
@@ -6613,6 +6661,17 @@ function runMarkdownDraftCheck(markdownText) {
             warnings.push(`图片路径包含空格：${ref}`);
         }
     });
+    const parser = markdownEmbedLinksApi && typeof markdownEmbedLinksApi.parseStandaloneEmbedLink === 'function'
+        ? markdownEmbedLinksApi.parseStandaloneEmbedLink
+        : null;
+    if (parser) {
+        const lines = text.split('\n');
+        lines.forEach((line, idx) => {
+            if (!markdownLineHasProtocolEmbedLink(line)) return;
+            if (parser(line)) return;
+            warnings.push(`第 ${idx + 1} 行协议链接未独占一行：嵌入不会触发。`);
+        });
+    }
 
     const lines = [];
     lines.push(`[${nowStamp()}] 发布前自检结果`);

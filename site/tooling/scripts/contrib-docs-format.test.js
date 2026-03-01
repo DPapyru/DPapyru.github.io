@@ -4,8 +4,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const TARGET_FILES = [
-    path.resolve('site/content/怎么贡献/使用网页特殊动画模块.md'),
-    path.resolve('site/content/怎么贡献/在线写作IDE使用教程.md')
+    path.resolve('site/content/如何贡献/使用网页特殊动画模块.md'),
+    path.resolve('site/content/如何贡献/在线写作IDE使用教程.md')
 ];
 
 function hasBrokenNestedAnimcsFence(text) {
@@ -21,7 +21,7 @@ test('contrib docs avoid broken nested animcs fences', () => {
 });
 
 test('vertex draw section includes live animcs demo and key draw calls', () => {
-    const source = fs.readFileSync(path.resolve('site/content/怎么贡献/使用网页特殊动画模块.md'), 'utf8');
+    const source = fs.readFileSync(path.resolve('site/content/如何贡献/使用网页特殊动画模块.md'), 'utf8');
 
     assert.match(source, /##\s*顶点绘制\s*\+\s*FX（首版）/);
     assert.match(source, /```animcs\s*\nanims\/fna-vertex-demo\.cs\s*\n```/m);

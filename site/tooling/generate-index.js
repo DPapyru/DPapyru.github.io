@@ -25,7 +25,7 @@ class ConfigManager {
         this.configPath = configPath;
         this.config = null;
         this.defaultConfig = this.getDefaultConfig();
-        this.specialCategories = ['怎么贡献', 'Modder入门'];
+        this.specialCategories = ['如何贡献', 'Modder入门'];
         this.categoryMappings = {
             '入门': 'getting-started',
             '基础概念': 'basic-concepts',
@@ -67,9 +67,9 @@ class ConfigManager {
                     description: '社区成员的个人经验和技巧分享',
                     topics: {}
                 },
-                '怎么贡献': {
-                    title: '怎么贡献',
-                    description: '介绍贡献者应该怎么贡献文章',
+                '如何贡献': {
+                    title: '如何贡献',
+                    description: '介绍贡献者应该如何贡献文章',
                     topics: {}
                 },
                 'Modder入门': {

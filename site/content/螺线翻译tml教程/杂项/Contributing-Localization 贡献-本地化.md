@@ -104,7 +104,7 @@ To test a translation mod, first make sure the original mod is enabled, then bui
 Once you have checked over everything and made necessary changes, you'll want to publish your localization. This step also depends on which localization approach you are using. 
 
 ### GitHub
-If you are familiar with GitHub, or want to learn how, you can make a pull request. More info on how to work with GitHub is found in the []() section below. If learning to use GitHub is too much work, there are other ways to contact the author with your translations. One simple way is to make an Issue on their GitHub page and post the files there. If you intend to localize many mods, it may be worth it to learn the basics of GitHub. 
+If you are familiar with GitHub, or want to learn how, you can make a pull request. More info on how to work with GitHub is found in the GitHub section below. If learning to use GitHub is too much work, there are other ways to contact the author with your translations. One simple way is to make an Issue on their GitHub page and post the files there. If you intend to localize many mods, it may be worth it to learn the basics of GitHub. 
 
 ### Contact Mod Developer
 Send the finished files to the mod developer. The mod developer will then use your files in their code. The mod developer might want to track translation credits in a comment at the top of their English translation file, and also on their workshop homepage.

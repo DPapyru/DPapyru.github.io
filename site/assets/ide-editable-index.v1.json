@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "root": "site/content",
-  "generatedAt": "2026-02-28T21:50:24.233Z",
+  "generatedAt": "2026-03-01T04:29:02.872Z",
   "files": [
     {
       "path": "Modder入门/code/firstclass_makefirstweapon.cs",
@@ -128,27 +128,35 @@
       "kind": "markdown"
     },
     {
-      "path": "怎么贡献/ContentProjects解决方案说明.md",
+      "path": "如何贡献/ContentProjects解决方案说明.md",
       "kind": "markdown"
     },
     {
-      "path": "怎么贡献/shaders/demo.fx",
+      "path": "如何贡献/Markdown新语法功能验证.md",
+      "kind": "markdown"
+    },
+    {
+      "path": "如何贡献/code/MarkdownSyntaxDemo.cs",
+      "kind": "csharp"
+    },
+    {
+      "path": "如何贡献/shaders/demo.fx",
       "kind": "shaderfx"
     },
     {
-      "path": "怎么贡献/使用网页特殊动画模块.md",
+      "path": "如何贡献/使用网页特殊动画模块.md",
       "kind": "markdown"
     },
     {
-      "path": "怎么贡献/在线写作IDE使用教程.md",
+      "path": "如何贡献/在线写作IDE使用教程.md",
       "kind": "markdown"
     },
     {
-      "path": "怎么贡献/教学文章写作指南.md",
+      "path": "如何贡献/教学文章写作指南.md",
       "kind": "markdown"
     },
     {
-      "path": "怎么贡献/站点Markdown扩展语法说明.md",
+      "path": "如何贡献/站点Markdown扩展语法说明.md",
       "kind": "markdown"
     },
     {

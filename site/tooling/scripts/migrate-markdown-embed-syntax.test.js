@@ -22,6 +22,11 @@ test('migration line conversion rewrites legacy cs/anim directives to protocol l
     );
 
     assert.equal(
+        migrateLine('{{cs:./Demo.cs#cs:m:Foo.Bar.Baz(int,string)|方法示例}}'),
+        '[方法示例](cs:./Demo.cs#cs:m:Foo.Bar.Baz(int,string))'
+    );
+
+    assert.equal(
         migrateLine('    {{anim:anims/demo-basic.cs}}'),
         '    [待补充说明](anims:anims/demo-basic.cs)'
     );

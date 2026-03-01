@@ -36,7 +36,7 @@ test('markdown collector exports main markdown and uploaded assets', () => {
     };
 
     globalThis.document = installDom({
-        'studio-target-path': '怎么贡献/综合IDE-验收.md',
+        'studio-target-path': '如何贡献/综合IDE-验收.md',
         'studio-markdown': '# demo markdown',
         'studio-pr-worker-url': 'https://example.com/api/create-pr',
         'studio-pr-title': 'docs: markdown collect'
@@ -45,13 +45,13 @@ test('markdown collector exports main markdown and uploaded assets', () => {
         'articleStudioMarkdown.v9': JSON.stringify({
             uploadedImages: [
                 {
-                    assetPath: '怎么贡献/imgs/demo.png',
+                    assetPath: '如何贡献/imgs/demo.png',
                     base64: 'AAA='
                 }
             ],
             uploadedCsharpFiles: [
                 {
-                    assetPath: '怎么贡献/code/Demo.cs',
+                    assetPath: '如何贡献/code/Demo.cs',
                     content: 'public class Demo {}'
                 }
             ]
@@ -65,7 +65,7 @@ test('markdown collector exports main markdown and uploaded assets', () => {
     const snapshot = collectMarkdownWorkspaceSnapshot();
 
     assert.equal(snapshot.workspace, 'markdown');
-    assert.equal(snapshot.targetPath, 'site/content/怎么贡献/综合IDE-验收.md');
+    assert.equal(snapshot.targetPath, 'site/content/如何贡献/综合IDE-验收.md');
     assert.equal(snapshot.markdown, '# demo markdown');
     assert.equal(snapshot.files.length, 3);
     assert.equal(snapshot.files[0].isMainMarkdown, true);

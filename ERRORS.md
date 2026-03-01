@@ -2459,3 +2459,25 @@
 **备注**：
 - 本次修复在工作树 `/mnt/f/DPapyru.github.io/.worktrees/fix-viewer-fxembed-viewport-width-restore` 实施，目标改动仅 `site/pages/viewer.html` 与 `site/tooling/scripts/viewer-shader-editor-parity.test.js`。
 - 运行 `build/check-generated` 期间产生的非目标生成/行尾副作用已回收，不纳入本次改动。
+
+### 验证记录 [2026-03-01 12:13]：`[]()` 统一语法迁移与文章内嵌入调试截图复验
+
+**级别**：L3（跨模块 + 内容 + 构建链路）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/markdown-ref-standard-links.test.js site/tooling/scripts/migrate-markdown-embed-syntax.test.js site/tooling/scripts/contrib-docs-format.test.js`：通过（9/9）
+- `node --test shared/specs/viewer-shell.test.js shared/specs/legacy-route-resolver.test.js shared/specs/doc-tree-service.test.js tml-ide-app/tests/workspace-store.test.js tml-ide-app/tests/workspace-collectors.test.js`：通过（16/16）
+- `npm run build`：通过（完整跑通 `generate-index`、`build:anims`、`site-app`、`tml-ide-app`）
+- `npm run check-generated`：失败（末尾 `git diff --exit-code` 未通过，存在本工作树差异）
+- `node site/tooling/scripts/check-content.js`：失败（132 errors + 1 warning；warning 为 `site/content/如何贡献/站点Markdown扩展语法说明.md:284` 协议链接未独占一行）
+
+**调试截图检查**：
+- 本地静态服务：`python3 -m http.server 4173`（工作树根目录）
+- 访问页：`/site/pages/viewer.html?file=如何贡献/Markdown新语法功能验证.md`
+- 结果：首屏、`C# 引用验证`、`动画引用验证`、`Shader 引用验证` 区段均已截图核对；页面 DOM 查询确认：
+  - `fx` 卡片路径为 `如何贡献/shaders/demo.fx`
+  - 动画嵌入容器存在（`anims/demo-basic.cs`）
+  - 方法签名 `ComputeDamage(int level, string weaponTag)` 在正文中出现（含 `cs:m` 原始括号与编码括号用例展开）
+
+**备注**：
+- 本轮将 `site/content/如何贡献/Markdown新语法功能验证.md` 中会触发空链接规则的字面量 `[]()` 改为 `[文本](目标)` 表达，避免新增内容检查错误。

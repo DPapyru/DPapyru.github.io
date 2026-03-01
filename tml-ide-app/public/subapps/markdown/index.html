@@ -173,14 +173,14 @@
 
                             <div class="studio-panel-section">
                                 <label for="studio-target-path">目标路径</label>
-                                <input id="studio-target-path" class="studio-input" type="text" value="怎么贡献/新文章.md" placeholder="例如：怎么贡献/新文章.md">
+                                <input id="studio-target-path" class="studio-input" type="text" value="如何贡献/新文章.md" placeholder="例如：如何贡献/新文章.md">
                                 <button id="studio-load-path" class="btn btn-small btn-outline" type="button">按路径载入</button>
                             </div>
 
                             <div class="studio-panel-section">
                                 <label>新建目录</label>
                                 <label for="studio-directory-parent">父目录</label>
-                                <input id="studio-directory-parent" class="studio-input" type="text" value="怎么贡献" placeholder="例如：怎么贡献">
+                                <input id="studio-directory-parent" class="studio-input" type="text" value="如何贡献" placeholder="例如：如何贡献">
                                 <label for="studio-new-directory-name">目录名</label>
                                 <input id="studio-new-directory-name" class="studio-input" type="text" placeholder="例如：进阶篇">
                                 <button id="studio-create-directory" class="btn btn-small btn-outline" type="button">创建目录并切换</button>
@@ -287,7 +287,7 @@
                                 <span class="studio-commandline-item">●</span>
                                 <span class="studio-commandline-item">○</span>
                                 <span class="studio-commandline-item">△</span>
-                                <span class="studio-commandline-path">site › content › <span id="studio-breadcrumb-path">怎么贡献/新文章.md</span></span>
+                                <span class="studio-commandline-path">site › content › <span id="studio-breadcrumb-path">如何贡献/新文章.md</span></span>
                             </div>
                             <div class="studio-workbench">
                                 <section class="studio-editor-area">
@@ -348,7 +348,7 @@
                                     </div>
 
                                     <div class="studio-editor-breadcrumb">
-                                        <span class="studio-editor-breadcrumb-path">site/content/<span id="studio-editor-path">怎么贡献/新文章.md</span></span>
+                                        <span class="studio-editor-breadcrumb-path">site/content/<span id="studio-editor-path">如何贡献/新文章.md</span></span>
                                     </div>
 
                                     <div class="studio-panes">
@@ -368,7 +368,7 @@
 
                                     <div class="studio-statusbar">
                                         <span id="studio-status">就绪</span>
-                                        <span id="studio-current-path">目标: 怎么贡献/新文章.md</span>
+                                        <span id="studio-current-path">目标: 如何贡献/新文章.md</span>
                                         <span id="studio-anim-bridge-status">AnimBridge: 未连接</span>
                                         <span id="studio-anim-compile-status">Anim预览: 未激活</span>
                                         <span id="studio-stats">0 行 · 0 字</span>
@@ -743,19 +743,19 @@ colorChange:
 
                     <section class="studio-guide-section">
                         <h4>4. C# 引用指令（完整）</h4>
-                        <pre><code>{{cs:./code/Demo.cs}}
-{{cs:./code/Demo.cs#cs:t:命名空间.类型名|类型示例}}
-{{cs:./code/Demo.cs#cs:m:命名空间.类型名.方法名(参数类型)|方法示例}}
-{{cs:./code/Demo.cs#cs:p:命名空间.类型名.属性名|属性示例}}
-{{cs:./code/Demo.cs#cs:f:命名空间.类型名.字段名|字段示例}}
-{{cs:./code/Demo.cs#cs:c:命名空间.类型名.常量名|常量示例}}
-{{cs:./code/Demo.cs#cs:e:命名空间.枚举类型.成员名|枚举成员示例}}</code></pre>
-                        <p>推荐先上传 C# 文件，再用“插入符号引用”按钮生成精确选择器。</p>
+                        <pre><code>[源文件](cs:./code/Demo.cs)
+[类型示例](cs:./code/Demo.cs#cs:t:命名空间.类型名)
+[方法示例](cs:./code/Demo.cs#cs:m:命名空间.类型名.方法名(参数类型))
+[属性示例](cs:./code/Demo.cs#cs:p:命名空间.类型名.属性名)
+[字段示例](cs:./code/Demo.cs#cs:f:命名空间.类型名.字段名)
+[常量示例](cs:./code/Demo.cs#cs:c:命名空间.类型名.常量名)
+[枚举成员示例](cs:./code/Demo.cs#cs:e:命名空间.枚举类型.成员名)</code></pre>
+                        <p>协议链接必须独占一行才能触发嵌入渲染；推荐先上传 C# 文件，再用“插入符号引用”按钮生成精确选择器。</p>
                     </section>
 
                     <section class="studio-guide-section">
                         <h4>5. 动画语法（两种）</h4>
-                        <pre><code>{{anim:anims/demo-basic.cs}}
+                        <pre><code>[待补充说明](anims:anims/demo-basic.cs)
 
 ```animcs
 anims/demo-basic.cs

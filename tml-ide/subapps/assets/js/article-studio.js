@@ -180,7 +180,7 @@
 
     const state = {
         markdown: '',
-        targetPath: '怎么贡献/新文章.md',
+        targetPath: '如何贡献/新文章.md',
         workerApiUrl: DEFAULT_PR_WORKER_API_URL,
         prTitle: '',
         lastPrUrl: '',
@@ -402,6 +402,7 @@
             const hrefRaw = String(match[2] || '').trim();
             if (!hrefRaw) continue;
             const href = hrefRaw.split(/\s+/)[0];
+            if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(href)) continue;
             const resolvedPath = normalizeExplorerAssetPathForIndex(href, baseMarkdownPath);
             if (!resolvedPath || /\.md$/i.test(resolvedPath)) continue;
             const kind = inferExplorerAssetKindForIndex(resolvedPath);
@@ -409,25 +410,25 @@
             pushRef(kind, resolvedPath);
         }
 
-        const csRegex = /\{\{cs:([^}\n]+)\}\}/g;
-        let csMatch = null;
-        while ((csMatch = csRegex.exec(source)) !== null) {
-            const parsed = parseCsDirective(csMatch[1]);
-            if (!parsed || !parsed.pathPart) continue;
-            const resolvedPath = normalizeExplorerAssetPathForIndex(parsed.pathPart, baseMarkdownPath);
-            if (!resolvedPath || !/\.cs$/i.test(resolvedPath)) continue;
-            pushRef('csharp', resolvedPath);
-        }
+        source.split(/\r?\n/).forEach(function (line) {
+            const embed = parseStandaloneProtocolEmbedLine(line);
+            if (!embed) return;
 
-        const animRegex = /\{\{anim:([^}\n]+)\}\}/g;
-        let animMatch = null;
-        while ((animMatch = animRegex.exec(source)) !== null) {
-            const rawPath = String(animMatch[1] || '').trim();
-            if (!rawPath) continue;
-            const resolvedPath = normalizePath(rawPath).replace(/^\.\//, '');
-            if (!isAnimSourcePath(resolvedPath)) continue;
-            pushRef('csharp', resolvedPath);
-        }
+            if (embed.kind === 'cs') {
+                const parsed = parseCsDirective(embed.target);
+                if (!parsed || !parsed.pathPart) return;
+                const resolvedPath = normalizeExplorerAssetPathForIndex(parsed.pathPart, baseMarkdownPath);
+                if (!resolvedPath || !/\.cs$/i.test(resolvedPath)) return;
+                pushRef('csharp', resolvedPath);
+                return;
+            }
+
+            if (embed.kind === 'anims') {
+                const resolvedPath = normalizePath(String(embed.target || '')).replace(/^\.\//, '');
+                if (!isAnimSourcePath(resolvedPath)) return;
+                pushRef('csharp', resolvedPath);
+            }
+        });
 
         const animcsRegex = /```animcs\s*([\s\S]*?)```/g;
         let animcsMatch = null;
@@ -651,7 +652,7 @@
         let value = normalizePath(input);
 
         if (!value) {
-            return '怎么贡献/新文章.md';
+            return '如何贡献/新文章.md';
         }
 
         if (value.endsWith('/')) {
@@ -2731,7 +2732,7 @@
             insertRef.textContent = '插入引用';
             insertRef.addEventListener('click', function () {
                 const relPath = `./${String(item.assetPath || '').split('/').slice(-2).join('/')}`;
-                insertBlockSnippet(`{{cs:${relPath}}}\n`, relPath);
+                insertBlockSnippet(`[${item.name || '代码说明'}](cs:${relPath})\n`, `cs:${relPath}`);
                 setStatus(`已插入 C# 引用：${item.name}`);
             });
 
@@ -3247,7 +3248,7 @@
             }
 
             const relPath = `./${String(localItem.assetPath || '').split('/').slice(-2).join('/')}`;
-            insertBlockSnippet(`{{cs:${relPath}}}\n`, relPath);
+            insertBlockSnippet(`[${localItem.name || '代码说明'}](cs:${relPath})\n`, `cs:${relPath}`);
         }
 
         refreshCsharpSymbolOptions();
@@ -3806,6 +3807,7 @@
                 const hrefRaw = String(match[1] || '').trim();
                 if (!hrefRaw) continue;
                 const href = hrefRaw.split(/\s+/)[0];
+                if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(href)) continue;
                 const resolvedPath = normalizeExplorerAssetPath(href, baseMarkdownPath);
                 if (!resolvedPath || /\.md$/i.test(resolvedPath)) continue;
                 const kind = inferExplorerAssetKind(resolvedPath);
@@ -3821,42 +3823,43 @@
                 });
             }
 
-            const csRegex = /\{\{cs:([^}\n]+)\}\}/g;
-            let csMatch = null;
-            while ((csMatch = csRegex.exec(source)) !== null) {
-                const parsed = parseCsDirective(csMatch[1]);
-                if (!parsed || !parsed.pathPart) continue;
-                const resolvedPath = normalizeExplorerAssetPath(parsed.pathPart, baseMarkdownPath);
-                if (!resolvedPath || !/\.cs$/i.test(resolvedPath)) continue;
-                const key = `csharp:${resolvedPath}`;
-                if (resourcePathKindSet.has(key)) continue;
-                resourcePathKindSet.add(key);
-                upsertEntry({
-                    key: `ref:csharp:${resolvedPath}`,
-                    path: resolvedPath,
-                    title: getFilenameFromPath(resolvedPath) || resolvedPath,
-                    kind: 'csharp',
-                    resourceId: ''
-                });
-            }
+            source.split(/\r?\n/).forEach(function (line) {
+                const embed = parseStandaloneProtocolEmbedLine(line);
+                if (!embed) return;
 
-            const animRegex = /\{\{anim:([^}\n]+)\}\}/g;
-            let animMatch = null;
-            while ((animMatch = animRegex.exec(source)) !== null) {
-                const rawPath = String(animMatch[1] || '').trim();
-                const resolvedPath = normalizePath(rawPath).replace(/^\.\//, '');
-                if (!isAnimSourcePath(resolvedPath)) continue;
-                const key = `csharp:${resolvedPath}`;
-                if (resourcePathKindSet.has(key)) continue;
-                resourcePathKindSet.add(key);
-                upsertEntry({
-                    key: `ref:csharp:${resolvedPath}`,
-                    path: resolvedPath,
-                    title: getFilenameFromPath(resolvedPath) || resolvedPath,
-                    kind: 'csharp',
-                    resourceId: ''
-                });
-            }
+                if (embed.kind === 'cs') {
+                    const parsed = parseCsDirective(embed.target);
+                    if (!parsed || !parsed.pathPart) return;
+                    const resolvedPath = normalizeExplorerAssetPath(parsed.pathPart, baseMarkdownPath);
+                    if (!resolvedPath || !/\.cs$/i.test(resolvedPath)) return;
+                    const key = `csharp:${resolvedPath}`;
+                    if (resourcePathKindSet.has(key)) return;
+                    resourcePathKindSet.add(key);
+                    upsertEntry({
+                        key: `ref:csharp:${resolvedPath}`,
+                        path: resolvedPath,
+                        title: getFilenameFromPath(resolvedPath) || resolvedPath,
+                        kind: 'csharp',
+                        resourceId: ''
+                    });
+                    return;
+                }
+
+                if (embed.kind === 'anims') {
+                    const resolvedPath = normalizePath(String(embed.target || '')).replace(/^\.\//, '');
+                    if (!isAnimSourcePath(resolvedPath)) return;
+                    const key = `csharp:${resolvedPath}`;
+                    if (resourcePathKindSet.has(key)) return;
+                    resourcePathKindSet.add(key);
+                    upsertEntry({
+                        key: `ref:csharp:${resolvedPath}`,
+                        path: resolvedPath,
+                        title: getFilenameFromPath(resolvedPath) || resolvedPath,
+                        kind: 'csharp',
+                        resourceId: ''
+                    });
+                }
+            });
 
             const animcsRegex = /```animcs\s*([\s\S]*?)```/g;
             let animcsMatch = null;
@@ -4429,7 +4432,7 @@
             index += 1;
         }
 
-        return normalizePath(`${dir || '怎么贡献'}/新文章-${Date.now().toString(36)}.md`);
+        return normalizePath(`${dir || '如何贡献'}/新文章-${Date.now().toString(36)}.md`);
     }
 
     function createDraftFile(pathValue) {
@@ -4623,7 +4626,7 @@
 
         if (resolved.kind === 'csharp') {
             const relPath = buildRelativeResourcePathFromTarget(resolved.item.assetPath || resolved.path || '');
-            insertBlockSnippet(`{{cs:${relPath}}}\n`, relPath);
+            insertBlockSnippet(`[${resolved.item.name || '代码说明'}](cs:${relPath})\n`, `cs:${relPath}`);
             setStatus(`已插入 C# 引用：${resolved.item.name}`);
         }
     }
@@ -4785,7 +4788,7 @@
 
         if (key === 'new-file') {
             const baseDir = getDirectoryFromPath(safePath || state.targetPath || '');
-            const newPath = buildNewDraftPath(baseDir || '怎么贡献');
+            const newPath = buildNewDraftPath(baseDir || '如何贡献');
             createDraftFile(newPath);
             return;
         }
@@ -5170,7 +5173,7 @@
             try {
                 state.targetPath = ensureSafeMarkdownPath(parsed.targetPath || state.targetPath);
             } catch (_) {
-                state.targetPath = '怎么贡献/新文章.md';
+                state.targetPath = '如何贡献/新文章.md';
             }
             state.workerApiUrl = normalizeWorkerApiUrl(parsed.workerApiUrl || state.workerApiUrl);
             state.prTitle = String(parsed.prTitle || state.prTitle || '');
@@ -5254,7 +5257,7 @@
         const titleInput = String(dom.prTitle ? dom.prTitle.value : '').trim();
         const linkedPrNumber = String(state.linkedPrNumber || '').trim();
         const authToken = String(state.authToken || '').trim();
-        const targetPath = normalizePath(state.targetPath || '怎么贡献/新文章.md') || '怎么贡献/新文章.md';
+        const targetPath = normalizePath(state.targetPath || '如何贡献/新文章.md') || '如何贡献/新文章.md';
         const markdown = String(state.markdown || '');
         const stagedMarkdownFiles = buildStagedMarkdownExtraFiles(targetPath, markdown);
         const extraFiles = stagedMarkdownFiles.concat(buildImageExtraFiles(), buildMediaExtraFiles(), buildCSharpExtraFiles());
@@ -5524,7 +5527,7 @@
             try {
                 state.targetPath = ensureSafeMarkdownPath(parsed.targetPath || state.targetPath);
             } catch (_) {
-                state.targetPath = '怎么贡献/新文章.md';
+                state.targetPath = '如何贡献/新文章.md';
             }
             state.workerApiUrl = normalizeWorkerApiUrl(parsed.workerApiUrl || state.workerApiUrl);
             state.prTitle = String(parsed.prTitle || '');
@@ -5951,11 +5954,11 @@
     }
 
     function buildViewerPreviewPayload() {
-        let safeTargetPath = '怎么贡献/新文章.md';
+        let safeTargetPath = '如何贡献/新文章.md';
         try {
             safeTargetPath = ensureSafeMarkdownPath(state.targetPath);
         } catch (_) {
-            safeTargetPath = '怎么贡献/新文章.md';
+            safeTargetPath = '如何贡献/新文章.md';
         }
         return {
             targetPath: safeTargetPath,
@@ -7002,6 +7005,81 @@
         };
     }
 
+    function parseStandaloneProtocolEmbedLine(lineText) {
+        const source = String(lineText || '');
+        const text = source.trim();
+        if (!text || text[0] !== '[') return null;
+
+        let index = 1;
+        const labelStart = index;
+        while (index < text.length && text[index] !== ']') {
+            if (text[index] === '\n' || text[index] === '\r') return null;
+            index += 1;
+        }
+        if (index >= text.length || text[index] !== ']') return null;
+        const label = text.slice(labelStart, index).trim();
+        if (!label) return null;
+        index += 1;
+
+        while (index < text.length && /\s/.test(text[index])) index += 1;
+        if (text[index] !== '(') return null;
+        index += 1;
+
+        const hrefStart = index;
+        let depth = 1;
+        while (index < text.length && depth > 0) {
+            const ch = text[index];
+            if (ch === '\n' || ch === '\r') return null;
+            if (ch === '(') depth += 1;
+            if (ch === ')') depth -= 1;
+            index += 1;
+        }
+        if (depth !== 0) return null;
+
+        const href = text.slice(hrefStart, index - 1).trim();
+        if (!href) return null;
+        if (index !== text.length) {
+            const tail = text.slice(index).trim();
+            if (tail) return null;
+        }
+
+        const protocolMatch = href.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):(.*)$/);
+        if (!protocolMatch) return null;
+        const kindRaw = String(protocolMatch[1] || '').trim().toLowerCase();
+        const target = String(protocolMatch[2] || '').trim();
+        if (!target) return null;
+
+        const kind = kindRaw === 'anim' ? 'anims' : kindRaw;
+        if (kind !== 'cs' && kind !== 'anims' && kind !== 'fx') return null;
+        return {
+            kind: kind,
+            label: label,
+            href: href,
+            target: target
+        };
+    }
+
+    function extractStandaloneProtocolEmbeds(markdownText) {
+        const out = [];
+        const lines = String(markdownText || '').split(/\r?\n/);
+        lines.forEach(function (line, idx) {
+            const parsed = parseStandaloneProtocolEmbedLine(line);
+            if (!parsed) return;
+            out.push({
+                lineNumber: idx + 1,
+                kind: parsed.kind,
+                label: parsed.label,
+                href: parsed.href,
+                target: parsed.target
+            });
+        });
+        return out;
+    }
+
+    function lineContainsProtocolEmbedLink(lineText) {
+        return /\[[^\]\n\r]+\]\((?:cs|anims|anim|fx):/i.test(String(lineText || ''));
+    }
+
     function extractDocLinks(markdownText) {
         const links = [];
         const regex = /(!?)\[[^\]]*]\(([^)]+)\)/g;
@@ -7121,86 +7199,143 @@
             }
         });
 
-        const csRegex = /\{\{cs:([^}\n]+)\}\}/g;
-        let csMatch = null;
-        while ((csMatch = csRegex.exec(markdown)) !== null) {
-            const parsedCs = parseCsDirective(csMatch[1]);
-            if (!parsedCs || !parsedCs.pathPart) {
-                pushDraftIssue(
-                    issues,
-                    'error',
-                    'cs-path-missing',
-                    'C# 引用缺少路径',
-                    '语法示例：{{cs:./code/Demo.cs}}'
-                );
-                continue;
-            }
+        if (/\{\{(?:cs|anim|ref):/i.test(markdown)) {
+            pushDraftIssue(
+                issues,
+                'error',
+                'legacy-embed-syntax',
+                '检测到旧语法',
+                '请将 `{{cs:...}}/{{anim:...}}/{{ref:...}}` 改为 `[]()` 协议链接语法。'
+            );
+        }
 
-            if (!/\.cs$/i.test(parsedCs.pathPart)) {
-                pushDraftIssue(
-                    issues,
-                    'error',
-                    'cs-path-ext-invalid',
-                    `C# 引用扩展名错误：${parsedCs.pathPart}`,
-                    'C# 引用路径必须以 .cs 结尾。'
-                );
-            }
+        if (/\[\s*]\(\s*\)/.test(markdown)) {
+            pushDraftIssue(
+                issues,
+                'error',
+                'empty-link',
+                '检测到空链接 `[]()`',
+                '请补齐链接文本与目标。'
+            );
+        }
+        if (/\[[^\]\n\r]+\]\(\s*\)/.test(markdown)) {
+            pushDraftIssue(
+                issues,
+                'error',
+                'empty-link-target',
+                '检测到空目标链接 `[文本]()`',
+                '请补齐链接目标。'
+            );
+        }
 
-            if (parsedCs.selectorPart && !/^cs:(?:t|m|p|f|c|e):.+$/.test(parsedCs.selectorPart)) {
-                pushDraftIssue(
-                    issues,
-                    'warn',
-                    'cs-selector-invalid',
-                    `C# 选择器格式可疑：${parsedCs.selectorPart}`,
-                    '建议使用 #cs:t: / #cs:m: / #cs:p: / #cs:f: / #cs:c: / #cs:e:。'
-                );
-            }
+        const protocolEmbeds = extractStandaloneProtocolEmbeds(markdown);
+        protocolEmbeds.forEach(function (embed) {
+            if (embed.kind === 'cs') {
+                const parsedCs = parseCsDirective(embed.target);
+                if (!parsedCs || !parsedCs.pathPart) {
+                    pushDraftIssue(
+                        issues,
+                        'error',
+                        'cs-path-missing',
+                        `第 ${embed.lineNumber} 行 C# 引用缺少路径`,
+                        '语法示例：[代码说明](cs:./code/Demo.cs)'
+                    );
+                    return;
+                }
 
-            const localCsharp = Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [];
-            if (localCsharp.length > 0) {
-                const normalizedPath = normalizePath(parsedCs.pathPart).replace(/^\.\//, '');
-                const pathName = normalizedPath.split('/').filter(Boolean).pop() || '';
-                const hitLocal = localCsharp.some(function (item) {
-                    const assetPath = normalizePath(item && item.assetPath || '');
-                    const fileName = String(item && item.name || '').trim();
-                    return assetPath.endsWith(normalizedPath) || fileName === pathName;
-                });
-                if (!hitLocal) {
+                if (!/\.cs$/i.test(parsedCs.pathPart)) {
+                    pushDraftIssue(
+                        issues,
+                        'error',
+                        'cs-path-ext-invalid',
+                        `C# 引用扩展名错误：${parsedCs.pathPart}`,
+                        'C# 引用路径必须以 .cs 结尾。'
+                    );
+                }
+
+                if (parsedCs.selectorPart && !/^cs:(?:t|m|p|f|c|e):.+$/.test(parsedCs.selectorPart)) {
                     pushDraftIssue(
                         issues,
                         'warn',
-                        'cs-local-unmatched',
-                        `当前附件未命中 C# 引用：${parsedCs.pathPart}`,
-                        '若本次提交包含该文件，请确认路径与文件名大小写一致。'
+                        'cs-selector-invalid',
+                        `C# 选择器格式可疑：${parsedCs.selectorPart}`,
+                        '建议使用 #cs:t: / #cs:m: / #cs:p: / #cs:f: / #cs:c: / #cs:e:。'
+                    );
+                }
+
+                const localCsharp = Array.isArray(state.uploadedCsharpFiles) ? state.uploadedCsharpFiles : [];
+                if (localCsharp.length > 0) {
+                    const normalizedPath = normalizePath(parsedCs.pathPart).replace(/^\.\//, '');
+                    const pathName = normalizedPath.split('/').filter(Boolean).pop() || '';
+                    const hitLocal = localCsharp.some(function (item) {
+                        const assetPath = normalizePath(item && item.assetPath || '');
+                        const fileName = String(item && item.name || '').trim();
+                        return assetPath.endsWith(normalizedPath) || fileName === pathName;
+                    });
+                    if (!hitLocal) {
+                        pushDraftIssue(
+                            issues,
+                            'warn',
+                            'cs-local-unmatched',
+                            `当前附件未命中 C# 引用：${parsedCs.pathPart}`,
+                            '若本次提交包含该文件，请确认路径与文件名大小写一致。'
+                        );
+                    }
+                }
+                return;
+            }
+
+            if (embed.kind === 'anims') {
+                const animPathRaw = String(embed.target || '').trim();
+                const animPath = normalizePath(animPathRaw).replace(/^\.\//, '');
+                if (!/^anims\//i.test(animPath)) {
+                    pushDraftIssue(
+                        issues,
+                        'error',
+                        'anim-path-prefix-invalid',
+                        `动画路径必须以 anims/ 开头：${animPathRaw}`,
+                        '示例：[待补充说明](anims:anims/demo-basic.cs)'
+                    );
+                }
+                if (!/\.cs$/i.test(animPath)) {
+                    pushDraftIssue(
+                        issues,
+                        'error',
+                        'anim-path-ext-invalid',
+                        `动画路径扩展名错误：${animPathRaw}`,
+                        '动画引用路径必须以 .cs 结尾。'
+                    );
+                }
+                return;
+            }
+
+            if (embed.kind === 'fx') {
+                const fxPathRaw = String(embed.target || '').trim();
+                const fxPath = normalizePath(fxPathRaw.split('#')[0]).replace(/^\.\//, '');
+                if (!/\.fx$/i.test(fxPath)) {
+                    pushDraftIssue(
+                        issues,
+                        'error',
+                        'fx-path-ext-invalid',
+                        `Shader 路径扩展名错误：${fxPathRaw}`,
+                        'FX 引用路径必须以 .fx 结尾。'
                     );
                 }
             }
-        }
+        });
 
-        const animRegex = /\{\{anim:([^}\n]+)\}\}/g;
-        let animMatch = null;
-        while ((animMatch = animRegex.exec(markdown)) !== null) {
-            const animPathRaw = String(animMatch[1] || '').trim();
-            const animPath = normalizePath(animPathRaw).replace(/^\.\//, '');
-            if (!/^anims\//i.test(animPath)) {
-                pushDraftIssue(
-                    issues,
-                    'error',
-                    'anim-path-prefix-invalid',
-                    `动画路径必须以 anims/ 开头：${animPathRaw}`,
-                    '示例：{{anim:anims/demo-basic.cs}}'
-                );
-            }
-            if (!/\.cs$/i.test(animPath)) {
-                pushDraftIssue(
-                    issues,
-                    'error',
-                    'anim-path-ext-invalid',
-                    `动画路径扩展名错误：${animPathRaw}`,
-                    '动画引用路径必须以 .cs 结尾。'
-                );
-            }
-        }
+        const markdownLines = markdown.split('\n');
+        markdownLines.forEach(function (line, idx) {
+            if (!lineContainsProtocolEmbedLink(line)) return;
+            if (parseStandaloneProtocolEmbedLine(line)) return;
+            pushDraftIssue(
+                issues,
+                'warn',
+                'protocol-embed-inline',
+                `第 ${idx + 1} 行协议链接未独占一行`,
+                '当前仅独占一行的 `[]()` 协议链接会触发嵌入渲染。'
+            );
+        });
 
         const animcsRegex = /```animcs\s*([\s\S]*?)```/g;
         let animcsMatch = null;
@@ -7401,7 +7536,7 @@
     function insertCsharpSelectorSnippet(kind, selectorTemplate, titleFallback) {
         const selectedTitle = toSingleLineText(readCurrentSelectionText(), titleFallback);
         const pathPart = firstUploadedCsharpRelativePath() || './code/你的文件.cs';
-        const snippet = `{{cs:${pathPart}#cs:${kind}:${selectorTemplate}|${selectedTitle}}}\n`;
+        const snippet = `[${selectedTitle}](cs:${pathPart}#cs:${kind}:${selectorTemplate})\n`;
         insertBlockSnippet(snippet, `#cs:${kind}:${selectorTemplate}`);
     }
 
@@ -7443,7 +7578,7 @@
         if (key === 'cs') {
             const selectedTitle = toSingleLineText(readCurrentSelectionText(), '代码片段标题');
             const pathPart = firstUploadedCsharpRelativePath() || './code/你的文件.cs';
-            insertBlockSnippet(`{{cs:${pathPart}#cs:t:命名空间.类型名|${selectedTitle}}}\n`, '#cs:t:命名空间.类型名');
+            insertBlockSnippet(`[${selectedTitle}](cs:${pathPart}#cs:t:命名空间.类型名)\n`, '#cs:t:命名空间.类型名');
             return;
         }
 
@@ -7473,7 +7608,7 @@
         }
 
         if (key === 'anim') {
-            insertBlockSnippet('{{anim:anims/你的动画文件.cs}}\n', 'anims/你的动画文件.cs');
+            insertBlockSnippet('[待补充说明](anims:anims/你的动画文件.cs)\n', 'anims:anims/你的动画文件.cs');
             return;
         }
 
@@ -7746,17 +7881,17 @@
             '// 在本地 Clone 仓库后补全可运行 C# 示例',
             '```',
             '',
-            `{{cs:${sourcePath}}}`,
-            `{{cs:${sourcePath}#cs:t:命名空间.类型名|核心类型示例}}`,
-            `{{cs:${sourcePath}#cs:m:命名空间.类型名.方法名(int,string)|核心方法示例}}`,
-            `{{cs:${sourcePath}#cs:p:命名空间.类型名.属性名|属性示例}}`,
-            `{{cs:${sourcePath}#cs:f:命名空间.类型名.字段名|字段示例}}`,
-            `{{cs:${sourcePath}#cs:c:命名空间.类型名.常量名|常量示例}}`,
-            `{{cs:${sourcePath}#cs:e:命名空间.枚举类型.成员名|枚举成员示例}}`,
+            `[源文件](cs:${sourcePath})`,
+            `[核心类型示例](cs:${sourcePath}#cs:t:命名空间.类型名)`,
+            `[核心方法示例](cs:${sourcePath}#cs:m:命名空间.类型名.方法名(int,string))`,
+            `[属性示例](cs:${sourcePath}#cs:p:命名空间.类型名.属性名)`,
+            `[字段示例](cs:${sourcePath}#cs:f:命名空间.类型名.字段名)`,
+            `[常量示例](cs:${sourcePath}#cs:c:命名空间.类型名.常量名)`,
+            `[枚举成员示例](cs:${sourcePath}#cs:e:命名空间.枚举类型.成员名)`,
             '',
             '## 动画与流程图',
             '',
-            '{{anim:anims/demo-basic.cs}}',
+            '[待补充说明](anims:anims/demo-basic.cs)',
             '',
             '```animcs',
             'anims/demo-basic.cs',
@@ -7853,7 +7988,7 @@
         }
 
         if (!setTargetPath(state.targetPath, true)) {
-            setTargetPath('怎么贡献/新文章.md', true);
+            setTargetPath('如何贡献/新文章.md', true);
         }
         if (!getFileBaseline(state.targetPath)) {
             const knownCurrent = !!findKnownEntryByPath(state.targetPath);
@@ -8392,8 +8527,8 @@
                 const selectorPart = found.selectorKind && found.selector
                     ? `#cs:${found.selectorKind}:${found.selector}`
                     : '';
-                const snippet = `{{cs:${found.path}${selectorPart}}}\n`;
-                insertBlockSnippet(snippet, found.path);
+                const snippet = `[${found.label || '代码符号'}](cs:${found.path}${selectorPart})\n`;
+                insertBlockSnippet(snippet, `cs:${found.path}`);
                 setStatus('已插入 C# 符号引用');
             });
         }

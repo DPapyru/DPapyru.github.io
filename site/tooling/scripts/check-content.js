@@ -62,8 +62,60 @@ function isMissingScalar(value) {
     return false;
 }
 
+function parseStandaloneProtocolEmbedLine(lineText) {
+    const source = String(lineText || '');
+    const text = source.trim();
+    if (!text || text[0] !== '[') return null;
 
+    let index = 1;
+    const labelStart = index;
+    while (index < text.length && text[index] !== ']') {
+        if (text[index] === '\n' || text[index] === '\r') return null;
+        index += 1;
+    }
+    if (index >= text.length || text[index] !== ']') return null;
+    const label = text.slice(labelStart, index).trim();
+    if (!label) return null;
+    index += 1;
 
+    while (index < text.length && /\s/.test(text[index])) index += 1;
+    if (text[index] !== '(') return null;
+    index += 1;
+
+    const hrefStart = index;
+    let depth = 1;
+    while (index < text.length && depth > 0) {
+        const ch = text[index];
+        if (ch === '\n' || ch === '\r') return null;
+        if (ch === '(') depth += 1;
+        if (ch === ')') depth -= 1;
+        index += 1;
+    }
+    if (depth !== 0) return null;
+
+    const href = text.slice(hrefStart, index - 1).trim();
+    if (!href) return null;
+    if (index !== text.length && text.slice(index).trim()) return null;
+
+    const protocolMatch = href.match(/^([a-zA-Z][a-zA-Z0-9+.-]*):(.*)$/);
+    if (!protocolMatch) return null;
+    const kindRaw = String(protocolMatch[1] || '').trim().toLowerCase();
+    const kind = kindRaw === 'anim' ? 'anims' : kindRaw;
+    const target = String(protocolMatch[2] || '').trim();
+    if (!target) return null;
+    if (kind !== 'cs' && kind !== 'anims' && kind !== 'fx') return null;
+
+    return {
+        kind,
+        label,
+        href,
+        target
+    };
+}
+
+function lineContainsProtocolEmbedLink(lineText) {
+    return /\[[^\]\n\r]+\]\((?:cs|anims|anim|fx):/i.test(String(lineText || ''));
+}
 
 function printHelp() {
     writeLine([
@@ -73,6 +125,9 @@ function printHelp() {
         '- Require YAML front matter',
         '- Require title in YAML front matter',
         '- Disallow prev_chapter: null / next_chapter: null (use empty value or omit key)',
+        '- Disallow legacy embed syntax {{cs:...}}/{{anim:...}}/{{ref:...}}',
+        '- Disallow empty markdown links []() and [text]()',
+        '- Warn protocol embed links not on standalone line',
         '',
         'Exit codes:',
         '- 0: OK',
@@ -111,6 +166,7 @@ function main() {
     const rootDir = args.rootDir;
     const files = listMarkdownFiles(rootDir);
     const errors = [];
+    const warnings = [];
 
     for (const filePath of files) {
         let raw = '';
@@ -137,6 +193,27 @@ function main() {
         if (hasExplicitNullKey(fm, 'next_chapter')) {
             errors.push({ filePath, message: 'next_chapter: null' });
         }
+
+        if (/\{\{(?:cs|anim|ref):/i.test(raw)) {
+            errors.push({ filePath, message: '检测到旧语法 {{cs:...}}/{{anim:...}}/{{ref:...}}' });
+        }
+        if (/\[\s*]\(\s*\)/.test(raw)) {
+            errors.push({ filePath, message: '检测到空链接 []()' });
+        }
+        if (/\[[^\]\n\r]+\]\(\s*\)/.test(raw)) {
+            errors.push({ filePath, message: '检测到空目标链接 [文本]()' });
+        }
+
+        const lines = String(raw || '').replace(/\r\n/g, '\n').split('\n');
+        lines.forEach((line, idx) => {
+            if (!lineContainsProtocolEmbedLink(line)) return;
+            if (parseStandaloneProtocolEmbedLine(line)) return;
+            warnings.push({
+                filePath,
+                lineNumber: idx + 1,
+                message: '协议链接未独占一行，嵌入不会触发'
+            });
+        });
     }
 
     if (errors.length) {
@@ -145,7 +222,22 @@ function main() {
             const rel = path.relative(process.cwd(), err.filePath).replace(/\\/g, '/');
             writeLine(`- ${rel}: ${err.message}`);
         }
+        if (warnings.length) {
+            writeLine(`check-content: ${warnings.length} warning(s)`);
+            for (const warn of warnings) {
+                const rel = path.relative(process.cwd(), warn.filePath).replace(/\\/g, '/');
+                writeLine(`- ${rel}:${warn.lineNumber}: ${warn.message}`);
+            }
+        }
         return 1;
+    }
+
+    if (warnings.length) {
+        writeLine(`check-content: ${warnings.length} warning(s)`);
+        for (const warn of warnings) {
+            const rel = path.relative(process.cwd(), warn.filePath).replace(/\\/g, '/');
+            writeLine(`- ${rel}:${warn.lineNumber}: ${warn.message}`);
+        }
     }
 
     writeLine(`check-content: OK (${files.length} files scanned)`);
@@ -153,4 +245,3 @@ function main() {
 }
 
 process.exitCode = main();
-

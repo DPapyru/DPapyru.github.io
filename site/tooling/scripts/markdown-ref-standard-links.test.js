@@ -51,6 +51,16 @@ test('standalone protocol embed parser supports cs/anims/fx and rejects inline m
     );
 
     assert.deepEqual(
+        embedLinks.parseStandaloneEmbedLink('[方法示例](cs:./code/Demo.cs#cs:m:Foo.Bar.Baz(int,string))'),
+        {
+            kind: 'cs',
+            label: '方法示例',
+            href: 'cs:./code/Demo.cs#cs:m:Foo.Bar.Baz(int,string)',
+            target: './code/Demo.cs#cs:m:Foo.Bar.Baz(int,string)'
+        }
+    );
+
+    assert.deepEqual(
         embedLinks.parseStandaloneEmbedLink('[动画](anims:anims/demo-basic.cs)'),
         {
             kind: 'anims',
@@ -91,6 +101,15 @@ test('tml-ide markdown insertion snippets use protocol embeds', () => {
     assert.match(source, /anims:anims\/你的动画文件\.cs/);
     assert.match(source, /cs:\.\/code\/demo\.cs#cs:t:命名空间\.类型名/);
     assert.match(source, /fx:\.\/shaders\/demo\.fx/);
-    assert.doesNotMatch(source, /\{\{anim:/);
-    assert.doesNotMatch(source, /\{\{cs:/);
+    assert.doesNotMatch(source, /insertMarkdownBlockSnippet\(`\{\{anim:/);
+    assert.doesNotMatch(source, /insertMarkdownBlockSnippet\(`\{\{cs:/);
+});
+
+test('legacy article studio insertion snippets also use protocol embeds', () => {
+    const source = fs.readFileSync(path.resolve('tml-ide/subapps/assets/js/article-studio.js'), 'utf8');
+
+    assert.match(source, /\(cs:\$\{pathPart\}#cs:/);
+    assert.match(source, /\[待补充说明\]\(anims:anims\/你的动画文件\.cs\)/);
+    assert.doesNotMatch(source, /insertBlockSnippet\(`\{\{anim:/);
+    assert.doesNotMatch(source, /insertBlockSnippet\(`\{\{cs:/);
 });

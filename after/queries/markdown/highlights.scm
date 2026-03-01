@@ -1,6 +1,6 @@
 ;; extends
 
-; Repo-specific Markdown extensions (see `site/content/怎么贡献/站点Markdown扩展语法说明.md`).
+; Repo-specific Markdown extensions (see `site/content/如何贡献/站点Markdown扩展语法说明.md`).
 ; These are rendered by the site tooling, so we highlight them in-editor.
 
 ; {[path][title]} reference blocks

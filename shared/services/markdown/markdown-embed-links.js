@@ -9,7 +9,6 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     'use strict';
 
-    const STANDALONE_LINK_RE = /^\s*\[([^\]\n\r]+)\]\(([^)\n\r]+)\)\s*$/;
     const EMBED_PROTOCOL_RE = /^([a-zA-Z][a-zA-Z0-9+.-]*):(.*)$/;
     const SUPPORTED_KIND_MAP = Object.freeze({
         cs: 'cs',
@@ -41,13 +40,10 @@
     }
 
     function parseStandaloneEmbedLink(lineText) {
-        const text = String(lineText || '');
-        const match = text.match(STANDALONE_LINK_RE);
-        if (!match) return null;
-
-        const label = String(match[1] || '').trim();
-        const href = String(match[2] || '').trim();
-        if (!label || !href) return null;
+        const parsedLink = parseStandaloneMarkdownLink(lineText);
+        if (!parsedLink) return null;
+        const label = String(parsedLink.label || '').trim();
+        const href = String(parsedLink.href || '').trim();
 
         const parsedHref = parseEmbedHref(href);
         if (!parsedHref) return null;
@@ -87,3 +83,52 @@
         normalizePath
     };
 });
+    function isNewlineChar(ch) {
+        return ch === '\n' || ch === '\r';
+    }
+
+    function parseStandaloneMarkdownLink(text) {
+        const source = String(text || '');
+        let index = 0;
+        while (index < source.length && /\s/.test(source[index])) index += 1;
+        if (source[index] !== '[') return null;
+        index += 1;
+
+        const labelStart = index;
+        while (index < source.length && source[index] !== ']') {
+            if (isNewlineChar(source[index])) return null;
+            index += 1;
+        }
+        if (index >= source.length || source[index] !== ']') return null;
+        const label = source.slice(labelStart, index).trim();
+        if (!label) return null;
+        index += 1;
+
+        while (index < source.length && /\s/.test(source[index])) index += 1;
+        if (source[index] !== '(') return null;
+        index += 1;
+
+        const hrefStart = index;
+        let depth = 1;
+        while (index < source.length && depth > 0) {
+            const ch = source[index];
+            if (isNewlineChar(ch)) return null;
+            if (ch === '(') depth += 1;
+            if (ch === ')') depth -= 1;
+            index += 1;
+        }
+        if (depth !== 0) return null;
+
+        const href = source.slice(hrefStart, index - 1).trim();
+        if (!href) return null;
+
+        while (index < source.length) {
+            if (!/\s/.test(source[index])) return null;
+            index += 1;
+        }
+
+        return {
+            label,
+            href
+        };
+    }

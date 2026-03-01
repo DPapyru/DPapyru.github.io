@@ -74,7 +74,7 @@ test('loadUnifiedWorkspaceState migrates workspace.v2 and legacy markdown/shader
                 },
                 markdown: {
                     workspace: 'markdown',
-                    targetPath: 'site/content/怎么贡献/a.md',
+                    targetPath: 'site/content/如何贡献/a.md',
                     markdown: '# title',
                     files: []
                 },
@@ -106,7 +106,7 @@ test('loadUnifiedWorkspaceState migrates workspace.v2 and legacy markdown/shader
     assert.equal(unified.schemaVersion, 3);
     assert.equal(unified.lastWorkspace, 'shader');
     assert.equal(unified.snapshots.csharp.files.length, 1);
-    assert.equal(unified.snapshots.markdown.staged.targetPath, 'site/content/怎么贡献/a.md');
+    assert.equal(unified.snapshots.markdown.staged.targetPath, 'site/content/如何贡献/a.md');
     assert.deepEqual(unified.snapshots.markdown.legacyState, { draft: 'markdown-legacy' });
     assert.deepEqual(unified.snapshots.markdown.viewerPreview, { mode: 'viewer' });
     assert.equal(unified.snapshots.shader.staged.targetPath, 'site/content/shader-gallery/demo/README.md');
@@ -134,7 +134,7 @@ test('saveUnifiedWorkspaceState persists normalized workspace.v3 payload to fall
         snapshots: {
             markdown: {
                 workspace: 'markdown',
-                targetPath: 'site/content/怎么贡献/save.md',
+                targetPath: 'site/content/如何贡献/save.md',
                 markdown: '# save',
                 files: []
             }
@@ -147,7 +147,7 @@ test('saveUnifiedWorkspaceState persists normalized workspace.v3 payload to fall
     const payload = JSON.parse(storage.dump()['tml-ide-workspace.v3']);
     assert.equal(payload.schemaVersion, 3);
     assert.equal(payload.lastWorkspace, 'markdown');
-    assert.equal(payload.snapshots.markdown.staged.targetPath, 'site/content/怎么贡献/save.md');
+    assert.equal(payload.snapshots.markdown.staged.targetPath, 'site/content/如何贡献/save.md');
     assert.equal(payload.submit.workerApiUrl, 'https://example.com/api/create-pr');
 
     globalThis.localStorage = backup.localStorage;
