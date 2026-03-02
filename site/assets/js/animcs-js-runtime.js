@@ -657,6 +657,15 @@
         }
         return new Vector3(x, y, z);
     };
+    Matrix.Translation = Matrix.CreateTranslation;
+    Matrix.Scale = Matrix.CreateScale;
+    Matrix.RotationX = Matrix.CreateRotationX;
+    Matrix.RotationY = Matrix.CreateRotationY;
+    Matrix.RotationZ = Matrix.CreateRotationZ;
+    Matrix.PerspectiveFovRh = Matrix.CreatePerspectiveFieldOfView;
+    Matrix.Mul = Matrix.Multiply;
+    Matrix.MulVec2 = Matrix.TransformVector2;
+    Matrix.MulVec3 = Matrix.TransformVector3;
 
     function Color(r, g, b, a) {
         this.R = Math.round(Number(r || 0));
@@ -1504,6 +1513,9 @@
             SetBlendState: function (mode) {
                 meshState.blendState = normalizeBlendState(mode);
             },
+            SetBlendMode: function (mode) {
+                meshState.blendState = normalizeBlendState(mode);
+            },
             SetTexture: function (slot, texturePath) {
                 const index = resolveTextureSlotIndex(slot);
                 if (index < 0) return;
@@ -1524,6 +1536,15 @@
                 meshState.floatUniforms[key] = Number(value || 0);
             },
             SetVector2: function (name, value) {
+                const key = String(name || '').trim();
+                if (!key) return;
+                const safe = value || {};
+                meshState.vec2Uniforms[key] = {
+                    X: Number(safe.X || 0),
+                    Y: Number(safe.Y || 0)
+                };
+            },
+            SetVec2: function (name, value) {
                 const key = String(name || '').trim();
                 if (!key) return;
                 const safe = value || {};
@@ -1621,9 +1642,13 @@
             Vector2,
             Vector3,
             Matrix,
+            Vec2: Vector2,
+            Vec3: Vector3,
+            Mat4: Matrix,
             Color,
             PrimitiveType,
             BlendState,
+            BlendMode: BlendState,
             VertexPositionColorTexture,
             MathF,
             AnimGeom: createAnimGeomApi(Vector2, Color, MathF)
@@ -1872,9 +1897,13 @@
         Vector2,
         Vector3,
         Matrix,
+        Vec2: Vector2,
+        Vec3: Vector3,
+        Mat4: Matrix,
         Color,
         PrimitiveType,
         BlendState,
+        BlendMode: BlendState,
         VertexPositionColorTexture,
         MathF,
         normalizeAnimPath,

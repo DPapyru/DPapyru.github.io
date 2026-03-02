@@ -91,6 +91,47 @@ test('createPlayer exposes Vector2/Vector3 and Matrix runtime APIs', () => {
     assert.deepEqual({ x: moved.X, y: moved.Y, z: moved.Z }, { x: 5, y: 7, z: 9 });
 });
 
+test('createPlayer exposes legacy runtime aliases for prebuilt anim modules', () => {
+    const seen = {};
+    const mod = {
+        create(runtimeApi) {
+            seen.runtimeApi = runtimeApi;
+            return {
+                OnInit() {},
+                OnUpdate() {},
+                OnRender() {},
+                OnDispose() {}
+            };
+        }
+    };
+
+    const player = runtime.createPlayer(mod, { width: 120, height: 80 });
+    player.start();
+    player.stop();
+
+    assert.equal(seen.runtimeApi.Vec2, seen.runtimeApi.Vector2);
+    assert.equal(seen.runtimeApi.Vec3, seen.runtimeApi.Vector3);
+    assert.equal(seen.runtimeApi.BlendMode, seen.runtimeApi.BlendState);
+
+    assert.equal(typeof seen.runtimeApi.Mat4, 'function');
+    assert.equal(seen.runtimeApi.Mat4, seen.runtimeApi.Matrix);
+    assert.equal(seen.runtimeApi.Mat4.Translation, seen.runtimeApi.Matrix.CreateTranslation);
+    assert.equal(seen.runtimeApi.Mat4.Scale, seen.runtimeApi.Matrix.CreateScale);
+    assert.equal(seen.runtimeApi.Mat4.RotationX, seen.runtimeApi.Matrix.CreateRotationX);
+    assert.equal(seen.runtimeApi.Mat4.RotationY, seen.runtimeApi.Matrix.CreateRotationY);
+    assert.equal(seen.runtimeApi.Mat4.RotationZ, seen.runtimeApi.Matrix.CreateRotationZ);
+    assert.equal(seen.runtimeApi.Mat4.PerspectiveFovRh, seen.runtimeApi.Matrix.CreatePerspectiveFieldOfView);
+    assert.equal(seen.runtimeApi.Mat4.Mul, seen.runtimeApi.Matrix.Multiply);
+    assert.equal(seen.runtimeApi.Mat4.MulVec2, seen.runtimeApi.Matrix.TransformVector2);
+    assert.equal(seen.runtimeApi.Mat4.MulVec3, seen.runtimeApi.Matrix.TransformVector3);
+
+    const translated = seen.runtimeApi.Mat4.MulVec3(
+        seen.runtimeApi.Mat4.Translation(1, 2, 3),
+        new seen.runtimeApi.Vec3(4, 5, 6)
+    );
+    assert.deepEqual({ x: translated.X, y: translated.Y, z: translated.Z }, { x: 5, y: 7, z: 9 });
+});
+
 test('canvas api supports Text drawing', () => {
     const calls = [];
     const fakeCtx = {
@@ -166,4 +207,37 @@ test('createPlayer exposes mesh shader draw APIs on canvas runtime', () => {
     assert.equal(typeof seen.canvasApi.SetVector2, 'function');
     assert.equal(typeof seen.canvasApi.SetColor, 'function');
     assert.equal(typeof seen.canvasApi.DrawUserIndexedPrimitives, 'function');
+});
+
+test('canvas api exposes legacy method aliases for blend and vec2 uniforms', () => {
+    const seen = {};
+    const fakeCanvas = {
+        width: 160,
+        height: 120,
+        addEventListener() {},
+        removeEventListener() {},
+        getContext() { return null; }
+    };
+    const mod = {
+        create(runtimeApi) {
+            seen.runtimeApi = runtimeApi;
+            return {
+                OnInit() {},
+                OnUpdate() {},
+                OnRender(g) {
+                    seen.canvasApi = g;
+                    g.SetBlendMode(runtimeApi.BlendMode.AlphaBlend);
+                    g.SetVec2('uCenter', new runtimeApi.Vec2(1, 2));
+                },
+                OnDispose() {}
+            };
+        }
+    };
+
+    const player = runtime.createPlayer(mod, { canvas: fakeCanvas, width: 160, height: 120 });
+    player.start();
+    player.stop();
+
+    assert.equal(typeof seen.canvasApi.SetBlendMode, 'function');
+    assert.equal(typeof seen.canvasApi.SetVec2, 'function');
 });
