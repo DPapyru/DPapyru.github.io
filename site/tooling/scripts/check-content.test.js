@@ -246,3 +246,33 @@ test('check-content: rejects front matter without title', () => {
     assert.match(res.stdout + res.stderr, /缺少\s*title/i);
 });
 
+test('check-content: ignores protocol links inside inline code and fenced code blocks', () => {
+    const tmp = makeTempDir('content-check-');
+    const root = path.join(tmp, 'content');
+    fs.mkdirSync(root, { recursive: true });
+
+    fs.writeFileSync(path.join(root, 'protocol-example.md'), [
+        '---',
+        'title: Protocol Example',
+        '---',
+        '',
+        '行内代码示例：`[说明](anims:anims/inline-code.cs)`',
+        '',
+        '```md',
+        '[说明](anims:anims/in-code-block.cs)',
+        '```',
+        '',
+        '普通文本 [说明](anims:anims/not-standalone.cs)'
+    ].join('\n'), 'utf8');
+
+    const script = path.resolve(__dirname, 'check-content.js');
+    const res = runNode([script, '--root', root]);
+    const output = res.stdout + res.stderr;
+
+    assert.equal(res.status, 0, output);
+    assert.match(output, /check-content:\s*1 warning\(s\)/i);
+    assert.match(output, /:11:\s*协议链接未独占一行/);
+    assert.doesNotMatch(output, /:5:\s*协议链接未独占一行/);
+    assert.doesNotMatch(output, /:8:\s*协议链接未独占一行/);
+});
+

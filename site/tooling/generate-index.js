@@ -43,8 +43,30 @@ class ConfigManager {
         });
     }
 
+    getDefaultPathMappings() {
+        return {
+            'DPapyru-ForNewModder.md': 'Modder入门/DPapyru-给新人的前言.md',
+            'DPapyru-ForContributors-Basic.md': '如何贡献/教学文章写作指南.md',
+            '怎么贡献/DPapyru-贡献者如何编写文章基础.md': '如何贡献/教学文章写作指南.md',
+            '怎么贡献/教学文章写作指南.md': '如何贡献/教学文章写作指南.md',
+            'TopicSystemGuide.md': '如何贡献/站点Markdown扩展语法说明.md',
+            'TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md',
+            '怎么贡献/TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md',
+            'getting-started.md': 'Modder入门/DPapyru-给新人的前言.md',
+            'basic-concepts.md': 'Modder入门/DPapyru-给新人的前言.md',
+            'tutorial-index.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '01-入门指南/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '02-基础概念/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '03-内容创建/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '04-高级开发/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '05-专题主题/README.md': 'Modder入门/DPapyru-给新人的前言.md',
+            '06-资源参考/README.md': 'Modder入门/DPapyru-给新人的前言.md'
+        };
+    }
+
     // 获取默认配置
     getDefaultConfig() {
+        const defaultPathMappings = this.getDefaultPathMappings();
         return {
             categories: {
                 '入门': {
@@ -172,11 +194,12 @@ class ConfigManager {
             },
             authors: {},
             all_files: [],
+            pathMappings: { ...defaultPathMappings },
             // 新增配置选项
             settings: {
                 defaultCategory: '资源参考',
                 defaultTopic: 'mod-basics',
-                pathMappings: {},
+                pathMappings: { ...defaultPathMappings },
                 customFields: ['time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange', 'min_c', 'min_t'],
                 validationRules: {
                     requiredFields: ['title'],
@@ -265,6 +288,21 @@ class ConfigManager {
                 }
             });
         }
+
+        // 同步路径映射：兼容读取 top-level pathMappings 与 settings.pathMappings 的代码路径
+        const defaultPathMappings = this.getDefaultPathMappings();
+        const topLevelMappings = (this.config.pathMappings && typeof this.config.pathMappings === 'object')
+            ? this.config.pathMappings
+            : {};
+        const settingsMappings = (this.config.settings.pathMappings && typeof this.config.settings.pathMappings === 'object')
+            ? this.config.settings.pathMappings
+            : {};
+        this.config.pathMappings = {
+            ...defaultPathMappings,
+            ...settingsMappings,
+            ...topLevelMappings
+        };
+        this.config.settings.pathMappings = { ...this.config.pathMappings };
 
         // 清理已废弃字段（向后兼容旧配置）
         if (Array.isArray(this.config.settings.customFields)) {

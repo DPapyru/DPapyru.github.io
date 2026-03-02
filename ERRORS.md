@@ -2481,3 +2481,17 @@
 
 **备注**：
 - 本轮将 `site/content/如何贡献/Markdown新语法功能验证.md` 中会触发空链接规则的字面量 `[]()` 改为 `[文本](目标)` 表达，避免新增内容检查错误。
+
+### 验证记录 [2026-03-02 08:13]：贡献路径重命名兼容 + BM25 键更新 + check-content 误报修复
+
+**级别**：工作树兼容性修复验收
+
+**命令与结果**：
+- `npm ci`：失败（根目录缺少 `package-lock.json` / `npm-shrinkwrap.json`，报 `EUSAGE`）
+- `npm install`：失败（网络/权限限制，`connect EPERM 127.0.0.1:7897`）
+- `node --test shared/specs/legacy-route-resolver.test.js site/tooling/scripts/check-content.test.js site/tooling/scripts/contrib-path-mappings.test.js site/tooling/scripts/bm25-contrib-heuristics.test.js`：通过（17 passed, 0 failed）
+- `node --test site/tooling/scripts/ide-editable-index.test.js shared/specs/viewer-shell.test.js shared/specs/doc-tree-service.test.js`：通过（9 passed, 0 failed）
+
+**备注**：
+- 本次修复聚焦：旧贡献别名映射到 `如何贡献` 新路径、BM25 新旧分类键兼容、`check-content` 忽略代码块与行内代码中的协议链接示例。
+- 受环境限制未执行 `npm run build` / `npm run check-generated`（依赖安装失败）。

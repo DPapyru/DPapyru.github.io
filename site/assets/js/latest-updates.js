@@ -7,8 +7,8 @@
 // 文档路径列表 - 更新为新的扁平化结构
 	const DOC_PATHS = [
 	    'Modder入门/DPapyru-给新人的前言.md',
-	    '怎么贡献/教学文章写作指南.md',
-	    '怎么贡献/TopicSystem使用指南.md'
+	    '如何贡献/教学文章写作指南.md',
+	    '如何贡献/站点Markdown扩展语法说明.md'
 	];
 
 // 从config.json获取文档列表的函数
@@ -183,11 +183,18 @@ function getFallbackDocumentInfo(url) {
 	            lastUpdated: '2026-01-18'
 	        },
         'TopicSystem使用指南.md': {
-            title: 'Topic系统使用指南',
-            description: '详细介绍Topic系统的使用方法和最佳实践',
-            difficulty: 'advanced',
+            title: '站点Markdown扩展语法说明',
+            description: '介绍站点支持的 Markdown 扩展语法和使用方式',
+            difficulty: 'beginner',
             time: '30分钟',
-            lastUpdated: '2025-11-27'
+            lastUpdated: '2026-03-01'
+        },
+        '站点Markdown扩展语法说明.md': {
+            title: '站点Markdown扩展语法说明',
+            description: '介绍站点支持的 Markdown 扩展语法和使用方式',
+            difficulty: 'beginner',
+            time: '30分钟',
+            lastUpdated: '2026-03-01'
         },
         '0-Basic-Prerequisites 基础-先决条件.md': {
             title: '0-Basic-Prerequisites 基础-先决条件',

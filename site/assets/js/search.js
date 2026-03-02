@@ -63,7 +63,7 @@ class TutorialSearch {
                     order: 4,
                     description: "个人开发经验分享"
                 },
-                "怎么贡献": {
+                "如何贡献": {
                     icon: "🤝",
                     order: 5,
                     description: "贡献指南"
@@ -438,8 +438,8 @@ class TutorialSearch {
 	        // 返回所有教程文件的路径 - 更新为新的嵌套文档结构
 	        return [
 	            'site/content/Modder入门/DPapyru-给新人的前言.md',
-	            'site/content/怎么贡献/教学文章写作指南.md',
-	            'site/content/怎么贡献/TopicSystem使用指南.md'
+	            'site/content/如何贡献/教学文章写作指南.md',
+	            'site/content/如何贡献/站点Markdown扩展语法说明.md'
 	        ];
 	    }
 
@@ -961,8 +961,9 @@ class TutorialSearch {
         // 默认分类映射（向后兼容）
 	        const defaultCategoryMappings = {
 	            'DPapyru-给新人的前言.md': 'Modder入门',
-	            '教学文章写作指南.md': '怎么贡献',
-	            'TopicSystem使用指南.md': '怎么贡献',
+	            '教学文章写作指南.md': '如何贡献',
+	            'TopicSystem使用指南.md': '如何贡献',
+	            '站点Markdown扩展语法说明.md': '如何贡献',
 	            'tutorial-index.md': '教程索引'
 	        };
         
@@ -1199,7 +1200,8 @@ class TutorialSearch {
             '进阶': '进阶',
             '高级': '高级',
             '个人分享': '个人分享',
-            '怎么贡献': '怎么贡献',
+            '如何贡献': '如何贡献',
+            '怎么贡献': '如何贡献',
             'Modder入门': 'Modder入门',
             '教程索引': '教程索引',
             '01-入门指南': '入门指南', // 保留旧映射以兼容性

@@ -9,9 +9,12 @@
 
 	  var DEFAULT_PATH_MAPPINGS = {
 	    'DPapyru-ForNewModder.md': 'Modder入门/DPapyru-给新人的前言.md',
-	    'DPapyru-ForContributors-Basic.md': '怎么贡献/教学文章写作指南.md',
-	    '怎么贡献/DPapyru-贡献者如何编写文章基础.md': '怎么贡献/教学文章写作指南.md',
-	    'TopicSystemGuide.md': '怎么贡献/TopicSystem使用指南.md',
+	    'DPapyru-ForContributors-Basic.md': '如何贡献/教学文章写作指南.md',
+	    '怎么贡献/DPapyru-贡献者如何编写文章基础.md': '如何贡献/教学文章写作指南.md',
+	    '怎么贡献/教学文章写作指南.md': '如何贡献/教学文章写作指南.md',
+	    'TopicSystemGuide.md': '如何贡献/站点Markdown扩展语法说明.md',
+	    'TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md',
+	    '怎么贡献/TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md',
 	    'getting-started.md': 'Modder入门/DPapyru-给新人的前言.md',
 	    'basic-concepts.md': 'Modder入门/DPapyru-给新人的前言.md',
 	    'tutorial-index.md': 'Modder入门/DPapyru-给新人的前言.md',
@@ -59,11 +62,11 @@
         '进阶': { icon: '', order: 2, description: '进阶开发技巧' },
         '高级': { icon: '', order: 3, description: '高级开发技术' },
         '个人分享': { icon: '', order: 4, description: '个人开发经验分享' },
-        '怎么贡献': { icon: '', order: 5, description: '贡献指南' },
+        '如何贡献': { icon: '', order: 5, description: '贡献指南' },
         'Modder入门': { icon: '', order: 6, description: 'Modder入门教程' }
       },
       topics: {},
-      pathMappings: {},
+      pathMappings: Object.assign({}, DEFAULT_PATH_MAPPINGS),
       all_files: [],
       extensions: {
         customFields: {

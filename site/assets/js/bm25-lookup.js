@@ -222,19 +222,24 @@
 
 	        const penalizeContrib = 0.22;
 	        const penalizeMeta = 0.55;
+        const contribPathPattern = /(?:怎么|如何)贡献/i;
+        const applyContribPenalty = (mult) => {
+            categoryMultiplier['如何贡献'] = mult;
+            categoryMultiplier['怎么贡献'] = mult; // 兼容历史索引
+        };
 
 	        if (intent === 'meta') {
 	            categoryMultiplier['Modder入门'] = 1.35;
-	            categoryMultiplier['怎么贡献'] = penalizeContrib;
+            applyContribPenalty(penalizeContrib);
 	            // “索引/引用/目录/搜索”类：主动引导到内容索引文档
 	            pathMultiplier.push({ pattern: /文章使用内容索引/i, mult: 2.1 });
-	            pathMultiplier.push({ pattern: /怎么贡献/i, mult: penalizeContrib });
+            pathMultiplier.push({ pattern: contribPathPattern, mult: penalizeContrib });
         } else if (intent === 'intro') {
             categoryMultiplier['Modder入门'] = 2.2;
-            categoryMultiplier['怎么贡献'] = penalizeContrib;
+            applyContribPenalty(penalizeContrib);
             // “提问/写作”偏元内容，入门时不应抢占
             pathMultiplier.push({ pattern: /提问|写作指南|教学文章写作指南/i, mult: penalizeMeta });
-            pathMultiplier.push({ pattern: /怎么贡献/i, mult: penalizeContrib });
+            pathMultiplier.push({ pattern: contribPathPattern, mult: penalizeContrib });
             // 入门优先：先把“从这里开始/推荐学习路径/1-入门”推上来；压制“文章使用内容索引”的导读抢占
             pathMultiplier.push({ pattern: /Modder入门\/1-入门/i, mult: 1.45 });
             pathMultiplier.push({ pattern: /Modder入门\/DPapyru-从这里开始\.md/i, mult: 1.7 });
@@ -245,14 +250,14 @@
         } else if (intent === 'concept') {
 	            // 概念/原理类：提升“概念了解/原理/机制”相关内容，避免元内容抢占
 	            categoryMultiplier['概念了解'] = 1.9;
-	            categoryMultiplier['怎么贡献'] = penalizeContrib;
+            applyContribPenalty(penalizeContrib);
 	            pathMultiplier.push({ pattern: /概念了解|原理|机制|生命周期|流程|本质|区别|世界观|坐标系|geometry|assets|reflection|polymorphism|logging/i, mult: 1.55 });
 	            pathMultiplier.push({ pattern: /提问|写作指南|教学文章写作指南/i, mult: penalizeMeta });
-	            pathMultiplier.push({ pattern: /怎么贡献/i, mult: penalizeContrib });
+            pathMultiplier.push({ pattern: contribPathPattern, mult: penalizeContrib });
         } else if (intent === 'howto') {
-            categoryMultiplier['怎么贡献'] = penalizeContrib;
+            applyContribPenalty(penalizeContrib);
             pathMultiplier.push({ pattern: /提问|写作指南|教学文章写作指南/i, mult: penalizeMeta });
-            pathMultiplier.push({ pattern: /怎么贡献/i, mult: penalizeContrib });
+            pathMultiplier.push({ pattern: contribPathPattern, mult: penalizeContrib });
             if (flags.hasWeapon || flags.hasItem) {
                 pathMultiplier.push({ pattern: /螺线翻译tml教程\/1-基础\/(1-Basic-Item|4-Basic-Ammo|5-Basic-Projectile)/i, mult: 1.6 });
                 if (!flags.hasAdvanced) {
@@ -264,7 +269,7 @@
             }
         } else if (intent === 'troubleshoot') {
             // 排错时不强行惩罚“提问”，但仍然轻微压制写作类
-            categoryMultiplier['怎么贡献'] = 0.35;
+            applyContribPenalty(0.35);
 	            pathMultiplier.push({ pattern: /教学文章写作指南/i, mult: 0.35 });
 	        }
 

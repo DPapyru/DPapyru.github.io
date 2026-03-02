@@ -117,6 +117,20 @@ function lineContainsProtocolEmbedLink(lineText) {
     return /\[[^\]\n\r]+\]\((?:cs|anims|anim|fx):/i.test(String(lineText || ''));
 }
 
+function stripInlineCodeSpans(lineText) {
+    return String(lineText || '').replace(/(`+)([^`]*?)\1/g, '');
+}
+
+function parseFenceMarker(lineText) {
+    const trimmed = String(lineText || '').trim();
+    const m = trimmed.match(/^(`{3,}|~{3,})/);
+    if (!m) return null;
+    return {
+        char: m[1][0],
+        length: m[1].length
+    };
+}
+
 function printHelp() {
     writeLine([
         'Usage: node site/tooling/scripts/check-content.js [--root <dir>] [--help]',
@@ -205,9 +219,22 @@ function main() {
         }
 
         const lines = String(raw || '').replace(/\r\n/g, '\n').split('\n');
+        let activeFence = null;
         lines.forEach((line, idx) => {
-            if (!lineContainsProtocolEmbedLink(line)) return;
-            if (parseStandaloneProtocolEmbedLine(line)) return;
+            const fence = parseFenceMarker(line);
+            if (fence) {
+                if (!activeFence) {
+                    activeFence = fence;
+                } else if (activeFence.char === fence.char && fence.length >= activeFence.length) {
+                    activeFence = null;
+                }
+                return;
+            }
+            if (activeFence) return;
+
+            const normalizedLine = stripInlineCodeSpans(line);
+            if (!lineContainsProtocolEmbedLink(normalizedLine)) return;
+            if (parseStandaloneProtocolEmbedLine(normalizedLine)) return;
             warnings.push({
                 filePath,
                 lineNumber: idx + 1,
