@@ -38,7 +38,7 @@ public sealed class VectorBasic : IAnimScript
         if (_mousePos.X != 0 || _mousePos.Y != 0)
             vec2 = new Vec2((_mousePos.X - center.X) / width * 4, -(_mousePos.Y - center.Y) / height * 2);
 
-        DrawAxes(g, center, scale);
+        DrawAxes(g, center, scale * 1.3f);
 
         DrawArrow(g, center, ToScreen(vec2, center, scale), new Color(255, 255, 255, 200), 2f, 10);
     }
