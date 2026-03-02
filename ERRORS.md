@@ -2518,3 +2518,17 @@
 **备注**：
 - 根目录 `npm ci` 仍不可用（仓库无 `package-lock.json`），本轮继续采用 `npm install` 进行依赖安装。
 - `check-generated` 失败类型与历史一致：构建后生成文件与资源哈希存在工作树差异，需要按提交策略统一纳入或回收。
+
+### 验证记录 [2026-03-02 12:56]：viewer 数学归一化保留代码 span + 同父节点配对约束修复
+
+**级别**：代码评审修复验收（viewer 运行时）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/viewer-callout-runtime.test.js`：失败（RED 阶段，新增断言未满足）
+- `node --test site/tooling/scripts/viewer-callout-runtime.test.js`：通过（GREEN 阶段，7 passed, 0 failed）
+- `npm run build`：失败（`site-app` 构建阶段缺失可选依赖 `@rollup/rollup-linux-x64-gnu`）
+- `npm run check-generated`：失败（`gallery:check` 阶段 `sharp` 无法在 `linux-x64` 运行时加载）
+
+**备注**：
+- 本次目标改动仅两处：`site/pages/viewer.html`、`site/tooling/scripts/viewer-callout-runtime.test.js`。
+- `build/check-generated` 失败由当前依赖环境问题导致，非本次逻辑改动引入。

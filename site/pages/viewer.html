@@ -7760,6 +7760,7 @@
 
             paragraphs.forEach(function (paragraph) {
                 if (!paragraph) return;
+                if (paragraph.children.length > 0) return;
                 const original = String(paragraph.textContent || '').trim();
                 const inlineBlockMatch = original.match(/^\$\$([\s\S]+)\$\$$/);
                 if (!inlineBlockMatch) return;
@@ -7773,11 +7774,14 @@
             for (let i = 0; i < paragraphs.length; i += 1) {
                 const start = paragraphs[i];
                 if (!start || String(start.textContent || '').trim() !== '$$') continue;
+                const startParent = start.parentNode;
+                if (!startParent) continue;
 
                 let endIndex = -1;
                 const bodyParts = [];
                 for (let j = i + 1; j < paragraphs.length; j += 1) {
                     const current = paragraphs[j];
+                    if (!current || current.parentNode !== startParent) continue;
                     const text = String(current && current.textContent || '').trim();
                     if (text === '$$') {
                         endIndex = j;
@@ -7789,14 +7793,11 @@
 
                 const merged = document.createElement('p');
                 merged.textContent = `\\[\n${bodyParts.join('\n')}\n\\]`;
-                const parent = start.parentNode;
-                if (!parent) continue;
-
-                parent.insertBefore(merged, start);
+                startParent.insertBefore(merged, start);
                 for (let j = i; j <= endIndex; j += 1) {
                     const node = paragraphs[j];
-                    if (node && node.parentNode === parent) {
-                        parent.removeChild(node);
+                    if (node && node.parentNode === startParent) {
+                        startParent.removeChild(node);
                     }
                 }
 

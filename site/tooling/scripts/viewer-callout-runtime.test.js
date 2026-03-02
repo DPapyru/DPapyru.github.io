@@ -29,6 +29,14 @@ test('viewer contains KaTeX runtime and applies math rendering for markdown outp
     assert.match(viewer, /renderMarkdownMath\(dom\.output\)/);
 });
 
+test('viewer math normalization preserves code spans and limits block pairing to same parent', () => {
+    const viewer = fs.readFileSync(path.resolve('site/pages/viewer.html'), 'utf8');
+
+    assert.match(viewer, /if\s*\(paragraph\.children\.length\s*>\s*0\)\s*return;/);
+    assert.match(viewer, /const\s+startParent\s*=\s*start\.parentNode;/);
+    assert.match(viewer, /current\.parentNode\s*!==\s*startParent/);
+});
+
 test('viewer embeds fx references as fxembed fenced blocks', () => {
     const viewer = fs.readFileSync(path.resolve('site/pages/viewer.html'), 'utf8');
 
