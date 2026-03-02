@@ -18,5 +18,14 @@ public class FirstProj : ModProjectile
     public override void AI()
     {
         // 这里填写AI内容
+        // 弹幕的更新应该都在这里更新(当然还有别的地方，不过最推荐这边)
+    }
+
+    public void TryArrow()
+    {
+        // 这个方法里面是试试 Arrow 的AI运动
+        // 核心逻辑是：有一个重力向下，水平速度不变，向下的速度有一个上限
+        if(Projectile.velocity.Y < 3) // 注意！泰拉坐标轴的Y轴和平常的平面直角坐标轴是反过来的，上是负数，下是正数！
+            Projectile.velocity.Y += 0.1f;
     }
 }

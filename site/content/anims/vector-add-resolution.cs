@@ -5,7 +5,7 @@ namespace AnimScripts.Dev;
 
 // 向量的加法和分解说明
 [AnimEntry("vector_add_resolution")]
-[AnimProfile(HeightScale = 4f)]
+[AnimProfile(HeightScale = 2f)]
 public sealed class vector_add_resolution : IAnimScript
 {
     private AnimContext? _ctx;
@@ -43,12 +43,13 @@ public sealed class vector_add_resolution : IAnimScript
         var vec2 = new Vec2(0.3f, 0.5f);
 
         if (_center.X != 0 || _center.Y != 0)
-            vec2 = new Vec2((_center.X - center.X) / width * 4, -(_center.Y - center.Y) / height * 2);
+            vec2 = new Vec2((_center.X - center.X) / width * 6.5f, -(_center.Y - center.Y) / height * 4);
+        
         // 绘制坐标系
-        DrawAxes(g, center, scale);
+        DrawAxes(g, center, scale * 2.5f);
 
-        var center_x = new Vec2(center.X, center.Y - vec2.Y * height / 4.75f);
-        var center_y = new Vec2(center.X + vec2.X * width / 4, center.Y);
+        var center_x = new Vec2(center.X, center.Y - vec2.Y * height / 4);
+        var center_y = new Vec2(center.X + vec2.X * width / 6.5f, center.Y);
         
         // 绘制X轴
         DrawArrow(g,center,ToScreen(new Vec2(vec2.X,0),center, scale),new Color(231,234,20,255),1.5f,8f);
