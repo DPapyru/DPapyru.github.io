@@ -2532,3 +2532,16 @@
 **备注**：
 - 本次目标改动仅两处：`site/pages/viewer.html`、`site/tooling/scripts/viewer-callout-runtime.test.js`。
 - `build/check-generated` 失败由当前依赖环境问题导致，非本次逻辑改动引入。
+
+### 验证记录 [2026-03-02 22:08]：动画模块 FNA 命名迁移（编译器/运行时/IDE 补全）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过
+- `node --test site/tooling/scripts/animcs-js-runtime-profile.test.js site/tooling/scripts/animcs-compiler-ast.test.js`：通过
+- `dotnet test site/tooling/tools/animcs/AnimRuntime.Tests/AnimRuntime.Tests.csproj`：失败
+- `dotnet test site/tooling/tools/animcs/AnimHost/AnimHost.csproj`：通过
+- `npm run build`：失败
+
+**备注**：`AnimRuntime.Tests` 失败原因为本机缺少 `Microsoft.NETCore.App 8.0.0`（仅检测到 10.0.2）；`npm run build` 失败原因为缺少可选依赖 `@rollup/rollup-linux-x64-gnu`。其余与本次迁移直接相关的 Node 侧测试通过。

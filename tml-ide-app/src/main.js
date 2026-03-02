@@ -415,15 +415,17 @@ const COMPLETION_MAX_ITEMS = 5000;
 const ANALYZE_COMPLETION_PROFILE_TMOD = 'tmod';
 const ANALYZE_COMPLETION_PROFILE_ANIMATION = 'animation';
 const ANIMATION_TYPE_LABELS = Object.freeze([
+    'Microsoft.Xna.Framework',
+    'Microsoft.Xna.Framework.Graphics',
     'AnimContext',
     'AnimInput',
     'ICanvas2D',
-    'Vec2',
-    'Vec3',
-    'Mat4',
+    'Vector2',
+    'Vector3',
+    'Matrix',
     'Color',
     'PrimitiveType',
-    'BlendMode',
+    'BlendState',
     'VertexPositionColorTexture',
     'MathF',
     'AnimGeom',
@@ -441,12 +443,12 @@ const ANIMATION_STATIC_OWNER_TO_TYPE = Object.freeze({
     input: 'AnimInput',
     g: 'ICanvas2D',
     canvas: 'ICanvas2D',
-    Vec2: 'Vec2',
-    Vec3: 'Vec3',
-    Mat4: 'Mat4',
+    Vector2: 'Vector2',
+    Vector3: 'Vector3',
+    Matrix: 'Matrix',
     Color: 'Color',
     PrimitiveType: 'PrimitiveType',
-    BlendMode: 'BlendMode',
+    BlendState: 'BlendState',
     VertexPositionColorTexture: 'VertexPositionColorTexture',
     MathF: 'MathF',
     AnimGeom: 'AnimGeom'
@@ -462,34 +464,38 @@ const ANIMATION_MEMBER_LABELS_BY_TYPE = Object.freeze({
         'Text',
         'UseEffect',
         'ClearEffect',
-        'SetBlendMode',
+        'SetBlendState',
         'SetTexture',
         'SetFloat',
-        'SetVec2',
+        'SetVector2',
         'SetColor',
         'DrawUserIndexedPrimitives'
     ]),
-    Vec2: Object.freeze(['X', 'Y', 'Add', 'Sub', 'MulScalar', 'DivScalar']),
-    Vec3: Object.freeze(['X', 'Y', 'Z', 'Add', 'Sub', 'MulScalar', 'DivScalar', 'Length', 'Normalize']),
-    Mat4: Object.freeze([
+    Vector2: Object.freeze(['X', 'Y', 'Add', 'Sub', 'MulScalar', 'DivScalar']),
+    Vector3: Object.freeze(['X', 'Y', 'Z', 'Add', 'Sub', 'MulScalar', 'DivScalar', 'Length', 'Normalize']),
+    Matrix: Object.freeze([
         'M00', 'M01', 'M02', 'M03',
         'M10', 'M11', 'M12', 'M13',
         'M20', 'M21', 'M22', 'M23',
         'M30', 'M31', 'M32', 'M33',
-        'Identity', 'Translation', 'Scale', 'RotationX', 'RotationY', 'RotationZ', 'PerspectiveFovRh', 'Mul', 'MulVec2', 'MulVec3'
+        'Identity',
+        'CreateTranslation', 'CreateScale',
+        'CreateRotationX', 'CreateRotationY', 'CreateRotationZ',
+        'CreatePerspectiveFieldOfView',
+        'Multiply', 'TransformVector2', 'TransformVector3'
     ]),
     Color: Object.freeze(['R', 'G', 'B', 'A']),
     PrimitiveType: Object.freeze(['TriangleList']),
-    BlendMode: Object.freeze(['AlphaBlend', 'Additive', 'Opaque']),
+    BlendState: Object.freeze(['AlphaBlend', 'Additive', 'Opaque']),
     VertexPositionColorTexture: Object.freeze(['Position', 'Color', 'TextureCoordinate']),
     MathF: Object.freeze(['Sin', 'Cos', 'Tan', 'Min', 'Max', 'Sqrt', 'Abs', 'Round']),
     AnimGeom: Object.freeze(['ToScreen', 'DrawAxes', 'DrawArrow'])
 });
 const ANIMATION_METHOD_LABELS = new Set([
     'Clear', 'Line', 'Circle', 'FillCircle', 'Text',
-    'UseEffect', 'ClearEffect', 'SetBlendMode', 'SetTexture', 'SetFloat', 'SetVec2', 'SetColor', 'DrawUserIndexedPrimitives',
+    'UseEffect', 'ClearEffect', 'SetBlendState', 'SetTexture', 'SetFloat', 'SetVector2', 'SetColor', 'DrawUserIndexedPrimitives',
     'Add', 'Sub', 'MulScalar', 'DivScalar', 'Length', 'Normalize',
-    'Identity', 'Translation', 'Scale', 'RotationX', 'RotationY', 'RotationZ', 'PerspectiveFovRh', 'Mul', 'MulVec2', 'MulVec3',
+    'Identity', 'CreateTranslation', 'CreateScale', 'CreateRotationX', 'CreateRotationY', 'CreateRotationZ', 'CreatePerspectiveFieldOfView', 'Multiply', 'TransformVector2', 'TransformVector3',
     'Sin', 'Cos', 'Tan', 'Min', 'Max', 'Sqrt', 'Abs', 'Round',
     'ToScreen', 'DrawAxes', 'DrawArrow',
     'OnInit', 'OnUpdate', 'OnRender', 'OnDispose'
@@ -8014,12 +8020,12 @@ function animationLocalTypeHints(text, offset) {
     const map = new Map();
     let match = null;
 
-    const explicitRe = /\b(AnimContext|AnimInput|ICanvas2D|Vec2|Vec3|Mat4|Color|PrimitiveType|BlendMode|VertexPositionColorTexture)\s+([A-Za-z_][A-Za-z0-9_]*)\b/g;
+    const explicitRe = /\b(?:(?:Microsoft\.Xna\.Framework(?:\.Graphics)?)\.)?(AnimContext|AnimInput|ICanvas2D|Vector2|Vector3|Matrix|Color|PrimitiveType|BlendState|VertexPositionColorTexture)\s+([A-Za-z_][A-Za-z0-9_]*)\b/g;
     while ((match = explicitRe.exec(scopeText)) !== null) {
         map.set(String(match[2] || ''), String(match[1] || ''));
     }
 
-    const varNewRe = /\bvar\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*new\s+(Vec2|Vec3|Mat4|Color|VertexPositionColorTexture)\b/g;
+    const varNewRe = /\bvar\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*new\s+(?:(?:Microsoft\.Xna\.Framework(?:\.Graphics)?)\.)?(Vector2|Vector3|Matrix|Color|VertexPositionColorTexture)\b/g;
     while ((match = varNewRe.exec(scopeText)) !== null) {
         map.set(String(match[1] || ''), String(match[2] || ''));
     }

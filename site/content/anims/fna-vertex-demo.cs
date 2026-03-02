@@ -1,5 +1,6 @@
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 [AnimEntry("fna-vertex-demo")]
 public sealed class FnaVertexDemo : IAnimScript
@@ -33,14 +34,14 @@ public sealed class FnaVertexDemo : IAnimScript
         var radius = MathF.Min(width, height) * 0.24f;
         var spin = _ctx.Time * 0.9f;
 
-        _vertices[0] = BuildVertex(centerX, centerY, radius, spin + 0f, new Color(255, 120, 120, 235), new Vec2(0f, 0f));
-        _vertices[1] = BuildVertex(centerX, centerY, radius, spin + 2.0943952f, new Color(120, 0, 250, 235), new Vec2(1f, 0f));
-        _vertices[2] = BuildVertex(centerX, centerY, radius, spin + 4.1887903f, new Color(120, 170, 255, 235), new Vec2(0.5f, 1f));
+        _vertices[0] = BuildVertex(centerX, centerY, radius, spin + 0f, new Color(255, 120, 120, 235), new Vector2(0f, 0f));
+        _vertices[1] = BuildVertex(centerX, centerY, radius, spin + 2.0943952f, new Color(120, 0, 250, 235), new Vector2(1f, 0f));
+        _vertices[2] = BuildVertex(centerX, centerY, radius, spin + 4.1887903f, new Color(120, 170, 255, 235), new Vector2(0.5f, 1f));
 
         g.UseEffect("anims/shaders/fna-vertex-demo.fx");
-        g.SetBlendMode(BlendMode.AlphaBlend);
+        g.SetBlendState(BlendState.AlphaBlend);
         g.SetFloat("uPulse", 0.5f + 0.5f * MathF.Sin(_ctx.Time * 2f));
-        g.SetVec2("uCenter", new Vec2(centerX, centerY));
+        g.SetVector2("uCenter", new Vector2(centerX, centerY));
         g.SetColor("uTint", new Color(130, 220, 255, 255));
         g.DrawUserIndexedPrimitives(
             PrimitiveType.TriangleList,
@@ -53,19 +54,19 @@ public sealed class FnaVertexDemo : IAnimScript
         );
         g.ClearEffect();
 
-        g.Text("FNA Vertex + FX Demo", new Vec2(12f, 12f), new Color(224, 234, 248, 240), 13f);
+        g.Text("FNA Vertex + FX Demo", new Vector2(12f, 12f), new Color(224, 234, 248, 240), 13f);
     }
 
     public void OnDispose()
     {
     }
 
-    private static VertexPositionColorTexture BuildVertex(float cx, float cy, float radius, float radians, Color color, Vec2 uv)
+    private static VertexPositionColorTexture BuildVertex(float cx, float cy, float radius, float radians, Color color, Vector2 uv)
     {
         var x = cx + MathF.Cos(radians) * radius;
         var y = cy + MathF.Sin(radians) * radius;
         return new VertexPositionColorTexture(
-            new Vec3(x, y, 0f),
+            new Vector3(x, y, 0f),
             color,
             uv
         );

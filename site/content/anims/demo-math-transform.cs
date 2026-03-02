@@ -1,6 +1,6 @@
 using System;
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
 
 [AnimEntry("demo-math-transform")]
 public sealed class DemoMathTransform : IAnimScript
@@ -27,7 +27,7 @@ public sealed class DemoMathTransform : IAnimScript
 
         var width = _ctx.Width;
         var height = _ctx.Height;
-        var center = new Vec2(width * 0.5f, height * 0.55f);
+        var center = new Vector2(width * 0.5f, height * 0.55f);
         var scale = MathF.Min(width, height) * 0.32f;
 
         DrawAxes(g, center, scale);
@@ -45,9 +45,9 @@ public sealed class DemoMathTransform : IAnimScript
         var m10 = sin;
         var m11 = cos * scaleY;
 
-        var basisX = new Vec2(m00, m10);
-        var basisY = new Vec2(m01, m11);
-        var vector = new Vec2(1.1f, 0.6f);
+        var basisX = new Vector2(m00, m10);
+        var basisY = new Vector2(m01, m11);
+        var vector = new Vector2(1.1f, 0.6f);
         var transformed = Mul(m00, m01, m10, m11, vector);
 
         DrawArrow(g, center, ToScreen(vector, center, scale), new Color(120, 200, 255), 2f, 10f);
@@ -63,40 +63,40 @@ public sealed class DemoMathTransform : IAnimScript
     {
     }
 
-    private static Vec2 ToScreen(Vec2 v, Vec2 center, float scale)
+    private static Vector2 ToScreen(Vector2 v, Vector2 center, float scale)
     {
-        return new Vec2(center.X + v.X * scale, center.Y - v.Y * scale);
+        return new Vector2(center.X + v.X * scale, center.Y - v.Y * scale);
     }
 
-    private static Vec2 Mul(float m00, float m01, float m10, float m11, Vec2 v)
+    private static Vector2 Mul(float m00, float m01, float m10, float m11, Vector2 v)
     {
-        return new Vec2(m00 * v.X + m01 * v.Y, m10 * v.X + m11 * v.Y);
+        return new Vector2(m00 * v.X + m01 * v.Y, m10 * v.X + m11 * v.Y);
     }
 
-    private static void DrawAxes(ICanvas2D g, Vec2 center, float scale)
+    private static void DrawAxes(ICanvas2D g, Vector2 center, float scale)
     {
         var axisColor = new Color(90, 100, 120, 200);
         var gridColor = new Color(40, 50, 70, 120);
         var axisLength = scale * 1.2f;
 
-        g.Line(new Vec2(center.X - axisLength, center.Y), new Vec2(center.X + axisLength, center.Y), axisColor, 1.5f);
-        g.Line(new Vec2(center.X, center.Y - axisLength), new Vec2(center.X, center.Y + axisLength), axisColor, 1.5f);
+        g.Line(new Vector2(center.X - axisLength, center.Y), new Vector2(center.X + axisLength, center.Y), axisColor, 1.5f);
+        g.Line(new Vector2(center.X, center.Y - axisLength), new Vector2(center.X, center.Y + axisLength), axisColor, 1.5f);
 
         for (int i = 1; i <= 4; i++)
         {
             var offset = i * scale * 0.25f;
-            g.Line(new Vec2(center.X - axisLength, center.Y - offset), new Vec2(center.X + axisLength, center.Y - offset), gridColor, 1f);
-            g.Line(new Vec2(center.X - axisLength, center.Y + offset), new Vec2(center.X + axisLength, center.Y + offset), gridColor, 1f);
-            g.Line(new Vec2(center.X - offset, center.Y - axisLength), new Vec2(center.X - offset, center.Y + axisLength), gridColor, 1f);
-            g.Line(new Vec2(center.X + offset, center.Y - axisLength), new Vec2(center.X + offset, center.Y + axisLength), gridColor, 1f);
+            g.Line(new Vector2(center.X - axisLength, center.Y - offset), new Vector2(center.X + axisLength, center.Y - offset), gridColor, 1f);
+            g.Line(new Vector2(center.X - axisLength, center.Y + offset), new Vector2(center.X + axisLength, center.Y + offset), gridColor, 1f);
+            g.Line(new Vector2(center.X - offset, center.Y - axisLength), new Vector2(center.X - offset, center.Y + axisLength), gridColor, 1f);
+            g.Line(new Vector2(center.X + offset, center.Y - axisLength), new Vector2(center.X + offset, center.Y + axisLength), gridColor, 1f);
         }
     }
 
-    private static void DrawArrow(ICanvas2D g, Vec2 from, Vec2 to, Color color, float width, float headSize)
+    private static void DrawArrow(ICanvas2D g, Vector2 from, Vector2 to, Color color, float width, float headSize)
     {
         g.Line(from, to, color, width);
 
-        var dir = new Vec2(to.X - from.X, to.Y - from.Y);
+        var dir = new Vector2(to.X - from.X, to.Y - from.Y);
         var len = MathF.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
         if (len <= 0.001f)
         {
@@ -105,28 +105,28 @@ public sealed class DemoMathTransform : IAnimScript
 
         var ux = dir.X / len;
         var uy = dir.Y / len;
-        var left = new Vec2(-uy, ux);
+        var left = new Vector2(-uy, ux);
 
-        var basePoint = new Vec2(to.X - ux * headSize, to.Y - uy * headSize);
-        var leftPoint = new Vec2(basePoint.X + left.X * headSize * 0.55f, basePoint.Y + left.Y * headSize * 0.55f);
-        var rightPoint = new Vec2(basePoint.X - left.X * headSize * 0.55f, basePoint.Y - left.Y * headSize * 0.55f);
+        var basePoint = new Vector2(to.X - ux * headSize, to.Y - uy * headSize);
+        var leftPoint = new Vector2(basePoint.X + left.X * headSize * 0.55f, basePoint.Y + left.Y * headSize * 0.55f);
+        var rightPoint = new Vector2(basePoint.X - left.X * headSize * 0.55f, basePoint.Y - left.Y * headSize * 0.55f);
 
         g.Line(to, leftPoint, color, width);
         g.Line(to, rightPoint, color, width);
     }
 
-    private static void DrawUnitSquare(ICanvas2D g, Vec2 center, float scale, float m00, float m01, float m10, float m11)
+    private static void DrawUnitSquare(ICanvas2D g, Vector2 center, float scale, float m00, float m01, float m10, float m11)
     {
         var edgeColor = new Color(90, 170, 255, 150);
         var points = new[]
         {
-            new Vec2(0f, 0f),
-            new Vec2(1f, 0f),
-            new Vec2(1f, 1f),
-            new Vec2(0f, 1f)
+            new Vector2(0f, 0f),
+            new Vector2(1f, 0f),
+            new Vector2(1f, 1f),
+            new Vector2(0f, 1f)
         };
 
-        var transformed = new Vec2[points.Length];
+        var transformed = new Vector2[points.Length];
         for (int i = 0; i < points.Length; i++)
         {
             transformed[i] = Mul(m00, m01, m10, m11, points[i]);

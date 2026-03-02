@@ -57,7 +57,7 @@ test('resolveEmbedProfile gives precedence to explicit embed data', () => {
     });
 });
 
-test('createPlayer exposes Vec2/Vec3 and Mat4 runtime APIs', () => {
+test('createPlayer exposes Vector2/Vector3 and Matrix runtime APIs', () => {
     const seen = {};
     const mod = {
         create(runtimeApi) {
@@ -77,16 +77,16 @@ test('createPlayer exposes Vec2/Vec3 and Mat4 runtime APIs', () => {
     player.start();
     player.stop();
 
-    assert.equal(typeof seen.runtimeApi.Vec2, 'function');
-    assert.equal(typeof seen.runtimeApi.Vec3, 'function');
-    assert.equal(typeof seen.runtimeApi.Mat4, 'function');
+    assert.equal(typeof seen.runtimeApi.Vector2, 'function');
+    assert.equal(typeof seen.runtimeApi.Vector3, 'function');
+    assert.equal(typeof seen.runtimeApi.Matrix, 'function');
     assert.equal(typeof seen.ctx.Input.WheelDelta, 'number');
 
-    const Vec2Ctor = seen.runtimeApi.Vec2;
-    const Vec3Ctor = seen.runtimeApi.Vec3;
-    const Mat4Ctor = seen.runtimeApi.Mat4;
-    const moved2 = Mat4Ctor.MulVec2(Mat4Ctor.Translation(1, 2, 0), new Vec2Ctor(4, 5));
-    const moved = Mat4Ctor.MulVec3(Mat4Ctor.Translation(1, 2, 3), new Vec3Ctor(4, 5, 6));
+    const Vector2Ctor = seen.runtimeApi.Vector2;
+    const Vector3Ctor = seen.runtimeApi.Vector3;
+    const MatrixCtor = seen.runtimeApi.Matrix;
+    const moved2 = MatrixCtor.TransformVector2(MatrixCtor.CreateTranslation(1, 2, 0), new Vector2Ctor(4, 5));
+    const moved = MatrixCtor.TransformVector3(MatrixCtor.CreateTranslation(1, 2, 3), new Vector3Ctor(4, 5, 6));
     assert.deepEqual({ x: moved2.X, y: moved2.Y }, { x: 5, y: 7 });
     assert.deepEqual({ x: moved.X, y: moved.Y, z: moved.Z }, { x: 5, y: 7, z: 9 });
 });
@@ -114,7 +114,7 @@ test('canvas api supports Text drawing', () => {
                 OnInit() {},
                 OnUpdate() {},
                 OnRender(g) {
-                    g.Text('M', new runtimeApi.Vec2(10, 20), new runtimeApi.Color(255, 255, 255, 255), 14);
+                    g.Text('M', new runtimeApi.Vector2(10, 20), new runtimeApi.Color(255, 255, 255, 255), 14);
                 },
                 OnDispose() {}
             };
@@ -155,15 +155,15 @@ test('createPlayer exposes mesh shader draw APIs on canvas runtime', () => {
     player.stop();
 
     assert.equal(typeof seen.runtimeApi.PrimitiveType, 'object');
-    assert.equal(typeof seen.runtimeApi.BlendMode, 'object');
+    assert.equal(typeof seen.runtimeApi.BlendState, 'object');
     assert.equal(typeof seen.runtimeApi.VertexPositionColorTexture, 'function');
 
     assert.equal(typeof seen.canvasApi.UseEffect, 'function');
     assert.equal(typeof seen.canvasApi.ClearEffect, 'function');
-    assert.equal(typeof seen.canvasApi.SetBlendMode, 'function');
+    assert.equal(typeof seen.canvasApi.SetBlendState, 'function');
     assert.equal(typeof seen.canvasApi.SetTexture, 'function');
     assert.equal(typeof seen.canvasApi.SetFloat, 'function');
-    assert.equal(typeof seen.canvasApi.SetVec2, 'function');
+    assert.equal(typeof seen.canvasApi.SetVector2, 'function');
     assert.equal(typeof seen.canvasApi.SetColor, 'function');
     assert.equal(typeof seen.canvasApi.DrawUserIndexedPrimitives, 'function');
 });

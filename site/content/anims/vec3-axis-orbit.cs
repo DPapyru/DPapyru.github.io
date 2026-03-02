@@ -1,5 +1,5 @@
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
 
 [AnimEntry("vec3-axis-orbit")]
 [AnimProfile(HeightScale = 1.9f)]
@@ -47,35 +47,35 @@ public sealed class Vec3AxisOrbit : IAnimScript
 
         var width = _ctx.Width;
         var height = _ctx.Height;
-        var center = new Vec2(width * 0.5f, height * 0.56f);
+        var center = new Vector2(width * 0.5f, height * 0.56f);
         var scale = MathF.Min(width, height) * 0.34f * _zoom;
-        var view = Mat4.RotationY(_yaw) * Mat4.RotationX(_pitch);
+        var view = Matrix.CreateRotationY(_yaw) * Matrix.CreateRotationX(_pitch);
 
         var gridColor = new Color(48, 70, 94, 120);
         for (int i = -4; i <= 4; i++)
         {
             var t = i * 0.25f;
-            DrawSegment3(g, view * new Vec3(t, 0f, -1f), view * new Vec3(t, 0f, 1f), gridColor, 1f, center, scale);
-            DrawSegment3(g, view * new Vec3(-1f, 0f, t), view * new Vec3(1f, 0f, t), gridColor, 1f, center, scale);
+            DrawSegment3(g, view * new Vector3(t, 0f, -1f), view * new Vector3(t, 0f, 1f), gridColor, 1f, center, scale);
+            DrawSegment3(g, view * new Vector3(-1f, 0f, t), view * new Vector3(1f, 0f, t), gridColor, 1f, center, scale);
         }
 
-        DrawArrow3(g, view * new Vec3(0f, 0f, 0f), view * new Vec3(1.2f, 0f, 0f), new Color(255, 110, 110, 240), 2f, center, scale);
-        DrawArrow3(g, view * new Vec3(0f, 0f, 0f), view * new Vec3(0f, 1.2f, 0f), new Color(120, 255, 140, 240), 2f, center, scale);
-        DrawArrow3(g, view * new Vec3(0f, 0f, 0f), view * new Vec3(0f, 0f, 1.2f), new Color(120, 170, 255, 240), 2f, center, scale);
+        DrawArrow3(g, view * new Vector3(0f, 0f, 0f), view * new Vector3(1.2f, 0f, 0f), new Color(255, 110, 110, 240), 2f, center, scale);
+        DrawArrow3(g, view * new Vector3(0f, 0f, 0f), view * new Vector3(0f, 1.2f, 0f), new Color(120, 255, 140, 240), 2f, center, scale);
+        DrawArrow3(g, view * new Vector3(0f, 0f, 0f), view * new Vector3(0f, 0f, 1.2f), new Color(120, 170, 255, 240), 2f, center, scale);
 
-        var orbit = new Vec3(MathF.Cos(_ctx.Time * 0.9f), 0.35f * MathF.Sin(_ctx.Time * 0.6f), MathF.Sin(_ctx.Time * 0.9f));
+        var orbit = new Vector3(MathF.Cos(_ctx.Time * 0.9f), 0.35f * MathF.Sin(_ctx.Time * 0.6f), MathF.Sin(_ctx.Time * 0.9f));
         var orbitLen = MathF.Sqrt(orbit.X * orbit.X + orbit.Y * orbit.Y + orbit.Z * orbit.Z);
-        var normalizedOrbit = orbitLen > 0.0001f ? orbit / orbitLen : new Vec3(0f, 0f, 0f);
-        DrawArrow3(g, view * new Vec3(0f, 0f, 0f), view * orbit, new Color(255, 210, 120, 240), 2f, center, scale);
-        DrawArrow3(g, view * new Vec3(0f, 0f, 0f), view * normalizedOrbit, new Color(255, 255, 255, 220), 1.6f, center, scale);
+        var normalizedOrbit = orbitLen > 0.0001f ? orbit / orbitLen : new Vector3(0f, 0f, 0f);
+        DrawArrow3(g, view * new Vector3(0f, 0f, 0f), view * orbit, new Color(255, 210, 120, 240), 2f, center, scale);
+        DrawArrow3(g, view * new Vector3(0f, 0f, 0f), view * normalizedOrbit, new Color(255, 255, 255, 220), 1.6f, center, scale);
 
-        g.Text("X", Project(view * new Vec3(1.35f, 0f, 0f), center, scale), new Color(255, 140, 140), 14f);
-        g.Text("Y", Project(view * new Vec3(0f, 1.35f, 0f), center, scale), new Color(150, 255, 170), 14f);
-        g.Text("Z", Project(view * new Vec3(0f, 0f, 1.35f), center, scale), new Color(150, 190, 255), 14f);
+        g.Text("X", Project(view * new Vector3(1.35f, 0f, 0f), center, scale), new Color(255, 140, 140), 14f);
+        g.Text("Y", Project(view * new Vector3(0f, 1.35f, 0f), center, scale), new Color(150, 255, 170), 14f);
+        g.Text("Z", Project(view * new Vector3(0f, 0f, 1.35f), center, scale), new Color(150, 190, 255), 14f);
 
-        g.Text("Vec3 Axis Orbit（拖拽旋转，滚轮缩放）", new Vec2(12f, 12f), new Color(220, 230, 240, 220), 13f);
-        g.Text("黄: 原向量  白: 归一化向量", new Vec2(12f, 30f), new Color(155, 195, 230, 210), 12f);
-        g.Text("yaw=" + Fmt(_yaw) + "  pitch=" + Fmt(_pitch) + "  zoom=" + Fmt(_zoom), new Vec2(12f, 48f), new Color(130, 150, 175, 210), 12f);
+        g.Text("Vector3 Axis Orbit（拖拽旋转，滚轮缩放）", new Vector2(12f, 12f), new Color(220, 230, 240, 220), 13f);
+        g.Text("黄: 原向量  白: 归一化向量", new Vector2(12f, 30f), new Color(155, 195, 230, 210), 12f);
+        g.Text("yaw=" + Fmt(_yaw) + "  pitch=" + Fmt(_pitch) + "  zoom=" + Fmt(_zoom), new Vector2(12f, 48f), new Color(130, 150, 175, 210), 12f);
     }
 
     public void OnDispose()
@@ -87,21 +87,21 @@ public sealed class Vec3AxisOrbit : IAnimScript
         return (MathF.Round(value * 100f) / 100f).ToString();
     }
 
-    private static void DrawSegment3(ICanvas2D g, Vec3 from, Vec3 to, Color color, float width, Vec2 center, float scale)
+    private static void DrawSegment3(ICanvas2D g, Vector3 from, Vector3 to, Color color, float width, Vector2 center, float scale)
     {
         g.Line(Project(from, center, scale), Project(to, center, scale), color, width);
     }
 
-    private static void DrawArrow3(ICanvas2D g, Vec3 from, Vec3 to, Color color, float width, Vec2 center, float scale)
+    private static void DrawArrow3(ICanvas2D g, Vector3 from, Vector3 to, Color color, float width, Vector2 center, float scale)
     {
         DrawArrow2(g, Project(from, center, scale), Project(to, center, scale), color, width, 10f);
     }
 
-    private static void DrawArrow2(ICanvas2D g, Vec2 from, Vec2 to, Color color, float width, float headSize)
+    private static void DrawArrow2(ICanvas2D g, Vector2 from, Vector2 to, Color color, float width, float headSize)
     {
         g.Line(from, to, color, width);
 
-        var dir = new Vec2(to.X - from.X, to.Y - from.Y);
+        var dir = new Vector2(to.X - from.X, to.Y - from.Y);
         var len = MathF.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
         if (len <= 0.001f)
         {
@@ -110,17 +110,17 @@ public sealed class Vec3AxisOrbit : IAnimScript
 
         var ux = dir.X / len;
         var uy = dir.Y / len;
-        var left = new Vec2(-uy, ux);
+        var left = new Vector2(-uy, ux);
 
-        var basePoint = new Vec2(to.X - ux * headSize, to.Y - uy * headSize);
-        var leftPoint = new Vec2(basePoint.X + left.X * headSize * 0.55f, basePoint.Y + left.Y * headSize * 0.55f);
-        var rightPoint = new Vec2(basePoint.X - left.X * headSize * 0.55f, basePoint.Y - left.Y * headSize * 0.55f);
+        var basePoint = new Vector2(to.X - ux * headSize, to.Y - uy * headSize);
+        var leftPoint = new Vector2(basePoint.X + left.X * headSize * 0.55f, basePoint.Y + left.Y * headSize * 0.55f);
+        var rightPoint = new Vector2(basePoint.X - left.X * headSize * 0.55f, basePoint.Y - left.Y * headSize * 0.55f);
 
         g.Line(to, leftPoint, color, width);
         g.Line(to, rightPoint, color, width);
     }
 
-    private static Vec2 Project(Vec3 v, Vec2 center, float scale)
+    private static Vector2 Project(Vector3 v, Vector2 center, float scale)
     {
         var depth = 2.8f + v.Z;
         if (depth < 0.25f)
@@ -128,7 +128,7 @@ public sealed class Vec3AxisOrbit : IAnimScript
             depth = 0.25f;
         }
 
-        return new Vec2(
+        return new Vector2(
             center.X + v.X * scale / depth,
             center.Y - v.Y * scale / depth
         );

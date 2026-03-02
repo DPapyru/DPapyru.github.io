@@ -1,13 +1,13 @@
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
 
 [AnimEntry("demo-eoc-ai")]
 [AnimProfile(Controls = "mode-select", HeightScale = 2.3f, ModeOptions = "0:自动|1:一阶-徘徊|2:一阶-冲刺|3:二阶-变形|4:二阶-徘徊|5:二阶-冲刺")]
 public sealed class DemoEocAi : IAnimScript
 {
     private AnimContext? _ctx;
-    private Vec2 _position;
-    private Vec2 _velocity;
+    private Vector2 _position;
+    private Vector2 _velocity;
     private float _stateTimer;
     private float _life;
     private float _maxLife;
@@ -18,8 +18,8 @@ public sealed class DemoEocAi : IAnimScript
     private bool _overrideActive;
     private int _overrideMode;
 
-    private Vec2[] _minionPos;
-    private Vec2[] _minionVel;
+    private Vector2[] _minionPos;
+    private Vector2[] _minionVel;
     private float[] _minionAge;
     private float[] _minionPhase;
     private bool[] _minionActive;
@@ -27,8 +27,8 @@ public sealed class DemoEocAi : IAnimScript
     public void OnInit(AnimContext ctx)
     {
         _ctx = ctx;
-        _position = new Vec2(ctx.Width * 0.5f, ctx.Height * 0.4f);
-        _velocity = new Vec2(0f, 0f);
+        _position = new Vector2(ctx.Width * 0.5f, ctx.Height * 0.4f);
+        _velocity = new Vector2(0f, 0f);
         _stateTimer = 0f;
         _maxLife = 2800f;
         _life = _maxLife;
@@ -40,13 +40,13 @@ public sealed class DemoEocAi : IAnimScript
         _overrideMode = 0;
         _minionPos = new[]
         {
-            new Vec2(0f, 0f), new Vec2(0f, 0f), new Vec2(0f, 0f),
-            new Vec2(0f, 0f), new Vec2(0f, 0f), new Vec2(0f, 0f)
+            new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f),
+            new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f)
         };
         _minionVel = new[]
         {
-            new Vec2(0f, 0f), new Vec2(0f, 0f), new Vec2(0f, 0f),
-            new Vec2(0f, 0f), new Vec2(0f, 0f), new Vec2(0f, 0f)
+            new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f),
+            new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(0f, 0f)
         };
         _minionAge = new[] { 0f, 0f, 0f, 0f, 0f, 0f };
         _minionPhase = new[] { 0f, 0f, 0f, 0f, 0f, 0f };
@@ -69,7 +69,7 @@ public sealed class DemoEocAi : IAnimScript
         var target = GetTargetPoint(_ctx.Time, _ctx.Width, _ctx.Height);
         if (_ctx.Input.IsInside)
         {
-            target = new Vec2(_ctx.Input.X, _ctx.Input.Y);
+            target = new Vector2(_ctx.Input.X, _ctx.Input.Y);
         }
 
         if (_ctx.Input.ModeLocked)
@@ -113,7 +113,7 @@ public sealed class DemoEocAi : IAnimScript
         var target = GetTargetPoint(_ctx.Time, _ctx.Width, _ctx.Height);
         if (_ctx.Input.IsInside)
         {
-            target = new Vec2(_ctx.Input.X, _ctx.Input.Y);
+            target = new Vector2(_ctx.Input.X, _ctx.Input.Y);
         }
 
         DrawTarget(g, target);
@@ -168,7 +168,7 @@ public sealed class DemoEocAi : IAnimScript
         }
     }
 
-    private void UpdateState(Vec2 target, float dt, bool allowTransition)
+    private void UpdateState(Vector2 target, float dt, bool allowTransition)
     {
         _stateTimer += dt;
         if (_state == 0)
@@ -234,34 +234,34 @@ public sealed class DemoEocAi : IAnimScript
         }
     }
 
-    private void UpdateHover(Vec2 target, float dt, Vec2 offset, float hoverTime, float speed)
+    private void UpdateHover(Vector2 target, float dt, Vector2 offset, float hoverTime, float speed)
     {
-        var desired = new Vec2(target.X + offset.X, target.Y + offset.Y);
-        var desiredVelocity = Scale(Normalize(new Vec2(desired.X - _position.X, desired.Y - _position.Y)), speed);
+        var desired = new Vector2(target.X + offset.X, target.Y + offset.Y);
+        var desiredVelocity = Scale(Normalize(new Vector2(desired.X - _position.X, desired.Y - _position.Y)), speed);
         _velocity = Lerp(_velocity, desiredVelocity, 0.08f);
-        _position = new Vec2(_position.X + _velocity.X * dt, _position.Y + _velocity.Y * dt);
+        _position = new Vector2(_position.X + _velocity.X * dt, _position.Y + _velocity.Y * dt);
         _position = ClampToArena(_position, _ctx.Width, _ctx.Height, 60f);
     }
 
-    private void UpdateCharge(Vec2 target, float dt, float speed, float chargeTime)
+    private void UpdateCharge(Vector2 target, float dt, float speed, float chargeTime)
     {
         if (_stateTimer <= 0.0001f)
         {
-            _velocity = Scale(Normalize(new Vec2(target.X - _position.X, target.Y - _position.Y)), speed);
+            _velocity = Scale(Normalize(new Vector2(target.X - _position.X, target.Y - _position.Y)), speed);
         }
-        _position = new Vec2(_position.X + _velocity.X * dt, _position.Y + _velocity.Y * dt);
+        _position = new Vector2(_position.X + _velocity.X * dt, _position.Y + _velocity.Y * dt);
         _position = ClampToArena(_position, _ctx.Width, _ctx.Height, 40f);
     }
 
-    private void UpdateTransform(Vec2 target, float dt)
+    private void UpdateTransform(Vector2 target, float dt)
     {
-        var desiredVelocity = Scale(Normalize(new Vec2(target.X - _position.X, target.Y - _position.Y)), 80f);
+        var desiredVelocity = Scale(Normalize(new Vector2(target.X - _position.X, target.Y - _position.Y)), 80f);
         _velocity = Lerp(_velocity, desiredVelocity, 0.05f);
-        _position = new Vec2(_position.X + _velocity.X * dt, _position.Y + _velocity.Y * dt);
+        _position = new Vector2(_position.X + _velocity.X * dt, _position.Y + _velocity.Y * dt);
         _position = ClampToArena(_position, _ctx.Width, _ctx.Height, 50f);
     }
 
-    private void TrySpawnMinions(Vec2 target, float dt)
+    private void TrySpawnMinions(Vector2 target, float dt)
     {
         _spawnTimer += dt;
         if (_spawnTimer < 2.2f)
@@ -282,14 +282,14 @@ public sealed class DemoEocAi : IAnimScript
                 _minionActive[i] = true;
                 _minionAge[i] = 0f;
                 _minionPhase[i] = _ctx.Time + i * 0.9f;
-                _minionPos[i] = new Vec2(_position.X, _position.Y);
-                _minionVel[i] = new Vec2(0f, 0f);
+                _minionPos[i] = new Vector2(_position.X, _position.Y);
+                _minionVel[i] = new Vector2(0f, 0f);
                 break;
             }
         }
     }
 
-    private void UpdateMinions(Vec2 target, float dt)
+    private void UpdateMinions(Vector2 target, float dt)
     {
         for (int i = 0; i < _minionActive.Length; i++)
         {
@@ -307,13 +307,13 @@ public sealed class DemoEocAi : IAnimScript
 
             var orbitAngle = _minionAge[i] * 2.4f + _minionPhase[i];
             var orbitRadius = 50f + 12f * MathF.Sin(_minionAge[i] * 3f + _minionPhase[i]);
-            var desired = new Vec2(
+            var desired = new Vector2(
                 target.X + MathF.Cos(orbitAngle) * orbitRadius,
                 target.Y + MathF.Sin(orbitAngle) * orbitRadius
             );
-            var desiredVelocity = Scale(Normalize(new Vec2(desired.X - _minionPos[i].X, desired.Y - _minionPos[i].Y)), 140f);
+            var desiredVelocity = Scale(Normalize(new Vector2(desired.X - _minionPos[i].X, desired.Y - _minionPos[i].Y)), 140f);
             _minionVel[i] = Lerp(_minionVel[i], desiredVelocity, 0.2f);
-            _minionPos[i] = new Vec2(_minionPos[i].X + _minionVel[i].X * dt, _minionPos[i].Y + _minionVel[i].Y * dt);
+            _minionPos[i] = new Vector2(_minionPos[i].X + _minionVel[i].X * dt, _minionPos[i].Y + _minionVel[i].Y * dt);
         }
     }
 
@@ -324,18 +324,18 @@ public sealed class DemoEocAi : IAnimScript
             _minionActive[i] = false;
             _minionAge[i] = 0f;
             _minionPhase[i] = 0f;
-            _minionPos[i] = new Vec2(0f, 0f);
-            _minionVel[i] = new Vec2(0f, 0f);
+            _minionPos[i] = new Vector2(0f, 0f);
+            _minionVel[i] = new Vector2(0f, 0f);
         }
     }
 
     private void DrawHealth(ICanvas2D g)
     {
-        var barStart = new Vec2(18f, 18f);
+        var barStart = new Vector2(18f, 18f);
         var barWidth = 220f;
-        var barEnd = new Vec2(barStart.X + barWidth, barStart.Y);
+        var barEnd = new Vector2(barStart.X + barWidth, barStart.Y);
         var ratio = _maxLife <= 0f ? 0f : _life / _maxLife;
-        var filled = new Vec2(barStart.X + barWidth * ratio, barStart.Y);
+        var filled = new Vector2(barStart.X + barWidth * ratio, barStart.Y);
 
         g.Line(barStart, barEnd, new Color(40, 40, 50, 200), 6f);
         g.Line(barStart, filled, new Color(220, 70, 70, 220), 6f);
@@ -353,19 +353,19 @@ public sealed class DemoEocAi : IAnimScript
             var pos = _minionPos[i];
             g.FillCircle(pos, 8f, new Color(120, 30, 30));
             g.Circle(pos, 8f, new Color(200, 80, 80), 2f);
-            var pupil = new Vec2(pos.X + 2f, pos.Y + 2f);
+            var pupil = new Vector2(pos.X + 2f, pos.Y + 2f);
             g.FillCircle(pupil, 3f, new Color(30, 10, 10));
         }
     }
 
-    private Vec2 GetHoverOffset()
+    private Vector2 GetHoverOffset()
     {
         if (_ctx is null)
         {
-            return new Vec2(0f, -120f);
+            return new Vector2(0f, -120f);
         }
         var bob = MathF.Sin(_ctx.Time * 1.3f) * 24f;
-        return new Vec2(MathF.Cos(_ctx.Time * 0.9f) * 80f, -120f + bob);
+        return new Vector2(MathF.Cos(_ctx.Time * 0.9f) * 80f, -120f + bob);
     }
 
     private float GetPhase1HoverTime()
@@ -400,13 +400,13 @@ public sealed class DemoEocAi : IAnimScript
         return 0.32f;
     }
 
-    private static Vec2 GetTargetPoint(float time, int width, int height)
+    private static Vector2 GetTargetPoint(float time, int width, int height)
     {
         var cx = width * 0.5f;
         var cy = height * 0.55f;
         var orbitX = MathF.Cos(time * 0.7f) * 140f;
         var orbitY = MathF.Sin(time * 1.1f) * 90f;
-        return new Vec2(cx + orbitX, cy + orbitY);
+        return new Vector2(cx + orbitX, cy + orbitY);
     }
 
     private static void DrawArena(ICanvas2D g, int width, int height)
@@ -414,19 +414,19 @@ public sealed class DemoEocAi : IAnimScript
         var frameColor = new Color(45, 60, 80, 160);
         var border = 20f;
 
-        g.Line(new Vec2(border, border), new Vec2(width - border, border), frameColor, 1f);
-        g.Line(new Vec2(width - border, border), new Vec2(width - border, height - border), frameColor, 1f);
-        g.Line(new Vec2(width - border, height - border), new Vec2(border, height - border), frameColor, 1f);
-        g.Line(new Vec2(border, height - border), new Vec2(border, border), frameColor, 1f);
+        g.Line(new Vector2(border, border), new Vector2(width - border, border), frameColor, 1f);
+        g.Line(new Vector2(width - border, border), new Vector2(width - border, height - border), frameColor, 1f);
+        g.Line(new Vector2(width - border, height - border), new Vector2(border, height - border), frameColor, 1f);
+        g.Line(new Vector2(border, height - border), new Vector2(border, border), frameColor, 1f);
     }
 
-    private static void DrawTarget(ICanvas2D g, Vec2 target)
+    private static void DrawTarget(ICanvas2D g, Vector2 target)
     {
         g.FillCircle(target, 4f, new Color(100, 220, 255));
         g.Circle(target, 10f, new Color(80, 140, 200, 160), 1f);
     }
 
-    private static void DrawEye(ICanvas2D g, Vec2 center, Vec2 target, bool isPhase2, float time)
+    private static void DrawEye(ICanvas2D g, Vector2 center, Vector2 target, bool isPhase2, float time)
     {
         var bodyRadius = 34f;
         var outline = isPhase2 ? new Color(255, 120, 120) : new Color(220, 80, 80);
@@ -434,16 +434,16 @@ public sealed class DemoEocAi : IAnimScript
         var irisColor = new Color(230, 170, 70);
         var pupilColor = new Color(30, 12, 12);
 
-        var gaze = Normalize(new Vec2(target.X - center.X, target.Y - center.Y));
-        var irisCenter = new Vec2(center.X + gaze.X * bodyRadius * 0.35f, center.Y + gaze.Y * bodyRadius * 0.35f);
-        var pupilCenter = new Vec2(irisCenter.X + gaze.X * 5f, irisCenter.Y + gaze.Y * 5f);
+        var gaze = Normalize(new Vector2(target.X - center.X, target.Y - center.Y));
+        var irisCenter = new Vector2(center.X + gaze.X * bodyRadius * 0.35f, center.Y + gaze.Y * bodyRadius * 0.35f);
+        var pupilCenter = new Vector2(irisCenter.X + gaze.X * 5f, irisCenter.Y + gaze.Y * 5f);
 
         for (int i = 0; i < 8; i++)
         {
             var angle = time * 0.9f + i * 0.78f;
-            var dir = new Vec2(MathF.Cos(angle), MathF.Sin(angle));
-            var start = new Vec2(center.X + dir.X * bodyRadius * 0.9f, center.Y + dir.Y * bodyRadius * 0.9f);
-            var end = new Vec2(center.X + dir.X * (bodyRadius + 10f + 6f * MathF.Sin(time + i)),
+            var dir = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+            var start = new Vector2(center.X + dir.X * bodyRadius * 0.9f, center.Y + dir.Y * bodyRadius * 0.9f);
+            var end = new Vector2(center.X + dir.X * (bodyRadius + 10f + 6f * MathF.Sin(time + i)),
                 center.Y + dir.Y * (bodyRadius + 10f + 6f * MathF.Sin(time + i)));
             g.Line(start, end, new Color(120, 40, 40, 160), 1f);
         }
@@ -455,29 +455,29 @@ public sealed class DemoEocAi : IAnimScript
         g.Circle(irisCenter, bodyRadius * 0.45f, new Color(255, 220, 150, 200), 1f);
     }
 
-    private static Vec2 ClampToArena(Vec2 pos, int width, int height, float padding)
+    private static Vector2 ClampToArena(Vector2 pos, int width, int height, float padding)
     {
         var x = MathF.Max(padding, MathF.Min(width - padding, pos.X));
         var y = MathF.Max(padding, MathF.Min(height - padding, pos.Y));
-        return new Vec2(x, y);
+        return new Vector2(x, y);
     }
 
-    private static Vec2 Scale(Vec2 v, float s) => new Vec2(v.X * s, v.Y * s);
+    private static Vector2 Scale(Vector2 v, float s) => new Vector2(v.X * s, v.Y * s);
 
-    private static Vec2 Lerp(Vec2 a, Vec2 b, float t)
+    private static Vector2 Lerp(Vector2 a, Vector2 b, float t)
     {
-        return new Vec2(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
+        return new Vector2(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
     }
 
-    private static float Length(Vec2 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y);
+    private static float Length(Vector2 v) => MathF.Sqrt(v.X * v.X + v.Y * v.Y);
 
-    private static Vec2 Normalize(Vec2 v)
+    private static Vector2 Normalize(Vector2 v)
     {
         var len = Length(v);
         if (len <= 0.0001f)
         {
-            return new Vec2(0f, 0f);
+            return new Vector2(0f, 0f);
         }
-        return new Vec2(v.X / len, v.Y / len);
+        return new Vector2(v.X / len, v.Y / len);
     }
 }

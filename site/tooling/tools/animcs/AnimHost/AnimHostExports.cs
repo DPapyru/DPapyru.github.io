@@ -1,7 +1,8 @@
 using System.Reflection;
 using System.Runtime.InteropServices.JavaScript;
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace AnimHost;
 
@@ -144,29 +145,68 @@ internal sealed class Canvas2DProxy : ICanvas2D
         _canvasId = canvasId;
     }
 
-    public void Clear(AnimRuntime.Math.Color color)
+    public void Clear(Color color)
     {
         CanvasInterop.Clear(_canvasId, color.R, color.G, color.B, color.A);
     }
 
-    public void Line(Vec2 from, Vec2 to, Color color, float width = 1f)
+    public void Line(Vector2 from, Vector2 to, Color color, float width = 1f)
     {
         CanvasInterop.Line(_canvasId, from.X, from.Y, to.X, to.Y, color.R, color.G, color.B, color.A, width);
     }
 
-    public void Circle(Vec2 center, float radius, Color color, float width = 1f)
+    public void Circle(Vector2 center, float radius, Color color, float width = 1f)
     {
         CanvasInterop.Circle(_canvasId, center.X, center.Y, radius, color.R, color.G, color.B, color.A, width);
     }
 
-    public void FillCircle(Vec2 center, float radius, Color color)
+    public void FillCircle(Vector2 center, float radius, Color color)
     {
         CanvasInterop.FillCircle(_canvasId, center.X, center.Y, radius, color.R, color.G, color.B, color.A);
     }
 
-    public void Text(string text, Vec2 position, Color color, float size = 12f)
+    public void Text(string text, Vector2 position, Color color, float size = 12f)
     {
         CanvasInterop.Text(_canvasId, text ?? string.Empty, position.X, position.Y, color.R, color.G, color.B, color.A, size);
+    }
+
+    public void UseEffect(string shaderPath)
+    {
+    }
+
+    public void ClearEffect()
+    {
+    }
+
+    public void SetBlendState(BlendState state)
+    {
+    }
+
+    public void SetTexture(int slot, string texturePath)
+    {
+    }
+
+    public void SetFloat(string name, float value)
+    {
+    }
+
+    public void SetVector2(string name, Vector2 value)
+    {
+    }
+
+    public void SetColor(string name, Color value)
+    {
+    }
+
+    public void DrawUserIndexedPrimitives(
+        PrimitiveType primitiveType,
+        VertexPositionColorTexture[] vertices,
+        int vertexOffset,
+        int numVertices,
+        int[] indices,
+        int indexOffset,
+        int primitiveCount)
+    {
     }
 }
 

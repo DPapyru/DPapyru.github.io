@@ -11,7 +11,8 @@ const batchInputs = [
         sourcePath: 'anims/ops.cs',
         sourceText: `
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 [AnimEntry("vec3-mat4-ops")]
 public sealed class Vec3Mat4Ops : IAnimScript
@@ -21,13 +22,13 @@ public sealed class Vec3Mat4Ops : IAnimScript
 
     public void OnRender(ICanvas2D g)
     {
-        var a = new Vec3(1f, 2f, 3f);
-        var b = new Vec3(4f, 5f, 6f);
-        var m = Mat4.Identity();
+        var a = new Vector3(1f, 2f, 3f);
+        var b = new Vector3(4f, 5f, 6f);
+        var m = Matrix.Identity;
         var sum = a + b;
         var scaled = 2f * a;
         var transformed = m * sum;
-        var point2 = m * new Vec2(1f, 2f);
+        var point2 = m * new Vector2(1f, 2f);
         var label = (MathF.Round(1.25f)).ToString();
         g.Text(label, point2, new Color(255, 255, 255));
         g.Clear(new Color(0, 0, 0));
@@ -41,7 +42,7 @@ public sealed class Vec3Mat4Ops : IAnimScript
         sourcePath: 'anims/one.cs',
         sourceText: `
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
 public sealed class One : IAnimScript
 {
     public void OnInit(AnimContext ctx) {}
@@ -55,7 +56,7 @@ public sealed class One : IAnimScript
         sourcePath: 'anims/two.cs',
         sourceText: `
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
 public sealed class Two : IAnimScript
 {
     public void OnInit(AnimContext ctx) {}
@@ -102,16 +103,16 @@ function compileOnce() {
     return cachedOutputs;
 }
 
-maybeTest('compileAnimToJs lowers Vec3/Mat4 operators to runtime helpers', { timeout: 30_000 }, () => {
+maybeTest('compileAnimToJs lowers Vector3/Matrix operators to runtime helpers', { timeout: 30_000 }, () => {
     const outputs = compileOnce();
     const ops = outputs.find((entry) => entry.sourcePath === 'anims/ops.cs');
     assert.ok(ops, 'missing compiled output for anims/ops.cs');
 
     const js = ops.js;
-    assert.match(js, /Vec3\.Add\(/);
-    assert.match(js, /Vec3\.MulScalar\(/);
-    assert.match(js, /Mat4\.MulVec3\(/);
-    assert.match(js, /Mat4\.MulVec2\(/);
+    assert.match(js, /Vector3\.Add\(/);
+    assert.match(js, /Vector3\.MulScalar\(/);
+    assert.match(js, /Matrix\.TransformVector3\(/);
+    assert.match(js, /Matrix\.TransformVector2\(/);
     assert.match(js, /\.toString\(\)/);
 });
 
@@ -131,7 +132,7 @@ maybeTest('compileAnimBatch compiles all entries in one pass', { timeout: 30_000
 maybeTest('compileAnimToJs supports while/switch/foreach statements', { timeout: 30_000 }, () => {
     const source = `
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
 
 [AnimEntry("control-flow-demo")]
 public sealed class ControlFlowDemo : IAnimScript
@@ -185,7 +186,8 @@ public sealed class ControlFlowDemo : IAnimScript
 maybeTest('compileAnimToJs supports FNA-style vertex draw API signatures', { timeout: 30_000 }, () => {
     const source = `
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 [AnimEntry("fna-vertex-demo-test")]
 public sealed class FnaVertexDemoTest : IAnimScript
@@ -199,9 +201,9 @@ public sealed class FnaVertexDemoTest : IAnimScript
     public void OnRender(ICanvas2D g)
     {
         g.UseEffect("anims/shaders/fna-vertex-demo.fx");
-        g.SetBlendMode(BlendMode.AlphaBlend);
+        g.SetBlendState(BlendState.AlphaBlend);
         g.SetFloat("uPulse", 0.75f);
-        g.SetVec2("uPan", new Vec2(0.1f, 0.2f));
+        g.SetVector2("uPan", new Vector2(0.1f, 0.2f));
         g.SetColor("uTint", new Color(255, 120, 80, 220));
         g.SetTexture(0, "anims/imgs/demo.png");
         g.DrawUserIndexedPrimitives(
@@ -222,9 +224,9 @@ public sealed class FnaVertexDemoTest : IAnimScript
 
     const js = compiler.compileAnimToJs(source);
     assert.match(js, /UseEffect\(/);
-    assert.match(js, /SetBlendMode\(/);
+    assert.match(js, /SetBlendState\(/);
     assert.match(js, /SetFloat\(/);
-    assert.match(js, /SetVec2\(/);
+    assert.match(js, /SetVector2\(/);
     assert.match(js, /SetColor\(/);
     assert.match(js, /SetTexture\(/);
     assert.match(js, /DrawUserIndexedPrimitives\(/);

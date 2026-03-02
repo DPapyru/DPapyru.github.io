@@ -1,6 +1,6 @@
-namespace AnimRuntime;
+namespace Microsoft.Xna.Framework.Graphics;
 
-public enum BlendMode
+public enum BlendState
 {
     AlphaBlend = 0,
     Additive = 1,

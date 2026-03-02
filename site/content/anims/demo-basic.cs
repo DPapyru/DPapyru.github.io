@@ -1,5 +1,5 @@
 using AnimRuntime;
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
 
 [AnimEntry("demo-basic")]
 public sealed class DemoBasic : IAnimScript

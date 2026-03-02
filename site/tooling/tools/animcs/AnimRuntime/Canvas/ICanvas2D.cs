@@ -1,20 +1,21 @@
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace AnimRuntime;
 
 public interface ICanvas2D
 {
     void Clear(Color color);
-    void Line(Vec2 from, Vec2 to, Color color, float width = 1f);
-    void Circle(Vec2 center, float radius, Color color, float width = 1f);
-    void FillCircle(Vec2 center, float radius, Color color);
-    void Text(string text, Vec2 position, Color color, float size = 12f);
+    void Line(Vector2 from, Vector2 to, Color color, float width = 1f);
+    void Circle(Vector2 center, float radius, Color color, float width = 1f);
+    void FillCircle(Vector2 center, float radius, Color color);
+    void Text(string text, Vector2 position, Color color, float size = 12f);
     void UseEffect(string shaderPath);
     void ClearEffect();
-    void SetBlendMode(BlendMode mode);
+    void SetBlendState(BlendState state);
     void SetTexture(int slot, string texturePath);
     void SetFloat(string name, float value);
-    void SetVec2(string name, Vec2 value);
+    void SetVector2(string name, Vector2 value);
     void SetColor(string name, Color value);
     void DrawUserIndexedPrimitives(
         PrimitiveType primitiveType,

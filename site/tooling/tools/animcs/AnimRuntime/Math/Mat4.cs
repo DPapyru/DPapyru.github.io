@@ -1,6 +1,6 @@
-namespace AnimRuntime.Math;
+namespace Microsoft.Xna.Framework;
 
-public readonly struct Mat4 : IEquatable<Mat4>
+public readonly struct Matrix : IEquatable<Matrix>
 {
     public float M00 { get; }
     public float M01 { get; }
@@ -19,7 +19,7 @@ public readonly struct Mat4 : IEquatable<Mat4>
     public float M32 { get; }
     public float M33 { get; }
 
-    public Mat4(
+    public Matrix(
         float m00, float m01, float m02, float m03,
         float m10, float m11, float m12, float m13,
         float m20, float m21, float m22, float m23,
@@ -31,32 +31,32 @@ public readonly struct Mat4 : IEquatable<Mat4>
         M30 = m30; M31 = m31; M32 = m32; M33 = m33;
     }
 
-    public static Mat4 Identity() => new Mat4(
+    public static Matrix Identity => new(
         1f, 0f, 0f, 0f,
         0f, 1f, 0f, 0f,
         0f, 0f, 1f, 0f,
         0f, 0f, 0f, 1f
     );
 
-    public static Mat4 Translation(float x, float y, float z) => new Mat4(
+    public static Matrix CreateTranslation(float x, float y, float z) => new(
         1f, 0f, 0f, x,
         0f, 1f, 0f, y,
         0f, 0f, 1f, z,
         0f, 0f, 0f, 1f
     );
 
-    public static Mat4 Scale(float x, float y, float z) => new Mat4(
+    public static Matrix CreateScale(float x, float y, float z) => new(
         x, 0f, 0f, 0f,
         0f, y, 0f, 0f,
         0f, 0f, z, 0f,
         0f, 0f, 0f, 1f
     );
 
-    public static Mat4 RotationX(float radians)
+    public static Matrix CreateRotationX(float radians)
     {
         var c = MathF.Cos(radians);
         var s = MathF.Sin(radians);
-        return new Mat4(
+        return new Matrix(
             1f, 0f, 0f, 0f,
             0f, c, -s, 0f,
             0f, s, c, 0f,
@@ -64,11 +64,11 @@ public readonly struct Mat4 : IEquatable<Mat4>
         );
     }
 
-    public static Mat4 RotationY(float radians)
+    public static Matrix CreateRotationY(float radians)
     {
         var c = MathF.Cos(radians);
         var s = MathF.Sin(radians);
-        return new Mat4(
+        return new Matrix(
             c, 0f, s, 0f,
             0f, 1f, 0f, 0f,
             -s, 0f, c, 0f,
@@ -76,11 +76,11 @@ public readonly struct Mat4 : IEquatable<Mat4>
         );
     }
 
-    public static Mat4 RotationZ(float radians)
+    public static Matrix CreateRotationZ(float radians)
     {
         var c = MathF.Cos(radians);
         var s = MathF.Sin(radians);
-        return new Mat4(
+        return new Matrix(
             c, -s, 0f, 0f,
             s, c, 0f, 0f,
             0f, 0f, 1f, 0f,
@@ -88,43 +88,54 @@ public readonly struct Mat4 : IEquatable<Mat4>
         );
     }
 
-    public static Mat4 PerspectiveFovRh(float fov, float aspect, float near, float far)
+    public static Matrix CreatePerspectiveFieldOfView(float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance)
     {
-        var f = 1f / MathF.Tan(fov * 0.5f);
-        return new Mat4(
-            f / aspect, 0f, 0f, 0f,
+        var f = 1f / MathF.Tan(fieldOfView * 0.5f);
+        return new Matrix(
+            f / aspectRatio, 0f, 0f, 0f,
             0f, f, 0f, 0f,
-            0f, 0f, far / (near - far), (far * near) / (near - far),
+            0f, 0f, farPlaneDistance / (nearPlaneDistance - farPlaneDistance), (farPlaneDistance * nearPlaneDistance) / (nearPlaneDistance - farPlaneDistance),
             0f, 0f, -1f, 0f
         );
     }
 
-    public static Mat4 operator *(Mat4 a, Mat4 b)
+    public static Matrix Multiply(Matrix a, Matrix b) => new(
+        a.M00 * b.M00 + a.M01 * b.M10 + a.M02 * b.M20 + a.M03 * b.M30,
+        a.M00 * b.M01 + a.M01 * b.M11 + a.M02 * b.M21 + a.M03 * b.M31,
+        a.M00 * b.M02 + a.M01 * b.M12 + a.M02 * b.M22 + a.M03 * b.M32,
+        a.M00 * b.M03 + a.M01 * b.M13 + a.M02 * b.M23 + a.M03 * b.M33,
+
+        a.M10 * b.M00 + a.M11 * b.M10 + a.M12 * b.M20 + a.M13 * b.M30,
+        a.M10 * b.M01 + a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31,
+        a.M10 * b.M02 + a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32,
+        a.M10 * b.M03 + a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33,
+
+        a.M20 * b.M00 + a.M21 * b.M10 + a.M22 * b.M20 + a.M23 * b.M30,
+        a.M20 * b.M01 + a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31,
+        a.M20 * b.M02 + a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32,
+        a.M20 * b.M03 + a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33,
+
+        a.M30 * b.M00 + a.M31 * b.M10 + a.M32 * b.M20 + a.M33 * b.M30,
+        a.M30 * b.M01 + a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31,
+        a.M30 * b.M02 + a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32,
+        a.M30 * b.M03 + a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33
+    );
+
+    public static Vector2 TransformVector2(Matrix m, Vector2 v)
     {
-        return new Mat4(
-            a.M00 * b.M00 + a.M01 * b.M10 + a.M02 * b.M20 + a.M03 * b.M30,
-            a.M00 * b.M01 + a.M01 * b.M11 + a.M02 * b.M21 + a.M03 * b.M31,
-            a.M00 * b.M02 + a.M01 * b.M12 + a.M02 * b.M22 + a.M03 * b.M32,
-            a.M00 * b.M03 + a.M01 * b.M13 + a.M02 * b.M23 + a.M03 * b.M33,
+        var x = m.M00 * v.X + m.M01 * v.Y + m.M03;
+        var y = m.M10 * v.X + m.M11 * v.Y + m.M13;
+        var w = m.M30 * v.X + m.M31 * v.Y + m.M33;
 
-            a.M10 * b.M00 + a.M11 * b.M10 + a.M12 * b.M20 + a.M13 * b.M30,
-            a.M10 * b.M01 + a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31,
-            a.M10 * b.M02 + a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32,
-            a.M10 * b.M03 + a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33,
+        if (MathF.Abs(w) > 0.000001f && MathF.Abs(w - 1f) > 0.000001f)
+        {
+            return new Vector2(x / w, y / w);
+        }
 
-            a.M20 * b.M00 + a.M21 * b.M10 + a.M22 * b.M20 + a.M23 * b.M30,
-            a.M20 * b.M01 + a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31,
-            a.M20 * b.M02 + a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32,
-            a.M20 * b.M03 + a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33,
-
-            a.M30 * b.M00 + a.M31 * b.M10 + a.M32 * b.M20 + a.M33 * b.M30,
-            a.M30 * b.M01 + a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31,
-            a.M30 * b.M02 + a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32,
-            a.M30 * b.M03 + a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33
-        );
+        return new Vector2(x, y);
     }
 
-    public static Vec3 operator *(Mat4 m, Vec3 v)
+    public static Vector3 TransformVector3(Matrix m, Vector3 v)
     {
         var x = m.M00 * v.X + m.M01 * v.Y + m.M02 * v.Z + m.M03;
         var y = m.M10 * v.X + m.M11 * v.Y + m.M12 * v.Z + m.M13;
@@ -133,27 +144,17 @@ public readonly struct Mat4 : IEquatable<Mat4>
 
         if (MathF.Abs(w) > 0.000001f && MathF.Abs(w - 1f) > 0.000001f)
         {
-            return new Vec3(x / w, y / w, z / w);
+            return new Vector3(x / w, y / w, z / w);
         }
 
-        return new Vec3(x, y, z);
+        return new Vector3(x, y, z);
     }
 
-    public static Vec2 operator *(Mat4 m, Vec2 v)
-    {
-        var x = m.M00 * v.X + m.M01 * v.Y + m.M03;
-        var y = m.M10 * v.X + m.M11 * v.Y + m.M13;
-        var w = m.M30 * v.X + m.M31 * v.Y + m.M33;
+    public static Matrix operator *(Matrix a, Matrix b) => Multiply(a, b);
+    public static Vector2 operator *(Matrix m, Vector2 v) => TransformVector2(m, v);
+    public static Vector3 operator *(Matrix m, Vector3 v) => TransformVector3(m, v);
 
-        if (MathF.Abs(w) > 0.000001f && MathF.Abs(w - 1f) > 0.000001f)
-        {
-            return new Vec2(x / w, y / w);
-        }
-
-        return new Vec2(x, y);
-    }
-
-    public bool Equals(Mat4 other)
+    public bool Equals(Matrix other)
     {
         return
             M00.Equals(other.M00) && M01.Equals(other.M01) && M02.Equals(other.M02) && M03.Equals(other.M03) &&
@@ -162,7 +163,7 @@ public readonly struct Mat4 : IEquatable<Mat4>
             M30.Equals(other.M30) && M31.Equals(other.M31) && M32.Equals(other.M32) && M33.Equals(other.M33);
     }
 
-    public override bool Equals(object? obj) => obj is Mat4 other && Equals(other);
+    public override bool Equals(object? obj) => obj is Matrix other && Equals(other);
 
     public override int GetHashCode()
     {
@@ -174,7 +175,7 @@ public readonly struct Mat4 : IEquatable<Mat4>
         return hash.ToHashCode();
     }
 
-    public static bool operator ==(Mat4 left, Mat4 right) => left.Equals(right);
+    public static bool operator ==(Matrix left, Matrix right) => left.Equals(right);
 
-    public static bool operator !=(Mat4 left, Mat4 right) => !left.Equals(right);
+    public static bool operator !=(Matrix left, Matrix right) => !left.Equals(right);
 }

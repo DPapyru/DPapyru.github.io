@@ -222,21 +222,21 @@ namespace AnimRuntime
 
     public interface ICanvas2D
     {
-        void Clear(AnimRuntime.Math.Color color);
-        void Line(AnimRuntime.Math.Vec2 from, AnimRuntime.Math.Vec2 to, AnimRuntime.Math.Color color, float width = 1f);
-        void Circle(AnimRuntime.Math.Vec2 center, float radius, AnimRuntime.Math.Color color, float width = 1f);
-        void FillCircle(AnimRuntime.Math.Vec2 center, float radius, AnimRuntime.Math.Color color);
-        void Text(string text, AnimRuntime.Math.Vec2 position, AnimRuntime.Math.Color color, float size = 12f);
+        void Clear(Microsoft.Xna.Framework.Color color);
+        void Line(Microsoft.Xna.Framework.Vector2 from, Microsoft.Xna.Framework.Vector2 to, Microsoft.Xna.Framework.Color color, float width = 1f);
+        void Circle(Microsoft.Xna.Framework.Vector2 center, float radius, Microsoft.Xna.Framework.Color color, float width = 1f);
+        void FillCircle(Microsoft.Xna.Framework.Vector2 center, float radius, Microsoft.Xna.Framework.Color color);
+        void Text(string text, Microsoft.Xna.Framework.Vector2 position, Microsoft.Xna.Framework.Color color, float size = 12f);
         void UseEffect(string shaderPath);
         void ClearEffect();
-        void SetBlendMode(BlendMode mode);
+        void SetBlendState(Microsoft.Xna.Framework.Graphics.BlendState state);
         void SetTexture(int slot, string texturePath);
         void SetFloat(string name, float value);
-        void SetVec2(string name, AnimRuntime.Math.Vec2 value);
-        void SetColor(string name, AnimRuntime.Math.Color value);
+        void SetVector2(string name, Microsoft.Xna.Framework.Vector2 value);
+        void SetColor(string name, Microsoft.Xna.Framework.Color value);
         void DrawUserIndexedPrimitives(
-            PrimitiveType primitiveType,
-            VertexPositionColorTexture[] vertices,
+            Microsoft.Xna.Framework.Graphics.PrimitiveType primitiveType,
+            Microsoft.Xna.Framework.Graphics.VertexPositionColorTexture[] vertices,
             int vertexOffset,
             int numVertices,
             int[] indices,
@@ -247,43 +247,13 @@ namespace AnimRuntime
 
     public static class AnimGeom
     {
-        public static AnimRuntime.Math.Vec2 ToScreen(AnimRuntime.Math.Vec2 v, AnimRuntime.Math.Vec2 center, float scale) => default;
-        public static void DrawAxes(ICanvas2D g, AnimRuntime.Math.Vec2 center, float scale, AnimRuntime.Math.Color? axisColor = null, AnimRuntime.Math.Color? gridColor = null) { }
-        public static void DrawArrow(ICanvas2D g, AnimRuntime.Math.Vec2 from, AnimRuntime.Math.Vec2 to, AnimRuntime.Math.Color color, float width = 1f, float headSize = 8f) { }
-    }
-
-    public enum PrimitiveType
-    {
-        TriangleList = 0
-    }
-
-    public enum BlendMode
-    {
-        AlphaBlend = 0,
-        Additive = 1,
-        Opaque = 2
-    }
-
-    public struct VertexPositionColorTexture
-    {
-        public AnimRuntime.Math.Vec3 Position;
-        public AnimRuntime.Math.Color Color;
-        public AnimRuntime.Math.Vec2 TextureCoordinate;
-
-        public VertexPositionColorTexture(
-            AnimRuntime.Math.Vec3 position,
-            AnimRuntime.Math.Color color,
-            AnimRuntime.Math.Vec2 textureCoordinate
-        )
-        {
-            Position = position;
-            Color = color;
-            TextureCoordinate = textureCoordinate;
-        }
+        public static Microsoft.Xna.Framework.Vector2 ToScreen(Microsoft.Xna.Framework.Vector2 v, Microsoft.Xna.Framework.Vector2 center, float scale) => default;
+        public static void DrawAxes(ICanvas2D g, Microsoft.Xna.Framework.Vector2 center, float scale, Microsoft.Xna.Framework.Color? axisColor = null, Microsoft.Xna.Framework.Color? gridColor = null) { }
+        public static void DrawArrow(ICanvas2D g, Microsoft.Xna.Framework.Vector2 from, Microsoft.Xna.Framework.Vector2 to, Microsoft.Xna.Framework.Color color, float width = 1f, float headSize = 8f) { }
     }
 }
 
-namespace AnimRuntime.Math
+namespace Microsoft.Xna.Framework
 {
     public struct Color
     {
@@ -301,45 +271,45 @@ namespace AnimRuntime.Math
         }
     }
 
-    public struct Vec2
+    public struct Vector2
     {
         public float X;
         public float Y;
 
-        public Vec2(float x, float y)
+        public Vector2(float x, float y)
         {
             X = x;
             Y = y;
         }
 
-        public static Vec2 operator +(Vec2 a, Vec2 b) => default;
-        public static Vec2 operator -(Vec2 a, Vec2 b) => default;
-        public static Vec2 operator *(Vec2 a, float b) => default;
-        public static Vec2 operator *(float a, Vec2 b) => default;
-        public static Vec2 operator /(Vec2 a, float b) => default;
+        public static Vector2 operator +(Vector2 a, Vector2 b) => default;
+        public static Vector2 operator -(Vector2 a, Vector2 b) => default;
+        public static Vector2 operator *(Vector2 a, float b) => default;
+        public static Vector2 operator *(float a, Vector2 b) => default;
+        public static Vector2 operator /(Vector2 a, float b) => default;
     }
 
-    public struct Vec3
+    public struct Vector3
     {
         public float X;
         public float Y;
         public float Z;
 
-        public Vec3(float x, float y, float z)
+        public Vector3(float x, float y, float z)
         {
             X = x;
             Y = y;
             Z = z;
         }
 
-        public static Vec3 operator +(Vec3 a, Vec3 b) => default;
-        public static Vec3 operator -(Vec3 a, Vec3 b) => default;
-        public static Vec3 operator *(Vec3 a, float b) => default;
-        public static Vec3 operator *(float a, Vec3 b) => default;
-        public static Vec3 operator /(Vec3 a, float b) => default;
+        public static Vector3 operator +(Vector3 a, Vector3 b) => default;
+        public static Vector3 operator -(Vector3 a, Vector3 b) => default;
+        public static Vector3 operator *(Vector3 a, float b) => default;
+        public static Vector3 operator *(float a, Vector3 b) => default;
+        public static Vector3 operator /(Vector3 a, float b) => default;
     }
 
-    public struct Mat4
+    public struct Matrix
     {
         public float M00 { get; set; }
         public float M01 { get; set; }
@@ -358,16 +328,52 @@ namespace AnimRuntime.Math
         public float M32 { get; set; }
         public float M33 { get; set; }
 
-        public static Mat4 Identity() => default;
-        public static Mat4 Translation(float x, float y, float z) => default;
-        public static Mat4 Scale(float x, float y, float z) => default;
-        public static Mat4 RotationX(float radians) => default;
-        public static Mat4 RotationY(float radians) => default;
-        public static Mat4 RotationZ(float radians) => default;
-        public static Mat4 PerspectiveFovRh(float fov, float aspect, float near, float far) => default;
-        public static Mat4 operator *(Mat4 a, Mat4 b) => default;
-        public static Vec2 operator *(Mat4 m, Vec2 v) => default;
-        public static Vec3 operator *(Mat4 m, Vec3 v) => default;
+        public static Matrix Identity => default;
+        public static Matrix CreateTranslation(float x, float y, float z) => default;
+        public static Matrix CreateScale(float x, float y, float z) => default;
+        public static Matrix CreateRotationX(float radians) => default;
+        public static Matrix CreateRotationY(float radians) => default;
+        public static Matrix CreateRotationZ(float radians) => default;
+        public static Matrix CreatePerspectiveFieldOfView(float fieldOfView, float aspectRatio, float nearPlaneDistance, float farPlaneDistance) => default;
+        public static Matrix Multiply(Matrix a, Matrix b) => default;
+        public static Vector2 TransformVector2(Matrix m, Vector2 v) => default;
+        public static Vector3 TransformVector3(Matrix m, Vector3 v) => default;
+        public static Matrix operator *(Matrix a, Matrix b) => default;
+        public static Vector2 operator *(Matrix m, Vector2 v) => default;
+        public static Vector3 operator *(Matrix m, Vector3 v) => default;
+    }
+}
+
+namespace Microsoft.Xna.Framework.Graphics
+{
+    public enum PrimitiveType
+    {
+        TriangleList = 0
+    }
+
+    public enum BlendState
+    {
+        AlphaBlend = 0,
+        Additive = 1,
+        Opaque = 2
+    }
+
+    public struct VertexPositionColorTexture
+    {
+        public Microsoft.Xna.Framework.Vector3 Position;
+        public Microsoft.Xna.Framework.Color Color;
+        public Microsoft.Xna.Framework.Vector2 TextureCoordinate;
+
+        public VertexPositionColorTexture(
+            Microsoft.Xna.Framework.Vector3 position,
+            Microsoft.Xna.Framework.Color color,
+            Microsoft.Xna.Framework.Vector2 textureCoordinate
+        )
+        {
+            Position = position;
+            Color = color;
+            TextureCoordinate = textureCoordinate;
+        }
     }
 }
 """;
@@ -401,7 +407,7 @@ internal sealed class JsEmitter
 
         WriteLine("export function create(runtime) {");
         _indentLevel += 1;
-        WriteLine("const { Vec2, Vec3, Mat4, Color, MathF, AnimGeom, PrimitiveType, BlendMode, VertexPositionColorTexture } = runtime;");
+        WriteLine("const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;");
         WriteLine($"class {_className} {{");
         _indentLevel += 1;
 
@@ -881,47 +887,47 @@ internal sealed class JsEmitter
         var rightType = _semanticModel.GetTypeInfo(rightNode).Type;
         var containingType = opSymbol.ContainingType.ToDisplayString();
 
-        if (containingType == "AnimRuntime.Math.Vec2")
+        if (containingType == "Microsoft.Xna.Framework.Vector2")
         {
             return opSymbol.Name switch
             {
-                "op_Addition" => $"Vec2.Add({left}, {right})",
-                "op_Subtraction" => $"Vec2.Sub({left}, {right})",
-                "op_Multiply" when IsType(leftType, "AnimRuntime.Math.Vec2") && IsNumeric(rightType) => $"Vec2.MulScalar({left}, {right})",
-                "op_Multiply" when IsNumeric(leftType) && IsType(rightType, "AnimRuntime.Math.Vec2") => $"Vec2.MulScalar({right}, {left})",
-                "op_Division" => $"Vec2.DivScalar({left}, {right})",
+                "op_Addition" => $"Vector2.Add({left}, {right})",
+                "op_Subtraction" => $"Vector2.Sub({left}, {right})",
+                "op_Multiply" when IsType(leftType, "Microsoft.Xna.Framework.Vector2") && IsNumeric(rightType) => $"Vector2.MulScalar({left}, {right})",
+                "op_Multiply" when IsNumeric(leftType) && IsType(rightType, "Microsoft.Xna.Framework.Vector2") => $"Vector2.MulScalar({right}, {left})",
+                "op_Division" => $"Vector2.DivScalar({left}, {right})",
                 _ => null
             };
         }
 
-        if (containingType == "AnimRuntime.Math.Vec3")
+        if (containingType == "Microsoft.Xna.Framework.Vector3")
         {
             return opSymbol.Name switch
             {
-                "op_Addition" => $"Vec3.Add({left}, {right})",
-                "op_Subtraction" => $"Vec3.Sub({left}, {right})",
-                "op_Multiply" when IsType(leftType, "AnimRuntime.Math.Vec3") && IsNumeric(rightType) => $"Vec3.MulScalar({left}, {right})",
-                "op_Multiply" when IsNumeric(leftType) && IsType(rightType, "AnimRuntime.Math.Vec3") => $"Vec3.MulScalar({right}, {left})",
-                "op_Division" => $"Vec3.DivScalar({left}, {right})",
+                "op_Addition" => $"Vector3.Add({left}, {right})",
+                "op_Subtraction" => $"Vector3.Sub({left}, {right})",
+                "op_Multiply" when IsType(leftType, "Microsoft.Xna.Framework.Vector3") && IsNumeric(rightType) => $"Vector3.MulScalar({left}, {right})",
+                "op_Multiply" when IsNumeric(leftType) && IsType(rightType, "Microsoft.Xna.Framework.Vector3") => $"Vector3.MulScalar({right}, {left})",
+                "op_Division" => $"Vector3.DivScalar({left}, {right})",
                 _ => null
             };
         }
 
-        if (containingType == "AnimRuntime.Math.Mat4" && opSymbol.Name == "op_Multiply")
+        if (containingType == "Microsoft.Xna.Framework.Matrix" && opSymbol.Name == "op_Multiply")
         {
-            if (IsType(leftType, "AnimRuntime.Math.Mat4") && IsType(rightType, "AnimRuntime.Math.Mat4"))
+            if (IsType(leftType, "Microsoft.Xna.Framework.Matrix") && IsType(rightType, "Microsoft.Xna.Framework.Matrix"))
             {
-                return $"Mat4.Mul({left}, {right})";
+                return $"Matrix.Multiply({left}, {right})";
             }
 
-            if (IsType(leftType, "AnimRuntime.Math.Mat4") && IsType(rightType, "AnimRuntime.Math.Vec2"))
+            if (IsType(leftType, "Microsoft.Xna.Framework.Matrix") && IsType(rightType, "Microsoft.Xna.Framework.Vector2"))
             {
-                return $"Mat4.MulVec2({left}, {right})";
+                return $"Matrix.TransformVector2({left}, {right})";
             }
 
-            if (IsType(leftType, "AnimRuntime.Math.Mat4") && IsType(rightType, "AnimRuntime.Math.Vec3"))
+            if (IsType(leftType, "Microsoft.Xna.Framework.Matrix") && IsType(rightType, "Microsoft.Xna.Framework.Vector3"))
             {
-                return $"Mat4.MulVec3({left}, {right})";
+                return $"Matrix.TransformVector3({left}, {right})";
             }
         }
 
@@ -955,13 +961,13 @@ internal sealed class JsEmitter
             "System.Single" => "0",
             "System.Double" => "0",
             "System.Decimal" => "0",
-            "AnimRuntime.Math.Vec2" => "new Vec2(0, 0)",
-            "AnimRuntime.Math.Vec3" => "new Vec3(0, 0, 0)",
-            "AnimRuntime.Math.Mat4" => "Mat4.Identity()",
-            "AnimRuntime.Math.Color" => "new Color(0, 0, 0, 255)",
-            "AnimRuntime.PrimitiveType" => "PrimitiveType.TriangleList",
-            "AnimRuntime.BlendMode" => "BlendMode.AlphaBlend",
-            "AnimRuntime.VertexPositionColorTexture" => "new VertexPositionColorTexture(new Vec3(0, 0, 0), new Color(0, 0, 0, 255), new Vec2(0, 0))",
+            "Microsoft.Xna.Framework.Vector2" => "new Vector2(0, 0)",
+            "Microsoft.Xna.Framework.Vector3" => "new Vector3(0, 0, 0)",
+            "Microsoft.Xna.Framework.Matrix" => "Matrix.Identity",
+            "Microsoft.Xna.Framework.Color" => "new Color(0, 0, 0, 255)",
+            "Microsoft.Xna.Framework.Graphics.PrimitiveType" => "PrimitiveType.TriangleList",
+            "Microsoft.Xna.Framework.Graphics.BlendState" => "BlendState.AlphaBlend",
+            "Microsoft.Xna.Framework.Graphics.VertexPositionColorTexture" => "new VertexPositionColorTexture(new Vector3(0, 0, 0), new Color(0, 0, 0, 255), new Vector2(0, 0))",
             _ => "null"
         };
     }

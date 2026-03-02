@@ -1,4 +1,4 @@
-namespace AnimRuntime.Math;
+namespace Microsoft.Xna.Framework;
 
 public readonly struct Color : IEquatable<Color>
 {
@@ -7,12 +7,12 @@ public readonly struct Color : IEquatable<Color>
     public byte B { get; }
     public byte A { get; }
 
-    public Color(byte r, byte g, byte b, byte a = 255)
+    public Color(int r, int g, int b, int a = 255)
     {
-        R = r;
-        G = g;
-        B = b;
-        A = a;
+        R = (byte)Math.Clamp(r, 0, 255);
+        G = (byte)Math.Clamp(g, 0, 255);
+        B = (byte)Math.Clamp(b, 0, 255);
+        A = (byte)Math.Clamp(a, 0, 255);
     }
 
     public bool Equals(Color other) => R == other.R && G == other.G && B == other.B && A == other.A;

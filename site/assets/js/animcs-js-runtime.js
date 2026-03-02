@@ -452,75 +452,75 @@
         return null;
     }
 
-    function Vec2(x, y) {
+    function Vector2(x, y) {
         this.X = Number(x || 0);
         this.Y = Number(y || 0);
     }
 
-    Vec2.Add = function (a, b) {
-        return new Vec2(((a && a.X) || 0) + ((b && b.X) || 0), ((a && a.Y) || 0) + ((b && b.Y) || 0));
+    Vector2.Add = function (a, b) {
+        return new Vector2(((a && a.X) || 0) + ((b && b.X) || 0), ((a && a.Y) || 0) + ((b && b.Y) || 0));
     };
-    Vec2.Sub = function (a, b) {
-        return new Vec2(((a && a.X) || 0) - ((b && b.X) || 0), ((a && a.Y) || 0) - ((b && b.Y) || 0));
+    Vector2.Sub = function (a, b) {
+        return new Vector2(((a && a.X) || 0) - ((b && b.X) || 0), ((a && a.Y) || 0) - ((b && b.Y) || 0));
     };
-    Vec2.MulScalar = function (v, scalar) {
+    Vector2.MulScalar = function (v, scalar) {
         const s = Number(scalar || 0);
-        return new Vec2(((v && v.X) || 0) * s, ((v && v.Y) || 0) * s);
+        return new Vector2(((v && v.X) || 0) * s, ((v && v.Y) || 0) * s);
     };
-    Vec2.DivScalar = function (v, scalar) {
+    Vector2.DivScalar = function (v, scalar) {
         const s = Number(scalar || 0);
-        if (Math.abs(s) <= 1e-6) return new Vec2(0, 0);
-        return new Vec2(((v && v.X) || 0) / s, ((v && v.Y) || 0) / s);
+        if (Math.abs(s) <= 1e-6) return new Vector2(0, 0);
+        return new Vector2(((v && v.X) || 0) / s, ((v && v.Y) || 0) / s);
     };
 
-    function Vec3(x, y, z) {
+    function Vector3(x, y, z) {
         this.X = Number(x || 0);
         this.Y = Number(y || 0);
         this.Z = Number(z || 0);
     }
 
-    Vec3.Add = function (a, b) {
-        return new Vec3(
+    Vector3.Add = function (a, b) {
+        return new Vector3(
             ((a && a.X) || 0) + ((b && b.X) || 0),
             ((a && a.Y) || 0) + ((b && b.Y) || 0),
             ((a && a.Z) || 0) + ((b && b.Z) || 0)
         );
     };
-    Vec3.Sub = function (a, b) {
-        return new Vec3(
+    Vector3.Sub = function (a, b) {
+        return new Vector3(
             ((a && a.X) || 0) - ((b && b.X) || 0),
             ((a && a.Y) || 0) - ((b && b.Y) || 0),
             ((a && a.Z) || 0) - ((b && b.Z) || 0)
         );
     };
-    Vec3.MulScalar = function (v, scalar) {
+    Vector3.MulScalar = function (v, scalar) {
         const s = Number(scalar || 0);
-        return new Vec3(((v && v.X) || 0) * s, ((v && v.Y) || 0) * s, ((v && v.Z) || 0) * s);
+        return new Vector3(((v && v.X) || 0) * s, ((v && v.Y) || 0) * s, ((v && v.Z) || 0) * s);
     };
-    Vec3.DivScalar = function (v, scalar) {
+    Vector3.DivScalar = function (v, scalar) {
         const s = Number(scalar || 0);
-        if (Math.abs(s) <= 1e-6) return new Vec3(0, 0, 0);
-        return new Vec3(((v && v.X) || 0) / s, ((v && v.Y) || 0) / s, ((v && v.Z) || 0) / s);
+        if (Math.abs(s) <= 1e-6) return new Vector3(0, 0, 0);
+        return new Vector3(((v && v.X) || 0) / s, ((v && v.Y) || 0) / s, ((v && v.Z) || 0) / s);
     };
-    Vec3.Length = function (v) {
+    Vector3.Length = function (v) {
         const x = (v && v.X) || 0;
         const y = (v && v.Y) || 0;
         const z = (v && v.Z) || 0;
         return Math.sqrt(x * x + y * y + z * z);
     };
-    Vec3.Normalize = function (v) {
-        const len = Vec3.Length(v);
-        if (len <= 1e-6) return new Vec3(0, 0, 0);
-        return Vec3.DivScalar(v, len);
+    Vector3.Normalize = function (v) {
+        const len = Vector3.Length(v);
+        if (len <= 1e-6) return new Vector3(0, 0, 0);
+        return Vector3.DivScalar(v, len);
     };
-    Vec3.prototype.Length = function () {
-        return Vec3.Length(this);
+    Vector3.prototype.Length = function () {
+        return Vector3.Length(this);
     };
-    Vec3.prototype.Normalize = function () {
-        return Vec3.Normalize(this);
+    Vector3.prototype.Normalize = function () {
+        return Vector3.Normalize(this);
     };
 
-    function Mat4(
+    function Matrix(
         m00, m01, m02, m03,
         m10, m11, m12, m13,
         m20, m21, m22, m23,
@@ -544,74 +544,79 @@
         this.M33 = Number(m33 == null ? 1 : m33);
     }
 
-    Mat4.Identity = function () {
-        return new Mat4(
+    function createIdentityMatrix() {
+        return new Matrix(
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1
         );
-    };
-    Mat4.Translation = function (x, y, z) {
-        return new Mat4(
+    }
+    Object.defineProperty(Matrix, 'Identity', {
+        get: function () {
+            return createIdentityMatrix();
+        }
+    });
+    Matrix.CreateTranslation = function (x, y, z) {
+        return new Matrix(
             1, 0, 0, Number(x || 0),
             0, 1, 0, Number(y || 0),
             0, 0, 1, Number(z || 0),
             0, 0, 0, 1
         );
     };
-    Mat4.Scale = function (x, y, z) {
-        return new Mat4(
+    Matrix.CreateScale = function (x, y, z) {
+        return new Matrix(
             Number(x || 0), 0, 0, 0,
             0, Number(y || 0), 0, 0,
             0, 0, Number(z || 0), 0,
             0, 0, 0, 1
         );
     };
-    Mat4.RotationX = function (radians) {
+    Matrix.CreateRotationX = function (radians) {
         const c = Math.cos(Number(radians || 0));
         const s = Math.sin(Number(radians || 0));
-        return new Mat4(
+        return new Matrix(
             1, 0, 0, 0,
             0, c, -s, 0,
             0, s, c, 0,
             0, 0, 0, 1
         );
     };
-    Mat4.RotationY = function (radians) {
+    Matrix.CreateRotationY = function (radians) {
         const c = Math.cos(Number(radians || 0));
         const s = Math.sin(Number(radians || 0));
-        return new Mat4(
+        return new Matrix(
             c, 0, s, 0,
             0, 1, 0, 0,
             -s, 0, c, 0,
             0, 0, 0, 1
         );
     };
-    Mat4.RotationZ = function (radians) {
+    Matrix.CreateRotationZ = function (radians) {
         const c = Math.cos(Number(radians || 0));
         const s = Math.sin(Number(radians || 0));
-        return new Mat4(
+        return new Matrix(
             c, -s, 0, 0,
             s, c, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1
         );
     };
-    Mat4.PerspectiveFovRh = function (fov, aspect, near, far) {
+    Matrix.CreatePerspectiveFieldOfView = function (fov, aspect, near, far) {
         const f = 1 / Math.tan(Number(fov || 0) * 0.5);
         const a = Number(aspect || 1);
         const n = Number(near || 0.1);
         const fr = Number(far || 1000);
-        return new Mat4(
+        return new Matrix(
             f / a, 0, 0, 0,
             0, f, 0, 0,
             0, 0, fr / (n - fr), (fr * n) / (n - fr),
             0, 0, -1, 0
         );
     };
-    Mat4.Mul = function (a, b) {
-        return new Mat4(
+    Matrix.Multiply = function (a, b) {
+        return new Matrix(
             a.M00 * b.M00 + a.M01 * b.M10 + a.M02 * b.M20 + a.M03 * b.M30,
             a.M00 * b.M01 + a.M01 * b.M11 + a.M02 * b.M21 + a.M03 * b.M31,
             a.M00 * b.M02 + a.M01 * b.M12 + a.M02 * b.M22 + a.M03 * b.M32,
@@ -633,24 +638,24 @@
             a.M30 * b.M03 + a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33
         );
     };
-    Mat4.MulVec2 = function (m, v) {
+    Matrix.TransformVector2 = function (m, v) {
         const x = m.M00 * v.X + m.M01 * v.Y + m.M03;
         const y = m.M10 * v.X + m.M11 * v.Y + m.M13;
         const w = m.M30 * v.X + m.M31 * v.Y + m.M33;
         if (Math.abs(w) > 1e-6 && Math.abs(w - 1) > 1e-6) {
-            return new Vec2(x / w, y / w);
+            return new Vector2(x / w, y / w);
         }
-        return new Vec2(x, y);
+        return new Vector2(x, y);
     };
-    Mat4.MulVec3 = function (m, v) {
+    Matrix.TransformVector3 = function (m, v) {
         const x = m.M00 * v.X + m.M01 * v.Y + m.M02 * v.Z + m.M03;
         const y = m.M10 * v.X + m.M11 * v.Y + m.M12 * v.Z + m.M13;
         const z = m.M20 * v.X + m.M21 * v.Y + m.M22 * v.Z + m.M23;
         const w = m.M30 * v.X + m.M31 * v.Y + m.M32 * v.Z + m.M33;
         if (Math.abs(w) > 1e-6 && Math.abs(w - 1) > 1e-6) {
-            return new Vec3(x / w, y / w, z / w);
+            return new Vector3(x / w, y / w, z / w);
         }
-        return new Vec3(x, y, z);
+        return new Vector3(x, y, z);
     };
 
     function Color(r, g, b, a) {
@@ -664,7 +669,7 @@
         const pos = position || {};
         const col = color || {};
         const uv = textureCoordinate || {};
-        this.Position = new Vec3(
+        this.Position = new Vector3(
             Number(pos.X || 0),
             Number(pos.Y || 0),
             Number(pos.Z || 0)
@@ -675,7 +680,7 @@
             Number(col.B == null ? 255 : col.B),
             Number(col.A == null ? 255 : col.A)
         );
-        this.TextureCoordinate = new Vec2(
+        this.TextureCoordinate = new Vector2(
             Number(uv.X == null ? uv.U : uv.X) || 0,
             Number(uv.Y == null ? uv.V : uv.Y) || 0
         );
@@ -824,7 +829,7 @@
         TriangleList: 0
     });
 
-    const BlendMode = Object.freeze({
+    const BlendState = Object.freeze({
         AlphaBlend: 0,
         Additive: 1,
         Opaque: 2
@@ -876,11 +881,11 @@
         return Math.max(0, Math.min(1, Number(value || 0)));
     }
 
-    function normalizeBlendMode(mode) {
+    function normalizeBlendState(mode) {
         const raw = Number(mode);
-        if (raw === BlendMode.Additive) return BlendMode.Additive;
-        if (raw === BlendMode.Opaque) return BlendMode.Opaque;
-        return BlendMode.AlphaBlend;
+        if (raw === BlendState.Additive) return BlendState.Additive;
+        if (raw === BlendState.Opaque) return BlendState.Opaque;
+        return BlendState.AlphaBlend;
     }
 
     function normalizeContentPath(input, expectedExtRe) {
@@ -938,7 +943,7 @@
             effectSource: '',
             effectPromise: null,
             effectError: '',
-            blendMode: BlendMode.AlphaBlend,
+            blendState: BlendState.AlphaBlend,
             floatUniforms: Object.create(null),
             vec2Uniforms: Object.create(null),
             colorUniforms: Object.create(null),
@@ -1193,8 +1198,8 @@
 
         function applyBlendFor2d(mode) {
             if (!ctx) return;
-            const safe = normalizeBlendMode(mode);
-            if (safe === BlendMode.Additive) {
+            const safe = normalizeBlendState(mode);
+            if (safe === BlendState.Additive) {
                 ctx.globalCompositeOperation = 'lighter';
                 return;
             }
@@ -1214,7 +1219,7 @@
             if ((startIndex + need) > indices.length) return false;
 
             ctx.save();
-            applyBlendFor2d(meshState.blendMode);
+            applyBlendFor2d(meshState.blendState);
             for (let tri = 0; tri < primitiveCount; tri += 1) {
                 const i0 = Number(indices[startIndex + tri * 3]) - startVertex;
                 const i1 = Number(indices[startIndex + tri * 3 + 1]) - startVertex;
@@ -1289,11 +1294,11 @@
             const indexArray = useUint32 ? new Uint32Array(logical) : new Uint16Array(logical);
 
             gl.viewport(0, 0, glState.glCanvas.width, glState.glCanvas.height);
-            if (meshState.blendMode === BlendMode.Opaque) {
+            if (meshState.blendState === BlendState.Opaque) {
                 gl.disable(gl.BLEND);
             } else {
                 gl.enable(gl.BLEND);
-                if (meshState.blendMode === BlendMode.Additive) {
+                if (meshState.blendState === BlendState.Additive) {
                     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.SRC_ALPHA, gl.ONE);
                 } else {
                     gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -1423,7 +1428,7 @@
 
             if (ctx) {
                 ctx.save();
-                applyBlendFor2d(meshState.blendMode);
+                applyBlendFor2d(meshState.blendState);
                 ctx.drawImage(glState.glCanvas, 0, 0, canvas.width, canvas.height);
                 ctx.restore();
             }
@@ -1496,8 +1501,8 @@
                 meshState.effectError = '';
                 meshState.effectPromise = null;
             },
-            SetBlendMode: function (mode) {
-                meshState.blendMode = normalizeBlendMode(mode);
+            SetBlendState: function (mode) {
+                meshState.blendState = normalizeBlendState(mode);
             },
             SetTexture: function (slot, texturePath) {
                 const index = resolveTextureSlotIndex(slot);
@@ -1518,7 +1523,7 @@
                 if (!key) return;
                 meshState.floatUniforms[key] = Number(value || 0);
             },
-            SetVec2: function (name, value) {
+            SetVector2: function (name, value) {
                 const key = String(name || '').trim();
                 if (!key) return;
                 const safe = value || {};
@@ -1548,14 +1553,14 @@
         return api;
     }
 
-    function createAnimGeomApi(Vec2Ctor, ColorCtor, MathApi) {
+    function createAnimGeomApi(Vector2Ctor, ColorCtor, MathApi) {
         const defaults = {
             axisColor: new ColorCtor(90, 100, 120, 200),
             gridColor: new ColorCtor(40, 50, 70, 120)
         };
 
         function toScreen(v, center, scale) {
-            return new Vec2Ctor(center.X + v.X * scale, center.Y - v.Y * scale);
+            return new Vector2Ctor(center.X + v.X * scale, center.Y - v.Y * scale);
         }
 
         function drawAxes(g, center, scale, axisColor, gridColor) {
@@ -1564,15 +1569,15 @@
             const useGrid = gridColor || defaults.gridColor;
             const axisLength = scale * 1.2;
 
-            g.Line(new Vec2Ctor(center.X - axisLength, center.Y), new Vec2Ctor(center.X + axisLength, center.Y), useAxis, 1.5);
-            g.Line(new Vec2Ctor(center.X, center.Y - axisLength), new Vec2Ctor(center.X, center.Y + axisLength), useAxis, 1.5);
+            g.Line(new Vector2Ctor(center.X - axisLength, center.Y), new Vector2Ctor(center.X + axisLength, center.Y), useAxis, 1.5);
+            g.Line(new Vector2Ctor(center.X, center.Y - axisLength), new Vector2Ctor(center.X, center.Y + axisLength), useAxis, 1.5);
 
             for (let i = 1; i <= 4; i += 1) {
                 const offset = i * scale * 0.25;
-                g.Line(new Vec2Ctor(center.X - axisLength, center.Y - offset), new Vec2Ctor(center.X + axisLength, center.Y - offset), useGrid, 1);
-                g.Line(new Vec2Ctor(center.X - axisLength, center.Y + offset), new Vec2Ctor(center.X + axisLength, center.Y + offset), useGrid, 1);
-                g.Line(new Vec2Ctor(center.X - offset, center.Y - axisLength), new Vec2Ctor(center.X - offset, center.Y + axisLength), useGrid, 1);
-                g.Line(new Vec2Ctor(center.X + offset, center.Y - axisLength), new Vec2Ctor(center.X + offset, center.Y + axisLength), useGrid, 1);
+                g.Line(new Vector2Ctor(center.X - axisLength, center.Y - offset), new Vector2Ctor(center.X + axisLength, center.Y - offset), useGrid, 1);
+                g.Line(new Vector2Ctor(center.X - axisLength, center.Y + offset), new Vector2Ctor(center.X + axisLength, center.Y + offset), useGrid, 1);
+                g.Line(new Vector2Ctor(center.X - offset, center.Y - axisLength), new Vector2Ctor(center.X - offset, center.Y + axisLength), useGrid, 1);
+                g.Line(new Vector2Ctor(center.X + offset, center.Y - axisLength), new Vector2Ctor(center.X + offset, center.Y + axisLength), useGrid, 1);
             }
         }
 
@@ -1582,16 +1587,16 @@
             const arrowHead = headSize == null ? 8 : headSize;
             g.Line(from, to, color, lineWidth);
 
-            const dir = new Vec2Ctor(to.X - from.X, to.Y - from.Y);
+            const dir = new Vector2Ctor(to.X - from.X, to.Y - from.Y);
             const len = MathApi.Sqrt(dir.X * dir.X + dir.Y * dir.Y);
             if (len <= 0.001) return;
 
             const ux = dir.X / len;
             const uy = dir.Y / len;
-            const left = new Vec2Ctor(-uy, ux);
-            const basePoint = new Vec2Ctor(to.X - ux * arrowHead, to.Y - uy * arrowHead);
-            const leftPoint = new Vec2Ctor(basePoint.X + left.X * arrowHead * 0.55, basePoint.Y + left.Y * arrowHead * 0.55);
-            const rightPoint = new Vec2Ctor(basePoint.X - left.X * arrowHead * 0.55, basePoint.Y - left.Y * arrowHead * 0.55);
+            const left = new Vector2Ctor(-uy, ux);
+            const basePoint = new Vector2Ctor(to.X - ux * arrowHead, to.Y - uy * arrowHead);
+            const leftPoint = new Vector2Ctor(basePoint.X + left.X * arrowHead * 0.55, basePoint.Y + left.Y * arrowHead * 0.55);
+            const rightPoint = new Vector2Ctor(basePoint.X - left.X * arrowHead * 0.55, basePoint.Y - left.Y * arrowHead * 0.55);
 
             g.Line(to, leftPoint, color, lineWidth);
             g.Line(to, rightPoint, color, lineWidth);
@@ -1613,15 +1618,15 @@
         const context = new AnimContext(width, height);
         const runtimeRenderState = { time: 0, delta: 0, frame: 0 };
         const runtimeApi = {
-            Vec2,
-            Vec3,
-            Mat4,
+            Vector2,
+            Vector3,
+            Matrix,
             Color,
             PrimitiveType,
-            BlendMode,
+            BlendState,
             VertexPositionColorTexture,
             MathF,
-            AnimGeom: createAnimGeomApi(Vec2, Color, MathF)
+            AnimGeom: createAnimGeomApi(Vector2, Color, MathF)
         };
         const canvasApi = createCanvasApi(canvas, ctx, runtimeRenderState);
         const controlState = opts.controlState || null;
@@ -1864,12 +1869,12 @@
     }
 
     return {
-        Vec2,
-        Vec3,
-        Mat4,
+        Vector2,
+        Vector3,
+        Matrix,
         Color,
         PrimitiveType,
-        BlendMode,
+        BlendState,
         VertexPositionColorTexture,
         MathF,
         normalizeAnimPath,

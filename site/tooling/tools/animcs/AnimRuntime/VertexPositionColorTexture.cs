@@ -1,14 +1,14 @@
-using AnimRuntime.Math;
+using Microsoft.Xna.Framework;
 
-namespace AnimRuntime;
+namespace Microsoft.Xna.Framework.Graphics;
 
 public readonly struct VertexPositionColorTexture
 {
-    public Vec3 Position { get; }
+    public Vector3 Position { get; }
     public Color Color { get; }
-    public Vec2 TextureCoordinate { get; }
+    public Vector2 TextureCoordinate { get; }
 
-    public VertexPositionColorTexture(Vec3 position, Color color, Vec2 textureCoordinate)
+    public VertexPositionColorTexture(Vector3 position, Color color, Vector2 textureCoordinate)
     {
         Position = position;
         Color = color;
