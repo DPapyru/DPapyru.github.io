@@ -101,6 +101,8 @@ test('tml-ide markdown insertion snippets use protocol embeds', () => {
     assert.match(source, /anims:anims\/你的动画文件\.cs/);
     assert.match(source, /cs:\.\/code\/demo\.cs#cs:t:命名空间\.类型名/);
     assert.match(source, /fx:\.\/shaders\/demo\.fx/);
+    assert.match(source, /if \(key === 'math-inline'\)/);
+    assert.match(source, /if \(key === 'math-block'\)/);
     assert.doesNotMatch(source, /insertMarkdownBlockSnippet\(`\{\{anim:/);
     assert.doesNotMatch(source, /insertMarkdownBlockSnippet\(`\{\{cs:/);
 });
@@ -110,6 +112,8 @@ test('legacy article studio insertion snippets also use protocol embeds', () => 
 
     assert.match(source, /\(cs:\$\{pathPart\}#cs:/);
     assert.match(source, /\[待补充说明\]\(anims:anims\/你的动画文件\.cs\)/);
+    assert.match(source, /if \(key === 'math-inline'\)/);
+    assert.match(source, /if \(key === 'math-block'\)/);
     assert.doesNotMatch(source, /insertBlockSnippet\(`\{\{anim:/);
     assert.doesNotMatch(source, /insertBlockSnippet\(`\{\{cs:/);
 });

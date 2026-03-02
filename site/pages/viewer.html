@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="/site/assets/css/prism.min.css"> <!-- 代码高亮样式 -->
     <link rel="stylesheet" href="/site/assets/css/rider-dark-theme.css"> <!-- Rider Dark代码高亮主题 -->
     <link rel="stylesheet" href="/site/assets/css/animts-runtime.css"> <!-- 动画运行时样式 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"> <!-- KaTeX 数学公式样式 -->
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png"> <!-- 网站图标 -->
 
     <!-- 主题切换脚本 - 早期加载以避免闪烁 -->
@@ -1274,6 +1275,8 @@
                 </script>
 			    <script src="/site/assets/js/site-config.js"></script>
 			    <script src="/site/assets/js/marked.min.js"></script> <!-- Markdown解析库 -->
+                <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script> <!-- KaTeX 渲染库 -->
+                <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script> <!-- KaTeX 自动渲染 -->
 			    <script src="/shared/capabilities/markdown/core/markdown-safety.js"></script>
                 <script src="/shared/capabilities/markdown/core/markdown-link-resolver.js"></script>
                 <script src="/shared/capabilities/markdown/core/create-markdown-pipeline.js"></script>
@@ -6786,6 +6789,7 @@
                                 installStudioPreviewAnimResolver(markdownContent);
                                 installFxEmbedInteractions(markdownContent);
                                 applyMarkdownCalloutBlocks(markdownContent);
+                                renderMarkdownMath(markdownContent);
 
 		                        // 移除正文内重复的“章节进度”导航（统一使用页脚导航）
 		                        removeDuplicateChapterProgress(markdownContent);
@@ -7669,7 +7673,24 @@
         }
 
         function stripMarkdownCalloutMarker(text) {
-            return String(text || '').replace(/^\s*\[![A-Za-z]+\]\s*/, '');
+            const source = String(text || '');
+            const lines = source.split(/\r?\n/);
+            const strippedLines = [];
+            let markerRemoved = false;
+
+            lines.forEach(function (line) {
+                const current = String(line || '');
+                if (!markerRemoved && current.trim()) {
+                    if (/^\s*\[![A-Za-z]+\](?:\s+.*)?\s*$/.test(current)) {
+                        markerRemoved = true;
+                        return;
+                    }
+                }
+                strippedLines.push(current);
+            });
+
+            if (!markerRemoved) return source;
+            return strippedLines.join('\n').replace(/^(?:\s*\n)+/, '');
         }
 
         function applyMarkdownCalloutBlocks(container) {
@@ -7707,13 +7728,41 @@
                         firstParagraph.remove();
                     }
                 } else {
-                    const original = String(blockquote.textContent || '');
+                    const textNode = Array.from(blockquote.childNodes).find(function (node) {
+                        return node && node.nodeType === 3 && String(node.textContent || '').trim();
+                    });
+                    if (!textNode) return;
+
+                    const original = String(textNode.textContent || '');
                     const stripped = stripMarkdownCalloutMarker(original);
                     if (stripped !== original) {
-                        blockquote.textContent = stripped;
+                        textNode.textContent = stripped;
                     }
                 }
             });
+        }
+
+        const MARKDOWN_MATH_RENDER_OPTIONS = Object.freeze({
+            delimiters: Object.freeze([
+                { left: '$$', right: '$$', display: true },
+                { left: '\\[', right: '\\]', display: true },
+                { left: '$', right: '$', display: false },
+                { left: '\\(', right: '\\)', display: false }
+            ]),
+            throwOnError: false,
+            ignoredTags: Object.freeze(['script', 'noscript', 'style', 'textarea', 'pre', 'code'])
+        });
+
+        function renderMarkdownMath(container) {
+            const root = container || document.getElementById('markdown-content');
+            if (!root) return;
+            if (typeof window.renderMathInElement !== 'function') return;
+
+            try {
+                window.renderMathInElement(root, MARKDOWN_MATH_RENDER_OPTIONS);
+            } catch (error) {
+                console.warn('KaTeX 渲染失败，已回退到原始公式文本:', error);
+            }
         }
 
         // 将难度代码转换为中文文本
@@ -9079,6 +9128,7 @@
                     dom.output.classList.add('viewer-ai-output--markdown');
                     dom.output.innerHTML = renderAiMarkdown(text);
                     applyMarkdownCalloutBlocks(dom.output);
+                    renderMarkdownMath(dom.output);
                     return;
                 }
 

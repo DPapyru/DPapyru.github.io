@@ -12,6 +12,20 @@ test('viewer contains markdown callout runtime for > [!LEVEL] syntax', () => {
     assert.match(viewer, /stripMarkdownCalloutMarker/);
     assert.match(viewer, /applyMarkdownCalloutBlocks\(markdownContent\)/);
     assert.match(viewer, /applyMarkdownCalloutBlocks\(dom\.output\)/);
+    assert.match(viewer, /markerRemoved/);
+    assert.match(viewer, /strippedLines\.join\('\\n'\)/);
+});
+
+test('viewer contains KaTeX runtime and applies math rendering for markdown outputs', () => {
+    const viewer = fs.readFileSync(path.resolve('site/pages/viewer.html'), 'utf8');
+
+    assert.match(viewer, /katex\.min\.css/);
+    assert.match(viewer, /katex\.min\.js/);
+    assert.match(viewer, /auto-render\.min\.js/);
+    assert.match(viewer, /renderMarkdownMath/);
+    assert.match(viewer, /renderMathInElement/);
+    assert.match(viewer, /renderMarkdownMath\(markdownContent\)/);
+    assert.match(viewer, /renderMarkdownMath\(dom\.output\)/);
 });
 
 test('viewer embeds fx references as fxembed fenced blocks', () => {

@@ -7569,6 +7569,16 @@
             return;
         }
 
+        if (key === 'math-inline') {
+            wrapSelection('$', '$', '公式');
+            return;
+        }
+
+        if (key === 'math-block') {
+            insertBlockSnippet('$$\n公式\n$$\n', '公式');
+            return;
+        }
+
         if (key === 'ref') {
             const selectedTitle = toSingleLineText(readCurrentSelectionText(), '引用标题');
             insertBlockSnippet(`[${selectedTitle}](目标文档.md)\n`, '目标文档.md');

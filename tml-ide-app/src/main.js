@@ -6048,6 +6048,14 @@ function applyMarkdownInsertAction(action) {
         insertMarkdownBlockSnippet('> 这里是引用内容\n', '这里是引用内容');
         return;
     }
+    if (key === 'math-inline') {
+        wrapMarkdownSelection('$', '$', '公式');
+        return;
+    }
+    if (key === 'math-block') {
+        insertMarkdownBlockSnippet('$$\n公式\n$$\n', '公式');
+        return;
+    }
     if (key === 'ref') {
         const selectedTitle = readMarkdownSelectionText('引用标题');
         insertMarkdownBlockSnippet(`[${selectedTitle}](目标文档.md)\n`, '目标文档.md');

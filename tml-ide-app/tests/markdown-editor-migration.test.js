@@ -23,6 +23,8 @@ test('index.html exposes markdown insertion buttons migrated from article-studio
     assert.match(html, /data-md-insert="h2"/);
     assert.match(html, /data-md-insert="list"/);
     assert.match(html, /data-md-insert="quote"/);
+    assert.match(html, /data-md-insert="math-inline"/);
+    assert.match(html, /data-md-insert="math-block"/);
     assert.match(html, /data-md-insert="ref"/);
     assert.match(html, /data-md-insert="cs-embed"/);
     assert.match(html, /data-md-insert="anim"/);
@@ -62,6 +64,10 @@ test('main.js wires markdown insert actions and Ctrl+V image paste flow', () => 
     assert.match(source, /readMarkdownSelectionText\('Shader 说明'\)/);
     assert.match(source, /anims:anims\/你的动画文件\.cs/);
     assert.match(source, /fx:\.\/shaders\/demo\.fx/);
+    assert.match(source, /if \(key === 'math-inline'\)/);
+    assert.match(source, /if \(key === 'math-block'\)/);
+    assert.match(source, /wrapMarkdownSelection\('\$', '\$', '公式'\)/);
+    assert.match(source, /insertMarkdownBlockSnippet\('\$\$\\n公式\\n\$\$\\n', '公式'\)/);
     assert.match(source, /> \[!NOTE\]/);
     assert.match(source, /joinRepoPathParts\(markdownDir,\s*'imgs'\)/);
     assert.match(source, /isBinaryFileMode\(mode\)[\s\S]*extractBase64ContentFromDataUrl[\s\S]*docs\.extraEntries\.push/);
@@ -71,6 +77,6 @@ test('main.js wires markdown insert actions and Ctrl+V image paste flow', () => 
     assert.match(source, /function renderMarkdownVisualBlockPreview/);
     assert.match(source, /markdown-visual-block-render/);
     assert.match(source, /renderMarkdownVisualEmbedPreview/);
-    assert.doesNotMatch(source, /\{\{anim:/);
+    assert.doesNotMatch(source, /insertMarkdownBlockSnippet\(`\{\{anim:/);
     assert.doesNotMatch(source, /globalThis\.open\(`\/site\/pages\/viewer\.html\?file=/);
 });
