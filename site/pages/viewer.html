@@ -7753,12 +7753,64 @@
             ignoredTags: Object.freeze(['script', 'noscript', 'style', 'textarea', 'pre', 'code'])
         });
 
+        function normalizeMarkdownMathBlocks(container) {
+            if (!container || typeof container.querySelectorAll !== 'function') return;
+            const paragraphs = Array.from(container.querySelectorAll('p'));
+            if (paragraphs.length <= 0) return;
+
+            paragraphs.forEach(function (paragraph) {
+                if (!paragraph) return;
+                const original = String(paragraph.textContent || '').trim();
+                const inlineBlockMatch = original.match(/^\$\$([\s\S]+)\$\$$/);
+                if (!inlineBlockMatch) return;
+                const body = String(inlineBlockMatch[1] || '').trim();
+                if (!body) return;
+                paragraph.textContent = `\\[\n${body}\n\\]`;
+            });
+
+            if (paragraphs.length <= 2) return;
+
+            for (let i = 0; i < paragraphs.length; i += 1) {
+                const start = paragraphs[i];
+                if (!start || String(start.textContent || '').trim() !== '$$') continue;
+
+                let endIndex = -1;
+                const bodyParts = [];
+                for (let j = i + 1; j < paragraphs.length; j += 1) {
+                    const current = paragraphs[j];
+                    const text = String(current && current.textContent || '').trim();
+                    if (text === '$$') {
+                        endIndex = j;
+                        break;
+                    }
+                    bodyParts.push(String(current && current.textContent || ''));
+                }
+                if (endIndex < 0 || bodyParts.length <= 0) continue;
+
+                const merged = document.createElement('p');
+                merged.textContent = `\\[\n${bodyParts.join('\n')}\n\\]`;
+                const parent = start.parentNode;
+                if (!parent) continue;
+
+                parent.insertBefore(merged, start);
+                for (let j = i; j <= endIndex; j += 1) {
+                    const node = paragraphs[j];
+                    if (node && node.parentNode === parent) {
+                        parent.removeChild(node);
+                    }
+                }
+
+                i = endIndex;
+            }
+        }
+
         function renderMarkdownMath(container) {
             const root = container || document.getElementById('markdown-content');
             if (!root) return;
             if (typeof window.renderMathInElement !== 'function') return;
 
             try {
+                normalizeMarkdownMathBlocks(root);
                 window.renderMathInElement(root, MARKDOWN_MATH_RENDER_OPTIONS);
             } catch (error) {
                 console.warn('KaTeX 渲染失败，已回退到原始公式文本:', error);

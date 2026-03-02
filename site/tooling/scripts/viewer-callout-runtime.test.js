@@ -22,6 +22,7 @@ test('viewer contains KaTeX runtime and applies math rendering for markdown outp
     assert.match(viewer, /katex\.min\.css/);
     assert.match(viewer, /katex\.min\.js/);
     assert.match(viewer, /auto-render\.min\.js/);
+    assert.match(viewer, /normalizeMarkdownMathBlocks/);
     assert.match(viewer, /renderMarkdownMath/);
     assert.match(viewer, /renderMathInElement/);
     assert.match(viewer, /renderMarkdownMath\(markdownContent\)/);

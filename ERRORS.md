@@ -2495,3 +2495,26 @@
 **备注**：
 - 本次修复聚焦：旧贡献别名映射到 `如何贡献` 新路径、BM25 新旧分类键兼容、`check-content` 忽略代码块与行内代码中的协议链接示例。
 - 受环境限制未执行 `npm run build` / `npm run check-generated`（依赖安装失败）。
+
+### 验证记录 [2026-03-02 11:34]：KaTeX 公式接入 + 双编辑器公式按钮 + Callout 去重修复
+
+**级别**：L3（viewer 渲染链路 + IDE 按钮 + legacy 子应用）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/markdown-editor-migration.test.js site/tooling/scripts/viewer-callout-runtime.test.js site/tooling/scripts/markdown-ref-standard-links.test.js`：通过（13 passed, 0 failed）
+- `npm run build`：通过（`site-app` 与 `tml-ide-app` 构建完成）
+- `npm run check-generated`：失败（末尾 `git diff --exit-code` 未通过，生成产物与哈希文件存在差异）
+
+**浏览器调试验证（Playwright + 本地 Chrome）**：
+- 预览场景：`viewer.html?studio_preview=1` 注入临时 Markdown payload（行内公式 + 块公式 + WARNING Callout + 普通引用）
+- 验证结果：
+  - `katexCount = 2`，`katexDisplayCount = 1`（行内/块公式均成功渲染）
+  - `calloutCount = 1`，`plainQuoteCount = 1`（严格模式生效，普通引用未升级）
+  - `warningTitleCount = 1`，`warningBodyCount = 1`，`markerResidueCount = 0`（无重复标题/正文、无 marker 残留）
+- 编辑器按钮验证：
+  - `tml-ide-app`：`math-inline` / `math-block` 按钮存在
+  - legacy `tml-ide/subapps/markdown`：两处语法区均存在 `math-inline` / `math-block`
+
+**备注**：
+- 根目录 `npm ci` 仍不可用（仓库无 `package-lock.json`），本轮继续采用 `npm install` 进行依赖安装。
+- `check-generated` 失败类型与历史一致：构建后生成文件与资源哈希存在工作树差异，需要按提交策略统一纳入或回收。
