@@ -895,11 +895,8 @@ function cleanPath(path) {
 	            'tutorial-index.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
 	            'DPapyru-ForNewModder.md': 'Modder入门/0-指南/DPapyru-给新人的前言.md',
 		            'DPapyru-ForContributors-Basic.md': '如何贡献/教学文章写作指南.md',
-		            '怎么贡献/DPapyru-贡献者如何编写文章基础.md': '如何贡献/教学文章写作指南.md',
-		            '怎么贡献/教学文章写作指南.md': '如何贡献/教学文章写作指南.md',
 		            'TopicSystemGuide.md': '如何贡献/站点Markdown扩展语法说明.md',
-		            'TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md',
-		            '怎么贡献/TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md'
+		            'TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md'
 		        };
 
         // 检查是否需要映射旧路径到新路径
@@ -1001,11 +998,8 @@ function tryFallbackPaths(originalPath) {
 	            'site/content/tutorial-index.md': 'site/content/Modder入门/0-指南/DPapyru-给新人的前言.md',
 	            'site/content/DPapyru-ForNewModder.md': 'site/content/Modder入门/0-指南/DPapyru-给新人的前言.md',
 		            'site/content/DPapyru-ForContributors-Basic.md': 'site/content/如何贡献/教学文章写作指南.md',
-		            'site/content/怎么贡献/DPapyru-贡献者如何编写文章基础.md': 'site/content/如何贡献/教学文章写作指南.md',
-		            'site/content/怎么贡献/教学文章写作指南.md': 'site/content/如何贡献/教学文章写作指南.md',
 		            'site/content/TopicSystemGuide.md': 'site/content/如何贡献/站点Markdown扩展语法说明.md',
-		            'site/content/TopicSystem使用指南.md': 'site/content/如何贡献/站点Markdown扩展语法说明.md',
-		            'site/content/怎么贡献/TopicSystem使用指南.md': 'site/content/如何贡献/站点Markdown扩展语法说明.md'
+		            'site/content/TopicSystem使用指南.md': 'site/content/如何贡献/站点Markdown扩展语法说明.md'
 		        };
 
         // 检查原始路径是否匹配旧结构，如果是则添加新结构路径作为备用

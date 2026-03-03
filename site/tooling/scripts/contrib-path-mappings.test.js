@@ -10,11 +10,20 @@ function loadConfig() {
 
 const REQUIRED_MAPPINGS = {
     'DPapyru-ForContributors-Basic.md': '如何贡献/教学文章写作指南.md',
-    '怎么贡献/DPapyru-贡献者如何编写文章基础.md': '如何贡献/教学文章写作指南.md',
-    '怎么贡献/教学文章写作指南.md': '如何贡献/教学文章写作指南.md',
     'TopicSystemGuide.md': '如何贡献/站点Markdown扩展语法说明.md',
-    'TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md',
-    '怎么贡献/TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md'
+    'TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md'
+};
+
+const REMOVED_MAPPINGS = [
+    '怎么贡献/DPapyru-贡献者如何编写文章基础.md',
+    '怎么贡献/教学文章写作指南.md',
+    '怎么贡献/TopicSystem使用指南.md'
+];
+
+function assertRemovedMappings(mappingTable, tableName) {
+    REMOVED_MAPPINGS.forEach((legacyPath) => {
+        assert.equal(mappingTable[legacyPath], undefined, `${tableName} should remove legacy mapping: ${legacyPath}`);
+    });
 };
 
 test('config pathMappings keeps contributor legacy aliases mapped to current paths', () => {
@@ -33,6 +42,18 @@ test('settings.pathMappings mirrors required contributor alias mappings', () => 
     Object.entries(REQUIRED_MAPPINGS).forEach(([legacyPath, nextPath]) => {
         assert.equal(settingsMappings[legacyPath], nextPath, `missing settings mapping: ${legacyPath}`);
     });
+});
+
+test('config pathMappings removes obsolete 怎么贡献 aliases', () => {
+    const config = loadConfig();
+    const topMappings = config.pathMappings || {};
+    assertRemovedMappings(topMappings, 'pathMappings');
+});
+
+test('settings.pathMappings removes obsolete 怎么贡献 aliases', () => {
+    const config = loadConfig();
+    const settingsMappings = (config.settings && config.settings.pathMappings) || {};
+    assertRemovedMappings(settingsMappings, 'settings.pathMappings');
 });
 
 test('mapped contributor targets exist in config all_files index', () => {

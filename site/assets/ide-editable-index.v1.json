@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "root": "site/content",
-  "generatedAt": "2026-03-03T06:36:12.537Z",
+  "generatedAt": "2026-03-03T08:43:00.775Z",
   "files": [
     {
       "path": "Modder入门/code/firstclass_makefirstweapon.cs",
@@ -164,19 +164,7 @@
       "kind": "markdown"
     },
     {
-      "path": "怎么贡献/使用网页特殊动画模块.md",
-      "kind": "markdown"
-    },
-    {
       "path": "怎么贡献/在线写作IDE使用教程.md",
-      "kind": "markdown"
-    },
-    {
-      "path": "怎么贡献/教学文章写作指南.md",
-      "kind": "markdown"
-    },
-    {
-      "path": "怎么贡献/站点Markdown扩展语法说明.md",
       "kind": "markdown"
     },
     {

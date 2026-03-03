@@ -53,14 +53,32 @@ test('resolveViewerFile keeps contributor aliases compatible with current config
 
     const cases = [
         ['DPapyru-ForContributors-Basic.md', '如何贡献/教学文章写作指南.md'],
-        ['怎么贡献/DPapyru-贡献者如何编写文章基础.md', '如何贡献/教学文章写作指南.md'],
         ['TopicSystemGuide.md', '如何贡献/站点Markdown扩展语法说明.md'],
-        ['怎么贡献/TopicSystem使用指南.md', '如何贡献/站点Markdown扩展语法说明.md']
+        ['TopicSystem使用指南.md', '如何贡献/站点Markdown扩展语法说明.md']
     ];
 
     for (const [rawFile, expectedPath] of cases) {
         const resolved = resolveViewerFile(rawFile, { allDocs, pathMappings });
         assert.equal(resolved.path, expectedPath);
         assert.equal(resolved.reason, 'path-mapping');
+    }
+});
+
+test('resolveViewerFile no longer maps removed 怎么贡献 aliases via pathMappings', () => {
+    const configPath = path.resolve(__dirname, '../../site/content/config.json');
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    const allDocs = config.all_files || [];
+    const pathMappings = config.pathMappings || (config.settings && config.settings.pathMappings) || {};
+
+    const removedAliases = [
+        '怎么贡献/DPapyru-贡献者如何编写文章基础.md',
+        '怎么贡献/教学文章写作指南.md',
+        '怎么贡献/TopicSystem使用指南.md'
+    ];
+
+    for (const rawFile of removedAliases) {
+        const resolved = resolveViewerFile(rawFile, { allDocs, pathMappings });
+        assert.notEqual(resolved.reason, 'path-mapping');
+        assert.notEqual(resolved.reason, 'path-mapping-fallback');
     }
 });

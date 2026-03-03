@@ -222,10 +222,9 @@
 
 	        const penalizeContrib = 0.22;
 	        const penalizeMeta = 0.55;
-        const contribPathPattern = /(?:怎么|如何)贡献/i;
+        const contribPathPattern = /如何贡献/i;
         const applyContribPenalty = (mult) => {
             categoryMultiplier['如何贡献'] = mult;
-            categoryMultiplier['怎么贡献'] = mult; // 兼容历史索引
         };
 
 	        if (intent === 'meta') {
