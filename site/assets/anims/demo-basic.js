@@ -1,6 +1,6 @@
 // Generated from anims/demo-basic.cs
 export function create(runtime) {
-    const { Vec2, Vec3, Mat4, Color, MathF, AnimGeom, PrimitiveType, BlendMode, VertexPositionColorTexture } = runtime;
+    const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class DemoBasic {
         constructor() {
         }

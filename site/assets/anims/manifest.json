@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "sources": [
     "anims/animgeom-toolkit-recipes.cs",
+    "anims/arrow-easy-ai.cs",
     "anims/demo-basic.cs",
     "anims/demo-eoc-ai.cs",
     "anims/demo-math-transform.cs",
@@ -34,6 +35,13 @@
             "text": "轨迹采样"
           }
         ]
+      }
+    },
+    "anims/arrow-easy-ai.cs": {
+      "js": "arrow-easy-ai.js",
+      "entry": "arrow-easy-ai",
+      "profile": {
+        "heightScale": 3
       }
     },
     "anims/demo-basic.cs": {
@@ -229,7 +237,7 @@
       "js": "vector-add-resolution.js",
       "entry": "vector-add-resolution",
       "profile": {
-        "heightScale": 4
+        "heightScale": 2
       }
     },
     "anims/vector-basic.cs": {

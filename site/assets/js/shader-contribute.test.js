@@ -1,6 +1,20 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
 
+function loadShaderContributeApi() {
+    const scriptPath = path.resolve('tml-ide-app/public/subapps/assets/js/shader-contribute.js');
+    const scriptSource = fs.readFileSync(scriptPath, 'utf8');
+    const sandbox = {};
+    sandbox.globalThis = sandbox;
+    sandbox.URL = URL;
+    vm.runInNewContext(scriptSource, sandbox, { filename: scriptPath });
+    return sandbox.ShaderContribute || {};
+}
+
+const shaderContributeApi = loadShaderContributeApi();
 const {
     normalizeWorkerApiUrl,
     buildWorkerApiCandidates,
@@ -8,7 +22,11 @@ const {
     normalizeSlug,
     parseContributionTemplate,
     buildContributionPayload
-} = require('../../../tml-ide-app/public/subapps/assets/js/shader-contribute.js');
+} = shaderContributeApi;
+
+function toPlainJson(value) {
+    return JSON.parse(JSON.stringify(value));
+}
 
 test('normalizeWorkerApiUrl completes protocol and create-pr path', () => {
     assert.equal(
@@ -23,21 +41,21 @@ test('normalizeWorkerApiUrl completes protocol and create-pr path', () => {
 
 test('buildWorkerApiCandidates adds known mirror and deduplicates', () => {
     assert.deepEqual(
-        buildWorkerApiCandidates('greenhome-pr.3577415213.workers.dev'),
+        toPlainJson(buildWorkerApiCandidates('greenhome-pr.3577415213.workers.dev')),
         [
             'https://greenhome-pr.3577415213.workers.dev/api/create-pr',
             'https://greenhome-pr-3577415213.workers.dev/api/create-pr'
         ]
     );
     assert.deepEqual(
-        buildWorkerApiCandidates('https://greenhome-pr-3577415213.workers.dev/api/create-pr'),
+        toPlainJson(buildWorkerApiCandidates('https://greenhome-pr-3577415213.workers.dev/api/create-pr')),
         [
             'https://greenhome-pr-3577415213.workers.dev/api/create-pr',
             'https://greenhome-pr.3577415213.workers.dev/api/create-pr'
         ]
     );
     assert.deepEqual(
-        buildWorkerApiCandidates('https://example.com/api/create-pr'),
+        toPlainJson(buildWorkerApiCandidates('https://example.com/api/create-pr')),
         [
             'https://example.com/api/create-pr'
         ]

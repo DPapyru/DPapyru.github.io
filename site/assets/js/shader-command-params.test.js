@@ -1,11 +1,28 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
 
+function loadShaderCommandParamsApi() {
+    const scriptPath = path.resolve('tml-ide-app/public/subapps/assets/js/shader-command-params.js');
+    const scriptSource = fs.readFileSync(scriptPath, 'utf8');
+    const sandbox = {};
+    sandbox.globalThis = sandbox;
+    vm.runInNewContext(scriptSource, sandbox, { filename: scriptPath });
+    return sandbox.ShaderCommandParams || {};
+}
+
+const shaderCommandParamsApi = loadShaderCommandParamsApi();
 const {
     parseCommandVariables,
     applyCommandValues,
     clampCommandValue
-} = require('../../../tml-ide-app/public/subapps/assets/js/shader-command-params.js');
+} = shaderCommandParamsApi;
+
+function toPlainJson(value) {
+    return JSON.parse(JSON.stringify(value));
+}
 
 test('parseCommandVariables parses Command metadata from inline declarations', () => {
     const source = [
@@ -18,14 +35,14 @@ test('parseCommandVariables parses Command metadata from inline declarations', (
     const vars = parseCommandVariables(source);
     assert.equal(vars.length, 3);
 
-    assert.deepEqual(vars.map((v) => ({
+    assert.deepEqual(toPlainJson(vars.map((v) => ({
         name: v.name,
         type: v.type,
         value: v.value,
         min: v.min,
         max: v.max,
         step: v.step
-    })), [
+    }))), [
         { name: 'speed', type: 'float', value: 1.25, min: 0, max: 5, step: 0.25 },
         { name: 'amplitude', type: 'float', value: 0.5, min: 0, max: 2, step: 0.1 },
         { name: 'repeat', type: 'int', value: 4, min: 1, max: 12, step: 1 }

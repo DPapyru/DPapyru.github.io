@@ -1,6 +1,6 @@
 // Generated from anims/demo-mode-state.cs
 export function create(runtime) {
-    const { Vec2, Vec3, Mat4, Color, MathF, AnimGeom, PrimitiveType, BlendMode, VertexPositionColorTexture } = runtime;
+    const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class DemoModeState {
         constructor() {
             this._ctx = null;
@@ -47,10 +47,10 @@ export function create(runtime) {
             g.Clear(new Color(8, 12, 16));
             let width = this._ctx.Width;
             let height = this._ctx.Height;
-            let center = new Vec2(width * 0.5, height * 0.58);
+            let center = new Vector2(width * 0.5, height * 0.58);
             let scale = MathF.Min(width, height) * 0.32;
             AnimGeom.DrawAxes(g, center, scale);
-            let vector = new Vec2(MathF.Cos(this._angle) * 0.95, MathF.Sin(this._angle) * 0.95);
+            let vector = new Vector2(MathF.Cos(this._angle) * 0.95, MathF.Sin(this._angle) * 0.95);
             let tip = AnimGeom.ToScreen(vector, center, scale);
             AnimGeom.DrawArrow(g, center, tip, new Color(120, 200, 255, 230), 2, 11);
             g.Circle(center, scale, new Color(90, 120, 150, 120), 1);

@@ -9,11 +9,10 @@ const targetPages = [
     'site/404.html',
     'site/search-results.html',
     'site/pages/anim-renderer.html',
-    'site/pages/article-studio.html',
     'site/pages/folder.html',
-    'site/pages/shader-contribute.html',
-    'site/pages/shader-playground.html',
-    'site/pages/viewer.html'
+    'site/pages/viewer.html',
+    'tml-ide/subapps/markdown/index.html',
+    'tml-ide/subapps/shader/index.html'
 ];
 
 function readHtml(relativePath) {

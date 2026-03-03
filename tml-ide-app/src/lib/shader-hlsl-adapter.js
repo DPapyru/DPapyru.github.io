@@ -27,6 +27,22 @@ const DEFAULT_RUNTIME_UNIFORM_LINES = [
     'uniform sampler2D iChannel2;',
     'uniform sampler2D iChannel3;'
 ];
+const RUNTIME_UNIFORM_NAME_SET = new Set([
+    'uResolution',
+    'uTime',
+    'iResolution',
+    'iTime',
+    'iTimeDelta',
+    'iFrame',
+    'iMouse',
+    'iDate',
+    'iChannelTime',
+    'iChannelResolution',
+    'iChannel0',
+    'iChannel1',
+    'iChannel2',
+    'iChannel3'
+]);
 
 function isVec2Type(typeName) {
     return /^(?:float2|half2|fixed2|vec2)$/i.test(String(typeName || ''));
@@ -395,8 +411,37 @@ function applyHlslTransforms(sourceText) {
     transformed = transformed.replace(/\bclip\s*\(\s*([^\)]+)\s*\)\s*;/g, 'if (($1) < 0.0) discard;');
     transformed = transformed.replace(/\brcp\s*\(\s*([^()]+)\s*\)/g, '(1.0 / ($1))');
     transformed = transformed.replace(/\blog10\s*\(\s*([^()]+)\s*\)/g, '(log($1) / log(10.0))');
+    transformed = promoteTopLevelUniformDeclarations(transformed);
     transformed = applyImplicitIntToFloatCasts(transformed);
     return transformed;
+}
+
+function promoteTopLevelUniformDeclarations(sourceText) {
+    const lines = normalizeLineEndings(sourceText).split('\n');
+    const out = [];
+    let scopeDepth = 0;
+    const declRe = /^\s*(float|int|uint|vec2|vec3|vec4|ivec2|ivec3|ivec4|uvec2|uvec3|uvec4|mat2|mat3|mat4|sampler2D)\s+([A-Za-z_][A-Za-z0-9_]*)\s*;\s*$/;
+
+    for (const line of lines) {
+        if (scopeDepth === 0) {
+            const decl = line.match(declRe);
+            if (decl) {
+                const typeName = decl[1];
+                const varName = decl[2];
+                if (!RUNTIME_UNIFORM_NAME_SET.has(varName)) {
+                    out.push(`uniform ${typeName} ${varName};`);
+                }
+                continue;
+            }
+        }
+
+        out.push(line);
+        const opens = (line.match(/\{/g) || []).length;
+        const closes = (line.match(/\}/g) || []).length;
+        scopeDepth = Math.max(0, scopeDepth + opens - closes);
+    }
+
+    return out.join('\n');
 }
 
 function mapCallArgExpr(arg, context) {

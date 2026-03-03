@@ -76,10 +76,10 @@ anims/vec2-basic-ops.cs
 ```
 ````
 
-也可使用：
+也可使用协议链接：
 
 ```text
-{{anim:anims/vec2-basic-ops.cs}}
+[动画示例](anims:anims/vec2-basic-ops.cs)
 ```
 
 ## 推荐模块（首版 6 个）

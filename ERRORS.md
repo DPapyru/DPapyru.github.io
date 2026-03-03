@@ -2559,3 +2559,42 @@
 **备注**：
 - 本次目标改动文件：`tml-ide-app/index.html`、`tml-ide-app/src/main.js`、`tml-ide-app/src/lib/workspace-store.js`、相关测试。
 - 受当前依赖环境限制，无法在本地完成全量测试与构建闭环；新增功能对应的定向测试已通过。
+
+### 验证记录 [2026-03-03 14:21]：继续执行任务（fix/anim-fna-full-replace）
+
+**级别**：L3 续跑（构建 + 生成一致性）
+
+**命令与结果**：
+- `pnpm install --frozen-lockfile`：通过（首次出现 `EACCES`，重试后通过）
+- `npm run build`：通过（完整跑通 `generate-index`、`build:anims`、`build:site-app`、`tml-ide-app`）
+- `npm run check-generated`：失败（完整执行后卡在末尾 `git diff --exit-code`，当前工作树存在待提交差异）
+
+**备注**：
+- 首次在沙箱内执行 `npm run check-generated` 时，`build:anims` 阶段调用 `dotnet` 出现 `spawnSync dotnet EPERM`；提权重跑后可执行到差异检查阶段。
+- 本轮验证额外更新了 `tml-ide/assets/*` 哈希资源文件，并出现 `tml-ide/subapps/*` 差异，需在后续提交前确认是否按本任务范围一并纳入。
+
+### 验证记录 [2026-03-03 14:36]：TDD 修复测试失败并准备合并 main
+
+**级别**：合并前回归（测试 + 构建）
+
+**命令与结果**：
+- `node --test site/assets/js/shader-command-params.test.js site/assets/js/shader-contribute.test.js`：通过（9/9）
+- `node --test site/tooling/scripts/markdown-ref-standard-links.test.js`：通过（5/5）
+- `node --test site/tooling/scripts/page-common-alignment.test.js site/tooling/scripts/workbench-shell.test.js`：通过（8/8）
+- `node --test tml-ide-app/tests/shader-hlsl-adapter-uniform-bridge.test.js`：通过（1/1）
+- `npm test`：通过（80/80）
+- `npm run build`：通过（完整跑通 `generate-index`、`build:anims`、`build:site-app`、`tml-ide-app`）
+
+**备注**：
+- 本轮修复覆盖：legacy Markdown 语法迁移、legacy article-studio 数学片段恢复、页面模板测试路径更新、shader HLSL 适配器 uniform 桥接修复。
+
+### 验证记录 [2026-03-03 14:44]：main 合并前最终回归（TDD 收口）
+
+**级别**：合并前验收（main merge in progress）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/markdown-ref-standard-links.test.js`：通过（5/5）
+- `npm test`：通过（80/80）
+
+**备注**：
+- 本轮在 `main` 合并流程中确认 legacy article-studio `math-inline`/`math-block` 已恢复并通过回归。
