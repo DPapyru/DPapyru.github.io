@@ -15,9 +15,7 @@ const unifiedHeaderPages = [
     'site/search-results.html',
     'site/content/index.html',
     'site/pages/viewer.html',
-    'site/pages/folder.html',
-    'site/pages/shader-playground.html',
-    'site/pages/shader-contribute.html'
+    'site/pages/folder.html'
 ];
 
 function readPage(fileName) {
