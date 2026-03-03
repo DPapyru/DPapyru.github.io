@@ -2559,3 +2559,18 @@
 **备注**：
 - 本次目标改动文件：`tml-ide-app/index.html`、`tml-ide-app/src/main.js`、`tml-ide-app/src/lib/workspace-store.js`、相关测试。
 - 受当前依赖环境限制，无法在本地完成全量测试与构建闭环；新增功能对应的定向测试已通过。
+
+### 验证记录 [2026-03-03 14:33]：IDE Vector2 兼容修复 + 移除 `怎么贡献` 旧目录/旧映射
+
+**级别**：L3（IDE 解析链路 + 站点索引/搜索映射）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/analyze-v2-edge-expressions.test.js`：通过（7 passed, 0 failed）
+- `node --test site/tooling/scripts/contrib-path-mappings.test.js site/tooling/scripts/bm25-contrib-heuristics.test.js shared/specs/legacy-route-resolver.test.js`：通过（11 passed, 0 failed）
+- `rg -n "怎么贡献" site shared tml-ide-app -S`：通过（残留仅在“已移除旧映射”的测试断言和 `generate-index.js` 清理表中）
+- `npm run build`：通过（完整跑通 `generate-index`、`build:anims`、`build:site-app`、`tml-ide-app`）
+- `npm run check-generated`：失败（末尾 `git diff --exit-code` 未通过，当前工作树存在待提交差异）
+
+**备注**：
+- 本次改动已删除 `site/content/怎么贡献` 目录，并将贡献文档统一到 `如何贡献`。
+- 本次在补齐 `site-app` 依赖后复跑 `build` 已通过；`check-generated` 失败原因是工作树存在待提交改动（预期）。

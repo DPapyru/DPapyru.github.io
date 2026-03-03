@@ -648,7 +648,7 @@
                             const category = window.DOC_CONFIG.categories[categoryKey];
                             
                             // 检查是否是特殊分类
-                            const isSpecial = ["怎么贡献", "Modder入门"].includes(categoryKey);
+                            const isSpecial = ["如何贡献", "Modder入门"].includes(categoryKey);
                             
                             MAIN_CATEGORIES[categoryKey] = {
                                 title: category.title,
@@ -707,7 +707,7 @@
                 '进阶': '#2196F3',
                 '高级': '#FF5722',
                 '个人分享': '#FFC107',
-                '怎么贡献': '#9C27B0',
+                '如何贡献': '#9C27B0',
                 'Modder入门': '#00BCD4'
             };
             return colorMap[categoryKey] || '#28a745';
@@ -721,7 +721,7 @@
                 '进阶': 2,
                 '高级': 3,
                 '个人分享': 4,
-                '怎么贡献': 5,
+                '如何贡献': 5,
                 'Modder入门': 6
             };
             return orderMap[categoryKey] || 999;
@@ -758,9 +758,9 @@
                     "color": "#FFC107",
                     "order": 4
                 },
-                "怎么贡献": {
-                    "title": "怎么贡献",
-                    "description": "介绍贡献者应该怎么贡献文章",
+                "如何贡献": {
+                    "title": "如何贡献",
+                    "description": "介绍贡献者应该如何贡献文章",
                     "icon": "",
                     "color": "#9C27B0",
                     "order": 5,
@@ -860,7 +860,7 @@
                 settings: {
                     defaultCategory: "入门",
                     defaultTopic: "mod-basics",
-                    specialCategories: ["怎么贡献", "Modder入门"]
+                    specialCategories: ["如何贡献", "Modder入门"]
                 },
                 extensions: {
                     customFields: {

@@ -48,6 +48,46 @@ function createIndex() {
         generatedAt: '2026-02-21T00:00:00.000Z',
         sources: [],
         types: {
+            'AnimRuntime.AnimContext': {
+                fullName: 'AnimRuntime.AnimContext',
+                namespace: 'AnimRuntime',
+                name: 'AnimContext',
+                summary: '',
+                members: {
+                    methods: [],
+                    properties: [property('Input', 'AnimRuntime.InputState')],
+                    fields: []
+                }
+            },
+            'AnimRuntime.InputState': {
+                fullName: 'AnimRuntime.InputState',
+                namespace: 'AnimRuntime',
+                name: 'InputState',
+                summary: '',
+                members: {
+                    methods: [],
+                    properties: [
+                        property('X', 'float'),
+                        property('Y', 'float'),
+                        property('IsInside', 'bool')
+                    ],
+                    fields: []
+                }
+            },
+            'Microsoft.Xna.Framework.Vector2': {
+                fullName: 'Microsoft.Xna.Framework.Vector2',
+                namespace: 'Microsoft.Xna.Framework',
+                name: 'Vector2',
+                summary: '',
+                members: {
+                    methods: [],
+                    properties: [
+                        property('X', 'float'),
+                        property('Y', 'float')
+                    ],
+                    fields: []
+                }
+            },
             'Terraria.Item': {
                 fullName: 'Terraria.Item',
                 namespace: 'Terraria',
@@ -207,4 +247,30 @@ test('Analyze v2 diagnostics still reports rule issues when syntax parsing noise
 
     const result = analyze(index, source, 'SetDefaults', { completion: false, hover: false, diagnostics: true });
     assert.ok((result.diagnosticsRule || []).some((item) => item.code === 'RULE_MISSING_SEMICOLON'));
+});
+
+test('Analyze v2 diagnostics handles member access inside object-creation arguments', () => {
+    const index = createIndex();
+    const source = [
+        'using AnimRuntime;',
+        'using Microsoft.Xna.Framework;',
+        '',
+        'public class Demo {',
+        '    private AnimContext _ctx;',
+        '    private Vector2 _mousePos;',
+        '',
+        '    void Update() {',
+        '        if (_ctx.Input.IsInside)',
+        '            _mousePos = new Vector2(_ctx.Input.X, _ctx.Input.Y);',
+        '    }',
+        '}'
+    ].join('\n');
+
+    const result = analyze(index, source, 'new Vector2(_ctx.Input.X, _ctx.Input.Y);', {
+        completion: false,
+        hover: false,
+        diagnostics: true
+    });
+    const unknownMember = (result.diagnosticsRule || []).filter((item) => item.code === 'RULE_UNKNOWN_MEMBER');
+    assert.equal(unknownMember.length, 0);
 });

@@ -109,11 +109,17 @@ function findExpressionStart(text, endIndex) {
                 depthParen -= 1;
                 continue;
             }
+            if (depthBracket === 0 && depthAngle === 0) {
+                return i + 1;
+            }
         }
         if (ch === '[') {
             if (depthBracket > 0) {
                 depthBracket -= 1;
                 continue;
+            }
+            if (depthParen === 0 && depthAngle === 0) {
+                return i + 1;
             }
         }
         if (ch === '<') {

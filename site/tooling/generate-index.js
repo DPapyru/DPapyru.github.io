@@ -47,11 +47,8 @@ class ConfigManager {
         return {
             'DPapyru-ForNewModder.md': 'Modder入门/DPapyru-给新人的前言.md',
             'DPapyru-ForContributors-Basic.md': '如何贡献/教学文章写作指南.md',
-            '怎么贡献/DPapyru-贡献者如何编写文章基础.md': '如何贡献/教学文章写作指南.md',
-            '怎么贡献/教学文章写作指南.md': '如何贡献/教学文章写作指南.md',
             'TopicSystemGuide.md': '如何贡献/站点Markdown扩展语法说明.md',
             'TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md',
-            '怎么贡献/TopicSystem使用指南.md': '如何贡献/站点Markdown扩展语法说明.md',
             'getting-started.md': 'Modder入门/DPapyru-给新人的前言.md',
             'basic-concepts.md': 'Modder入门/DPapyru-给新人的前言.md',
             'tutorial-index.md': 'Modder入门/DPapyru-给新人的前言.md',
@@ -62,6 +59,14 @@ class ConfigManager {
             '05-专题主题/README.md': 'Modder入门/DPapyru-给新人的前言.md',
             '06-资源参考/README.md': 'Modder入门/DPapyru-给新人的前言.md'
         };
+    }
+
+    getRemovedPathMappings() {
+        return [
+            '怎么贡献/DPapyru-贡献者如何编写文章基础.md',
+            '怎么贡献/教学文章写作指南.md',
+            '怎么贡献/TopicSystem使用指南.md'
+        ];
     }
 
     // 获取默认配置
@@ -303,6 +308,10 @@ class ConfigManager {
             ...topLevelMappings
         };
         this.config.settings.pathMappings = { ...this.config.pathMappings };
+        this.getRemovedPathMappings().forEach((legacyPath) => {
+            delete this.config.pathMappings[legacyPath];
+            delete this.config.settings.pathMappings[legacyPath];
+        });
 
         // 清理已废弃字段（向后兼容旧配置）
         if (Array.isArray(this.config.settings.customFields)) {
