@@ -250,6 +250,20 @@ function writeDbValue(db, key, payload, errorMessage) {
     });
 }
 
+function deleteDbValue(db, key, errorMessage) {
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const req = store.delete(key);
+        req.onerror = function () {
+            reject(new Error(errorMessage));
+        };
+        req.onsuccess = function () {
+            resolve(null);
+        };
+    });
+}
+
 export function createDefaultWorkspace() {
     return {
         schemaVersion: 1,
@@ -416,6 +430,39 @@ export async function saveUnifiedWorkspaceState(unifiedState) {
     if (globalThis.localStorage) {
         globalThis.localStorage.setItem(UNIFIED_FALLBACK_STORAGE_V3_KEY, JSON.stringify(payload));
     }
+}
+
+export async function clearWorkspacePersistence() {
+    try {
+        const db = await openDatabase();
+        if (db) {
+            await deleteDbValue(db, WORKSPACE_KEY, '清理 workspace.v1 失败');
+            await deleteDbValue(db, UNIFIED_WORKSPACE_V2_KEY, '清理 workspace.v2 失败');
+            await deleteDbValue(db, UNIFIED_WORKSPACE_V3_KEY, '清理 workspace.v3 失败');
+            db.close();
+        }
+    } catch (_err) {
+        // Fallback storage cleanup below.
+    }
+
+    if (!globalThis.localStorage) return;
+
+    [
+        FALLBACK_STORAGE_KEY,
+        UNIFIED_FALLBACK_STORAGE_V2_KEY,
+        UNIFIED_FALLBACK_STORAGE_V3_KEY,
+        LEGACY_MARKDOWN_STORAGE_KEY,
+        LEGACY_MARKDOWN_VIEWER_PREVIEW_KEY,
+        LEGACY_SHADER_PLAYGROUND_KEY,
+        LEGACY_SHADER_CONTRIBUTE_KEY,
+        LEGACY_SHADER_DRAFT_KEY
+    ].forEach((key) => {
+        try {
+            globalThis.localStorage.removeItem(key);
+        } catch (_err) {
+            // Ignore single-key cleanup failures.
+        }
+    });
 }
 
 export function exportWorkspaceJson(workspace) {

@@ -12,6 +12,7 @@ test('index.html exposes required IDE controls', () => {
     assert.match(html, /id="btn-markdown-toggle-preview"/);
     assert.match(html, /id="btn-markdown-open-viewer"/);
     assert.match(html, /id="btn-shader-compile"/);
+    assert.match(html, /id="btn-clear-local-cache"/);
     assert.match(html, /id="btn-panel-shader-compile"/);
     assert.match(html, /id="shader-error-list"/);
     assert.match(html, /id="sidebar-scm-view"/);

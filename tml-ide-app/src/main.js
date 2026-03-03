@@ -29,6 +29,7 @@ import { createCsharpWorkspacePlugin } from './workspaces/csharp/index.js';
 import { createMarkdownWorkspacePlugin } from './workspaces/markdown/index.js';
 import { createShaderWorkspacePlugin } from './workspaces/shader/index.js';
 import {
+    clearWorkspacePersistence,
     createDefaultWorkspace,
     exportWorkspaceJson,
     importWorkspaceJson,
@@ -154,6 +155,7 @@ const dom = {
     btnDeleteFile: document.getElementById('btn-delete-file'),
     btnRunDiagnostics: document.getElementById('btn-run-diagnostics'),
     btnSaveWorkspace: document.getElementById('btn-save-workspace'),
+    btnClearLocalCache: document.getElementById('btn-clear-local-cache'),
     btnExportWorkspace: document.getElementById('btn-export-workspace'),
     inputImportWorkspace: document.getElementById('input-import-workspace'),
     toggleRoslyn: document.getElementById('toggle-roslyn'),
@@ -3623,6 +3625,36 @@ function saveWorkspaceNow() {
             addEvent('error', `保存工作区失败：${error.message}`);
             setStatus(`保存失败：${error.message}`);
         });
+}
+
+async function clearLocalCacheAndReloadFromGithub() {
+    const ok = globalThis.confirm('将清空本地 IndexedDB/草稿缓存，并重新从 GitHub 拉取最新内容，是否继续？');
+    if (!ok) return;
+
+    if (dom.btnClearLocalCache) {
+        dom.btnClearLocalCache.disabled = true;
+    }
+    setStatus('正在清空本地缓存...');
+
+    try {
+        await clearWorkspacePersistence();
+        clearAuthSession();
+        try {
+            localStorage.removeItem(WORKSPACE_LAST_KEY);
+        } catch (_err) {
+            // Ignore workspace preference cleanup failure.
+        }
+
+        addEvent('info', '本地缓存已清空，正在重新拉取 GitHub 内容...');
+        setStatus('缓存已清空，正在重新加载...');
+        globalThis.location.reload();
+    } catch (error) {
+        addEvent('error', `清空缓存失败：${error.message}`);
+        setStatus(`清空缓存失败：${error.message}`);
+        if (dom.btnClearLocalCache) {
+            dom.btnClearLocalCache.disabled = false;
+        }
+    }
 }
 
 function buildCommandPaletteItems(query) {
@@ -10200,6 +10232,14 @@ function bindUiEvents() {
     dom.btnSaveWorkspace.addEventListener('click', function () {
         saveWorkspaceNow();
     });
+
+    if (dom.btnClearLocalCache) {
+        dom.btnClearLocalCache.addEventListener('click', function () {
+            clearLocalCacheAndReloadFromGithub().catch((error) => {
+                addEvent('error', `清空缓存失败：${error.message}`);
+            });
+        });
+    }
 
     dom.btnExportWorkspace.addEventListener('click', function () {
         const text = exportWorkspaceJson(workspaceSnapshotForSave());

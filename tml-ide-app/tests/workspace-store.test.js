@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+    clearWorkspacePersistence,
     createDefaultWorkspace,
     exportWorkspaceJson,
     importWorkspaceJson,
@@ -149,6 +150,47 @@ test('saveUnifiedWorkspaceState persists normalized workspace.v3 payload to fall
     assert.equal(payload.lastWorkspace, 'markdown');
     assert.equal(payload.snapshots.markdown.staged.targetPath, 'site/content/如何贡献/save.md');
     assert.equal(payload.submit.workerApiUrl, 'https://example.com/api/create-pr');
+
+    globalThis.localStorage = backup.localStorage;
+    globalThis.indexedDB = backup.indexedDB;
+});
+
+test('clearWorkspacePersistence removes workspace cache and legacy snapshot keys from fallback storage', async () => {
+    const backup = {
+        localStorage: globalThis.localStorage,
+        indexedDB: globalThis.indexedDB
+    };
+
+    globalThis.indexedDB = undefined;
+    const storage = installStorage({
+        'tml-ide-workspace.v1': JSON.stringify({ schemaVersion: 1 }),
+        'tml-ide-workspace.v2': JSON.stringify({ schemaVersion: 2 }),
+        'tml-ide-workspace.v3': JSON.stringify({ schemaVersion: 3 }),
+        'articleStudioMarkdown.v9': JSON.stringify({ draft: 'a' }),
+        'articleStudioViewerPreview.v1': JSON.stringify({ draft: 'b' }),
+        'shader-playground.v1': JSON.stringify({ draft: 'c' }),
+        'shader-contribute.state.v2': JSON.stringify({ draft: 'd' }),
+        'shader-playground.contribute-draft.v1': JSON.stringify({ draft: 'e' }),
+        'keep-me': '1'
+    });
+    globalThis.localStorage = storage;
+
+    await clearWorkspacePersistence();
+    const dumped = storage.dump();
+
+    [
+        'tml-ide-workspace.v1',
+        'tml-ide-workspace.v2',
+        'tml-ide-workspace.v3',
+        'articleStudioMarkdown.v9',
+        'articleStudioViewerPreview.v1',
+        'shader-playground.v1',
+        'shader-contribute.state.v2',
+        'shader-playground.contribute-draft.v1'
+    ].forEach((key) => {
+        assert.equal(Object.prototype.hasOwnProperty.call(dumped, key), false, `${key} should be removed`);
+    });
+    assert.equal(dumped['keep-me'], '1');
 
     globalThis.localStorage = backup.localStorage;
     globalThis.indexedDB = backup.indexedDB;

@@ -2545,3 +2545,17 @@
 - `npm run build`：失败
 
 **备注**：`AnimRuntime.Tests` 失败原因为本机缺少 `Microsoft.NETCore.App 8.0.0`（仅检测到 10.0.2）；`npm run build` 失败原因为缺少可选依赖 `@rollup/rollup-linux-x64-gnu`。其余与本次迁移直接相关的 Node 侧测试通过。
+
+### 验证记录 [2026-03-03 14:00]：tml-ide 新增清空本地缓存并重拉按钮
+
+**级别**：功能改动（IDE 前端 + 缓存存储层）
+
+**命令与结果**：
+- `npm ci`（仓库根目录）：失败（`EUSAGE`，根目录缺少 `package-lock.json`）
+- `node --test tests/workspace-store.test.js tests/smoke-contract.test.js`：先失败后通过（先验证 RED，再实现 GREEN）
+- `npm test`（`tml-ide-app`）：失败（环境缺少 `@replit/codemirror-lang-csharp`，导致 `analyze-v2*` 与 `shader-hlsl-adapter-uniform-bridge` 用例无法加载）
+- `npm run build`（`tml-ide-app`）：失败（环境缺少可选依赖 `@rollup/rollup-linux-x64-gnu`）
+
+**备注**：
+- 本次目标改动文件：`tml-ide-app/index.html`、`tml-ide-app/src/main.js`、`tml-ide-app/src/lib/workspace-store.js`、相关测试。
+- 受当前依赖环境限制，无法在本地完成全量测试与构建闭环；新增功能对应的定向测试已通过。
