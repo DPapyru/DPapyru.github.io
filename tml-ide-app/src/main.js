@@ -1,10 +1,12 @@
 import './style.css';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import 'monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js';
 import 'monaco-editor/esm/vs/basic-languages/csharp/csharp.contribution';
 import 'monaco-editor/esm/vs/basic-languages/markdown/markdown.contribution';
 import 'monaco-editor/esm/vs/basic-languages/cpp/cpp.contribution';
+import 'monaco-editor/esm/vs/language/typescript/monaco.contribution';
 import { conf as csharpConf, language as csharpLanguage } from 'monaco-editor/esm/vs/basic-languages/csharp/csharp';
 
 import { DIAGNOSTIC_SEVERITY, MESSAGE_TYPES } from './contracts/messages.js';
@@ -63,7 +65,10 @@ const fxUsingImagesApi = globalThis.SharedFxUsingImages && typeof globalThis.Sha
     : {};
 
 self.MonacoEnvironment = {
-    getWorker() {
+    getWorker(_moduleId, label) {
+        if (label === 'typescript' || label === 'javascript') {
+            return new tsWorker();
+        }
         return new editorWorker();
     }
 };
@@ -541,6 +546,15 @@ const ANIMTS_DEFAULT_BRIDGE_ENDPOINT = 'browser://local-transpile';
 const ANIMTS_BRIDGE_CANDIDATE_ENDPOINTS = [ANIMTS_DEFAULT_BRIDGE_ENDPOINT];
 const ANIMTS_COMPILE_DEBOUNCE_MS = 400;
 const ANIMTS_COMPILE_TIMEOUT_MS = 8000;
+const ANIMTS_TRANSPILE_COMPILER_OPTIONS = Object.freeze({
+    allowNonTsExtensions: true,
+    target: monaco.languages.typescript.ScriptTarget.ES2020,
+    module: monaco.languages.typescript.ModuleKind.ES2020,
+    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+    isolatedModules: true,
+    removeComments: false,
+    downlevelIteration: false
+});
 let viewerPagePathCache = '';
 const FILE_NAME_ALLOWED_EXT_RE = /(?:\.anim\.ts|\.cs|\.md|\.fx|\.png|\.jpe?g|\.gif|\.webp|\.svg|\.bmp|\.avif|\.mp4|\.webm|\.mov|\.m4v|\.avi|\.mkv)$/i;
 const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
@@ -615,6 +629,13 @@ const SHADER_COMPLETION_WORDS = Object.freeze(Array.from(new Set([
 const SHADER_COMPLETION_RESERVED = new Set(SHADER_COMPLETION_WORDS.map((word) => String(word).toLowerCase()));
 const shaderPreviewPresetCache = new Map();
 const shaderUploadImageCache = new Map();
+if (monaco.languages && monaco.languages.typescript && monaco.languages.typescript.typescriptDefaults) {
+    const tsDefaults = monaco.languages.typescript.typescriptDefaults;
+    tsDefaults.setCompilerOptions({
+        ...tsDefaults.getCompilerOptions(),
+        ...ANIMTS_TRANSPILE_COMPILER_OPTIONS
+    });
+}
 const QUICK_CREATE_TYPE_META = Object.freeze({
     markdown: Object.freeze({ ext: '.md', defaultFileName: '新文章.md' }),
     shaderfx: Object.freeze({ ext: '.fx', defaultFileName: 'effect.fx' }),
@@ -1605,6 +1626,114 @@ function normalizeAnimCompileDiagnostics(input) {
         .filter(Boolean);
 }
 
+function flattenTypeScriptDiagnosticMessage(messageText) {
+    if (!messageText) return '';
+    if (typeof messageText === 'string') return messageText;
+    const queue = [messageText];
+    const lines = [];
+    while (queue.length) {
+        const current = queue.shift();
+        if (!current || typeof current !== 'object') continue;
+        const line = String(current.messageText || '').trim();
+        if (line) lines.push(line);
+        if (Array.isArray(current.next)) {
+            current.next.forEach((item) => queue.push(item));
+        }
+    }
+    return lines.join('\n');
+}
+
+function formatTypeScriptDiagnosticsForAnim(animPath, model, diagnostics) {
+    if (!Array.isArray(diagnostics) || !model) return [];
+    return diagnostics
+        .map((diag) => {
+            if (!diag || typeof diag !== 'object') return '';
+            const message = flattenTypeScriptDiagnosticMessage(diag.messageText) || String(diag.message || '').trim();
+            if (!message) return '';
+            if (typeof diag.start === 'number' && diag.start >= 0) {
+                const pos = model.getPositionAt(diag.start);
+                return `${animPath}:${pos.lineNumber}:${pos.column} ${message}`;
+            }
+            return message;
+        })
+        .filter(Boolean);
+}
+
+async function transpileAnimSourceForPreview(animPath, sourceText, requestId) {
+    const source = String(sourceText || '');
+    if (!source.trim()) {
+        return {
+            ok: false,
+            moduleJs: '',
+            diagnostics: ['编译失败：源码为空'],
+            profile: null
+        };
+    }
+
+    const tsLang = monaco.languages && monaco.languages.typescript;
+    if (!tsLang || typeof tsLang.getTypeScriptWorker !== 'function') {
+        return {
+            ok: false,
+            moduleJs: '',
+            diagnostics: ['编译失败：TypeScript 编译器未就绪'],
+            profile: null
+        };
+    }
+
+    const uri = monaco.Uri.parse(
+        `inmemory://animts-preview/${encodeURIComponent(animPath)}-${encodeURIComponent(String(requestId || Date.now()))}.ts`
+    );
+    const model = monaco.editor.createModel(source, 'typescript', uri);
+
+    try {
+        const getTypeScriptWorker = await tsLang.getTypeScriptWorker();
+        const worker = await getTypeScriptWorker(uri);
+        const fileName = uri.toString();
+        const [syntacticDiagnostics, compilerDiagnostics, emitOutput] = await Promise.all([
+            worker.getSyntacticDiagnostics(fileName),
+            worker.getCompilerOptionsDiagnostics(fileName),
+            worker.getEmitOutput(fileName)
+        ]);
+
+        const diagnostics = [
+            ...formatTypeScriptDiagnosticsForAnim(animPath, model, syntacticDiagnostics),
+            ...formatTypeScriptDiagnosticsForAnim(animPath, model, compilerDiagnostics)
+        ];
+
+        const outputFiles = emitOutput && Array.isArray(emitOutput.outputFiles) ? emitOutput.outputFiles : [];
+        const jsFile = outputFiles.find((outputFile) => /\.js$/i.test(String(outputFile && outputFile.name || '')));
+        const moduleJs = String(jsFile && jsFile.text || '');
+        if (diagnostics.length || !moduleJs.trim()) {
+            return {
+                ok: false,
+                moduleJs: '',
+                diagnostics: diagnostics.length ? diagnostics : ['编译失败：未生成 JS 模块'],
+                profile: null
+            };
+        }
+
+        return {
+            ok: true,
+            moduleJs,
+            diagnostics: [],
+            profile: null
+        };
+    } catch (error) {
+        return {
+            ok: false,
+            moduleJs: '',
+            diagnostics: [
+                error && error.message
+                    ? `编译失败：${error.message}`
+                    : `编译失败：${String(error)}`
+            ],
+            profile: null
+        };
+    } finally {
+        model.dispose();
+    }
+}
+
 function setAnimCompileStatus(text) {
     const message = String(text || '').trim() || '未激活';
     state.animPreview.compileStatus = message;
@@ -2029,7 +2158,7 @@ function scheduleMarkdownPreviewSync(options) {
 }
 
 async function compileAnimSourceNow(animPath, sourceText, options) {
-    const opts = options || {};
+    void options;
     const normalized = normalizeAnimSourcePath(animPath);
     if (!isAnimSourcePath(normalized)) return;
     const requestId = String(++state.animPreview.compileRequestSeq);
@@ -2045,13 +2174,10 @@ async function compileAnimSourceNow(animPath, sourceText, options) {
         if (controller.signal.aborted) {
             throw new DOMException('aborted', 'AbortError');
         }
-        const moduleJs = String(sourceText || '');
-        const payload = {
-            ok: !!moduleJs.trim(),
-            moduleJs,
-            diagnostics: moduleJs.trim() ? [] : ['编译失败：源码为空'],
-            profile: null
-        };
+        const payload = await transpileAnimSourceForPreview(normalized, sourceText, requestId);
+        if (controller.signal.aborted) {
+            throw new DOMException('aborted', 'AbortError');
+        }
         if (state.animPreview.latestRequestIdByPath[normalized] !== requestId) {
             return;
         }

@@ -80,6 +80,36 @@ function normalizeAnimProfile(input) {
     return Object.keys(profile).length ? profile : null;
 }
 
+function extractExportedProfileLiteralByAst(sourceText) {
+    const source = String(sourceText || '');
+    if (!source.trim()) return '';
+
+    const sourceFile = ts.createSourceFile('anim-profile.ts', source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    let profileLiteral = '';
+
+    const visit = (node) => {
+        if (profileLiteral) return;
+        if (ts.isVariableStatement(node)) {
+            const modifiers = Array.isArray(node.modifiers) ? node.modifiers : [];
+            const hasExportModifier = modifiers.some((modifier) => modifier && modifier.kind === ts.SyntaxKind.ExportKeyword);
+            if (hasExportModifier) {
+                node.declarationList.declarations.forEach((declaration) => {
+                    if (profileLiteral) return;
+                    if (!declaration || !ts.isIdentifier(declaration.name) || declaration.name.text !== 'profile') return;
+                    if (!declaration.initializer || !ts.isObjectLiteralExpression(declaration.initializer)) return;
+                    profileLiteral = declaration.initializer.getText(sourceFile);
+                });
+            }
+        }
+        if (!profileLiteral) {
+            ts.forEachChild(node, visit);
+        }
+    };
+
+    visit(sourceFile);
+    return profileLiteral;
+}
+
 function parseAnimProfile(sourceText) {
     const source = String(sourceText || '');
 
@@ -93,11 +123,11 @@ function parseAnimProfile(sourceText) {
         }
     }
 
-    const profileMatch = source.match(/export\s+const\s+profile\s*=\s*(\{[\s\S]*?\})\s*;?/m);
-    if (!profileMatch || !profileMatch[1]) return null;
+    const profileLiteral = extractExportedProfileLiteralByAst(source);
+    if (!profileLiteral) return null;
 
     try {
-        const evaluated = Function(`"use strict"; return (${profileMatch[1]});`)();
+        const evaluated = Function(`"use strict"; return (${profileLiteral});`)();
         return normalizeAnimProfile(evaluated);
     } catch (_error) {
         return null;
@@ -217,6 +247,7 @@ if (require.main === module) {
 module.exports = {
     parseModeOptionsDsl,
     normalizeAnimProfile,
+    extractExportedProfileLiteralByAst,
     parseAnimProfile,
     scanAnimScripts,
     buildManifest,

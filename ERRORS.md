@@ -2609,3 +2609,19 @@
 
 **备注**：
 - 本轮失败不是构建失败，属于 `check-generated` 的一致性门禁行为（要求无未提交差异）。
+
+### 验证记录 [2026-03-04 18:35]：按审查修复 animts 预览/构建回归与解决方案残留引用
+
+**级别**：代码评审修复验收（定向回归 + 构建）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/anim-preview-compile-regressions.test.js site/tooling/scripts/build-animts-profile.test.js site/tooling/scripts/content-projects-solution.test.js`：通过（4 passed, 0 failed）
+- `npm run build:animts`：通过
+- `npm --prefix tml-ide-app run build`：通过（产出新增 `ts.worker` 与 `tsMode` 资源）
+- `npm run build`：通过（完整跑通 `generate-index`、`build:animts`、`build:site-app`、`tml-ide-app`）
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js tml-ide-app/tests/markdown-editor-migration.test.js`：失败（基线断言与当前分支目标不一致，仍要求 `animcs`/旧插入按钮文案）
+- `node --test site/tooling/scripts/article-studio-anim-preview-payload.test.js`：失败（基线断言仍检查 `ANIMCS_COMPILE_*`，当前代码已是 `ANIMTS_COMPILE_*`）
+
+**备注**：
+- 本轮修复点：`anim-renderer` 运行按钮变量作用域、`main.js` 的 `.anim.ts` 本地 TS 转译与诊断、`build-animts` profile 嵌套对象解析、两处 `ContentProjects.sln` 残留项目引用清理。
+- 失败用例为现有测试与分支现状不一致的既有问题，非本轮修复引入。
