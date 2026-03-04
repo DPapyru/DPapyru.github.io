@@ -2625,3 +2625,14 @@
 **备注**：
 - 本轮修复点：`anim-renderer` 运行按钮变量作用域、`main.js` 的 `.anim.ts` 本地 TS 转译与诊断、`build-animts` profile 嵌套对象解析、两处 `ContentProjects.sln` 残留项目引用清理。
 - 失败用例为现有测试与分支现状不一致的既有问题，非本轮修复引入。
+
+### 验证记录 [2026-03-04 19:09]：animts 迁移审查修复（索引/默认模板/profile/文档 fence）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/ide-editable-index.test.js site/tooling/scripts/build-animts-profile.test.js site/tooling/scripts/markdown-animts-fence.test.js tml-ide-app/tests/workspace-store.test.js`：通过
+- `npm run build`：通过
+- `npm run check-generated`：待补跑
+
+**备注**：本次修复覆盖审查指出的 4 个回归点，并额外修复了 `workspace-store` 旧 `.cs` 路径迁移到 `.anim.ts` 的一致性问题；`check-generated` 含 `git diff --exit-code`，建议在准备合入时于干净索引状态补跑。

@@ -57,7 +57,10 @@ test('generateIdeEditableIndex outputs whitelist-only files with stable ordering
     ]);
     assert.deepEqual(paths, paths.slice().sort());
 
-    const whitelistPattern = /(?:\.md$|\.fx$|^anims\/[^/]+\.cs$|\/code\/[^/]+\.cs$|\/imgs\/[^/]+$|\/media\/[^/]+$)/;
+    const kindsByPath = new Map(payload.files.map((item) => [String(item.path || ''), String(item.kind || '')]));
+    assert.equal(kindsByPath.get('anims/demo.anim.ts'), 'animts');
+
+    const whitelistPattern = /(?:\.md$|\.fx$|^anims\/[^/]+\.anim\.ts$|\/code\/[^/]+\.cs$|\/imgs\/[^/]+$|\/media\/[^/]+$)/;
     paths.forEach((entryPath) => {
         assert.match(entryPath, whitelistPattern);
     });

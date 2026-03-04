@@ -18,7 +18,10 @@ test('workspace export/import keeps schemaVersion and files', () => {
     assert.equal(parsed.schemaVersion, 1);
     assert.ok(Array.isArray(parsed.files));
     assert.ok(parsed.files.length >= 1);
-    assert.ok(parsed.files[0].path.endsWith('.cs'));
+    assert.ok(parsed.files[0].path.endsWith('.anim.ts'));
+    assert.match(parsed.files[0].content, /export\s+function\s+create\s*\(/);
+    assert.doesNotMatch(parsed.files[0].content, /using\s+Terraria/i);
+    assert.doesNotMatch(parsed.files[0].content, /ModItem/);
 });
 
 test('workspace import normalizes malformed payload', () => {

@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const ts = require('typescript');
+const PROFILE_FALLBACK_PATH = path.join(__dirname, 'animts-profile-fallbacks.v1.json');
 
 function toPosixPath(filePath) {
     return String(filePath || '').replace(/\\/g, '/');
@@ -78,6 +79,40 @@ function normalizeAnimProfile(input) {
     }
 
     return Object.keys(profile).length ? profile : null;
+}
+
+function loadProfileFallbacks() {
+    try {
+        if (!fs.existsSync(PROFILE_FALLBACK_PATH)) return {};
+        const raw = fs.readFileSync(PROFILE_FALLBACK_PATH, 'utf8');
+        const parsed = JSON.parse(String(raw || '{}'));
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+
+        const normalized = {};
+        Object.entries(parsed).forEach(([sourcePath, profile]) => {
+            const source = toPosixPath(String(sourcePath || '').trim());
+            if (!source) return;
+            const safeProfile = normalizeAnimProfile(profile);
+            if (safeProfile) {
+                normalized[source] = safeProfile;
+            }
+        });
+        return normalized;
+    } catch (_error) {
+        return {};
+    }
+}
+
+const PROFILE_FALLBACKS = loadProfileFallbacks();
+
+function resolveManifestProfile(sourcePath, profile) {
+    const explicit = normalizeAnimProfile(profile);
+    if (explicit) return explicit;
+
+    const source = toPosixPath(String(sourcePath || '').trim());
+    if (!source) return null;
+    const fallback = PROFILE_FALLBACKS[source];
+    return fallback ? JSON.parse(JSON.stringify(fallback)) : null;
 }
 
 function extractExportedProfileLiteralByAst(sourceText) {
@@ -163,8 +198,9 @@ function buildManifest(items) {
             entry: item.entry
         };
 
-        if (item.profile) {
-            entries[item.source].profile = item.profile;
+        const profile = resolveManifestProfile(item.source, item.profile);
+        if (profile) {
+            entries[item.source].profile = profile;
         }
     }
 

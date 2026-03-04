@@ -36,7 +36,7 @@ source_cs:
 
 [动画示例](anims:anims/demo-basic.anim.ts)
 
-```animcs
+```animts
 anims/demo-basic.anim.ts
 ```
 

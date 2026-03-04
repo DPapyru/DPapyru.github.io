@@ -55,10 +55,19 @@ function migrateLegacyWorkspacePath(pathValue) {
         .replace(/\\/g, '/')
         .replace(/^\/+/, '');
     if (!safe) return '';
-    if (safe.includes('/')) return safe;
-    if (/\.cs$/i.test(safe)) {
-        return `anims/${safe}`;
+
+    // Legacy workspace files used root-level *.cs names for animation scripts.
+    if (!safe.includes('/')) {
+        if (/\.cs$/i.test(safe)) {
+            return `anims/${safe.replace(/\.cs$/i, '.anim.ts')}`;
+        }
+        return safe;
     }
+
+    if (/^anims\/[^/]+\.cs$/i.test(safe)) {
+        return safe.replace(/\.cs$/i, '.anim.ts');
+    }
+
     return safe;
 }
 
@@ -273,15 +282,30 @@ export function createDefaultWorkspace() {
                 id: 'file-program',
                 path: 'anims/Program.anim.ts',
                 content: [
-                    'using Terraria;',
-                    'using Terraria.ModLoader;',
+                    'export const profile = {',
+                    '    heightScale: 1.4',
+                    '};',
                     '',
-                    'public class ExampleItem : ModItem',
-                    '{',
-                    '    public override void SetDefaults()',
-                    '    {',
-                    '        Main.NewText("Hello tML IDE");',
+                    'export function create(runtime) {',
+                    '    const { Color } = runtime;',
+                    '',
+                    '    class ProgramAnim {',
+                    '        OnInit(ctx) {',
+                    '            this._ctx = ctx;',
+                    '        }',
+                    '',
+                    '        OnUpdate(_dt) {',
+                    '        }',
+                    '',
+                    '        OnRender(g) {',
+                    '            g.Clear(new Color(8, 12, 16));',
+                    '        }',
+                    '',
+                    '        OnDispose() {',
+                    '        }',
                     '    }',
+                    '',
+                    '    return new ProgramAnim();',
                     '}'
                 ].join('\n')
             }

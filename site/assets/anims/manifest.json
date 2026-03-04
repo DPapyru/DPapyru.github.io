@@ -21,11 +21,28 @@
   "entries": {
     "anims/animgeom-toolkit-recipes.anim.ts": {
       "js": "anims/animgeom-toolkit-recipes.js",
-      "entry": "anims/animgeom-toolkit-recipes"
+      "entry": "anims/animgeom-toolkit-recipes",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 1.55,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "坐标轴+箭头"
+          },
+          {
+            "value": 1,
+            "text": "轨迹采样"
+          }
+        ]
+      }
     },
     "anims/arrow-easy-ai.anim.ts": {
       "js": "anims/arrow-easy-ai.js",
-      "entry": "anims/arrow-easy-ai"
+      "entry": "anims/arrow-easy-ai",
+      "profile": {
+        "heightScale": 3
+      }
     },
     "anims/demo-basic.anim.ts": {
       "js": "anims/demo-basic.js",
@@ -33,7 +50,37 @@
     },
     "anims/demo-eoc-ai.anim.ts": {
       "js": "anims/demo-eoc-ai.js",
-      "entry": "anims/demo-eoc-ai"
+      "entry": "anims/demo-eoc-ai",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 2.3,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "自动"
+          },
+          {
+            "value": 1,
+            "text": "一阶-徘徊"
+          },
+          {
+            "value": 2,
+            "text": "一阶-冲刺"
+          },
+          {
+            "value": 3,
+            "text": "二阶-变形"
+          },
+          {
+            "value": 4,
+            "text": "二阶-徘徊"
+          },
+          {
+            "value": 5,
+            "text": "二阶-冲刺"
+          }
+        ]
+      }
     },
     "anims/demo-math-transform.anim.ts": {
       "js": "anims/demo-math-transform.js",
@@ -41,7 +88,29 @@
     },
     "anims/demo-mode-state.anim.ts": {
       "js": "anims/demo-mode-state.js",
-      "entry": "anims/demo-mode-state"
+      "entry": "anims/demo-mode-state",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 1.25,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "自动"
+          },
+          {
+            "value": 1,
+            "text": "静止"
+          },
+          {
+            "value": 2,
+            "text": "顺时针"
+          },
+          {
+            "value": 3,
+            "text": "逆时针"
+          }
+        ]
+      }
     },
     "anims/fna-vertex-demo.anim.ts": {
       "js": "anims/fna-vertex-demo.js",
@@ -49,31 +118,127 @@
     },
     "anims/mat4-trs-compose.anim.ts": {
       "js": "anims/mat4-trs-compose.js",
-      "entry": "anims/mat4-trs-compose"
+      "entry": "anims/mat4-trs-compose",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 2.05,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "TRS复合"
+          },
+          {
+            "value": 1,
+            "text": "仅平移"
+          },
+          {
+            "value": 2,
+            "text": "仅旋转"
+          },
+          {
+            "value": 3,
+            "text": "仅缩放"
+          }
+        ]
+      }
     },
     "anims/mat4-view-projection.anim.ts": {
       "js": "anims/mat4-view-projection.js",
-      "entry": "anims/mat4-view-projection"
+      "entry": "anims/mat4-view-projection",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 2,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "透视+视图"
+          },
+          {
+            "value": 1,
+            "text": "仅视图"
+          }
+        ]
+      }
     },
     "anims/matrix-mat4-transform.anim.ts": {
       "js": "anims/matrix-mat4-transform.js",
-      "entry": "anims/matrix-mat4-transform"
+      "entry": "anims/matrix-mat4-transform",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 2.05,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "复合"
+          },
+          {
+            "value": 1,
+            "text": "平移"
+          },
+          {
+            "value": 2,
+            "text": "旋转"
+          },
+          {
+            "value": 3,
+            "text": "缩放"
+          }
+        ]
+      }
     },
     "anims/vec2-basic-ops.anim.ts": {
       "js": "anims/vec2-basic-ops.js",
-      "entry": "anims/vec2-basic-ops"
+      "entry": "anims/vec2-basic-ops",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 1.5,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "加法"
+          },
+          {
+            "value": 1,
+            "text": "减法"
+          },
+          {
+            "value": 2,
+            "text": "缩放"
+          }
+        ]
+      }
     },
     "anims/vec2-project-decompose.anim.ts": {
       "js": "anims/vec2-project-decompose.js",
-      "entry": "anims/vec2-project-decompose"
+      "entry": "anims/vec2-project-decompose",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 1.55,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "投影"
+          },
+          {
+            "value": 1,
+            "text": "分解"
+          }
+        ]
+      }
     },
     "anims/vec3-axis-orbit.anim.ts": {
       "js": "anims/vec3-axis-orbit.js",
-      "entry": "anims/vec3-axis-orbit"
+      "entry": "anims/vec3-axis-orbit",
+      "profile": {
+        "heightScale": 1.9
+      }
     },
     "anims/vector-add-resolution.anim.ts": {
       "js": "anims/vector-add-resolution.js",
-      "entry": "anims/vector-add-resolution"
+      "entry": "anims/vector-add-resolution",
+      "profile": {
+        "heightScale": 2
+      }
     },
     "anims/vector-basic.anim.ts": {
       "js": "anims/vector-basic.js",
@@ -81,7 +246,25 @@
     },
     "anims/vector-move.anim.ts": {
       "js": "anims/vector-move.js",
-      "entry": "anims/vector-move"
+      "entry": "anims/vector-move",
+      "profile": {
+        "controls": "mode-select",
+        "heightScale": 2.5,
+        "modeOptions": [
+          {
+            "value": 0,
+            "text": "初始状态"
+          },
+          {
+            "value": 1,
+            "text": "分离为X-Y向量"
+          },
+          {
+            "value": 2,
+            "text": "向量合成"
+          }
+        ]
+      }
     }
   }
 }

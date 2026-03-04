@@ -649,7 +649,7 @@ function isIdeEditableRelativePath(relativePath) {
     const lower = normalized.toLowerCase();
     if (lower.endsWith('.md')) return true;
     if (lower.endsWith('.fx')) return true;
-    if (/^anims\/[^/]+\.cs$/i.test(normalized)) return true;
+    if (/^anims\/[^/]+(?:\.anim\.ts|\.cs)$/i.test(normalized)) return true;
     if (/(?:^|\/)code\/[^/]+\.cs$/i.test(normalized)) return true;
     if (/(?:^|\/)imgs\/[^/]+$/i.test(normalized)) return true;
     if (/(?:^|\/)media\/[^/]+$/i.test(normalized)) return true;
@@ -661,6 +661,7 @@ function ideEditableKindFromRelativePath(relativePath) {
     const lower = normalized.toLowerCase();
     if (lower.endsWith('.md')) return 'markdown';
     if (lower.endsWith('.fx')) return 'shaderfx';
+    if (lower.endsWith('.anim.ts')) return 'animts';
     if (lower.endsWith('.cs')) return 'csharp';
     if (/(?:^|\/)imgs\/[^/]+$/i.test(normalized)) return 'image';
     if (/(?:^|\/)media\/[^/]+$/i.test(normalized)) return 'media';
