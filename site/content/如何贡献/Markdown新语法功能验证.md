@@ -34,10 +34,10 @@ source_cs:
 
 ## 动画引用验证
 
-[动画示例](anims:anims/demo-basic.cs)
+[动画示例](anims:anims/demo-basic.anim.ts)
 
 ```animcs
-anims/demo-basic.cs
+anims/demo-basic.anim.ts
 ```
 
 ## Shader 引用验证

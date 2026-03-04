@@ -271,7 +271,7 @@ export function createDefaultWorkspace() {
         files: [
             {
                 id: 'file-program',
-                path: 'anims/Program.cs',
+                path: 'anims/Program.anim.ts',
                 content: [
                     'using Terraria;',
                     'using Terraria.ModLoader;',

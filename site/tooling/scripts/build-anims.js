@@ -1,3 +1,3 @@
-const { main } = require('./build-animcs');
+const { main } = require('./build-animts');
 
 main();

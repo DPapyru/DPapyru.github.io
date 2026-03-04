@@ -8,7 +8,7 @@ const maybeTest = astIntegrationEnabled ? test : test.skip;
 
 const batchInputs = [
     {
-        sourcePath: 'anims/ops.cs',
+        sourcePath: 'anims/ops.anim.ts',
         sourceText: `
 using AnimRuntime;
 using Microsoft.Xna.Framework;
@@ -39,7 +39,7 @@ public sealed class Vec3Mat4Ops : IAnimScript
 `
     },
     {
-        sourcePath: 'anims/one.cs',
+        sourcePath: 'anims/one.anim.ts',
         sourceText: `
 using AnimRuntime;
 using Microsoft.Xna.Framework;
@@ -53,7 +53,7 @@ public sealed class One : IAnimScript
 `
     },
     {
-        sourcePath: 'anims/two.cs',
+        sourcePath: 'anims/two.anim.ts',
         sourceText: `
 using AnimRuntime;
 using Microsoft.Xna.Framework;
@@ -105,8 +105,8 @@ function compileOnce() {
 
 maybeTest('compileAnimToJs lowers Vector3/Matrix operators to runtime helpers', { timeout: 30_000 }, () => {
     const outputs = compileOnce();
-    const ops = outputs.find((entry) => entry.sourcePath === 'anims/ops.cs');
-    assert.ok(ops, 'missing compiled output for anims/ops.cs');
+    const ops = outputs.find((entry) => entry.sourcePath === 'anims/ops.anim.ts');
+    assert.ok(ops, 'missing compiled output for anims/ops.anim.ts');
 
     const js = ops.js;
     assert.match(js, /Vector3\.Add\(/);
@@ -121,10 +121,10 @@ maybeTest('compileAnimBatch compiles all entries in one pass', { timeout: 30_000
     const outputs = compileOnce();
     assert.equal(outputs.length, 3);
 
-    const one = outputs.find((entry) => entry.sourcePath === 'anims/one.cs');
-    const two = outputs.find((entry) => entry.sourcePath === 'anims/two.cs');
-    assert.ok(one, 'missing compiled output for anims/one.cs');
-    assert.ok(two, 'missing compiled output for anims/two.cs');
+    const one = outputs.find((entry) => entry.sourcePath === 'anims/one.anim.ts');
+    const two = outputs.find((entry) => entry.sourcePath === 'anims/two.anim.ts');
+    assert.ok(one, 'missing compiled output for anims/one.anim.ts');
+    assert.ok(two, 'missing compiled output for anims/two.anim.ts');
     assert.match(one.js, /export function create\(runtime\)/);
     assert.match(two.js, /export function create\(runtime\)/);
 });

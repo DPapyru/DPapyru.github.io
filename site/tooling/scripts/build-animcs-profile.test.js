@@ -51,7 +51,7 @@ public sealed class DemoBasic : IAnimScript
 test('buildManifest includes profile data in entries', () => {
     const manifest = buildAnim.buildManifest([
         {
-            source: 'anims/demo-mode.cs',
+            source: 'anims/demo-mode.anim.ts',
             entry: 'demo-mode',
             profile: {
                 controls: 'mode-select',
@@ -63,7 +63,7 @@ test('buildManifest includes profile data in entries', () => {
         }
     ]);
 
-    assert.deepEqual(manifest.entries['anims/demo-mode.cs'], {
+    assert.deepEqual(manifest.entries['anims/demo-mode.anim.ts'], {
         js: 'demo-mode.js',
         entry: 'demo-mode',
         profile: {

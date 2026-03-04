@@ -61,12 +61,12 @@ test('standalone protocol embed parser supports cs/anims/fx and rejects inline m
     );
 
     assert.deepEqual(
-        embedLinks.parseStandaloneEmbedLink('[动画](anims:anims/demo-basic.cs)'),
+        embedLinks.parseStandaloneEmbedLink('[动画](anims:anims/demo-basic.anim.ts)'),
         {
             kind: 'anims',
             label: '动画',
-            href: 'anims:anims/demo-basic.cs',
-            target: 'anims/demo-basic.cs'
+            href: 'anims:anims/demo-basic.anim.ts',
+            target: 'anims/demo-basic.anim.ts'
         }
     );
 

@@ -1,4 +1,4 @@
-// Generated from anims/vector-basic.cs
+// Generated from anims/vector-basic.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class VectorBasic {

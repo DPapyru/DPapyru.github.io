@@ -6,7 +6,7 @@
     <title>tML IDE Playground</title>
     <meta name="description" content="独立 tModLoader C# IDE Playground，支持补全、悬停文档与双层诊断。">
     <link rel="icon" type="image/png" href="/site/assets/imgs/Green_tModLoader.png">
-  <script type="module" crossorigin src="/tml-ide/assets/index-Kbg2NURb.js"></script>
+  <script type="module" crossorigin src="/tml-ide/assets/index-D5AeUZ4Y.js"></script>
   <link rel="stylesheet" crossorigin href="/tml-ide/assets/index-B98invoq.css">
 </head>
 <body>
@@ -30,6 +30,7 @@
                 <button id="btn-shader-export" type="button">导出 .fx</button>
                 <button id="btn-open-unified-submit" type="button">统一提交</button>
                 <button id="btn-save-workspace" type="button">保存工作区</button>
+                <button id="btn-clear-local-cache" type="button">清空缓存并重拉</button>
                 <button id="btn-export-workspace" type="button">导出 workspace.v1.json</button>
                 <label class="file-btn" for="input-import-workspace">导入工作区</label>
                 <input id="input-import-workspace" type="file" accept="application/json,.json" hidden>
@@ -63,7 +64,7 @@
                         <button id="btn-delete-file" type="button">删除</button>
                     </div>
                     <ul id="file-list" class="file-list" aria-label="工程文件列表"></ul>
-                    <p class="panel-tip">支持 .cs/.animcs/.md/.fx 以及常见图片与视频资源，内容自动保存到浏览器 IndexedDB。</p>
+                    <p class="panel-tip">支持 .cs/.anim.ts/.md/.fx 以及常见图片与视频资源，内容自动保存到浏览器 IndexedDB。</p>
                 </section>
 
                 <section id="sidebar-scm-view" class="sidebar-view" hidden>
@@ -191,7 +192,7 @@
                                 <button type="button" data-md-insert="anim">动画片段</button>
                                 <button type="button" data-md-insert="fx-embed">FX 引用</button>
                                 <button type="button" data-md-insert="callout-note">提示框</button>
-                                <button type="button" data-md-insert="animcs-block">animcs 代码块</button>
+                                <button type="button" data-md-insert="animts-block">animts 代码块</button>
                                 <button type="button" data-md-insert="color-inline">单色文本</button>
                                 <button type="button" data-md-insert="color-change-inline">颜色动画文本</button>
                                 <button type="button" data-md-insert="quiz-tf">判断题</button>
@@ -443,7 +444,7 @@
                 <select id="quick-create-type">
                     <option value="markdown">Markdown (.md)</option>
                     <option value="shaderfx">Shader (.fx)</option>
-                    <option value="animcs">动画 C# (anims/*.cs)</option>
+                    <option value="animts">动画 TS (**/*.anim.ts)</option>
                     <option value="codecs">代码 C# (**/code/*.cs)</option>
                     <option value="image">图片 (**/imgs/*)</option>
                     <option value="video">视频 (**/media/*)</option>

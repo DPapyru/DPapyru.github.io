@@ -1,4 +1,4 @@
-// Generated from anims/vector-move.cs
+// Generated from anims/vector-move.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class vector_move {

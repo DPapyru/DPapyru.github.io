@@ -1,270 +1,87 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "sources": [
-    "anims/animgeom-toolkit-recipes.cs",
-    "anims/arrow-easy-ai.cs",
-    "anims/demo-basic.cs",
-    "anims/demo-eoc-ai.cs",
-    "anims/demo-math-transform.cs",
-    "anims/demo-mode-state.cs",
-    "anims/fna-vertex-demo.cs",
-    "anims/mat4-trs-compose.cs",
-    "anims/mat4-view-projection.cs",
-    "anims/matrix-mat4-transform.cs",
-    "anims/vec2-basic-ops.cs",
-    "anims/vec2-project-decompose.cs",
-    "anims/vec3-axis-orbit.cs",
-    "anims/vector-add-resolution.cs",
-    "anims/vector-basic.cs",
-    "anims/vector-move.cs"
+    "anims/animgeom-toolkit-recipes.anim.ts",
+    "anims/arrow-easy-ai.anim.ts",
+    "anims/demo-basic.anim.ts",
+    "anims/demo-eoc-ai.anim.ts",
+    "anims/demo-math-transform.anim.ts",
+    "anims/demo-mode-state.anim.ts",
+    "anims/fna-vertex-demo.anim.ts",
+    "anims/mat4-trs-compose.anim.ts",
+    "anims/mat4-view-projection.anim.ts",
+    "anims/matrix-mat4-transform.anim.ts",
+    "anims/vec2-basic-ops.anim.ts",
+    "anims/vec2-project-decompose.anim.ts",
+    "anims/vec3-axis-orbit.anim.ts",
+    "anims/vector-add-resolution.anim.ts",
+    "anims/vector-basic.anim.ts",
+    "anims/vector-move.anim.ts"
   ],
   "entries": {
-    "anims/animgeom-toolkit-recipes.cs": {
-      "js": "animgeom-toolkit-recipes.js",
-      "entry": "animgeom-toolkit-recipes",
-      "profile": {
-        "controls": "mode-select",
-        "heightScale": 1.55,
-        "modeOptions": [
-          {
-            "value": 0,
-            "text": "坐标轴+箭头"
-          },
-          {
-            "value": 1,
-            "text": "轨迹采样"
-          }
-        ]
-      }
+    "anims/animgeom-toolkit-recipes.anim.ts": {
+      "js": "anims/animgeom-toolkit-recipes.js",
+      "entry": "anims/animgeom-toolkit-recipes"
     },
-    "anims/arrow-easy-ai.cs": {
-      "js": "arrow-easy-ai.js",
-      "entry": "arrow-easy-ai",
-      "profile": {
-        "heightScale": 3
-      }
+    "anims/arrow-easy-ai.anim.ts": {
+      "js": "anims/arrow-easy-ai.js",
+      "entry": "anims/arrow-easy-ai"
     },
-    "anims/demo-basic.cs": {
-      "js": "demo-basic.js",
-      "entry": "demo-basic"
+    "anims/demo-basic.anim.ts": {
+      "js": "anims/demo-basic.js",
+      "entry": "anims/demo-basic"
     },
-    "anims/demo-eoc-ai.cs": {
-      "js": "demo-eoc-ai.js",
-      "entry": "demo-eoc-ai",
-      "profile": {
-        "controls": "mode-select",
-        "heightScale": 2.3,
-        "modeOptions": [
-          {
-            "value": 0,
-            "text": "自动"
-          },
-          {
-            "value": 1,
-            "text": "一阶-徘徊"
-          },
-          {
-            "value": 2,
-            "text": "一阶-冲刺"
-          },
-          {
-            "value": 3,
-            "text": "二阶-变形"
-          },
-          {
-            "value": 4,
-            "text": "二阶-徘徊"
-          },
-          {
-            "value": 5,
-            "text": "二阶-冲刺"
-          }
-        ]
-      }
+    "anims/demo-eoc-ai.anim.ts": {
+      "js": "anims/demo-eoc-ai.js",
+      "entry": "anims/demo-eoc-ai"
     },
-    "anims/demo-math-transform.cs": {
-      "js": "demo-math-transform.js",
-      "entry": "demo-math-transform"
+    "anims/demo-math-transform.anim.ts": {
+      "js": "anims/demo-math-transform.js",
+      "entry": "anims/demo-math-transform"
     },
-    "anims/demo-mode-state.cs": {
-      "js": "demo-mode-state.js",
-      "entry": "demo-mode-state",
-      "profile": {
-        "controls": "mode-select",
-        "heightScale": 1.25,
-        "modeOptions": [
-          {
-            "value": 0,
-            "text": "自动"
-          },
-          {
-            "value": 1,
-            "text": "静止"
-          },
-          {
-            "value": 2,
-            "text": "顺时针"
-          },
-          {
-            "value": 3,
-            "text": "逆时针"
-          }
-        ]
-      }
+    "anims/demo-mode-state.anim.ts": {
+      "js": "anims/demo-mode-state.js",
+      "entry": "anims/demo-mode-state"
     },
-    "anims/fna-vertex-demo.cs": {
-      "js": "fna-vertex-demo.js",
-      "entry": "fna-vertex-demo"
+    "anims/fna-vertex-demo.anim.ts": {
+      "js": "anims/fna-vertex-demo.js",
+      "entry": "anims/fna-vertex-demo"
     },
-    "anims/mat4-trs-compose.cs": {
-      "js": "mat4-trs-compose.js",
-      "entry": "mat4-trs-compose",
-      "profile": {
-        "controls": "mode-select",
-        "heightScale": 2.05,
-        "modeOptions": [
-          {
-            "value": 0,
-            "text": "TRS复合"
-          },
-          {
-            "value": 1,
-            "text": "仅平移"
-          },
-          {
-            "value": 2,
-            "text": "仅旋转"
-          },
-          {
-            "value": 3,
-            "text": "仅缩放"
-          }
-        ]
-      }
+    "anims/mat4-trs-compose.anim.ts": {
+      "js": "anims/mat4-trs-compose.js",
+      "entry": "anims/mat4-trs-compose"
     },
-    "anims/mat4-view-projection.cs": {
-      "js": "mat4-view-projection.js",
-      "entry": "mat4-view-projection",
-      "profile": {
-        "controls": "mode-select",
-        "heightScale": 2,
-        "modeOptions": [
-          {
-            "value": 0,
-            "text": "透视+视图"
-          },
-          {
-            "value": 1,
-            "text": "仅视图"
-          }
-        ]
-      }
+    "anims/mat4-view-projection.anim.ts": {
+      "js": "anims/mat4-view-projection.js",
+      "entry": "anims/mat4-view-projection"
     },
-    "anims/matrix-mat4-transform.cs": {
-      "js": "matrix-mat4-transform.js",
-      "entry": "matrix-mat4-transform",
-      "profile": {
-        "controls": "mode-select",
-        "heightScale": 2.05,
-        "modeOptions": [
-          {
-            "value": 0,
-            "text": "复合"
-          },
-          {
-            "value": 1,
-            "text": "平移"
-          },
-          {
-            "value": 2,
-            "text": "旋转"
-          },
-          {
-            "value": 3,
-            "text": "缩放"
-          }
-        ]
-      }
+    "anims/matrix-mat4-transform.anim.ts": {
+      "js": "anims/matrix-mat4-transform.js",
+      "entry": "anims/matrix-mat4-transform"
     },
-    "anims/vec2-basic-ops.cs": {
-      "js": "vec2-basic-ops.js",
-      "entry": "vec2-basic-ops",
-      "profile": {
-        "controls": "mode-select",
-        "heightScale": 1.5,
-        "modeOptions": [
-          {
-            "value": 0,
-            "text": "加法"
-          },
-          {
-            "value": 1,
-            "text": "减法"
-          },
-          {
-            "value": 2,
-            "text": "缩放"
-          }
-        ]
-      }
+    "anims/vec2-basic-ops.anim.ts": {
+      "js": "anims/vec2-basic-ops.js",
+      "entry": "anims/vec2-basic-ops"
     },
-    "anims/vec2-project-decompose.cs": {
-      "js": "vec2-project-decompose.js",
-      "entry": "vec2-project-decompose",
-      "profile": {
-        "controls": "mode-select",
-        "heightScale": 1.55,
-        "modeOptions": [
-          {
-            "value": 0,
-            "text": "投影"
-          },
-          {
-            "value": 1,
-            "text": "分解"
-          }
-        ]
-      }
+    "anims/vec2-project-decompose.anim.ts": {
+      "js": "anims/vec2-project-decompose.js",
+      "entry": "anims/vec2-project-decompose"
     },
-    "anims/vec3-axis-orbit.cs": {
-      "js": "vec3-axis-orbit.js",
-      "entry": "vec3-axis-orbit",
-      "profile": {
-        "heightScale": 1.9
-      }
+    "anims/vec3-axis-orbit.anim.ts": {
+      "js": "anims/vec3-axis-orbit.js",
+      "entry": "anims/vec3-axis-orbit"
     },
-    "anims/vector-add-resolution.cs": {
-      "js": "vector-add-resolution.js",
-      "entry": "vector-add-resolution",
-      "profile": {
-        "heightScale": 2
-      }
+    "anims/vector-add-resolution.anim.ts": {
+      "js": "anims/vector-add-resolution.js",
+      "entry": "anims/vector-add-resolution"
     },
-    "anims/vector-basic.cs": {
-      "js": "vector-basic.js",
-      "entry": "vector-basic"
+    "anims/vector-basic.anim.ts": {
+      "js": "anims/vector-basic.js",
+      "entry": "anims/vector-basic"
     },
-    "anims/vector-move.cs": {
-      "js": "vector-move.js",
-      "entry": "vector-move",
-      "profile": {
-        "controls": "mode-select",
-        "heightScale": 2.5,
-        "modeOptions": [
-          {
-            "value": 0,
-            "text": "初始状态"
-          },
-          {
-            "value": 1,
-            "text": "分离为X-Y向量"
-          },
-          {
-            "value": 2,
-            "text": "向量合成"
-          }
-        ]
-      }
+    "anims/vector-move.anim.ts": {
+      "js": "anims/vector-move.js",
+      "entry": "anims/vector-move"
     }
   }
 }

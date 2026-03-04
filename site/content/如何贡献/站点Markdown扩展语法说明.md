@@ -68,7 +68,7 @@ next_chapter: 在线写作IDE使用教程.md
 语法：
 
 ```text
-[待补充说明](anims:anims/demo-basic.cs)
+[待补充说明](anims:anims/demo-basic.anim.ts)
 ```
 
 要求：
@@ -281,7 +281,7 @@ colorChange:
 
 ### 错误2：动画不显示
 
-确认已执行 `npm run build`，且 `[说明](anims:anims/xxx.cs)` 路径合法。
+确认已执行 `npm run build`，且 `[说明](anims:anims/xxx.anim.ts)` 路径合法。
 
 ## 下一步
 

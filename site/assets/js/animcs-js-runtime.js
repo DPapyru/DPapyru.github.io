@@ -242,7 +242,7 @@
         }
 
         if (!normalized) return;
-        if (normalized === 'anims/demo-eoc-ai.cs') {
+        if (normalized === 'anims/demo-eoc-ai.anim.ts') {
             if (!embed.getAttribute('data-animcs-height-scale')) {
                 embed.setAttribute('data-animcs-height-scale', '2.3');
             }

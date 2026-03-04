@@ -71,8 +71,8 @@
 
                 <section style="margin-top: 12px;">
                     <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                        <label for="anim-file" style="color: var(--text-secondary);">选择 C# 文件：</label>
-                        <input id="anim-file" type="file" accept=".cs" class="btn btn-small btn-outline">
+                        <label for="anim-file" style="color: var(--text-secondary);">选择 animts 文件：</label>
+                        <input id="anim-file" type="file" accept=".anim.ts" class="btn btn-small btn-outline">
                         <button id="anim-run" class="btn btn-small" type="button" disabled>播放所选（需先构建）</button>
                         <button id="anim-demo-basic" class="btn btn-small btn-outline" type="button">播放示例：基础动画</button>
                         <button id="anim-demo-math" class="btn btn-small btn-outline" type="button">播放示例：数学变换</button>
@@ -83,7 +83,7 @@
                         <label for="anim-dir" style="color: var(--text-secondary);">选择仓库目录（可选）：</label>
                         <input id="anim-dir" type="file" webkitdirectory directory multiple class="btn btn-small btn-outline">
                         <select id="anim-path-select" class="btn btn-small btn-outline" style="min-width: 340px;" disabled>
-                            <option value="">（从目录中选择 anims/*.cs）</option>
+                            <option value="">（从目录中选择 *.anim.ts）</option>
                         </select>
                         <button id="anim-run-selected" class="btn btn-small" type="button" disabled>播放所选</button>
                         <button id="anim-copy-snippet" class="btn btn-small btn-outline" type="button" disabled>复制 anim 指令</button>
@@ -91,7 +91,7 @@
                 </section>
 
                 <section style="margin-top: 14px;">
-                    <div id="anim-embed" class="animts-embed animcs-embed" data-animcs-src=""></div>
+                    <div id="anim-embed" class="animts-embed" data-animts-src=""></div>
                 </section>
             </div>
         </div>
@@ -118,7 +118,7 @@
     </script>
     <script src="../../site/assets/js/accent-theme.js"></script>
     <script src="../../tml-ide/subapps/assets/js/shader-hlsl-adapter.js"></script>
-    <script src="../../site/assets/js/animcs-js-runtime.js"></script>
+    <script src="../../site/assets/js/animts-runtime.js"></script>
     <script>
         (function () {
             const fileInput = document.getElementById('anim-file');
@@ -154,13 +154,13 @@
 
             function sourceToDefaultJsName(sourcePath) {
                 const normalized = String(sourcePath || '').replace(/\\/g, '/').trim();
-                const m = normalized.match(/^anims\/(.+)\.cs$/i);
+                const m = normalized.match(/^(.+)\.anim\.ts$/i);
                 if (!m || !m[1]) return '';
                 return `${m[1]}.js`;
             }
 
             function updateLocalResolver() {
-                embed.__ANIMCS_RESOLVE_ENTRY = function (payload) {
+                embed.__ANIMTS_RESOLVE_ENTRY = function (payload) {
                     const normalized = String(payload && payload.normalized ? payload.normalized : '').trim();
                     if (!normalized) return null;
 
@@ -192,10 +192,9 @@
                 runSelectedBtn.disabled = !currentPath;
 
                 if (currentPath) {
-                    embed.setAttribute('data-animcs-src', currentPath);
-                    embed.classList.add('animcs-embed');
-                    if (window.AnimCsJsRuntime && typeof window.AnimCsJsRuntime.initEmbeds === 'function') {
-                        window.AnimCsJsRuntime.initEmbeds();
+                    embed.setAttribute('data-animts-src', currentPath);
+                    if (window.AnimTsRuntime && typeof window.AnimTsRuntime.initEmbeds === 'function') {
+                        window.AnimTsRuntime.initEmbeds();
                     }
                 }
                 if (label) setStatus(label);
@@ -208,18 +207,18 @@
                 copySnippetBtn.disabled = true;
                 runBtn.disabled = !file;
                 if (!file) {
-                    setStatus('请选择一个 .cs 文件');
+                    setStatus('请选择一个 .anim.ts 文件');
                     return;
                 }
-                setStatus(`已选择：${file.name}（请先执行 npm run build 再通过路径预览）`);
+                setStatus(`已选择：${file.name}（可直接预览或先执行 npm run build）`);
             });
 
             runBtn.addEventListener('click', function () {
                 if (!currentFile) {
-                    setStatus('请选择一个 .cs 文件');
+                    setStatus('请选择一个 .anim.ts 文件');
                     return;
                 }
-                setStatus('浏览器内不支持编译 C# 动画，请先执行 npm run build 后通过路径预览。');
+                mountPath(file.name, `预览：${file.name}`);
             });
 
             demoBasicBtn.addEventListener('click', function () {
@@ -230,7 +229,7 @@
                 runBtn.disabled = true;
                 currentPath = '';
                 copySnippetBtn.disabled = true;
-                mountPath('anims/demo-basic.cs', '预览：anims/demo-basic.cs');
+                mountPath('anims/demo-basic.anim.ts', '预览：anims/demo-basic.anim.ts');
             });
 
             demoMathBtn.addEventListener('click', function () {
@@ -241,7 +240,7 @@
                 runBtn.disabled = true;
                 currentPath = '';
                 copySnippetBtn.disabled = true;
-                mountPath('anims/demo-math-transform.cs', '预览：anims/demo-math-transform.cs');
+                mountPath('anims/demo-math-transform.anim.ts', '预览：anims/demo-math-transform.anim.ts');
             });
 
             demoEocBtn.addEventListener('click', function () {
@@ -252,7 +251,7 @@
                 runBtn.disabled = true;
                 currentPath = '';
                 copySnippetBtn.disabled = true;
-                mountPath('anims/demo-eoc-ai.cs', '预览：anims/demo-eoc-ai.cs');
+                mountPath('anims/demo-eoc-ai.anim.ts', '预览：anims/demo-eoc-ai.anim.ts');
             });
 
             dirInput.addEventListener('change', async function () {
@@ -274,13 +273,13 @@
 
                 let manifestFile = null;
 
-                // Expect selecting repo root or site/content directory. We keep paths like anims/xxx.cs (same as viewer).
+                // Expect selecting repo root or site/content directory. We keep paths like anims/xxx.anim.ts (same as viewer).
                 files.forEach((file) => {
                     const rel = String(file.webkitRelativePath || file.name).replace(/\\/g, '/');
-                    // Match site/content/anims/*.cs or content/anims/*.cs or anims/*.cs
-                    const m = rel.match(/(?:^|\/)site\/content\/(anims\/.+\.cs)$/i)
-                        || rel.match(/(?:^|\/)content\/(anims\/.+\.cs)$/i)
-                        || rel.match(/(?:^|\/)(anims\/.+\.cs)$/i);
+                    // Match site/content/**/*.anim.ts or content/**/*.anim.ts or direct **/*.anim.ts
+                    const m = rel.match(/(?:^|\/)site\/content\/(.+\.anim\.ts)$/i)
+                        || rel.match(/(?:^|\/)content\/(.+\.anim\.ts)$/i)
+                        || rel.match(/(?:^|\/)(.+\.anim\.ts)$/i);
                     if (m) {
                         const key = m[1].replace(/^\.?\//, '').replace(/\\\\/g, '/');
                         if (!key.startsWith('anims/_lib/')) {
@@ -321,7 +320,7 @@
                 pathSelect.replaceChildren();
                 const placeholder = document.createElement('option');
                 placeholder.value = '';
-                placeholder.textContent = paths.length ? '（选择 anims/*.cs）' : '（目录中未找到 site/content/anims/*.cs）';
+                placeholder.textContent = paths.length ? '（选择 *.anim.ts）' : '（目录中未找到 site/content/**/*.anim.ts）';
                 pathSelect.appendChild(placeholder);
 
                 paths.forEach((p) => {
@@ -335,7 +334,7 @@
                 runSelectedBtn.disabled = paths.length === 0;
 
                 if (!paths.length) {
-                    setStatus('目录中未找到 site/content/anims/*.cs');
+                    setStatus('目录中未找到 site/content/**/*.anim.ts');
                     return;
                 }
 
@@ -387,7 +386,7 @@
                     if (isFileProtocol()) {
                         setStatus('就绪：file:// 直开请先选择仓库目录（需包含 site/assets/anims/*.js）');
                     } else {
-                        setStatus('就绪：请选择一个 site/content/anims/*.cs 文件');
+                        setStatus('就绪：请选择一个 site/content/**/*.anim.ts 文件');
                     }
                 } catch (e) {
                     setStatus(`初始化失败：${e && e.message ? e.message : String(e)}`);

@@ -50,7 +50,7 @@ colors:
 
 ## 向量基础介绍
 
-[动画1](anim:anims/vector-basic.cs)
+[动画1](anim:anims/vector-basic.anim.ts)
 
 上面这个可交互的动画是向量的一个演示，如同你所见，向量会指向一个终点。
 
@@ -74,10 +74,10 @@ colors:
 
 那么接下来坐标的加减法就是 $ (X_1-X_2,Y_1-Y_2) $
 
-[箭的AI](anim:anims/arrow-easy-ai.cs)
+[箭的AI](anim:anims/arrow-easy-ai.anim.ts)
 
 ## 向量合成和分解
 
-[动画2](anim:anims/vector-add-resolution.cs)
+[动画2](anim:anims/vector-add-resolution.anim.ts)
 
 

@@ -7,7 +7,7 @@ const runtime = require(path.resolve('site/assets/js/animcs-js-runtime.js'));
 test('resolveEntryForSource prefers manifest entry', () => {
     const manifest = {
         entries: {
-            'anims/demo-basic.cs': {
+            'anims/demo-basic.anim.ts': {
                 js: 'demo-basic.custom.js',
                 entry: 'demo-basic-custom'
             }
@@ -15,7 +15,7 @@ test('resolveEntryForSource prefers manifest entry', () => {
     };
 
     assert.deepEqual(
-        runtime.resolveEntryForSource(manifest, 'anims/demo-basic.cs'),
+        runtime.resolveEntryForSource(manifest, 'anims/demo-basic.anim.ts'),
         {
             js: 'demo-basic.custom.js',
             entry: 'demo-basic-custom'
@@ -25,7 +25,7 @@ test('resolveEntryForSource prefers manifest entry', () => {
 
 test('resolveEntryForSource falls back to basename mapping when manifest is unavailable', () => {
     assert.deepEqual(
-        runtime.resolveEntryForSource(null, 'anims/demo-basic.cs'),
+        runtime.resolveEntryForSource(null, 'anims/demo-basic.anim.ts'),
         {
             js: 'demo-basic.js',
             entry: 'demo-basic'

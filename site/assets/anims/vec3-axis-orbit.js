@@ -1,4 +1,4 @@
-// Generated from anims/vec3-axis-orbit.cs
+// Generated from anims/vec3-axis-orbit.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class Vec3AxisOrbit {

@@ -536,13 +536,13 @@ const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
 const VIEWER_PREVIEW_MESSAGE_TYPE = 'article-studio-preview-update';
 const IDE_EDITABLE_INDEX_PATH = '/site/assets/ide-editable-index.v1.json';
 const PREVIEW_SYNC_DEBOUNCE_MS = 120;
-const ANIMCS_BRIDGE_STORAGE_KEY = 'articleStudioAnimBridgeEndpoint.v1';
-const ANIMCS_DEFAULT_BRIDGE_ENDPOINT = 'http://127.0.0.1:5078';
-const ANIMCS_BRIDGE_CANDIDATE_ENDPOINTS = [ANIMCS_DEFAULT_BRIDGE_ENDPOINT, 'http://127.0.0.1:5178'];
-const ANIMCS_COMPILE_DEBOUNCE_MS = 400;
-const ANIMCS_COMPILE_TIMEOUT_MS = 8000;
+const ANIMTS_BRIDGE_STORAGE_KEY = 'articleStudioAnimBridgeEndpoint.v1';
+const ANIMTS_DEFAULT_BRIDGE_ENDPOINT = 'browser://local-transpile';
+const ANIMTS_BRIDGE_CANDIDATE_ENDPOINTS = [ANIMTS_DEFAULT_BRIDGE_ENDPOINT];
+const ANIMTS_COMPILE_DEBOUNCE_MS = 400;
+const ANIMTS_COMPILE_TIMEOUT_MS = 8000;
 let viewerPagePathCache = '';
-const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|animcs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif|mp4|webm|mov|m4v|avi|mkv)$/i;
+const FILE_NAME_ALLOWED_EXT_RE = /(?:\.anim\.ts|\.cs|\.md|\.fx|\.png|\.jpe?g|\.gif|\.webp|\.svg|\.bmp|\.avif|\.mp4|\.webm|\.mov|\.m4v|\.avi|\.mkv)$/i;
 const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
 const SHADER_PREVIEW_RENDER_MODES = new Set(['alpha', 'additive', 'nonpremultiplied', 'opaque']);
 const SHADER_PREVIEW_ADDRESS_MODES = new Set(['clamp', 'wrap']);
@@ -618,7 +618,7 @@ const shaderUploadImageCache = new Map();
 const QUICK_CREATE_TYPE_META = Object.freeze({
     markdown: Object.freeze({ ext: '.md', defaultFileName: '新文章.md' }),
     shaderfx: Object.freeze({ ext: '.fx', defaultFileName: 'effect.fx' }),
-    animcs: Object.freeze({ ext: '.cs', defaultFileName: 'new-anim.cs' }),
+    animts: Object.freeze({ ext: '.anim.ts', defaultFileName: 'new-anim.anim.ts' }),
     codecs: Object.freeze({ ext: '.cs', defaultFileName: 'snippet.cs' }),
     image: Object.freeze({ ext: '.png', defaultFileName: 'image.png' }),
     video: Object.freeze({ ext: '.mp4', defaultFileName: 'video.mp4' })
@@ -891,7 +891,7 @@ function isIdeEditableRelativePath(pathValue) {
     const lower = relative.toLowerCase();
     if (lower.endsWith('.md')) return true;
     if (lower.endsWith('.fx')) return true;
-    if (/^anims\/[^/]+\.cs$/i.test(relative)) return true;
+    if (lower.endsWith('.anim.ts')) return true;
     if (/(?:^|\/)code\/[^/]+\.cs$/i.test(relative)) return true;
     if (/(?:^|\/)imgs\/[^/]+$/i.test(relative)) return true;
     if (/(?:^|\/)media\/[^/]+$/i.test(relative)) return true;
@@ -968,20 +968,22 @@ function resolveContentPathFromMarkdown(markdownPath, rawPath) {
 }
 
 function detectFileMode(pathValue) {
+    if (/\.anim\.ts$/i.test(String(pathValue || ''))) return 'animts';
     const ext = fileExt(pathValue);
     if (ext === '.md' || ext === '.markdown') return 'markdown';
     if (ext === '.fx') return 'shaderfx';
-    if (ext === '.animcs') return 'csharp';
+    if (ext === '.ts') return 'animts';
     if (VIDEO_FILE_EXTENSIONS.has(ext)) return 'video';
     if (IMAGE_FILE_EXTENSIONS.has(ext)) return 'image';
     return 'csharp';
 }
 
 function languageForFile(pathValue) {
-    if (isAnimationCsharpFilePath(pathValue)) return 'csharp';
+    if (isAnimationCsharpFilePath(pathValue)) return 'javascript';
     const mode = detectFileMode(pathValue);
     if (mode === 'markdown') return 'markdown';
     if (mode === 'shaderfx') return 'shaderfx';
+    if (mode === 'animts') return 'javascript';
     if (mode === 'video') return 'plaintext';
     if (mode === 'image') return 'plaintext';
     return 'csharp';
@@ -1545,8 +1547,7 @@ function normalizeAnimSourcePath(pathValue) {
 function isAnimSourcePath(pathValue) {
     const normalized = normalizeAnimSourcePath(pathValue);
     if (!normalized) return false;
-    if (!/^anims\//i.test(normalized)) return false;
-    if (!/\.cs$/i.test(normalized)) return false;
+    if (!/\.anim\.ts$/i.test(normalized)) return false;
     if (/(^|\/)\.\.(\/|$)/.test(normalized)) return false;
     return true;
 }
@@ -1583,7 +1584,7 @@ function normalizeAnimBridgeEndpoint(input) {
 
 function readStoredAnimBridgeEndpoint() {
     try {
-        return normalizeAnimBridgeEndpoint(localStorage.getItem(ANIMCS_BRIDGE_STORAGE_KEY) || '');
+        return normalizeAnimBridgeEndpoint(localStorage.getItem(ANIMTS_BRIDGE_STORAGE_KEY) || '');
     } catch (_error) {
         return '';
     }
@@ -1591,7 +1592,7 @@ function readStoredAnimBridgeEndpoint() {
 
 function persistAnimBridgeEndpoint(endpoint) {
     try {
-        localStorage.setItem(ANIMCS_BRIDGE_STORAGE_KEY, String(endpoint || ''));
+        localStorage.setItem(ANIMTS_BRIDGE_STORAGE_KEY, String(endpoint || ''));
     } catch (_error) {
         // Ignore storage errors.
     }
@@ -1723,9 +1724,9 @@ function collectReferencedAnimPaths(markdownPath, markdownContent) {
         }
     });
 
-    const animcsFenceRe = /```animcs\s*([\s\S]*?)```/g;
+    const animtsFenceRe = /```animts\s*([\s\S]*?)```/g;
     let fenceMatch = null;
-    while ((fenceMatch = animcsFenceRe.exec(source)) !== null) {
+    while ((fenceMatch = animtsFenceRe.exec(source)) !== null) {
         const blockText = String(fenceMatch[1] || '');
         const firstLine = blockText
             .split(/\r?\n/)
@@ -1744,7 +1745,7 @@ function updateAnimPreviewReferenceContext(markdownPath, markdownContent) {
     state.animPreview.referencedAnimPaths = referencedPaths;
     state.animPreview.referencedAnimSet = new Set(referencedPaths);
     if (referencedPaths.length <= 0) {
-        setAnimCompileStatus('未激活（当前文章未引用 anims/*.cs）');
+        setAnimCompileStatus('未激活（当前文章未引用 *.anim.ts）');
     }
 }
 
@@ -1869,7 +1870,7 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
         compiledAnims: buildCompiledAnimsPayload(),
         animCompileErrors: buildAnimCompileErrorsPayload(),
         animBridge: {
-            endpoint: normalizeAnimBridgeEndpoint(state.animPreview.bridgeEndpoint) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT,
+            endpoint: normalizeAnimBridgeEndpoint(state.animPreview.bridgeEndpoint) || ANIMTS_DEFAULT_BRIDGE_ENDPOINT,
             connected: !!state.animPreview.bridgeConnected,
             status: String(state.animPreview.compileStatus || '未激活')
         },
@@ -1909,7 +1910,7 @@ function resolveAnimBridgeCandidates(preferredEndpoint) {
 
     appendCandidate(preferredEndpoint);
     appendCandidate(state.animPreview.bridgeEndpoint);
-    ANIMCS_BRIDGE_CANDIDATE_ENDPOINTS.forEach((value) => appendCandidate(value));
+    ANIMTS_BRIDGE_CANDIDATE_ENDPOINTS.forEach((value) => appendCandidate(value));
     return candidates;
 }
 
@@ -2035,52 +2036,35 @@ async function compileAnimSourceNow(animPath, sourceText, options) {
     state.animPreview.latestRequestIdByPath[normalized] = requestId;
     setAnimCompileStatus(`编译中 ${normalized}`);
 
-    const endpoint = await connectAnimBridge({ preferredEndpoint: opts.preferredEndpoint, silent: true });
-    if (!endpoint) {
-        setCompiledAnimError(normalized, ['未检测到本地 AnimBridge，请先启动 dotnet 桥接服务']);
-        setAnimCompileStatus(`桥接不可用 ${normalized}`);
-        scheduleMarkdownPreviewSync({ refreshAnimRefs: false });
-        return;
-    }
-
     const controller = new AbortController();
     const timeout = setTimeout(() => {
         controller.abort();
-    }, ANIMCS_COMPILE_TIMEOUT_MS);
+    }, ANIMTS_COMPILE_TIMEOUT_MS);
 
     try {
-        const response = await fetch(`${endpoint}/api/animcs/compile`, {
-            method: 'POST',
-            headers: {
-                'content-type': 'application/json'
-            },
-            body: JSON.stringify({
-                sourcePath: normalized,
-                sourceText: String(sourceText || ''),
-                requestId
-            }),
-            signal: controller.signal
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+        if (controller.signal.aborted) {
+            throw new DOMException('aborted', 'AbortError');
         }
-
-        const payload = await response.json().catch(() => null);
+        const moduleJs = String(sourceText || '');
+        const payload = {
+            ok: !!moduleJs.trim(),
+            moduleJs,
+            diagnostics: moduleJs.trim() ? [] : ['编译失败：源码为空'],
+            profile: null
+        };
         if (state.animPreview.latestRequestIdByPath[normalized] !== requestId) {
             return;
         }
 
         const diagnostics = normalizeAnimCompileDiagnostics(payload && payload.diagnostics);
-        const moduleJs = String(payload && payload.moduleJs || '');
-        if (!payload || payload.ok !== true || !moduleJs) {
+        if (!payload || payload.ok !== true || !payload.moduleJs) {
             setCompiledAnimError(normalized, diagnostics.length ? diagnostics : ['编译失败：未生成 JS 模块']);
             setAnimCompileStatus(`编译失败 ${normalized}`);
             scheduleMarkdownPreviewSync({ refreshAnimRefs: false });
             return;
         }
 
-        setCompiledAnimOutput(normalized, moduleJs, payload.profile && typeof payload.profile === 'object' ? payload.profile : null);
+        setCompiledAnimOutput(normalized, payload.moduleJs, payload.profile && typeof payload.profile === 'object' ? payload.profile : null);
         state.animPreview.bridgeConnected = true;
         setAnimCompileStatus(`编译成功 ${normalized}`);
         scheduleMarkdownPreviewSync({ refreshAnimRefs: false });
@@ -2089,7 +2073,7 @@ async function compileAnimSourceNow(animPath, sourceText, options) {
             return;
         }
         const reason = error && error.name === 'AbortError'
-            ? `编译超时（>${ANIMCS_COMPILE_TIMEOUT_MS}ms）`
+            ? `编译超时（>${ANIMTS_COMPILE_TIMEOUT_MS}ms）`
             : (error && error.message ? error.message : String(error));
         setCompiledAnimError(normalized, [reason]);
         setAnimCompileStatus(`编译失败 ${normalized}`);
@@ -2115,7 +2099,7 @@ function scheduleAnimCompileForPath(animPath, sourceText, options) {
         run();
         return;
     }
-    state.animPreview.compileTimerByPath[normalized] = setTimeout(run, ANIMCS_COMPILE_DEBOUNCE_MS);
+    state.animPreview.compileTimerByPath[normalized] = setTimeout(run, ANIMTS_COMPILE_DEBOUNCE_MS);
 }
 
 function scheduleCompileForReferencedAnims(options) {
@@ -2124,7 +2108,7 @@ function scheduleCompileForReferencedAnims(options) {
         ? state.animPreview.referencedAnimPaths
         : [];
     if (!referenced.length) {
-        setAnimCompileStatus('未激活（当前文章未引用 anims/*.cs）');
+        setAnimCompileStatus('未激活（当前文章未引用 *.anim.ts）');
         return;
     }
 
@@ -2143,7 +2127,7 @@ function scheduleCompileForReferencedAnims(options) {
     });
 
     if (compileCount <= 0) {
-        setAnimCompileStatus('未激活（引用的 anims/*.cs 尚未在工作区打开）');
+        setAnimCompileStatus('未激活（引用的 *.anim.ts 尚未在工作区打开）');
     }
 }
 
@@ -2841,9 +2825,9 @@ function isAllowedExtraFilePath(pathValue) {
     const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(path);
     const isArticleImageFile = /^site\/content\/.+\/imgs\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(path);
     const isArticleMediaFile = /^site\/content\/.+\/media\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:mp4|webm)$/i.test(path);
-    const isAnimRootCsharpFile = /^site\/content\/anims\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(path);
+    const isAnimRootAnimtsFile = /^site\/content\/anims\/[a-z0-9\u4e00-\u9fa5_-]+\.anim\.ts$/i.test(path);
     const isArticleCsharpFile = /^site\/content\/.+\/code\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(path);
-    return isShaderGalleryFile || isArticleImageFile || isArticleMediaFile || isAnimRootCsharpFile || isArticleCsharpFile;
+    return isShaderGalleryFile || isArticleImageFile || isArticleMediaFile || isAnimRootAnimtsFile || isArticleCsharpFile;
 }
 
 function isMarkdownContentPath(pathValue) {
@@ -4169,7 +4153,7 @@ function createFileFromPathInput(pathInput, options) {
     const opts = options && typeof options === 'object' ? options : {};
     const fileName = normalizeEditableWorkspacePathInput(pathInput);
     if (!fileName) {
-        addEvent('error', '路径必须位于 site/content 白名单（.md / anims/*.cs / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
+        addEvent('error', '路径必须位于 site/content 白名单（.md / **/*.anim.ts / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
         return null;
     }
     const exists = state.workspace.files.some((file) => isSameContentRelativePath(file.path, fileName));
@@ -4369,7 +4353,7 @@ function contextFileTreeMenuCommands() {
                 const parent = parentDirOfRepoPath(ctx.repoPath);
                 const safeParent = normalizeContentRelativePath(parent);
                 let type = 'markdown';
-                if (/(^|\/)anims(\/|$)/i.test(safeParent)) type = 'animcs';
+                if (/(^|\/)anims(\/|$)/i.test(safeParent)) type = 'animts';
                 else if (/(^|\/)code(\/|$)/i.test(safeParent)) type = 'codecs';
                 else if (/(^|\/)imgs(\/|$)/i.test(safeParent)) type = 'image';
                 else if (/(^|\/)media(\/|$)/i.test(safeParent)) type = 'video';
@@ -4907,7 +4891,7 @@ function guessQuickCreateDirectory(baseDir, typeValue) {
         }
         return joinRepoPathParts(safeBase, name);
     };
-    if (type === 'animcs') return ensureSubdir('anims');
+    if (type === 'animts') return ensureSubdir('anims');
     if (type === 'codecs') return ensureSubdir('code');
     if (type === 'image') return ensureSubdir('imgs');
     if (type === 'video') return ensureSubdir('media');
@@ -6106,7 +6090,7 @@ function applyMarkdownInsertAction(action) {
     }
     if (key === 'anim') {
         const selectedTitle = readMarkdownSelectionText('动画说明');
-        insertMarkdownBlockSnippet(`[${selectedTitle}](anims:anims/你的动画文件.cs)\n`, 'anims:anims/你的动画文件.cs');
+        insertMarkdownBlockSnippet(`[${selectedTitle}](anims:anims/你的动画文件.anim.ts)\n`, 'anims:anims/你的动画文件.anim.ts');
         return;
     }
     if (key === 'fx-embed') {
@@ -6118,13 +6102,13 @@ function applyMarkdownInsertAction(action) {
         insertMarkdownBlockSnippet('> [!NOTE]\n> 这里填写提示内容。\n', '[!NOTE]');
         return;
     }
-    if (key === 'animcs-block') {
+    if (key === 'animts-block') {
         insertMarkdownBlockSnippet([
-            '```animcs',
-            'anims/demo-basic.cs',
+            '```animts',
+            'anims/demo-basic.anim.ts',
             '```',
             ''
-        ].join('\n'), 'anims/demo-basic.cs');
+        ].join('\n'), 'anims/demo-basic.anim.ts');
         return;
     }
     if (key === 'color-inline') {
@@ -8012,9 +7996,7 @@ function exportShaderFile() {
 function isAnimationCsharpFilePath(pathValue) {
     const safe = normalizeRepoPath(pathValue).toLowerCase();
     if (!safe) return false;
-    if (/\.animcs$/i.test(safe)) return true;
-    if (/\.anim\.cs$/i.test(safe)) return true;
-    if (/\/(?:anims?|animations?)\//i.test(safe)) return true;
+    if (/\.anim\.ts$/i.test(safe)) return true;
     return false;
 }
 
@@ -10174,7 +10156,7 @@ function bindUiEvents() {
 
         const next = normalizeEditableWorkspacePathInput(input);
         if (!next) {
-            addEvent('error', '路径必须位于 site/content 白名单（.md / anims/*.cs / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
+            addEvent('error', '路径必须位于 site/content 白名单（.md / **/*.anim.ts / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
             return;
         }
 
@@ -10378,8 +10360,8 @@ async function bootstrap() {
     initializeUnifiedState(unifiedState);
     updateUnifiedAuthUi();
     state.animPreview.bridgeEndpoint = normalizeAnimBridgeEndpoint(
-        readStoredAnimBridgeEndpoint() || ANIMCS_DEFAULT_BRIDGE_ENDPOINT
-    ) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+        readStoredAnimBridgeEndpoint() || ANIMTS_DEFAULT_BRIDGE_ENDPOINT
+    ) || ANIMTS_DEFAULT_BRIDGE_ENDPOINT;
     persistAnimBridgeEndpoint(state.animPreview.bridgeEndpoint);
     state.animPreview.bridgeConnected = false;
     setAnimCompileStatus('未激活');

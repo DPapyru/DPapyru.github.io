@@ -41,7 +41,7 @@ next_chapter: 使用网页特殊动画模块.md
 核心关联项目：
 
 1. `site/content/ModDocProject.csproj`
-2. `site/content/anims/AnimScripts.Dev.csproj`
+2. `site/content/anims/AnimScripts.Dev.anim.tsproj`
 
 设计目标：
 

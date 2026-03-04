@@ -1,4 +1,4 @@
-// Generated from anims/matrix-mat4-transform.cs
+// Generated from anims/matrix-mat4-transform.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class MatrixMat4Transform {

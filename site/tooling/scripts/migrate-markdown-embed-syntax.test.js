@@ -9,8 +9,8 @@ test('migration parser handles optional title payload', () => {
         label: '类型示例'
     });
 
-    assert.deepEqual(parseLegacyDirectivePayload('anims/demo.cs'), {
-        target: 'anims/demo.cs',
+    assert.deepEqual(parseLegacyDirectivePayload('anims/demo.anim.ts'), {
+        target: 'anims/demo.anim.ts',
         label: '待补充说明'
     });
 });
@@ -27,12 +27,12 @@ test('migration line conversion rewrites legacy cs/anim directives to protocol l
     );
 
     assert.equal(
-        migrateLine('    {{anim:anims/demo-basic.cs}}'),
-        '    [待补充说明](anims:anims/demo-basic.cs)'
+        migrateLine('    {{anim:anims/demo-basic.anim.ts}}'),
+        '    [待补充说明](anims:anims/demo-basic.anim.ts)'
     );
 
     assert.equal(
-        migrateLine('说明：{{anim:anims/demo-basic.cs}}'),
+        migrateLine('说明：{{anim:anims/demo-basic.anim.ts}}'),
         null
     );
 });

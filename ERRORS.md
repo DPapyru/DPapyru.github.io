@@ -2598,3 +2598,14 @@
 
 **备注**：
 - 本轮在 `main` 合并流程中确认 legacy article-studio `math-inline`/`math-block` 已恢复并通过回归。
+
+### 验证记录 [2026-03-04 17:49]：动画模块 animts 迁移（去 C# 动画链路）续跑
+
+**级别**：L3（构建 + 生成一致性）
+
+**命令与结果**：
+- `npm run build`：通过（完整跑通 `generate-index`、`build:animts`、`build:site-app`、`tml-ide-app`）
+- `npm run check-generated`：失败（`build` 完成后在 `git diff --exit-code` 阶段返回非 0，当前工作树存在待提交差异）
+
+**备注**：
+- 本轮失败不是构建失败，属于 `check-generated` 的一致性门禁行为（要求无未提交差异）。

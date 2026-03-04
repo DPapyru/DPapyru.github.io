@@ -1290,7 +1290,7 @@
                 <script src="/site/assets/js/prism-csharp.min.js"></script> <!-- C#语言高亮支持 -->
                 <script src="/tml-ide/subapps/assets/js/shader-hlsl-adapter.js"></script> <!-- HLSL 适配器（与 IDE 一致） -->
                 <script src="/tml-ide/subapps/assets/js/shader-editor-assist.js"></script> <!-- Shader 编辑器高亮与补全 -->
-                <script src="/site/assets/js/animcs-js-runtime.js"></script> <!-- C# 动画运行时（JS 输出） -->
+                <script src="/site/assets/js/animts-runtime.js"></script> <!-- animts 动画运行时 -->
     <script>
         // Mermaid 兜底加载：如果本地资源缺失/加载失败，则尝试从 CDN 加载（不影响已有本地加载）
         (function ensureMermaidLoaded() {
@@ -1356,7 +1356,7 @@
             function normalizeStudioPreviewAnimPath(input) {
                 const value = normalizeStudioPreviewPath(input || '');
                 if (!value) return '';
-                if (!/^anims\//i.test(value) || !/\.cs$/i.test(value)) return '';
+                if (!/\.anim\.ts$/i.test(value)) return '';
                 if (/(^|\/)\.\.(\/|$)/.test(value)) return '';
                 return value;
             }
@@ -1865,12 +1865,12 @@
             function installStudioPreviewAnimResolver(container) {
                 if (!STUDIO_PREVIEW_MODE) return;
                 const resolver = createStudioPreviewAnimResolver();
-                window.__ANIMCS_RESOLVE_ENTRY = resolver;
+                window.__ANIMTS_RESOLVE_ENTRY = resolver;
 
                 const scope = container && container.querySelectorAll ? container : document;
                 if (!scope || typeof scope.querySelectorAll !== 'function') return;
-                scope.querySelectorAll('.animcs-embed[data-animcs-src]').forEach(function (embed) {
-                    embed.__ANIMCS_RESOLVE_ENTRY = resolver;
+                scope.querySelectorAll('.animts-embed[data-animts-src]').forEach(function (embed) {
+                    embed.__ANIMTS_RESOLVE_ENTRY = resolver;
                 });
             }
 
@@ -4402,18 +4402,18 @@
 		                        }
 		                        const safeCode = escapeHtml(code || '');
 
-                        if (language === 'animcs') {
+                        if (language === 'animts') {
                             const raw = String(code || '').split('\n').map(line => String(line || '').trim()).find(line => line) || '';
                             let src = raw;
                             try { src = decodeURIComponent(raw); } catch (_) { src = raw; }
                             src = String(src).trim().replace(/^\.?\//, '').replace(/^docs\//, '');
                             const normalized = normalizePath(src);
 
-                            if (!normalized.startsWith('anims/') || !/\.cs$/i.test(normalized)) {
-                                return `<pre><code class="language-plaintext">${escapeHtml('animcs 代码块第一行必须是 anims/*.cs 路径')}</code></pre>`;
+                            if (!/\.anim\.ts$/i.test(normalized) || /(^|\/)\.\.(\/|$)/.test(normalized)) {
+                                return `<pre><code class="language-plaintext">${escapeHtml('animts 代码块第一行必须是 site/content 下的 *.anim.ts 路径')}</code></pre>`;
                             }
 
-                            return `<div class="animts-embed animcs-embed" data-animcs-src="${escapeHtml(normalized)}"></div>`;
+                            return `<div class="animts-embed" data-animts-src="${escapeHtml(normalized)}"></div>`;
                         }
 
                         if (language === 'fxembed') {
@@ -6362,12 +6362,11 @@
                         normalizedAnimPath.includes('\0') ||
                         normalizedAnimPath.includes('\\\\') ||
                         /(^|\/)\.\.(\/|$)/.test(normalizedAnimPath) ||
-                        !normalizedAnimPath.startsWith('anims/') ||
-                        !/\.cs$/i.test(normalizedAnimPath)
+                        !/\.anim\.ts$/i.test(normalizedAnimPath)
                     ) {
                         return `\n\n> 无法载入动画：非法路径 \`${m.target}\`\n\n`;
                     }
-                    return `\n\n${buildFencedCodeBlock('animcs', normalizedAnimPath)}\n\n`;
+                    return `\n\n${buildFencedCodeBlock('animts', normalizedAnimPath)}\n\n`;
                 }
 
                 if (m.kind === 'fx') {
