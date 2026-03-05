@@ -6,6 +6,7 @@ import 'monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js
 import 'monaco-editor/esm/vs/basic-languages/csharp/csharp.contribution';
 import 'monaco-editor/esm/vs/basic-languages/markdown/markdown.contribution';
 import 'monaco-editor/esm/vs/basic-languages/cpp/cpp.contribution';
+import 'monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution';
 import 'monaco-editor/esm/vs/language/typescript/monaco.contribution';
 import { conf as csharpConf, language as csharpLanguage } from 'monaco-editor/esm/vs/basic-languages/csharp/csharp';
 
@@ -1000,11 +1001,11 @@ function detectFileMode(pathValue) {
 }
 
 function languageForFile(pathValue) {
-    if (isAnimationCsharpFilePath(pathValue)) return 'javascript';
+    if (isAnimationCsharpFilePath(pathValue)) return 'typescript';
     const mode = detectFileMode(pathValue);
     if (mode === 'markdown') return 'markdown';
     if (mode === 'shaderfx') return 'shaderfx';
-    if (mode === 'animts') return 'javascript';
+    if (mode === 'animts') return 'typescript';
     if (mode === 'video') return 'plaintext';
     if (mode === 'image') return 'plaintext';
     return 'csharp';
@@ -5068,7 +5069,7 @@ function updateStatusLanguage() {
         return;
     }
     if (active && isAnimationCsharpFilePath(active.path)) {
-        dom.statusLanguage.textContent = 'C# (动画)';
+        dom.statusLanguage.textContent = 'TypeScript (动画)';
         return;
     }
     dom.statusLanguage.textContent = 'C#';

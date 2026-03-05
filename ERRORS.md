@@ -2649,3 +2649,15 @@
 **备注**：
 - 本轮仅按要求修复两个 P2：`tml-ide-app/src/main.js` 本地预览编译成功路径保留 profile；`site/pages/anim-renderer.html` 单文件“播放所选”走本地所选文件模块。
 - `article-studio-anim-preview-payload.test.js` 的失败属于既有测试基线与分支命名迁移不一致，不是本次修复引入。
+
+### 验证记录 [2026-03-05 10:41]：.anim.ts 高亮与补全切换到 TypeScript
+
+**级别**：定向修复验收（IDE 语言服务 + 浏览器探针 + 构建）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过（3 passed, 0 failed）
+- `npm --prefix tml-ide-app run build`：通过（产出新增 `typescript-*.js` 与更新 `index-*.js` / `tsMode-*.js`）
+- `node tmp-playwright/ide-probe-8000.mjs`：通过（`localhost:8000/tml-ide/` 下 `.anim.ts` token class 从单一提升为多类；补全弹窗可见，返回 TS 成员如 `filter` / `forEach`）
+
+**备注**：
+- 仍存在独立 404：`/site/content/anims/Program.anim.ts`（不影响本次 `.anim.ts` 高亮与补全修复结果）。
