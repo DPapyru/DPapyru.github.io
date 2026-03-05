@@ -7,7 +7,7 @@ test('anim renderer run button uses currentFile instead of out-of-scope file var
     const sourcePath = path.resolve('site/pages/anim-renderer.html');
     const source = fs.readFileSync(sourcePath, 'utf8');
 
-    const runHandlerMatch = source.match(/runBtn\.addEventListener\('click', function \(\) \{([\s\S]*?)\n\s*}\);/);
+    const runHandlerMatch = source.match(/runBtn\.addEventListener\('click',\s*(?:async\s+)?function \(\) \{([\s\S]*?)\n\s*}\);/);
     assert.ok(runHandlerMatch && runHandlerMatch[1], 'runBtn click handler not found');
 
     const handlerBody = runHandlerMatch[1];

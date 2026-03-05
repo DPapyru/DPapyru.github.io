@@ -2700,3 +2700,17 @@
 
 **备注**：
 - 本轮为动画 TS 场景设置 `setDiagnosticsOptions`（关闭语义/建议诊断，保留语法诊断），避免自定义字段红线干扰高亮显示。
+
+### 验证记录 [2026-03-05 11:45]：animts/no-csharp 失败项收敛与合并前验收
+
+**级别**：定向回归 + 全量测试 + 构建验收
+
+**命令与结果**：
+- `node --test site/tooling/scripts/animcs-js-runtime-file-fallback.test.js site/tooling/scripts/animcs-shader-adapter-contract.test.js site/tooling/scripts/article-studio-anim-preview-payload.test.js site/tooling/scripts/contrib-docs-format.test.js site/tooling/scripts/markdown-ref-standard-links.test.js site/tooling/scripts/viewer-studio-preview-animcs.test.js tml-ide-app/tests/anim-preview-compile-regressions.test.js tml-ide-app/tests/markdown-editor-migration.test.js`：通过（24 passed, 0 failed）
+- `npm test`：通过（280 tests, 276 passed, 0 failed, 4 skipped）
+- `npm run build`：通过（`generate-index`、`build:animts`、`build:site-app`、`tml-ide-app build` 全链路完成）
+- `npm run check-generated`：失败（命令末尾 `git diff --exit-code` 在当前有代码改动和生成时间戳更新时返回非零）
+
+**备注**：
+- 本轮实质修复：`animcs-js-runtime` 回退入口兼容 `.anim.ts`，以及多处测试断言与当前 `animts` 实现对齐（`ANIMTS_*` 常量、`animts` 代码块/路径、异步 click handler 匹配等）。
+- `check-generated` 失败属于该脚本在非干净工作区下的预期行为，本轮已保留与任务相关改动并回退无关生成产物变更。
