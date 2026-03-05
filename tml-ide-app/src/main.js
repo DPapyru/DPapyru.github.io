@@ -1659,6 +1659,191 @@ function formatTypeScriptDiagnosticsForAnim(animPath, model, diagnostics) {
         .filter(Boolean);
 }
 
+function parseAnimModeOptionsDslForPreview(text) {
+    const raw = String(text || '').trim();
+    if (!raw) return [];
+
+    return raw.split('|')
+        .map((chunk) => String(chunk || '').trim())
+        .filter(Boolean)
+        .map((part) => {
+            const sep = part.indexOf(':');
+            if (sep <= 0) return null;
+            const value = Number(part.slice(0, sep).trim());
+            const label = part.slice(sep + 1).trim();
+            if (!Number.isFinite(value) || !label) return null;
+            return { value, text: label };
+        })
+        .filter(Boolean);
+}
+
+function normalizeAnimProfileForPreview(input) {
+    if (!input || typeof input !== 'object') return null;
+    const profile = {};
+
+    if (typeof input.controls === 'string') {
+        const controls = input.controls.trim();
+        if (controls) profile.controls = controls;
+    }
+
+    if (input.heightScale != null) {
+        const heightScale = Number(input.heightScale);
+        if (Number.isFinite(heightScale) && heightScale > 0) {
+            profile.heightScale = heightScale;
+        }
+    }
+
+    let modeOptions = [];
+    if (Array.isArray(input.modeOptions)) {
+        modeOptions = input.modeOptions
+            .map((item) => {
+                if (!item || typeof item !== 'object') return null;
+                const value = Number(item.value);
+                const text = String(item.text || '').trim();
+                if (!Number.isFinite(value) || !text) return null;
+                return { value, text };
+            })
+            .filter(Boolean);
+    } else if (typeof input.modeOptions === 'string') {
+        modeOptions = parseAnimModeOptionsDslForPreview(input.modeOptions);
+    }
+
+    if (modeOptions.length) {
+        profile.modeOptions = modeOptions;
+    }
+
+    return Object.keys(profile).length ? profile : null;
+}
+
+function extractBraceBlockForPreview(sourceText, openBraceIndex) {
+    const source = String(sourceText || '');
+    const start = Number(openBraceIndex);
+    if (!Number.isFinite(start) || start < 0 || start >= source.length || source[start] !== '{') return '';
+
+    let depth = 0;
+    let inSingleQuote = false;
+    let inDoubleQuote = false;
+    let inTemplateQuote = false;
+    let inLineComment = false;
+    let inBlockComment = false;
+
+    for (let i = start; i < source.length; i += 1) {
+        const ch = source[i];
+        const next = source[i + 1];
+
+        if (inLineComment) {
+            if (ch === '\n') inLineComment = false;
+            continue;
+        }
+        if (inBlockComment) {
+            if (ch === '*' && next === '/') {
+                inBlockComment = false;
+                i += 1;
+            }
+            continue;
+        }
+        if (inSingleQuote) {
+            if (ch === '\\') {
+                i += 1;
+                continue;
+            }
+            if (ch === '\'') inSingleQuote = false;
+            continue;
+        }
+        if (inDoubleQuote) {
+            if (ch === '\\') {
+                i += 1;
+                continue;
+            }
+            if (ch === '"') inDoubleQuote = false;
+            continue;
+        }
+        if (inTemplateQuote) {
+            if (ch === '\\') {
+                i += 1;
+                continue;
+            }
+            if (ch === '`') inTemplateQuote = false;
+            continue;
+        }
+
+        if (ch === '/' && next === '/') {
+            inLineComment = true;
+            i += 1;
+            continue;
+        }
+        if (ch === '/' && next === '*') {
+            inBlockComment = true;
+            i += 1;
+            continue;
+        }
+        if (ch === '\'') {
+            inSingleQuote = true;
+            continue;
+        }
+        if (ch === '"') {
+            inDoubleQuote = true;
+            continue;
+        }
+        if (ch === '`') {
+            inTemplateQuote = true;
+            continue;
+        }
+
+        if (ch === '{') {
+            depth += 1;
+            continue;
+        }
+        if (ch === '}') {
+            depth -= 1;
+            if (depth === 0) {
+                return source.slice(start, i + 1);
+            }
+        }
+    }
+
+    return '';
+}
+
+function extractExportedAnimProfileLiteralForPreview(sourceText) {
+    const source = String(sourceText || '');
+    if (!source.trim()) return '';
+
+    const exportedProfileMatch = source.match(/\bexport\s+const\s+profile\b[\s\S]*?=/);
+    if (!exportedProfileMatch || typeof exportedProfileMatch.index !== 'number') return '';
+
+    const assignStart = exportedProfileMatch.index + exportedProfileMatch[0].length;
+    const openBraceOffset = source.slice(assignStart).indexOf('{');
+    if (openBraceOffset < 0) return '';
+    const openBraceIndex = assignStart + openBraceOffset;
+
+    return extractBraceBlockForPreview(source, openBraceIndex);
+}
+
+function parseAnimProfileForPreview(sourceText) {
+    const source = String(sourceText || '');
+    if (!source.trim()) return null;
+
+    const inlineTag = source.match(/\/\/\s*@anim-profile\s+(\{.*\})\s*$/m);
+    if (inlineTag && inlineTag[1]) {
+        try {
+            return normalizeAnimProfileForPreview(JSON.parse(inlineTag[1]));
+        } catch (_error) {
+            // Fallback to exported profile parser.
+        }
+    }
+
+    const profileLiteral = extractExportedAnimProfileLiteralForPreview(source);
+    if (!profileLiteral) return null;
+
+    try {
+        const evaluated = Function(`"use strict"; return (${profileLiteral});`)();
+        return normalizeAnimProfileForPreview(evaluated);
+    } catch (_error) {
+        return null;
+    }
+}
+
 async function transpileAnimSourceForPreview(animPath, sourceText, requestId) {
     const source = String(sourceText || '');
     if (!source.trim()) {
@@ -1669,6 +1854,7 @@ async function transpileAnimSourceForPreview(animPath, sourceText, requestId) {
             profile: null
         };
     }
+    const profile = parseAnimProfileForPreview(source);
 
     const tsLang = monaco.languages && monaco.languages.typescript;
     if (!tsLang || typeof tsLang.getTypeScriptWorker !== 'function') {
@@ -1716,7 +1902,7 @@ async function transpileAnimSourceForPreview(animPath, sourceText, requestId) {
             ok: true,
             moduleJs,
             diagnostics: [],
-            profile: null
+            profile
         };
     } catch (error) {
         return {

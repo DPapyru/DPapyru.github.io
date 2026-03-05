@@ -2636,3 +2636,16 @@
 - `npm run check-generated`：待补跑
 
 **备注**：本次修复覆盖审查指出的 4 个回归点，并额外修复了 `workspace-store` 旧 `.cs` 路径迁移到 `.anim.ts` 的一致性问题；`check-generated` 含 `git diff --exit-code`，建议在准备合入时于干净索引状态补跑。
+
+### 验证记录 [2026-03-04 22:54]：修复两个 P2（profile 保留 + 单文件播放所选）
+
+**级别**：代码评审修复验收（定向回归 + L3 构建）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/animts-preview-regressions.test.js`：通过（2 passed, 0 failed）
+- `node --test site/tooling/scripts/article-studio-anim-preview-payload.test.js site/tooling/scripts/animts-preview-regressions.test.js`：失败（`article-studio-anim-preview-payload.test.js` 仍断言 `ANIMCS_COMPILE_*`，与当前分支 `ANIMTS_COMPILE_*` 基线不一致）
+- `npm run build`：通过（完整跑通 `generate-index`、`build:animts`、`build:site-app`、`tml-ide-app`）
+
+**备注**：
+- 本轮仅按要求修复两个 P2：`tml-ide-app/src/main.js` 本地预览编译成功路径保留 profile；`site/pages/anim-renderer.html` 单文件“播放所选”走本地所选文件模块。
+- `article-studio-anim-preview-payload.test.js` 的失败属于既有测试基线与分支命名迁移不一致，不是本次修复引入。

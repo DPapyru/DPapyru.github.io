@@ -138,6 +138,7 @@
             let localJsByName = new Map();
             let manifestJsBySource = new Map();
             let localModuleUrlByName = new Map();
+            let singleFileModuleBySource = new Map();
 
             function isFileProtocol() {
                 return typeof location !== 'undefined' && location.protocol === 'file:';
@@ -150,6 +151,15 @@
                     } catch (_) { }
                 });
                 localModuleUrlByName = new Map();
+
+                singleFileModuleBySource.forEach((entry) => {
+                    const moduleUrl = entry && typeof entry.moduleUrl === 'string' ? entry.moduleUrl : '';
+                    if (!moduleUrl) return;
+                    try {
+                        URL.revokeObjectURL(moduleUrl);
+                    } catch (_) { }
+                });
+                singleFileModuleBySource = new Map();
             }
 
             function sourceToDefaultJsName(sourcePath) {
@@ -165,6 +175,11 @@
                     if (!normalized) return null;
 
                     const normalizedKey = normalized.toLowerCase();
+                    const singleModule = singleFileModuleBySource.get(normalizedKey);
+                    if (singleModule && typeof singleModule.moduleUrl === 'string' && singleModule.moduleUrl) {
+                        return { moduleUrl: singleModule.moduleUrl };
+                    }
+
                     const byManifest = manifestJsBySource.get(normalizedKey) || '';
                     const jsName = byManifest || sourceToDefaultJsName(normalized);
                     if (!jsName) return null;
@@ -213,12 +228,73 @@
                 setStatus(`已选择：${file.name}（可直接预览或先执行 npm run build）`);
             });
 
-            runBtn.addEventListener('click', function () {
+            async function prepareSingleFilePreview(file) {
+                if (!file) {
+                    throw new Error('请选择一个 .anim.ts 文件');
+                }
+
+                const sourceName = String(file.name || '').replace(/\\/g, '/').trim();
+                if (!/\.anim\.ts$/i.test(sourceName)) {
+                    throw new Error('仅支持 .anim.ts 文件');
+                }
+
+                const sourceText = await file.text();
+                if (!String(sourceText || '').trim()) {
+                    throw new Error('文件内容为空');
+                }
+
+                let moduleCode = String(sourceText || '');
+                if (window.ts && typeof window.ts.transpileModule === 'function') {
+                    const result = window.ts.transpileModule(moduleCode, {
+                        fileName: sourceName,
+                        compilerOptions: {
+                            target: window.ts.ScriptTarget.ES2020,
+                            module: window.ts.ModuleKind.ES2020,
+                            moduleResolution: window.ts.ModuleResolutionKind.Bundler,
+                            isolatedModules: true,
+                            removeComments: false,
+                            downlevelIteration: false
+                        },
+                        reportDiagnostics: true
+                    });
+
+                    const diagnostics = Array.isArray(result && result.diagnostics) ? result.diagnostics : [];
+                    const errors = diagnostics
+                        .filter((diag) => diag && diag.category === window.ts.DiagnosticCategory.Error)
+                        .map((diag) => String(window.ts.flattenDiagnosticMessageText(diag.messageText, '\n') || '').trim())
+                        .filter(Boolean);
+                    if (errors.length) {
+                        throw new Error(`编译失败：${errors.join(' | ')}`);
+                    }
+                    moduleCode = String(result && result.outputText || '');
+                }
+
+                const normalizedKey = sourceName.toLowerCase();
+                const previous = singleFileModuleBySource.get(normalizedKey);
+                if (previous && typeof previous.moduleUrl === 'string' && previous.moduleUrl) {
+                    try {
+                        URL.revokeObjectURL(previous.moduleUrl);
+                    } catch (_) { }
+                }
+
+                const moduleBlob = new Blob([moduleCode], { type: 'text/javascript' });
+                const moduleUrl = URL.createObjectURL(moduleBlob);
+                singleFileModuleBySource.set(normalizedKey, { moduleUrl });
+                return sourceName;
+            }
+
+            runBtn.addEventListener('click', async function () {
                 if (!currentFile) {
                     setStatus('请选择一个 .anim.ts 文件');
                     return;
                 }
-                mountPath(currentFile.name, `预览：${currentFile.name}`);
+
+                try {
+                    const sourcePath = await prepareSingleFilePreview(currentFile);
+                    mountPath(sourcePath, `预览：${sourcePath}`);
+                } catch (error) {
+                    setStatus(`预览失败：${error && error.message ? error.message : String(error)}`);
+                }
             });
 
             demoBasicBtn.addEventListener('click', function () {
