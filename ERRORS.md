@@ -2803,3 +2803,17 @@
 
 **备注**：
 - 本轮在连线计算中引入 `FLOWCHART_STAGE_ARROW_EDGE_GAP=10`，对起点/终点按向量投影收缩，避免箭头贴在节点边框上产生重叠观感。
+
+### 验证记录 [2026-03-06 05:51]：feat/ide-flowchart-studio 分支合并前统一校验
+
+**级别**：分支收尾（合并前校验）
+
+**命令与结果**：
+- `npm test`：通过（86 passed, 0 failed）
+- `npm run build`：失败（`site-app` 构建缺少 `@vitejs/plugin-react`，`ERR_MODULE_NOT_FOUND`）
+- `npm run check-generated`：未执行（依赖 `npm run build`，前置失败）
+- `npm ci`：失败（`esbuild` 二进制在当前挂载路径执行报 `EPERM`，无法在该工作树补齐依赖）
+
+**备注**：
+- 已保留失败日志：`/tmp/feat_ide_flowchart_npm_test.log`、`/tmp/feat_ide_flowchart_npm_build.log`、`/tmp/feat_ide_flowchart_npm_ci.log`。
+- 本次按“先提交再清理”继续执行分支合并与工作树清理，构建失败原因为环境依赖安装受限。
