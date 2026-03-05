@@ -261,35 +261,6 @@
         }
       }
     },
-    "怎么贡献": {
-      "title": "怎么贡献",
-      "description": "怎么贡献相关的教程",
-      "topics": {
-        "article-contribution": {
-          "title": "文章贡献",
-          "description": "如何为教程网站贡献文章",
-          "files": [
-            {
-              "filename": "在线写作IDE使用教程.md",
-              "path": "怎么贡献/在线写作IDE使用教程.md",
-              "originalPath": "怎么贡献/在线写作IDE使用教程.md",
-              "title": "在线写作IDE使用教程",
-              "author": "小天使",
-              "order": 3,
-              "description": "面向 article-studio 的写作、预览、实时动画编译与 PR 提交流程",
-              "time": "30分钟",
-              "difficulty": "beginner",
-              "prev_chapter": "站点Markdown扩展语法说明.md",
-              "next_chapter": "ContentProjects解决方案说明.md",
-              "min_c": null,
-              "min_t": null,
-              "colors": null,
-              "colorChange": null
-            }
-          ]
-        }
-      }
-    },
     "方向性指导": {
       "title": "方向性指导",
       "description": "方向性指导相关的教程",
@@ -5448,24 +5419,6 @@
       "title": "在线写作IDE使用教程",
       "author": "小天使",
       "category": "如何贡献",
-      "topic": "article-contribution",
-      "order": 3,
-      "time": "30分钟",
-      "difficulty": "beginner",
-      "prev_chapter": "站点Markdown扩展语法说明.md",
-      "next_chapter": "ContentProjects解决方案说明.md",
-      "min_c": null,
-      "min_t": null,
-      "colors": null,
-      "colorChange": null
-    },
-    {
-      "filename": "在线写作IDE使用教程.md",
-      "path": "怎么贡献/在线写作IDE使用教程.md",
-      "originalPath": "怎么贡献/在线写作IDE使用教程.md",
-      "title": "在线写作IDE使用教程",
-      "author": "小天使",
-      "category": "怎么贡献",
       "topic": "article-contribution",
       "order": 3,
       "time": "30分钟",

@@ -25,12 +25,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://dpapyru.github.io/site/pages/folder.html?path=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE</loc>
-    <lastmod>2026-03-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://dpapyru.github.io/site/pages/folder.html?path=%E6%96%B9%E5%90%91%E6%80%A7%E6%8C%87%E5%AF%BC</loc>
     <lastmod>2026-03-04</lastmod>
     <changefreq>weekly</changefreq>
@@ -98,12 +92,6 @@
   </url>
   <url>
     <loc>https://dpapyru.github.io/site/pages/viewer.html?file=%E5%A6%82%E4%BD%95%E8%B4%A1%E7%8C%AE%2FMarkdown%E6%96%B0%E8%AF%AD%E6%B3%95%E5%8A%9F%E8%83%BD%E9%AA%8C%E8%AF%81.md</loc>
-    <lastmod>2026-03-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://dpapyru.github.io/site/pages/viewer.html?file=%E6%80%8E%E4%B9%88%E8%B4%A1%E7%8C%AE%2F%E5%9C%A8%E7%BA%BF%E5%86%99%E4%BD%9CIDE%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B.md</loc>
     <lastmod>2026-03-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
