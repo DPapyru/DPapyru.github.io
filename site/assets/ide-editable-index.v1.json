@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "root": "site/content",
-  "generatedAt": "2026-03-03T08:43:00.775Z",
+  "generatedAt": "2026-03-04T11:08:30.938Z",
   "files": [
     {
       "path": "Modder入门/code/firstclass_makefirstweapon.cs",
@@ -52,72 +52,72 @@
       "kind": "shaderfx"
     },
     {
-      "path": "anims/animgeom-toolkit-recipes.cs",
-      "kind": "csharp"
+      "path": "anims/animgeom-toolkit-recipes.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/arrow-easy-ai.cs",
-      "kind": "csharp"
+      "path": "anims/arrow-easy-ai.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/demo-basic.cs",
-      "kind": "csharp"
+      "path": "anims/demo-basic.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/demo-eoc-ai.cs",
-      "kind": "csharp"
+      "path": "anims/demo-eoc-ai.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/demo-math-transform.cs",
-      "kind": "csharp"
+      "path": "anims/demo-math-transform.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/demo-mode-state.cs",
-      "kind": "csharp"
+      "path": "anims/demo-mode-state.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/fna-vertex-demo.cs",
-      "kind": "csharp"
+      "path": "anims/fna-vertex-demo.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/mat4-trs-compose.cs",
-      "kind": "csharp"
+      "path": "anims/mat4-trs-compose.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/mat4-view-projection.cs",
-      "kind": "csharp"
+      "path": "anims/mat4-view-projection.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/matrix-mat4-transform.cs",
-      "kind": "csharp"
+      "path": "anims/matrix-mat4-transform.anim.ts",
+      "kind": "animts"
     },
     {
       "path": "anims/shaders/fna-vertex-demo.fx",
       "kind": "shaderfx"
     },
     {
-      "path": "anims/vec2-basic-ops.cs",
-      "kind": "csharp"
+      "path": "anims/vec2-basic-ops.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/vec2-project-decompose.cs",
-      "kind": "csharp"
+      "path": "anims/vec2-project-decompose.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/vec3-axis-orbit.cs",
-      "kind": "csharp"
+      "path": "anims/vec3-axis-orbit.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/vector-add-resolution.cs",
-      "kind": "csharp"
+      "path": "anims/vector-add-resolution.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/vector-basic.cs",
-      "kind": "csharp"
+      "path": "anims/vector-basic.anim.ts",
+      "kind": "animts"
     },
     {
-      "path": "anims/vector-move.cs",
-      "kind": "csharp"
+      "path": "anims/vector-move.anim.ts",
+      "kind": "animts"
     },
     {
       "path": "shader-gallery/newshader/README.md",

@@ -15,11 +15,11 @@
     const MAX_CSHARP_FILE_SIZE = 200 * 1024;
     const MAX_CSHARP_COUNT = 5;
     const FLOWCHART_REALTIME_DEBOUNCE_MS = 500;
-    const ANIMCS_BRIDGE_STORAGE_KEY = 'articleStudioAnimBridgeEndpoint.v1';
-    const ANIMCS_DEFAULT_BRIDGE_ENDPOINT = 'http://127.0.0.1:5078';
-    const ANIMCS_BRIDGE_CANDIDATE_ENDPOINTS = [ANIMCS_DEFAULT_BRIDGE_ENDPOINT, 'http://127.0.0.1:5178'];
-    const ANIMCS_COMPILE_DEBOUNCE_MS = 400;
-    const ANIMCS_COMPILE_TIMEOUT_MS = 8000;
+    const ANIMTS_BRIDGE_STORAGE_KEY = 'articleStudioAnimBridgeEndpoint.v1';
+    const ANIMTS_DEFAULT_BRIDGE_ENDPOINT = 'http://127.0.0.1:5078';
+    const ANIMTS_BRIDGE_CANDIDATE_ENDPOINTS = [ANIMTS_DEFAULT_BRIDGE_ENDPOINT, 'http://127.0.0.1:5178'];
+    const ANIMTS_COMPILE_DEBOUNCE_MS = 400;
+    const ANIMTS_COMPILE_TIMEOUT_MS = 8000;
 
     const dom = {
         markdown: document.getElementById('studio-markdown'),
@@ -195,7 +195,7 @@
         csharpEditorDraft: '',
         compiledAnims: {},
         animCompileErrors: {},
-        animBridgeEndpoint: ANIMCS_DEFAULT_BRIDGE_ENDPOINT,
+        animBridgeEndpoint: ANIMTS_DEFAULT_BRIDGE_ENDPOINT,
         animBridgeConnected: false,
         animCompileStatus: '未激活',
         preflightPending: false,
@@ -430,10 +430,10 @@
             }
         });
 
-        const animcsRegex = /```animcs\s*([\s\S]*?)```/g;
-        let animcsMatch = null;
-        while ((animcsMatch = animcsRegex.exec(source)) !== null) {
-            const body = String(animcsMatch[1] || '');
+        const animtsRegex = /```animts\s*([\s\S]*?)```/g;
+        let animtsMatch = null;
+        while ((animtsMatch = animtsRegex.exec(source)) !== null) {
+            const body = String(animtsMatch[1] || '');
             const firstLine = body.split(/\r?\n/).map(function (line) {
                 return String(line || '').trim();
             }).find(Boolean) || '';
@@ -608,7 +608,7 @@
 
     function readStoredAnimBridgeEndpoint() {
         try {
-            return normalizeAnimBridgeEndpoint(localStorage.getItem(ANIMCS_BRIDGE_STORAGE_KEY) || '');
+            return normalizeAnimBridgeEndpoint(localStorage.getItem(ANIMTS_BRIDGE_STORAGE_KEY) || '');
         } catch (_) {
             return '';
         }
@@ -616,14 +616,14 @@
 
     function persistAnimBridgeEndpoint(endpoint) {
         try {
-            localStorage.setItem(ANIMCS_BRIDGE_STORAGE_KEY, String(endpoint || ''));
+            localStorage.setItem(ANIMTS_BRIDGE_STORAGE_KEY, String(endpoint || ''));
         } catch (_) {
             // ignore storage errors
         }
     }
 
     function renderAnimBridgeStatusline() {
-        const endpoint = normalizeAnimBridgeEndpoint(state.animBridgeEndpoint) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+        const endpoint = normalizeAnimBridgeEndpoint(state.animBridgeEndpoint) || ANIMTS_DEFAULT_BRIDGE_ENDPOINT;
         const connected = !!state.animBridgeConnected;
         if (dom.animBridgeStatus) {
             dom.animBridgeStatus.textContent = connected
@@ -639,7 +639,7 @@
         if (dom.csharpCompileHint) {
             dom.csharpCompileHint.textContent = connected
                 ? `桥接可用：${endpoint}`
-                : '仅对 anims/*.cs 启用实时编译预览。';
+                : '仅对 anims/*.anim.ts 启用实时编译预览。';
         }
     }
 
@@ -2354,7 +2354,7 @@
 
         pushCandidate(preferredEndpoint);
         pushCandidate(state.animBridgeEndpoint);
-        ANIMCS_BRIDGE_CANDIDATE_ENDPOINTS.forEach(pushCandidate);
+        ANIMTS_BRIDGE_CANDIDATE_ENDPOINTS.forEach(pushCandidate);
         return candidates;
     }
 
@@ -2482,10 +2482,10 @@
         const controller = new AbortController();
         const timeout = setTimeout(function () {
             controller.abort();
-        }, ANIMCS_COMPILE_TIMEOUT_MS);
+        }, ANIMTS_COMPILE_TIMEOUT_MS);
 
         try {
-            const response = await fetch(`${endpoint}/api/animcs/compile`, {
+            const response = await fetch(`${endpoint}/api/animts/compile`, {
                 method: 'POST',
                 headers: {
                     'content-type': 'application/json'
@@ -2525,7 +2525,7 @@
                 return;
             }
             const reason = err && err.name === 'AbortError'
-                ? `编译超时（>${ANIMCS_COMPILE_TIMEOUT_MS}ms）`
+                ? `编译超时（>${ANIMTS_COMPILE_TIMEOUT_MS}ms）`
                 : (err && err.message ? err.message : String(err));
             setCompiledAnimError(normalized, [reason]);
             setAnimCompileStatus(`编译失败 ${normalized}`);
@@ -2541,7 +2541,7 @@
         const opts = options && typeof options === 'object' ? options : {};
         const animPath = getActiveCsharpEditorAnimPath();
         if (!animPath) {
-            setAnimCompileStatus('未激活（当前文件不在 anims/*.cs）');
+            setAnimCompileStatus('未激活（当前文件不在 anims/*.anim.ts）');
             return;
         }
 
@@ -2558,7 +2558,7 @@
             runCompile();
             return;
         }
-        animCompileTimer = setTimeout(runCompile, ANIMCS_COMPILE_DEBOUNCE_MS);
+        animCompileTimer = setTimeout(runCompile, ANIMTS_COMPILE_DEBOUNCE_MS);
     }
 
     function closeCsharpEditorModal(options) {
@@ -2667,7 +2667,7 @@
                 syncViewerPreview(false);
             });
         } else {
-            setAnimCompileStatus('未激活（当前文件不在 anims/*.cs）');
+            setAnimCompileStatus('未激活（当前文件不在 anims/*.anim.ts）');
         }
         closeCsharpEditorModal();
         setStatus(`已保存 C# 编辑：${item.name}`);
@@ -3861,10 +3861,10 @@
                 }
             });
 
-            const animcsRegex = /```animcs\s*([\s\S]*?)```/g;
-            let animcsMatch = null;
-            while ((animcsMatch = animcsRegex.exec(source)) !== null) {
-                const body = String(animcsMatch[1] || '');
+            const animtsRegex = /```animts\s*([\s\S]*?)```/g;
+            let animtsMatch = null;
+            while ((animtsMatch = animtsRegex.exec(source)) !== null) {
+                const body = String(animtsMatch[1] || '');
                 const firstLine = body.split(/\r?\n/).map(function (line) {
                     return String(line || '').trim();
                 }).find(Boolean) || '';
@@ -5593,7 +5593,7 @@
             if (typeof parsed.isDirectPreview === 'boolean') {
                 state.isDirectPreview = parsed.isDirectPreview;
             }
-            state.animBridgeEndpoint = normalizeAnimBridgeEndpoint(parsed.animBridgeEndpoint || readStoredAnimBridgeEndpoint() || ANIMCS_DEFAULT_BRIDGE_ENDPOINT) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+            state.animBridgeEndpoint = normalizeAnimBridgeEndpoint(parsed.animBridgeEndpoint || readStoredAnimBridgeEndpoint() || ANIMTS_DEFAULT_BRIDGE_ENDPOINT) || ANIMTS_DEFAULT_BRIDGE_ENDPOINT;
             state.animBridgeConnected = false;
             state.compiledAnims = {};
             state.animCompileErrors = {};
@@ -5669,7 +5669,7 @@
                 metadata: applyMetadataDefaults(state.metadata),
                 previewImageNoticeEnabled: !!state.previewImageNoticeEnabled,
                 isDirectPreview: !!state.isDirectPreview,
-                animBridgeEndpoint: normalizeAnimBridgeEndpoint(state.animBridgeEndpoint) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT,
+                animBridgeEndpoint: normalizeAnimBridgeEndpoint(state.animBridgeEndpoint) || ANIMTS_DEFAULT_BRIDGE_ENDPOINT,
                 explorerFilter: String(state.explorerFilter || ''),
                 explorerFolders: ensureObject(state.explorerFolders),
                 rightPanelTab: normalizeRightPanelTab(state.rightPanelTab),
@@ -6011,7 +6011,7 @@
             compiledAnims: buildCompiledAnimsPayload(),
             animCompileErrors: buildAnimCompileErrorsPayload(),
             animBridge: {
-                endpoint: normalizeAnimBridgeEndpoint(state.animBridgeEndpoint) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT,
+                endpoint: normalizeAnimBridgeEndpoint(state.animBridgeEndpoint) || ANIMTS_DEFAULT_BRIDGE_ENDPOINT,
                 connected: !!state.animBridgeConnected
             },
             updatedAt: new Date().toISOString()
@@ -7294,16 +7294,16 @@
                         'error',
                         'anim-path-prefix-invalid',
                         `动画路径必须以 anims/ 开头：${animPathRaw}`,
-                        '示例：[待补充说明](anims:anims/demo-basic.cs)'
+                        '示例：[待补充说明](anims:anims/demo-basic.anim.ts)'
                     );
                 }
-                if (!/\.cs$/i.test(animPath)) {
+                if (!/\.anim\.ts$/i.test(animPath)) {
                     pushDraftIssue(
                         issues,
                         'error',
                         'anim-path-ext-invalid',
                         `动画路径扩展名错误：${animPathRaw}`,
-                        '动画引用路径必须以 .cs 结尾。'
+                        '动画引用路径必须以 .anim.ts 结尾。'
                     );
                 }
                 return;
@@ -7337,10 +7337,10 @@
             );
         });
 
-        const animcsRegex = /```animcs\s*([\s\S]*?)```/g;
-        let animcsMatch = null;
-        while ((animcsMatch = animcsRegex.exec(markdown)) !== null) {
-            const rawBody = String(animcsMatch[1] || '');
+        const animtsRegex = /```animts\s*([\s\S]*?)```/g;
+        let animtsMatch = null;
+        while ((animtsMatch = animtsRegex.exec(markdown)) !== null) {
+            const rawBody = String(animtsMatch[1] || '');
             const firstLine = rawBody.split(/\r?\n/).map(function (line) {
                 return String(line || '').trim();
             }).find(Boolean) || '';
@@ -7349,30 +7349,30 @@
                 pushDraftIssue(
                     issues,
                     'error',
-                    'animcs-path-missing',
-                    'animcs 代码块缺少动画路径',
-                    'animcs 代码块第一行必须填写 anims/*.cs 路径。'
+                    'animts-path-missing',
+                    'animts 代码块缺少动画路径',
+                    'animts 代码块第一行必须填写 anims/*.anim.ts 路径。'
                 );
                 continue;
             }
 
-            const animcsPath = normalizePath(firstLine).replace(/^\.\//, '');
-            if (!/^anims\//i.test(animcsPath)) {
+            const animtsPath = normalizePath(firstLine).replace(/^\.\//, '');
+            if (!/^anims\//i.test(animtsPath)) {
                 pushDraftIssue(
                     issues,
                     'error',
-                    'animcs-path-prefix-invalid',
-                    `animcs 路径必须以 anims/ 开头：${firstLine}`,
-                    '示例：```animcs\\nanims/demo-basic.cs\\n```'
+                    'animts-path-prefix-invalid',
+                    `animts 路径必须以 anims/ 开头：${firstLine}`,
+                    '示例：```animts\\nanims/demo-basic.anim.ts\\n```'
                 );
             }
-            if (!/\.cs$/i.test(animcsPath)) {
+            if (!/\.anim\.ts$/i.test(animtsPath)) {
                 pushDraftIssue(
                     issues,
                     'error',
-                    'animcs-path-ext-invalid',
-                    `animcs 路径扩展名错误：${firstLine}`,
-                    'animcs 路径必须以 .cs 结尾。'
+                    'animts-path-ext-invalid',
+                    `animts 路径扩展名错误：${firstLine}`,
+                    'animts 路径必须以 .anim.ts 结尾。'
                 );
             }
         }
@@ -7569,16 +7569,6 @@
             return;
         }
 
-        if (key === 'math-inline') {
-            wrapSelection('$', '$', '公式');
-            return;
-        }
-
-        if (key === 'math-block') {
-            insertBlockSnippet('$$\n公式\n$$\n', '公式');
-            return;
-        }
-
         if (key === 'ref') {
             const selectedTitle = toSingleLineText(readCurrentSelectionText(), '引用标题');
             insertBlockSnippet(`[${selectedTitle}](目标文档.md)\n`, '目标文档.md');
@@ -7618,17 +7608,17 @@
         }
 
         if (key === 'anim') {
-            insertBlockSnippet('[待补充说明](anims:anims/你的动画文件.cs)\n', 'anims:anims/你的动画文件.cs');
+            insertBlockSnippet('[待补充说明](anims:anims/你的动画文件.anim.ts)\n', 'anims:anims/你的动画文件.anim.ts');
             return;
         }
 
-        if (key === 'animcs-block') {
+        if (key === 'animts-block') {
             insertBlockSnippet([
-                '```animcs',
-                'anims/demo-basic.cs',
+                '```animts',
+                'anims/demo-basic.anim.ts',
                 '```',
                 ''
-            ].join('\n'), 'anims/demo-basic.cs');
+            ].join('\n'), 'anims/demo-basic.anim.ts');
             return;
         }
 
@@ -7901,10 +7891,10 @@
             '',
             '## 动画与流程图',
             '',
-            '[待补充说明](anims:anims/demo-basic.cs)',
+            '[待补充说明](anims:anims/demo-basic.anim.ts)',
             '',
-            '```animcs',
-            'anims/demo-basic.cs',
+            '```animts',
+            'anims/demo-basic.anim.ts',
             '```',
             '',
             '```mermaid',
@@ -7976,7 +7966,7 @@
     function init() {
         loadState();
         loadAuthSession();
-        state.animBridgeEndpoint = normalizeAnimBridgeEndpoint(state.animBridgeEndpoint || readStoredAnimBridgeEndpoint() || ANIMCS_DEFAULT_BRIDGE_ENDPOINT) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+        state.animBridgeEndpoint = normalizeAnimBridgeEndpoint(state.animBridgeEndpoint || readStoredAnimBridgeEndpoint() || ANIMTS_DEFAULT_BRIDGE_ENDPOINT) || ANIMTS_DEFAULT_BRIDGE_ENDPOINT;
         persistAnimBridgeEndpoint(state.animBridgeEndpoint);
         renderAnimBridgeStatusline();
         connectAnimBridge({ silent: true }).catch(function () {
@@ -8574,10 +8564,10 @@
 
         if (dom.csharpBridgeReset) {
             dom.csharpBridgeReset.addEventListener('click', async function () {
-                state.animBridgeEndpoint = ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+                state.animBridgeEndpoint = ANIMTS_DEFAULT_BRIDGE_ENDPOINT;
                 persistAnimBridgeEndpoint(state.animBridgeEndpoint);
                 renderAnimBridgeStatusline();
-                const connectedEndpoint = await connectAnimBridge({ preferredEndpoint: ANIMCS_DEFAULT_BRIDGE_ENDPOINT, silent: true });
+                const connectedEndpoint = await connectAnimBridge({ preferredEndpoint: ANIMTS_DEFAULT_BRIDGE_ENDPOINT, silent: true });
                 if (connectedEndpoint) {
                     setStatus(`AnimBridge 已恢复默认并连接：${connectedEndpoint}`);
                     scheduleAnimDraftCompile({ immediate: true });

@@ -1,4 +1,4 @@
-// Generated from anims/animgeom-toolkit-recipes.cs
+// Generated from anims/animgeom-toolkit-recipes.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class AnimgeomToolkitRecipes {

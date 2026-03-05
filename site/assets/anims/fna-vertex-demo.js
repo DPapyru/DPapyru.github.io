@@ -1,4 +1,4 @@
-// Generated from anims/fna-vertex-demo.cs
+// Generated from anims/fna-vertex-demo.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class FnaVertexDemo {

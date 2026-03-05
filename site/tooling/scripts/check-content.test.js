@@ -256,13 +256,13 @@ test('check-content: ignores protocol links inside inline code and fenced code b
         'title: Protocol Example',
         '---',
         '',
-        '行内代码示例：`[说明](anims:anims/inline-code.cs)`',
+        '行内代码示例：`[说明](anims:anims/inline-code.anim.ts)`',
         '',
         '```md',
-        '[说明](anims:anims/in-code-block.cs)',
+        '[说明](anims:anims/in-code-block.anim.ts)',
         '```',
         '',
-        '普通文本 [说明](anims:anims/not-standalone.cs)'
+        '普通文本 [说明](anims:anims/not-standalone.anim.ts)'
     ].join('\n'), 'utf8');
 
     const script = path.resolve(__dirname, 'check-content.js');

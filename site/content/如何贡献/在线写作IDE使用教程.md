@@ -72,24 +72,24 @@ dotnet run --project site/tooling/tools/animcs-preview-bridge
 
 ````text
 ```animcs
-anims/vec2-basic-ops.cs
+anims/vec2-basic-ops.anim.ts
 ```
 ````
 
 也可使用：
 
 ```text
-[待补充说明](anims:anims/vec2-basic-ops.cs)
+[待补充说明](anims:anims/vec2-basic-ops.anim.ts)
 ```
 
 ## 推荐模块（首版 6 个）
 
-1. `anims/vec2-basic-ops.cs`
-2. `anims/vec2-project-decompose.cs`
-3. `anims/vec3-axis-orbit.cs`
-4. `anims/mat4-trs-compose.cs`
-5. `anims/mat4-view-projection.cs`
-6. `anims/animgeom-toolkit-recipes.cs`
+1. `anims/vec2-basic-ops.anim.ts`
+2. `anims/vec2-project-decompose.anim.ts`
+3. `anims/vec3-axis-orbit.anim.ts`
+4. `anims/mat4-trs-compose.anim.ts`
+5. `anims/mat4-view-projection.anim.ts`
+6. `anims/animgeom-toolkit-recipes.anim.ts`
 
 ## 提交流程
 

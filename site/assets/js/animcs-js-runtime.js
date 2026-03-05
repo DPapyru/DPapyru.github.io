@@ -67,16 +67,19 @@
 
     function normalizeAnimPath(input) {
         const rel = String(input || '').replace(/\\/g, '/');
-        const match = rel.match(/(?:^|\/)(?:site\/content\/|content\/)?(anims\/[^\s]+\.cs)$/i);
+        const match = rel.match(/(?:^|\/)(?:site\/content\/|content\/)?(anims\/[^\s]+(?:\.anim\.ts|\.cs))$/i);
         return match ? match[1] : '';
     }
 
     function createFallbackEntry(normalized) {
         const rel = String(normalized || '').trim();
         if (!rel) return null;
-        const match = rel.match(/^anims\/(.+)\.cs$/i);
-        if (!match || !match[1]) return null;
-        const stem = match[1];
+        const animTsMatch = rel.match(/^anims\/(.+)\.anim\.ts$/i);
+        const legacyCsMatch = rel.match(/^anims\/(.+)\.cs$/i);
+        const stem = animTsMatch && animTsMatch[1]
+            ? animTsMatch[1]
+            : (legacyCsMatch && legacyCsMatch[1] ? legacyCsMatch[1] : '');
+        if (!stem) return null;
         return {
             js: `${stem}.js`,
             entry: stem
@@ -242,7 +245,7 @@
         }
 
         if (!normalized) return;
-        if (normalized === 'anims/demo-eoc-ai.cs') {
+        if (normalized === 'anims/demo-eoc-ai.anim.ts') {
             if (!embed.getAttribute('data-animcs-height-scale')) {
                 embed.setAttribute('data-animcs-height-scale', '2.3');
             }

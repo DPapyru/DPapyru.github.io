@@ -22,7 +22,7 @@ test('generateIdeEditableIndex outputs whitelist-only files with stable ordering
     const outputPath = path.join(tempRoot, 'site/assets/ide-editable-index.v1.json');
 
     writeFile(contentRoot, 'articles/guide.md', '# guide');
-    writeFile(contentRoot, 'anims/demo.cs', 'public sealed class Demo {}');
+    writeFile(contentRoot, 'anims/demo.anim.ts', 'public sealed class Demo {}');
     writeFile(contentRoot, 'articles/topic/code/Sample.cs', 'public sealed class Sample {}');
     writeFile(contentRoot, 'articles/topic/preview.fx', 'float4 MainPS(...) : SV_TARGET { return 1; }');
     writeFile(contentRoot, 'articles/topic/imgs/a.png', 'png');
@@ -30,7 +30,7 @@ test('generateIdeEditableIndex outputs whitelist-only files with stable ordering
     writeFile(contentRoot, 'articles/topic/media/clip.mov', 'mov');
 
     writeFile(contentRoot, 'articles/topic/note.txt', 'skip');
-    writeFile(contentRoot, 'anims/nested/skip.cs', 'skip');
+    writeFile(contentRoot, 'anims/nested/skip.anim.ts', 'skip');
     writeFile(contentRoot, 'articles/topic/codes/skip.cs', 'skip');
 
     generateIdeEditableIndex({
@@ -47,7 +47,7 @@ test('generateIdeEditableIndex outputs whitelist-only files with stable ordering
 
     const paths = payload.files.map((item) => String(item.path || ''));
     assert.deepEqual(paths, [
-        'anims/demo.cs',
+        'anims/demo.anim.ts',
         'articles/guide.md',
         'articles/topic/code/Sample.cs',
         'articles/topic/imgs/a.png',
@@ -57,7 +57,10 @@ test('generateIdeEditableIndex outputs whitelist-only files with stable ordering
     ]);
     assert.deepEqual(paths, paths.slice().sort());
 
-    const whitelistPattern = /(?:\.md$|\.fx$|^anims\/[^/]+\.cs$|\/code\/[^/]+\.cs$|\/imgs\/[^/]+$|\/media\/[^/]+$)/;
+    const kindsByPath = new Map(payload.files.map((item) => [String(item.path || ''), String(item.kind || '')]));
+    assert.equal(kindsByPath.get('anims/demo.anim.ts'), 'animts');
+
+    const whitelistPattern = /(?:\.md$|\.fx$|^anims\/[^/]+\.anim\.ts$|\/code\/[^/]+\.cs$|\/imgs\/[^/]+$|\/media\/[^/]+$)/;
     paths.forEach((entryPath) => {
         assert.match(entryPath, whitelistPattern);
     });

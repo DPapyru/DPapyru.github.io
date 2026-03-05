@@ -1,4 +1,4 @@
-// Generated from anims/mat4-trs-compose.cs
+// Generated from anims/mat4-trs-compose.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class Mat4TrsCompose {

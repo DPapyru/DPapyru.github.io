@@ -201,7 +201,7 @@
               "title": "使用网页特殊动画模块",
               "author": "DPapyru",
               "order": 5,
-              "description": "在站点中使用 animcs 模块，包含本地 Dotnet 实时预览桥接、模块索引与排错流程",
+              "description": "在站点中使用 animts 模块，包含本地 Dotnet 实时预览桥接、模块索引与排错流程",
               "time": "35分钟",
               "difficulty": "intermediate",
               "prev_chapter": "ContentProjects解决方案说明.md",

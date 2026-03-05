@@ -18,7 +18,10 @@ test('workspace export/import keeps schemaVersion and files', () => {
     assert.equal(parsed.schemaVersion, 1);
     assert.ok(Array.isArray(parsed.files));
     assert.ok(parsed.files.length >= 1);
-    assert.ok(parsed.files[0].path.endsWith('.cs'));
+    assert.ok(parsed.files[0].path.endsWith('.anim.ts'));
+    assert.match(parsed.files[0].content, /export\s+function\s+create\s*\(/);
+    assert.doesNotMatch(parsed.files[0].content, /using\s+Terraria/i);
+    assert.doesNotMatch(parsed.files[0].content, /ModItem/);
 });
 
 test('workspace import normalizes malformed payload', () => {
@@ -26,7 +29,7 @@ test('workspace import normalizes malformed payload', () => {
     assert.equal(parsed.schemaVersion, 1);
     assert.equal(parsed.files.length, 1);
     assert.equal(parsed.activeFileId, parsed.files[0].id);
-    assert.equal(parsed.files[0].path, 'anims/A.cs');
+    assert.equal(parsed.files[0].path, 'anims/A.anim.ts');
 });
 
 test('workspace import migrates legacy root csharp path into anims namespace', () => {
@@ -36,7 +39,7 @@ test('workspace import migrates legacy root csharp path into anims namespace', (
         ]
     }));
     assert.equal(parsed.files.length, 1);
-    assert.equal(parsed.files[0].path, 'anims/Program.cs');
+    assert.equal(parsed.files[0].path, 'anims/Program.anim.ts');
 });
 
 function installStorage(seed) {

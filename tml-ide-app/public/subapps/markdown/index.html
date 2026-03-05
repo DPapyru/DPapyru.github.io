@@ -326,7 +326,7 @@
                                                 <div class="studio-advanced-actions">
                                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="ref" title="插入 Markdown 链接">引用文档</button>
                                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="anim" title="插入动画片段语法">动画片段</button>
-                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="animcs-block" title="插入 animcs 代码块（第一行是 anims/*.cs）">animcs 代码块</button>
+                                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="animts-block" title="插入 animts 代码块（第一行是 *.anim.ts 路径）">animts 代码块</button>
                                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="color-inline" title="插入单色文本语法">单色文本</button>
                                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="color-change-inline" title="插入颜色动画文本语法">颜色动画文本</button>
                                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-tf" title="插入判断题模板">判断题</button>
@@ -461,7 +461,7 @@
                                 <div class="studio-advanced-actions studio-command-grid">
                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="ref" title="插入 Markdown 链接">引用文档</button>
                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="anim" title="插入动画片段语法">动画片段</button>
-                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="animcs-block" title="插入 animcs 代码块（第一行是 anims/*.cs）">animcs 代码块</button>
+                                    <button class="btn btn-small btn-outline" type="button" data-studio-insert="animts-block" title="插入 animts 代码块（第一行是 *.anim.ts 路径）">animts 代码块</button>
                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="color-inline" title="插入单色文本语法">单色文本</button>
                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="color-change-inline" title="插入颜色动画文本语法">颜色动画文本</button>
                                     <button class="btn btn-small btn-outline" type="button" data-studio-insert="quiz-tf" title="插入判断题模板">判断题</button>
@@ -655,7 +655,7 @@
                         <button id="studio-csharp-bridge-save" class="btn btn-small btn-outline" type="button">连接</button>
                         <button id="studio-csharp-bridge-reset" class="btn btn-small btn-outline" type="button">默认</button>
                     </div>
-                    <span id="studio-csharp-compile-hint" class="studio-help">仅对 anims/*.cs 启用实时编译预览。</span>
+                    <span id="studio-csharp-compile-hint" class="studio-help">仅对 *.anim.ts 启用实时预览。</span>
                 </div>
                 <div class="studio-csharp-editor-pane">
                     <label for="studio-csharp-editor-text">源码（仅点击保存才会生效）</label>
@@ -755,12 +755,12 @@ colorChange:
 
                     <section class="studio-guide-section">
                         <h4>5. 动画语法（两种）</h4>
-                        <pre><code>[待补充说明](anims:anims/demo-basic.cs)
+                        <pre><code>[待补充说明](anims:anims/demo-basic.anim.ts)
 
-```animcs
-anims/demo-basic.cs
+```animts
+anims/demo-basic.anim.ts
 ```</code></pre>
-                        <p><code>anims/*.cs</code> 是硬性要求，路径与大小写必须正确。</p>
+                        <p><code>*.anim.ts</code> 是硬性要求，路径与大小写必须正确。</p>
                     </section>
 
                     <section class="studio-guide-section">
@@ -826,7 +826,7 @@ answer: B
                         <ul>
                             <li>链接失效：目标路径未被索引或相对路径写错。</li>
                             <li>C# 片段不命中：选择器签名与源码不一致。</li>
-                            <li>动画不显示：路径不是 <code>anims/*.cs</code> 或未构建。</li>
+                            <li>动画不显示：路径不是 <code>*.anim.ts</code> 或未构建。</li>
                             <li>颜色不生效：<code>colors</code>/<code>colorChange</code> 未定义对应键。</li>
                         </ul>
                     </section>

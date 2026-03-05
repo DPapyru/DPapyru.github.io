@@ -30,7 +30,7 @@ test('index.html exposes markdown insertion buttons migrated from article-studio
     assert.match(html, /data-md-insert="anim"/);
     assert.match(html, /data-md-insert="fx-embed"/);
     assert.match(html, /data-md-insert="callout-note"/);
-    assert.match(html, /data-md-insert="animcs-block"/);
+    assert.match(html, /data-md-insert="animts-block"/);
     assert.match(html, /data-md-insert="color-inline"/);
     assert.match(html, /data-md-insert="color-change-inline"/);
     assert.match(html, /data-md-insert="quiz-tf"/);
@@ -62,7 +62,7 @@ test('main.js wires markdown insert actions and Ctrl+V image paste flow', () => 
     assert.match(source, /已粘贴图片/);
     assert.match(source, /readMarkdownSelectionText\('动画说明'\)/);
     assert.match(source, /readMarkdownSelectionText\('Shader 说明'\)/);
-    assert.match(source, /anims:anims\/你的动画文件\.cs/);
+    assert.match(source, /anims:anims\/你的动画文件\.anim\.ts/);
     assert.match(source, /fx:\.\/shaders\/demo\.fx/);
     assert.match(source, /if \(key === 'math-inline'\)/);
     assert.match(source, /if \(key === 'math-block'\)/);

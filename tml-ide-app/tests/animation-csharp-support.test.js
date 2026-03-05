@@ -8,14 +8,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const root = path.resolve(__dirname, '..');
 
-test('main.js enables animation C# files with csharp completion/highlight mode', () => {
+test('main.js enables animation .anim.ts files with TypeScript highlight/completion mode', () => {
     const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
 
-    assert.match(source, /FILE_NAME_ALLOWED_EXT_RE[\s\S]*animcs/);
-    assert.match(source, /if \(ext === '\.animcs'\) return 'csharp';/);
+    assert.match(source, /FILE_NAME_ALLOWED_EXT_RE[\s\S]*\.anim\.ts/);
     assert.match(source, /function isAnimationCsharpFilePath/);
-    assert.match(source, /if \(isAnimationCsharpFilePath\(pathValue\)\) return 'csharp';/);
-    assert.match(source, /dom\.statusLanguage\.textContent = 'C# \(动画\)';/);
+    assert.match(source, /if \(isAnimationCsharpFilePath\(pathValue\)\) return 'typescript';/);
+    assert.match(source, /if \(mode === 'animts'\) return 'typescript';/);
+    assert.match(source, /dom\.statusLanguage\.textContent = 'TypeScript \(动画\)';/);
 });
 
 test('main.js separates animation completion profile from normal tModLoader C#', () => {
@@ -52,4 +52,22 @@ test('main.js exposes vertex shader draw domain members for animation completion
     assert.doesNotMatch(source, /SetBlendMode/);
     assert.doesNotMatch(source, /SetVec2/);
     assert.doesNotMatch(source, /\bBlendMode\b/);
+});
+
+test('main.js augments anim.ts TypeScript completion with this-field provider', () => {
+    const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
+
+    assert.match(source, /buildAnimTsThisCompletionItems/);
+    assert.match(source, /registerCompletionItemProvider\('typescript'/);
+    assert.match(source, /if \(!file \|\| !isAnimationCsharpFilePath\(file\.path\)\)/);
+    assert.match(source, /ANIMATION_MEMBER_RETURN_TYPE_BY_TYPE/);
+});
+
+test('main.js configures TypeScript diagnostics to avoid anim field semantic squiggles', () => {
+    const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
+
+    assert.match(source, /typescriptDefaults/);
+    assert.match(source, /setDiagnosticsOptions\(\{/);
+    assert.match(source, /noSemanticValidation:\s*true/);
+    assert.match(source, /noSuggestionDiagnostics:\s*true/);
 });

@@ -1,4 +1,4 @@
-// Generated from anims/vec2-basic-ops.cs
+// Generated from anims/vec2-basic-ops.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class Vec2BasicOps {

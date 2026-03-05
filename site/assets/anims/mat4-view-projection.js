@@ -1,4 +1,4 @@
-// Generated from anims/mat4-view-projection.cs
+// Generated from anims/mat4-view-projection.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class Mat4ViewProjection {

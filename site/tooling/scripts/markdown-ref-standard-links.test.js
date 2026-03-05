@@ -61,12 +61,12 @@ test('standalone protocol embed parser supports cs/anims/fx and rejects inline m
     );
 
     assert.deepEqual(
-        embedLinks.parseStandaloneEmbedLink('[动画](anims:anims/demo-basic.cs)'),
+        embedLinks.parseStandaloneEmbedLink('[动画](anims:anims/demo-basic.anim.ts)'),
         {
             kind: 'anims',
             label: '动画',
-            href: 'anims:anims/demo-basic.cs',
-            target: 'anims/demo-basic.cs'
+            href: 'anims:anims/demo-basic.anim.ts',
+            target: 'anims/demo-basic.anim.ts'
         }
     );
 
@@ -98,7 +98,7 @@ test('tml-ide markdown insertion snippets use protocol embeds', () => {
     assert.match(source, /readMarkdownSelectionText\('动画说明'\)/);
     assert.match(source, /readMarkdownSelectionText\('代码说明'\)/);
     assert.match(source, /readMarkdownSelectionText\('Shader 说明'\)/);
-    assert.match(source, /anims:anims\/你的动画文件\.cs/);
+    assert.match(source, /anims:anims\/你的动画文件\.anim\.ts/);
     assert.match(source, /cs:\.\/code\/demo\.cs#cs:t:命名空间\.类型名/);
     assert.match(source, /fx:\.\/shaders\/demo\.fx/);
     assert.match(source, /if \(key === 'math-inline'\)/);
@@ -111,9 +111,8 @@ test('legacy article studio insertion snippets also use protocol embeds', () => 
     const source = fs.readFileSync(path.resolve('tml-ide/subapps/assets/js/article-studio.js'), 'utf8');
 
     assert.match(source, /\(cs:\$\{pathPart\}#cs:/);
-    assert.match(source, /\[待补充说明\]\(anims:anims\/你的动画文件\.cs\)/);
-    assert.match(source, /if \(key === 'math-inline'\)/);
-    assert.match(source, /if \(key === 'math-block'\)/);
+    assert.match(source, /\[待补充说明\]\(anims:anims\/你的动画文件\.anim\.ts\)/);
+    assert.match(source, /if \(key === 'animts-block'\)/);
     assert.doesNotMatch(source, /insertBlockSnippet\(`\{\{anim:/);
     assert.doesNotMatch(source, /insertBlockSnippet\(`\{\{cs:/);
 });

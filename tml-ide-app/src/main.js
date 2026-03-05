@@ -1,10 +1,13 @@
 import './style.css';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import 'monaco-editor/esm/vs/editor/contrib/suggest/browser/suggestController.js';
 import 'monaco-editor/esm/vs/basic-languages/csharp/csharp.contribution';
 import 'monaco-editor/esm/vs/basic-languages/markdown/markdown.contribution';
 import 'monaco-editor/esm/vs/basic-languages/cpp/cpp.contribution';
+import 'monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution';
+import 'monaco-editor/esm/vs/language/typescript/monaco.contribution';
 import { conf as csharpConf, language as csharpLanguage } from 'monaco-editor/esm/vs/basic-languages/csharp/csharp';
 
 import { DIAGNOSTIC_SEVERITY, MESSAGE_TYPES } from './contracts/messages.js';
@@ -13,6 +16,7 @@ import { buildPatchIndexFromXml } from './lib/language-core.js';
 import { createEmptyApiIndex, mergeApiIndex, normalizeApiIndex } from './lib/index-schema.js';
 import { buildFragmentSource as buildShaderFragmentSource } from './lib/shader-hlsl-adapter.js';
 import { buildSuggestions as buildDiagnosticSuggestions } from './lib/diagnostic-suggestions.js';
+import { buildAnimTsThisCompletionItems } from './lib/animts-this-completion.js';
 import { createChangeTracker } from './lib/change-tracker.js';
 import { buildUnifiedDiff } from './lib/unified-diff.js';
 import * as sharedMarkdownCapabilityExports from '../../shared/capabilities/markdown/core/index.js';
@@ -63,7 +67,10 @@ const fxUsingImagesApi = globalThis.SharedFxUsingImages && typeof globalThis.Sha
     : {};
 
 self.MonacoEnvironment = {
-    getWorker() {
+    getWorker(_moduleId, label) {
+        if (label === 'typescript' || label === 'javascript') {
+            return new tsWorker();
+        }
         return new editorWorker();
     }
 };
@@ -504,6 +511,11 @@ const ANIMATION_METHOD_LABELS = new Set([
 ]);
 const ANIMATION_TYPE_LABEL_SET = new Set(ANIMATION_TYPE_LABELS);
 const ANIMATION_MEMBER_LABEL_SET = new Set(Object.values(ANIMATION_MEMBER_LABELS_BY_TYPE).flat());
+const ANIMATION_MEMBER_RETURN_TYPE_BY_TYPE = Object.freeze({
+    AnimContext: Object.freeze({
+        Input: 'AnimInput'
+    })
+});
 const UNIFIED_STATE_SAVE_DELAY = 240;
 const FIX_POPUP_AUTO_DELAY = 300;
 const FIX_POPUP_AUTO_COOLDOWN = 1200;
@@ -536,13 +548,22 @@ const VIEWER_PREVIEW_STORAGE_KEY = 'articleStudioViewerPreview.v1';
 const VIEWER_PREVIEW_MESSAGE_TYPE = 'article-studio-preview-update';
 const IDE_EDITABLE_INDEX_PATH = '/site/assets/ide-editable-index.v1.json';
 const PREVIEW_SYNC_DEBOUNCE_MS = 120;
-const ANIMCS_BRIDGE_STORAGE_KEY = 'articleStudioAnimBridgeEndpoint.v1';
-const ANIMCS_DEFAULT_BRIDGE_ENDPOINT = 'http://127.0.0.1:5078';
-const ANIMCS_BRIDGE_CANDIDATE_ENDPOINTS = [ANIMCS_DEFAULT_BRIDGE_ENDPOINT, 'http://127.0.0.1:5178'];
-const ANIMCS_COMPILE_DEBOUNCE_MS = 400;
-const ANIMCS_COMPILE_TIMEOUT_MS = 8000;
+const ANIMTS_BRIDGE_STORAGE_KEY = 'articleStudioAnimBridgeEndpoint.v1';
+const ANIMTS_DEFAULT_BRIDGE_ENDPOINT = 'browser://local-transpile';
+const ANIMTS_BRIDGE_CANDIDATE_ENDPOINTS = [ANIMTS_DEFAULT_BRIDGE_ENDPOINT];
+const ANIMTS_COMPILE_DEBOUNCE_MS = 400;
+const ANIMTS_COMPILE_TIMEOUT_MS = 8000;
+const ANIMTS_TRANSPILE_COMPILER_OPTIONS = Object.freeze({
+    allowNonTsExtensions: true,
+    target: monaco.languages.typescript.ScriptTarget.ES2020,
+    module: monaco.languages.typescript.ModuleKind.ES2020,
+    moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+    isolatedModules: true,
+    removeComments: false,
+    downlevelIteration: false
+});
 let viewerPagePathCache = '';
-const FILE_NAME_ALLOWED_EXT_RE = /\.(?:cs|animcs|md|fx|png|jpe?g|gif|webp|svg|bmp|avif|mp4|webm|mov|m4v|avi|mkv)$/i;
+const FILE_NAME_ALLOWED_EXT_RE = /(?:\.anim\.ts|\.cs|\.md|\.fx|\.png|\.jpe?g|\.gif|\.webp|\.svg|\.bmp|\.avif|\.mp4|\.webm|\.mov|\.m4v|\.avi|\.mkv)$/i;
 const SHADER_PREVIEW_BG_MODES = new Set(['transparent', 'black', 'white']);
 const SHADER_PREVIEW_RENDER_MODES = new Set(['alpha', 'additive', 'nonpremultiplied', 'opaque']);
 const SHADER_PREVIEW_ADDRESS_MODES = new Set(['clamp', 'wrap']);
@@ -615,10 +636,22 @@ const SHADER_COMPLETION_WORDS = Object.freeze(Array.from(new Set([
 const SHADER_COMPLETION_RESERVED = new Set(SHADER_COMPLETION_WORDS.map((word) => String(word).toLowerCase()));
 const shaderPreviewPresetCache = new Map();
 const shaderUploadImageCache = new Map();
+if (monaco.languages && monaco.languages.typescript && monaco.languages.typescript.typescriptDefaults) {
+    const tsDefaults = monaco.languages.typescript.typescriptDefaults;
+    tsDefaults.setCompilerOptions({
+        ...tsDefaults.getCompilerOptions(),
+        ...ANIMTS_TRANSPILE_COMPILER_OPTIONS
+    });
+    tsDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSuggestionDiagnostics: true,
+        noSyntaxValidation: false
+    });
+}
 const QUICK_CREATE_TYPE_META = Object.freeze({
     markdown: Object.freeze({ ext: '.md', defaultFileName: '新文章.md' }),
     shaderfx: Object.freeze({ ext: '.fx', defaultFileName: 'effect.fx' }),
-    animcs: Object.freeze({ ext: '.cs', defaultFileName: 'new-anim.cs' }),
+    animts: Object.freeze({ ext: '.anim.ts', defaultFileName: 'new-anim.anim.ts' }),
     codecs: Object.freeze({ ext: '.cs', defaultFileName: 'snippet.cs' }),
     image: Object.freeze({ ext: '.png', defaultFileName: 'image.png' }),
     video: Object.freeze({ ext: '.mp4', defaultFileName: 'video.mp4' })
@@ -891,7 +924,7 @@ function isIdeEditableRelativePath(pathValue) {
     const lower = relative.toLowerCase();
     if (lower.endsWith('.md')) return true;
     if (lower.endsWith('.fx')) return true;
-    if (/^anims\/[^/]+\.cs$/i.test(relative)) return true;
+    if (lower.endsWith('.anim.ts')) return true;
     if (/(?:^|\/)code\/[^/]+\.cs$/i.test(relative)) return true;
     if (/(?:^|\/)imgs\/[^/]+$/i.test(relative)) return true;
     if (/(?:^|\/)media\/[^/]+$/i.test(relative)) return true;
@@ -968,20 +1001,22 @@ function resolveContentPathFromMarkdown(markdownPath, rawPath) {
 }
 
 function detectFileMode(pathValue) {
+    if (/\.anim\.ts$/i.test(String(pathValue || ''))) return 'animts';
     const ext = fileExt(pathValue);
     if (ext === '.md' || ext === '.markdown') return 'markdown';
     if (ext === '.fx') return 'shaderfx';
-    if (ext === '.animcs') return 'csharp';
+    if (ext === '.ts') return 'animts';
     if (VIDEO_FILE_EXTENSIONS.has(ext)) return 'video';
     if (IMAGE_FILE_EXTENSIONS.has(ext)) return 'image';
     return 'csharp';
 }
 
 function languageForFile(pathValue) {
-    if (isAnimationCsharpFilePath(pathValue)) return 'csharp';
+    if (isAnimationCsharpFilePath(pathValue)) return 'typescript';
     const mode = detectFileMode(pathValue);
     if (mode === 'markdown') return 'markdown';
     if (mode === 'shaderfx') return 'shaderfx';
+    if (mode === 'animts') return 'typescript';
     if (mode === 'video') return 'plaintext';
     if (mode === 'image') return 'plaintext';
     return 'csharp';
@@ -1545,8 +1580,7 @@ function normalizeAnimSourcePath(pathValue) {
 function isAnimSourcePath(pathValue) {
     const normalized = normalizeAnimSourcePath(pathValue);
     if (!normalized) return false;
-    if (!/^anims\//i.test(normalized)) return false;
-    if (!/\.cs$/i.test(normalized)) return false;
+    if (!/\.anim\.ts$/i.test(normalized)) return false;
     if (/(^|\/)\.\.(\/|$)/.test(normalized)) return false;
     return true;
 }
@@ -1583,7 +1617,7 @@ function normalizeAnimBridgeEndpoint(input) {
 
 function readStoredAnimBridgeEndpoint() {
     try {
-        return normalizeAnimBridgeEndpoint(localStorage.getItem(ANIMCS_BRIDGE_STORAGE_KEY) || '');
+        return normalizeAnimBridgeEndpoint(localStorage.getItem(ANIMTS_BRIDGE_STORAGE_KEY) || '');
     } catch (_error) {
         return '';
     }
@@ -1591,7 +1625,7 @@ function readStoredAnimBridgeEndpoint() {
 
 function persistAnimBridgeEndpoint(endpoint) {
     try {
-        localStorage.setItem(ANIMCS_BRIDGE_STORAGE_KEY, String(endpoint || ''));
+        localStorage.setItem(ANIMTS_BRIDGE_STORAGE_KEY, String(endpoint || ''));
     } catch (_error) {
         // Ignore storage errors.
     }
@@ -1602,6 +1636,300 @@ function normalizeAnimCompileDiagnostics(input) {
     return input
         .map((item) => String(item || '').trim())
         .filter(Boolean);
+}
+
+function flattenTypeScriptDiagnosticMessage(messageText) {
+    if (!messageText) return '';
+    if (typeof messageText === 'string') return messageText;
+    const queue = [messageText];
+    const lines = [];
+    while (queue.length) {
+        const current = queue.shift();
+        if (!current || typeof current !== 'object') continue;
+        const line = String(current.messageText || '').trim();
+        if (line) lines.push(line);
+        if (Array.isArray(current.next)) {
+            current.next.forEach((item) => queue.push(item));
+        }
+    }
+    return lines.join('\n');
+}
+
+function formatTypeScriptDiagnosticsForAnim(animPath, model, diagnostics) {
+    if (!Array.isArray(diagnostics) || !model) return [];
+    return diagnostics
+        .map((diag) => {
+            if (!diag || typeof diag !== 'object') return '';
+            const message = flattenTypeScriptDiagnosticMessage(diag.messageText) || String(diag.message || '').trim();
+            if (!message) return '';
+            if (typeof diag.start === 'number' && diag.start >= 0) {
+                const pos = model.getPositionAt(diag.start);
+                return `${animPath}:${pos.lineNumber}:${pos.column} ${message}`;
+            }
+            return message;
+        })
+        .filter(Boolean);
+}
+
+function parseAnimModeOptionsDslForPreview(text) {
+    const raw = String(text || '').trim();
+    if (!raw) return [];
+
+    return raw.split('|')
+        .map((chunk) => String(chunk || '').trim())
+        .filter(Boolean)
+        .map((part) => {
+            const sep = part.indexOf(':');
+            if (sep <= 0) return null;
+            const value = Number(part.slice(0, sep).trim());
+            const label = part.slice(sep + 1).trim();
+            if (!Number.isFinite(value) || !label) return null;
+            return { value, text: label };
+        })
+        .filter(Boolean);
+}
+
+function normalizeAnimProfileForPreview(input) {
+    if (!input || typeof input !== 'object') return null;
+    const profile = {};
+
+    if (typeof input.controls === 'string') {
+        const controls = input.controls.trim();
+        if (controls) profile.controls = controls;
+    }
+
+    if (input.heightScale != null) {
+        const heightScale = Number(input.heightScale);
+        if (Number.isFinite(heightScale) && heightScale > 0) {
+            profile.heightScale = heightScale;
+        }
+    }
+
+    let modeOptions = [];
+    if (Array.isArray(input.modeOptions)) {
+        modeOptions = input.modeOptions
+            .map((item) => {
+                if (!item || typeof item !== 'object') return null;
+                const value = Number(item.value);
+                const text = String(item.text || '').trim();
+                if (!Number.isFinite(value) || !text) return null;
+                return { value, text };
+            })
+            .filter(Boolean);
+    } else if (typeof input.modeOptions === 'string') {
+        modeOptions = parseAnimModeOptionsDslForPreview(input.modeOptions);
+    }
+
+    if (modeOptions.length) {
+        profile.modeOptions = modeOptions;
+    }
+
+    return Object.keys(profile).length ? profile : null;
+}
+
+function extractBraceBlockForPreview(sourceText, openBraceIndex) {
+    const source = String(sourceText || '');
+    const start = Number(openBraceIndex);
+    if (!Number.isFinite(start) || start < 0 || start >= source.length || source[start] !== '{') return '';
+
+    let depth = 0;
+    let inSingleQuote = false;
+    let inDoubleQuote = false;
+    let inTemplateQuote = false;
+    let inLineComment = false;
+    let inBlockComment = false;
+
+    for (let i = start; i < source.length; i += 1) {
+        const ch = source[i];
+        const next = source[i + 1];
+
+        if (inLineComment) {
+            if (ch === '\n') inLineComment = false;
+            continue;
+        }
+        if (inBlockComment) {
+            if (ch === '*' && next === '/') {
+                inBlockComment = false;
+                i += 1;
+            }
+            continue;
+        }
+        if (inSingleQuote) {
+            if (ch === '\\') {
+                i += 1;
+                continue;
+            }
+            if (ch === '\'') inSingleQuote = false;
+            continue;
+        }
+        if (inDoubleQuote) {
+            if (ch === '\\') {
+                i += 1;
+                continue;
+            }
+            if (ch === '"') inDoubleQuote = false;
+            continue;
+        }
+        if (inTemplateQuote) {
+            if (ch === '\\') {
+                i += 1;
+                continue;
+            }
+            if (ch === '`') inTemplateQuote = false;
+            continue;
+        }
+
+        if (ch === '/' && next === '/') {
+            inLineComment = true;
+            i += 1;
+            continue;
+        }
+        if (ch === '/' && next === '*') {
+            inBlockComment = true;
+            i += 1;
+            continue;
+        }
+        if (ch === '\'') {
+            inSingleQuote = true;
+            continue;
+        }
+        if (ch === '"') {
+            inDoubleQuote = true;
+            continue;
+        }
+        if (ch === '`') {
+            inTemplateQuote = true;
+            continue;
+        }
+
+        if (ch === '{') {
+            depth += 1;
+            continue;
+        }
+        if (ch === '}') {
+            depth -= 1;
+            if (depth === 0) {
+                return source.slice(start, i + 1);
+            }
+        }
+    }
+
+    return '';
+}
+
+function extractExportedAnimProfileLiteralForPreview(sourceText) {
+    const source = String(sourceText || '');
+    if (!source.trim()) return '';
+
+    const exportedProfileMatch = source.match(/\bexport\s+const\s+profile\b[\s\S]*?=/);
+    if (!exportedProfileMatch || typeof exportedProfileMatch.index !== 'number') return '';
+
+    const assignStart = exportedProfileMatch.index + exportedProfileMatch[0].length;
+    const openBraceOffset = source.slice(assignStart).indexOf('{');
+    if (openBraceOffset < 0) return '';
+    const openBraceIndex = assignStart + openBraceOffset;
+
+    return extractBraceBlockForPreview(source, openBraceIndex);
+}
+
+function parseAnimProfileForPreview(sourceText) {
+    const source = String(sourceText || '');
+    if (!source.trim()) return null;
+
+    const inlineTag = source.match(/\/\/\s*@anim-profile\s+(\{.*\})\s*$/m);
+    if (inlineTag && inlineTag[1]) {
+        try {
+            return normalizeAnimProfileForPreview(JSON.parse(inlineTag[1]));
+        } catch (_error) {
+            // Fallback to exported profile parser.
+        }
+    }
+
+    const profileLiteral = extractExportedAnimProfileLiteralForPreview(source);
+    if (!profileLiteral) return null;
+
+    try {
+        const evaluated = Function(`"use strict"; return (${profileLiteral});`)();
+        return normalizeAnimProfileForPreview(evaluated);
+    } catch (_error) {
+        return null;
+    }
+}
+
+async function transpileAnimSourceForPreview(animPath, sourceText, requestId) {
+    const source = String(sourceText || '');
+    if (!source.trim()) {
+        return {
+            ok: false,
+            moduleJs: '',
+            diagnostics: ['编译失败：源码为空'],
+            profile: null
+        };
+    }
+    const profile = parseAnimProfileForPreview(source);
+
+    const tsLang = monaco.languages && monaco.languages.typescript;
+    if (!tsLang || typeof tsLang.getTypeScriptWorker !== 'function') {
+        return {
+            ok: false,
+            moduleJs: '',
+            diagnostics: ['编译失败：TypeScript 编译器未就绪'],
+            profile: null
+        };
+    }
+
+    const uri = monaco.Uri.parse(
+        `inmemory://animts-preview/${encodeURIComponent(animPath)}-${encodeURIComponent(String(requestId || Date.now()))}.ts`
+    );
+    const model = monaco.editor.createModel(source, 'typescript', uri);
+
+    try {
+        const getTypeScriptWorker = await tsLang.getTypeScriptWorker();
+        const worker = await getTypeScriptWorker(uri);
+        const fileName = uri.toString();
+        const [syntacticDiagnostics, compilerDiagnostics, emitOutput] = await Promise.all([
+            worker.getSyntacticDiagnostics(fileName),
+            worker.getCompilerOptionsDiagnostics(fileName),
+            worker.getEmitOutput(fileName)
+        ]);
+
+        const diagnostics = [
+            ...formatTypeScriptDiagnosticsForAnim(animPath, model, syntacticDiagnostics),
+            ...formatTypeScriptDiagnosticsForAnim(animPath, model, compilerDiagnostics)
+        ];
+
+        const outputFiles = emitOutput && Array.isArray(emitOutput.outputFiles) ? emitOutput.outputFiles : [];
+        const jsFile = outputFiles.find((outputFile) => /\.js$/i.test(String(outputFile && outputFile.name || '')));
+        const moduleJs = String(jsFile && jsFile.text || '');
+        if (diagnostics.length || !moduleJs.trim()) {
+            return {
+                ok: false,
+                moduleJs: '',
+                diagnostics: diagnostics.length ? diagnostics : ['编译失败：未生成 JS 模块'],
+                profile: null
+            };
+        }
+
+        return {
+            ok: true,
+            moduleJs,
+            diagnostics: [],
+            profile
+        };
+    } catch (error) {
+        return {
+            ok: false,
+            moduleJs: '',
+            diagnostics: [
+                error && error.message
+                    ? `编译失败：${error.message}`
+                    : `编译失败：${String(error)}`
+            ],
+            profile: null
+        };
+    } finally {
+        model.dispose();
+    }
 }
 
 function setAnimCompileStatus(text) {
@@ -1723,9 +2051,9 @@ function collectReferencedAnimPaths(markdownPath, markdownContent) {
         }
     });
 
-    const animcsFenceRe = /```animcs\s*([\s\S]*?)```/g;
+    const animtsFenceRe = /```animts\s*([\s\S]*?)```/g;
     let fenceMatch = null;
-    while ((fenceMatch = animcsFenceRe.exec(source)) !== null) {
+    while ((fenceMatch = animtsFenceRe.exec(source)) !== null) {
         const blockText = String(fenceMatch[1] || '');
         const firstLine = blockText
             .split(/\r?\n/)
@@ -1744,7 +2072,7 @@ function updateAnimPreviewReferenceContext(markdownPath, markdownContent) {
     state.animPreview.referencedAnimPaths = referencedPaths;
     state.animPreview.referencedAnimSet = new Set(referencedPaths);
     if (referencedPaths.length <= 0) {
-        setAnimCompileStatus('未激活（当前文章未引用 anims/*.cs）');
+        setAnimCompileStatus('未激活（当前文章未引用 *.anim.ts）');
     }
 }
 
@@ -1869,7 +2197,7 @@ function buildMarkdownViewerPreviewPayload(markdownPath, markdownContent) {
         compiledAnims: buildCompiledAnimsPayload(),
         animCompileErrors: buildAnimCompileErrorsPayload(),
         animBridge: {
-            endpoint: normalizeAnimBridgeEndpoint(state.animPreview.bridgeEndpoint) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT,
+            endpoint: normalizeAnimBridgeEndpoint(state.animPreview.bridgeEndpoint) || ANIMTS_DEFAULT_BRIDGE_ENDPOINT,
             connected: !!state.animPreview.bridgeConnected,
             status: String(state.animPreview.compileStatus || '未激活')
         },
@@ -1909,7 +2237,7 @@ function resolveAnimBridgeCandidates(preferredEndpoint) {
 
     appendCandidate(preferredEndpoint);
     appendCandidate(state.animPreview.bridgeEndpoint);
-    ANIMCS_BRIDGE_CANDIDATE_ENDPOINTS.forEach((value) => appendCandidate(value));
+    ANIMTS_BRIDGE_CANDIDATE_ENDPOINTS.forEach((value) => appendCandidate(value));
     return candidates;
 }
 
@@ -2028,59 +2356,39 @@ function scheduleMarkdownPreviewSync(options) {
 }
 
 async function compileAnimSourceNow(animPath, sourceText, options) {
-    const opts = options || {};
+    void options;
     const normalized = normalizeAnimSourcePath(animPath);
     if (!isAnimSourcePath(normalized)) return;
     const requestId = String(++state.animPreview.compileRequestSeq);
     state.animPreview.latestRequestIdByPath[normalized] = requestId;
     setAnimCompileStatus(`编译中 ${normalized}`);
 
-    const endpoint = await connectAnimBridge({ preferredEndpoint: opts.preferredEndpoint, silent: true });
-    if (!endpoint) {
-        setCompiledAnimError(normalized, ['未检测到本地 AnimBridge，请先启动 dotnet 桥接服务']);
-        setAnimCompileStatus(`桥接不可用 ${normalized}`);
-        scheduleMarkdownPreviewSync({ refreshAnimRefs: false });
-        return;
-    }
-
     const controller = new AbortController();
     const timeout = setTimeout(() => {
         controller.abort();
-    }, ANIMCS_COMPILE_TIMEOUT_MS);
+    }, ANIMTS_COMPILE_TIMEOUT_MS);
 
     try {
-        const response = await fetch(`${endpoint}/api/animcs/compile`, {
-            method: 'POST',
-            headers: {
-                'content-type': 'application/json'
-            },
-            body: JSON.stringify({
-                sourcePath: normalized,
-                sourceText: String(sourceText || ''),
-                requestId
-            }),
-            signal: controller.signal
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+        if (controller.signal.aborted) {
+            throw new DOMException('aborted', 'AbortError');
         }
-
-        const payload = await response.json().catch(() => null);
+        const payload = await transpileAnimSourceForPreview(normalized, sourceText, requestId);
+        if (controller.signal.aborted) {
+            throw new DOMException('aborted', 'AbortError');
+        }
         if (state.animPreview.latestRequestIdByPath[normalized] !== requestId) {
             return;
         }
 
         const diagnostics = normalizeAnimCompileDiagnostics(payload && payload.diagnostics);
-        const moduleJs = String(payload && payload.moduleJs || '');
-        if (!payload || payload.ok !== true || !moduleJs) {
+        if (!payload || payload.ok !== true || !payload.moduleJs) {
             setCompiledAnimError(normalized, diagnostics.length ? diagnostics : ['编译失败：未生成 JS 模块']);
             setAnimCompileStatus(`编译失败 ${normalized}`);
             scheduleMarkdownPreviewSync({ refreshAnimRefs: false });
             return;
         }
 
-        setCompiledAnimOutput(normalized, moduleJs, payload.profile && typeof payload.profile === 'object' ? payload.profile : null);
+        setCompiledAnimOutput(normalized, payload.moduleJs, payload.profile && typeof payload.profile === 'object' ? payload.profile : null);
         state.animPreview.bridgeConnected = true;
         setAnimCompileStatus(`编译成功 ${normalized}`);
         scheduleMarkdownPreviewSync({ refreshAnimRefs: false });
@@ -2089,7 +2397,7 @@ async function compileAnimSourceNow(animPath, sourceText, options) {
             return;
         }
         const reason = error && error.name === 'AbortError'
-            ? `编译超时（>${ANIMCS_COMPILE_TIMEOUT_MS}ms）`
+            ? `编译超时（>${ANIMTS_COMPILE_TIMEOUT_MS}ms）`
             : (error && error.message ? error.message : String(error));
         setCompiledAnimError(normalized, [reason]);
         setAnimCompileStatus(`编译失败 ${normalized}`);
@@ -2115,7 +2423,7 @@ function scheduleAnimCompileForPath(animPath, sourceText, options) {
         run();
         return;
     }
-    state.animPreview.compileTimerByPath[normalized] = setTimeout(run, ANIMCS_COMPILE_DEBOUNCE_MS);
+    state.animPreview.compileTimerByPath[normalized] = setTimeout(run, ANIMTS_COMPILE_DEBOUNCE_MS);
 }
 
 function scheduleCompileForReferencedAnims(options) {
@@ -2124,7 +2432,7 @@ function scheduleCompileForReferencedAnims(options) {
         ? state.animPreview.referencedAnimPaths
         : [];
     if (!referenced.length) {
-        setAnimCompileStatus('未激活（当前文章未引用 anims/*.cs）');
+        setAnimCompileStatus('未激活（当前文章未引用 *.anim.ts）');
         return;
     }
 
@@ -2143,7 +2451,7 @@ function scheduleCompileForReferencedAnims(options) {
     });
 
     if (compileCount <= 0) {
-        setAnimCompileStatus('未激活（引用的 anims/*.cs 尚未在工作区打开）');
+        setAnimCompileStatus('未激活（引用的 *.anim.ts 尚未在工作区打开）');
     }
 }
 
@@ -2841,9 +3149,9 @@ function isAllowedExtraFilePath(pathValue) {
     const isShaderGalleryFile = /^site\/content\/shader-gallery\/[a-z0-9](?:[a-z0-9-]{0,62})\/(?:entry|shader)\.json$/i.test(path);
     const isArticleImageFile = /^site\/content\/.+\/imgs\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:png|jpg|jpeg|gif|webp|svg|bmp|avif)$/i.test(path);
     const isArticleMediaFile = /^site\/content\/.+\/media\/[a-z0-9\u4e00-\u9fa5_-]+\.(?:mp4|webm)$/i.test(path);
-    const isAnimRootCsharpFile = /^site\/content\/anims\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(path);
+    const isAnimRootAnimtsFile = /^site\/content\/anims\/[a-z0-9\u4e00-\u9fa5_-]+\.anim\.ts$/i.test(path);
     const isArticleCsharpFile = /^site\/content\/.+\/code\/[a-z0-9\u4e00-\u9fa5_-]+\.cs$/i.test(path);
-    return isShaderGalleryFile || isArticleImageFile || isArticleMediaFile || isAnimRootCsharpFile || isArticleCsharpFile;
+    return isShaderGalleryFile || isArticleImageFile || isArticleMediaFile || isAnimRootAnimtsFile || isArticleCsharpFile;
 }
 
 function isMarkdownContentPath(pathValue) {
@@ -4169,7 +4477,7 @@ function createFileFromPathInput(pathInput, options) {
     const opts = options && typeof options === 'object' ? options : {};
     const fileName = normalizeEditableWorkspacePathInput(pathInput);
     if (!fileName) {
-        addEvent('error', '路径必须位于 site/content 白名单（.md / anims/*.cs / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
+        addEvent('error', '路径必须位于 site/content 白名单（.md / **/*.anim.ts / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
         return null;
     }
     const exists = state.workspace.files.some((file) => isSameContentRelativePath(file.path, fileName));
@@ -4369,7 +4677,7 @@ function contextFileTreeMenuCommands() {
                 const parent = parentDirOfRepoPath(ctx.repoPath);
                 const safeParent = normalizeContentRelativePath(parent);
                 let type = 'markdown';
-                if (/(^|\/)anims(\/|$)/i.test(safeParent)) type = 'animcs';
+                if (/(^|\/)anims(\/|$)/i.test(safeParent)) type = 'animts';
                 else if (/(^|\/)code(\/|$)/i.test(safeParent)) type = 'codecs';
                 else if (/(^|\/)imgs(\/|$)/i.test(safeParent)) type = 'image';
                 else if (/(^|\/)media(\/|$)/i.test(safeParent)) type = 'video';
@@ -4772,7 +5080,7 @@ function updateStatusLanguage() {
         return;
     }
     if (active && isAnimationCsharpFilePath(active.path)) {
-        dom.statusLanguage.textContent = 'C# (动画)';
+        dom.statusLanguage.textContent = 'TypeScript (动画)';
         return;
     }
     dom.statusLanguage.textContent = 'C#';
@@ -4907,7 +5215,7 @@ function guessQuickCreateDirectory(baseDir, typeValue) {
         }
         return joinRepoPathParts(safeBase, name);
     };
-    if (type === 'animcs') return ensureSubdir('anims');
+    if (type === 'animts') return ensureSubdir('anims');
     if (type === 'codecs') return ensureSubdir('code');
     if (type === 'image') return ensureSubdir('imgs');
     if (type === 'video') return ensureSubdir('media');
@@ -6106,7 +6414,7 @@ function applyMarkdownInsertAction(action) {
     }
     if (key === 'anim') {
         const selectedTitle = readMarkdownSelectionText('动画说明');
-        insertMarkdownBlockSnippet(`[${selectedTitle}](anims:anims/你的动画文件.cs)\n`, 'anims:anims/你的动画文件.cs');
+        insertMarkdownBlockSnippet(`[${selectedTitle}](anims:anims/你的动画文件.anim.ts)\n`, 'anims:anims/你的动画文件.anim.ts');
         return;
     }
     if (key === 'fx-embed') {
@@ -6118,13 +6426,13 @@ function applyMarkdownInsertAction(action) {
         insertMarkdownBlockSnippet('> [!NOTE]\n> 这里填写提示内容。\n', '[!NOTE]');
         return;
     }
-    if (key === 'animcs-block') {
+    if (key === 'animts-block') {
         insertMarkdownBlockSnippet([
-            '```animcs',
-            'anims/demo-basic.cs',
+            '```animts',
+            'anims/demo-basic.anim.ts',
             '```',
             ''
-        ].join('\n'), 'anims/demo-basic.cs');
+        ].join('\n'), 'anims/demo-basic.anim.ts');
         return;
     }
     if (key === 'color-inline') {
@@ -8012,9 +8320,7 @@ function exportShaderFile() {
 function isAnimationCsharpFilePath(pathValue) {
     const safe = normalizeRepoPath(pathValue).toLowerCase();
     if (!safe) return false;
-    if (/\.animcs$/i.test(safe)) return true;
-    if (/\.anim\.cs$/i.test(safe)) return true;
-    if (/\/(?:anims?|animations?)\//i.test(safe)) return true;
+    if (/\.anim\.ts$/i.test(safe)) return true;
     return false;
 }
 
@@ -9360,6 +9666,48 @@ function installEditorProviders() {
         }
     });
 
+    monaco.languages.registerCompletionItemProvider('typescript', {
+        triggerCharacters: ['.', '_'],
+        provideCompletionItems(model, position) {
+            const file = workspaceFileByModel(model);
+            if (!file || !isAnimationCsharpFilePath(file.path)) {
+                return { suggestions: [] };
+            }
+
+            const offset = model.getOffsetAt(position);
+            const items = buildAnimTsThisCompletionItems(model.getValue(), offset, {
+                maxItems: 80,
+                staticIdentifierTypeHints: ANIMATION_STATIC_OWNER_TO_TYPE,
+                memberLabelsByType: ANIMATION_MEMBER_LABELS_BY_TYPE,
+                memberReturnTypeByType: ANIMATION_MEMBER_RETURN_TYPE_BY_TYPE,
+                methodLabels: ANIMATION_METHOD_LABELS
+            });
+            if (!items.length) {
+                return { suggestions: [] };
+            }
+
+            const word = model.getWordUntilPosition(position);
+            const range = new monaco.Range(
+                position.lineNumber,
+                word.startColumn,
+                position.lineNumber,
+                word.endColumn
+            );
+
+            return {
+                suggestions: items.map((item) => ({
+                    label: item.label,
+                    kind: convertCompletionKind(item.kind),
+                    insertText: item.insertText || item.label,
+                    detail: item.detail || '',
+                    documentation: item.documentation || '',
+                    sortText: item.sortText || item.label,
+                    range
+                }))
+            };
+        }
+    });
+
     monaco.languages.registerHoverProvider('csharp', {
         async provideHover(model, position) {
             const offset = model.getOffsetAt(position);
@@ -10174,7 +10522,7 @@ function bindUiEvents() {
 
         const next = normalizeEditableWorkspacePathInput(input);
         if (!next) {
-            addEvent('error', '路径必须位于 site/content 白名单（.md / anims/*.cs / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
+            addEvent('error', '路径必须位于 site/content 白名单（.md / **/*.anim.ts / **/code/*.cs / .fx / **/imgs/* / **/media/*）');
             return;
         }
 
@@ -10378,8 +10726,8 @@ async function bootstrap() {
     initializeUnifiedState(unifiedState);
     updateUnifiedAuthUi();
     state.animPreview.bridgeEndpoint = normalizeAnimBridgeEndpoint(
-        readStoredAnimBridgeEndpoint() || ANIMCS_DEFAULT_BRIDGE_ENDPOINT
-    ) || ANIMCS_DEFAULT_BRIDGE_ENDPOINT;
+        readStoredAnimBridgeEndpoint() || ANIMTS_DEFAULT_BRIDGE_ENDPOINT
+    ) || ANIMTS_DEFAULT_BRIDGE_ENDPOINT;
     persistAnimBridgeEndpoint(state.animPreview.bridgeEndpoint);
     state.animPreview.bridgeConnected = false;
     setAnimCompileStatus('未激活');

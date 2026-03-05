@@ -1,4 +1,4 @@
-// Generated from anims/demo-math-transform.cs
+// Generated from anims/demo-math-transform.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class DemoMathTransform {

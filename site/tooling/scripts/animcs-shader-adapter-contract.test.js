@@ -13,7 +13,7 @@ test('viewer loads IDE shader hlsl adapter before animcs runtime', () => {
     assert.match(html, /\/tml-ide\/subapps\/assets\/js\/shader-hlsl-adapter\.js/);
     assert.match(
         html,
-        /shader-hlsl-adapter\.js[\s\S]*animcs-js-runtime\.js/
+        /shader-hlsl-adapter\.js[\s\S]*animts-runtime\.js/
     );
 });
 
@@ -23,6 +23,6 @@ test('anim-renderer loads IDE shader hlsl adapter before animcs runtime', () => 
     assert.match(html, /shader-hlsl-adapter\.js/);
     assert.match(
         html,
-        /shader-hlsl-adapter\.js[\s\S]*animcs-js-runtime\.js/
+        /shader-hlsl-adapter\.js[\s\S]*animts-runtime\.js/
     );
 });

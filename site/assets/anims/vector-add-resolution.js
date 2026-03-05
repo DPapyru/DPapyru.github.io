@@ -1,4 +1,4 @@
-// Generated from anims/vector-add-resolution.cs
+// Generated from anims/vector-add-resolution.anim.ts
 export function create(runtime) {
     const { Vector2, Vector3, Matrix, Color, MathF, AnimGeom, PrimitiveType, BlendState, VertexPositionColorTexture } = runtime;
     class vector_add_resolution {

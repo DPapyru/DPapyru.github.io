@@ -2598,3 +2598,119 @@
 
 **备注**：
 - 本轮在 `main` 合并流程中确认 legacy article-studio `math-inline`/`math-block` 已恢复并通过回归。
+
+### 验证记录 [2026-03-04 17:49]：动画模块 animts 迁移（去 C# 动画链路）续跑
+
+**级别**：L3（构建 + 生成一致性）
+
+**命令与结果**：
+- `npm run build`：通过（完整跑通 `generate-index`、`build:animts`、`build:site-app`、`tml-ide-app`）
+- `npm run check-generated`：失败（`build` 完成后在 `git diff --exit-code` 阶段返回非 0，当前工作树存在待提交差异）
+
+**备注**：
+- 本轮失败不是构建失败，属于 `check-generated` 的一致性门禁行为（要求无未提交差异）。
+
+### 验证记录 [2026-03-04 18:35]：按审查修复 animts 预览/构建回归与解决方案残留引用
+
+**级别**：代码评审修复验收（定向回归 + 构建）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/anim-preview-compile-regressions.test.js site/tooling/scripts/build-animts-profile.test.js site/tooling/scripts/content-projects-solution.test.js`：通过（4 passed, 0 failed）
+- `npm run build:animts`：通过
+- `npm --prefix tml-ide-app run build`：通过（产出新增 `ts.worker` 与 `tsMode` 资源）
+- `npm run build`：通过（完整跑通 `generate-index`、`build:animts`、`build:site-app`、`tml-ide-app`）
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js tml-ide-app/tests/markdown-editor-migration.test.js`：失败（基线断言与当前分支目标不一致，仍要求 `animcs`/旧插入按钮文案）
+- `node --test site/tooling/scripts/article-studio-anim-preview-payload.test.js`：失败（基线断言仍检查 `ANIMCS_COMPILE_*`，当前代码已是 `ANIMTS_COMPILE_*`）
+
+**备注**：
+- 本轮修复点：`anim-renderer` 运行按钮变量作用域、`main.js` 的 `.anim.ts` 本地 TS 转译与诊断、`build-animts` profile 嵌套对象解析、两处 `ContentProjects.sln` 残留项目引用清理。
+- 失败用例为现有测试与分支现状不一致的既有问题，非本轮修复引入。
+
+### 验证记录 [2026-03-04 19:09]：animts 迁移审查修复（索引/默认模板/profile/文档 fence）
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/ide-editable-index.test.js site/tooling/scripts/build-animts-profile.test.js site/tooling/scripts/markdown-animts-fence.test.js tml-ide-app/tests/workspace-store.test.js`：通过
+- `npm run build`：通过
+- `npm run check-generated`：待补跑
+
+**备注**：本次修复覆盖审查指出的 4 个回归点，并额外修复了 `workspace-store` 旧 `.cs` 路径迁移到 `.anim.ts` 的一致性问题；`check-generated` 含 `git diff --exit-code`，建议在准备合入时于干净索引状态补跑。
+
+### 验证记录 [2026-03-04 22:54]：修复两个 P2（profile 保留 + 单文件播放所选）
+
+**级别**：代码评审修复验收（定向回归 + L3 构建）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/animts-preview-regressions.test.js`：通过（2 passed, 0 failed）
+- `node --test site/tooling/scripts/article-studio-anim-preview-payload.test.js site/tooling/scripts/animts-preview-regressions.test.js`：失败（`article-studio-anim-preview-payload.test.js` 仍断言 `ANIMCS_COMPILE_*`，与当前分支 `ANIMTS_COMPILE_*` 基线不一致）
+- `npm run build`：通过（完整跑通 `generate-index`、`build:animts`、`build:site-app`、`tml-ide-app`）
+
+**备注**：
+- 本轮仅按要求修复两个 P2：`tml-ide-app/src/main.js` 本地预览编译成功路径保留 profile；`site/pages/anim-renderer.html` 单文件“播放所选”走本地所选文件模块。
+- `article-studio-anim-preview-payload.test.js` 的失败属于既有测试基线与分支命名迁移不一致，不是本次修复引入。
+
+### 验证记录 [2026-03-05 10:41]：.anim.ts 高亮与补全切换到 TypeScript
+
+**级别**：定向修复验收（IDE 语言服务 + 浏览器探针 + 构建）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过（4 passed, 0 failed）
+- `npm --prefix tml-ide-app run build`：通过（产出新增 `typescript-*.js` 与更新 `index-*.js` / `tsMode-*.js`）
+- `node tmp-playwright/ide-probe-8000.mjs`：通过（`localhost:8000/tml-ide/` 下 `.anim.ts` token class 从单一提升为多类；补全弹窗可见，返回 TS 成员如 `filter` / `forEach`）
+
+**备注**：
+- 仍存在独立 404：`/site/content/anims/Program.anim.ts`（不影响本次 `.anim.ts` 高亮与补全修复结果）。
+
+### 验证记录 [2026-03-05 10:54]：.anim.ts 自定义 this 字段补全修复
+
+**级别**：定向修复验收（TS 补全扩展 + 浏览器验收）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/animts-this-completion.test.js`：通过（3 passed, 0 failed）
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过（3 passed, 0 failed）
+- `npm --prefix tml-ide-app run build`：通过（产出更新 `index-*.js`）
+- `node - <<'NODE' ...`（Playwright 打开 `http://localhost:8000/tml-ide/` 并触发补全）：通过（`this.` 返回 `_ctx/_pitch/_yaw`，`this._p` 返回 `_pitch`）
+
+**备注**：
+- 本轮新增 `.anim.ts` 的 TS 补全补强层，仅在动画文件生效；保留 Monaco TypeScript 原生补全，同时补齐 `this.<自定义字段>` 建议。
+
+### 验证记录 [2026-03-05 11:07]：.anim.ts this 字段 TS 强类型补全修复
+
+**级别**：定向修复验收（类型感知补全 + 浏览器调试）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/animts-this-completion.test.js`：通过（5 passed, 0 failed）
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过（4 passed, 0 failed）
+- `npm --prefix tml-ide-app run build`：通过（产出更新 `index-*.js` / `tsMode-*.js` / `typescript-*.js`）
+- `node - <<'NODE' ...`（Playwright 调试 `http://localhost:8000/tml-ide/`）：通过（`this.` 命中 `_ctx/_yaw/_pitch`，`this._ctx.` 命中 `Input/Width/Height`，`this._ctx.Input.` 命中 `DeltaX/DeltaY/IsDown`）
+
+**备注**：
+- 本轮补全保持 TypeScript 语言模式，新增 `this` 字段赋值推断与链式成员类型映射（`AnimContext -> Input -> AnimInput`）。
+
+### 验证记录 [2026-03-05 11:15]：.anim.ts 高亮红线抑制 + TS 强类型补全保持
+
+**级别**：定向修复验收（Monaco TS 诊断配置 + 浏览器调试）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过（5 passed, 0 failed）
+- `node --test tml-ide-app/tests/animts-this-completion.test.js`：通过（5 passed, 0 failed）
+- `npm --prefix tml-ide-app run build`：通过（产出更新 `index-*.js` / `tsMode-*.js` / `typescript-*.js`）
+- `node - <<'NODE' ...`（Playwright 调试 `http://localhost:8000/tml-ide/`）：通过（`squiggly-error=0`；`this.` 命中 `_ctx` 等自定义字段；`this._ctx.` 命中 `Input/Width/Height`；`this._ctx.Input.` 命中 `DeltaX/DeltaY/IsDown`）
+
+**备注**：
+- 本轮为动画 TS 场景设置 `setDiagnosticsOptions`（关闭语义/建议诊断，保留语法诊断），避免自定义字段红线干扰高亮显示。
+
+### 验证记录 [2026-03-05 11:45]：animts/no-csharp 失败项收敛与合并前验收
+
+**级别**：定向回归 + 全量测试 + 构建验收
+
+**命令与结果**：
+- `node --test site/tooling/scripts/animcs-js-runtime-file-fallback.test.js site/tooling/scripts/animcs-shader-adapter-contract.test.js site/tooling/scripts/article-studio-anim-preview-payload.test.js site/tooling/scripts/contrib-docs-format.test.js site/tooling/scripts/markdown-ref-standard-links.test.js site/tooling/scripts/viewer-studio-preview-animcs.test.js tml-ide-app/tests/anim-preview-compile-regressions.test.js tml-ide-app/tests/markdown-editor-migration.test.js`：通过（24 passed, 0 failed）
+- `npm test`：通过（280 tests, 276 passed, 0 failed, 4 skipped）
+- `npm run build`：通过（`generate-index`、`build:animts`、`build:site-app`、`tml-ide-app build` 全链路完成）
+- `npm run check-generated`：失败（命令末尾 `git diff --exit-code` 在当前有代码改动和生成时间戳更新时返回非零）
+
+**备注**：
+- 本轮实质修复：`animcs-js-runtime` 回退入口兼容 `.anim.ts`，以及多处测试断言与当前 `animts` 实现对齐（`ANIMTS_*` 常量、`animts` 代码块/路径、异步 click handler 匹配等）。
+- `check-generated` 失败属于该脚本在非干净工作区下的预期行为，本轮已保留与任务相关改动并回退无关生成产物变更。
