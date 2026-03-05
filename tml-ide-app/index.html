@@ -178,6 +178,7 @@
                                 <input id="input-md-import-draft" type="file" accept="application/json,.json" hidden>
                                 <button id="btn-md-reset" type="button">清空草稿</button>
                                 <button id="btn-md-focus-mode" type="button">专注模式</button>
+                                <button id="btn-md-flowchart" type="button">流程图工作台</button>
                             </div>
                             <div class="tool-btn-row" aria-label="Markdown 格式插入">
                                 <button type="button" data-md-insert="bold">加粗</button>
@@ -428,6 +429,87 @@
                 </section>
             </div>
             <div id="shader-preview-status" class="shader-preview-status">预览就绪</div>
+        </section>
+    </div>
+
+    <div id="studio-flowchart-modal" class="studio-flowchart-modal" hidden aria-hidden="true">
+        <button id="studio-flowchart-modal-backdrop" class="studio-flowchart-modal-backdrop" type="button" aria-label="关闭流程图工作台"></button>
+        <section class="studio-flowchart-modal-content" role="dialog" aria-modal="true" aria-labelledby="studio-flowchart-title">
+            <header class="studio-flowchart-modal-header">
+                <h2 id="studio-flowchart-title">Flowchart Studio (v1)</h2>
+                <button id="studio-flowchart-modal-close" type="button">关闭</button>
+            </header>
+            <div class="studio-flowchart-modal-body">
+                <section class="studio-flowchart-toolbar">
+                    <div class="studio-flowchart-toolbar-head">
+                        <span id="studio-flowchart-binding-status" class="studio-flowchart-binding-status">当前绑定：未命中，待新建</span>
+                    </div>
+                    <div class="studio-flowchart-toolbar-actions">
+                        <button id="studio-flowchart-mode-visual" class="studio-flowchart-mode-btn studio-flowchart-mode-btn--active" type="button">可视化</button>
+                        <button id="studio-flowchart-mode-source" class="studio-flowchart-mode-btn" type="button">高级源码</button>
+                        <button id="studio-flowchart-rebind" type="button">重新绑定光标位置</button>
+                        <button id="studio-flowchart-bind-new" type="button">新建并绑定</button>
+                        <button id="studio-flowchart-realtime-toggle" type="button">实时写入：已开启</button>
+                    </div>
+                </section>
+                <section id="studio-flowchart-visual-panel" class="studio-flowchart-panel studio-flowchart-panel--active">
+                    <article class="studio-flowchart-section">
+                        <label for="studio-flowchart-direction">方向</label>
+                        <select id="studio-flowchart-direction" class="studio-flowchart-select">
+                            <option value="TD">TD（上到下）</option>
+                            <option value="LR">LR（左到右）</option>
+                        </select>
+                    </article>
+                    <article class="studio-flowchart-section">
+                        <div class="studio-flowchart-section-head">
+                            <strong>可视画布</strong>
+                            <span class="studio-flowchart-stage-tip">拖拽节点调整布局；从右侧端口拉线连接目标节点。</span>
+                        </div>
+                        <div id="studio-flowchart-stage" class="studio-flowchart-stage" role="application" aria-label="流程图画布">
+                            <svg id="studio-flowchart-stage-svg" class="studio-flowchart-stage-svg" viewBox="0 0 960 420" preserveAspectRatio="none" aria-hidden="true"></svg>
+                            <div id="studio-flowchart-stage-nodes" class="studio-flowchart-stage-nodes"></div>
+                            <div id="studio-flowchart-stage-empty" class="studio-flowchart-stage-empty">暂无节点，请先新增节点。</div>
+                        </div>
+                    </article>
+                    <article class="studio-flowchart-section">
+                        <div class="studio-flowchart-section-head">
+                            <strong>节点列表</strong>
+                            <button id="studio-flowchart-add-node" type="button">新增节点</button>
+                        </div>
+                        <div id="studio-flowchart-node-list" class="studio-flowchart-list" aria-live="polite"></div>
+                    </article>
+                    <article class="studio-flowchart-section">
+                        <div class="studio-flowchart-section-head">
+                            <strong>连线列表</strong>
+                            <button id="studio-flowchart-add-edge" type="button">新增连线</button>
+                        </div>
+                        <div id="studio-flowchart-edge-list" class="studio-flowchart-list" aria-live="polite"></div>
+                    </article>
+                </section>
+                <section id="studio-flowchart-source-panel" class="studio-flowchart-panel">
+                    <article class="studio-flowchart-section">
+                        <div class="studio-flowchart-section-head">
+                            <strong>Mermaid 源码（实时生成）</strong>
+                            <div class="studio-flowchart-inline-actions">
+                                <button id="studio-flowchart-copy-source" type="button">复制源码</button>
+                                <button id="studio-flowchart-apply" type="button">应用到文档</button>
+                            </div>
+                        </div>
+                        <textarea id="studio-flowchart-generated-source" class="studio-flowchart-source" spellcheck="false" readonly></textarea>
+                    </article>
+                    <article class="studio-flowchart-section">
+                        <div class="studio-flowchart-section-head">
+                            <strong>高级源码模式</strong>
+                            <div class="studio-flowchart-inline-actions">
+                                <button id="studio-flowchart-source-apply" type="button">应用到文档</button>
+                                <button id="studio-flowchart-try-visual" type="button">尝试回到可视化</button>
+                                <button id="studio-flowchart-source-reset" type="button">放弃本次修改</button>
+                            </div>
+                        </div>
+                        <textarea id="studio-flowchart-source-editor" class="studio-flowchart-source" spellcheck="false" placeholder="在此输入 Mermaid flowchart 源码"></textarea>
+                    </article>
+                </section>
+            </div>
         </section>
     </div>
 
