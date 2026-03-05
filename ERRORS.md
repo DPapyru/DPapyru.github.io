@@ -2714,3 +2714,92 @@
 **备注**：
 - 本轮实质修复：`animcs-js-runtime` 回退入口兼容 `.anim.ts`，以及多处测试断言与当前 `animts` 实现对齐（`ANIMTS_*` 常量、`animts` 代码块/路径、异步 click handler 匹配等）。
 - `check-generated` 失败属于该脚本在非干净工作区下的预期行为，本轮已保留与任务相关改动并回退无关生成产物变更。
+
+### 验证记录 [2026-03-05 17:16]：Flowchart Studio 回归 + 拖拽式编辑适配验收
+
+**级别**：功能回归 + 交互增强（拖拽排序）+ 浏览器截图验收
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/markdown-editor-migration.test.js`：通过（2 passed, 0 failed）
+- `npm --prefix tml-ide-app run build`：通过（产出更新 `tml-ide/assets/index-*.js` / `index-*.css` / `tsMode-*.js` / `typescript-*.js`）
+- `npm --prefix tml-ide-app run test`：失败（2 failed, 94 passed；失败项为既有路径问题：`tests/anim-preview-compile-regressions.test.js` 读取 `tml-ide-app/site/pages/anim-renderer.html` 与 `tml-ide-app/tml-ide-app/src/main.js`）
+- `npm run build`：失败（`site-app` 缺少 `@vitejs/plugin-react`，`ERR_MODULE_NOT_FOUND`）
+- `node - <<'NODE' ...`（Playwright，访问 `http://127.0.0.1:8000/tml-ide/`，打开流程图工作台并拖拽节点）：通过（`drag-source-changed: true`，说明拖拽后 Mermaid 源码已更新）
+
+**截图产物**：
+- `/mnt/f/CodexPreview/flowchart-accept-base.png`
+- `/mnt/f/CodexPreview/flowchart-accept-open.png`
+- `/mnt/f/CodexPreview/flowchart-accept-drag.png`
+
+**备注**：
+- 拖拽能力本轮落地为流程图节点/连线列表排序（HTML5 drag-and-drop），并接入实时写回链路。
+- 浏览器验收前确认 `8000` 端口需指向当前工作树目录；若指向仓库主目录会加载旧版 `tml-ide`。
+
+### 验证记录 [2026-03-05 17:43]：Flowchart Studio 画布拖拽 + 拉线建边验收
+
+**级别**：交互增强验收（可视化画布编辑）+ 浏览器截图验收
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/markdown-editor-migration.test.js`：通过（2 passed, 0 failed）
+- `npm --prefix tml-ide-app run build`：通过（产出更新 `tml-ide/assets/index-*.js` / `index-*.css` / `tsMode-*.js` / `typescript-*.js`）
+- `npm --prefix tml-ide-app run test`：失败（2 failed, 94 passed；失败项为既有路径问题：`tests/anim-preview-compile-regressions.test.js` 读取 `tml-ide-app/site/pages/anim-renderer.html` 与 `tml-ide-app/tml-ide-app/src/main.js`）
+- `node - <<'NODE' ...`（Playwright，访问 `http://127.0.0.1:8000/tml-ide/`，画布拖拽与拉线建边）：通过（`drag-layout-changed: true`，`source-changed-by-drag: false`，`edge-created-by-connect: true`）
+
+**截图产物**：
+- `/mnt/f/CodexPreview/flowchart-accept-base.png`
+- `/mnt/f/CodexPreview/flowchart-accept-drag.png`
+- `/mnt/f/CodexPreview/flowchart-accept-open.png`
+- `/mnt/f/CodexPreview/flowchart-accept-connect.png`
+
+**备注**：
+- 本轮按需求实现“画布拖拽节点 + 鼠标拉线建边”，并按约定保持节点坐标不写入 Mermaid（关闭后按模型自动布局）。
+
+### 验证记录 [2026-03-05 18:05]：Flowchart Studio 连线直线化验收
+
+**级别**：交互表现调整（曲线改直线）+ 浏览器截图验收
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/markdown-editor-migration.test.js`：先失败后通过（新增 `flowchartEdgePath` 直线断言后，Red 阶段失败；实现后 Green 通过，2 passed）
+- `npm --prefix tml-ide-app run build`：通过（产出更新 `tml-ide/assets/index-*.js` / `tsMode-*.js` / `typescript-*.js`）
+- `npm --prefix tml-ide-app run test`：失败（2 failed, 94 passed；失败项仍为既有路径问题：`tests/anim-preview-compile-regressions.test.js` 读取 `tml-ide-app/site/pages/anim-renderer.html` 与 `tml-ide-app/tml-ide-app/src/main.js`）
+- `node - <<'NODE' ...`（Playwright，访问 `http://127.0.0.1:8000/tml-ide/?file=site/content/如何贡献/站点Markdown扩展语法说明.md`，拖拽+拉线验收）：通过（`dragLayoutChanged: true`，`edgeCreatedByConnect: true`，`allEdgesStraight: true`，边路径命令仅含 `M/L`）
+
+**截图产物**：
+- `/mnt/f/CodexPreview/flowchart-straight-open.png`
+- `/mnt/f/CodexPreview/flowchart-straight-drag.png`
+- `/mnt/f/CodexPreview/flowchart-straight-connect.png`
+
+**备注**：
+- 本轮仅调整可视画布连线渲染路径：普通边由贝塞尔曲线改为直线，自环改为折线回路；未修改 Mermaid 语义与数据结构。
+
+### 验证记录 [2026-03-05 18:11]：Flowchart Studio 双向边合并为单线双端箭头验收
+
+**级别**：箭头样式调整（双向边视觉合并）+ 浏览器截图验收
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/markdown-editor-migration.test.js`：通过（2 passed, 0 failed；包含新增 `marker-start` 与双向边合并渲染断言）
+- `npm --prefix tml-ide-app run build`：通过（产出更新 `tml-ide/assets/index-*.js` / `tsMode-*.js` / `typescript-*.js`）
+- `npm --prefix tml-ide-app run test`：失败（2 failed, 94 passed；失败项仍为既有路径问题：`tests/anim-preview-compile-regressions.test.js` 读取 `tml-ide-app/site/pages/anim-renderer.html` 与 `tml-ide-app/tml-ide-app/src/main.js`）
+- `node - <<'NODE' ...`（Playwright，访问 `http://127.0.0.1:8000/tml-ide/?file=site/content/如何贡献/站点Markdown扩展语法说明.md`，构造 `start->process` 与 `process->start`）：通过（`singleVisualEdge: true`，`bothSidesArrow: true`，路径属性含 `marker-start` 与 `marker-end`）
+
+**截图产物**：
+- `/mnt/f/CodexPreview/flowchart-bidirectional-arrows.png`
+
+**备注**：
+- 本轮仅改变画布渲染：当存在 A→B 与 B→A 时，渲染为一条线并在两端绘制箭头；模型内仍保留两条有向边，不影响源码语义与编辑数据结构。
+
+### 验证记录 [2026-03-05 18:17]：Flowchart Studio 箭头与节点边缘防重叠修复验收
+
+**级别**：视觉细节修复（箭头留白）+ 浏览器截图验收
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/markdown-editor-migration.test.js`：通过（2 passed, 0 failed；新增 `FLOWCHART_STAGE_ARROW_EDGE_GAP` 与投影留白断言）
+- `npm --prefix tml-ide-app run build`：通过（产出更新 `tml-ide/assets/index-*.js` / `tsMode-*.js` / `typescript-*.js`）
+- `npm --prefix tml-ide-app run test`：失败（2 failed, 94 passed；失败项仍为既有路径问题：`tests/anim-preview-compile-regressions.test.js` 读取 `tml-ide-app/site/pages/anim-renderer.html` 与 `tml-ide-app/tml-ide-app/src/main.js`）
+- `node - <<'NODE' ...`（Playwright，访问 `http://127.0.0.1:8000/tml-ide/?file=site/content/如何贡献/站点Markdown扩展语法说明.md`，构造双向边）：通过（`bothSidesArrow: true`，`hasGap: true`，`startGap: 10`，`endGap: 10`）
+
+**截图产物**：
+- `/mnt/f/CodexPreview/flowchart-arrow-gap-fix.png`
+
+**备注**：
+- 本轮在连线计算中引入 `FLOWCHART_STAGE_ARROW_EDGE_GAP=10`，对起点/终点按向量投影收缩，避免箭头贴在节点边框上产生重叠观感。
