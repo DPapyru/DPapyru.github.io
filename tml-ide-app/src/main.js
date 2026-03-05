@@ -16,7 +16,7 @@ import { buildPatchIndexFromXml } from './lib/language-core.js';
 import { createEmptyApiIndex, mergeApiIndex, normalizeApiIndex } from './lib/index-schema.js';
 import { buildFragmentSource as buildShaderFragmentSource } from './lib/shader-hlsl-adapter.js';
 import { buildSuggestions as buildDiagnosticSuggestions } from './lib/diagnostic-suggestions.js';
-import { buildAnimTsThisFieldCompletionItems } from './lib/animts-this-completion.js';
+import { buildAnimTsThisCompletionItems } from './lib/animts-this-completion.js';
 import { createChangeTracker } from './lib/change-tracker.js';
 import { buildUnifiedDiff } from './lib/unified-diff.js';
 import * as sharedMarkdownCapabilityExports from '../../shared/capabilities/markdown/core/index.js';
@@ -511,6 +511,11 @@ const ANIMATION_METHOD_LABELS = new Set([
 ]);
 const ANIMATION_TYPE_LABEL_SET = new Set(ANIMATION_TYPE_LABELS);
 const ANIMATION_MEMBER_LABEL_SET = new Set(Object.values(ANIMATION_MEMBER_LABELS_BY_TYPE).flat());
+const ANIMATION_MEMBER_RETURN_TYPE_BY_TYPE = Object.freeze({
+    AnimContext: Object.freeze({
+        Input: 'AnimInput'
+    })
+});
 const UNIFIED_STATE_SAVE_DELAY = 240;
 const FIX_POPUP_AUTO_DELAY = 300;
 const FIX_POPUP_AUTO_COOLDOWN = 1200;
@@ -9665,7 +9670,13 @@ function installEditorProviders() {
             }
 
             const offset = model.getOffsetAt(position);
-            const items = buildAnimTsThisFieldCompletionItems(model.getValue(), offset, 80);
+            const items = buildAnimTsThisCompletionItems(model.getValue(), offset, {
+                maxItems: 80,
+                staticIdentifierTypeHints: ANIMATION_STATIC_OWNER_TO_TYPE,
+                memberLabelsByType: ANIMATION_MEMBER_LABELS_BY_TYPE,
+                memberReturnTypeByType: ANIMATION_MEMBER_RETURN_TYPE_BY_TYPE,
+                methodLabels: ANIMATION_METHOD_LABELS
+            });
             if (!items.length) {
                 return { suggestions: [] };
             }
@@ -9681,7 +9692,7 @@ function installEditorProviders() {
             return {
                 suggestions: items.map((item) => ({
                     label: item.label,
-                    kind: monaco.languages.CompletionItemKind.Field,
+                    kind: convertCompletionKind(item.kind),
                     insertText: item.insertText || item.label,
                     detail: item.detail || '',
                     documentation: item.documentation || '',

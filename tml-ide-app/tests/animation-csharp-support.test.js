@@ -57,7 +57,8 @@ test('main.js exposes vertex shader draw domain members for animation completion
 test('main.js augments anim.ts TypeScript completion with this-field provider', () => {
     const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
 
-    assert.match(source, /buildAnimTsThisFieldCompletionItems/);
+    assert.match(source, /buildAnimTsThisCompletionItems/);
     assert.match(source, /registerCompletionItemProvider\('typescript'/);
     assert.match(source, /if \(!file \|\| !isAnimationCsharpFilePath\(file\.path\)\)/);
+    assert.match(source, /ANIMATION_MEMBER_RETURN_TYPE_BY_TYPE/);
 });
