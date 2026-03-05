@@ -16,6 +16,7 @@ import { buildPatchIndexFromXml } from './lib/language-core.js';
 import { createEmptyApiIndex, mergeApiIndex, normalizeApiIndex } from './lib/index-schema.js';
 import { buildFragmentSource as buildShaderFragmentSource } from './lib/shader-hlsl-adapter.js';
 import { buildSuggestions as buildDiagnosticSuggestions } from './lib/diagnostic-suggestions.js';
+import { buildAnimTsThisFieldCompletionItems } from './lib/animts-this-completion.js';
 import { createChangeTracker } from './lib/change-tracker.js';
 import { buildUnifiedDiff } from './lib/unified-diff.js';
 import * as sharedMarkdownCapabilityExports from '../../shared/capabilities/markdown/core/index.js';
@@ -9650,6 +9651,42 @@ function installEditorProviders() {
                     documentation: item.documentation || '',
                     sortText: item.sortText || item.label,
                     range: undefined
+                }))
+            };
+        }
+    });
+
+    monaco.languages.registerCompletionItemProvider('typescript', {
+        triggerCharacters: ['.', '_'],
+        provideCompletionItems(model, position) {
+            const file = workspaceFileByModel(model);
+            if (!file || !isAnimationCsharpFilePath(file.path)) {
+                return { suggestions: [] };
+            }
+
+            const offset = model.getOffsetAt(position);
+            const items = buildAnimTsThisFieldCompletionItems(model.getValue(), offset, 80);
+            if (!items.length) {
+                return { suggestions: [] };
+            }
+
+            const word = model.getWordUntilPosition(position);
+            const range = new monaco.Range(
+                position.lineNumber,
+                word.startColumn,
+                position.lineNumber,
+                word.endColumn
+            );
+
+            return {
+                suggestions: items.map((item) => ({
+                    label: item.label,
+                    kind: monaco.languages.CompletionItemKind.Field,
+                    insertText: item.insertText || item.label,
+                    detail: item.detail || '',
+                    documentation: item.documentation || '',
+                    sortText: item.sortText || item.label,
+                    range
                 }))
             };
         }

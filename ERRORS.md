@@ -2655,9 +2655,22 @@
 **级别**：定向修复验收（IDE 语言服务 + 浏览器探针 + 构建）
 
 **命令与结果**：
-- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过（3 passed, 0 failed）
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过（4 passed, 0 failed）
 - `npm --prefix tml-ide-app run build`：通过（产出新增 `typescript-*.js` 与更新 `index-*.js` / `tsMode-*.js`）
 - `node tmp-playwright/ide-probe-8000.mjs`：通过（`localhost:8000/tml-ide/` 下 `.anim.ts` token class 从单一提升为多类；补全弹窗可见，返回 TS 成员如 `filter` / `forEach`）
 
 **备注**：
 - 仍存在独立 404：`/site/content/anims/Program.anim.ts`（不影响本次 `.anim.ts` 高亮与补全修复结果）。
+
+### 验证记录 [2026-03-05 10:54]：.anim.ts 自定义 this 字段补全修复
+
+**级别**：定向修复验收（TS 补全扩展 + 浏览器验收）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/animts-this-completion.test.js`：通过（3 passed, 0 failed）
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过（3 passed, 0 failed）
+- `npm --prefix tml-ide-app run build`：通过（产出更新 `index-*.js`）
+- `node - <<'NODE' ...`（Playwright 打开 `http://localhost:8000/tml-ide/` 并触发补全）：通过（`this.` 返回 `_ctx/_pitch/_yaw`，`this._p` 返回 `_pitch`）
+
+**备注**：
+- 本轮新增 `.anim.ts` 的 TS 补全补强层，仅在动画文件生效；保留 Monaco TypeScript 原生补全，同时补齐 `this.<自定义字段>` 建议。
