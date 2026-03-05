@@ -2687,3 +2687,16 @@
 
 **备注**：
 - 本轮补全保持 TypeScript 语言模式，新增 `this` 字段赋值推断与链式成员类型映射（`AnimContext -> Input -> AnimInput`）。
+
+### 验证记录 [2026-03-05 11:15]：.anim.ts 高亮红线抑制 + TS 强类型补全保持
+
+**级别**：定向修复验收（Monaco TS 诊断配置 + 浏览器调试）
+
+**命令与结果**：
+- `node --test tml-ide-app/tests/animation-csharp-support.test.js`：通过（5 passed, 0 failed）
+- `node --test tml-ide-app/tests/animts-this-completion.test.js`：通过（5 passed, 0 failed）
+- `npm --prefix tml-ide-app run build`：通过（产出更新 `index-*.js` / `tsMode-*.js` / `typescript-*.js`）
+- `node - <<'NODE' ...`（Playwright 调试 `http://localhost:8000/tml-ide/`）：通过（`squiggly-error=0`；`this.` 命中 `_ctx` 等自定义字段；`this._ctx.` 命中 `Input/Width/Height`；`this._ctx.Input.` 命中 `DeltaX/DeltaY/IsDown`）
+
+**备注**：
+- 本轮为动画 TS 场景设置 `setDiagnosticsOptions`（关闭语义/建议诊断，保留语法诊断），避免自定义字段红线干扰高亮显示。

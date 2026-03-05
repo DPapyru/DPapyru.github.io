@@ -62,3 +62,12 @@ test('main.js augments anim.ts TypeScript completion with this-field provider', 
     assert.match(source, /if \(!file \|\| !isAnimationCsharpFilePath\(file\.path\)\)/);
     assert.match(source, /ANIMATION_MEMBER_RETURN_TYPE_BY_TYPE/);
 });
+
+test('main.js configures TypeScript diagnostics to avoid anim field semantic squiggles', () => {
+    const source = fs.readFileSync(path.join(root, 'src/main.js'), 'utf8');
+
+    assert.match(source, /typescriptDefaults/);
+    assert.match(source, /setDiagnosticsOptions\(\{/);
+    assert.match(source, /noSemanticValidation:\s*true/);
+    assert.match(source, /noSuggestionDiagnostics:\s*true/);
+});

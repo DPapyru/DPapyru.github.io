@@ -642,6 +642,11 @@ if (monaco.languages && monaco.languages.typescript && monaco.languages.typescri
         ...tsDefaults.getCompilerOptions(),
         ...ANIMTS_TRANSPILE_COMPILER_OPTIONS
     });
+    tsDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSuggestionDiagnostics: true,
+        noSyntaxValidation: false
+    });
 }
 const QUICK_CREATE_TYPE_META = Object.freeze({
     markdown: Object.freeze({ ext: '.md', defaultFileName: '新文章.md' }),
