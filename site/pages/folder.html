@@ -36,18 +36,19 @@
 
     <style>
         body.folder-svg-only-page .workbench-main {
-            padding: 0;
+            padding: 10px;
             overflow: auto;
             min-height: 0;
             background: var(--bg-color);
             border-left: 1px solid var(--workbench-line-color);
             border-right: 1px solid var(--workbench-line-color);
             scroll-behavior: smooth;
+            scroll-padding: 10px;
         }
 
         body.folder-svg-only-page .folder-map-svg {
             display: block;
-            width: 1840px;
+            width: 1520px;
             min-width: 100%;
             height: auto;
             background: var(--bg-color);
@@ -82,7 +83,7 @@
             }
 
             body.folder-svg-only-page .folder-map-svg {
-                width: 1640px;
+                width: 1360px;
             }
         }
     </style>
@@ -146,7 +147,7 @@
     </header>
 
     <main class="workbench-main" id="main-content" tabindex="-1">
-        <svg class="folder-map-svg" id="folder-map-svg" viewBox="0 0 1840 920" role="img" aria-label="文档目录结构导航图"></svg>
+        <svg class="folder-map-svg" id="folder-map-svg" viewBox="0 0 1520 920" role="img" aria-label="文档目录结构导航图"></svg>
     </main>
     <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: IDE</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
 
@@ -504,15 +505,58 @@
             }
 
             function buildFolderDocGroups(folderNode) {
+                var currentDocs = [];
+                var childGroups = [];
+                if (!folderNode) {
+                    return {
+                        currentDocs: currentDocs,
+                        childGroups: childGroups
+                    };
+                }
+
+                currentDocs = Array.isArray(folderNode.docs)
+                    ? folderNode.docs.slice().sort(compareDoc).map(function (doc) { return doc.title; })
+                    : [];
+
+                var children = folderNode.children
+                    ? Array.from(folderNode.children.values()).sort(compareFolder)
+                    : [];
+                children.forEach(function (child) {
+                    var docs = collectDocsRecursively(child);
+                    if (!docs.length) return;
+                    childGroups.push({
+                        label: child.name || ROOT_LABEL,
+                        path: child.path || '',
+                        totalDocs: docs.length,
+                        hiddenDocCount: Math.max(0, docs.length - 3),
+                        previewDocs: docs.slice(0, 3).map(function (doc) {
+                            return doc.title;
+                        })
+                    });
+                });
+
+                return {
+                    currentDocs: currentDocs,
+                    childGroups: childGroups
+                };
+            }
+
+            function buildRenderableGroups(folderNode) {
                 var groups = [];
                 if (!folderNode) return groups;
 
-                groups.push({
-                    label: '当前目录',
-                    path: folderNode.path || '',
-                    docs: Array.isArray(folderNode.docs) ? folderNode.docs.slice().sort(compareDoc) : [],
-                    isCurrent: true
-                });
+                var currentDocs = Array.isArray(folderNode.docs) ? folderNode.docs.slice().sort(compareDoc) : [];
+                if (currentDocs.length) {
+                    groups.push({
+                        kind: 'current',
+                        label: '本级文章',
+                        path: folderNode.path || '',
+                        totalDocs: currentDocs.length,
+                        hiddenDocCount: 0,
+                        docs: currentDocs.slice(0, 3),
+                        isCurrent: true
+                    });
+                }
 
                 var children = folderNode.children
                     ? Array.from(folderNode.children.values()).sort(compareFolder)
@@ -521,9 +565,12 @@
                     var docs = collectDocsRecursively(child);
                     if (!docs.length) return;
                     groups.push({
+                        kind: 'child',
                         label: child.name || ROOT_LABEL,
                         path: child.path || '',
-                        docs: docs,
+                        totalDocs: docs.length,
+                        hiddenDocCount: Math.max(0, docs.length - 3),
+                        docs: docs.slice(0, 3),
                         isCurrent: false
                     });
                 });
@@ -554,22 +601,13 @@
             }
 
             function buildFolderRenderState(folderNode) {
-                var groups = buildFolderDocGroups(folderNode);
-                var allDocs = [];
-
-                groups.forEach(function (group) {
-                    group.docs.forEach(function (doc) {
-                        allDocs.push(doc);
-                    });
-                });
-
-                if (!groups.some(function (group) { return group.path === state.activeGroupPath; })) {
-                    state.activeGroupPath = normalizePath(folderNode && folderNode.path || '');
-                }
+                var groups = buildRenderableGroups(folderNode);
+                var allDocs = collectDocsRecursively(folderNode);
 
                 return {
                     groups: groups,
                     allDocs: allDocs,
+                    groupSummary: buildFolderDocGroups(folderNode),
                     breadcrumbItems: buildBreadcrumbItems(folderNode),
                     childCount: folderNode && folderNode.children ? folderNode.children.size : 0
                 };
@@ -717,41 +755,36 @@
                 var opts = options || {};
                 var groups = renderState.groups;
                 var allDocs = renderState.allDocs;
-                var width = 1840;
-                var headerInsetX = 72;
-                var entryX = 170;
-                var centerX = 500;
-                var groupX = 830;
-                var docStartX = 1090;
-                var entryWidth = 190;
-                var centerWidth = 290;
-                var groupWidth = 200;
+                var width = 1520;
+                var safe = 10;
+                var centerX = width / 2;
+                var rootWidth = 360;
+                var rootHeight = 74;
+                var groupWidth = 196;
+                var groupHeight = 62;
                 var cardWidth = 240;
-                var cardHeight = 76;
-                var groupGap = 46;
-                var rowGap = 18;
-                var colGap = 18;
-                var groupPalette = ['#4dabf7', '#51cf66', '#9775fa', '#ff922b', '#22b8cf', '#f06595'];
-                var groupLayouts = [];
-                var yCursor;
+                var cardHeight = 66;
+                var cardGap = 12;
+                var groupGapY = 26;
+                var overflowHeight = 30;
+                var maxColumns = 4;
+                var breadcrumbLayout;
                 var headerBottom;
-                var topPadding;
+                var rootCenterY;
+                var rootBottomY;
+                var rowLayouts = [];
+                var currentY;
                 var contentBottom;
                 var height;
-                var contentCenterY;
-                var displayName = state.currentPath || ROOT_LABEL;
-                var parentPath = getParentPath(state.currentPath);
-                var breadcrumbLayout;
-                var jumpLayout;
-                var groupJumpItems;
                 var backgroundLayer;
                 var relationLayer;
                 var nodeLayer;
                 var headerLayer;
-                var entryNode;
-                var entryLabel;
-                var entrySubtitle;
                 var viewTarget;
+                var parentPath = getParentPath(state.currentPath);
+                var backChipWidth = 132;
+                var backChipHeight = 34;
+                var rowIndex;
 
                 state.groupLayoutByPath = new Map();
                 state.docLayoutByPath = new Map();
@@ -763,65 +796,55 @@
                         isCurrent: item.isCurrent
                     };
                 }), {
-                    startX: headerInsetX,
-                    startY: 100,
-                    maxWidth: width - headerInsetX * 2,
-                    itemHeight: 40,
-                    gapX: 12,
-                    gapY: 10,
-                    minWidth: 92,
-                    maxItemWidth: 260,
-                    paddingX: 54
+                    startX: safe + 2,
+                    startY: safe + 8,
+                    maxWidth: width - safe * 2 - (folderNode.path ? (backChipWidth + 18) : 0),
+                    itemHeight: 34,
+                    gapX: 8,
+                    gapY: 8,
+                    minWidth: 84,
+                    maxItemWidth: 240,
+                    paddingX: 42
                 });
 
-                groupJumpItems = groups.map(function (group) {
-                    return {
-                        label: (group.isCurrent ? '当前目录' : group.label) + ' · ' + group.docs.length,
-                        path: group.path,
-                        isActive: normalizePath(group.path) === normalizePath(state.activeGroupPath)
-                    };
-                });
+                headerBottom = breadcrumbLayout.bottomY + safe + 6;
+                rootCenterY = headerBottom + 56;
+                rootBottomY = rootCenterY + rootHeight / 2;
+                currentY = rootBottomY + 70;
 
-                jumpLayout = layoutChips(groupJumpItems, {
-                    startX: headerInsetX,
-                    startY: breadcrumbLayout.bottomY + 58,
-                    maxWidth: width - headerInsetX * 2,
-                    itemHeight: 40,
-                    gapX: 12,
-                    gapY: 10,
-                    minWidth: 138,
-                    maxItemWidth: 320,
-                    paddingX: 58
-                });
+                for (rowIndex = 0; rowIndex * maxColumns < groups.length; rowIndex += 1) {
+                    var rowGroups = groups.slice(rowIndex * maxColumns, rowIndex * maxColumns + maxColumns);
+                    var rowCount = rowGroups.length;
+                    var availableWidth = width - safe * 2;
+                    var columnWidth = availableWidth / Math.max(1, rowCount);
+                    var rowHeight = 0;
+                    var placements = [];
 
-                headerBottom = jumpLayout.bottomY + 42;
-                topPadding = headerBottom + 84;
-                yCursor = topPadding;
-
-                groups.forEach(function (group, index) {
-                    var columnCount = group.docs.length > 24 ? 3 : (group.docs.length > 8 ? 2 : 1);
-                    var rowCount = Math.max(1, Math.ceil(Math.max(group.docs.length, 1) / columnCount));
-                    var blockHeight = group.docs.length
-                        ? rowCount * cardHeight + Math.max(0, rowCount - 1) * rowGap
-                        : 0;
-                    var groupHeight = Math.max(76, blockHeight);
-
-                    groupLayouts.push({
-                        group: group,
-                        color: groupPalette[index % groupPalette.length],
-                        columnCount: columnCount,
-                        rowCount: rowCount,
-                        blockHeight: blockHeight,
-                        centerY: yCursor + groupHeight / 2
+                    rowGroups.forEach(function (group, columnIndex) {
+                        var docCount = group.docs.length;
+                        var overflowVisible = group.hiddenDocCount > 0;
+                        var blockHeight = groupHeight
+                            + (docCount ? groupGapY + docCount * cardHeight + Math.max(0, docCount - 1) * cardGap : 0)
+                            + (overflowVisible ? (cardGap + overflowHeight) : 0);
+                        rowHeight = Math.max(rowHeight, blockHeight);
+                        placements.push({
+                            group: group,
+                            centerX: safe + columnWidth * columnIndex + columnWidth / 2,
+                            blockHeight: blockHeight
+                        });
                     });
-                    yCursor += groupHeight + groupGap;
-                });
 
-                contentBottom = groups.length ? (yCursor - groupGap + 100) : (topPadding + 220);
-                height = Math.max(920, contentBottom);
-                contentCenterY = groups.length
-                    ? Math.round((topPadding + contentBottom - 100) / 2)
-                    : Math.round(topPadding + 90);
+                    rowLayouts.push({
+                        topY: currentY,
+                        trunkY: currentY - 22,
+                        height: rowHeight,
+                        placements: placements
+                    });
+                    currentY += rowHeight + 58;
+                }
+
+                contentBottom = rowLayouts.length ? (currentY - 18) : (rootBottomY + 170);
+                height = Math.max(760, contentBottom + safe);
 
                 svg.innerHTML = '';
                 svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
@@ -848,78 +871,45 @@
                 }));
 
                 backgroundLayer.appendChild(createSvgEl('rect', {
-                    x: '24',
-                    y: '24',
-                    width: String(width - 48),
-                    height: String(headerBottom - 8),
-                    rx: '24',
-                    ry: '24',
+                    x: String(safe),
+                    y: String(safe),
+                    width: String(width - safe * 2),
+                    height: String(height - safe * 2),
+                    rx: '20',
+                    ry: '20',
                     fill: palette.surface,
                     stroke: palette.border,
-                    'stroke-width': '1.4',
-                    opacity: '0.96'
+                    'stroke-width': '1.2',
+                    'stroke-opacity': '0.78'
                 }));
 
-                backgroundLayer.appendChild(createSvgEl('path', {
-                    d: polylinePath([
-                        { x: 24, y: headerBottom },
-                        { x: width - 24, y: headerBottom }
-                    ]),
-                    fill: 'none',
-                    stroke: palette.line,
-                    'stroke-width': '1.2',
-                    'stroke-opacity': '0.7'
+                backgroundLayer.appendChild(createSvgEl('rect', {
+                    x: String(safe + 10),
+                    y: String(safe + 10),
+                    width: String(width - safe * 2 - 20),
+                    height: String(height - safe * 2 - 20),
+                    rx: '16',
+                    ry: '16',
+                    fill: palette.bg,
+                    'fill-opacity': '0.82'
                 }));
 
                 appendText(headerLayer, {
-                    x: headerInsetX,
-                    y: 68,
-                    text: displayName,
-                    fill: palette.text,
-                    size: 30,
+                    x: safe + 8,
+                    y: safe + 60,
+                    text: '目录树导航',
+                    fill: palette.muted,
+                    size: 14,
                     weight: 700
                 });
                 appendText(headerLayer, {
-                    x: headerInsetX,
-                    y: 102,
-                    text: 'SVG-only 目录导航：路径跳转、分组定位、文章进入都在画布内完成。',
+                    x: width - safe - 8,
+                    y: safe + 60,
+                    text: '子目录 ' + renderState.childCount + ' · 文章 ' + allDocs.length,
                     fill: palette.muted,
                     size: 14,
-                    weight: 400
-                });
-                appendText(headerLayer, {
-                    x: width - headerInsetX,
-                    y: 68,
-                    text: '子目录 ' + renderState.childCount + ' · 文章 ' + allDocs.length,
-                    fill: palette.text,
-                    size: 16,
                     weight: 700,
                     anchor: 'end'
-                });
-                appendText(headerLayer, {
-                    x: width - headerInsetX,
-                    y: 102,
-                    text: '左侧返回层级 · 中间查看当前目录 · 右侧打开文章',
-                    fill: palette.muted,
-                    size: 14,
-                    weight: 400,
-                    anchor: 'end'
-                });
-                appendText(headerLayer, {
-                    x: headerInsetX,
-                    y: 148,
-                    text: '路径',
-                    fill: palette.muted,
-                    size: 13,
-                    weight: 700
-                });
-                appendText(headerLayer, {
-                    x: headerInsetX,
-                    y: breadcrumbLayout.bottomY + 44,
-                    text: '分组跳转',
-                    fill: palette.muted,
-                    size: 13,
-                    weight: 700
                 });
 
                 breadcrumbLayout.placements.forEach(function (placement) {
@@ -929,11 +919,12 @@
                         y: placement.y,
                         width: placement.width,
                         height: placement.height,
-                        fill: item.isCurrent ? palette.next : palette.bg,
-                        stroke: item.isCurrent ? palette.next : palette.border,
-                        strokeWidth: item.isCurrent ? 2.2 : 1.6,
+                        fill: item.isCurrent ? palette.primary : palette.bg,
+                        stroke: item.isCurrent ? palette.primary : palette.border,
+                        strokeWidth: item.isCurrent ? 2 : 1.4,
                         textColor: item.isCurrent ? '#ffffff' : palette.text,
                         label: item.label,
+                        titleMax: 20,
                         tooltip: item.path || '文档入口',
                         onClick: item.isCurrent ? null : function () {
                             navigateTo(item.path, false);
@@ -941,241 +932,245 @@
                     });
                 });
 
-                jumpLayout.placements.forEach(function (placement) {
-                    var item = placement.item;
-                    drawChip(headerLayer, {
-                        x: placement.x,
-                        y: placement.y,
-                        width: placement.width,
-                        height: placement.height,
-                        fill: item.isActive ? palette.primary : palette.bg,
-                        stroke: item.isActive ? palette.primary : palette.border,
-                        strokeWidth: item.isActive ? 2.2 : 1.6,
-                        textColor: item.isActive ? '#ffffff' : palette.text,
-                        label: item.label,
-                        titleMax: 26,
-                        tooltip: item.path || '当前目录',
+                if (folderNode.path) {
+                    var backChip = drawChip(headerLayer, {
+                        x: width - safe - backChipWidth,
+                        y: safe + 8,
+                        width: backChipWidth,
+                        height: backChipHeight,
+                        fill: palette.bg,
+                        stroke: palette.next,
+                        strokeWidth: 1.8,
+                        textColor: palette.text,
+                        label: '返回上一级',
+                        titleMax: 18,
+                        tooltip: parentPath,
                         onClick: function () {
-                            state.activeGroupPath = normalizePath(item.path || '');
-                            refreshFolderView(folderNode, {
-                                focusGroupPath: state.activeGroupPath,
-                                focusBehavior: 'smooth'
-                            });
+                            navigateTo(parentPath, false);
                         }
                     });
-                });
-
-                entryNode = folderNode.parent || state.tree;
-                entryLabel = folderNode.path ? (entryNode && entryNode.name || ROOT_LABEL) : '文档';
-                entrySubtitle = folderNode.path ? '返回上一级' : '文档入口';
-
-                relationLayer.appendChild(createSvgEl('path', {
-                    d: polylinePath([
-                        { x: entryX + entryWidth / 2, y: contentCenterY },
-                        { x: centerX - centerWidth / 2 - 46, y: contentCenterY }
-                    ]),
-                    fill: 'none',
-                    stroke: palette.next,
-                    'stroke-width': '3',
-                    'stroke-opacity': '0.84',
-                    'stroke-linecap': 'round'
-                }));
-
-                drawNode(nodeLayer, {
-                    cx: entryX,
-                    cy: contentCenterY,
-                    width: entryWidth,
-                    height: 82,
-                    radius: 12,
-                    fill: folderNode.path ? palette.surface : palette.bg,
-                    stroke: palette.next,
-                    strokeWidth: folderNode.path ? 2.4 : 1.6,
-                    textColor: palette.text,
-                    title: entryLabel,
-                    titleLines: wrapTextLines(entryLabel, 10, 2),
-                    titleSize: 17,
-                    titleLineHeight: 18,
-                    subtitle: entrySubtitle,
-                    subtitleSize: 12,
-                    subtitleMax: 18,
-                    tooltip: folderNode.path ? parentPath : '文档入口',
-                    onClick: folderNode.path ? function () {
-                        navigateTo(parentPath, false);
-                    } : null
-                });
+                    backChip.setAttribute('data-nav-role', 'go-parent');
+                }
 
                 drawNode(nodeLayer, {
                     cx: centerX,
-                    cy: contentCenterY,
-                    width: centerWidth,
-                    height: 102,
-                    radius: 14,
-                    fill: palette.surface,
-                    stroke: palette.border,
-                    strokeWidth: 2,
-                    textColor: palette.text,
+                    cy: rootCenterY,
+                    width: rootWidth,
+                    height: rootHeight,
+                    radius: 16,
+                    fill: '#1d2b47',
+                    stroke: '#253a63',
+                    strokeWidth: 2.2,
+                    textColor: '#ffffff',
                     title: folderNode.name || ROOT_LABEL,
-                    titleLines: wrapTextLines(folderNode.name || ROOT_LABEL, 12, 2),
+                    titleLines: wrapTextLines(folderNode.name || ROOT_LABEL, 18, 2),
                     titleSize: 20,
                     titleLineHeight: 22,
                     subtitle: renderState.childCount + ' 个子目录 · ' + allDocs.length + ' 篇文章',
-                    subtitleSize: 13,
-                    subtitleMax: 24,
+                    subtitleSize: 12,
+                    subtitleMax: 28,
                     tooltip: folderNode.path || ROOT_LABEL
                 });
 
-                groupLayouts.forEach(function (layout) {
-                    var group = layout.group;
-                    var groupNodeY = layout.centerY;
-                    var groupNodeX = groupX;
-                    var branchMidX = groupNodeX - 132;
-                    var docBlockTop = groupNodeY - layout.blockHeight / 2;
-                    var groupClickable = !group.isCurrent;
-                    var groupActive = normalizePath(group.path) === normalizePath(state.activeGroupPath || folderNode.path || '');
-                    var groupSubtitle = group.isCurrent
-                        ? ('本级文章 ' + group.docs.length + ' 篇')
-                        : ('进入目录 · ' + group.docs.length + ' 篇');
-                    var blockWidth = layout.columnCount * cardWidth + Math.max(0, layout.columnCount - 1) * colGap;
-                    var focusPointX = group.docs.length
-                        ? (docStartX + Math.max(cardWidth / 2, blockWidth / 2))
-                        : (groupNodeX + 180);
-
-                    state.groupLayoutByPath.set(normalizePath(group.path), {
-                        x: focusPointX,
-                        y: groupNodeY
-                    });
-
+                if (rowLayouts.length) {
                     relationLayer.appendChild(createSvgEl('path', {
                         d: polylinePath([
-                            { x: centerX + centerWidth / 2, y: contentCenterY },
-                            { x: branchMidX, y: contentCenterY },
-                            { x: branchMidX, y: groupNodeY },
-                            { x: groupNodeX - groupWidth / 2 - 28, y: groupNodeY }
+                            { x: centerX, y: rootBottomY },
+                            { x: centerX, y: rowLayouts[rowLayouts.length - 1].trunkY }
                         ]),
                         fill: 'none',
-                        stroke: palette.prev,
-                        'stroke-width': groupActive ? '3' : '2.2',
-                        'stroke-opacity': groupActive ? '0.88' : '0.66',
+                        stroke: palette.line,
+                        'stroke-width': '2.2',
+                        'stroke-opacity': '0.88',
+                        'stroke-linecap': 'round'
+                    }));
+                }
+
+                rowLayouts.forEach(function (rowLayout, rowLayoutIndex) {
+                    if (!rowLayout.placements.length) return;
+
+                    var minX = rowLayout.placements[0].centerX;
+                    var maxX = rowLayout.placements[rowLayout.placements.length - 1].centerX;
+                    relationLayer.appendChild(createSvgEl('path', {
+                        d: polylinePath([
+                            { x: minX, y: rowLayout.trunkY },
+                            { x: maxX, y: rowLayout.trunkY }
+                        ]),
+                        fill: 'none',
+                        stroke: palette.line,
+                        'stroke-width': '2',
+                        'stroke-opacity': rowLayoutIndex === 0 ? '0.9' : '0.74',
                         'stroke-linecap': 'round'
                     }));
 
-                    drawNode(nodeLayer, {
-                        cx: groupNodeX,
-                        cy: groupNodeY,
-                        width: groupWidth,
-                        height: 64,
-                        radius: 10,
-                        fill: palette.surface,
-                        stroke: layout.color,
-                        strokeWidth: groupActive ? 2.8 : 2,
-                        textColor: palette.text,
-                        title: group.label,
-                        titleLines: wrapTextLines(group.label, 10, 2),
-                        titleSize: 15,
-                        titleLineHeight: 18,
-                        subtitle: groupSubtitle,
-                        subtitleSize: 11,
-                        subtitleMax: 18,
-                        tooltip: group.path || '当前目录',
-                        onClick: groupClickable ? function () {
-                            navigateTo(group.path, false);
-                        } : function () {
-                            state.activeGroupPath = normalizePath(group.path || '');
-                            refreshFolderView(folderNode, {
-                                focusGroupPath: state.activeGroupPath,
-                                focusBehavior: 'smooth'
-                            });
-                        }
-                    });
-
-                    group.docs.forEach(function (doc, index) {
-                        var column = index % layout.columnCount;
-                        var row = Math.floor(index / layout.columnCount);
-                        var point = {
-                            x: docStartX + cardWidth / 2 + column * (cardWidth + colGap),
-                            y: docBlockTop + cardHeight / 2 + row * (cardHeight + rowGap)
-                        };
-                        var relativePath = String(doc.path || '');
-                        var subtitle = String(doc.author || '').trim();
-                        var connectorOpacity = groupActive ? '0.9' : '0.56';
-                        var nodeOpacity = groupActive ? '1' : '0.88';
-                        var nodeGroup;
-
-                        if (!subtitle) {
-                            subtitle = relativePath.indexOf('/') === -1
-                                ? relativePath
-                                : relativePath.split('/').slice(-2).join('/');
-                        }
+                    rowLayout.placements.forEach(function (placement) {
+                        var group = placement.group;
+                        var groupCenterY = rowLayout.topY + groupHeight / 2;
+                        var groupColor = group.kind === 'current' ? '#304462' : palette.folder;
+                        var groupFill = group.kind === 'current' ? '#25334b' : palette.folder;
+                        var previewSubtitle = group.kind === 'current'
+                            ? '当前目录内的文章'
+                            : (group.hiddenDocCount > 0
+                                ? '预览 3 / ' + group.totalDocs + ' 篇'
+                                : '共 ' + group.totalDocs + ' 篇');
 
                         relationLayer.appendChild(createSvgEl('path', {
                             d: polylinePath([
-                                { x: groupNodeX + groupWidth / 2 + 14, y: groupNodeY },
-                                { x: point.x - cardWidth / 2 - 22, y: groupNodeY },
-                                { x: point.x - cardWidth / 2 - 22, y: point.y },
-                                { x: point.x - cardWidth / 2 - 6, y: point.y }
+                                { x: placement.centerX, y: rowLayout.trunkY },
+                                { x: placement.centerX, y: groupCenterY - groupHeight / 2 }
                             ]),
                             fill: 'none',
-                            stroke: layout.color,
-                            'stroke-width': groupActive ? '2.4' : '1.7',
-                            'stroke-opacity': connectorOpacity,
+                            stroke: groupColor,
+                            'stroke-width': '2',
+                            'stroke-opacity': '0.84',
                             'stroke-linecap': 'round'
                         }));
 
-                        nodeGroup = drawNode(nodeLayer, {
-                            cx: point.x,
-                            cy: point.y,
-                            width: cardWidth,
-                            height: cardHeight,
-                            radius: 10,
-                            fill: groupActive ? palette.surface : palette.bg,
-                            stroke: groupActive ? layout.color : palette.border,
-                            strokeWidth: groupActive ? 2.2 : 1.6,
-                            textColor: palette.text,
-                            title: doc.title,
-                            titleLines: wrapTextLines(doc.title, 15, 2),
-                            titleLineHeight: 18,
-                            titleSize: 14,
-                            subtitle: subtitle,
+                        var groupNode = drawNode(nodeLayer, {
+                            cx: placement.centerX,
+                            cy: groupCenterY,
+                            width: groupWidth,
+                            height: groupHeight,
+                            radius: 12,
+                            fill: groupFill,
+                            stroke: groupColor,
+                            strokeWidth: group.kind === 'current' ? 1.8 : 2.1,
+                            textColor: '#ffffff',
+                            title: group.label,
+                            titleLines: wrapTextLines(group.label, 10, 2),
+                            titleSize: 15,
+                            titleLineHeight: 17,
+                            subtitle: previewSubtitle,
                             subtitleSize: 11,
                             subtitleMax: 20,
-                            tooltip: doc.path,
-                            onClick: function () {
-                                openDoc(doc.path);
-                            }
+                            tooltip: group.path || '当前目录',
+                            onClick: group.kind === 'child' ? function () {
+                                navigateTo(group.path, false);
+                            } : null
                         });
-                        nodeGroup.setAttribute('data-doc-path', doc.path);
-                        nodeGroup.setAttribute('data-doc-title', doc.title);
-                        nodeGroup.setAttribute('opacity', nodeOpacity);
-                        state.docLayoutByPath.set(doc.path, point);
+                        if (group.kind === 'child') {
+                            groupNode.setAttribute('data-folder-path', group.path);
+                        } else {
+                            groupNode.setAttribute('data-group-kind', 'current-docs');
+                        }
+
+                        state.groupLayoutByPath.set(normalizePath(group.path || ('row-' + rowLayoutIndex + '-' + placement.centerX)), {
+                            x: placement.centerX,
+                            y: groupCenterY
+                        });
+
+                        var lastConnectorY = groupCenterY + groupHeight / 2;
+                        group.docs.forEach(function (doc, docIndex) {
+                            var cardCenterY = groupCenterY + groupHeight / 2 + groupGapY + cardHeight / 2 + docIndex * (cardHeight + cardGap);
+                            var subtitle = String(doc.author || '').trim();
+                            if (!subtitle || subtitle === '未知') {
+                                subtitle = String(doc.path || '').split('/').slice(-2).join('/');
+                            }
+
+                            relationLayer.appendChild(createSvgEl('path', {
+                                d: polylinePath([
+                                    { x: placement.centerX, y: lastConnectorY },
+                                    { x: placement.centerX, y: cardCenterY - cardHeight / 2 }
+                                ]),
+                                fill: 'none',
+                                stroke: groupColor,
+                                'stroke-width': '1.8',
+                                'stroke-opacity': '0.7',
+                                'stroke-linecap': 'round'
+                            }));
+                            lastConnectorY = cardCenterY + cardHeight / 2;
+
+                            var docNode = drawNode(nodeLayer, {
+                                cx: placement.centerX,
+                                cy: cardCenterY,
+                                width: cardWidth,
+                                height: cardHeight,
+                                radius: 10,
+                                fill: '#f3f6fb',
+                                stroke: '#d8dfeb',
+                                strokeWidth: 1.5,
+                                textColor: '#18212f',
+                                subTextColor: '#5d6a7d',
+                                title: doc.title,
+                                titleLines: wrapTextLines(doc.title, 16, 2),
+                                titleSize: 14,
+                                titleLineHeight: 18,
+                                subtitle: subtitle,
+                                subtitleSize: 11,
+                                subtitleMax: 22,
+                                tooltip: doc.path,
+                                onClick: function () {
+                                    openDoc(doc.path);
+                                }
+                            });
+                            docNode.setAttribute('data-doc-path', doc.path);
+                            docNode.setAttribute('data-doc-title', doc.title);
+                            state.docLayoutByPath.set(doc.path, {
+                                x: placement.centerX,
+                                y: cardCenterY
+                            });
+                        });
+
+                        if (group.hiddenDocCount > 0) {
+                            var overflowY = lastConnectorY + cardGap + overflowHeight / 2;
+                            relationLayer.appendChild(createSvgEl('path', {
+                                d: polylinePath([
+                                    { x: placement.centerX, y: lastConnectorY },
+                                    { x: placement.centerX, y: overflowY - overflowHeight / 2 }
+                                ]),
+                                fill: 'none',
+                                stroke: groupColor,
+                                'stroke-width': '1.6',
+                                'stroke-opacity': '0.64',
+                                'stroke-linecap': 'round'
+                            }));
+
+                            var overflowChip = drawChip(nodeLayer, {
+                                x: placement.centerX - 62,
+                                y: overflowY - overflowHeight / 2,
+                                width: 124,
+                                height: overflowHeight,
+                                radius: 15,
+                                fill: palette.bg,
+                                stroke: groupColor,
+                                strokeWidth: 1.4,
+                                textColor: palette.text,
+                                label: '另有 ' + group.hiddenDocCount + ' 篇',
+                                titleMax: 16,
+                                tooltip: group.path,
+                                onClick: group.kind === 'child' ? function () {
+                                    navigateTo(group.path, false);
+                                } : null
+                            });
+                            overflowChip.setAttribute('data-overflow-count', String(group.hiddenDocCount));
+                        }
                     });
                 });
 
-                if (!allDocs.length) {
+                if (!groups.length) {
                     drawNode(nodeLayer, {
-                        cx: 1290,
-                        cy: contentCenterY,
-                        width: 380,
-                        height: 104,
+                        cx: centerX,
+                        cy: rootBottomY + 110,
+                        width: 360,
+                        height: 96,
                         radius: 14,
                         fill: palette.surface,
                         stroke: palette.border,
-                        strokeWidth: 1.8,
+                        strokeWidth: 1.6,
                         textColor: palette.text,
-                        title: '当前目录暂无文章',
-                        titleSize: 20,
-                        subtitle: renderState.childCount
-                            ? '该目录及其子目录暂无文章，可点击左侧节点返回上一级。'
-                            : '点击左侧节点返回上一级目录，或从路径节点切换层级。',
+                        title: '当前目录暂无内容',
+                        titleSize: 18,
+                        subtitle: folderNode.path ? '可以返回上一级继续浏览。' : '请从上方路径切换到其他目录。',
                         subtitleSize: 12,
-                        subtitleMax: 34
+                        subtitleMax: 28
                     });
                 }
 
                 viewTarget = opts.focusGroupPath != null
                     ? state.groupLayoutByPath.get(normalizePath(opts.focusGroupPath))
-                    : state.groupLayoutByPath.get(normalizePath(state.activeGroupPath || folderNode.path || ''));
+                    : null;
                 if (!viewTarget) {
-                    viewTarget = { x: centerX + 80, y: contentCenterY };
+                    viewTarget = { x: centerX, y: rootCenterY + 40 };
                 }
 
                 window.requestAnimationFrame(function () {

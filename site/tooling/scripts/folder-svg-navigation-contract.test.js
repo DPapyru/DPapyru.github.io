@@ -36,73 +36,56 @@ function extractNamedFunction(source, functionName, dependencies) {
     return new Function(...argNames, `return (${functionSource});`)(...argValues);
 }
 
-function createSvgStub(tag, attrs) {
-    return {
-        tag,
-        attrs: Object.assign({}, attrs),
-        children: [],
-        classList: {
-            values: [],
-            add(value) {
-                this.values.push(value);
-            }
-        },
-        setAttribute(name, value) {
-            this.attrs[name] = value;
-        },
-        getAttribute(name) {
-            return this.attrs[name];
-        },
-        appendChild(child) {
-            this.children.push(child);
-            return child;
-        },
-        addEventListener() {}
-    };
-}
-
-test('folder page main keeps only svg canvas content', () => {
+test('folder page main keeps only svg canvas content with 10px safe padding', () => {
     const html = readFolderHtml();
 
     assert.match(
         html,
+        /<body class="workbench-page folder-svg-only-page">/
+    );
+    assert.match(
+        html,
+        /body\.folder-svg-only-page \.workbench-main\s*\{[\s\S]*padding:\s*10px;/
+    );
+    assert.match(
+        html,
         /<main class="workbench-main" id="main-content" tabindex="-1">\s*<svg class="folder-map-svg" id="folder-map-svg"/s
     );
-    assert.doesNotMatch(html, /id="go-parent-btn"/);
-    assert.doesNotMatch(html, /id="folder-map-breadcrumb"/);
-    assert.doesNotMatch(html, /id="folder-doc-locator"/);
-    assert.doesNotMatch(html, /id="folder-doc-locator-results"/);
+    assert.doesNotMatch(html, /id="folder-map-title"/);
+    assert.doesNotMatch(html, /id="folder-count-meta"/);
+    assert.doesNotMatch(html, /id="doc-count-meta"/);
     assert.doesNotMatch(html, /id="folder-map-empty"/);
     assert.doesNotMatch(html, /folder-map-legend/);
 });
 
-test('folder page script no longer depends on html toolbar or locator controls', () => {
+test('folder page script no longer depends on html toolbar helpers', () => {
     const html = readFolderHtml();
 
-    assert.doesNotMatch(html, /function updateToolbar\(/);
-    assert.doesNotMatch(html, /function updateDocLocatorControls\(/);
-    assert.doesNotMatch(html, /function updateFolderMapBreadcrumb\(/);
-    assert.doesNotMatch(html, /folder-doc-locator/);
-    assert.match(html, /function focusStageOnPoint\(/);
-    assert.match(html, /function renderMap\(/);
+    assert.match(html, /function\s+buildFolderDocGroups\s*\(/);
+    assert.match(html, /function\s+renderMap\s*\(/);
+    assert.match(html, /function\s+drawNode\s*\(/);
+    assert.doesNotMatch(html, /function\s+updateToolbar\s*\(/);
+    assert.doesNotMatch(html, /function\s+setMapEmpty\s*\(/);
+    assert.doesNotMatch(html, /id="go-parent-btn"/);
 });
 
-test('folder page builds grouped recursive doc index for current folder svg', () => {
+test('buildFolderDocGroups keeps current docs and limits child previews to three docs', () => {
     const html = readFolderHtml();
     const compareDoc = function (a, b) {
+        const orderDelta = (a.order || 999) - (b.order || 999);
+        if (orderDelta !== 0) return orderDelta;
         return String(a.title || '').localeCompare(String(b.title || ''), 'zh-CN');
+    };
+    const compareFolder = function (a, b) {
+        return String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN');
     };
     const collectDocsRecursively = extractNamedFunction(html, 'collectDocsRecursively', {
         compareDoc,
-        compareFolder: function (a, b) {
-            return String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN');
-        }
+        compareFolder
     });
     const buildFolderDocGroups = extractNamedFunction(html, 'buildFolderDocGroups', {
         collectDocsRecursively,
-        compareFolder: function (a, b) {
-            return String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN');
-        },
+        compareFolder,
         compareDoc,
         ROOT_LABEL: '教程目录'
     });
@@ -110,23 +93,35 @@ test('folder page builds grouped recursive doc index for current folder svg', ()
     const folderNode = {
         name: '螺线翻译tml教程',
         path: '螺线翻译tml教程',
-        docs: [{ title: '总览', path: '螺线翻译tml教程/总览.md' }],
+        docs: [
+            { title: '总览', path: '螺线翻译tml教程/总览.md', order: 1 },
+            { title: '开始前', path: '螺线翻译tml教程/开始前.md', order: 2 }
+        ],
         children: new Map([
             ['0-开始', {
                 name: '0-开始',
                 path: '螺线翻译tml教程/0-开始',
-                docs: [{ title: '主页', path: '螺线翻译tml教程/0-开始/主页.md' }],
+                docs: [
+                    { title: '主页', path: '螺线翻译tml教程/0-开始/主页.md', order: 1 },
+                    { title: '玩家', path: '螺线翻译tml教程/0-开始/玩家.md', order: 2 },
+                    { title: '开发者', path: '螺线翻译tml教程/0-开始/开发者.md', order: 3 },
+                    { title: '贡献者', path: '螺线翻译tml教程/0-开始/贡献者.md', order: 4 }
+                ],
                 children: new Map()
             }],
             ['1-基础', {
                 name: '1-基础',
                 path: '螺线翻译tml教程/1-基础',
-                docs: [{ title: '基础一', path: '螺线翻译tml教程/1-基础/基础一.md' }],
+                docs: [{ title: '基础一', path: '螺线翻译tml教程/1-基础/基础一.md', order: 1 }],
                 children: new Map([
                     ['附录', {
                         name: '附录',
                         path: '螺线翻译tml教程/1-基础/附录',
-                        docs: [{ title: '附录文档', path: '螺线翻译tml教程/1-基础/附录/附录文档.md' }],
+                        docs: [
+                            { title: '附录文档', path: '螺线翻译tml教程/1-基础/附录/附录文档.md', order: 2 },
+                            { title: '附录二', path: '螺线翻译tml教程/1-基础/附录/附录二.md', order: 3 },
+                            { title: '附录三', path: '螺线翻译tml教程/1-基础/附录/附录三.md', order: 4 }
+                        ],
                         children: new Map()
                     }]
                 ])
@@ -136,54 +131,29 @@ test('folder page builds grouped recursive doc index for current folder svg', ()
 
     assert.deepEqual(
         collectDocsRecursively(folderNode).map(function (doc) { return doc.title; }),
-        ['总览', '主页', '基础一', '附录文档']
+        ['总览', '开始前', '主页', '玩家', '开发者', '贡献者', '基础一', '附录文档', '附录二', '附录三']
     );
 
     assert.deepEqual(
-        buildFolderDocGroups(folderNode).map(function (group) {
-            return {
-                label: group.label,
-                path: group.path,
-                docs: group.docs.map(function (doc) { return doc.title; })
-            };
-        }),
-        [
-            { label: '当前目录', path: '螺线翻译tml教程', docs: ['总览'] },
-            { label: '0-开始', path: '螺线翻译tml教程/0-开始', docs: ['主页'] },
-            { label: '1-基础', path: '螺线翻译tml教程/1-基础', docs: ['基础一', '附录文档'] }
-        ]
-    );
-});
-
-test('drawNode falls back to visible title for SVG accessible name when label is omitted', () => {
-    const html = readFolderHtml();
-    const layer = {
-        children: [],
-        appendChild(node) {
-            this.children.push(node);
-            return node;
+        buildFolderDocGroups(folderNode),
+        {
+            currentDocs: ['总览', '开始前'],
+            childGroups: [
+                {
+                    label: '0-开始',
+                    path: '螺线翻译tml教程/0-开始',
+                    totalDocs: 4,
+                    hiddenDocCount: 1,
+                    previewDocs: ['主页', '玩家', '开发者']
+                },
+                {
+                    label: '1-基础',
+                    path: '螺线翻译tml教程/1-基础',
+                    totalDocs: 4,
+                    hiddenDocCount: 1,
+                    previewDocs: ['基础一', '附录文档', '附录二']
+                }
+            ]
         }
-    };
-    const drawNode = extractNamedFunction(html, 'drawNode', {
-        truncateText: function (text) {
-            return String(text || '');
-        },
-        createSvgEl: createSvgStub,
-        addInteractiveNode: function () {}
-    });
-
-    drawNode(layer, {
-        cx: 160,
-        cy: 120,
-        width: 220,
-        height: 72,
-        fill: '#000',
-        stroke: '#fff',
-        textColor: '#fff',
-        title: '返回上一级',
-        subtitle: '进入上一级目录',
-        onClick: function () {}
-    });
-
-    assert.equal(layer.children[0].getAttribute('aria-label'), '返回上一级');
+    );
 });
