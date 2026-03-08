@@ -2818,6 +2818,21 @@
 - 已保留失败日志：`/tmp/feat_ide_flowchart_npm_test.log`、`/tmp/feat_ide_flowchart_npm_build.log`、`/tmp/feat_ide_flowchart_npm_ci.log`。
 - 本次按“先提交再清理”继续执行分支合并与工作树清理，构建失败原因为环境依赖安装受限。
 
+
+### 验证记录 [2026-03-08 08:54]：IDE 验收纠偏与关键交互修复
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test --test-reporter spec tml-ide-app/tests/anim-preview-cwd-stability.test.js tml-ide-app/tests/ide-acceptance-alignment.test.js tml-ide-app/tests/ide-ux-regressions.test.js`：通过
+- `cd tml-ide-app && node --test --test-reporter spec tests/**/*.test.js`：通过（108 passed, 0 failed）
+- `npm --prefix tml-ide-app test`：通过（102 passed, 0 failed）
+- `npm run build`：通过
+- `npm run check-generated`：失败
+- `node` + `/tmp/pw/node_modules/playwright-core` + `/usr/bin/google-chrome` 浏览器 smoke：通过（本地 `http://127.0.0.1:4176/tml-ide/` 已确认快速创建、Markdown 可视化预览、Shader compile 面板默认聚焦、anim.ts debug completion、统一提交面板）
+
+**备注**：本次在工作树 `fix-ide-validation-ux` 中完成 IDE 验收脚本纠偏、repo tree 定位反馈、Shader compile 面板聚焦与 anim.ts debug completion 对齐；`check-generated` 失败原因是该命令末尾执行 `git diff --exit-code`，在当前存在待评审源码与对应构建产物更新的工作树中会返回非零，未发现额外的无关生成漂移。
+
 ### 验证记录 [2026-03-08 10:10]：合并 contributor-learning 文档并修正评审入口条件
 
 **级别**：L3
@@ -2833,3 +2848,25 @@
 - 本次针对 `/site/content/如何贡献/` 的 contributor-learning 文档组同步了 5 篇重写稿，并把 `教学文章写作指南.md` 改为明确区分“浏览器草稿链路”和“可进入评审的 PR 条件”。
 - 同步更新了与内容索引直接相关的生成物：`site/content/config.json`、`site/assets/search-index.json`、`site/assets/ide-editable-index.v1.json`、`site/assets/semantic/guided-index.v1.json`、`site/assets/semantic/bm25-index.v1.json`、`site/sitemap.xml`。
 - `check-generated` 暴露出的其余差异不在本次审核修复范围内，未顺手并入本次提交。
+
+### 验证记录 [2026-03-08 10:13]：IDE 构建产物补齐与审核意见修复
+
+**级别**：L3
+
+**命令与结果**：
+- `npm test`：通过（283 passed, 0 failed, 4 skipped）
+- `npm --prefix tml-ide-app test -- built-assets-tracking.test.js`：通过（103 passed, 0 failed；新增构建产物 Git 跟踪回归测试）
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：本次根据审核意见补齐了 `tml-ide/index.html` 所引用的新哈希产物，并新增 `tml-ide-app/tests/built-assets-tracking.test.js` 防止构建产物存在但未纳入 Git；`check-generated` 当前失败原因不是 IDE 产物缺失，而是生成流程会重写时间戳字段，导致 `fun-test/quiz-data.v1.json`、`site/assets/ide-editable-index.v1.json`、`site/assets/shader-gallery/index.json` 在每次重跑后出现 `generatedAt/generated_at` 差异。
+
+### 验证记录 [2026-03-08 10:21]：合并 fix-ide-validation-ux 到 fix-doc-viewer-folder-nav
+
+**级别**：分支集成
+
+**命令与结果**：
+- `npm run build`：通过
+- `npm test`：失败（3 failed；失败项为 `contrib docs avoid broken nested animcs fences`、`vertex draw section includes live animcs demo and key draw calls`、`content markdown no longer uses legacy transclusion syntax`）
+
+**备注**：本次已将 `fix-ide-validation-ux` 的 IDE 验收修复与构建产物补齐合并到 `fix-doc-viewer-folder-nav` 的合并结果中；当前失败集中在目标分支既有的 contributor-learning 文档内容校验，与本次 IDE 构建产物补齐逻辑无直接关系。

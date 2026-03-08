@@ -3965,6 +3965,11 @@ function setActivePanelTab(panelTab) {
     });
 }
 
+function ensureShaderWorkflowVisible() {
+    showBottomPanel(true);
+    setActivePanelTab('compile');
+}
+
 function setActiveActivity(activity) {
     const safeActivity = String(activity || 'explorer');
     state.ui.activeActivity = safeActivity;
@@ -4595,6 +4600,7 @@ function createFileFromPathInput(pathInput, options) {
     ensureScmBaseline(fileName);
     switchActiveFile(file.id);
     updateFileListUi();
+    revealRepoExplorerPath(file.path);
     scheduleWorkspaceSave();
     addEvent('info', `已新增文件：${fileName}`);
     return file;
@@ -4606,6 +4612,27 @@ function parentDirOfRepoPath(repoPath) {
     const idx = safe.lastIndexOf('/');
     if (idx < 0) return '';
     return safe.slice(0, idx);
+}
+
+function revealRepoExplorerPath(repoPath) {
+    const safe = normalizeEditableWorkspacePathInput(repoPath);
+    if (!safe) return false;
+
+    const segments = safe.split('/').filter(Boolean);
+    let current = '';
+    for (let i = 0; i < segments.length - 1; i += 1) {
+        current = current ? `${current}/${segments[i]}` : segments[i];
+        state.repoExplorer.expandedDirs.add(current);
+    }
+
+    if (!dom.fileList) return true;
+    requestAnimationFrame(() => {
+        const nodes = Array.from(dom.fileList.querySelectorAll('[data-node-type="file"][data-repo-path]'));
+        const target = nodes.find((node) => isSameContentRelativePath(String(node.dataset.repoPath || ''), safe));
+        if (!target || typeof target.scrollIntoView !== 'function') return;
+        target.scrollIntoView({ block: 'nearest' });
+    });
+    return true;
 }
 
 function contextEditorMenuCommands() {
@@ -10128,6 +10155,7 @@ function applyEditorModeUi() {
         dom.editor.hidden = isResourcePreview;
     }
     if (isShader) {
+        ensureShaderWorkflowVisible();
         syncShaderPreviewControls();
         if (state.ui.shaderPreviewModalOpen) {
             ensureShaderPreviewLoop();
@@ -10650,6 +10678,33 @@ function renderRepoExplorerTree() {
     renderNodes(tree, 0);
 }
 
+function expandRepoExplorerAncestorsForPath(pathValue) {
+    const normalizedPath = normalizeEditableWorkspacePathInput(pathValue);
+    if (!normalizedPath) return false;
+
+    const segments = splitRepoPathSegments(normalizedPath);
+    if (segments.length <= 1) return false;
+
+    let changed = false;
+    let current = '';
+    for (let index = 0; index < segments.length - 1; index += 1) {
+        current = current ? `${current}/${segments[index]}` : segments[index];
+        if (!state.repoExplorer.expandedDirs.has(current)) {
+            state.repoExplorer.expandedDirs.add(current);
+            changed = true;
+        }
+    }
+    return changed;
+}
+
+function revealActiveRepoExplorerItem() {
+    if (!dom.fileList) return false;
+    const activeNode = dom.fileList.querySelector('.repo-tree-file[aria-current="true"], .file-item[aria-current="true"]');
+    if (!(activeNode instanceof HTMLElement)) return false;
+    activeNode.scrollIntoView({ block: 'nearest' });
+    return true;
+}
+
 async function readBlobAsDataUrl(blob) {
     return await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -10726,6 +10781,7 @@ async function openRepoExplorerFile(pathValue, options) {
     trackWorkspaceFileChange(file);
     switchActiveFile(file.id);
     updateFileListUi();
+    revealRepoExplorerPath(file.path);
     scheduleWorkspaceSave();
     scheduleUnifiedStateSave();
     return file;
@@ -10798,6 +10854,7 @@ function updateFileListUi() {
     if (dom.activeFileName) {
         dom.activeFileName.textContent = active ? active.path : '(无文件)';
     }
+    revealActiveRepoExplorerItem();
 }
 
 function workspaceSnapshotForSave() {
@@ -10891,6 +10948,7 @@ function switchActiveFile(fileId) {
     state.workspace.activeFileId = target.id;
     const model = ensureModelForFile(target);
     state.editor.setModel(model);
+    expandRepoExplorerAncestorsForPath(target.path);
     updateFileListUi();
     scheduleWorkspaceSave();
     applyEditorModeUi();
@@ -10906,6 +10964,7 @@ function switchActiveFile(fileId) {
     if (mode === 'csharp') {
         runDiagnostics();
     } else if (mode === 'shaderfx') {
+        setActivePanelTab('compile');
         monaco.editor.setModelMarkers(model, 'tml-ide', []);
         const shaderIssues = state.shaderIssuesByFileId.get(String(target.id || '')) || [];
         renderProblems(shaderIssues);
@@ -12972,6 +13031,28 @@ async function bootstrap() {
             });
         },
         async requestCompletionsAtCursor(maxItems) {
+            if (!state.initialized || !state.editor) {
+                return [];
+            }
+            const model = state.editor.getModel();
+            if (!model) {
+                return [];
+            }
+            const file = workspaceFileByModel(model);
+            const position = state.editor.getPosition();
+            if (!position) {
+                return [];
+            }
+            if (file && isAnimationCsharpFilePath(file.path)) {
+                const offset = model.getOffsetAt(position);
+                return buildAnimTsThisCompletionItems(model.getValue(), offset, {
+                    maxItems: Math.max(10, Math.min(COMPLETION_MAX_ITEMS, Number(maxItems || COMPLETION_MAX_ITEMS))),
+                    staticIdentifierTypeHints: ANIMATION_STATIC_OWNER_TO_TYPE,
+                    memberLabelsByType: ANIMATION_MEMBER_LABELS_BY_TYPE,
+                    memberReturnTypeByType: ANIMATION_MEMBER_RETURN_TYPE_BY_TYPE,
+                    methodLabels: ANIMATION_METHOD_LABELS
+                });
+            }
             const result = await this.requestAnalyzeAtCursor({
                 completion: true,
                 hover: false,
