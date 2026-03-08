@@ -22,28 +22,51 @@ async function waitIdeReady(page) {
     await page.waitForSelector('#editor .monaco-editor', { timeout: 30000 });
 }
 
-async function addWorkspaceFile(page, fileName) {
-    const dialogs = [];
-    const handler = async (dialog) => {
-        dialogs.push(dialog.message());
-        if (dialog.type() === 'prompt') {
-            await dialog.accept(fileName);
-            return;
-        }
-        await dialog.dismiss();
+function inferQuickCreateType(fileName) {
+    const safe = String(fileName || '').trim().toLowerCase();
+    if (/\.anim\.ts$/i.test(safe)) return 'animts';
+    if (/\.fx$/i.test(safe)) return 'shaderfx';
+    if (/\.cs$/i.test(safe)) return 'codecs';
+    if (/\.(?:png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(safe)) return 'image';
+    if (/\.(?:mp4|webm)$/i.test(safe)) return 'video';
+    return 'markdown';
+}
+
+function splitQuickCreatePath(fileName) {
+    const segments = String(fileName || '').split('/').filter(Boolean);
+    const name = segments.pop() || '';
+    return {
+        directory: segments.join('/'),
+        name
     };
-    page.once('dialog', handler);
+}
+
+async function addWorkspaceFile(page, fileName) {
+    const target = splitQuickCreatePath(fileName);
+    const type = inferQuickCreateType(fileName);
+
     await page.click('#btn-add-file');
-    await page.waitForTimeout(200);
-    if (!dialogs.length) {
-        throw new Error(`新增文件对话框未出现: ${fileName}`);
-    }
+    await page.waitForSelector('#quick-create-modal:not([hidden])', { timeout: 10000 });
+    await page.selectOption('#quick-create-type', type);
+    await page.fill('#quick-create-directory', target.directory);
+    await page.fill('#quick-create-name', target.name);
+    await page.click('#btn-quick-create-submit');
+    await page.waitForSelector('#quick-create-modal[hidden]', { timeout: 10000 });
+    await page.waitForFunction((repoPath) => {
+        return Array.from(document.querySelectorAll('#file-list [data-node-type="file"]')).some((node) => {
+            return String(node.dataset.repoPath || '').trim() === String(repoPath || '').trim();
+        });
+    }, fileName, { timeout: 10000 });
 }
 
 async function ensureIdeFiles(page, fileNames) {
     await waitIdeReady(page);
     const existing = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('#file-list .file-item')).map((node) => {
+            const repoPath = String(node.dataset.repoPath || '').trim();
+            if (repoPath) {
+                return repoPath;
+            }
             const labelNode = node.querySelector('.repo-tree-label');
             if (labelNode) {
                 return String(labelNode.textContent || '').trim();
@@ -223,7 +246,7 @@ function buildIdeScenarios() {
             id: 'ide-file-create-and-input',
             run: async ({ page, step, assert }) => {
                 await step('ensure-ide-ready-and-files', async () => {
-                    await ensureIdeFiles(page, ['demo.md', 'effect.fx', 'swing.animcs']);
+                    await ensureIdeFiles(page, ['audit/demo.md', 'audit/effect.fx', 'audit/swing.anim.ts']);
                 });
 
                 await step('input-markdown-content', async () => {
@@ -263,7 +286,7 @@ function buildIdeScenarios() {
                             .map((node) => String(node.dataset.repoPath || '').trim())
                             .filter(Boolean)
                             .filter((path, index, list) => list.indexOf(path) === index);
-                        const textPaths = repoPaths.filter((path) => /\.(?:md|cs|animcs|fx)$/i.test(path));
+                        const textPaths = repoPaths.filter((path) => /(?:\.md|\.cs|\.fx|\.anim\.ts)$/i.test(path));
                         const addedPath = '如何贡献/scm-badge-added.md';
 
                         function toContentPath(pathValue) {
@@ -383,7 +406,7 @@ function buildIdeScenarios() {
             id: 'ide-markdown-preview',
             run: async ({ page, step, assert }) => {
                 await step('ensure-ide-ready-and-markdown-file', async () => {
-                    await ensureIdeFiles(page, ['demo.md']);
+                    await ensureIdeFiles(page, ['audit/demo.md']);
                     await page.click('#file-list .file-item:has-text("demo.md")');
                     await page.evaluate(() => {
                         globalThis.__tmlIdeDebug.setEditorText('# Preview\n\nmarkdown 预览流程。');
@@ -395,14 +418,27 @@ function buildIdeScenarios() {
                     await page.waitForSelector('#markdown-preview-pane:not([hidden])', { timeout: 10000 });
                 });
 
-                await step('assert-markdown-preview-frame', async () => {
-                    const ok = await page.evaluate(() => {
-                        const frame = document.querySelector('#markdown-preview-frame');
-                        if (!(frame instanceof HTMLIFrameElement)) return false;
-                        const src = String(frame.getAttribute('src') || '');
-                        return src.includes('/site/pages/viewer.html?') && src.includes('studio_preview=1');
+                await step('assert-markdown-visual-preview', async () => {
+                    await page.waitForFunction(() => {
+                        const visualCanvas = document.querySelector('#markdown-visual-canvas');
+                        return !!visualCanvas && visualCanvas.children.length > 0;
+                    }, null, { timeout: 10000 });
+                    const summary = await page.evaluate(() => {
+                        const previewPane = document.querySelector('#markdown-preview-pane');
+                        const frame = previewPane ? previewPane.querySelector('iframe') : null;
+                        const visualCanvas = document.querySelector('#markdown-visual-canvas');
+                        const toggle = document.querySelector('#btn-markdown-toggle-preview');
+                        return {
+                            frameHidden: !!(frame && frame.hasAttribute('hidden')),
+                            frameSrc: String(frame && frame.getAttribute('src') || ''),
+                            visualChildren: visualCanvas ? visualCanvas.children.length : 0,
+                            toggleText: String(toggle && toggle.textContent || '').trim()
+                        };
                     });
-                    assert('ide-markdown-preview-src-valid', ok, 'viewer preview iframe not ready');
+                    assert('ide-markdown-preview-iframe-hidden', summary.frameHidden, JSON.stringify(summary));
+                    assert('ide-markdown-preview-iframe-empty', summary.frameSrc === '', JSON.stringify(summary));
+                    assert('ide-markdown-preview-visual-canvas', summary.visualChildren > 0, JSON.stringify(summary));
+                    assert('ide-markdown-preview-toggle-text', summary.toggleText.includes('返回编辑'), JSON.stringify(summary));
                 });
             }
         },
@@ -410,7 +446,7 @@ function buildIdeScenarios() {
             id: 'ide-shader-preview',
             run: async ({ page, step, assert }) => {
                 await step('prepare-shader-file', async () => {
-                    await ensureIdeFiles(page, ['effect.fx']);
+                    await ensureIdeFiles(page, ['audit/effect.fx']);
                     await page.click('#file-list .file-item:has-text("effect.fx")');
                     await page.click('#btn-shader-insert-template');
                     await page.waitForFunction(() => {
@@ -438,23 +474,25 @@ function buildIdeScenarios() {
         {
             id: 'ide-anim-completion',
             run: async ({ page, step, assert }) => {
-                await step('prepare-animcs-file', async () => {
-                    await ensureIdeFiles(page, ['swing.animcs']);
-                    await page.click('#file-list .file-item:has-text("swing.animcs")');
+                await step('prepare-animts-file', async () => {
+                    await ensureIdeFiles(page, ['audit/swing.anim.ts']);
+                    await page.click('#file-list .file-item:has-text("swing.anim.ts")');
                     await page.evaluate(() => {
                         globalThis.__tmlIdeDebug.setEditorText([
-                            'using AnimRuntime;',
-                            'using AnimRuntime.Math;',
+                            'class DemoAnim {',
+                            '    constructor() {',
+                            '        this._ctx = null;',
+                            '    }',
+                            '    OnInit(ctx) {',
+                            '        this._ctx = ctx;',
+                            '    }',
                             '',
-                            'public class DemoAnim',
-                            '{',
-                            '    public void Test(ICanvas2D g, AnimContext ctx)',
-                            '    {',
-                            '        AnimGeom.',
+                            '    OnUpdate(dt) {',
+                            '        this._ctx.',
                             '    }',
                             '}'
                         ].join('\n'));
-                        globalThis.__tmlIdeDebug.setCursorAfterText('AnimGeom.');
+                        globalThis.__tmlIdeDebug.setCursorAfterText('this._ctx.');
                     });
                 });
 
@@ -463,7 +501,33 @@ function buildIdeScenarios() {
                         const items = await globalThis.__tmlIdeDebug.requestCompletionsAtCursor(200);
                         return Array.isArray(items) ? items.map((item) => String(item.label || '')) : [];
                     });
-                    assert('ide-anim-completion-has-drawaxes', labels.includes('DrawAxes'), JSON.stringify(labels.slice(0, 20)));
+                    assert('ide-anim-completion-has-width', labels.includes('Width'), JSON.stringify(labels.slice(0, 20)));
+                    assert('ide-anim-completion-has-input', labels.includes('Input'), JSON.stringify(labels.slice(0, 20)));
+                });
+            }
+        },
+        {
+            id: 'ide-unified-submit-panel',
+            run: async ({ page, step, assert }) => {
+                await step('open-unified-submit-panel', async () => {
+                    await page.click('#btn-open-unified-submit');
+                    await page.waitForFunction(() => {
+                        const panel = document.querySelector('#unified-submit-panel');
+                        return !!panel && panel.getAttribute('aria-hidden') === 'false';
+                    }, null, { timeout: 10000 });
+                });
+
+                await step('assert-unified-submit-defaults', async () => {
+                    const summary = await page.evaluate(() => {
+                        const workerUrl = document.querySelector('#unified-worker-url');
+                        const authStatus = document.querySelector('#unified-auth-status');
+                        return {
+                            workerUrl: String(workerUrl && workerUrl.value || ''),
+                            authStatus: String(authStatus && authStatus.textContent || '').trim()
+                        };
+                    });
+                    assert('ide-submit-worker-url-default', /workers\.dev\/api\/create-pr/.test(summary.workerUrl), summary.workerUrl);
+                    assert('ide-submit-auth-default', summary.authStatus.includes('未登录'), summary.authStatus);
                 });
             }
         }
