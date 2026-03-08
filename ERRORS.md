@@ -2817,3 +2817,21 @@
 **备注**：
 - 已保留失败日志：`/tmp/feat_ide_flowchart_npm_test.log`、`/tmp/feat_ide_flowchart_npm_build.log`、`/tmp/feat_ide_flowchart_npm_ci.log`。
 - 本次按“先提交再清理”继续执行分支合并与工作树清理，构建失败原因为环境依赖安装受限。
+
+### 验证记录 [2026-03-08 09:17]：贡献教程主线收窄（Markdown + anim.ts）重写
+
+**级别**：内容信息架构调整 + 生成产物更新
+
+**命令与结果**：
+- `npm ci`：通过（根依赖安装完成）
+- `npm run check-content`：失败（132 error(s)；主要为 `site/content/螺线翻译tml教程/**` 与 `site/content/shader-gallery/**/README.md` 等历史文件缺少 YAML front matter，本次未改这些文件）
+- `npm --prefix site-app ci`：通过（补齐 `site-app` 构建依赖）
+- `npm --prefix tml-ide-app ci`：通过（补齐 `tml-ide-app` 构建依赖）
+- `npm run build`：先失败后通过（初次因 `site-app` 缺少 `@vitejs/plugin-react`；补齐 `site-app` / `tml-ide-app` 依赖后通过。最终生成更新 `site/content/config.json`、`site/assets/search-index.json`、`site/assets/semantic/*`、`site/assets/anims/*`、`site/sitemap.xml`、`tml-ide/*` 等产物）
+- `npm run check-generated`：失败（前置 `gallery:check` 与 `build` 通过，最终失败于 `git diff --exit-code`；当前工作树包含本次教程改写与对应生成产物，非额外生成漂移）
+
+**备注**：
+- 本轮将 `site/content/如何贡献/` 的默认学习链收敛为两篇主教程：`教学文章写作指南.md` -> `使用网页特殊动画模块.md`。
+- `站点Markdown扩展语法说明.md`、`在线写作IDE使用教程.md`、`ContentProjects解决方案说明.md` 已改为参考/进阶定位，不再充当新人默认必读链路。
+- `npm run build` 持续出现既有 Vite warning：`JetBrainsMonoNerdFont-Bold.ttf` 在构建时未解析、保留到运行时；本轮构建仍成功产出。
+- `check-content` 的历史报错不在本轮处理范围内，仅在此记录基线状态。

@@ -2,33 +2,38 @@
 title: 站点Markdown扩展语法说明
 author: 小天使
 date: 2026-02-07
-last_updated: 2026-02-10
+last_updated: 2026-03-08
 difficulty: beginner
-time: 20分钟
-description: 当前 viewer 渲染器支持的扩展语法，含实用示例与排错建议
+time: 15分钟
+description: Markdown 写作参考页：集中查询当前 viewer 与网页 IDE 支持的常用扩展语法。
 topic: article-contribution
-order: 2
-prev_chapter: 教学文章写作指南.md
-next_chapter: 在线写作IDE使用教程.md
+order: 20
 ---
 
 # 站点Markdown扩展语法说明
 
-本文是“当前项目版本”的语法说明，重点覆盖贡献者最常用的扩展。
+这是一篇“查表页”，不是新的默认主线。
 
-## 使用前请先记住
+如果你是第一次贡献，优先阅读：
 
-1. 指令行必须独占一行
-2. 引用统一使用协议前缀：`cs:` / `anims:` / `fx:`
-3. 旧语法“双花括号 cs/anim 引用”已移除
-4. 先在 viewer 预览，再决定提交
+1. `教学文章写作指南.md`
+2. `使用网页特殊动画模块.md`
 
-## 文档链接（标准 Markdown）
+当你只想查“这条语法到底怎么写”时，再回来看本页最省时间。
 
-语法：
+## 使用前先记住 4 条
+
+1. 协议链接通常要独占一行，嵌入效果才会触发。
+2. 当前常用协议前缀是 `cs:`、`anims:`、`fx:`。
+3. 旧语法 `{{cs:...}} / {{anim:...}} / {{ref:...}}` 已移除。
+4. 提交前先在 IDE 里点一次 `预览` 或 `新标签预览`。
+
+## 普通文档链接
+
+写法：
 
 ```text
-[显示标题](相对路径/目标文档.md)
+[显示标题](./目标文档.md)
 ```
 
 示例：
@@ -37,7 +42,11 @@ next_chapter: 在线写作IDE使用教程.md
 [先看基础篇](./基础篇.md)
 ```
 
-适用：在文章间建立标准可维护的跳转链接。
+用途：
+
+1. 在教程之间跳转
+2. 组织阅读顺序
+3. 引导读者继续深入
 
 ## C# 引用指令
 
@@ -56,30 +65,38 @@ next_chapter: 在线写作IDE使用教程.md
 
 常见选择器：
 
-- `#cs:t:` 类型
-- `#cs:m:` 方法
-- `#cs:p:` 属性
-- `#cs:f:` 字段
-- `#cs:c:` 常量
-- `#cs:e:` 枚举成员
+1. `#cs:t:` 类型
+2. `#cs:m:` 方法
+3. `#cs:p:` 属性
+4. `#cs:f:` 字段
+5. `#cs:c:` 常量
+6. `#cs:e:` 枚举成员
 
 ## 动画引用指令
 
-语法：
+### 协议链接写法
 
 ```text
 [待补充说明](anims:anims/demo-basic.anim.ts)
 ```
 
+### animts 代码块写法
+
+````md
+```animts
+anims/demo-basic.anim.ts
+```
+````
+
 要求：
 
-1. 路径以 `anims/` 开头
-2. 扩展名为 `.cs`
-3. 在使用前执行 `npm run build`
+1. 路径通常以 `anims/` 开头。
+2. 扩展名必须是 `.anim.ts`。
+3. 最终提交前需要跑一次 `npm run build` 刷新产物。
 
 ## FX 引用指令
 
-语法：
+写法：
 
 ```text
 [待补充说明](fx:./shaders/demo.fx)
@@ -87,13 +104,13 @@ next_chapter: 在线写作IDE使用教程.md
 
 要求：
 
-1. 路径指向 `.fx` 文件
-2. 指令独占一行
-3. 在教程页会渲染为 Shader 卡片，点击后可打开弹窗 IDE 预览
+1. 路径指向真实 `.fx` 文件。
+2. 指令单独占一行时更稳定。
+3. 提交前最好用 IDE 的 `渲染预览` 或 viewer 确认效果。
 
-## 提示框语法（Callout）
+## 提示框（Callout）
 
-语法（GitHub 五级）：
+写法：
 
 ```text
 > [!NOTE]
@@ -102,16 +119,16 @@ next_chapter: 在线写作IDE使用教程.md
 
 可用级别：
 
-- `NOTE`
-- `TIP`
-- `IMPORTANT`
-- `WARNING`
-- `CAUTION`
+1. `NOTE`
+2. `TIP`
+3. `IMPORTANT`
+4. `WARNING`
+5. `CAUTION`
 
 说明：
 
-1. 级别必须写英文大写
-2. viewer 会渲染为中文标题提示框
+1. 级别必须写英文大写。
+2. viewer 会把它渲染成对应的提示框。
 
 ## Quiz 题目语法
 
@@ -150,19 +167,38 @@ explain: |
 ```
 ````
 
-注意：`tf` 的 `answer` 必须是布尔值，不要写字符串。
+注意：`tf` 的 `answer` 必须是布尔值，不要写成字符串。
 
 ## 常用 Front Matter 字段
 
+### 最小模板
+
+```yaml
+---
+title: 文章标题
+description: 一句话说明本文解决什么问题
+topic: article-contribution
+---
+```
+
+### 推荐补充字段
+
+```yaml
+author: 你的名字
+difficulty: beginner
+time: 15分钟
+order: 100
+```
+
 ### `source_cs`
 
-用于在文章底部展示 C# 源码。
+用于在文章底部展示 C# 源码：
 
 ```yaml
 source_cs: Modder入门学习/CSharp基础/CSharp_Frist.cs
 ```
 
-也可写数组：
+也可以写数组：
 
 ```yaml
 source_cs:
@@ -170,30 +206,13 @@ source_cs:
   - path/second.cs
 ```
 
-### `min_c` 与 `min_t`
+### `colors` 与 `colorChange`
 
-用于建议阅读门槛，不会阻止阅读。
-
-```yaml
-min_c: 1
-min_t: 1
-```
-
-### `colors`
-
-用于定义正文可调用的单色变量，配合 `{color:变量名}{文本}` 使用。
+用于正文中的单色文本或颜色动画文本：
 
 ```yaml
 colors:
   Mad: "#ff4d4f"
-  Good: "#22c55e"
-```
-
-### `colorChange`
-
-用于定义正文可调用的颜色动画，配合 `{colorChange:动画名}{文本}` 使用。
-
-```yaml
 colorChange:
   rainbow:
     - "#ff0000"
@@ -201,88 +220,31 @@ colorChange:
     - "#0000ff"
 ```
 
-## 文字颜色扩展语法
-
-### 单色文本
+配套正文写法：
 
 ```text
 {color:Mad}{这是一段单色文字}
-```
-
-说明：
-
-1. `Mad` 需要在 front matter 的 `colors` 中定义
-2. 变量名建议只用英文、数字、`_`、`-`
-
-### 颜色动画文本
-
-```text
 {colorChange:rainbow}{这是一段颜色动画文字}
 ```
 
-说明：
+## 常见报错怎么查
 
-1. `rainbow` 需要在 front matter 的 `colorChange` 中定义
-2. 动画颜色序列至少写 1 个颜色，推荐 3 个以上
+### 1. 动画没有触发嵌入
 
-### 完整可运行示例
+先检查：
 
-````md
----
-title: 颜色示例
-author: 你的名字
-topic: article-contribution
-description: 演示 colors 与 colorChange 的写法
-order: 100
-difficulty: beginner
-time: 5分钟
-colors:
-  Mad: "#ff4d4f"
-colorChange:
-  rainbow:
-    - "#ff0000"
-    - "#00ff00"
-    - "#0000ff"
----
+1. 这一行是不是独占一行
+2. 路径是不是 `.anim.ts`
+3. 路径是不是实际存在
 
-普通文本。
+### 2. 自检提示旧语法
 
-{color:Mad}{这是单色强调文本}
+如果看到 `{{cs:...}} / {{anim:...}} / {{ref:...}}`，请直接改成 `[]()` 协议链接语法。
 
-{colorChange:rainbow}{这是颜色动画文本}
-````
+### 3. viewer 里能看，提交后不对
 
-### 内置可直接使用的颜色名
+优先确认是否在提交前执行过 `npm run build`，因为结构索引、搜索索引和动画产物都依赖它刷新。
 
-不写 `colors` 也可直接用这些内置名：`primary`、`secondary`、`accent`、`success`、`warning`、`error`、`info`、`link`、`red`、`green`、`blue`、`yellow`、`purple`、`orange`、`cyan`、`pink`。
+## 一句话总结
 
-```text
-{color:primary}{使用主题主色}
-{color:warning}{使用警告色}
-```
-
-提示：在 `/tml-ide/` 左侧 Metadata 面板中填写 `colors` 和 `colorChange` 后，会自动写入 front matter。
-
-## 作者模式调试
-
-在 viewer 中开启“作者模式”后，可以看到：
-
-1. 元数据缺失提示
-2. 结构建议
-3. 链接与引用诊断
-
-这一步非常适合在提交前做快速自检。
-
-## 常见错误
-
-### 错误1：引用失败
-
-检查目标路径是否相对当前文档，且文件真实存在。
-
-### 错误2：动画不显示
-
-确认已执行 `npm run build`，且 `[说明](anims:anims/xxx.anim.ts)` 路径合法。
-
-## 下一步
-
-继续阅读：`在线写作IDE使用教程.md`。
+本页的作用只有一个：当你忘了具体写法时，回来查，不用重新把整条贡献主线再学一遍。

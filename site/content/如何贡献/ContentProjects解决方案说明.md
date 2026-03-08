@@ -2,115 +2,108 @@
 title: ContentProjects解决方案说明
 author: DPapyru
 date: 2026-02-07
-last_updated: 2026-02-07
+last_updated: 2026-03-08
 difficulty: intermediate
-time: 20分钟
-description: 讲清 site/ContentProjects.sln 在当前项目中的定位、配置方法与常见问题
+time: 12分钟
+description: 本地 IDE 进阶页：说明 `site/ContentProjects.sln` 的定位，以及它为什么不属于新贡献者默认主线。
 topic: article-contribution
-order: 4
-prev_chapter: 在线写作IDE使用教程.md
-next_chapter: 使用网页特殊动画模块.md
+order: 22
 ---
 
 # ContentProjects解决方案说明
 
-`site/ContentProjects.sln` 是“本地 IDE 开发入口”，主要解决两件事：
+这是一篇进阶参考页，不是新贡献者默认入口。
 
-1. 在同一工作区中获得稳定的 C# 补全
-2. 方便维护文档相关 C# 代码与动画脚本工程
+如果你只是：
 
-它不是线上编辑器，也不是最终打包工程。
+1. 写或修改 Markdown 教程
+2. 给文章补一个 `anim.ts` 动画
+3. 用网页 IDE 完成预览和提交
 
-## 什么时候应该使用它
+那么暂时不需要打开这篇，也不需要先配置本地工程。
+
+## 它的定位是什么
+
+`site/ContentProjects.sln` 是“本地 IDE 开发入口”，解决的是更重一点的编辑需求：
+
+1. 稳定的本地 C# IntelliSense
+2. 复杂示例代码维护
+3. 本地项目级导航、重构和引用排查
+
+它不是线上编辑器，也不是默认的文章写作入口。
+
+## 什么时候你才应该看它
 
 适合下面情况：
 
-1. 你要写较复杂的 C# 示例并希望有 IntelliSense
-2. 你要排查命名空间、类型引用、文件组织问题
-3. 你在维护动画脚本或文档示例工程
+1. 你要维护较复杂的 C# 示例
+2. 你要跨多个文件追踪命名空间、类型引用
+3. 你发现网页 IDE 已经不够支撑这次修改规模
 
 不适合下面情况：
 
 1. 只改 Markdown 文案
-2. 只改 Markdown 文案与结构
+2. 只给文章补一个普通 `anim.ts` 动画
+3. 只想快速提交一篇教程
 
-这两类工作优先用 `/tml-ide/` 更快。
+这三类工作，优先继续用 `/tml-ide/` 更省心。
 
-## 当前解决方案包含内容
+## 当前解决方案里有什么
 
-核心关联项目：
+当前最关键的关联项目通常是：
 
 1. `site/content/ModDocProject.csproj`
 2. `site/content/anims/AnimScripts.Dev.anim.tsproj`
 
-设计目标：
+你可以把它理解成“内容维护辅助工程”，而不是“站点发布工程”。
 
-- 尽量降低“文档写作 + C# 示例维护”的环境门槛
-- 保持与站点构建流程解耦，避免误触完整打包链路
+## 最小配置步骤
 
-## 快速配置步骤
+### 第 1 步：打开解决方案
 
-### 第1步：打开解决方案
+在本地 IDE 中打开：`site/ContentProjects.sln`
 
-在 IDE 中打开：`site/ContentProjects.sln`
-
-推荐 IDE：
+常见选择：
 
 1. Rider
 2. Visual Studio
 3. VS Code（配合 C# 扩展）
 
-### 第2步：检查 tModLoader targets 路径
+### 第 2 步：检查本地路径
 
-打开 `site/content/ModDocProject.csproj`，确认 `Import Project` 指向你的本地路径。
+如果工程里引用了你本地环境相关的路径，请先核对这些路径是否正确。
 
-如果本地路径不同，改成你自己的绝对路径。
+最常见的排查方向：
 
-### 第3步：验证最小编译环境
+1. `Import Project` 指向是否存在
+2. .NET SDK 是否可用
+3. IDE 是否正确识别项目引用
 
-至少保证：
+### 第 3 步：再回网页 IDE 组织内容
 
-1. .NET SDK 可用（建议 .NET 8）
-2. IDE 可以加载项目并识别引用
+推荐协作方式不是“全程只用本地 IDE”，而是：
 
-## 与网页 IDE 的协作方式
+1. 本地 IDE 维护复杂代码
+2. 网页 IDE 组织文章和预览
+3. 提交前再统一做构建验证
 
-推荐协作流程：
+## 和默认贡献主线的关系
 
-1. 在本地 IDE 完成复杂 C# 示例维护
-2. 在网页 IDE 完成教程组织和 PR 提交
-3. 回到本地跑构建命令做最终验证
+现在的默认顺序应该是：
 
-这样可以同时兼顾效率和正确性。
+1. 先读 `教学文章写作指南.md`
+2. 需要动画时再读 `使用网页特殊动画模块.md`
+3. 只有当网页 IDE 不够用了，再回来看本页
 
-## 与构建命令的关系
+这样可以把新贡献者的学习宽度压到最小，不会一开始就被本地工程配置拦住。
 
-贡献前建议执行：
+## 提交前验证
 
-1. `npm run build`
-2. `npm run check-content`
-3. `npm run check-generated`
+无论你主要用网页 IDE 还是本地 IDE，最终校验都还是回到仓库脚本：
 
-这三步不是由 `ContentProjects.sln` 自动替代。
+```bash
+npm run build
+npm run check-generated
+```
 
-## 常见问题
-
-### Q1：为什么看起来不像普通 Mod 打包工程
-
-因为这个方案的定位是“开发与维护辅助”，目标是编辑体验稳定，不是直接产出发布包。
-
-### Q2：路径改完还是报错
-
-优先确认：
-
-1. `Import Project` 是否可访问
-2. IDE 是否使用正确的 .NET SDK
-3. 旧缓存是否需要清理并重启 IDE
-
-### Q3：我只写教程是否必须配置本地工程
-
-不是。只写 Markdown 时直接用网页 IDE 即可。
-
-## 下一步
-
-如果你要在文章中使用动画模块，继续阅读：`使用网页特殊动画模块.md`。
+如果你只是为了写一篇教程而打开本页，请记住一句话：本页是进阶工具说明，不是贡献起跑线。
