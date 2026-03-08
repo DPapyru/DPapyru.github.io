@@ -5502,8 +5502,7 @@ function applyFrontMatterDefaults(metadata) {
         order: String(safe.order || '').trim(),
         difficulty: String(safe.difficulty || 'beginner').trim() || 'beginner',
         time: String(safe.time || '').trim(),
-        prev_chapter: String(safe.prev_chapter || '').trim(),
-        next_chapter: String(safe.next_chapter || '').trim(),
+        prefix: Array.isArray(safe.prefix) ? safe.prefix.map((item) => String(item || '').trim()).filter(Boolean) : [],
         min_c: String(safe.min_c || '').trim(),
         min_t: String(safe.min_t || '').trim(),
         colors: safe.colors && typeof safe.colors === 'object' ? safe.colors : {},
@@ -5518,7 +5517,7 @@ function mergeFrontMatterSafely(markdownText, metadata) {
     const parsed = parseFrontMatterSafely(markdownText);
     const body = String(parsed.body || '').replace(/^\s+/, '');
     const meta = applyFrontMatterDefaults(metadata);
-    return [
+    const lines = [
         '---',
         `title: ${meta.title || '新文章'}`,
         `author: ${meta.author || ''}`,
@@ -5526,11 +5525,18 @@ function mergeFrontMatterSafely(markdownText, metadata) {
         `description: ${meta.description || ''}`,
         `order: ${meta.order || ''}`,
         `difficulty: ${meta.difficulty || 'beginner'}`,
-        `time: ${meta.time || ''}`,
-        '---',
-        '',
-        body
-    ].join('\n');
+        `time: ${meta.time || ''}`
+    ];
+    if (Array.isArray(meta.prefix) && meta.prefix.length > 0) {
+        lines.push('prefix:');
+        meta.prefix.forEach((entry) => {
+            const safeEntry = String(entry || '').trim();
+            if (!safeEntry) return;
+            lines.push(`  - "${safeEntry}"`);
+        });
+    }
+    lines.push('---', '', body);
+    return lines.join('\n');
 }
 
 function ensureFrontMatterSafely(markdownText, metadata) {
@@ -5593,6 +5599,29 @@ function formatMetadataColorChangeField(colorChange) {
         .join('\n');
 }
 
+function parseMetadataPrefixField(value) {
+    return String(value || '')
+        .split(/\r?\n/)
+        .map((line) => String(line || '').trim())
+        .map((line) => line.replace(/^-+\s+/, ''))
+        .map((line) => {
+            if ((line.startsWith('"') && line.endsWith('"')) || (line.startsWith('\'') && line.endsWith('\''))) {
+                return line.slice(1, -1).trim();
+            }
+            return line;
+        })
+        .filter(Boolean)
+        .filter((line) => /^\[[^\]]+\]\([^)]+\.md\)$/i.test(line));
+}
+
+function formatMetadataPrefixField(prefixEntries) {
+    const safe = Array.isArray(prefixEntries) ? prefixEntries : [];
+    return safe
+        .map((entry) => String(entry || '').trim())
+        .filter(Boolean)
+        .join('\n');
+}
+
 function setMarkdownMetaStatus(text, isError) {
     if (!dom.markdownMetaStatus) return;
     dom.markdownMetaStatus.textContent = String(text || '');
@@ -5608,8 +5637,7 @@ function readMarkdownMetaForm() {
         order: getMetaFieldValue('order').trim(),
         difficulty: getMetaFieldValue('difficulty').trim(),
         time: getMetaFieldValue('time').trim(),
-        prev_chapter: getMetaFieldValue('prev_chapter').trim(),
-        next_chapter: getMetaFieldValue('next_chapter').trim(),
+        prefix: parseMetadataPrefixField(getMetaFieldValue('prefix')),
         min_c: getMetaFieldValue('min_c').trim(),
         min_t: getMetaFieldValue('min_t').trim(),
         colors: parseMetadataColorsField(getMetaFieldValue('colors')),
@@ -5626,8 +5654,7 @@ function fillMarkdownMetaForm(metadata) {
     setMetaFieldValue('order', meta.order || '');
     setMetaFieldValue('difficulty', meta.difficulty || 'beginner');
     setMetaFieldValue('time', meta.time || '');
-    setMetaFieldValue('prev_chapter', meta.prev_chapter || '');
-    setMetaFieldValue('next_chapter', meta.next_chapter || '');
+    setMetaFieldValue('prefix', formatMetadataPrefixField(meta.prefix));
     setMetaFieldValue('min_c', meta.min_c || '');
     setMetaFieldValue('min_t', meta.min_t || '');
     setMetaFieldValue('colors', formatMetadataColorsField(meta.colors));

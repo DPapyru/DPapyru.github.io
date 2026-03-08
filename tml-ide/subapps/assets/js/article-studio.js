@@ -143,8 +143,7 @@
         metaOrder: document.getElementById('studio-meta-order'),
         metaDifficulty: document.getElementById('studio-meta-difficulty'),
         metaTime: document.getElementById('studio-meta-time'),
-        metaPrevChapter: document.getElementById('studio-meta-prev-chapter'),
-        metaNextChapter: document.getElementById('studio-meta-next-chapter'),
+        metaPrefix: document.getElementById('studio-meta-prefix'),
         metaMinC: document.getElementById('studio-meta-min-c'),
         metaMinT: document.getElementById('studio-meta-min-t'),
         colorName: document.getElementById('studio-color-name'),
@@ -228,8 +227,7 @@
             order: '',
             difficulty: 'beginner',
             time: '',
-            prev_chapter: '',
-            next_chapter: '',
+            prefix: [],
             min_c: '',
             min_t: '',
             colors: {},
@@ -1136,6 +1134,57 @@
         }).filter(Boolean);
     }
 
+    function parsePrefixInput(raw) {
+        const text = String(raw || '').trim();
+        if (!text) return [];
+        if (text.startsWith('[') && text.endsWith(']')) {
+            return text.slice(1, -1).split(',').map(function (item) {
+                return String(item || '').trim();
+            }).map(function (line) {
+                if ((line.startsWith('"') && line.endsWith('"')) || (line.startsWith('\'') && line.endsWith('\''))) {
+                    return line.slice(1, -1).trim();
+                }
+                return line;
+            }).filter(Boolean);
+        }
+
+        return text
+            .split(/\r?\n/)
+            .map(function (line) {
+                return String(line || '')
+                    .trim()
+                    .replace(/^-+\s+/, '');
+            })
+            .map(function (line) {
+                if ((line.startsWith('"') && line.endsWith('"')) || (line.startsWith('\'') && line.endsWith('\''))) {
+                    return line.slice(1, -1).trim();
+                }
+                return line;
+            })
+            .filter(Boolean);
+    }
+
+    function normalizePrefixEntries(rawPrefix) {
+        const source = Array.isArray(rawPrefix) ? rawPrefix : parsePrefixInput(rawPrefix);
+        const output = [];
+        const seen = new Set();
+        source.forEach(function (item) {
+            const raw = String(item || '').trim();
+            const match = raw.match(/^\[[^\]]+\]\(([^)]+)\)$/);
+            if (!match) return;
+            const href = String(match[1] || '').trim().replace(/\\/g, '/');
+            if (!/\.md$/i.test(href)) return;
+            if (seen.has(raw)) return;
+            seen.add(raw);
+            output.push(raw);
+        });
+        return output;
+    }
+
+    function formatPrefixInput(rawPrefix) {
+        return normalizePrefixEntries(rawPrefix).join('\n');
+    }
+
     function metaFieldMap() {
         return {
             title: dom.metaTitle,
@@ -1145,8 +1194,7 @@
             order: dom.metaOrder,
             difficulty: dom.metaDifficulty,
             time: dom.metaTime,
-            prev_chapter: dom.metaPrevChapter,
-            next_chapter: dom.metaNextChapter,
+            prefix: dom.metaPrefix,
             min_c: dom.metaMinC,
             min_t: dom.metaMinT
         };
@@ -1167,19 +1215,40 @@
         const yamlText = String(match[1] || '');
         const body = text.slice(match[0].length);
         const meta = {};
+        const yamlLines = yamlText.split(/\r?\n/);
 
-        yamlText.split(/\r?\n/).forEach(function (line) {
-            const raw = String(line || '');
-            if (!raw.trim()) return;
-            if (/^\s/.test(raw)) return;
+        for (let i = 0; i < yamlLines.length; i += 1) {
+            const raw = String(yamlLines[i] || '');
+            if (!raw.trim()) continue;
+            if (/^\s/.test(raw)) continue;
 
             const idx = raw.indexOf(':');
-            if (idx <= 0) return;
+            if (idx <= 0) continue;
             const key = raw.slice(0, idx).trim();
             const value = raw.slice(idx + 1).trim();
-            if (!key) return;
+            if (!key) continue;
+
+            if (key === 'prefix') {
+                if (value) {
+                    meta.prefix = parsePrefixInput(value);
+                    continue;
+                }
+
+                const prefixItems = [];
+                for (let j = i + 1; j < yamlLines.length; j += 1) {
+                    const nested = String(yamlLines[j] || '');
+                    const trimmed = nested.trim();
+                    if (!trimmed) continue;
+                    if (!/^\s{2,}-\s+/.test(nested)) break;
+                    prefixItems.push(trimmed.replace(/^-+\s+/, '').trim());
+                    i = j;
+                }
+                meta.prefix = prefixItems;
+                continue;
+            }
+
             meta[key] = value;
-        });
+        }
 
         return {
             metadata: meta,
@@ -1198,8 +1267,7 @@
             order: normalizeMetaNumberInput(base.order),
             difficulty: String(base.difficulty || 'beginner').trim() || 'beginner',
             time: String(base.time || '').trim(),
-            prev_chapter: String(base.prev_chapter || '').trim(),
-            next_chapter: String(base.next_chapter || '').trim(),
+            prefix: normalizePrefixEntries(base.prefix),
             min_c: normalizeMetaNumberInput(base.min_c),
             min_t: normalizeMetaNumberInput(base.min_t),
             colors: ensureObject(base.colors),
@@ -1223,8 +1291,7 @@
             order: metadata.order,
             difficulty: metadata.difficulty,
             time: metadata.time,
-            prev_chapter: metadata.prev_chapter,
-            next_chapter: metadata.next_chapter,
+            prefix: metadata.prefix,
             min_c: metadata.min_c,
             min_t: metadata.min_t
         };
@@ -1248,8 +1315,14 @@
             `time: ${m.time || '25分钟'}`
         ];
 
-        if (m.prev_chapter) lines.push(`prev_chapter: ${m.prev_chapter}`);
-        if (m.next_chapter) lines.push(`next_chapter: ${m.next_chapter}`);
+        if (Array.isArray(m.prefix) && m.prefix.length > 0) {
+            lines.push('prefix:');
+            m.prefix.forEach(function (entry) {
+                const safeEntry = String(entry || '').trim();
+                if (!safeEntry) return;
+                lines.push(`  - "${safeEntry}"`);
+            });
+        }
         if (m.min_c) lines.push(`min_c: ${m.min_c}`);
         if (m.min_t) lines.push(`min_t: ${m.min_t}`);
 
@@ -1306,7 +1379,9 @@
         Object.keys(mapping).forEach(function (key) {
             const input = mapping[key];
             if (!input) return;
-            const nextValue = String(m[key] || '');
+            const nextValue = key === 'prefix'
+                ? formatPrefixInput(m.prefix)
+                : String(m[key] || '');
             if (String(input.value || '') !== nextValue) {
                 input.value = nextValue;
             }
@@ -1401,6 +1476,10 @@
         Object.keys(mapping).forEach(function (key) {
             const input = mapping[key];
             if (!input) return;
+            if (key === 'prefix') {
+                nextMeta.prefix = normalizePrefixEntries(parsePrefixInput(input.value));
+                return;
+            }
             nextMeta[key] = String(input.value || '').trim();
         });
 
@@ -1412,45 +1491,11 @@
     }
 
     function updateChapterSelectOptions() {
-        const updateSingle = function (selectEl, selectedValue) {
-            if (!selectEl) return;
-            const current = String(selectedValue || '').trim();
-            const baseDir = markdownDirectoryFromTargetPath(state.targetPath);
-            const candidates = knownMarkdownEntries.filter(function (entry) {
-                if (!entry || !entry.path) return false;
-                return getDirectoryFromPath(entry.path) === baseDir;
-            });
-
-            selectEl.innerHTML = '';
-            const empty = document.createElement('option');
-            empty.value = '';
-            empty.textContent = '(无)';
-            selectEl.appendChild(empty);
-
-            candidates.forEach(function (entry) {
-                const option = document.createElement('option');
-                option.value = entry.path;
-                option.textContent = `${entry.path} · ${entry.title || entry.path}`;
-                selectEl.appendChild(option);
-            });
-
-            if (current) {
-                const existing = Array.from(selectEl.options).find(function (opt) {
-                    return opt.value === current;
-                });
-
-                if (!existing) {
-                    const custom = document.createElement('option');
-                    custom.value = current;
-                    custom.textContent = `${current} · (当前值)`;
-                    selectEl.appendChild(custom);
-                }
-                selectEl.value = current;
-            }
-        };
-
-        updateSingle(dom.metaPrevChapter, state.metadata.prev_chapter);
-        updateSingle(dom.metaNextChapter, state.metadata.next_chapter);
+        if (!dom.metaPrefix) return;
+        const nextValue = formatPrefixInput(state.metadata.prefix);
+        if (String(dom.metaPrefix.value || '') !== nextValue) {
+            dom.metaPrefix.value = nextValue;
+        }
     }
 
     function dataUrlToPlainText(dataUrl) {
@@ -7835,8 +7880,8 @@
             `order: ${m.order || '100'}`,
             `difficulty: ${m.difficulty || 'beginner'}`,
             `time: ${m.time || '25分钟'}`,
-            (m.prev_chapter ? `prev_chapter: ${m.prev_chapter}` : null),
-            (m.next_chapter ? `next_chapter: ${m.next_chapter}` : null),
+            'prefix:',
+            '  - "[前置额外说明](如何贡献/新文章.md)"',
             'min_c: 1',
             'min_t: 1',
             'source_cs:',
@@ -8821,8 +8866,7 @@
             dom.metaOrder,
             dom.metaDifficulty,
             dom.metaTime,
-            dom.metaPrevChapter,
-            dom.metaNextChapter,
+            dom.metaPrefix,
             dom.metaMinC,
             dom.metaMinT
         ].filter(Boolean);

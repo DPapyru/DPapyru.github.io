@@ -17,8 +17,7 @@
         order: '',
         difficulty: 'beginner',
         time: '',
-        prev_chapter: '',
-        next_chapter: '',
+        prefix: [],
         min_c: '',
         min_t: '',
         colors: {},
@@ -48,6 +47,38 @@
             return text.slice(1, -1);
         }
         return text;
+    }
+
+    function parseSimpleYamlArray(raw) {
+        const text = String(raw || '').trim();
+        if (!text.startsWith('[') || !text.endsWith(']')) return [];
+        const body = text.slice(1, -1).trim();
+        if (!body) return [];
+        return body.split(',').map(function (item) {
+            return parseSimpleYamlValue(item);
+        }).filter(Boolean);
+    }
+
+    function normalizePrefixEntries(rawPrefix) {
+        const source = Array.isArray(rawPrefix)
+            ? rawPrefix
+            : String(rawPrefix || '')
+                .split(/\r?\n/)
+                .map((line) => String(line || '').trim())
+                .filter(Boolean);
+        const deduped = [];
+        const seen = new Set();
+        source.forEach((item) => {
+            const raw = parseSimpleYamlValue(item);
+            const match = String(raw || '').trim().match(/^\[[^\]]+\]\(([^)]+)\)$/);
+            if (!match) return;
+            const href = String(match[1] || '').trim().replace(/\\/g, '/');
+            if (!/\.md$/i.test(href)) return;
+            if (seen.has(raw)) return;
+            seen.add(raw);
+            deduped.push(raw);
+        });
+        return deduped;
     }
 
     function parseFrontMatterBlock(yamlText) {
@@ -130,6 +161,31 @@
                 continue;
             }
 
+            if (key === 'prefix') {
+                const prefix = [];
+                if (tail) {
+                    const inline = parseSimpleYamlArray(tail);
+                    inline.forEach((item) => {
+                        if (item) prefix.push(item);
+                    });
+                } else {
+                    while (i < lines.length) {
+                        const nextLine = String(lines[i] || '');
+                        const nextTrimmed = nextLine.trim();
+                        if (!nextTrimmed) {
+                            i += 1;
+                            continue;
+                        }
+                        if (!/^\s{2,}-\s+/.test(nextLine)) break;
+                        const item = parseSimpleYamlValue(nextTrimmed.replace(/^-+\s+/, ''));
+                        if (item) prefix.push(item);
+                        i += 1;
+                    }
+                }
+                metadata.prefix = prefix;
+                continue;
+            }
+
             metadata[key] = parseSimpleYamlValue(tail);
         }
 
@@ -171,8 +227,7 @@
         merged.order = normalizeMetaNumberInput(merged.order);
         merged.difficulty = String(merged.difficulty || 'beginner').trim() || 'beginner';
         merged.time = String(merged.time || '').trim();
-        merged.prev_chapter = String(merged.prev_chapter || '').trim();
-        merged.next_chapter = String(merged.next_chapter || '').trim();
+        merged.prefix = normalizePrefixEntries(merged.prefix);
         merged.min_c = normalizeMetaNumberInput(merged.min_c);
         merged.min_t = normalizeMetaNumberInput(merged.min_t);
         merged.colors = ensureObject(merged.colors);
@@ -195,8 +250,14 @@
             `difficulty: ${m.difficulty || 'beginner'}`,
             `time: ${m.time || ''}`
         ];
-        if (m.prev_chapter) lines.push(`prev_chapter: ${m.prev_chapter}`);
-        if (m.next_chapter) lines.push(`next_chapter: ${m.next_chapter}`);
+        if (Array.isArray(m.prefix) && m.prefix.length > 0) {
+            lines.push('prefix:');
+            m.prefix.forEach((entry) => {
+                const value = String(entry || '').trim();
+                if (!value) return;
+                lines.push(`  - "${value}"`);
+            });
+        }
         if (m.min_c) lines.push(`min_c: ${m.min_c}`);
         if (m.min_t) lines.push(`min_t: ${m.min_t}`);
 

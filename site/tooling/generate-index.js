@@ -205,10 +205,10 @@ class ConfigManager {
                 defaultCategory: '资源参考',
                 defaultTopic: 'mod-basics',
                 pathMappings: { ...defaultPathMappings },
-                customFields: ['time', 'prev_chapter', 'next_chapter', 'colors', 'colorChange', 'min_c', 'min_t'],
+                customFields: ['time', 'prefix', 'colors', 'colorChange', 'min_c', 'min_t'],
                 validationRules: {
                     requiredFields: ['title'],
-                    optionalFields: ['author', 'description', 'difficulty', 'order', 'topic', 'time', 'prev_chapter', 'next_chapter', 'source_cs', 'colors', 'colorChange', 'min_c', 'min_t']
+                    optionalFields: ['author', 'description', 'difficulty', 'order', 'topic', 'time', 'prefix', 'source_cs', 'colors', 'colorChange', 'min_c', 'min_t']
                 }
             }
         };
@@ -503,7 +503,9 @@ function processMainProject() {
     files.forEach(file => {
         const fullPath = path.join(docsDir, file);
         const content = fs.readFileSync(fullPath, 'utf8');
-        let metadata = parseMetadata(content);
+        const parsedDoc = parseFrontMatterAndBody(content);
+        let metadata = parsedDoc.metadata;
+        const markdownBody = parsedDoc.body;
         if (!metadata.title) metadata.title = inferTitleFromFilename(file);
         if (!metadata.title) metadata.title = inferTitleFromFilename(file);
 
@@ -1800,7 +1802,9 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
     files.forEach(file => {
         const fullPath = path.join(docsDir, file);
         const content = fs.readFileSync(fullPath, 'utf8');
-        let metadata = parseMetadata(content);
+        const parsedDoc = parseFrontMatterAndBody(content);
+        const markdownBody = parsedDoc.body;
+        let metadata = parsedDoc.metadata;
 
         // 跳过隐藏文件
         if (metadata.hide === 'true' || metadata.hide === true) {
@@ -1865,25 +1869,14 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
         // 应用路径映射
         const mappedPath = configManager.mapPath(file);
 
-        // 创建文件对象
-        const fileObj = {
-            filename: path.basename(file), // 仅文件名，向后兼容
-            path: mappedPath, // 使用映射后的路径
-            originalPath: file, // 保留原始路径
-            title: metadata.title || path.basename(file, '.md'),
-            author: metadata.author || '未知',
-            order: parseOrder(metadata.order),
-            description: metadata.description || '无描述',
-            // 添加新的自定义字段
-            time: metadata.time || '不具体',
-            difficulty: metadata.difficulty || 'beginner',
-            prev_chapter: metadata.prev_chapter || null,
-            next_chapter: metadata.next_chapter || null,
-            min_c: (typeof metadata.min_c === 'number' ? metadata.min_c : null),
-            min_t: (typeof metadata.min_t === 'number' ? metadata.min_t : null),
-            colors: metadata.colors || metadata.colorLD || null,
-            colorChange: metadata.colorChange || null
-        };
+        const fileObj = normalizeDocRecord({
+            relativePath: file,
+            mappedPath: mappedPath,
+            metadata: metadata,
+            markdownBody: markdownBody,
+            category: category,
+            topic: topic
+        });
 
         // 检查文件是否已存在于主题的文件列表中
         const existingFileIndex = configData.categories[category].topics[topic].files.findIndex(
@@ -1898,47 +1891,28 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
             configData.categories[category].topics[topic].files.push(fileObj);
         }
 
-        // 按order排序
-        configData.categories[category].topics[topic].files.sort((a, b) => a.order - b.order);
+        configData.categories[category].topics[topic].files.sort(compareDocRecords);
 
         // 添加到all_files
-        configData.all_files.push({
-            filename: path.basename(file), // 仅文件名，向后兼容
-            path: mappedPath, // 使用映射后的路径
-            originalPath: file, // 保留原始路径
-            title: metadata.title || path.basename(file, '.md'),
-            author: metadata.author || '未知',
-            category: category,
-            topic: topic,
-            order: parseOrder(metadata.order),
-            // 添加新的自定义字段
-            time: metadata.time || '不具体',
-            difficulty: metadata.difficulty || 'beginner',
-            prev_chapter: metadata.prev_chapter || null,
-            next_chapter: metadata.next_chapter || null,
-            min_c: (typeof metadata.min_c === 'number' ? metadata.min_c : null),
-            min_t: (typeof metadata.min_t === 'number' ? metadata.min_t : null),
-            colors: metadata.colors || metadata.colorLD || null,
-            colorChange: metadata.colorChange || null
-        });
+        configData.all_files.push(fileObj);
 
         // 更新作者信息
-        if (metadata.author) {
-            if (!configData.authors[metadata.author]) {
-                configData.authors[metadata.author] = {
-                    name: metadata.author,
+        if (fileObj.author) {
+            if (!configData.authors[fileObj.author]) {
+                configData.authors[fileObj.author] = {
+                    name: fileObj.author,
                     files: []
                 };
             }
 
             // 检查文件是否已存在于作者的文件列表中
-            if (!configData.authors[metadata.author].files.includes(path.basename(file))) {
-                configData.authors[metadata.author].files.push(path.basename(file));
+            if (!configData.authors[fileObj.author].files.includes(path.basename(file))) {
+                configData.authors[fileObj.author].files.push(path.basename(file));
             }
 
             // 从其他作者的文件列表中移除此文件，确保作者信息一致性
             Object.keys(configData.authors).forEach(author => {
-                if (author !== metadata.author && configData.authors[author].files.includes(path.basename(file))) {
+                if (author !== fileObj.author && configData.authors[author].files.includes(path.basename(file))) {
                     configData.authors[author].files = configData.authors[author].files.filter(f => f !== path.basename(file));
 
                     // 如果该作者没有其他文件了，移除该作者
@@ -1950,8 +1924,7 @@ function updateConfigData(docsDir, files, configManager, translatorConfigs = {})
         }
     });
 
-    // 按order排序all_files
-    configData.all_files.sort((a, b) => a.order - b.order);
+    configData.all_files.sort(compareDocRecords);
 }
 
 // 应用翻译配置的函数
@@ -1998,26 +1971,216 @@ function applyTranslatorConfig(filePath, metadata, translatorConfigs) {
 }
 
 // 辅助函数
+function parseFrontMatterAndBody(content) {
+    try {
+        const safeContent = String(content || '').replace(/^\uFEFF/, '');
+        const metadataMatch = safeContent.match(/^\s*---\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
+        if (!metadataMatch) {
+            return {
+                metadata: {},
+                body: safeContent
+            };
+        }
+
+        return {
+            metadata: parseYaml(metadataMatch[1]),
+            body: safeContent.slice(metadataMatch[0].length)
+        };
+    } catch (error) {
+        console.error('解析 Front Matter 时出错:', error.message);
+        return {
+            metadata: {},
+            body: String(content || '')
+        };
+    }
+}
+
 function parseMetadata(content) {
     try {
-        // 移除可能的BOM字符
-        content = content.replace(/^\uFEFF/, '');
-
-        // 仅解析文件起始处的 Front Matter，避免误把正文中的 '---' 当成元数据
-        const metadataMatch = content.match(/^\s*---\r?\n([\s\S]*?)\r?\n---\s*(?:\r?\n|$)/);
-        if (!metadataMatch) return {};
-
-        // 使用更强大的YAML解析器
-        return parseYaml(metadataMatch[1]);
+        return parseFrontMatterAndBody(content).metadata;
     } catch (error) {
         console.error('解析元数据时出错:', error.message);
         return {};
     }
 }
 
+function extractDescriptionFromMarkdownBody(markdownBody, fallbackText = '无描述') {
+    const fallback = String(fallbackText || '无描述').trim() || '无描述';
+    const lines = String(markdownBody || '').replace(/\r\n/g, '\n').split('\n');
+    const paragraphLines = [];
+    let insideFence = false;
+
+    for (let i = 0; i < lines.length; i += 1) {
+        const rawLine = String(lines[i] || '');
+        const trimmed = rawLine.trim();
+        if (trimmed.startsWith('```')) {
+            insideFence = !insideFence;
+            continue;
+        }
+        if (insideFence) {
+            continue;
+        }
+        if (!trimmed) {
+            if (paragraphLines.length > 0) break;
+            continue;
+        }
+        if (/^\s{0,3}#{1,6}\s+/.test(rawLine)) {
+            if (paragraphLines.length > 0) break;
+            continue;
+        }
+        if (/^\s{0,3}[-*+]\s+/.test(rawLine) || /^\s{0,3}\d+\.\s+/.test(rawLine)) {
+            if (paragraphLines.length > 0) break;
+            continue;
+        }
+        if (/^\s{0,3}>/.test(rawLine)) {
+            if (paragraphLines.length > 0) break;
+            continue;
+        }
+
+        paragraphLines.push(
+            trimmed
+                .replace(/!\[[^\]]*]\([^)]+\)/g, ' ')
+                .replace(/\[([^\]]+)]\([^)]+\)/g, '$1')
+                .replace(/`([^`]*)`/g, '$1')
+                .replace(/<[^>]+>/g, ' ')
+        );
+    }
+
+    const candidate = paragraphLines.join(' ').replace(/\s+/g, ' ').trim();
+    if (!candidate) return fallback;
+    if (candidate.length <= 160) return candidate;
+    return `${candidate.slice(0, 159)}…`;
+}
+
+function normalizeDocTags(rawTags) {
+    const source = Array.isArray(rawTags)
+        ? rawTags
+        : String(rawTags || '')
+            .split(/[;,，]/)
+            .map((part) => part.trim())
+            .filter(Boolean);
+    const deduped = [];
+    const seen = new Set();
+    source.forEach((tag) => {
+        const value = String(tag || '').trim();
+        if (!value || seen.has(value)) return;
+        seen.add(value);
+        deduped.push(value);
+    });
+    return deduped;
+}
+
+function normalizeDocPrefixLinks(rawPrefix) {
+    const source = Array.isArray(rawPrefix)
+        ? rawPrefix
+        : [];
+    const output = [];
+    const seen = new Set();
+
+    source.forEach((item) => {
+        const raw = String(item || '').trim();
+        if (!raw) return;
+        const match = raw.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+        if (!match) return;
+        const label = String(match[1] || '').trim();
+        const href = String(match[2] || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+        if (!label || !href || !/\.md$/i.test(href)) return;
+        if (/^\.\.?(\/|$)/.test(href) || href.includes('/../') || href.includes('\\')) return;
+        const normalized = `[${label}](${href})`;
+        if (seen.has(normalized)) return;
+        seen.add(normalized);
+        output.push(normalized);
+    });
+
+    return output;
+}
+
+function normalizeDateValue(rawDate) {
+    const text = String(rawDate || '').trim();
+    if (!text) return '';
+    const date = new Date(text);
+    if (!Number.isNaN(date.getTime())) {
+        const y = String(date.getUTCFullYear()).padStart(4, '0');
+        const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const d = String(date.getUTCDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+    const match = text.match(/^(\d{4}-\d{2}-\d{2})/);
+    return match ? match[1] : text;
+}
+
+function estimateReadingTime(markdownBody) {
+    const plain = String(markdownBody || '')
+        .replace(/\r\n/g, '\n')
+        .replace(/```[\s\S]*?```/g, ' ')
+        .replace(/`[^`]*`/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    if (!plain) return '1 min';
+
+    const cjkChars = (plain.match(/[\u4e00-\u9fff]/g) || []).length;
+    const latinWords = (plain.match(/[A-Za-z0-9_]+/g) || []).length;
+    const weightedCount = cjkChars + latinWords * 2;
+    const minutes = Math.max(1, Math.round(weightedCount / 450));
+    return `${minutes} min`;
+}
+
 function parseOrder(value, fallback = 999) {
     const parsed = Number.parseInt(value, 10);
     return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function compareDocRecords(a, b) {
+    const orderDelta = parseOrder(a && a.order, 999) - parseOrder(b && b.order, 999);
+    if (orderDelta !== 0) return orderDelta;
+
+    const dateA = normalizeDateValue((a && (a.date || a.last_updated)) || '');
+    const dateB = normalizeDateValue((b && (b.date || b.last_updated)) || '');
+    if (dateA !== dateB) return dateA < dateB ? 1 : -1;
+
+    return stableStringCompare(String(a && a.title || ''), String(b && b.title || ''));
+}
+
+function normalizeDocRecord(options = {}) {
+    const relativePath = String(options.relativePath || '').replace(/\\/g, '/');
+    const mappedPath = String(options.mappedPath || relativePath || '').replace(/\\/g, '/');
+    const metadata = options.metadata && typeof options.metadata === 'object' ? options.metadata : {};
+    const markdownBody = String(options.markdownBody || '');
+    const description = String(metadata.description || '').trim()
+        || extractDescriptionFromMarkdownBody(markdownBody, '无描述');
+    const baseDate = normalizeDateValue(metadata.date || metadata.published_at || metadata.publish_date || '');
+    const lastUpdated = normalizeDateValue(
+        metadata.last_updated || metadata.updated_at || metadata.modified_at || baseDate
+    );
+    const explicitReadingTime = String(metadata.reading_time || metadata.read_time || '').trim();
+    const folderPath = path.dirname(mappedPath).replace(/\\/g, '/');
+
+    return {
+        filename: path.basename(relativePath), // 仅文件名，向后兼容
+        path: mappedPath,
+        originalPath: relativePath,
+        folder: folderPath === '.' ? '' : folderPath,
+        slug: mappedPath.replace(/\.md$/i, ''),
+        title: metadata.title || path.basename(relativePath, '.md'),
+        author: metadata.author || '未知',
+        category: options.category || '',
+        topic: options.topic || '',
+        order: parseOrder(metadata.order),
+        description: description,
+        tags: normalizeDocTags(metadata.tags || metadata.tag || metadata.keywords),
+        date: baseDate,
+        last_updated: lastUpdated || '',
+        reading_time: explicitReadingTime || estimateReadingTime(markdownBody),
+        is_hidden: metadata.hide === true || metadata.hide === 'true',
+        time: metadata.time || '不具体',
+        difficulty: metadata.difficulty || 'beginner',
+        prefix: normalizeDocPrefixLinks(metadata.prefix),
+        min_c: (typeof metadata.min_c === 'number' ? metadata.min_c : null),
+        min_t: (typeof metadata.min_t === 'number' ? metadata.min_t : null),
+        colors: metadata.colors || metadata.colorLD || null,
+        colorChange: metadata.colorChange || null
+    };
 }
 
 // 简单的YAML解析器，支持嵌套对象和数组
@@ -2233,6 +2396,11 @@ module.exports = {
     generateBm25Index,
     generateFunTestQuiz,
     generateIdeEditableIndex,
+    parseFrontMatterAndBody,
+    parseMetadata,
+    extractDescriptionFromMarkdownBody,
+    normalizeDocTags,
+    normalizeDocRecord,
     runStructure,
     runSearch,
     runAll

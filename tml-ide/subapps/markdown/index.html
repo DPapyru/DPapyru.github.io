@@ -228,16 +228,8 @@
                                     <input id="studio-meta-time" class="studio-input" type="text" placeholder="25分钟">
                                 </div>
                                 <div class="studio-panel-section">
-                                    <label for="studio-meta-prev-chapter">上一篇</label>
-                                    <select id="studio-meta-prev-chapter" class="studio-select">
-                                        <option value="">(无)</option>
-                                    </select>
-                                </div>
-                                <div class="studio-panel-section">
-                                    <label for="studio-meta-next-chapter">下一篇</label>
-                                    <select id="studio-meta-next-chapter" class="studio-select">
-                                        <option value="">(无)</option>
-                                    </select>
+                                    <label for="studio-meta-prefix">prefix（前置说明）</label>
+                                    <textarea id="studio-meta-prefix" class="studio-editor studio-editor--compact" spellcheck="false" placeholder="[前置额外说明](如何贡献/新文章.md)&#10;[前置额外说明](路径/文章.md)"></textarea>
                                 </div>
                                 <div class="studio-panel-section studio-grid-2">
                                     <div>
@@ -724,8 +716,9 @@ description: 一句话说明本文内容
 order: 100
 difficulty: beginner
 time: 25分钟
-prev_chapter: 上一章.md
-next_chapter: 下一章.md
+prefix:
+  - "[前置额外说明](如何贡献/新文章.md)"
+  - "[前置额外说明](路径/文章.md)"
 source_cs:
   - code/Demo.cs
 min_c: 1

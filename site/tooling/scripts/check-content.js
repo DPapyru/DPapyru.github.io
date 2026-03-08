@@ -42,9 +42,69 @@ function extractFrontMatter(text) {
     return m ? String(m[1] || '') : '';
 }
 
-function hasExplicitNullKey(frontMatterText, key) {
-    const re = new RegExp(`^\\s*${key}\\s*:\\s*null\\s*$`, 'im');
-    return re.test(String(frontMatterText || ''));
+function parseInlineArray(text) {
+    const raw = String(text || '').trim();
+    if (!raw.startsWith('[') || !raw.endsWith(']')) return null;
+    const body = raw.slice(1, -1).trim();
+    if (!body) return [];
+    return body.split(',').map((part) => String(part || '').trim()).filter(Boolean);
+}
+
+function stripWrappingQuotes(text) {
+    const raw = String(text || '').trim();
+    if (!raw) return '';
+    if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith('\'') && raw.endsWith('\''))) {
+        return raw.slice(1, -1).trim();
+    }
+    return raw;
+}
+
+function extractPrefixEntries(frontMatterText) {
+    const lines = String(frontMatterText || '').replace(/\r\n/g, '\n').split('\n');
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = String(lines[i] || '');
+        const match = line.match(/^\s*prefix\s*:\s*(.*)$/);
+        if (!match) continue;
+
+        const tail = String(match[1] || '').trim();
+        if (tail) {
+            const inline = parseInlineArray(tail);
+            if (!inline) return { entries: null, formatError: 'prefix 必须是数组' };
+            return { entries: inline, formatError: '' };
+        }
+
+        const entries = [];
+        for (let j = i + 1; j < lines.length; j += 1) {
+            const blockLine = String(lines[j] || '');
+            if (!blockLine.trim()) continue;
+            if (!/^\s{2,}-\s+/.test(blockLine)) break;
+            entries.push(blockLine.replace(/^\s*-\s+/, '').trim());
+            i = j;
+        }
+        return { entries, formatError: '' };
+    }
+    return { entries: null, formatError: '' };
+}
+
+function validatePrefixEntry(entryText) {
+    const raw = stripWrappingQuotes(entryText);
+    if (!raw) return 'prefix 项不能为空';
+    const match = raw.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (!match) return 'prefix 项必须是 Markdown 链接字符串，如 "[标题](路径.md)"';
+
+    const label = String(match[1] || '').trim();
+    const href = String(match[2] || '').trim().replace(/\\/g, '/');
+    if (!label) return 'prefix 链接文本不能为空';
+    if (!href) return 'prefix 链接路径不能为空';
+    if (!/\.md$/i.test(href)) return 'prefix 链接路径必须以 .md 结尾';
+    if (href.startsWith('/') || href.startsWith('./') || href.startsWith('../')) {
+        return 'prefix 路径必须相对 site/content 根目录，不允许 ./ ../ 或绝对路径';
+    }
+    if (/(^|\/)\.\.(\/|$)/.test(href)) {
+        return 'prefix 路径不允许包含 ..';
+    }
+
+    return '';
 }
 
 function getFrontMatterScalar(frontMatterText, key) {
@@ -138,7 +198,7 @@ function printHelp() {
         'Checks:',
         '- Require YAML front matter',
         '- Require title in YAML front matter',
-        '- Disallow prev_chapter: null / next_chapter: null (use empty value or omit key)',
+        '- Validate prefix metadata as markdown-link array with .md paths under site/content root',
         '- Disallow legacy embed syntax {{cs:...}}/{{anim:...}}/{{ref:...}}',
         '- Disallow empty markdown links []() and [text]()',
         '- Warn protocol embed links not on standalone line',
@@ -201,11 +261,16 @@ function main() {
             errors.push({ filePath, message: '缺少 title' });
         }
 
-        if (hasExplicitNullKey(fm, 'prev_chapter')) {
-            errors.push({ filePath, message: 'prev_chapter: null' });
-        }
-        if (hasExplicitNullKey(fm, 'next_chapter')) {
-            errors.push({ filePath, message: 'next_chapter: null' });
+        const prefixMeta = extractPrefixEntries(fm);
+        if (prefixMeta.formatError) {
+            errors.push({ filePath, message: prefixMeta.formatError });
+        } else if (Array.isArray(prefixMeta.entries)) {
+            prefixMeta.entries.forEach((entry) => {
+                const reason = validatePrefixEntry(entry);
+                if (reason) {
+                    errors.push({ filePath, message: reason });
+                }
+            });
         }
 
         if (/\{\{(?:cs|anim|ref):/i.test(raw)) {

@@ -1160,11 +1160,9 @@
 	
 	                <!-- 教程底部区域：导航链接和反馈表单 -->
 	                <div class="tutorial-footer">
-	                    <!-- 教程导航：上一篇/下一篇链接 -->
-	                    <div class="tutorial-navigation">
+                    <!-- 教程导航：返回目录 -->
+                    <div class="tutorial-navigation">
                         <a href="folder.html" class="btn btn-outline prev-tutorial">← 返回文档列表</a>
-	                        <a href="?file=Modder入门/DPapyru-从这里开始.md" class="btn btn-secondary">查看教程</a>
-                        <a href="?file=如何贡献/教学文章写作指南.md" class="btn btn-primary next-tutorial">贡献指南 →</a>
                     </div>
                     <!-- 教程反馈：用户反馈和问题提交 -->
                     <div class="tutorial-feedback">
@@ -6768,11 +6766,9 @@
 	                            if (!metadata.topic && docFromConfig.topic) metadata.topic = docFromConfig.topic;
 	                            if (!metadata.difficulty && docFromConfig.difficulty) metadata.difficulty = docFromConfig.difficulty;
 	                            if (!metadata.time && docFromConfig.time) metadata.time = docFromConfig.time;
-	                            if (!metadata.prev_chapter && docFromConfig.prev_chapter) metadata.prev_chapter = docFromConfig.prev_chapter;
-	                            if (!metadata.next_chapter && docFromConfig.next_chapter) metadata.next_chapter = docFromConfig.next_chapter;
-	                            if (!metadata.colors && docFromConfig.colors) metadata.colors = docFromConfig.colors;
-	                            if (!metadata.colorChange && docFromConfig.colorChange) metadata.colorChange = docFromConfig.colorChange;
-	                        }
+                            if (!metadata.colors && docFromConfig.colors) metadata.colors = docFromConfig.colors;
+                            if (!metadata.colorChange && docFromConfig.colorChange) metadata.colorChange = docFromConfig.colorChange;
+                        }
 
                         console.log('解析的元数据:', metadata);
 
@@ -7295,12 +7291,10 @@
 	            const difficulty = metadata.difficulty;
 	            const time = metadata.time;
 	            const author = metadata.author || '未知';
-	            const prevChapter = metadata.prev_chapter || null;
-	            const nextChapter = metadata.next_chapter || null;
-		            const colors = metadata.colors || metadata.colorLD || null;
-		            const colorChange = metadata.colorChange || null;
-		
-	            console.log('更新页面元数据:', { title, difficulty, time, author, prevChapter, nextChapter, colors, colorChange });
+            const colors = metadata.colors || metadata.colorLD || null;
+            const colorChange = metadata.colorChange || null;
+
+            console.log('更新页面元数据:', { title, difficulty, time, author, colors, colorChange });
 
 	            document.title = `${title} - 泰拉瑞亚Mod制作教程`;
 
@@ -7344,7 +7338,7 @@
             updateBreadcrumbNavigation(metadata, filePath);
 
             // 更新导航按钮
-	            updateNavigationButtons(prevChapter, nextChapter, filePath);
+            updateNavigationButtons(filePath);
 
             // 更新 SEO 元标签（canonical/OG/Twitter/description）
             updateSeoMeta({
@@ -7565,7 +7559,7 @@
         }
 
 	        // 更新导航按钮
-		        function updateNavigationButtons(prevChapter, nextChapter, currentDocPath) {
+		        function updateNavigationButtons(currentDocPath) {
 	            const navigationContainer = document.querySelector('.tutorial-navigation');
 	            if (!navigationContainer) {
 	                console.warn('找不到导航容器');
@@ -7583,82 +7577,7 @@
 		            backToListBtn.textContent = '← 返回文档列表';
 		            navigationContainer.appendChild(backToListBtn);
 
-	            function findDocByPath(docPath) {
-	                const p = String(docPath || '');
-	                if (!p || !Array.isArray(ALL_DOCS)) return null;
-	                return ALL_DOCS.find(d => d && (d.path === p || d.filename === p)) || null;
-	            }
-
-	            function getDocTitle(docPath) {
-	                const doc = findDocByPath(docPath);
-	                if (doc && doc.title) return String(doc.title);
-	                const tail = String(docPath || '').split('/').pop() || '';
-	                return tail.replace(/\.md$/i, '') || String(docPath || '');
-	            }
-
-	            function resolveNavPath(raw) {
-	                if (!raw) return null;
-	                const href = String(raw).trim();
-	                if (!href) return null;
-	                const resolved = resolveDocLinkPath(href, currentDocPath || CURRENT_DOC_PATH);
-	                if (resolved) return resolved;
-	                const fallback = resolveRelativeHref(href, currentDocPath || CURRENT_DOC_PATH);
-	                if (!fallback) return href;
-	                return String(fallback).replace(/^\.?\//, '').replace(/^docs\//, '');
-	            }
-
-	            function appendNavButton(kind, resolvedPath) {
-	                const title = getDocTitle(resolvedPath);
-	                const btn = document.createElement('a');
-	                btn.href = `?file=${encodeURIComponent(resolvedPath)}`;
-	                btn.className = kind === 'prev'
-	                    ? 'btn btn-secondary prev-tutorial'
-	                    : 'btn btn-primary next-tutorial';
-
-	                const label = document.createElement('span');
-	                label.className = 'tutorial-nav-label';
-	                label.textContent = kind === 'prev' ? '← 上一章' : '下一章 →';
-
-	                const sep = document.createElement('span');
-	                sep.className = 'tutorial-nav-sep';
-	                sep.textContent = '：';
-
-	                const t = document.createElement('span');
-	                t.className = 'tutorial-nav-title';
-	                t.textContent = title;
-
-	                if (kind === 'prev') {
-	                    btn.appendChild(label);
-	                    btn.appendChild(sep);
-	                    btn.appendChild(t);
-	                } else {
-	                    const arrow = document.createElement('span');
-	                    arrow.className = 'tutorial-nav-arrow';
-	                    arrow.textContent = '→';
-	                    label.textContent = '下一章';
-	                    btn.appendChild(label);
-	                    btn.appendChild(sep);
-	                    btn.appendChild(t);
-	                    btn.appendChild(document.createTextNode(' '));
-	                    btn.appendChild(arrow);
-	                }
-
-	                navigationContainer.appendChild(btn);
-	            }
-
-	            // 添加上一章按钮（如果存在）
-		            if (prevChapter) {
-		                const resolvedPrev = resolveNavPath(prevChapter);
-		                if (resolvedPrev) appendNavButton('prev', resolvedPrev);
-		            }
-
-	            // 添加下一章按钮（如果存在）
-		            if (nextChapter) {
-		                const resolvedNext = resolveNavPath(nextChapter);
-		                if (resolvedNext) appendNavButton('next', resolvedNext);
-		            }
-
-	            console.log('导航按钮已更新:', { prevChapter, nextChapter });
+	            console.log('导航按钮已更新:', { backToList: backToListBtn.href });
 	        }
 
 	        function removeDuplicateChapterProgress(container) {

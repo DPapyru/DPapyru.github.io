@@ -49,7 +49,7 @@ test('check-content: --help exits 0', () => {
     assert.doesNotMatch(res.stdout + res.stderr, /route\s+v2/i);
 });
 
-test('check-content: rejects prev_chapter: null', () => {
+test('check-content: rejects prefix item without .md suffix', () => {
     const tmp = makeTempDir('content-check-');
     const root = path.join(tmp, 'content');
     fs.mkdirSync(root, { recursive: true });
@@ -57,7 +57,8 @@ test('check-content: rejects prev_chapter: null', () => {
     fs.writeFileSync(path.join(root, 'a.md'), [
         '---',
         'title: A',
-        'prev_chapter: null',
+        'prefix:',
+        '  - "[前置说明](指南/入门.txt)"',
         '---',
         '',
         'body'
@@ -67,7 +68,52 @@ test('check-content: rejects prev_chapter: null', () => {
     const res = runNode([script, '--root', root]);
 
     assert.equal(res.status, 1, res.stderr || res.stdout);
-    assert.match(res.stdout + res.stderr, /prev_chapter:\s*null/i);
+    assert.match(res.stdout + res.stderr, /prefix.*\.md/i);
+});
+
+test('check-content: rejects prefix item with invalid markdown-link format', () => {
+    const tmp = makeTempDir('content-check-');
+    const root = path.join(tmp, 'content');
+    fs.mkdirSync(root, { recursive: true });
+
+    fs.writeFileSync(path.join(root, 'a.md'), [
+        '---',
+        'title: A',
+        'prefix:',
+        '  - "前置说明: 指南/入门.md"',
+        '---',
+        '',
+        'body'
+    ].join('\n'), 'utf8');
+
+    const script = path.resolve(__dirname, 'check-content.js');
+    const res = runNode([script, '--root', root]);
+
+    assert.equal(res.status, 1, res.stderr || res.stdout);
+    assert.match(res.stdout + res.stderr, /prefix.*markdown/i);
+});
+
+test('check-content: accepts valid prefix markdown-link array', () => {
+    const tmp = makeTempDir('content-check-');
+    const root = path.join(tmp, 'content');
+    fs.mkdirSync(root, { recursive: true });
+
+    fs.writeFileSync(path.join(root, 'a.md'), [
+        '---',
+        'title: A',
+        'prefix:',
+        '  - "[前置额外说明](如何贡献/新文章.md)"',
+        '  - "[术语补充](术语表/基础名词.md)"',
+        '---',
+        '',
+        'body'
+    ].join('\n'), 'utf8');
+
+    const script = path.resolve(__dirname, 'check-content.js');
+    const res = runNode([script, '--root', root]);
+
+    assert.equal(res.status, 0, res.stderr || res.stdout);
+    assert.match(res.stdout + res.stderr, /OK/i);
 });
 
 test('check-content: ignores routing_manual metadata field', () => {

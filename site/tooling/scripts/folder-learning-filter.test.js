@@ -3,27 +3,29 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-test('folder page does not render learning toggle actions', () => {
+test('folder page keeps article list routing independent from learning profile filters', () => {
     const htmlPath = path.resolve('site/pages/folder.html');
     const html = fs.readFileSync(htmlPath, 'utf8');
 
-    assert.doesNotMatch(html, /makeToggle\('显示未标注'/);
-    assert.doesNotMatch(html, /makeToggle\('显示全部'/);
+    assert.match(html, /目录下文章不会按学习路径分流/);
     assert.doesNotMatch(html, /setPref\('showUnmapped'/);
     assert.doesNotMatch(html, /setPref\('showAll'/);
 });
 
-test('learning-path filter keeps unmapped docs visible with profile', () => {
-    const jsPath = path.resolve('site/assets/js/learning-paths.js');
-    const js = fs.readFileSync(jsPath, 'utf8');
-
-    assert.match(js, /if\s*\(!rule\)\s*\{[\s\S]*counts\.unmapped\s*\+=\s*1;[\s\S]*visible\.push\(doc\);/);
-    assert.match(js, /isStrict:\s*false/);
-});
-
-test('folder page labels list mode as non-filtered by routing', () => {
+test('folder page script supports path q sort query params', () => {
     const htmlPath = path.resolve('site/pages/folder.html');
     const html = fs.readFileSync(htmlPath, 'utf8');
 
-    assert.match(html, /文章列表不做分流/);
+    assert.match(html, /searchParams\.get\('path'\)/);
+    assert.match(html, /searchParams\.get\('q'\)/);
+    assert.match(html, /searchParams\.get\('sort'\)/);
+});
+
+test('folder page canonical builder keeps only path query parameter', () => {
+    const htmlPath = path.resolve('site/pages/folder.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+
+    assert.match(html, /url\.searchParams\.delete\('q'\)/);
+    assert.match(html, /url\.searchParams\.delete\('sort'\)/);
+    assert.match(html, /url\.searchParams\.set\('path',\s*normalizedPath\)/);
 });

@@ -2985,3 +2985,28 @@
 **备注**：
 - 修复点包含：去除贡献文档中的旧双花括号语法字面量、恢复 ` ````text + ```animts ` 安全嵌套围栏、恢复 `## 顶点绘制 + FX（首版）` 章节及 `UseEffect("anims/shaders/fna-vertex-demo.fx")` / `DrawUserIndexedPrimitives(...)` 关键标记。
 - 构建期间出现既有 warning（字体运行时解析与大 chunk 提示），命令均成功退出，不影响本次文档回归修复结论。
+
+### 验证记录 [2026-03-08 16:15]：folder 页面 metadata-first 重构 + generate-index 元数据标准化
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/folder-view-toggle.test.js site/tooling/scripts/folder-learning-filter.test.js site/tooling/scripts/folder-svg-navigation-contract.test.js site/tooling/scripts/generate-index-frontmatter-normalization.test.js site/tooling/scripts/ide-editable-index.test.js`：通过（15 tests, 0 failures）
+- `npm run build`：通过
+- `npm run check-generated`：失败
+
+**备注**：`check-generated` 的失败由 `git diff --exit-code` 返回非零触发，当前工作树存在本次功能改动与测试改动，属预期结果；功能链路构建（含 `generate-index`、`site-app`、`tml-ide-app`）已通过。
+
+### 验证记录 [2026-03-08 18:58]：folder 单列分组排版 + prefix 元数据落地 + 移除上一章/下一章
+
+**级别**：L3（跨页面 + 工具链 + IDE 元数据）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/check-content.test.js site/tooling/scripts/folder-learning-filter.test.js site/tooling/scripts/folder-svg-navigation-contract.test.js site/tooling/scripts/folder-view-toggle.test.js site/tooling/scripts/generate-index-frontmatter-normalization.test.js`：通过（23 tests, 0 failures）
+- `npm run generate-index`：通过（已刷新 `site/content/config.json` / 搜索索引 / 语义索引）
+- `npm run build`：通过（`BUILD_EXIT=0`）
+- `npm run check-generated`：失败（`CHECK_GENERATED_EXIT=1`，失败点为 `git diff --exit-code` 检测到本次功能改动与生成产物差异）
+
+**备注**：
+- `check-generated` 失败属于当前工作树存在待评审差异的预期结果，不是构建链路错误。
+- 构建仍存在既有 Vite 提示（字体运行时解析、chunk 体积警告），命令成功退出。

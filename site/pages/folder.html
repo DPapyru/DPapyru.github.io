@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<!-- 目录可视化页面（SVG） -->
+<!-- 文件夹文章目录页（metadata-first） -->
 <html lang="zh-CN" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文件夹内容 - 泰拉瑞亚Mod制作教程</title>
 
-    <meta name="description" content="泰拉瑞亚Mod制作教程文档目录可视化页面，支持按目录下钻和章节关系查看。">
+    <meta name="description" content="泰拉瑞亚Mod制作教程文档目录页面，支持目录筛选、元数据检索与多文章浏览。">
     <meta name="keywords" content="泰拉瑞亚,Mod,教程,文档,文件夹,tModLoader">
     <meta name="author" content="泰拉瑞亚Mod社区">
     <meta name="robots" content="index, follow">
 
     <meta property="og:title" content="文件夹内容 - 泰拉瑞亚Mod制作教程">
-    <meta property="og:description" content="泰拉瑞亚Mod制作教程文档目录可视化页面，支持按目录下钻和章节关系查看。">
+    <meta property="og:description" content="泰拉瑞亚Mod制作教程文档目录页面，支持目录筛选、元数据检索与多文章浏览。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://dpapyru.github.io/site/pages/folder.html">
     <meta property="og:image" content="https://dpapyru.github.io/site/assets/imgs/Green_tModLoader.png">
@@ -21,7 +21,7 @@
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="文件夹内容 - 泰拉瑞亚Mod制作教程">
-    <meta name="twitter:description" content="泰拉瑞亚Mod制作教程文档目录可视化页面，支持按目录下钻和章节关系查看。">
+    <meta name="twitter:description" content="泰拉瑞亚Mod制作教程文档目录页面，支持目录筛选、元数据检索与多文章浏览。">
     <meta name="twitter:image" content="https://dpapyru.github.io/site/assets/imgs/Green_tModLoader.png">
 
     <link rel="canonical" href="https://dpapyru.github.io/site/pages/folder.html">
@@ -35,61 +35,605 @@
     <script src="/site/assets/js/theme-init.js"></script>
 
     <style>
-        body.folder-svg-only-page .workbench-main {
+        body.folder-catalog-page .workbench-main.folder-main {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 16px 22px 18px;
+            min-height: 0;
+            border-left: none;
+            border-right: none;
+            background: transparent;
+        }
+
+        .folder-layout {
+            display: grid;
+            grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
+            gap: 14px;
+            height: 100%;
+            min-height: 580px;
+        }
+
+        .folder-sidebar,
+        .folder-article-panel {
+            background: color-mix(in srgb, var(--bg-secondary) 88%, transparent);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        .folder-sidebar {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .folder-sidebar-head {
+            padding: 14px 14px 8px;
+            border-bottom: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
+        }
+
+        .folder-sidebar-title {
+            margin: 0;
+            font-size: 1.05rem;
+            color: var(--text-color);
+            letter-spacing: 0.2px;
+        }
+
+        .folder-sidebar-note {
+            margin: 8px 0 0;
+            color: var(--text-secondary);
+            font-size: 0.86rem;
+            line-height: 1.45;
+        }
+
+        .folder-folder-tree {
             padding: 10px;
             overflow: auto;
             min-height: 0;
-            background: var(--bg-color);
-            border-left: 1px solid var(--workbench-line-color);
-            border-right: 1px solid var(--workbench-line-color);
-            scroll-behavior: smooth;
-            scroll-padding: 10px;
         }
 
-        body.folder-svg-only-page .folder-map-svg {
+        .folder-folder-tree .learn-tree-root,
+        .folder-folder-tree .learn-tree-children {
+            --learn-tree-row-height: 32px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .folder-folder-tree .learn-tree-item {
+            min-height: 32px;
+            border-radius: 6px;
+            padding: 4px 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .folder-folder-tree .learn-tree-label,
+        .folder-folder-tree .learn-tree-link-label {
+            position: relative;
             display: block;
-            width: 1520px;
-            min-width: 100%;
-            height: auto;
-            background: var(--bg-color);
+            min-width: 0;
+            padding-left: 24px;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            gap: 0;
         }
 
-        body.folder-svg-only-page .workbench-main:focus {
-            outline: none;
+        .folder-folder-tree .learn-tree-label::before,
+        .folder-folder-tree .learn-tree-link-label::before {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
-        .map-clickable {
+        .folder-folder-tree .learn-tree-folder.is-active > .learn-tree-row .learn-tree-item {
+            background-color: var(--sidebar-active) !important;
+            color: var(--primary-color) !important;
+            border-left: 2px solid var(--primary-color);
+            border-radius: 0 6px 6px 0;
+            padding-left: 8px;
+        }
+
+        .folder-folder-tree .learn-tree-folder.is-active > .learn-tree-row .learn-tree-label::before {
+            color: var(--primary-color);
+        }
+
+        .folder-folder-tree .learn-tree-toggle {
+            width: 18px;
+            height: 18px;
+            min-width: 18px;
+            border: 1px solid color-mix(in srgb, var(--border-color) 85%, transparent);
+            border-radius: 4px;
+            background: color-mix(in srgb, var(--bg-color) 82%, transparent);
+            color: var(--text-secondary);
+            font-size: 0;
+            line-height: 1;
+            flex: 0 0 18px;
+            overflow: visible;
+        }
+
+        .folder-folder-tree .learn-tree-toggle::before {
+            content: '▾';
+            display: block;
+            font-size: 11px;
+            text-align: center;
+            line-height: 16px;
+        }
+
+        .folder-folder-tree .learn-tree-folder[data-collapsed="1"] > .learn-tree-row .learn-tree-toggle::before {
+            content: '▸';
+        }
+
+        .folder-folder-tree .learn-tree-toggle:hover,
+        .folder-folder-tree .learn-tree-toggle:focus-visible {
+            background: color-mix(in srgb, var(--primary-color) 14%, var(--bg-color));
+            color: var(--primary-color);
+            border-color: color-mix(in srgb, var(--primary-color) 62%, transparent);
+        }
+
+        .folder-folder-tree .learn-tree-open-folder {
+            margin-left: auto;
+            height: 22px;
+            min-width: 40px;
+            padding: 0 8px;
+            border-radius: 999px;
+            border: 1px solid color-mix(in srgb, var(--border-color) 78%, transparent);
+            background: color-mix(in srgb, var(--bg-secondary) 66%, transparent);
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            line-height: 1;
             cursor: pointer;
+        }
+
+        .folder-folder-tree .learn-tree-open-folder:hover,
+        .folder-folder-tree .learn-tree-open-folder:focus-visible {
+            color: var(--primary-color);
+            border-color: color-mix(in srgb, var(--primary-color) 58%, transparent);
+            background: color-mix(in srgb, var(--primary-color) 12%, var(--bg-color));
+        }
+
+        .folder-article-panel {
+            --folder-group-glyph-font: "JetBrainsMonoNerdFontBold", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .folder-panel-toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 14px;
+            border-bottom: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
+        }
+
+        .folder-toolbar-main {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .folder-path-wrap {
+            min-width: 0;
+        }
+
+        .folder-path-wrap-label {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
+
+        #folder-current-path {
+            display: block;
+            margin-top: 3px;
+            color: var(--text-color);
+            font-size: 1.02rem;
+            font-weight: 650;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .folder-toolbar-stats {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .folder-toolbar-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+            background: color-mix(in srgb, var(--bg-color) 86%, transparent);
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
+
+        .folder-toolbar-stat strong {
+            color: var(--text-color);
+            font-weight: 700;
+        }
+
+        .folder-toolbar-controls {
+            display: grid;
+            grid-template-columns: minmax(190px, 320px) 120px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .folder-toolbar-controls label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            border: 0;
+            padding: 0;
+            clip: rect(0 0 0 0);
+            overflow: hidden;
+        }
+
+        #folder-search-input,
+        #folder-sort-select {
+            background: color-mix(in srgb, var(--bg-color) 88%, transparent);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        #folder-search-input:focus,
+        #folder-sort-select:focus {
             outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 26%, transparent);
         }
 
-        .map-clickable rect {
-            transition: transform 0.18s ease, stroke-width 0.18s ease, filter 0.18s ease;
-            transform-box: fill-box;
-            transform-origin: center;
+        .folder-panel-meta {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
+            font-size: 0.86rem;
+            flex-wrap: wrap;
         }
 
-        .map-clickable:hover rect,
-        .map-clickable:focus rect {
-            transform: translateY(-2px);
-            stroke-width: 2.6;
-            filter: brightness(1.06);
+        #folder-total-count {
+            color: var(--text-color);
+            font-weight: 650;
         }
 
-        @media (max-width: 768px) {
-            body.folder-svg-only-page .workbench-main {
-                border-left: none;
-                border-right: none;
+        .folder-article-list {
+            padding: 10px 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: auto;
+            min-height: 0;
+        }
+
+        .folder-group {
+            border: 1px solid color-mix(in srgb, var(--border-color) 82%, transparent);
+            border-radius: 10px;
+            background: color-mix(in srgb, var(--bg-color) 86%, transparent);
+            overflow: hidden;
+        }
+
+        .folder-group-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 8px 12px;
+            border-bottom: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+            background: color-mix(in srgb, var(--bg-secondary) 78%, transparent);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .folder-group-title-wrap {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .folder-group-toggle {
+            display: none;
+        }
+
+        .folder-group-title {
+            position: relative;
+            display: block;
+            min-width: 0;
+            padding-left: 22px;
+            color: var(--text-color);
+            font-size: 0.86rem;
+            font-weight: 650;
+            line-height: 1.25;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .folder-group-title::before {
+            content: '\f07c';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: var(--folder-group-glyph-font);
+            font-size: 16px;
+            line-height: 1;
+            color: var(--text-secondary);
+            flex: 0 0 auto;
+            margin-right: 0;
+        }
+
+        .folder-group-count {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .folder-group[data-collapsed="1"] > .folder-group-header .folder-group-title::before {
+            content: '\f07b';
+        }
+
+        .folder-group-list {
+            display: flex;
+            flex-direction: column;
+            border: 1px dashed color-mix(in srgb, var(--border-color) 66%, transparent);
+            border-radius: 8px;
+            overflow: hidden;
+            background: color-mix(in srgb, var(--bg-color) 90%, transparent);
+        }
+
+        .folder-group-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .folder-group[data-collapsed="1"] > .folder-group-header {
+            border-bottom: none;
+        }
+
+        .folder-group[data-collapsed="1"] > .folder-group-body {
+            display: none;
+        }
+
+        .folder-group-children {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .folder-group[data-depth="0"] > .folder-group-body {
+            padding: 10px;
+        }
+
+        .folder-group .folder-group {
+            margin-left: 8px;
+        }
+
+        .folder-doc-card {
+            display: block;
+            padding: 12px;
+            border-top: 1px dashed color-mix(in srgb, var(--border-color) 70%, transparent);
+            min-width: 0;
+            background: transparent;
+        }
+
+        .folder-doc-card:first-child {
+            border-top: none;
+        }
+
+        .folder-doc-main {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .folder-doc-meta-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .folder-doc-title-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 1rem;
+            line-height: 1.35;
+            font-weight: 650;
+            word-break: break-word;
+        }
+
+        .folder-doc-title-link:hover {
+            color: var(--primary-color);
+        }
+
+        .folder-doc-desc {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.86rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .folder-meta-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            min-height: 24px;
+        }
+
+        .folder-meta-pill {
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+            font-size: 0.76rem;
+            border: 1px solid color-mix(in srgb, var(--border-color) 78%, transparent);
+            border-radius: 999px;
+            color: var(--text-secondary);
+            padding: 3px 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background: color-mix(in srgb, var(--bg-secondary) 65%, transparent);
+        }
+
+        .folder-meta-pill--difficulty {
+            border-color: color-mix(in srgb, var(--primary-color) 65%, transparent);
+            color: color-mix(in srgb, var(--primary-color) 85%, #ffffff);
+        }
+
+        .folder-prefix-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            min-height: 20px;
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
+
+        .folder-prefix-label {
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .folder-prefix-link {
+            color: var(--link-color);
+            text-decoration: none;
+            border-bottom: 1px dotted color-mix(in srgb, var(--link-color) 58%, transparent);
+        }
+
+        .folder-prefix-link:hover {
+            color: var(--primary-color);
+            border-bottom-color: color-mix(in srgb, var(--primary-color) 60%, transparent);
+        }
+
+        .folder-doc-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            min-width: 90px;
+        }
+
+        .folder-doc-link {
+            color: var(--link-color);
+            font-size: 0.84rem;
+            text-decoration: none;
+            font-weight: 620;
+        }
+
+        .folder-doc-link:hover {
+            color: var(--primary-color);
+        }
+
+        .folder-empty {
+            margin: 16px;
+            padding: 18px;
+            border-radius: 10px;
+            border: 1px dashed color-mix(in srgb, var(--border-color) 75%, transparent);
+            color: var(--text-secondary);
+            background: color-mix(in srgb, var(--bg-color) 82%, transparent);
+        }
+
+        @media (max-width: 1100px) {
+            .folder-layout {
+                grid-template-columns: 290px minmax(0, 1fr);
             }
 
-            body.folder-svg-only-page .folder-map-svg {
-                width: 1360px;
+            .folder-toolbar-controls {
+                grid-template-columns: 1fr;
+                width: min(320px, 100%);
+            }
+
+            .folder-toolbar-main {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .folder-toolbar-stats {
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 960px) {
+            body.folder-catalog-page .workbench-main.folder-main {
+                border-left: none;
+                border-right: none;
+                padding: 10px;
+            }
+
+            .folder-layout {
+                grid-template-columns: 1fr;
+                min-height: 0;
+            }
+
+            .folder-sidebar {
+                max-height: 44vh;
+            }
+
+            .folder-toolbar-controls {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .folder-article-list {
+                gap: 10px;
+                padding: 8px;
+            }
+
+            .folder-doc-card {
+                padding: 10px;
+            }
+
+            .folder-doc-main {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .folder-doc-actions {
+                justify-content: flex-start;
+            }
+
+            .folder-panel-meta {
+                gap: 8px;
             }
         }
     </style>
 </head>
 
-<body class="workbench-page folder-svg-only-page">
+<body class="workbench-page folder-catalog-page">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
 
     <header class="site-header">
@@ -146,10 +690,52 @@
         </div>
     </header>
 
-    <main class="workbench-main" id="main-content" tabindex="-1">
-        <svg class="folder-map-svg" id="folder-map-svg" viewBox="0 0 1520 920" role="img" aria-label="文档目录结构导航图"></svg>
+    <main class="workbench-main folder-main" id="main-content" tabindex="-1">
+        <div class="folder-layout" id="folder-layout">
+            <aside class="folder-sidebar" id="folder-sidebar" aria-label="目录导航">
+                <div class="folder-sidebar-head">
+                    <h2 class="folder-sidebar-title">目录导航</h2>
+                    <p class="folder-sidebar-note">目录下文章不会按学习路径分流</p>
+                </div>
+                <div class="folder-folder-tree" id="folder-folder-tree"></div>
+            </aside>
+
+            <section class="folder-article-panel" id="folder-article-panel" aria-label="文章列表">
+                <div class="folder-panel-toolbar">
+                    <div class="folder-toolbar-main">
+                        <div class="folder-path-wrap">
+                            <p class="folder-path-wrap-label">当前路径</p>
+                            <strong id="folder-current-path">全部目录</strong>
+                        </div>
+                        <div class="folder-toolbar-stats" aria-live="polite">
+                            <span class="folder-toolbar-stat"><strong id="folder-subfolder-count">0</strong> 子目录</span>
+                            <span class="folder-toolbar-stat"><strong id="folder-raw-count">0</strong> 原始文章</span>
+                        </div>
+                    </div>
+                    <div class="folder-toolbar-controls">
+                        <label for="folder-search-input">搜索当前目录</label>
+                        <input id="folder-search-input" type="search" placeholder="搜索标题、描述、标签或作者" autocomplete="off">
+                        <label for="folder-sort-select">排序方式</label>
+                        <select id="folder-sort-select">
+                            <option value="order">按顺序</option>
+                            <option value="date">按日期</option>
+                            <option value="title">按标题</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="folder-panel-meta">
+                    <span id="folder-total-count">0</span>
+                    <span>篇文章</span>
+                    <span>·</span>
+                    <span>支持 Markdown 元数据多文章目录</span>
+                </div>
+                <div class="folder-empty" id="folder-empty" hidden>当前筛选条件下暂无文章。</div>
+                <div class="folder-article-list" id="folder-article-list"></div>
+            </section>
+        </div>
     </main>
-    <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: IDE</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
+
+    <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: FOLDER CATALOG</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
 
     <script src="/shared/assets/js/site-core.js"></script>
     <script>
@@ -162,35 +748,429 @@
 
     <script>
         (function () {
-            // 文章列表不做分流
             var ROOT_LABEL = '绿群教程';
-            var SVG_NS = 'http://www.w3.org/2000/svg';
+            var DEFAULT_SORT = 'order';
+            var ALLOWED_SORTS = new Set(['order', 'date', 'title']);
+            var ARTICLE_PROGRESS_STORAGE_KEY = 'folderArticlePanelProgress:v1';
+            var GROUP_COLLAPSE_STORAGE_KEY = 'folderGroupCollapse:v1';
+            var MAX_ARTICLE_PROGRESS_ENTRIES = 160;
+            var MAX_GROUP_COLLAPSE_ENTRIES = 480;
+            var groupBodyIdSeed = 0;
 
             var state = {
                 allDocs: [],
-                docByPath: new Map(),
                 tree: null,
                 currentPath: '',
-                docLayoutByPath: new Map(),
-                groupLayoutByPath: new Map(),
-                activeGroupPath: '',
-                loadError: ''
+                query: '',
+                sort: DEFAULT_SORT,
+                currentArticleProgressKey: ''
+            };
+
+            var refs = {
+                tree: null,
+                articlePanel: null,
+                list: null,
+                empty: null,
+                search: null,
+                sort: null,
+                path: null,
+                total: null
             };
 
             function normalizePath(value) {
                 return String(value || '')
                     .replace(/\\/g, '/')
-                    .replace(/^\/+|\/+$/g, '');
+                    .replace(/^\/+|\/+$/g, '')
+                    .replace(/\/+/g, '/');
             }
 
-            function splitFolderPath(path) {
-                var normalized = normalizePath(path);
+            function splitPath(pathValue) {
+                var normalized = normalizePath(pathValue);
                 return normalized ? normalized.split('/').filter(Boolean) : [];
             }
 
-            function getFolderPathFromURL() {
-                var params = new URLSearchParams(window.location.search);
-                return normalizePath(params.get('path') || '');
+            function normalizeTags(rawTags) {
+                var source = Array.isArray(rawTags)
+                    ? rawTags
+                    : String(rawTags || '')
+                        .split(/[;,，]/)
+                        .map(function (item) { return item.trim(); })
+                        .filter(Boolean);
+                var deduped = [];
+                var seen = new Set();
+                source.forEach(function (tag) {
+                    var value = String(tag || '').trim();
+                    if (!value || seen.has(value)) return;
+                    seen.add(value);
+                    deduped.push(value);
+                });
+                return deduped;
+            }
+
+            function parseMarkdownLink(text) {
+                var raw = String(text || '').trim();
+                if (!raw) return null;
+                var match = raw.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+                if (!match) return null;
+                var label = String(match[1] || '').trim();
+                var target = normalizePath(match[2] || '');
+                if (!label || !target || !/\.md$/i.test(target)) return null;
+                return {
+                    label: label,
+                    path: target,
+                    raw: raw
+                };
+            }
+
+            function normalizePrefixLinks(rawPrefix) {
+                var source = Array.isArray(rawPrefix)
+                    ? rawPrefix
+                    : String(rawPrefix || '')
+                        .split(/\r?\n/)
+                        .map(function (line) { return line.trim(); })
+                        .filter(Boolean);
+                var output = [];
+                var seen = new Set();
+                source.forEach(function (item) {
+                    var parsed = parseMarkdownLink(item);
+                    if (!parsed) return;
+                    if (seen.has(parsed.path)) return;
+                    seen.add(parsed.path);
+                    output.push(parsed);
+                });
+                return output;
+            }
+
+            function toOrder(value) {
+                var parsed = Number.parseInt(value, 10);
+                return Number.isFinite(parsed) ? parsed : 999;
+            }
+
+            function normalizeDoc(raw) {
+                var source = raw && typeof raw === 'object' ? raw : {};
+                var docPath = normalizePath(source.path || source.filename || '');
+                if (!docPath || !/\.md$/i.test(docPath)) return null;
+
+                var tags = normalizeTags(source.tags || source.tag || source.keywords);
+                var folder = normalizePath(source.folder || docPath.split('/').slice(0, -1).join('/'));
+
+                if (source.is_hidden === true || source.hide === true || source.hide === 'true') {
+                    return null;
+                }
+
+                return {
+                    filename: source.filename || docPath.split('/').pop() || '',
+                    path: docPath,
+                    title: source.title || docPath.split('/').pop().replace(/\.md$/i, ''),
+                    description: source.description || '暂无描述',
+                    author: source.author || '未知',
+                    category: source.category || '未分类',
+                    topic: source.topic || 'unknown',
+                    order: toOrder(source.order),
+                    difficulty: source.difficulty || 'beginner',
+                    time: source.time || '不具体',
+                    date: String(source.date || ''),
+                    last_updated: String(source.last_updated || ''),
+                    reading_time: String(source.reading_time || ''),
+                    tags: tags,
+                    prefix: normalizePrefixLinks(source.prefix),
+                    folder: folder,
+                    slug: String(source.slug || docPath.replace(/\.md$/i, ''))
+                };
+            }
+
+            function createFolderNode(name, pathValue, parent) {
+                return {
+                    name: name,
+                    path: pathValue,
+                    parent: parent,
+                    docs: [],
+                    children: new Map()
+                };
+            }
+
+            function buildFolderIndex(docs) {
+                var root = createFolderNode(ROOT_LABEL, '', null);
+                docs.forEach(function (doc) {
+                    var parts = splitPath(doc.path);
+                    var fileName = parts.pop();
+                    if (!fileName) return;
+
+                    var current = root;
+                    var currentPath = '';
+                    parts.forEach(function (part) {
+                        currentPath = currentPath ? currentPath + '/' + part : part;
+                        if (!current.children.has(part)) {
+                            current.children.set(part, createFolderNode(part, currentPath, current));
+                        }
+                        current = current.children.get(part);
+                    });
+                    current.docs.push(doc);
+                });
+
+                return root;
+            }
+
+            function getFolderNode(pathValue) {
+                var normalized = normalizePath(pathValue);
+                if (!normalized) return state.tree;
+
+                var parts = splitPath(normalized);
+                var current = state.tree;
+                for (var i = 0; i < parts.length; i += 1) {
+                    if (!current || !current.children.has(parts[i])) return null;
+                    current = current.children.get(parts[i]);
+                }
+                return current;
+            }
+
+            function collectDocsRecursively(folderNode) {
+                if (!folderNode) return [];
+                var docs = Array.isArray(folderNode.docs) ? folderNode.docs.slice() : [];
+                var children = folderNode.children ? Array.from(folderNode.children.values()) : [];
+                children.sort(function (left, right) {
+                    return String(left.name || '').localeCompare(String(right.name || ''), 'zh-CN');
+                });
+                children.forEach(function (child) {
+                    docs = docs.concat(collectDocsRecursively(child));
+                });
+                return docs;
+            }
+
+            function compareDocs(left, right, sortKey) {
+                if (sortKey === 'title') {
+                    return String(left.title || '').localeCompare(String(right.title || ''), 'zh-CN');
+                }
+
+                if (sortKey === 'date') {
+                    var leftDate = String(left.date || left.last_updated || '');
+                    var rightDate = String(right.date || right.last_updated || '');
+                    if (leftDate !== rightDate) return leftDate < rightDate ? 1 : -1;
+                }
+
+                var delta = toOrder(left.order) - toOrder(right.order);
+                if (delta !== 0) return delta;
+                return String(left.title || '').localeCompare(String(right.title || ''), 'zh-CN');
+            }
+
+            function toRelativeGroupPath(docFolder, currentPath) {
+                var folder = normalizePath(docFolder);
+                var current = normalizePath(currentPath);
+                if (!current) return folder;
+                if (folder === current) return '';
+                if (folder.indexOf(current + '/') === 0) {
+                    return folder.slice(current.length + 1);
+                }
+                return folder;
+            }
+
+            function formatGroupLabel(relativePath, currentPath) {
+                var safePath = normalizePath(relativePath);
+                if (!safePath) return currentPath ? '当前目录' : '根目录';
+                return safePath;
+            }
+
+            function createGroupedDocsNode(name, pathValue, depth) {
+                return {
+                    name: String(name || ''),
+                    path: normalizePath(pathValue),
+                    depth: Number(depth || 0),
+                    docs: [],
+                    children: new Map()
+                };
+            }
+
+            function buildGroupedDocsTree(docs, currentPath) {
+                var root = createGroupedDocsNode('', '', 0);
+                docs.forEach(function (doc) {
+                    var relativePath = toRelativeGroupPath(doc.folder, currentPath);
+                    var parts = splitPath(relativePath);
+                    var cursor = root;
+                    var accum = '';
+                    parts.forEach(function (part, index) {
+                        accum = accum ? accum + '/' + part : part;
+                        if (!cursor.children.has(part)) {
+                            cursor.children.set(part, createGroupedDocsNode(part, accum, index + 1));
+                        }
+                        cursor = cursor.children.get(part);
+                    });
+                    cursor.docs.push(doc);
+                });
+                return root;
+            }
+
+            function listGroupedChildNodes(node) {
+                return Array.from(node.children.values()).sort(function (left, right) {
+                    return compareTreeName(left.name, right.name);
+                });
+            }
+
+            function countGroupedDocs(node) {
+                if (!node) return 0;
+                var count = node.docs.length;
+                listGroupedChildNodes(node).forEach(function (child) {
+                    count += countGroupedDocs(child);
+                });
+                return count;
+            }
+
+            function filterDocs(docs, query) {
+                var keyword = String(query || '').trim().toLowerCase();
+                if (!keyword) return docs;
+
+                return docs.filter(function (doc) {
+                    var blob = [
+                        doc.title,
+                        doc.description,
+                        doc.author,
+                        doc.category,
+                        doc.topic,
+                        doc.path,
+                        doc.tags.join(' ')
+                    ].join(' ').toLowerCase();
+                    return blob.includes(keyword);
+                });
+            }
+
+            function getArticleScrollContainer() {
+                return refs.list || refs.articlePanel || null;
+            }
+
+            function buildArticleProgressKey() {
+                var pathValue = normalizePath(state.currentPath || '');
+                var queryValue = String(state.query || '').trim();
+                var sortValue = ALLOWED_SORTS.has(state.sort) ? state.sort : DEFAULT_SORT;
+                return [pathValue, queryValue, sortValue].join('||');
+            }
+
+            function readArticleProgressStore() {
+                try {
+                    var raw = window.localStorage.getItem(ARTICLE_PROGRESS_STORAGE_KEY);
+                    if (!raw) return {};
+                    var parsed = JSON.parse(raw);
+                    return parsed && typeof parsed === 'object' ? parsed : {};
+                } catch (error) {
+                    return {};
+                }
+            }
+
+            function writeArticleProgressStore(store) {
+                try {
+                    window.localStorage.setItem(ARTICLE_PROGRESS_STORAGE_KEY, JSON.stringify(store));
+                } catch (error) {
+                    console.warn('无法保存文章浏览进度:', error);
+                }
+            }
+
+            function saveArticlePanelProgress(progressKey) {
+                var key = String(progressKey || '').trim();
+                var container = getArticleScrollContainer();
+                if (!key || !container) return;
+                var top = Math.max(0, Math.round(container.scrollTop || 0));
+                var store = readArticleProgressStore();
+                store[key] = {
+                    top: top,
+                    updatedAt: Date.now()
+                };
+
+                var entries = Object.keys(store).map(function (entryKey) {
+                    var item = store[entryKey];
+                    return {
+                        key: entryKey,
+                        updatedAt: item && typeof item === 'object' ? Number(item.updatedAt || 0) : 0
+                    };
+                });
+                if (entries.length > MAX_ARTICLE_PROGRESS_ENTRIES) {
+                    entries.sort(function (left, right) { return left.updatedAt - right.updatedAt; });
+                    entries.slice(0, entries.length - MAX_ARTICLE_PROGRESS_ENTRIES).forEach(function (entry) {
+                        delete store[entry.key];
+                    });
+                }
+
+                writeArticleProgressStore(store);
+            }
+
+            function restoreArticlePanelProgress(progressKey) {
+                var key = String(progressKey || '').trim();
+                var container = getArticleScrollContainer();
+                if (!container) return;
+                if (!key) {
+                    container.scrollTop = 0;
+                    return;
+                }
+
+                var store = readArticleProgressStore();
+                var record = store[key];
+                var top = 0;
+                if (typeof record === 'number') {
+                    top = Number(record);
+                } else if (record && typeof record === 'object') {
+                    top = Number(record.top || 0);
+                }
+                container.scrollTop = Number.isFinite(top) && top > 0 ? top : 0;
+            }
+
+            function readGroupCollapseStore() {
+                try {
+                    var raw = window.localStorage.getItem(GROUP_COLLAPSE_STORAGE_KEY);
+                    if (!raw) return {};
+                    var parsed = JSON.parse(raw);
+                    return parsed && typeof parsed === 'object' ? parsed : {};
+                } catch (error) {
+                    return {};
+                }
+            }
+
+            function writeGroupCollapseStore(store) {
+                try {
+                    window.localStorage.setItem(GROUP_COLLAPSE_STORAGE_KEY, JSON.stringify(store));
+                } catch (error) {
+                    console.warn('无法保存分组折叠状态:', error);
+                }
+            }
+
+            function buildGroupCollapseKey(groupNode) {
+                var contextKey = buildArticleProgressKey();
+                var groupPath = normalizePath(groupNode && groupNode.path || '');
+                var groupDepth = Math.max(0, Number(groupNode && groupNode.depth || 0));
+                return [contextKey, groupPath || '__current__', String(groupDepth)].join('||');
+            }
+
+            function getGroupCollapsedStateOrNull(groupNode) {
+                var key = buildGroupCollapseKey(groupNode);
+                if (!key) return null;
+                var store = readGroupCollapseStore();
+                var record = store[key];
+                if (typeof record === 'boolean') return record;
+                if (!record || typeof record !== 'object') return null;
+                if (typeof record.collapsed === 'boolean') return record.collapsed;
+                return null;
+            }
+
+            function saveGroupCollapsedState(groupNode, collapsed) {
+                var key = buildGroupCollapseKey(groupNode);
+                if (!key) return;
+                var store = readGroupCollapseStore();
+                store[key] = {
+                    collapsed: !!collapsed,
+                    updatedAt: Date.now()
+                };
+
+                var entries = Object.keys(store).map(function (entryKey) {
+                    var item = store[entryKey];
+                    return {
+                        key: entryKey,
+                        updatedAt: item && typeof item === 'object' ? Number(item.updatedAt || 0) : 0
+                    };
+                });
+                if (entries.length > MAX_GROUP_COLLAPSE_ENTRIES) {
+                    entries.sort(function (left, right) { return left.updatedAt - right.updatedAt; });
+                    entries.slice(0, entries.length - MAX_GROUP_COLLAPSE_ENTRIES).forEach(function (entry) {
+                        delete store[entry.key];
+                    });
+                }
+
+                writeGroupCollapseStore(store);
             }
 
             function setMetaContent(selector, content) {
@@ -198,7 +1178,7 @@
                 if (el && content) el.setAttribute('content', content);
             }
 
-            function setCanonical(href) {
+            function setCanonicalHref(href) {
                 var link = document.querySelector('link[rel="canonical"]');
                 if (!link) {
                     link = document.createElement('link');
@@ -208,1070 +1188,702 @@
                 link.setAttribute('href', href);
             }
 
-            function updateSeo(folderPath) {
-                var baseUrl = 'https://dpapyru.github.io/site/pages/folder.html';
-                var displayPath = folderPath || ROOT_LABEL;
-                var canonical = folderPath ? (baseUrl + '?path=' + encodeURIComponent(folderPath)) : baseUrl;
-                var title = displayPath + ' - 目录可视化 - 泰拉瑞亚Mod制作教程';
-                var description = '泰拉瑞亚Mod制作教程目录视图：浏览“' + displayPath + '”的子目录与文章关系。';
+            function updateSeo(normalizedPath) {
+                var url = new URL('https://dpapyru.github.io/site/pages/folder.html');
+                if (normalizedPath) {
+                    url.searchParams.set('path', normalizedPath);
+                }
+                url.searchParams.delete('q');
+                url.searchParams.delete('sort');
+
+                var displayPath = normalizedPath || ROOT_LABEL;
+                var canonical = url.toString();
+                var title = displayPath + ' - 文件夹内容 - 泰拉瑞亚Mod制作教程';
+                var description = '目录「' + displayPath + '」下的文章索引，支持按元数据筛选与排序。';
 
                 document.title = title;
-                setCanonical(canonical);
                 setMetaContent('meta[name="description"]', description);
                 setMetaContent('meta[property="og:title"]', title);
                 setMetaContent('meta[property="og:description"]', description);
                 setMetaContent('meta[property="og:url"]', canonical);
                 setMetaContent('meta[name="twitter:title"]', title);
                 setMetaContent('meta[name="twitter:description"]', description);
+                setCanonicalHref(canonical);
             }
 
-            function createFolderNode(name, path, parent) {
-                return {
-                    name: name,
-                    path: path,
-                    parent: parent,
-                    children: new Map(),
-                    docs: []
-                };
-            }
-
-            function normalizeDoc(raw) {
-                var path = normalizePath(raw && raw.path ? raw.path : raw && raw.filename ? raw.filename : '');
-                if (!path || !/\.md$/i.test(path)) return null;
-
-                return {
-                    filename: raw.filename || path.split('/').pop() || '',
-                    path: path,
-                    title: raw.title || path.split('/').pop().replace(/\.md$/i, ''),
-                    author: raw.author || '未知',
-                    category: raw.category || '未分类',
-                    order: Number(raw.order || 999) || 999,
-                    prev_chapter: raw.prev_chapter || '',
-                    next_chapter: raw.next_chapter || ''
-                };
-            }
-
-            function compareFolder(a, b) {
-                return String(a.name || '').localeCompare(String(b.name || ''), 'zh-CN');
-            }
-
-            function compareDoc(a, b) {
-                var orderDelta = (a.order || 999) - (b.order || 999);
-                if (orderDelta !== 0) return orderDelta;
-                return String(a.title || '').localeCompare(String(b.title || ''), 'zh-CN');
-            }
-
-            function buildTree(docs) {
-                var root = createFolderNode(ROOT_LABEL, '', null);
-
-                docs.forEach(function (doc) {
-                    var parts = splitFolderPath(doc.path);
-                    var fileName = parts.pop();
-                    if (!fileName) return;
-
-                    var current = root;
-                    var currentPath = '';
-
-                    parts.forEach(function (part) {
-                        currentPath = currentPath ? currentPath + '/' + part : part;
-                        if (!current.children.has(part)) {
-                            current.children.set(part, createFolderNode(part, currentPath, current));
-                        }
-                        current = current.children.get(part);
-                    });
-
-                    current.docs.push(doc);
-                });
-
-                return root;
-            }
-
-            function getFolderNode(path) {
-                var normalized = normalizePath(path);
-                if (!normalized) return state.tree;
-
-                var parts = splitFolderPath(normalized);
-                var current = state.tree;
-                var i;
-                for (i = 0; i < parts.length; i += 1) {
-                    if (!current || !current.children.has(parts[i])) return null;
-                    current = current.children.get(parts[i]);
-                }
-                return current;
-            }
-
-            function getParentPath(path) {
-                var parts = splitFolderPath(path);
-                parts.pop();
-                return parts.join('/');
-            }
-
-            function getCssVar(name, fallback) {
-                var value = getComputedStyle(document.documentElement).getPropertyValue(name);
-                value = String(value || '').trim();
-                return value || fallback;
-            }
-
-            function getPalette() {
-                return {
-                    bg: getCssVar('--bg-color', '#121212'),
-                    surface: getCssVar('--bg-secondary', '#1c1f26'),
-                    text: getCssVar('--text-color', '#f0f0f0'),
-                    muted: getCssVar('--text-secondary', '#9aa4b2'),
-                    border: getCssVar('--border-color', '#2f3b4f'),
-                    primary: getCssVar('--primary-color', '#3fb950'),
-                    folder: getCssVar('--link-color', '#4dabf7'),
-                    doc: getCssVar('--text-color', '#f0f0f0'),
-                    prev: '#4dabf7',
-                    next: '#ff922b',
-                    line: getCssVar('--border-color', '#3a4557')
-                };
-            }
-
-            function createSvgEl(tag, attrs) {
-                var el = document.createElementNS(SVG_NS, tag);
-                Object.keys(attrs || {}).forEach(function (key) {
-                    el.setAttribute(key, attrs[key]);
-                });
-                return el;
-            }
-
-            function polylinePath(points) {
-                return points.map(function (point, index) {
-                    return (index === 0 ? 'M ' : 'L ') + point.x + ' ' + point.y;
-                }).join(' ');
-            }
-
-            function clamp(value, min, max) {
-                return Math.max(min, Math.min(max, value));
-            }
-
-            function truncateText(text, maxLen) {
-                var value = String(text || '');
-                if (value.length <= maxLen) return value;
-                return value.slice(0, Math.max(1, maxLen - 1)) + '…';
-            }
-
-            function wrapTextLines(text, maxCharsPerLine, maxLines) {
-                var value = String(text || '').replace(/\s+/g, ' ').trim();
-                var chars = Array.from(value);
-                var lineLimit = Math.max(1, maxLines || 1);
-                var lineChars = Math.max(1, maxCharsPerLine || 10);
-                var lines = [];
-                var i;
-
-                if (!chars.length) return [''];
-
-                for (i = 0; i < lineLimit && chars.length > 0; i += 1) {
-                    lines.push(chars.splice(0, lineChars).join(''));
-                }
-
-                if (chars.length > 0) {
-                    lines[lineLimit - 1] = truncateText(lines[lineLimit - 1] + chars.join(''), lineChars);
-                }
-                return lines;
-            }
-
-            function addInteractiveNode(group, onClick) {
-                group.classList.add('map-clickable');
-                group.setAttribute('tabindex', '0');
-                group.setAttribute('role', 'button');
-                group.addEventListener('click', onClick);
-                group.addEventListener('keydown', function (event) {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        onClick();
-                    }
-                });
-            }
-
-            function drawNode(layer, options) {
-                var x = options.cx - options.width / 2;
-                var y = options.cy - options.height / 2;
-                var accessibleLabel = String(options.label || options.title || options.subtitle || options.tooltip || '').trim();
-                var titleLines = Array.isArray(options.titleLines) && options.titleLines.length > 0
-                    ? options.titleLines
-                    : [truncateText(options.title || '', options.titleMax || 14)];
-                var titleSize = options.titleSize || 16;
-                var titleLineHeight = options.titleLineHeight || Math.round(titleSize * 1.24);
-                var hasSubtitle = !!options.subtitle;
-                var titleStartY = options.cy - ((titleLines.length - 1) * titleLineHeight) / 2 - (hasSubtitle ? 9 : 0);
-
-                var group = createSvgEl('g', {
-                    'aria-label': accessibleLabel
-                });
-                layer.appendChild(group);
-
-                var rect = createSvgEl('rect', {
-                    x: String(x),
-                    y: String(y),
-                    width: String(options.width),
-                    height: String(options.height),
-                    rx: String(options.radius || 10),
-                    ry: String(options.radius || 10),
-                    fill: options.fill,
-                    stroke: options.stroke,
-                    'stroke-width': String(options.strokeWidth || 2)
-                });
-                group.appendChild(rect);
-
-                titleLines.forEach(function (lineText, lineIndex) {
-                    var title = createSvgEl('text', {
-                        x: String(options.cx),
-                        y: String(titleStartY + lineIndex * titleLineHeight),
-                        'text-anchor': 'middle',
-                        'font-size': String(titleSize),
-                        'font-weight': String(options.titleWeight || 700),
-                        fill: options.textColor
-                    });
-                    title.textContent = lineText;
-                    group.appendChild(title);
-                });
-
-                if (hasSubtitle) {
-                    var subtitle = createSvgEl('text', {
-                        x: String(options.cx),
-                        y: String(titleStartY + titleLines.length * titleLineHeight + 9),
-                        'text-anchor': 'middle',
-                        'font-size': String(options.subtitleSize || 12),
-                        fill: options.subTextColor || options.textColor,
-                        opacity: '0.92'
-                    });
-                    subtitle.textContent = truncateText(options.subtitle, options.subtitleMax || 20);
-                    group.appendChild(subtitle);
-                }
-
-                if (options.tooltip) {
-                    var tip = createSvgEl('title', {});
-                    tip.textContent = options.tooltip;
-                    group.appendChild(tip);
-                }
-
-                if (typeof options.onClick === 'function') {
-                    addInteractiveNode(group, options.onClick);
-                }
-
-                return group;
-            }
-
-            function appendText(layer, options) {
-                var text = createSvgEl('text', {
-                    x: String(options.x),
-                    y: String(options.y),
-                    fill: options.fill,
-                    'font-size': String(options.size || 14),
-                    'font-weight': String(options.weight || 400),
-                    'text-anchor': options.anchor || 'start'
-                });
-                if (options.opacity != null) {
-                    text.setAttribute('opacity', String(options.opacity));
-                }
-                text.textContent = options.text || '';
-                layer.appendChild(text);
-                return text;
-            }
-
-            function drawChip(layer, options) {
-                return drawNode(layer, {
-                    cx: options.x + options.width / 2,
-                    cy: options.y + options.height / 2,
-                    width: options.width,
-                    height: options.height,
-                    radius: options.radius || Math.round(options.height / 2),
-                    fill: options.fill,
-                    stroke: options.stroke,
-                    strokeWidth: options.strokeWidth || 1.8,
-                    textColor: options.textColor,
-                    title: options.label,
-                    titleMax: options.titleMax || 24,
-                    titleSize: options.titleSize || 13,
-                    titleWeight: options.titleWeight || 700,
-                    tooltip: options.tooltip,
-                    onClick: options.onClick || null
-                });
-            }
-
-            function collectDocsRecursively(folderNode) {
-                var docs = Array.isArray(folderNode && folderNode.docs) ? folderNode.docs.slice() : [];
-                var children = folderNode && folderNode.children ? Array.from(folderNode.children.values()) : [];
-
-                docs.sort(compareDoc);
-                children.sort(compareFolder);
-
-                children.forEach(function (child) {
-                    docs = docs.concat(collectDocsRecursively(child));
-                });
-                return docs;
-            }
-
-            function buildFolderDocGroups(folderNode) {
-                var currentDocs = [];
-                var childGroups = [];
-                if (!folderNode) {
-                    return {
-                        currentDocs: currentDocs,
-                        childGroups: childGroups
-                    };
-                }
-
-                currentDocs = Array.isArray(folderNode.docs)
-                    ? folderNode.docs.slice().sort(compareDoc).map(function (doc) { return doc.title; })
-                    : [];
-
-                var children = folderNode.children
-                    ? Array.from(folderNode.children.values()).sort(compareFolder)
-                    : [];
-                children.forEach(function (child) {
-                    var docs = collectDocsRecursively(child);
-                    if (!docs.length) return;
-                    childGroups.push({
-                        label: child.name || ROOT_LABEL,
-                        path: child.path || '',
-                        totalDocs: docs.length,
-                        hiddenDocCount: Math.max(0, docs.length - 3),
-                        previewDocs: docs.slice(0, 3).map(function (doc) {
-                            return doc.title;
-                        })
-                    });
-                });
-
-                return {
-                    currentDocs: currentDocs,
-                    childGroups: childGroups
-                };
-            }
-
-            function buildRenderableGroups(folderNode) {
-                var groups = [];
-                if (!folderNode) return groups;
-
-                var currentDocs = Array.isArray(folderNode.docs) ? folderNode.docs.slice().sort(compareDoc) : [];
-                if (currentDocs.length) {
-                    groups.push({
-                        kind: 'current',
-                        label: '本级文章',
-                        path: folderNode.path || '',
-                        totalDocs: currentDocs.length,
-                        hiddenDocCount: 0,
-                        docs: currentDocs.slice(0, 3),
-                        isCurrent: true
-                    });
-                }
-
-                var children = folderNode.children
-                    ? Array.from(folderNode.children.values()).sort(compareFolder)
-                    : [];
-                children.forEach(function (child) {
-                    var docs = collectDocsRecursively(child);
-                    if (!docs.length) return;
-                    groups.push({
-                        kind: 'child',
-                        label: child.name || ROOT_LABEL,
-                        path: child.path || '',
-                        totalDocs: docs.length,
-                        hiddenDocCount: Math.max(0, docs.length - 3),
-                        docs: docs.slice(0, 3),
-                        isCurrent: false
-                    });
-                });
-
-                return groups;
-            }
-
-            function buildBreadcrumbItems(folderNode) {
-                var items = [];
-                var folderPath = normalizePath(folderNode && folderNode.path || '');
-                var parts = splitFolderPath(folderPath);
-
-                items.push({
-                    label: '文档',
-                    path: '',
-                    isCurrent: parts.length === 0
-                });
-
-                parts.forEach(function (part, index) {
-                    items.push({
-                        label: part,
-                        path: parts.slice(0, index + 1).join('/'),
-                        isCurrent: index === parts.length - 1
-                    });
-                });
-
-                return items;
-            }
-
-            function buildFolderRenderState(folderNode) {
-                var groups = buildRenderableGroups(folderNode);
-                var allDocs = collectDocsRecursively(folderNode);
-
-                return {
-                    groups: groups,
-                    allDocs: allDocs,
-                    groupSummary: buildFolderDocGroups(folderNode),
-                    breadcrumbItems: buildBreadcrumbItems(folderNode),
-                    childCount: folderNode && folderNode.children ? folderNode.children.size : 0
-                };
-            }
-
-            function estimateChipWidth(label, minWidth, maxWidth, paddingX) {
-                var chars = Array.from(String(label || '')).length;
-                return clamp(chars * 16 + (paddingX || 48), minWidth || 88, maxWidth || 320);
-            }
-
-            function layoutChips(items, options) {
-                var placements = [];
-                var startX = options.startX || 0;
-                var cursorX = startX;
-                var y = options.startY || 0;
-                var itemHeight = options.itemHeight || 40;
-                var maxX = startX + (options.maxWidth || 600);
-                var gapX = options.gapX || 10;
-                var gapY = options.gapY || 10;
-                var bottomY = y;
-
-                items.forEach(function (item) {
-                    var width = estimateChipWidth(item.label, options.minWidth, options.maxItemWidth, options.paddingX);
-                    if (cursorX + width > maxX && cursorX > startX) {
-                        cursorX = startX;
-                        y += itemHeight + gapY;
-                    }
-
-                    placements.push({
-                        item: item,
-                        x: cursorX,
-                        y: y,
-                        width: width,
-                        height: itemHeight
-                    });
-                    cursorX += width + gapX;
-                    bottomY = y + itemHeight;
-                });
-
-                return {
-                    placements: placements,
-                    bottomY: placements.length ? bottomY : (options.startY || 0)
-                };
-            }
-
-            function focusStageOnPoint(point, behavior) {
-                var stage = document.getElementById('main-content');
-                if (!stage || !point) return;
-
-                var maxLeft = Math.max(0, stage.scrollWidth - stage.clientWidth);
-                var maxTop = Math.max(0, stage.scrollHeight - stage.clientHeight);
-                stage.scrollTo({
-                    left: clamp(point.x - stage.clientWidth / 2, 0, maxLeft),
-                    top: clamp(point.y - stage.clientHeight / 2, 0, maxTop),
-                    behavior: behavior || 'auto'
-                });
-            }
-
-            function openDoc(docPath) {
-                window.location.href = '/site/pages/viewer.html?file=' + encodeURIComponent(docPath);
-            }
-
-            function renderErrorMap(message) {
-                var svg = document.getElementById('folder-map-svg');
-                if (!svg) return;
-
-                var palette = getPalette();
-                var width = 1840;
-                var height = 760;
-                svg.innerHTML = '';
-                svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-                svg.setAttribute('width', String(width));
-                svg.setAttribute('height', String(height));
-                svg.style.width = width + 'px';
-                svg.style.height = height + 'px';
-                state.groupLayoutByPath = new Map();
-                state.docLayoutByPath = new Map();
-
-                var backgroundLayer = createSvgEl('g');
-                var nodeLayer = createSvgEl('g');
-                svg.appendChild(backgroundLayer);
-                svg.appendChild(nodeLayer);
-
-                backgroundLayer.appendChild(createSvgEl('rect', {
-                    x: '0',
-                    y: '0',
-                    width: String(width),
-                    height: String(height),
-                    fill: palette.bg
-                }));
-
-                backgroundLayer.appendChild(createSvgEl('rect', {
-                    x: '24',
-                    y: '24',
-                    width: String(width - 48),
-                    height: '180',
-                    rx: '24',
-                    ry: '24',
-                    fill: palette.surface,
-                    stroke: palette.border,
-                    'stroke-width': '1.4',
-                    opacity: '0.9'
-                }));
-
-                appendText(nodeLayer, {
-                    x: 72,
-                    y: 70,
-                    text: '目录导航加载失败',
-                    fill: palette.text,
-                    size: 28,
-                    weight: 700
-                });
-                appendText(nodeLayer, {
-                    x: 72,
-                    y: 104,
-                    text: '请刷新页面后重试，或返回上一级目录重新进入。',
-                    fill: palette.muted,
-                    size: 14,
-                    weight: 400
-                });
-
-                drawNode(nodeLayer, {
-                    cx: width / 2,
-                    cy: height / 2,
-                    width: 460,
-                    height: 118,
-                    radius: 18,
-                    fill: palette.surface,
-                    stroke: palette.next,
-                    strokeWidth: 2.6,
-                    textColor: palette.text,
-                    title: '目录数据不可用',
-                    titleSize: 22,
-                    subtitle: message || '加载目录数据失败，请稍后重试。',
-                    subtitleSize: 13,
-                    subtitleMax: 42
-                });
-            }
-
-            function renderMap(folderNode, renderState, options) {
-                var svg = document.getElementById('folder-map-svg');
-                if (!svg) return;
-
-                var palette = getPalette();
-                var opts = options || {};
-                var groups = renderState.groups;
-                var allDocs = renderState.allDocs;
-                var width = 1520;
-                var safe = 10;
-                var centerX = width / 2;
-                var rootWidth = 360;
-                var rootHeight = 74;
-                var groupWidth = 196;
-                var groupHeight = 62;
-                var cardWidth = 240;
-                var cardHeight = 66;
-                var cardGap = 12;
-                var groupGapY = 26;
-                var overflowHeight = 30;
-                var maxColumns = 4;
-                var breadcrumbLayout;
-                var headerBottom;
-                var rootCenterY;
-                var rootBottomY;
-                var rowLayouts = [];
-                var currentY;
-                var contentBottom;
-                var height;
-                var backgroundLayer;
-                var relationLayer;
-                var nodeLayer;
-                var headerLayer;
-                var viewTarget;
-                var parentPath = getParentPath(state.currentPath);
-                var backChipWidth = 132;
-                var backChipHeight = 34;
-                var rowIndex;
-
-                state.groupLayoutByPath = new Map();
-                state.docLayoutByPath = new Map();
-
-                breadcrumbLayout = layoutChips(renderState.breadcrumbItems.map(function (item) {
-                    return {
-                        label: item.label || ROOT_LABEL,
-                        path: item.path,
-                        isCurrent: item.isCurrent
-                    };
-                }), {
-                    startX: safe + 2,
-                    startY: safe + 8,
-                    maxWidth: width - safe * 2 - (folderNode.path ? (backChipWidth + 18) : 0),
-                    itemHeight: 34,
-                    gapX: 8,
-                    gapY: 8,
-                    minWidth: 84,
-                    maxItemWidth: 240,
-                    paddingX: 42
-                });
-
-                headerBottom = breadcrumbLayout.bottomY + safe + 6;
-                rootCenterY = headerBottom + 56;
-                rootBottomY = rootCenterY + rootHeight / 2;
-                currentY = rootBottomY + 70;
-
-                for (rowIndex = 0; rowIndex * maxColumns < groups.length; rowIndex += 1) {
-                    var rowGroups = groups.slice(rowIndex * maxColumns, rowIndex * maxColumns + maxColumns);
-                    var rowCount = rowGroups.length;
-                    var availableWidth = width - safe * 2;
-                    var columnWidth = availableWidth / Math.max(1, rowCount);
-                    var rowHeight = 0;
-                    var placements = [];
-
-                    rowGroups.forEach(function (group, columnIndex) {
-                        var docCount = group.docs.length;
-                        var overflowVisible = group.hiddenDocCount > 0;
-                        var blockHeight = groupHeight
-                            + (docCount ? groupGapY + docCount * cardHeight + Math.max(0, docCount - 1) * cardGap : 0)
-                            + (overflowVisible ? (cardGap + overflowHeight) : 0);
-                        rowHeight = Math.max(rowHeight, blockHeight);
-                        placements.push({
-                            group: group,
-                            centerX: safe + columnWidth * columnIndex + columnWidth / 2,
-                            blockHeight: blockHeight
-                        });
-                    });
-
-                    rowLayouts.push({
-                        topY: currentY,
-                        trunkY: currentY - 22,
-                        height: rowHeight,
-                        placements: placements
-                    });
-                    currentY += rowHeight + 58;
-                }
-
-                contentBottom = rowLayouts.length ? (currentY - 18) : (rootBottomY + 170);
-                height = Math.max(760, contentBottom + safe);
-
-                svg.innerHTML = '';
-                svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-                svg.setAttribute('width', String(width));
-                svg.setAttribute('height', String(height));
-                svg.style.width = width + 'px';
-                svg.style.height = height + 'px';
-
-                backgroundLayer = createSvgEl('g');
-                headerLayer = createSvgEl('g');
-                relationLayer = createSvgEl('g');
-                nodeLayer = createSvgEl('g');
-                svg.appendChild(backgroundLayer);
-                svg.appendChild(headerLayer);
-                svg.appendChild(relationLayer);
-                svg.appendChild(nodeLayer);
-
-                backgroundLayer.appendChild(createSvgEl('rect', {
-                    x: '0',
-                    y: '0',
-                    width: String(width),
-                    height: String(height),
-                    fill: palette.bg
-                }));
-
-                backgroundLayer.appendChild(createSvgEl('rect', {
-                    x: String(safe),
-                    y: String(safe),
-                    width: String(width - safe * 2),
-                    height: String(height - safe * 2),
-                    rx: '20',
-                    ry: '20',
-                    fill: palette.surface,
-                    stroke: palette.border,
-                    'stroke-width': '1.2',
-                    'stroke-opacity': '0.78'
-                }));
-
-                backgroundLayer.appendChild(createSvgEl('rect', {
-                    x: String(safe + 10),
-                    y: String(safe + 10),
-                    width: String(width - safe * 2 - 20),
-                    height: String(height - safe * 2 - 20),
-                    rx: '16',
-                    ry: '16',
-                    fill: palette.bg,
-                    'fill-opacity': '0.82'
-                }));
-
-                appendText(headerLayer, {
-                    x: safe + 8,
-                    y: safe + 60,
-                    text: '目录树导航',
-                    fill: palette.muted,
-                    size: 14,
-                    weight: 700
-                });
-                appendText(headerLayer, {
-                    x: width - safe - 8,
-                    y: safe + 60,
-                    text: '子目录 ' + renderState.childCount + ' · 文章 ' + allDocs.length,
-                    fill: palette.muted,
-                    size: 14,
-                    weight: 700,
-                    anchor: 'end'
-                });
-
-                breadcrumbLayout.placements.forEach(function (placement) {
-                    var item = placement.item;
-                    drawChip(headerLayer, {
-                        x: placement.x,
-                        y: placement.y,
-                        width: placement.width,
-                        height: placement.height,
-                        fill: item.isCurrent ? palette.primary : palette.bg,
-                        stroke: item.isCurrent ? palette.primary : palette.border,
-                        strokeWidth: item.isCurrent ? 2 : 1.4,
-                        textColor: item.isCurrent ? '#ffffff' : palette.text,
-                        label: item.label,
-                        titleMax: 20,
-                        tooltip: item.path || '文档入口',
-                        onClick: item.isCurrent ? null : function () {
-                            navigateTo(item.path, false);
-                        }
-                    });
-                });
-
-                if (folderNode.path) {
-                    var backChip = drawChip(headerLayer, {
-                        x: width - safe - backChipWidth,
-                        y: safe + 8,
-                        width: backChipWidth,
-                        height: backChipHeight,
-                        fill: palette.bg,
-                        stroke: palette.next,
-                        strokeWidth: 1.8,
-                        textColor: palette.text,
-                        label: '返回上一级',
-                        titleMax: 18,
-                        tooltip: parentPath,
-                        onClick: function () {
-                            navigateTo(parentPath, false);
-                        }
-                    });
-                    backChip.setAttribute('data-nav-role', 'go-parent');
-                }
-
-                drawNode(nodeLayer, {
-                    cx: centerX,
-                    cy: rootCenterY,
-                    width: rootWidth,
-                    height: rootHeight,
-                    radius: 16,
-                    fill: '#1d2b47',
-                    stroke: '#253a63',
-                    strokeWidth: 2.2,
-                    textColor: '#ffffff',
-                    title: folderNode.name || ROOT_LABEL,
-                    titleLines: wrapTextLines(folderNode.name || ROOT_LABEL, 18, 2),
-                    titleSize: 20,
-                    titleLineHeight: 22,
-                    subtitle: renderState.childCount + ' 个子目录 · ' + allDocs.length + ' 篇文章',
-                    subtitleSize: 12,
-                    subtitleMax: 28,
-                    tooltip: folderNode.path || ROOT_LABEL
-                });
-
-                if (rowLayouts.length) {
-                    relationLayer.appendChild(createSvgEl('path', {
-                        d: polylinePath([
-                            { x: centerX, y: rootBottomY },
-                            { x: centerX, y: rowLayouts[rowLayouts.length - 1].trunkY }
-                        ]),
-                        fill: 'none',
-                        stroke: palette.line,
-                        'stroke-width': '2.2',
-                        'stroke-opacity': '0.88',
-                        'stroke-linecap': 'round'
-                    }));
-                }
-
-                rowLayouts.forEach(function (rowLayout, rowLayoutIndex) {
-                    if (!rowLayout.placements.length) return;
-
-                    var minX = rowLayout.placements[0].centerX;
-                    var maxX = rowLayout.placements[rowLayout.placements.length - 1].centerX;
-                    relationLayer.appendChild(createSvgEl('path', {
-                        d: polylinePath([
-                            { x: minX, y: rowLayout.trunkY },
-                            { x: maxX, y: rowLayout.trunkY }
-                        ]),
-                        fill: 'none',
-                        stroke: palette.line,
-                        'stroke-width': '2',
-                        'stroke-opacity': rowLayoutIndex === 0 ? '0.9' : '0.74',
-                        'stroke-linecap': 'round'
-                    }));
-
-                    rowLayout.placements.forEach(function (placement) {
-                        var group = placement.group;
-                        var groupCenterY = rowLayout.topY + groupHeight / 2;
-                        var groupColor = group.kind === 'current' ? '#304462' : palette.folder;
-                        var groupFill = group.kind === 'current' ? '#25334b' : palette.folder;
-                        var previewSubtitle = group.kind === 'current'
-                            ? '当前目录内的文章'
-                            : (group.hiddenDocCount > 0
-                                ? '预览 3 / ' + group.totalDocs + ' 篇'
-                                : '共 ' + group.totalDocs + ' 篇');
-
-                        relationLayer.appendChild(createSvgEl('path', {
-                            d: polylinePath([
-                                { x: placement.centerX, y: rowLayout.trunkY },
-                                { x: placement.centerX, y: groupCenterY - groupHeight / 2 }
-                            ]),
-                            fill: 'none',
-                            stroke: groupColor,
-                            'stroke-width': '2',
-                            'stroke-opacity': '0.84',
-                            'stroke-linecap': 'round'
-                        }));
-
-                        var groupNode = drawNode(nodeLayer, {
-                            cx: placement.centerX,
-                            cy: groupCenterY,
-                            width: groupWidth,
-                            height: groupHeight,
-                            radius: 12,
-                            fill: groupFill,
-                            stroke: groupColor,
-                            strokeWidth: group.kind === 'current' ? 1.8 : 2.1,
-                            textColor: '#ffffff',
-                            title: group.label,
-                            titleLines: wrapTextLines(group.label, 10, 2),
-                            titleSize: 15,
-                            titleLineHeight: 17,
-                            subtitle: previewSubtitle,
-                            subtitleSize: 11,
-                            subtitleMax: 20,
-                            tooltip: group.path || '当前目录',
-                            onClick: group.kind === 'child' ? function () {
-                                navigateTo(group.path, false);
-                            } : null
-                        });
-                        if (group.kind === 'child') {
-                            groupNode.setAttribute('data-folder-path', group.path);
-                        } else {
-                            groupNode.setAttribute('data-group-kind', 'current-docs');
-                        }
-
-                        state.groupLayoutByPath.set(normalizePath(group.path || ('row-' + rowLayoutIndex + '-' + placement.centerX)), {
-                            x: placement.centerX,
-                            y: groupCenterY
-                        });
-
-                        var lastConnectorY = groupCenterY + groupHeight / 2;
-                        group.docs.forEach(function (doc, docIndex) {
-                            var cardCenterY = groupCenterY + groupHeight / 2 + groupGapY + cardHeight / 2 + docIndex * (cardHeight + cardGap);
-                            var subtitle = String(doc.author || '').trim();
-                            if (!subtitle || subtitle === '未知') {
-                                subtitle = String(doc.path || '').split('/').slice(-2).join('/');
-                            }
-
-                            relationLayer.appendChild(createSvgEl('path', {
-                                d: polylinePath([
-                                    { x: placement.centerX, y: lastConnectorY },
-                                    { x: placement.centerX, y: cardCenterY - cardHeight / 2 }
-                                ]),
-                                fill: 'none',
-                                stroke: groupColor,
-                                'stroke-width': '1.8',
-                                'stroke-opacity': '0.7',
-                                'stroke-linecap': 'round'
-                            }));
-                            lastConnectorY = cardCenterY + cardHeight / 2;
-
-                            var docNode = drawNode(nodeLayer, {
-                                cx: placement.centerX,
-                                cy: cardCenterY,
-                                width: cardWidth,
-                                height: cardHeight,
-                                radius: 10,
-                                fill: '#f3f6fb',
-                                stroke: '#d8dfeb',
-                                strokeWidth: 1.5,
-                                textColor: '#18212f',
-                                subTextColor: '#5d6a7d',
-                                title: doc.title,
-                                titleLines: wrapTextLines(doc.title, 16, 2),
-                                titleSize: 14,
-                                titleLineHeight: 18,
-                                subtitle: subtitle,
-                                subtitleSize: 11,
-                                subtitleMax: 22,
-                                tooltip: doc.path,
-                                onClick: function () {
-                                    openDoc(doc.path);
-                                }
-                            });
-                            docNode.setAttribute('data-doc-path', doc.path);
-                            docNode.setAttribute('data-doc-title', doc.title);
-                            state.docLayoutByPath.set(doc.path, {
-                                x: placement.centerX,
-                                y: cardCenterY
-                            });
-                        });
-
-                        if (group.hiddenDocCount > 0) {
-                            var overflowY = lastConnectorY + cardGap + overflowHeight / 2;
-                            relationLayer.appendChild(createSvgEl('path', {
-                                d: polylinePath([
-                                    { x: placement.centerX, y: lastConnectorY },
-                                    { x: placement.centerX, y: overflowY - overflowHeight / 2 }
-                                ]),
-                                fill: 'none',
-                                stroke: groupColor,
-                                'stroke-width': '1.6',
-                                'stroke-opacity': '0.64',
-                                'stroke-linecap': 'round'
-                            }));
-
-                            var overflowChip = drawChip(nodeLayer, {
-                                x: placement.centerX - 62,
-                                y: overflowY - overflowHeight / 2,
-                                width: 124,
-                                height: overflowHeight,
-                                radius: 15,
-                                fill: palette.bg,
-                                stroke: groupColor,
-                                strokeWidth: 1.4,
-                                textColor: palette.text,
-                                label: '另有 ' + group.hiddenDocCount + ' 篇',
-                                titleMax: 16,
-                                tooltip: group.path,
-                                onClick: group.kind === 'child' ? function () {
-                                    navigateTo(group.path, false);
-                                } : null
-                            });
-                            overflowChip.setAttribute('data-overflow-count', String(group.hiddenDocCount));
-                        }
-                    });
-                });
-
-                if (!groups.length) {
-                    drawNode(nodeLayer, {
-                        cx: centerX,
-                        cy: rootBottomY + 110,
-                        width: 360,
-                        height: 96,
-                        radius: 14,
-                        fill: palette.surface,
-                        stroke: palette.border,
-                        strokeWidth: 1.6,
-                        textColor: palette.text,
-                        title: '当前目录暂无内容',
-                        titleSize: 18,
-                        subtitle: folderNode.path ? '可以返回上一级继续浏览。' : '请从上方路径切换到其他目录。',
-                        subtitleSize: 12,
-                        subtitleMax: 28
-                    });
-                }
-
-                viewTarget = opts.focusGroupPath != null
-                    ? state.groupLayoutByPath.get(normalizePath(opts.focusGroupPath))
-                    : null;
-                if (!viewTarget) {
-                    viewTarget = { x: centerX, y: rootCenterY + 40 };
-                }
-
-                window.requestAnimationFrame(function () {
-                    focusStageOnPoint(viewTarget, opts.focusBehavior || 'auto');
-                });
-            }
-
-            function refreshFolderView(folderNode, options) {
-                var renderState = buildFolderRenderState(folderNode);
-                renderMap(folderNode, renderState, options || {});
-            }
-
-            function applyPathToUrl(path, replace) {
-                var normalized = normalizePath(path);
+            function getQueryState() {
                 var url = new URL(window.location.href);
-                if (normalized) {
-                    url.searchParams.set('path', normalized);
+                var searchParams = url.searchParams;
+                var parsedSort = String(searchParams.get('sort') || DEFAULT_SORT);
+                return {
+                    path: normalizePath(searchParams.get('path') || ''),
+                    query: String(searchParams.get('q') || '').trim(),
+                    sort: ALLOWED_SORTS.has(parsedSort) ? parsedSort : DEFAULT_SORT
+                };
+            }
+
+            function applyStateToUrl(replaceState) {
+                var url = new URL(window.location.href);
+                if (state.currentPath) {
+                    url.searchParams.set('path', state.currentPath);
                 } else {
                     url.searchParams.delete('path');
                 }
 
-                if (replace) {
-                    window.history.replaceState({ path: normalized }, '', url.toString());
+                if (state.query) {
+                    url.searchParams.set('q', state.query);
                 } else {
-                    window.history.pushState({ path: normalized }, '', url.toString());
+                    url.searchParams.delete('q');
+                }
+
+                if (state.sort && state.sort !== DEFAULT_SORT) {
+                    url.searchParams.set('sort', state.sort);
+                } else {
+                    url.searchParams.delete('sort');
+                }
+
+                if (replaceState) {
+                    window.history.replaceState({ path: state.currentPath, q: state.query, sort: state.sort }, '', url.toString());
+                } else {
+                    window.history.pushState({ path: state.currentPath, q: state.query, sort: state.sort }, '', url.toString());
                 }
             }
 
-            function navigateTo(path, replaceState) {
-                var normalized = normalizePath(path);
-                var node = getFolderNode(normalized);
-                if (!node) {
-                    normalized = '';
-                    node = state.tree;
+            function compareTreeName(left, right) {
+                try {
+                    return String(left || '').localeCompare(String(right || ''), 'zh-Hans-CN', { numeric: true, sensitivity: 'base' });
+                } catch (error) {
+                    return String(left || '').localeCompare(String(right || ''), 'zh-CN');
+                }
+            }
+
+            function createDocTreeNode(name, type) {
+                return {
+                    name: name,
+                    type: type,
+                    children: Object.create(null),
+                    doc: null
+                };
+            }
+
+            function buildDocPathTree(docs) {
+                var root = createDocTreeNode('', 'root');
+                (docs || []).forEach(function (doc) {
+                    var docPath = normalizePath((doc && doc.path) || (doc && doc.filename) || '');
+                    if (!docPath) return;
+                    var parts = splitPath(docPath);
+                    if (!parts.length) return;
+
+                    var cursor = root;
+                    for (var i = 0; i < parts.length; i += 1) {
+                        var part = parts[i];
+                        var isLeaf = i === parts.length - 1;
+                        if (isLeaf) {
+                            var fileNode = createDocTreeNode(part, 'file');
+                            fileNode.doc = doc;
+                            cursor.children[part] = fileNode;
+                        } else {
+                            if (!cursor.children[part]) cursor.children[part] = createDocTreeNode(part, 'folder');
+                            cursor = cursor.children[part];
+                        }
+                    }
+                });
+                return root;
+            }
+
+            function getFolderCollapsedStateOrNull(folderKey) {
+                try {
+                    var key = String(folderKey || '').trim();
+                    if (!key) return null;
+                    var storageKey = 'docsViewerSidebarFolder' + key.charAt(0).toUpperCase() + key.slice(1);
+                    var value = window.localStorage.getItem(storageKey);
+                    if (value === null) return null;
+                    return value === 'true';
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            function setFolderCollapsedState(folderKey, isCollapsed) {
+                try {
+                    var key = String(folderKey || '').trim();
+                    if (!key) return;
+                    var storageKey = 'docsViewerSidebarFolder' + key.charAt(0).toUpperCase() + key.slice(1);
+                    window.localStorage.setItem(storageKey, isCollapsed ? 'true' : 'false');
+                } catch (error) {
+                    console.warn('无法保存目录折叠状态:', error);
+                }
+            }
+
+            function setFolderCollapsedDom(folderLi, collapsed, persist) {
+                folderLi.dataset.collapsed = collapsed ? '1' : '0';
+                var toggleBtn = folderLi.querySelector(':scope > .learn-tree-row .learn-tree-toggle');
+                if (toggleBtn) toggleBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+
+                if (persist) {
+                    var folderKey = folderLi.dataset.folderKey || '';
+                    if (folderKey) setFolderCollapsedState(folderKey, collapsed);
+                }
+            }
+
+            function appendTreeGuides(container, ancestorLast, isLast, depth) {
+                if (!container || !depth) return;
+                var ancestor = Array.isArray(ancestorLast) ? ancestorLast : [];
+                var ancestorCols = Math.max(depth - 1, 0);
+
+                for (var i = 0; i < ancestorCols; i += 1) {
+                    var col = document.createElement('span');
+                    col.className = 'learn-tree-guide' + (ancestor[i] ? '' : ' has-vertical');
+                    container.appendChild(col);
                 }
 
-                state.currentPath = normalized;
-                state.activeGroupPath = normalized;
-                state.loadError = '';
-                updateSeo(normalized);
-                applyPathToUrl(normalized, !!replaceState);
-                refreshFolderView(node, {
-                    focusGroupPath: normalized,
-                    focusBehavior: replaceState ? 'auto' : 'smooth'
+                var current = document.createElement('span');
+                current.className = 'learn-tree-guide current has-vertical' + (isLast ? ' is-last' : '');
+                container.appendChild(current);
+            }
+
+            function renderFolderTree() {
+                if (!refs.tree) return;
+                refs.tree.innerHTML = '';
+                if (!state.tree) return;
+
+                var docsTree = buildDocPathTree(state.allDocs);
+                var activeAncestors = new Set();
+                var activeParts = splitPath(state.currentPath);
+                var accum = '';
+                activeParts.forEach(function (part) {
+                    accum = accum ? accum + '/' + part : part;
+                    activeAncestors.add(accum);
+                });
+
+                var rootUl = document.createElement('ul');
+                rootUl.className = 'learn-tree-root';
+
+                function applyFolderSelection(pathValue) {
+                    var nextPath = normalizePath(pathValue);
+                    if (state.currentPath === nextPath) return;
+                    state.currentPath = nextPath;
+                    renderAll(false);
+                }
+
+                function renderTree(parentUl, treeNode, parentPath, depth, ancestorLast) {
+                    var ancestor = Array.isArray(ancestorLast) ? ancestorLast : [];
+                    var names = Object.keys(treeNode.children || {}).sort(compareTreeName);
+                    var folderNames = names.filter(function (name) { return treeNode.children[name].type === 'folder'; });
+                    var fileNames = names.filter(function (name) { return treeNode.children[name].type === 'file'; });
+
+                    folderNames.forEach(function (folderName) {
+                        var isLast = folderName === folderNames[folderNames.length - 1] && fileNames.length === 0;
+                        var folderNode = treeNode.children[folderName];
+                        var folderPath = parentPath ? parentPath + '/' + folderName : folderName;
+                        var folderKey = encodeURIComponent(folderPath);
+
+                        var li = document.createElement('li');
+                        li.className = 'learn-tree-folder';
+                        li.dataset.folderPath = folderPath;
+                        li.dataset.folderKey = folderKey;
+                        li.dataset.depth = String(depth);
+                        if (state.currentPath === folderPath) li.classList.add('is-active');
+
+                        var row = document.createElement('div');
+                        row.className = 'learn-tree-row learn-tree-folder-row';
+                        row.setAttribute('role', 'button');
+                        row.setAttribute('tabindex', '0');
+                        row.setAttribute('aria-label', '展开或收起目录 ' + folderName);
+
+                        var label = document.createElement('span');
+                        label.className = 'learn-tree-label';
+                        label.textContent = folderName;
+
+                        var guides = document.createElement('span');
+                        guides.className = 'learn-tree-guides';
+                        guides.setAttribute('aria-hidden', 'true');
+                        appendTreeGuides(guides, ancestor, isLast, depth);
+
+                        var toggle = document.createElement('button');
+                        toggle.type = 'button';
+                        toggle.className = 'learn-tree-toggle';
+                        toggle.setAttribute('aria-label', '展开/收起');
+
+                        var item = document.createElement('span');
+                        item.className = 'learn-tree-item';
+                        item.appendChild(toggle);
+                        item.appendChild(label);
+
+                        var openFolderBtn = document.createElement('button');
+                        openFolderBtn.type = 'button';
+                        openFolderBtn.className = 'learn-tree-open-folder';
+                        openFolderBtn.setAttribute('aria-label', '查看目录 ' + folderName);
+                        openFolderBtn.textContent = '查看';
+                        item.appendChild(openFolderBtn);
+
+                        row.appendChild(guides);
+                        row.appendChild(item);
+                        li.appendChild(row);
+
+                        var childrenUl = document.createElement('ul');
+                        childrenUl.className = 'learn-tree-children';
+                        li.appendChild(childrenUl);
+
+                        renderTree(childrenUl, folderNode, folderPath, depth + 1, ancestor.concat([isLast]));
+
+                        var storedCollapsed = getFolderCollapsedStateOrNull(folderKey);
+                        var collapsed = (storedCollapsed === null ? depth >= 1 : storedCollapsed) && !activeAncestors.has(folderPath);
+                        setFolderCollapsedDom(li, collapsed, false);
+
+                        function onToggle(event) {
+                            if (event) event.stopPropagation();
+                            var nowCollapsed = li.dataset.collapsed !== '1';
+                            setFolderCollapsedDom(li, nowCollapsed, true);
+                        }
+
+                        row.addEventListener('click', onToggle);
+                        row.addEventListener('keydown', function (event) {
+                            if (event.key !== 'Enter' && event.key !== ' ') return;
+                            event.preventDefault();
+                            onToggle();
+                        });
+                        toggle.addEventListener('click', onToggle);
+                        openFolderBtn.addEventListener('click', function (event) {
+                            event.stopPropagation();
+                            applyFolderSelection(folderPath);
+                        });
+
+                        parentUl.appendChild(li);
+                    });
+
+                    fileNames.forEach(function (fileName) {
+                        var isLast = fileName === fileNames[fileNames.length - 1];
+                        var fileNode = treeNode.children[fileName];
+                        var doc = fileNode && fileNode.doc ? fileNode.doc : {};
+                        var docPath = normalizePath(doc.path || doc.filename || '');
+                        if (!docPath) return;
+
+                        var li = document.createElement('li');
+                        li.className = 'learn-tree-file';
+                        li.dataset.depth = String(depth);
+
+                        var link = document.createElement('a');
+                        link.className = 'learn-tree-link';
+                        link.href = '/site/pages/viewer.html?file=' + encodeURIComponent(docPath);
+
+                        var guides = document.createElement('span');
+                        guides.className = 'learn-tree-guides';
+                        guides.setAttribute('aria-hidden', 'true');
+                        appendTreeGuides(guides, ancestor, isLast, depth);
+
+                        var label = document.createElement('span');
+                        label.className = 'learn-tree-link-label';
+                        label.textContent = doc.title || fileName.replace(/\.md$/i, '');
+
+                        var spacer = document.createElement('span');
+                        spacer.className = 'learn-tree-toggle-spacer';
+                        spacer.setAttribute('aria-hidden', 'true');
+
+                        var item = document.createElement('span');
+                        item.className = 'learn-tree-item';
+                        item.appendChild(spacer);
+                        item.appendChild(label);
+
+                        link.appendChild(guides);
+                        link.appendChild(item);
+                        li.appendChild(link);
+                        parentUl.appendChild(li);
+                    });
+                }
+
+                var rootLi = document.createElement('li');
+                rootLi.className = 'learn-tree-folder' + (state.currentPath ? '' : ' is-active');
+                rootLi.dataset.folderPath = '';
+                rootLi.dataset.folderKey = encodeURIComponent('__root__');
+                rootLi.dataset.depth = '0';
+
+                var rootRow = document.createElement('div');
+                rootRow.className = 'learn-tree-row learn-tree-folder-row';
+                rootRow.setAttribute('role', 'button');
+                rootRow.setAttribute('tabindex', '0');
+                rootRow.setAttribute('aria-label', '展开或收起全部目录');
+
+                var rootGuides = document.createElement('span');
+                rootGuides.className = 'learn-tree-guides';
+                rootGuides.setAttribute('aria-hidden', 'true');
+
+                var rootToggle = document.createElement('button');
+                rootToggle.type = 'button';
+                rootToggle.className = 'learn-tree-toggle';
+                rootToggle.setAttribute('aria-label', '展开/收起');
+
+                var rootLabel = document.createElement('span');
+                rootLabel.className = 'learn-tree-label';
+                rootLabel.textContent = '全部目录';
+
+                var rootItem = document.createElement('span');
+                rootItem.className = 'learn-tree-item';
+                rootItem.appendChild(rootToggle);
+                rootItem.appendChild(rootLabel);
+
+                var rootOpenBtn = document.createElement('button');
+                rootOpenBtn.type = 'button';
+                rootOpenBtn.className = 'learn-tree-open-folder';
+                rootOpenBtn.setAttribute('aria-label', '查看全部目录');
+                rootOpenBtn.textContent = '查看';
+                rootItem.appendChild(rootOpenBtn);
+
+                rootRow.appendChild(rootGuides);
+                rootRow.appendChild(rootItem);
+                rootLi.appendChild(rootRow);
+
+                var rootChildren = document.createElement('ul');
+                rootChildren.className = 'learn-tree-children';
+                rootLi.appendChild(rootChildren);
+                renderTree(rootChildren, docsTree, '', 0, []);
+
+                var rootStoredCollapsed = getFolderCollapsedStateOrNull(rootLi.dataset.folderKey);
+                setFolderCollapsedDom(rootLi, rootStoredCollapsed === null ? false : rootStoredCollapsed, false);
+
+                function onRootToggle(event) {
+                    if (event) event.stopPropagation();
+                    var nowCollapsed = rootLi.dataset.collapsed !== '1';
+                    setFolderCollapsedDom(rootLi, nowCollapsed, true);
+                }
+
+                rootRow.addEventListener('click', onRootToggle);
+                rootRow.addEventListener('keydown', function (event) {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    onRootToggle();
+                });
+                rootToggle.addEventListener('click', onRootToggle);
+                rootOpenBtn.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    applyFolderSelection('');
+                });
+
+                rootUl.appendChild(rootLi);
+                refs.tree.appendChild(rootUl);
+            }
+
+            function createMetaPill(label, value, className) {
+                if (!value) return null;
+                var pill = document.createElement('span');
+                pill.className = 'folder-meta-pill' + (className ? ' ' + className : '');
+                pill.textContent = label + '：' + value;
+                return pill;
+            }
+
+            function createDocCard(doc) {
+                var card = document.createElement('article');
+                card.className = 'folder-doc-card';
+
+                var main = document.createElement('div');
+                main.className = 'folder-doc-main';
+
+                var stack = document.createElement('div');
+                stack.className = 'folder-doc-meta-stack';
+
+                var titleLink = document.createElement('a');
+                titleLink.className = 'folder-doc-title-link';
+                titleLink.href = '/site/pages/viewer.html?file=' + encodeURIComponent(doc.path);
+                titleLink.textContent = doc.title;
+                stack.appendChild(titleLink);
+
+                var desc = document.createElement('p');
+                desc.className = 'folder-doc-desc';
+                desc.textContent = doc.description;
+                stack.appendChild(desc);
+
+                var metaRow = document.createElement('div');
+                metaRow.className = 'folder-meta-row';
+                var authorPill = createMetaPill('作者', doc.author);
+                var timePill = createMetaPill('时长', doc.time || doc.reading_time);
+                var difficultyPill = createMetaPill('难度', doc.difficulty, 'folder-meta-pill--difficulty');
+                var datePill = createMetaPill('更新', doc.last_updated || doc.date);
+                [authorPill, timePill, difficultyPill, datePill].forEach(function (pill) {
+                    if (pill) metaRow.appendChild(pill);
+                });
+                stack.appendChild(metaRow);
+
+                if (doc.tags && doc.tags.length) {
+                    var tagsRow = document.createElement('div');
+                    tagsRow.className = 'folder-meta-row';
+                    doc.tags.slice(0, 6).forEach(function (tag) {
+                        var tagPill = createMetaPill('标签', tag);
+                        if (tagPill) tagsRow.appendChild(tagPill);
+                    });
+                    stack.appendChild(tagsRow);
+                }
+
+                if (Array.isArray(doc.prefix) && doc.prefix.length) {
+                    var prefixRow = document.createElement('div');
+                    prefixRow.className = 'folder-prefix-row';
+                    var prefixLabel = document.createElement('span');
+                    prefixLabel.className = 'folder-prefix-label';
+                    prefixLabel.textContent = '前置：';
+                    prefixRow.appendChild(prefixLabel);
+                    doc.prefix.slice(0, 3).forEach(function (prefixItem, index) {
+                        var prefixLink = document.createElement('a');
+                        prefixLink.className = 'folder-prefix-link';
+                        prefixLink.href = '/site/pages/viewer.html?file=' + encodeURIComponent(prefixItem.path);
+                        prefixLink.textContent = prefixItem.label;
+                        prefixRow.appendChild(prefixLink);
+                        if (index < Math.min(doc.prefix.length, 3) - 1) {
+                            prefixRow.appendChild(document.createTextNode(' / '));
+                        }
+                    });
+                    if (doc.prefix.length > 3) {
+                        prefixRow.appendChild(document.createTextNode(' +' + (doc.prefix.length - 3)));
+                    }
+                    stack.appendChild(prefixRow);
+                }
+
+                main.appendChild(stack);
+
+                var actions = document.createElement('div');
+                actions.className = 'folder-doc-actions';
+                var docLink = document.createElement('a');
+                docLink.className = 'folder-doc-link';
+                docLink.href = '/site/pages/viewer.html?file=' + encodeURIComponent(doc.path);
+                docLink.textContent = '阅读文章';
+                actions.appendChild(docLink);
+                main.appendChild(actions);
+
+                card.appendChild(main);
+                return card;
+            }
+
+            function renderGroupSection(groupNode, currentPath) {
+                var section = document.createElement('section');
+                section.className = 'folder-group';
+                section.dataset.depth = String(Math.max(0, Number(groupNode && groupNode.depth || 0)));
+                section.dataset.groupKey = buildGroupCollapseKey(groupNode);
+
+                var header = document.createElement('div');
+                header.className = 'folder-group-header';
+                header.setAttribute('role', 'button');
+                header.setAttribute('tabindex', '0');
+                var groupTitle = document.createElement('span');
+                groupTitle.className = 'folder-group-title';
+                var groupTitleText = groupNode.path ? groupNode.name : formatGroupLabel('', currentPath);
+                groupTitle.textContent = groupTitleText;
+
+                var titleWrap = document.createElement('span');
+                titleWrap.className = 'folder-group-title-wrap';
+
+                var groupToggle = document.createElement('button');
+                groupToggle.type = 'button';
+                groupToggle.className = 'folder-group-toggle';
+                groupToggle.setAttribute('aria-label', '展开或收起分组');
+                titleWrap.appendChild(groupToggle);
+                titleWrap.appendChild(groupTitle);
+                header.appendChild(titleWrap);
+
+                var groupCount = document.createElement('span');
+                groupCount.className = 'folder-group-count';
+                groupCount.textContent = countGroupedDocs(groupNode) + ' 篇';
+                header.appendChild(groupCount);
+                header.setAttribute('aria-label', '展开或收起分组 ' + groupTitleText);
+                section.appendChild(header);
+
+                var body = document.createElement('div');
+                body.className = 'folder-group-body';
+                groupBodyIdSeed += 1;
+                body.id = 'folder-group-body-' + groupBodyIdSeed;
+                header.setAttribute('aria-controls', body.id);
+                groupToggle.setAttribute('aria-controls', body.id);
+
+                if (Array.isArray(groupNode.docs) && groupNode.docs.length) {
+                    var groupList = document.createElement('div');
+                    groupList.className = 'folder-group-list';
+                    groupNode.docs.forEach(function (doc) {
+                        groupList.appendChild(createDocCard(doc));
+                    });
+                    body.appendChild(groupList);
+                }
+
+                var childGroups = listGroupedChildNodes(groupNode);
+                if (childGroups.length) {
+                    var childrenWrap = document.createElement('div');
+                    childrenWrap.className = 'folder-group-children';
+                    childGroups.forEach(function (childNode) {
+                        childrenWrap.appendChild(renderGroupSection(childNode, currentPath));
+                    });
+                    body.appendChild(childrenWrap);
+                }
+
+                function setGroupCollapsedDom(collapsed, persist) {
+                    section.dataset.collapsed = collapsed ? '1' : '0';
+                    header.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                    groupToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                    if (persist) {
+                        saveGroupCollapsedState(groupNode, collapsed);
+                    }
+                }
+
+                function onGroupToggle(event) {
+                    if (event) event.stopPropagation();
+                    var nowCollapsed = section.dataset.collapsed !== '1';
+                    setGroupCollapsedDom(nowCollapsed, true);
+                }
+
+                header.addEventListener('click', onGroupToggle);
+                header.addEventListener('keydown', function (event) {
+                    if (event.key !== 'Enter' && event.key !== ' ') return;
+                    event.preventDefault();
+                    onGroupToggle();
+                });
+                groupToggle.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    onGroupToggle();
+                });
+
+                var storedCollapsed = getGroupCollapsedStateOrNull(groupNode);
+                var isNestedGroup = Number(groupNode && groupNode.depth || 0) >= 1;
+                var initialCollapsed = storedCollapsed === null ? isNestedGroup : storedCollapsed;
+                setGroupCollapsedDom(initialCollapsed, false);
+
+                section.appendChild(body);
+                return section;
+            }
+
+            function renderArticleList() {
+                if (!refs.list || !refs.empty) return;
+
+                var folderNode = getFolderNode(state.currentPath) || state.tree;
+                var rawDocs = collectDocsRecursively(folderNode);
+                var docs = filterDocs(rawDocs, state.query);
+                docs.sort(function (left, right) {
+                    return compareDocs(left, right, state.sort);
+                });
+                var groupedDocsTree = buildGroupedDocsTree(docs, state.currentPath);
+
+                refs.list.innerHTML = '';
+                groupBodyIdSeed = 0;
+                refs.path.textContent = state.currentPath || '全部目录';
+                refs.total.textContent = String(docs.length);
+                if (refs.subfolderCount) {
+                    refs.subfolderCount.textContent = String(folderNode && folderNode.children ? folderNode.children.size : 0);
+                }
+                if (refs.rawCount) {
+                    refs.rawCount.textContent = String(rawDocs.length);
+                }
+
+                if (!docs.length) {
+                    refs.empty.hidden = false;
+                    return;
+                }
+
+                refs.empty.hidden = true;
+
+                if (groupedDocsTree.docs.length) {
+                    refs.list.appendChild(renderGroupSection(groupedDocsTree, state.currentPath));
+                    return;
+                }
+
+                listGroupedChildNodes(groupedDocsTree).forEach(function (groupNode) {
+                    refs.list.appendChild(renderGroupSection(groupNode, state.currentPath));
                 });
             }
 
-            async function loadConfig() {
-                var config;
+            function renderAll(replaceState) {
+                if (!state.tree) return;
+                if (state.currentArticleProgressKey) {
+                    saveArticlePanelProgress(state.currentArticleProgressKey);
+                }
+                renderFolderTree();
+                renderArticleList();
+                state.currentArticleProgressKey = buildArticleProgressKey();
+                restoreArticlePanelProgress(state.currentArticleProgressKey);
+                updateSeo(state.currentPath);
+                applyStateToUrl(!!replaceState);
+            }
+
+            function applyQueryState(replaceState) {
+                var queryState = getQueryState();
+                var node = getFolderNode(queryState.path);
+                state.currentPath = node ? queryState.path : '';
+                state.query = queryState.query;
+                state.sort = queryState.sort;
+
+                refs.search.value = state.query;
+                refs.sort.value = state.sort;
+                renderAll(replaceState);
+            }
+
+            function loadConfig() {
                 if (window.SiteConfig && typeof window.SiteConfig.load === 'function') {
-                    config = await window.SiteConfig.load();
-                } else {
-                    var response = await fetch('/site/content/config.json');
-                    if (!response.ok) throw new Error('无法加载配置文件: ' + response.status);
-                    config = await response.json();
+                    return window.SiteConfig.load();
                 }
 
-                var rawDocs = Array.isArray(config && config.all_files) ? config.all_files : [];
-                var docs = rawDocs.map(normalizeDoc).filter(Boolean);
-
-                state.allDocs = docs;
-                state.docByPath = new Map();
-                docs.forEach(function (doc) {
-                    state.docByPath.set(doc.path, doc);
+                return fetch('/site/content/config.json', { cache: 'no-store' }).then(function (response) {
+                    if (!response.ok) throw new Error('无法加载配置文件: ' + response.status);
+                    return response.json();
                 });
-                state.tree = buildTree(docs);
             }
 
             function bindEvents() {
-                window.addEventListener('popstate', function () {
-                    var path = getFolderPathFromURL();
-                    var node = getFolderNode(path);
-                    if (!node) path = '';
-                    state.currentPath = path;
-                    state.activeGroupPath = path;
-                    updateSeo(path);
-                    refreshFolderView(getFolderNode(path), {
-                        focusGroupPath: path,
-                        focusBehavior: 'auto'
-                    });
+                var articleProgressTimer = 0;
+
+                refs.search.addEventListener('input', function () {
+                    state.query = String(refs.search.value || '').trim();
+                    renderAll(true);
                 });
 
-                window.addEventListener('themechange', function () {
-                    var node = getFolderNode(state.currentPath || '');
-                    if (node) {
-                        refreshFolderView(node, {
-                            focusGroupPath: state.activeGroupPath || state.currentPath || '',
-                            focusBehavior: 'auto'
-                        });
+                refs.sort.addEventListener('change', function () {
+                    var value = String(refs.sort.value || DEFAULT_SORT);
+                    state.sort = ALLOWED_SORTS.has(value) ? value : DEFAULT_SORT;
+                    renderAll(true);
+                });
+
+                window.addEventListener('popstate', function () {
+                    applyQueryState(true);
+                });
+
+                if (refs.list) {
+                    refs.list.addEventListener('scroll', function () {
+                        if (articleProgressTimer) return;
+                        articleProgressTimer = window.setTimeout(function () {
+                            articleProgressTimer = 0;
+                            saveArticlePanelProgress(state.currentArticleProgressKey || buildArticleProgressKey());
+                        }, 120);
+                    });
+                }
+
+                window.addEventListener('beforeunload', function () {
+                    if (articleProgressTimer) {
+                        window.clearTimeout(articleProgressTimer);
+                        articleProgressTimer = 0;
                     }
+                    saveArticlePanelProgress(state.currentArticleProgressKey || buildArticleProgressKey());
                 });
             }
 
+            function cacheRefs() {
+                refs.tree = document.getElementById('folder-folder-tree');
+                refs.articlePanel = document.getElementById('folder-article-panel');
+                refs.list = document.getElementById('folder-article-list');
+                refs.empty = document.getElementById('folder-empty');
+                refs.search = document.getElementById('folder-search-input');
+                refs.sort = document.getElementById('folder-sort-select');
+                refs.path = document.getElementById('folder-current-path');
+                refs.total = document.getElementById('folder-total-count');
+                refs.subfolderCount = document.getElementById('folder-subfolder-count');
+                refs.rawCount = document.getElementById('folder-raw-count');
+            }
+
             document.addEventListener('DOMContentLoaded', function () {
-                loadConfig().then(function () {
+                cacheRefs();
+                loadConfig().then(function (config) {
+                    var docs = Array.isArray(config && config.all_files) ? config.all_files : [];
+                    state.allDocs = docs.map(normalizeDoc).filter(Boolean);
+                    state.tree = buildFolderIndex(state.allDocs);
                     bindEvents();
-                    navigateTo(getFolderPathFromURL(), true);
+                    applyQueryState(true);
                 }).catch(function (error) {
                     console.error('folder.html 初始化失败:', error);
-                    state.loadError = '加载目录数据失败，请稍后重试。';
-                    renderErrorMap(state.loadError);
+                    if (refs.empty) {
+                        refs.empty.hidden = false;
+                        refs.empty.textContent = '加载目录数据失败，请稍后重试。';
+                    }
                 });
             });
         })();
