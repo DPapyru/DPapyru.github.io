@@ -168,11 +168,11 @@ function buildFolderScenarios() {
             id: 'folder-enter-subfolder',
             run: async ({ page, step, assert }) => {
                 await step('click-subfolder-node', async () => {
-                    await page.waitForSelector('#folder-map-svg g.map-clickable', { timeout: 15000 });
-                    const nodes = page.locator('#folder-map-svg g.map-clickable');
+                    await page.waitForSelector('#folder-map-svg [data-folder-path]', { timeout: 15000 });
+                    const nodes = page.locator('#folder-map-svg [data-folder-path]');
                     const count = await nodes.count();
-                    assert('folder-map-clickable-count', count > 1, String(count));
-                    await nodes.nth(1).click();
+                    assert('folder-map-subfolder-count', count > 0, String(count));
+                    await nodes.first().click();
                     await page.waitForTimeout(900);
                 });
 
@@ -194,7 +194,7 @@ function buildFolderScenarios() {
                 });
 
                 await step('click-go-parent', async () => {
-                    await page.click('#go-parent-btn');
+                    await page.click('#folder-map-svg [data-nav-role="go-parent"]');
                     await page.waitForTimeout(700);
                 });
 
@@ -216,17 +216,11 @@ function buildFolderScenarios() {
                 });
 
                 await step('click-doc-node', async () => {
-                    const clicked = await page.evaluate(() => {
-                        const nodes = Array.from(document.querySelectorAll('#folder-map-svg g.map-clickable'));
-                        const docNode = nodes.find((node) => {
-                            const title = node.querySelector('title');
-                            return title && /\.md$/i.test(String(title.textContent || '').trim());
-                        });
-                        if (!docNode) return false;
-                        docNode.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-                        return true;
-                    });
-                    assert('folder-doc-node-found', clicked, 'no clickable doc node');
+                    await page.waitForSelector('#folder-map-svg [data-doc-path]', { timeout: 15000 });
+                    const nodes = page.locator('#folder-map-svg [data-doc-path]');
+                    const count = await nodes.count();
+                    assert('folder-doc-node-found', count > 0, String(count));
+                    await nodes.first().click();
                     await page.waitForLoadState('domcontentloaded');
                     await page.waitForTimeout(800);
                 });

@@ -2870,3 +2870,33 @@
 - `npm test`：失败（3 failed；失败项为 `contrib docs avoid broken nested animcs fences`、`vertex draw section includes live animcs demo and key draw calls`、`content markdown no longer uses legacy transclusion syntax`）
 
 **备注**：本次已将 `fix-ide-validation-ux` 的 IDE 验收修复与构建产物补齐合并到 `fix-doc-viewer-folder-nav` 的合并结果中；当前失败集中在目标分支既有的 contributor-learning 文档内容校验，与本次 IDE 构建产物补齐逻辑无直接关系。
+
+
+### 验证记录 [2026-03-08 12:09]：目录树形导航改版与截图验收
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/folder-svg-navigation-contract.test.js site/tooling/scripts/folder-view-toggle.test.js site/tooling/scripts/folder-learning-filter.test.js site/tooling/scripts/page-common-alignment.test.js`：通过（14 passed, 0 failed）
+- `npm ci --prefix site-app`：通过
+- `npm ci --prefix tml-ide-app`：通过
+- `npm run build`：通过（`site-app` 与 `tml-ide-app` 成功构建；`tml-ide-app` 仍有既有字体运行时解析提示与大 chunk 警告，但命令成功退出）
+- `npm run check-generated`：失败（命令末尾执行 `git diff --exit-code`；当前工作树存在本次待评审源码改动，因此返回非零）
+- `google-chrome --headless --dump-dom http://127.0.0.1:4176/site/tmp-folder-tree-browser-check.html`：通过（5 passed, 0 failed）
+- `google-chrome --headless --screenshot=... http://127.0.0.1:4176/site/pages/folder.html[?path=...]`：通过（已产出根目录、`螺线翻译tml教程`、`如何贡献` 三张截图）
+
+**截图产物**：
+- `/tmp/folder_tree_root.png`
+- `/tmp/folder_tree_luoxian.png`
+- `/tmp/folder_tree_contribute.png`
+- `/tmp/folder_tree_browser_check_dom.html`
+
+**页面评分**：
+- `91/100`
+
+**备注**：
+- 本次目录页已改为单 SVG 树图主视图，主内容安全距离固定为 `10px`。
+- 子目录会显示子目录文章预览，且每个子目录最多显示 `3` 篇；超出部分以“另有 N 篇”摘要展示。
+- 当前目录下的直属文章会作为独立分组“本级文章”展示，避免信息丢失。
+- 浏览器验收确认：可进入子目录、可返回上级、可点击文章进入 `viewer.html`、大目录存在 `>3` 文章溢出摘要。
+- 评分扣分点主要是：极宽目录下顶部导航芯片仍有轻微边缘压缩观感，但不影响交互与信息识别。
