@@ -133,7 +133,7 @@
               "title": "教学文章写作指南",
               "author": "小天使",
               "order": 1,
-              "description": "面向新贡献者的默认主线：先在浏览器里完成 Markdown 写作与预览，再回本地仓库补构建验证，最后决定是否继续学动画。",
+              "description": "面向新贡献者的默认主线：先在浏览器里完成 Markdown 写作、预览与提交，再决定是否继续学动画。",
               "time": "20分钟",
               "difficulty": "beginner",
               "prev_chapter": null,
