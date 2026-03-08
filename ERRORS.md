@@ -2972,3 +2972,16 @@
 - 本次仅并入各工作树分支的已提交历史，未纳入工作树未提交改动。
 - `check-generated` 失败差异集中在时间戳字段：`fun-test/quiz-data.v1.json`（`generatedAt`）、`site/assets/ide-editable-index.v1.json`（`generatedAt`）、`site/assets/shader-gallery/index.json`（`generated_at`）。
 - 为保持工作区干净，验收后已执行 `git restore --worktree --staged .` 清理生成命令引入的临时改动。
+
+### 验证记录 [2026-03-08 13:53]：修复贡献文档回归并恢复评审契约
+
+**级别**：文档回归修复（贡献文档契约）
+
+**命令与结果**：
+- `node --test site/tooling/scripts/contrib-docs-format.test.js site/tooling/scripts/markdown-ref-standard-links.test.js`：通过（7 passed, 0 failed）
+- `npm test`：先失败后通过（初次失败因 `tml-ide-app` 子包缺少 `@replit/codemirror-lang-csharp`；执行 `npm --prefix tml-ide-app ci` 后复跑通过，291 passed, 0 failed, 4 skipped）
+- `npm run build`：先失败后通过（初次失败因 `site-app` 缺少 `@vitejs/plugin-react`；执行 `npm --prefix site-app ci` 后复跑通过）
+
+**备注**：
+- 修复点包含：去除贡献文档中的旧双花括号语法字面量、恢复 ` ````text + ```animts ` 安全嵌套围栏、恢复 `## 顶点绘制 + FX（首版）` 章节及 `UseEffect("anims/shaders/fna-vertex-demo.fx")` / `DrawUserIndexedPrimitives(...)` 关键标记。
+- 构建期间出现既有 warning（字体运行时解析与大 chunk 提示），命令均成功退出，不影响本次文档回归修复结论。
