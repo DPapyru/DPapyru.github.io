@@ -2817,3 +2817,19 @@
 **备注**：
 - 已保留失败日志：`/tmp/feat_ide_flowchart_npm_test.log`、`/tmp/feat_ide_flowchart_npm_build.log`、`/tmp/feat_ide_flowchart_npm_ci.log`。
 - 本次按“先提交再清理”继续执行分支合并与工作树清理，构建失败原因为环境依赖安装受限。
+
+### 验证记录 [2026-03-08 10:10]：合并 contributor-learning 文档并修正评审入口条件
+
+**级别**：L3
+
+**命令与结果**：
+- `npm ci`：通过
+- `npm --prefix site-app ci`：通过
+- `npm --prefix tml-ide-app ci`：通过
+- `npm run build`：通过（`tml-ide-app` 仍有既有字体运行时解析提示与大 chunk 警告，但命令成功退出）
+- `npm run check-generated`：失败（`git diff --exit-code` 报告当前分支还存在与本次文档合并无关的历史生成物差异，如 `fun-test/quiz-data.v1.json`、`site/assets/anims/*`、`tml-ide/*`）
+
+**备注**：
+- 本次针对 `/site/content/如何贡献/` 的 contributor-learning 文档组同步了 5 篇重写稿，并把 `教学文章写作指南.md` 改为明确区分“浏览器草稿链路”和“可进入评审的 PR 条件”。
+- 同步更新了与内容索引直接相关的生成物：`site/content/config.json`、`site/assets/search-index.json`、`site/assets/ide-editable-index.v1.json`、`site/assets/semantic/guided-index.v1.json`、`site/assets/semantic/bm25-index.v1.json`、`site/sitemap.xml`。
+- `check-generated` 暴露出的其余差异不在本次审核修复范围内，未顺手并入本次提交。
