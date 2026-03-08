@@ -4298,12 +4298,29 @@
 	                            const baseHref = hashIndex >= 0 ? rawHref.slice(0, hashIndex) : rawHref;
 
 	                            if (!baseHref) return '';
+
+	                            if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(baseHref)) {
+	                                try {
+	                                    const legacyUrl = new URL(baseHref);
+	                                    const legacyHost = String(legacyUrl.hostname || '').toLowerCase();
+	                                    const legacyPath = String(legacyUrl.pathname || '').replace(/\/+$/, '');
+	                                    const legacyFile = String(legacyUrl.searchParams.get('file') || '').trim();
+	                                    const isLegacyViewer =
+	                                        (legacyHost === 'dpapyru.github.io' || legacyHost === 'www.dpapyru.github.io') &&
+	                                        legacyPath === '/docs/viewer.html';
+
+	                                    if (isLegacyViewer && legacyFile) {
+	                                        return `viewer.html?file=${encodeURIComponent(legacyFile)}${hash}`;
+	                                    }
+	                                } catch (error) {}
+	                                return rawHref;
+	                            }
+
 	                            if (
 	                                baseHref.includes('.html') ||
 	                                baseHref.startsWith('?') ||
 	                                baseHref.includes('viewer.html') ||
-	                                baseHref.includes('folder.html') ||
-	                                /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(baseHref)
+	                                baseHref.includes('folder.html')
 	                            ) {
 	                                return rawHref;
 	                            }
@@ -4863,6 +4880,15 @@
                 stack.push(part);
             }
             return stack.join('/');
+        }
+
+        function getFolderOfPath(inputPath) {
+            const normalizedPath = normalizePath(inputPath);
+            if (!normalizedPath) return '';
+
+            const parts = normalizedPath.split('/').filter(Boolean);
+            if (parts.length <= 1) return '';
+            return parts.slice(0, -1).join('/');
         }
 
         function resolveRelativeHref(rawHref, currentDocPath) {
@@ -7491,7 +7517,7 @@
 
             // 添加文档列表链接
             const docsLink = document.createElement('a');
-            docsLink.href = 'index.html';
+            docsLink.href = 'folder.html';
             docsLink.textContent = '文档';
             breadcrumb.appendChild(docsLink);
 
@@ -7551,7 +7577,8 @@
 
 	            // 添加返回文档列表按钮
 	            const backToListBtn = document.createElement('a');
-	            backToListBtn.href = 'index.html';
+	            const currentFolder = getFolderOfPath(currentDocPath || CURRENT_DOC_PATH);
+	            backToListBtn.href = currentFolder ? `folder.html?path=${encodeURIComponent(currentFolder)}` : 'folder.html';
 	            backToListBtn.className = 'btn btn-outline prev-tutorial';
 		            backToListBtn.textContent = '← 返回文档列表';
 		            navigationContainer.appendChild(backToListBtn);

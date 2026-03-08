@@ -2818,20 +2818,35 @@
 - 已保留失败日志：`/tmp/feat_ide_flowchart_npm_test.log`、`/tmp/feat_ide_flowchart_npm_build.log`、`/tmp/feat_ide_flowchart_npm_ci.log`。
 - 本次按“先提交再清理”继续执行分支合并与工作树清理，构建失败原因为环境依赖安装受限。
 
-
-### 验证记录 [2026-03-08 08:54]：IDE 验收纠偏与关键交互修复
+### 验证记录 [2026-03-08 08:45]：viewer 路由修复与 folder SVG 导航增强
 
 **级别**：L3
 
 **命令与结果**：
-- `node --test --test-reporter spec tml-ide-app/tests/anim-preview-cwd-stability.test.js tml-ide-app/tests/ide-acceptance-alignment.test.js tml-ide-app/tests/ide-ux-regressions.test.js`：通过
-- `cd tml-ide-app && node --test --test-reporter spec tests/**/*.test.js`：通过（108 passed, 0 failed）
-- `npm --prefix tml-ide-app test`：通过（102 passed, 0 failed）
+- `node --test site/tooling/scripts/folder-view-toggle.test.js site/tooling/scripts/folder-learning-filter.test.js site/tooling/scripts/page-common-alignment.test.js site/tooling/scripts/viewer-route-runtime.test.js site/tooling/scripts/viewer-nav-all-docs.test.js site/tooling/scripts/viewer-doc-route-regression.test.js site/tooling/scripts/folder-svg-navigation-contract.test.js`：通过（21 tests, 0 failures）
 - `npm run build`：通过
-- `npm run check-generated`：失败
-- `node` + `/tmp/pw/node_modules/playwright-core` + `/usr/bin/google-chrome` 浏览器 smoke：通过（本地 `http://127.0.0.1:4176/tml-ide/` 已确认快速创建、Markdown 可视化预览、Shader compile 面板默认聚焦、anim.ts debug completion、统一提交面板）
+- `python3 -m http.server 4174`：通过（本地调试服务启动）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=4000 --dump-dom 'http://127.0.0.1:4174/site/pages/folder.html?path=Modder%E5%85%A5%E9%97%A8' | rg ...`：通过（面包屑、目录内定位、SVG 文章卡片存在）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=5000 --dump-dom 'http://127.0.0.1:4174/site/pages/folder.html?path=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B' | ...`：通过（`doc_nodes=129`，`viewBox="0 0 1840 7090"`）
+- `google-chrome --headless --disable-gpu --no-sandbox --virtual-time-budget=5000 --dump-dom 'http://127.0.0.1:4174/site/pages/viewer.html?file=...' | rg ...`：通过（面包屑/返回按钮指向 `folder.html`，旧绝对 viewer 链接已渲染为当前 `viewer.html?file=`）
+- `npm run check-generated`：待补跑
 
-**备注**：本次在工作树 `fix-ide-validation-ux` 中完成 IDE 验收脚本纠偏、repo tree 定位反馈、Shader compile 面板聚焦与 anim.ts debug completion 对齐；`check-generated` 失败原因是该命令末尾执行 `git diff --exit-code`，在当前存在待评审源码与对应构建产物更新的工作树中会返回非零，未发现额外的无关生成漂移。
+**备注**：本次修复 `site/pages/viewer.html` 的运行时“文档/返回列表”跳转与旧绝对 viewer 链接兼容；同时重做 `site/pages/folder.html` 的 SVG 目录导航，新增路径面包屑、目录内文章定位和“当前目录 + 子目录”的多文章索引。`build` 会重生成多个受跟踪产物，本次已在工作树中回退无关生成物以保持补丁聚焦；`check-generated` 含 `git diff --exit-code`，在当前未提交工作树状态下不适合作为最终判定，需在提交前干净状态补跑。`build` 期间 `tml-ide-app` 仍出现既有 Vite 警告（字体运行时解析与大 chunk 提示），但命令最终成功退出。
+
+### 验证记录 [2026-03-08 09:23]：folder SVG-only workbench-main 改造验收
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/folder-view-toggle.test.js site/tooling/scripts/folder-learning-filter.test.js site/tooling/scripts/page-common-alignment.test.js site/tooling/scripts/viewer-route-runtime.test.js site/tooling/scripts/viewer-nav-all-docs.test.js site/tooling/scripts/viewer-doc-route-regression.test.js site/tooling/scripts/folder-svg-navigation-contract.test.js`：通过（22 tests, 0 failures）
+- `google-chrome --headless=new --disable-gpu --enable-logging=stderr --v=0 --virtual-time-budget=5000 --dump-dom 'http://127.0.0.1:4175/site/pages/folder.html?path=%E8%9E%BA%E7%BA%BF%E7%BF%BB%E8%AF%91tml%E6%95%99%E7%A8%8B' > /tmp/folder-svg-only-dom.html && rg ... /tmp/folder-svg-only-dom.html`：通过（`viewBox="0 0 1840 7516"`，存在 `data-doc-path` 节点；未出现 `go-parent-btn` / `folder-doc-locator` / `folder-map-legend`）
+- `npm run build`：通过（包含 `generate-index`、`site-app`、`tml-ide-app` 构建；`tml-ide-app` 仍有既有字体运行时解析与大 chunk 警告，但命令最终成功退出）
+- `npm run check-generated`：未执行（当前工作树有未提交改动，命令内含 `git diff --exit-code`，需在提交前干净状态补跑）
+
+**备注**：
+- 本轮将 `site/pages/folder.html` 的 `workbench-main` 收敛为仅保留 SVG 画布，并把路径跳转、分组跳转、返回上级与文章进入全部收回 SVG 内部。
+- `/html/body/main` 现在由 `main.workbench-main` 直接承担滚动容器职责，目录页不再渲染独立 HTML 工具条、定位输入框、图例或空状态块。
+- 浏览器级验证使用本地 `python3 -m http.server 4175` 服务；Chrome 运行期出现的 DBus 噪声来自无头环境，不影响页面渲染结果。
 
 ### 验证记录 [2026-03-08 10:10]：合并 contributor-learning 文档并修正评审入口条件
 
@@ -2870,3 +2885,26 @@
 - `npm test`：失败（3 failed；失败项为 `contrib docs avoid broken nested animcs fences`、`vertex draw section includes live animcs demo and key draw calls`、`content markdown no longer uses legacy transclusion syntax`）
 
 **备注**：本次已将 `fix-ide-validation-ux` 的 IDE 验收修复与构建产物补齐合并到 `fix-doc-viewer-folder-nav` 的合并结果中；当前失败集中在目标分支既有的 contributor-learning 文档内容校验，与本次 IDE 构建产物补齐逻辑无直接关系。
+
+### 验证记录 [2026-03-08 10:51]：修复 folder/viewer 导航回归与 SVG 按钮无名称
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/viewer-doc-route-regression.test.js site/tooling/scripts/folder-svg-navigation-contract.test.js site/tooling/scripts/viewer-route-runtime.test.js site/tooling/scripts/viewer-nav-all-docs.test.js site/tooling/scripts/folder-view-toggle.test.js site/tooling/scripts/page-common-alignment.test.js`：通过（22 passed, 0 failed）
+- `npm run build`：通过（`tml-ide-app` 仍有既有字体运行时解析提示与大 chunk 警告，但命令成功退出）
+- `npm run check-generated`：失败
+
+**备注**：本次修复将 `viewer.html` 的“返回文档列表”按钮改为保留当前文档所属文件夹 `?path=`，并让 `folder.html` 的 `drawNode()` 在未显式提供 `label` 时回退到可见标题/副标题，避免 SVG 主导航按钮出现空 `aria-label`。`check-generated` 当前失败原因为该命令末尾包含 `git diff --exit-code`，会把本次待提交的源代码改动（以及当前工作树中已有的暂存差异）视为未清洁工作区；构建过程中产生的时间戳型生成物已回退，未额外并入本次修复。
+
+### 验证记录 [2026-03-08 11:17]：恢复贡献文档中的 vertex+FX 教程与安全围栏示例
+
+**级别**：L3
+
+**命令与结果**：
+- `node --test site/tooling/scripts/contrib-docs-format.test.js site/tooling/scripts/markdown-ref-standard-links.test.js`：通过（7 passed, 0 failed）
+- `npm test`：通过（292 passed, 0 failed, 4 skipped）
+- `npm run build`：通过（`tml-ide-app` 仍有既有字体运行时解析提示与大 chunk 警告，但命令成功退出）
+- `npm run check-generated`：失败
+
+**备注**：本次修复恢复了 `site/content/如何贡献/使用网页特殊动画模块.md` 中的 `顶点绘制 + FX（首版）` 段、`anims/fna-vertex-demo.anim.ts` 实际嵌入示例及 `UseEffect(...)` / `DrawUserIndexedPrimitives(...)` 关键代码；同时把贡献文档中的 anim 嵌入字面量示例统一改回 ` ````text ` 安全围栏，并将正文里直接写出的旧式双花括号引用说明改写为不触发旧语法检测的表述。`check-generated` 当前失败原因为命令末尾包含 `git diff --exit-code`，会把当前工作树中已有的源代码与生成物差异视为未清洁工作区；其中纯时间戳型生成物已回退，仅保留与文档内容变更相关的索引更新。

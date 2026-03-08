@@ -35,98 +35,26 @@
     <script src="/site/assets/js/theme-init.js"></script>
 
     <style>
-        .folder-map-page {
-            padding: 5px 0 8px;
-            min-height: calc(100vh - 86px);
-        }
-
-        .folder-map-panel {
-            border: 1px solid var(--border-color);
-            background: var(--bg-content);
-            border-radius: 10px;
-            box-shadow: var(--shadow-md);
-            overflow: hidden;
-            margin: 0 5px;
-        }
-
-        .folder-map-toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            flex-wrap: wrap;
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border-color);
-            background: var(--bg-secondary);
-        }
-
-        .folder-map-title {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .folder-map-meta {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            flex-wrap: wrap;
-        }
-
-        .folder-map-stage {
-            position: relative;
-            width: 100%;
+        body.folder-svg-only-page .workbench-main {
+            padding: 0;
             overflow: auto;
+            min-height: 0;
             background: var(--bg-color);
-            min-height: 420px;
-            height: clamp(420px, calc(100vh - 210px), 820px);
+            border-left: 1px solid var(--workbench-line-color);
+            border-right: 1px solid var(--workbench-line-color);
+            scroll-behavior: smooth;
         }
 
-        .folder-map-svg {
+        body.folder-svg-only-page .folder-map-svg {
             display: block;
-            width: 100%;
-            min-width: 700px;
+            width: 1840px;
+            min-width: 100%;
             height: auto;
+            background: var(--bg-color);
         }
 
-        .folder-map-empty {
-            padding: 12px 10px;
-            text-align: center;
-            color: var(--text-secondary);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .folder-map-legend {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            padding: 8px 10px 10px;
-        }
-
-        .legend-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .legend-line {
-            display: inline-block;
-            width: 24px;
-            height: 0;
-            border-top-width: 2px;
-            border-top-style: solid;
-        }
-
-        #legend-prev-line {
-            border-top-style: solid;
-        }
-
-        #legend-next-line {
-            border-top-style: solid;
+        body.folder-svg-only-page .workbench-main:focus {
+            outline: none;
         }
 
         .map-clickable {
@@ -135,43 +63,32 @@
         }
 
         .map-clickable rect {
-            transition: transform 0.18s ease, stroke-width 0.18s ease;
+            transition: transform 0.18s ease, stroke-width 0.18s ease, filter 0.18s ease;
             transform-box: fill-box;
             transform-origin: center;
         }
 
         .map-clickable:hover rect,
         .map-clickable:focus rect {
-            transform: scale(1.03);
-            stroke-width: 2.5;
+            transform: translateY(-2px);
+            stroke-width: 2.6;
+            filter: brightness(1.06);
         }
 
         @media (max-width: 768px) {
-            .folder-map-page {
-                padding: 4px 0 6px;
+            body.folder-svg-only-page .workbench-main {
+                border-left: none;
+                border-right: none;
             }
 
-            .folder-map-panel {
-                margin: 0 4px;
-            }
-
-            .folder-map-stage {
-                min-height: 360px;
-                height: clamp(360px, calc(100vh - 190px), 700px);
-            }
-
-            .folder-map-svg {
-                min-width: 620px;
-            }
-
-            .folder-map-toolbar {
-                align-items: flex-start;
+            body.folder-svg-only-page .folder-map-svg {
+                width: 1640px;
             }
         }
     </style>
 </head>
 
-<body class="workbench-page">
+<body class="workbench-page folder-svg-only-page">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
 
     <header class="site-header">
@@ -229,30 +146,7 @@
     </header>
 
     <main class="workbench-main" id="main-content" tabindex="-1">
-        <section class="folder-map-page">
-            <div class="folder-map-panel">
-                <div class="folder-map-toolbar">
-                    <button class="btn btn-outline" id="go-parent-btn" type="button">返回上一级</button>
-                    <div class="folder-map-title" id="folder-map-title">目录可视化</div>
-                    <div class="folder-map-meta">
-                        <span id="folder-count-meta">目录 0</span>
-                        <span id="doc-count-meta">文章 0</span>
-                    </div>
-                </div>
-
-                <div class="folder-map-stage">
-                    <svg class="folder-map-svg" id="folder-map-svg" viewBox="0 0 1200 860" role="img" aria-label="文档目录结构"></svg>
-                </div>
-
-                <div class="folder-map-legend">
-                    <span class="legend-chip"><span class="legend-line" id="legend-prev-line"></span>左侧箭头（橙色）</span>
-                    <span class="legend-chip"><span class="legend-line" id="legend-next-line"></span>右侧箭头（蓝色）</span>
-                    <span>点击目录节点进入目录，点击文章节点打开文章</span>
-                </div>
-
-                <div class="folder-map-empty" id="folder-map-empty" hidden>当前目录暂无子目录与文章。</div>
-            </div>
-        </section>
+        <svg class="folder-map-svg" id="folder-map-svg" viewBox="0 0 1840 920" role="img" aria-label="文档目录结构导航图"></svg>
     </main>
     <div class="workbench-statusbar" role="status" aria-label="页面状态栏"><span class="workbench-statusbar-item">SWISS WORKBENCH</span><span class="workbench-statusbar-sep" aria-hidden="true">|</span><span class="workbench-statusbar-item">LAYOUT: IDE</span><span class="workbench-statusbar-spacer"></span><span class="workbench-statusbar-item">THEME: ACCENT</span></div>
 
@@ -269,24 +163,18 @@
         (function () {
             // 文章列表不做分流
             var ROOT_LABEL = '绿群教程';
-            var SAFE_SCALE = 0.2;
             var SVG_NS = 'http://www.w3.org/2000/svg';
 
             var state = {
                 allDocs: [],
                 docByPath: new Map(),
                 tree: null,
-                currentPath: ''
+                currentPath: '',
+                docLayoutByPath: new Map(),
+                groupLayoutByPath: new Map(),
+                activeGroupPath: '',
+                loadError: ''
             };
-
-            function escapeHtml(text) {
-                return String(text == null ? '' : text)
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;');
-            }
 
             function normalizePath(value) {
                 return String(value || '')
@@ -372,45 +260,6 @@
                 return String(a.title || '').localeCompare(String(b.title || ''), 'zh-CN');
             }
 
-            function buildDocFlowOrder(docs) {
-                var sorted = docs.slice().sort(compareDoc);
-                var pathSet = new Set(sorted.map(function (doc) { return doc.path; }));
-                var byPath = new Map(sorted.map(function (doc) { return [doc.path, doc]; }));
-                var nextMap = new Map();
-                var indegree = new Map();
-                var ordered = [];
-                var visited = new Set();
-
-                sorted.forEach(function (doc) {
-                    indegree.set(doc.path, 0);
-                });
-
-                sorted.forEach(function (doc) {
-                    var nextPath = resolveChapterPath(doc.path, doc.next_chapter);
-                    if (!nextPath || !pathSet.has(nextPath) || nextPath === doc.path) return;
-                    if (nextMap.has(doc.path)) return;
-                    nextMap.set(doc.path, nextPath);
-                    indegree.set(nextPath, (indegree.get(nextPath) || 0) + 1);
-                });
-
-                function walk(startDoc) {
-                    var current = startDoc;
-                    while (current && !visited.has(current.path)) {
-                        visited.add(current.path);
-                        ordered.push(current);
-                        var nextPath = nextMap.get(current.path);
-                        current = nextPath ? byPath.get(nextPath) : null;
-                    }
-                }
-
-                sorted.filter(function (doc) {
-                    return (indegree.get(doc.path) || 0) === 0;
-                }).forEach(walk);
-
-                sorted.forEach(walk);
-                return ordered;
-            }
-
             function buildTree(docs) {
                 var root = createFolderNode(ROOT_LABEL, '', null);
 
@@ -456,29 +305,6 @@
                 return parts.join('/');
             }
 
-            function resolveChapterPath(sourcePath, chapterRef) {
-                var ref = normalizePath(chapterRef || '');
-                if (!ref) return '';
-
-                if (state.docByPath.has(ref)) return ref;
-
-                var sourceParts = splitFolderPath(sourcePath);
-                sourceParts.pop();
-
-                ref.split('/').forEach(function (part) {
-                    if (!part || part === '.') return;
-                    if (part === '..') {
-                        if (sourceParts.length > 0) sourceParts.pop();
-                    } else {
-                        sourceParts.push(part);
-                    }
-                });
-
-                var resolved = sourceParts.join('/');
-                if (state.docByPath.has(resolved)) return resolved;
-                return '';
-            }
-
             function getCssVar(name, fallback) {
                 var value = getComputedStyle(document.documentElement).getPropertyValue(name);
                 value = String(value || '').trim();
@@ -513,12 +339,6 @@
                 return points.map(function (point, index) {
                     return (index === 0 ? 'M ' : 'L ') + point.x + ' ' + point.y;
                 }).join(' ');
-            }
-
-            function getAlternatingOffset(index, step) {
-                if (index === 0) return 0;
-                var level = Math.ceil(index / 2);
-                return index % 2 === 1 ? (-level * step) : (level * step);
             }
 
             function clamp(value, min, max) {
@@ -567,6 +387,7 @@
             function drawNode(layer, options) {
                 var x = options.cx - options.width / 2;
                 var y = options.cy - options.height / 2;
+                var accessibleLabel = String(options.label || options.title || options.subtitle || options.tooltip || '').trim();
                 var titleLines = Array.isArray(options.titleLines) && options.titleLines.length > 0
                     ? options.titleLines
                     : [truncateText(options.title || '', options.titleMax || 14)];
@@ -576,7 +397,7 @@
                 var titleStartY = options.cy - ((titleLines.length - 1) * titleLineHeight) / 2 - (hasSubtitle ? 9 : 0);
 
                 var group = createSvgEl('g', {
-                    'aria-label': options.label || ''
+                    'aria-label': accessibleLabel
                 });
                 layer.appendChild(group);
 
@@ -632,522 +453,739 @@
                 return group;
             }
 
-            function updateLegendColors(palette) {
-                var prevLine = document.getElementById('legend-prev-line');
-                var nextLine = document.getElementById('legend-next-line');
-                if (prevLine) prevLine.style.borderTopColor = palette.next;
-                if (nextLine) nextLine.style.borderTopColor = palette.prev;
+            function appendText(layer, options) {
+                var text = createSvgEl('text', {
+                    x: String(options.x),
+                    y: String(options.y),
+                    fill: options.fill,
+                    'font-size': String(options.size || 14),
+                    'font-weight': String(options.weight || 400),
+                    'text-anchor': options.anchor || 'start'
+                });
+                if (options.opacity != null) {
+                    text.setAttribute('opacity', String(options.opacity));
+                }
+                text.textContent = options.text || '';
+                layer.appendChild(text);
+                return text;
             }
 
-            function updateToolbar(folderNode) {
-                var title = document.getElementById('folder-map-title');
-                var folderCount = document.getElementById('folder-count-meta');
-                var docCount = document.getElementById('doc-count-meta');
-                var goParentBtn = document.getElementById('go-parent-btn');
-
-                var folderPath = state.currentPath;
-                var displayName = folderPath || ROOT_LABEL;
-                var children = Array.from(folderNode.children.values()).sort(compareFolder);
-                var docs = folderNode.docs.slice().sort(compareDoc);
-
-                if (title) {
-                    title.textContent = '当前目录：' + displayName;
-                }
-                if (folderCount) {
-                    folderCount.textContent = '目录 ' + children.length;
-                }
-                if (docCount) {
-                    docCount.textContent = '文章 ' + docs.length;
-                }
-
-                if (goParentBtn) {
-                    var parentPath = getParentPath(folderPath);
-                    var isRoot = !folderPath;
-                    goParentBtn.disabled = isRoot;
-                    goParentBtn.setAttribute('aria-disabled', isRoot ? 'true' : 'false');
-                    goParentBtn.onclick = function () {
-                        if (isRoot) return;
-                        navigateTo(parentPath, false);
-                    };
-                }
+            function drawChip(layer, options) {
+                return drawNode(layer, {
+                    cx: options.x + options.width / 2,
+                    cy: options.y + options.height / 2,
+                    width: options.width,
+                    height: options.height,
+                    radius: options.radius || Math.round(options.height / 2),
+                    fill: options.fill,
+                    stroke: options.stroke,
+                    strokeWidth: options.strokeWidth || 1.8,
+                    textColor: options.textColor,
+                    title: options.label,
+                    titleMax: options.titleMax || 24,
+                    titleSize: options.titleSize || 13,
+                    titleWeight: options.titleWeight || 700,
+                    tooltip: options.tooltip,
+                    onClick: options.onClick || null
+                });
             }
 
-            function setMapEmpty(visible) {
-                var empty = document.getElementById('folder-map-empty');
-                if (!empty) return;
-                empty.hidden = !visible;
+            function collectDocsRecursively(folderNode) {
+                var docs = Array.isArray(folderNode && folderNode.docs) ? folderNode.docs.slice() : [];
+                var children = folderNode && folderNode.children ? Array.from(folderNode.children.values()) : [];
+
+                docs.sort(compareDoc);
+                children.sort(compareFolder);
+
+                children.forEach(function (child) {
+                    docs = docs.concat(collectDocsRecursively(child));
+                });
+                return docs;
             }
 
-            function renderMap(folderNode) {
+            function buildFolderDocGroups(folderNode) {
+                var groups = [];
+                if (!folderNode) return groups;
+
+                groups.push({
+                    label: '当前目录',
+                    path: folderNode.path || '',
+                    docs: Array.isArray(folderNode.docs) ? folderNode.docs.slice().sort(compareDoc) : [],
+                    isCurrent: true
+                });
+
+                var children = folderNode.children
+                    ? Array.from(folderNode.children.values()).sort(compareFolder)
+                    : [];
+                children.forEach(function (child) {
+                    var docs = collectDocsRecursively(child);
+                    if (!docs.length) return;
+                    groups.push({
+                        label: child.name || ROOT_LABEL,
+                        path: child.path || '',
+                        docs: docs,
+                        isCurrent: false
+                    });
+                });
+
+                return groups;
+            }
+
+            function buildBreadcrumbItems(folderNode) {
+                var items = [];
+                var folderPath = normalizePath(folderNode && folderNode.path || '');
+                var parts = splitFolderPath(folderPath);
+
+                items.push({
+                    label: '文档',
+                    path: '',
+                    isCurrent: parts.length === 0
+                });
+
+                parts.forEach(function (part, index) {
+                    items.push({
+                        label: part,
+                        path: parts.slice(0, index + 1).join('/'),
+                        isCurrent: index === parts.length - 1
+                    });
+                });
+
+                return items;
+            }
+
+            function buildFolderRenderState(folderNode) {
+                var groups = buildFolderDocGroups(folderNode);
+                var allDocs = [];
+
+                groups.forEach(function (group) {
+                    group.docs.forEach(function (doc) {
+                        allDocs.push(doc);
+                    });
+                });
+
+                if (!groups.some(function (group) { return group.path === state.activeGroupPath; })) {
+                    state.activeGroupPath = normalizePath(folderNode && folderNode.path || '');
+                }
+
+                return {
+                    groups: groups,
+                    allDocs: allDocs,
+                    breadcrumbItems: buildBreadcrumbItems(folderNode),
+                    childCount: folderNode && folderNode.children ? folderNode.children.size : 0
+                };
+            }
+
+            function estimateChipWidth(label, minWidth, maxWidth, paddingX) {
+                var chars = Array.from(String(label || '')).length;
+                return clamp(chars * 16 + (paddingX || 48), minWidth || 88, maxWidth || 320);
+            }
+
+            function layoutChips(items, options) {
+                var placements = [];
+                var startX = options.startX || 0;
+                var cursorX = startX;
+                var y = options.startY || 0;
+                var itemHeight = options.itemHeight || 40;
+                var maxX = startX + (options.maxWidth || 600);
+                var gapX = options.gapX || 10;
+                var gapY = options.gapY || 10;
+                var bottomY = y;
+
+                items.forEach(function (item) {
+                    var width = estimateChipWidth(item.label, options.minWidth, options.maxItemWidth, options.paddingX);
+                    if (cursorX + width > maxX && cursorX > startX) {
+                        cursorX = startX;
+                        y += itemHeight + gapY;
+                    }
+
+                    placements.push({
+                        item: item,
+                        x: cursorX,
+                        y: y,
+                        width: width,
+                        height: itemHeight
+                    });
+                    cursorX += width + gapX;
+                    bottomY = y + itemHeight;
+                });
+
+                return {
+                    placements: placements,
+                    bottomY: placements.length ? bottomY : (options.startY || 0)
+                };
+            }
+
+            function focusStageOnPoint(point, behavior) {
+                var stage = document.getElementById('main-content');
+                if (!stage || !point) return;
+
+                var maxLeft = Math.max(0, stage.scrollWidth - stage.clientWidth);
+                var maxTop = Math.max(0, stage.scrollHeight - stage.clientHeight);
+                stage.scrollTo({
+                    left: clamp(point.x - stage.clientWidth / 2, 0, maxLeft),
+                    top: clamp(point.y - stage.clientHeight / 2, 0, maxTop),
+                    behavior: behavior || 'auto'
+                });
+            }
+
+            function openDoc(docPath) {
+                window.location.href = '/site/pages/viewer.html?file=' + encodeURIComponent(docPath);
+            }
+
+            function renderErrorMap(message) {
                 var svg = document.getElementById('folder-map-svg');
                 if (!svg) return;
 
                 var palette = getPalette();
-                updateLegendColors(palette);
-
-                var folders = Array.from(folderNode.children.values()).sort(compareFolder);
-                var docs = buildDocFlowOrder(folderNode.docs.slice());
-
-                var center = {
-                    x: 600,
-                    y: docs.length > 0 ? 198 : 220
-                };
-
-                var docPathSet = new Set(docs.map(function (doc) { return doc.path; }));
-                var flowEdgeCount = 0;
-                docs.forEach(function (doc) {
-                    var nextPath = resolveChapterPath(doc.path, doc.next_chapter);
-                    if (nextPath && docPathSet.has(nextPath) && nextPath !== doc.path) {
-                        flowEdgeCount += 1;
-                    }
-                });
-
-                var flowLayout = flowEdgeCount > 0 && docs.length > 0 && docs.length <= 8;
-                var sequenceLayout = flowLayout;
-                var cardWidth = flowLayout ? 252 : 232;
-                var cardHeight = flowLayout ? 84 : 68;
-                var gapX = flowLayout ? 24 : 16;
-                var gapY = flowLayout ? 112 : 90;
-                var docColumnCount;
-                if (sequenceLayout) {
-                    docColumnCount = 1;
-                } else {
-                    docColumnCount = Math.min(4, Math.max(1, Math.ceil(Math.sqrt(Math.max(1, docs.length)))));
-                }
-                var docRows = docs.length > 0 ? Math.ceil(docs.length / docColumnCount) : 0;
-
-                var folderLayout = [];
-                var folderNodeHeight = 58;
-                var maxFolderBottom = center.y + 43;
-
-                if (folders.length > 0) {
-                    var startDeg = -170;
-                    var endDeg = 140;
-                    var folderOrbitSafePadding = Math.round(170 * SAFE_SCALE);
-                    var orbitRadiusX = 600 - folderOrbitSafePadding - 105;
-                    var orbitRadiusY = Math.max(120, Math.round(130 + 120 * SAFE_SCALE));
-                    var step = folders.length === 1 ? 0 : (endDeg - startDeg) / (folders.length - 1);
-                    var folderStrokePalette = ['#4dabf7', '#51cf66', '#9775fa', '#ff922b', '#22b8cf', '#f06595'];
-
-                    folders.forEach(function (folder, index) {
-                        var deg = folders.length === 1 ? -90 : (startDeg + step * index);
-                        var rad = deg * (Math.PI / 180);
-                        var folderColor = folderStrokePalette[index % folderStrokePalette.length];
-                        var point = folders.length === 1
-                            ? { x: center.x, y: center.y - 138 }
-                            : {
-                                x: center.x + orbitRadiusX * Math.cos(rad),
-                                y: center.y + orbitRadiusY * Math.sin(rad)
-                            };
-
-                        folderLayout.push({ folder: folder, point: point, color: folderColor });
-                        maxFolderBottom = Math.max(maxFolderBottom, point.y + folderNodeHeight / 2);
-                    });
-                }
-
-                var docStartY = Math.max(322, maxFolderBottom + Math.max(30, Math.round(72 * SAFE_SCALE)));
-                var bottomSafePadding = Math.max(20, Math.round(90 * SAFE_SCALE));
-                var viewHeight = docs.length > 0
-                    ? Math.max(
-                        flowLayout ? 660 : 600,
-                        docStartY + Math.max(0, docRows - 1) * gapY + cardHeight / 2 + bottomSafePadding
-                    )
-                    : Math.max(440, maxFolderBottom + 84);
-
-                svg.setAttribute('viewBox', '0 0 1200 ' + viewHeight);
+                var width = 1840;
+                var height = 760;
                 svg.innerHTML = '';
+                svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+                svg.setAttribute('width', String(width));
+                svg.setAttribute('height', String(height));
+                svg.style.width = width + 'px';
+                svg.style.height = height + 'px';
+                state.groupLayoutByPath = new Map();
+                state.docLayoutByPath = new Map();
 
-                var defs = createSvgEl('defs', {});
-                var markerPrev = createSvgEl('marker', {
-                    id: 'arrow-prev',
-                    viewBox: '0 0 10 10',
-                    refX: '8',
-                    refY: '5',
-                    markerWidth: '7',
-                    markerHeight: '7',
-                    orient: 'auto'
-                });
-                markerPrev.appendChild(createSvgEl('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: palette.prev }));
+                var backgroundLayer = createSvgEl('g');
+                var nodeLayer = createSvgEl('g');
+                svg.appendChild(backgroundLayer);
+                svg.appendChild(nodeLayer);
 
-                var markerPrevStart = createSvgEl('marker', {
-                    id: 'arrow-prev-start',
-                    viewBox: '0 0 10 10',
-                    refX: '8',
-                    refY: '5',
-                    markerWidth: '6',
-                    markerHeight: '6',
-                    orient: 'auto-start-reverse'
-                });
-                markerPrevStart.appendChild(createSvgEl('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: palette.prev }));
-
-                var markerNext = createSvgEl('marker', {
-                    id: 'arrow-next',
-                    viewBox: '0 0 10 10',
-                    refX: '8',
-                    refY: '5',
-                    markerWidth: '7',
-                    markerHeight: '7',
-                    orient: 'auto'
-                });
-                markerNext.appendChild(createSvgEl('path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: palette.next }));
-
-                defs.appendChild(markerPrev);
-                defs.appendChild(markerPrevStart);
-                defs.appendChild(markerNext);
-                svg.appendChild(defs);
-
-                svg.appendChild(createSvgEl('rect', {
+                backgroundLayer.appendChild(createSvgEl('rect', {
                     x: '0',
                     y: '0',
-                    width: '1200',
-                    height: String(viewHeight),
+                    width: String(width),
+                    height: String(height),
                     fill: palette.bg
                 }));
 
-                var branchLayer = createSvgEl('g', { 'pointer-events': 'none' });
-                var relationLayer = createSvgEl('g', { 'pointer-events': 'none' });
-                var nodeLayer = createSvgEl('g', {});
-                svg.appendChild(branchLayer);
+                backgroundLayer.appendChild(createSvgEl('rect', {
+                    x: '24',
+                    y: '24',
+                    width: String(width - 48),
+                    height: '180',
+                    rx: '24',
+                    ry: '24',
+                    fill: palette.surface,
+                    stroke: palette.border,
+                    'stroke-width': '1.4',
+                    opacity: '0.9'
+                }));
+
+                appendText(nodeLayer, {
+                    x: 72,
+                    y: 70,
+                    text: '目录导航加载失败',
+                    fill: palette.text,
+                    size: 28,
+                    weight: 700
+                });
+                appendText(nodeLayer, {
+                    x: 72,
+                    y: 104,
+                    text: '请刷新页面后重试，或返回上一级目录重新进入。',
+                    fill: palette.muted,
+                    size: 14,
+                    weight: 400
+                });
+
+                drawNode(nodeLayer, {
+                    cx: width / 2,
+                    cy: height / 2,
+                    width: 460,
+                    height: 118,
+                    radius: 18,
+                    fill: palette.surface,
+                    stroke: palette.next,
+                    strokeWidth: 2.6,
+                    textColor: palette.text,
+                    title: '目录数据不可用',
+                    titleSize: 22,
+                    subtitle: message || '加载目录数据失败，请稍后重试。',
+                    subtitleSize: 13,
+                    subtitleMax: 42
+                });
+            }
+
+            function renderMap(folderNode, renderState, options) {
+                var svg = document.getElementById('folder-map-svg');
+                if (!svg) return;
+
+                var palette = getPalette();
+                var opts = options || {};
+                var groups = renderState.groups;
+                var allDocs = renderState.allDocs;
+                var width = 1840;
+                var headerInsetX = 72;
+                var entryX = 170;
+                var centerX = 500;
+                var groupX = 830;
+                var docStartX = 1090;
+                var entryWidth = 190;
+                var centerWidth = 290;
+                var groupWidth = 200;
+                var cardWidth = 240;
+                var cardHeight = 76;
+                var groupGap = 46;
+                var rowGap = 18;
+                var colGap = 18;
+                var groupPalette = ['#4dabf7', '#51cf66', '#9775fa', '#ff922b', '#22b8cf', '#f06595'];
+                var groupLayouts = [];
+                var yCursor;
+                var headerBottom;
+                var topPadding;
+                var contentBottom;
+                var height;
+                var contentCenterY;
+                var displayName = state.currentPath || ROOT_LABEL;
+                var parentPath = getParentPath(state.currentPath);
+                var breadcrumbLayout;
+                var jumpLayout;
+                var groupJumpItems;
+                var backgroundLayer;
+                var relationLayer;
+                var nodeLayer;
+                var headerLayer;
+                var entryNode;
+                var entryLabel;
+                var entrySubtitle;
+                var viewTarget;
+
+                state.groupLayoutByPath = new Map();
+                state.docLayoutByPath = new Map();
+
+                breadcrumbLayout = layoutChips(renderState.breadcrumbItems.map(function (item) {
+                    return {
+                        label: item.label || ROOT_LABEL,
+                        path: item.path,
+                        isCurrent: item.isCurrent
+                    };
+                }), {
+                    startX: headerInsetX,
+                    startY: 100,
+                    maxWidth: width - headerInsetX * 2,
+                    itemHeight: 40,
+                    gapX: 12,
+                    gapY: 10,
+                    minWidth: 92,
+                    maxItemWidth: 260,
+                    paddingX: 54
+                });
+
+                groupJumpItems = groups.map(function (group) {
+                    return {
+                        label: (group.isCurrent ? '当前目录' : group.label) + ' · ' + group.docs.length,
+                        path: group.path,
+                        isActive: normalizePath(group.path) === normalizePath(state.activeGroupPath)
+                    };
+                });
+
+                jumpLayout = layoutChips(groupJumpItems, {
+                    startX: headerInsetX,
+                    startY: breadcrumbLayout.bottomY + 58,
+                    maxWidth: width - headerInsetX * 2,
+                    itemHeight: 40,
+                    gapX: 12,
+                    gapY: 10,
+                    minWidth: 138,
+                    maxItemWidth: 320,
+                    paddingX: 58
+                });
+
+                headerBottom = jumpLayout.bottomY + 42;
+                topPadding = headerBottom + 84;
+                yCursor = topPadding;
+
+                groups.forEach(function (group, index) {
+                    var columnCount = group.docs.length > 24 ? 3 : (group.docs.length > 8 ? 2 : 1);
+                    var rowCount = Math.max(1, Math.ceil(Math.max(group.docs.length, 1) / columnCount));
+                    var blockHeight = group.docs.length
+                        ? rowCount * cardHeight + Math.max(0, rowCount - 1) * rowGap
+                        : 0;
+                    var groupHeight = Math.max(76, blockHeight);
+
+                    groupLayouts.push({
+                        group: group,
+                        color: groupPalette[index % groupPalette.length],
+                        columnCount: columnCount,
+                        rowCount: rowCount,
+                        blockHeight: blockHeight,
+                        centerY: yCursor + groupHeight / 2
+                    });
+                    yCursor += groupHeight + groupGap;
+                });
+
+                contentBottom = groups.length ? (yCursor - groupGap + 100) : (topPadding + 220);
+                height = Math.max(920, contentBottom);
+                contentCenterY = groups.length
+                    ? Math.round((topPadding + contentBottom - 100) / 2)
+                    : Math.round(topPadding + 90);
+
+                svg.innerHTML = '';
+                svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+                svg.setAttribute('width', String(width));
+                svg.setAttribute('height', String(height));
+                svg.style.width = width + 'px';
+                svg.style.height = height + 'px';
+
+                backgroundLayer = createSvgEl('g');
+                headerLayer = createSvgEl('g');
+                relationLayer = createSvgEl('g');
+                nodeLayer = createSvgEl('g');
+                svg.appendChild(backgroundLayer);
+                svg.appendChild(headerLayer);
                 svg.appendChild(relationLayer);
                 svg.appendChild(nodeLayer);
 
+                backgroundLayer.appendChild(createSvgEl('rect', {
+                    x: '0',
+                    y: '0',
+                    width: String(width),
+                    height: String(height),
+                    fill: palette.bg
+                }));
+
+                backgroundLayer.appendChild(createSvgEl('rect', {
+                    x: '24',
+                    y: '24',
+                    width: String(width - 48),
+                    height: String(headerBottom - 8),
+                    rx: '24',
+                    ry: '24',
+                    fill: palette.surface,
+                    stroke: palette.border,
+                    'stroke-width': '1.4',
+                    opacity: '0.96'
+                }));
+
+                backgroundLayer.appendChild(createSvgEl('path', {
+                    d: polylinePath([
+                        { x: 24, y: headerBottom },
+                        { x: width - 24, y: headerBottom }
+                    ]),
+                    fill: 'none',
+                    stroke: palette.line,
+                    'stroke-width': '1.2',
+                    'stroke-opacity': '0.7'
+                }));
+
+                appendText(headerLayer, {
+                    x: headerInsetX,
+                    y: 68,
+                    text: displayName,
+                    fill: palette.text,
+                    size: 30,
+                    weight: 700
+                });
+                appendText(headerLayer, {
+                    x: headerInsetX,
+                    y: 102,
+                    text: 'SVG-only 目录导航：路径跳转、分组定位、文章进入都在画布内完成。',
+                    fill: palette.muted,
+                    size: 14,
+                    weight: 400
+                });
+                appendText(headerLayer, {
+                    x: width - headerInsetX,
+                    y: 68,
+                    text: '子目录 ' + renderState.childCount + ' · 文章 ' + allDocs.length,
+                    fill: palette.text,
+                    size: 16,
+                    weight: 700,
+                    anchor: 'end'
+                });
+                appendText(headerLayer, {
+                    x: width - headerInsetX,
+                    y: 102,
+                    text: '左侧返回层级 · 中间查看当前目录 · 右侧打开文章',
+                    fill: palette.muted,
+                    size: 14,
+                    weight: 400,
+                    anchor: 'end'
+                });
+                appendText(headerLayer, {
+                    x: headerInsetX,
+                    y: 148,
+                    text: '路径',
+                    fill: palette.muted,
+                    size: 13,
+                    weight: 700
+                });
+                appendText(headerLayer, {
+                    x: headerInsetX,
+                    y: breadcrumbLayout.bottomY + 44,
+                    text: '分组跳转',
+                    fill: palette.muted,
+                    size: 13,
+                    weight: 700
+                });
+
+                breadcrumbLayout.placements.forEach(function (placement) {
+                    var item = placement.item;
+                    drawChip(headerLayer, {
+                        x: placement.x,
+                        y: placement.y,
+                        width: placement.width,
+                        height: placement.height,
+                        fill: item.isCurrent ? palette.next : palette.bg,
+                        stroke: item.isCurrent ? palette.next : palette.border,
+                        strokeWidth: item.isCurrent ? 2.2 : 1.6,
+                        textColor: item.isCurrent ? '#ffffff' : palette.text,
+                        label: item.label,
+                        tooltip: item.path || '文档入口',
+                        onClick: item.isCurrent ? null : function () {
+                            navigateTo(item.path, false);
+                        }
+                    });
+                });
+
+                jumpLayout.placements.forEach(function (placement) {
+                    var item = placement.item;
+                    drawChip(headerLayer, {
+                        x: placement.x,
+                        y: placement.y,
+                        width: placement.width,
+                        height: placement.height,
+                        fill: item.isActive ? palette.primary : palette.bg,
+                        stroke: item.isActive ? palette.primary : palette.border,
+                        strokeWidth: item.isActive ? 2.2 : 1.6,
+                        textColor: item.isActive ? '#ffffff' : palette.text,
+                        label: item.label,
+                        titleMax: 26,
+                        tooltip: item.path || '当前目录',
+                        onClick: function () {
+                            state.activeGroupPath = normalizePath(item.path || '');
+                            refreshFolderView(folderNode, {
+                                focusGroupPath: state.activeGroupPath,
+                                focusBehavior: 'smooth'
+                            });
+                        }
+                    });
+                });
+
+                entryNode = folderNode.parent || state.tree;
+                entryLabel = folderNode.path ? (entryNode && entryNode.name || ROOT_LABEL) : '文档';
+                entrySubtitle = folderNode.path ? '返回上一级' : '文档入口';
+
+                relationLayer.appendChild(createSvgEl('path', {
+                    d: polylinePath([
+                        { x: entryX + entryWidth / 2, y: contentCenterY },
+                        { x: centerX - centerWidth / 2 - 46, y: contentCenterY }
+                    ]),
+                    fill: 'none',
+                    stroke: palette.next,
+                    'stroke-width': '3',
+                    'stroke-opacity': '0.84',
+                    'stroke-linecap': 'round'
+                }));
+
                 drawNode(nodeLayer, {
-                    cx: center.x,
-                    cy: center.y,
-                    width: 290,
-                    height: 86,
+                    cx: entryX,
+                    cy: contentCenterY,
+                    width: entryWidth,
+                    height: 82,
+                    radius: 12,
+                    fill: folderNode.path ? palette.surface : palette.bg,
+                    stroke: palette.next,
+                    strokeWidth: folderNode.path ? 2.4 : 1.6,
+                    textColor: palette.text,
+                    title: entryLabel,
+                    titleLines: wrapTextLines(entryLabel, 10, 2),
+                    titleSize: 17,
+                    titleLineHeight: 18,
+                    subtitle: entrySubtitle,
+                    subtitleSize: 12,
+                    subtitleMax: 18,
+                    tooltip: folderNode.path ? parentPath : '文档入口',
+                    onClick: folderNode.path ? function () {
+                        navigateTo(parentPath, false);
+                    } : null
+                });
+
+                drawNode(nodeLayer, {
+                    cx: centerX,
+                    cy: contentCenterY,
+                    width: centerWidth,
+                    height: 102,
                     radius: 14,
-                    fill: palette.primary,
-                    stroke: palette.primary,
-                    textColor: palette.bg,
-                    title: folderNode.path ? folderNode.name : ROOT_LABEL,
-                    subtitle: folderNode.path || '站点顶层目录',
+                    fill: palette.surface,
+                    stroke: palette.border,
+                    strokeWidth: 2,
+                    textColor: palette.text,
+                    title: folderNode.name || ROOT_LABEL,
+                    titleLines: wrapTextLines(folderNode.name || ROOT_LABEL, 12, 2),
+                    titleSize: 20,
+                    titleLineHeight: 22,
+                    subtitle: renderState.childCount + ' 个子目录 · ' + allDocs.length + ' 篇文章',
                     subtitleSize: 13,
-                    subtitleMax: 28,
-                    titleMax: 18,
-                    titleSize: 21,
-                    titleWeight: 800,
+                    subtitleMax: 24,
                     tooltip: folderNode.path || ROOT_LABEL
                 });
 
-                if (folderLayout.length > 0) {
-                    folderLayout.forEach(function (item) {
-                        var folder = item.folder;
-                        var point = item.point;
-                        var midY = point.y < center.y ? (center.y - 34) : (center.y + 30);
-                        var midX = Math.round((center.x + point.x) / 2);
-                        var path = createSvgEl('path', {
-                            d: polylinePath([
-                                { x: center.x, y: center.y },
-                                { x: midX, y: midY },
-                                { x: point.x, y: point.y }
-                            ]),
-                            fill: 'none',
-                            stroke: item.color,
-                            'stroke-width': '2',
-                            'stroke-opacity': '0.45'
-                        });
-                        branchLayer.appendChild(path);
+                groupLayouts.forEach(function (layout) {
+                    var group = layout.group;
+                    var groupNodeY = layout.centerY;
+                    var groupNodeX = groupX;
+                    var branchMidX = groupNodeX - 132;
+                    var docBlockTop = groupNodeY - layout.blockHeight / 2;
+                    var groupClickable = !group.isCurrent;
+                    var groupActive = normalizePath(group.path) === normalizePath(state.activeGroupPath || folderNode.path || '');
+                    var groupSubtitle = group.isCurrent
+                        ? ('本级文章 ' + group.docs.length + ' 篇')
+                        : ('进入目录 · ' + group.docs.length + ' 篇');
+                    var blockWidth = layout.columnCount * cardWidth + Math.max(0, layout.columnCount - 1) * colGap;
+                    var focusPointX = group.docs.length
+                        ? (docStartX + Math.max(cardWidth / 2, blockWidth / 2))
+                        : (groupNodeX + 180);
 
-                        drawNode(nodeLayer, {
-                            cx: point.x,
-                            cy: point.y,
-                            width: 200,
-                            height: 58,
-                            radius: 10,
-                            fill: palette.surface,
-                            stroke: item.color,
-                            textColor: palette.text,
-                            title: folder.name,
-                            titleMax: 14,
-                            titleSize: 15,
-                            subtitle: '目录',
-                            subtitleSize: 12,
-                            subtitleMax: 10,
-                            tooltip: folder.path,
-                            onClick: function () {
-                                navigateTo(folder.path, false);
-                            }
-                        });
+                    state.groupLayoutByPath.set(normalizePath(group.path), {
+                        x: focusPointX,
+                        y: groupNodeY
                     });
-                }
 
-                var docPointByPath = new Map();
-                var docIndexByPath = new Map();
-                var docHalfHeight = cardHeight / 2;
-                var totalWidth = docColumnCount * cardWidth + (docColumnCount - 1) * gapX;
-                var docStartX = (1200 - totalWidth) / 2 + cardWidth / 2;
-
-                docs.forEach(function (doc, index) {
-                    docIndexByPath.set(doc.path, index);
-                    var col = index % docColumnCount;
-                    var row = Math.floor(index / docColumnCount);
-                    var point = {
-                        x: docStartX + col * (cardWidth + gapX),
-                        y: docStartY + row * gapY
-                    };
-                    docPointByPath.set(doc.path, point);
-
-                    var docBranchStartY = center.y + 44;
-                    var docTopY = point.y - docHalfHeight - 5;
-                    var docMidY = Math.min(docTopY - 18, center.y + 154);
-                    var branch = createSvgEl('path', {
+                    relationLayer.appendChild(createSvgEl('path', {
                         d: polylinePath([
-                            { x: center.x, y: docBranchStartY },
-                            { x: center.x, y: docMidY },
-                            { x: point.x, y: docMidY },
-                            { x: point.x, y: docTopY }
+                            { x: centerX + centerWidth / 2, y: contentCenterY },
+                            { x: branchMidX, y: contentCenterY },
+                            { x: branchMidX, y: groupNodeY },
+                            { x: groupNodeX - groupWidth / 2 - 28, y: groupNodeY }
                         ]),
                         fill: 'none',
-                        stroke: palette.line,
-                        'stroke-width': '1.8',
-                        'stroke-opacity': '0.78'
-                    });
-                    branchLayer.appendChild(branch);
+                        stroke: palette.prev,
+                        'stroke-width': groupActive ? '3' : '2.2',
+                        'stroke-opacity': groupActive ? '0.88' : '0.66',
+                        'stroke-linecap': 'round'
+                    }));
 
                     drawNode(nodeLayer, {
-                        cx: point.x,
-                        cy: point.y,
-                        width: cardWidth,
-                        height: cardHeight,
-                        radius: 8,
+                        cx: groupNodeX,
+                        cy: groupNodeY,
+                        width: groupWidth,
+                        height: 64,
+                        radius: 10,
+                        fill: palette.surface,
+                        stroke: layout.color,
+                        strokeWidth: groupActive ? 2.8 : 2,
+                        textColor: palette.text,
+                        title: group.label,
+                        titleLines: wrapTextLines(group.label, 10, 2),
+                        titleSize: 15,
+                        titleLineHeight: 18,
+                        subtitle: groupSubtitle,
+                        subtitleSize: 11,
+                        subtitleMax: 18,
+                        tooltip: group.path || '当前目录',
+                        onClick: groupClickable ? function () {
+                            navigateTo(group.path, false);
+                        } : function () {
+                            state.activeGroupPath = normalizePath(group.path || '');
+                            refreshFolderView(folderNode, {
+                                focusGroupPath: state.activeGroupPath,
+                                focusBehavior: 'smooth'
+                            });
+                        }
+                    });
+
+                    group.docs.forEach(function (doc, index) {
+                        var column = index % layout.columnCount;
+                        var row = Math.floor(index / layout.columnCount);
+                        var point = {
+                            x: docStartX + cardWidth / 2 + column * (cardWidth + colGap),
+                            y: docBlockTop + cardHeight / 2 + row * (cardHeight + rowGap)
+                        };
+                        var relativePath = String(doc.path || '');
+                        var subtitle = String(doc.author || '').trim();
+                        var connectorOpacity = groupActive ? '0.9' : '0.56';
+                        var nodeOpacity = groupActive ? '1' : '0.88';
+                        var nodeGroup;
+
+                        if (!subtitle) {
+                            subtitle = relativePath.indexOf('/') === -1
+                                ? relativePath
+                                : relativePath.split('/').slice(-2).join('/');
+                        }
+
+                        relationLayer.appendChild(createSvgEl('path', {
+                            d: polylinePath([
+                                { x: groupNodeX + groupWidth / 2 + 14, y: groupNodeY },
+                                { x: point.x - cardWidth / 2 - 22, y: groupNodeY },
+                                { x: point.x - cardWidth / 2 - 22, y: point.y },
+                                { x: point.x - cardWidth / 2 - 6, y: point.y }
+                            ]),
+                            fill: 'none',
+                            stroke: layout.color,
+                            'stroke-width': groupActive ? '2.4' : '1.7',
+                            'stroke-opacity': connectorOpacity,
+                            'stroke-linecap': 'round'
+                        }));
+
+                        nodeGroup = drawNode(nodeLayer, {
+                            cx: point.x,
+                            cy: point.y,
+                            width: cardWidth,
+                            height: cardHeight,
+                            radius: 10,
+                            fill: groupActive ? palette.surface : palette.bg,
+                            stroke: groupActive ? layout.color : palette.border,
+                            strokeWidth: groupActive ? 2.2 : 1.6,
+                            textColor: palette.text,
+                            title: doc.title,
+                            titleLines: wrapTextLines(doc.title, 15, 2),
+                            titleLineHeight: 18,
+                            titleSize: 14,
+                            subtitle: subtitle,
+                            subtitleSize: 11,
+                            subtitleMax: 20,
+                            tooltip: doc.path,
+                            onClick: function () {
+                                openDoc(doc.path);
+                            }
+                        });
+                        nodeGroup.setAttribute('data-doc-path', doc.path);
+                        nodeGroup.setAttribute('data-doc-title', doc.title);
+                        nodeGroup.setAttribute('opacity', nodeOpacity);
+                        state.docLayoutByPath.set(doc.path, point);
+                    });
+                });
+
+                if (!allDocs.length) {
+                    drawNode(nodeLayer, {
+                        cx: 1290,
+                        cy: contentCenterY,
+                        width: 380,
+                        height: 104,
+                        radius: 14,
                         fill: palette.surface,
                         stroke: palette.border,
-                        textColor: palette.doc,
-                        title: doc.title,
-                        titleLines: wrapTextLines(doc.title, flowLayout ? 12 : 14, 2),
-                        titleLineHeight: flowLayout ? 18 : 17,
-                        titleSize: flowLayout ? 15 : 14,
-                        tooltip: doc.path,
-                        onClick: function () {
-                            window.location.href = '/site/pages/viewer.html?file=' + encodeURIComponent(doc.path);
-                        }
-                    });
-                });
-
-                var prevEdges = [];
-                var nextEdges = [];
-
-                docs.forEach(function (doc) {
-                    var source = docPointByPath.get(doc.path);
-                    if (!source) return;
-                    var sourceIndex = docIndexByPath.get(doc.path) || 0;
-
-                    var prevPath = resolveChapterPath(doc.path, doc.prev_chapter);
-                    var prevPoint = docPointByPath.get(prevPath);
-                    if (prevPath && prevPoint && prevPath !== doc.path) {
-                        var prevTargetIndex = docIndexByPath.get(prevPath) || 0;
-                        prevEdges.push({
-                            sourcePath: doc.path,
-                            targetPath: prevPath,
-                            source: source,
-                            target: prevPoint,
-                            sourceIndex: sourceIndex,
-                            targetIndex: prevTargetIndex,
-                            distance: Math.max(1, Math.abs(prevTargetIndex - sourceIndex))
-                        });
-                    }
-
-                    var nextPath = resolveChapterPath(doc.path, doc.next_chapter);
-                    var nextPoint = docPointByPath.get(nextPath);
-                    if (nextPath && nextPoint && nextPath !== doc.path) {
-                        var nextTargetIndex = docIndexByPath.get(nextPath) || 0;
-                        nextEdges.push({
-                            sourcePath: doc.path,
-                            targetPath: nextPath,
-                            source: source,
-                            target: nextPoint,
-                            sourceIndex: sourceIndex,
-                            targetIndex: nextTargetIndex,
-                            distance: Math.max(1, Math.abs(nextTargetIndex - sourceIndex))
-                        });
-                    }
-                });
-
-                function compareEdge(a, b) {
-                    var distanceDelta = (b.distance || 0) - (a.distance || 0);
-                    if (distanceDelta !== 0) return distanceDelta;
-                    var sourceDelta = (a.sourceIndex || 0) - (b.sourceIndex || 0);
-                    if (sourceDelta !== 0) return sourceDelta;
-                    return (a.targetIndex || 0) - (b.targetIndex || 0);
-                }
-
-                prevEdges.sort(compareEdge);
-                nextEdges.sort(compareEdge);
-                var flowEdgeMap = new Map();
-                nextEdges.forEach(function (edge) {
-                    var key = edge.sourcePath + '->' + edge.targetPath;
-                    flowEdgeMap.set(key, {
-                        sourcePath: edge.sourcePath,
-                        targetPath: edge.targetPath,
-                        source: edge.source,
-                        target: edge.target,
-                        sourceIndex: edge.sourceIndex,
-                        targetIndex: edge.targetIndex,
-                        distance: edge.distance
-                    });
-                });
-
-                prevEdges.forEach(function (edge) {
-                    var reverseKey = edge.targetPath + '->' + edge.sourcePath;
-                    if (flowEdgeMap.has(reverseKey)) return;
-                    flowEdgeMap.set(reverseKey, {
-                        sourcePath: edge.targetPath,
-                        targetPath: edge.sourcePath,
-                        source: edge.target,
-                        target: edge.source,
-                        sourceIndex: edge.targetIndex,
-                        targetIndex: edge.sourceIndex,
-                        distance: edge.distance
-                    });
-                });
-
-                var flowEdges = Array.from(flowEdgeMap.values()).sort(compareEdge);
-
-                if (sequenceLayout) {
-                    var downwardLaneCount = 0;
-                    var upwardLaneCount = 0;
-                    var rightBaseX = center.x + cardWidth / 2 + 30;
-                    var leftBaseX = center.x - cardWidth / 2 - 30;
-                    var laneStep = 20;
-                    var sidePortOffsets = new Map();
-                    var minPortGap = 12;
-                    var portOffsetStep = 12;
-
-                    var reservePortOffset = function (sideKey, preferredOffset) {
-                        var offsets = sidePortOffsets.get(sideKey);
-                        if (!offsets) {
-                            offsets = [];
-                            sidePortOffsets.set(sideKey, offsets);
-                        }
-
-                        var candidate = preferredOffset;
-                        var guard = 0;
-                        while (guard < 40 && offsets.some(function (offset) {
-                            return Math.abs(offset - candidate) < minPortGap;
-                        })) {
-                            var delta = (Math.floor(guard / 2) + 1) * portOffsetStep;
-                            candidate = preferredOffset + (guard % 2 === 0 ? delta : -delta);
-                            guard += 1;
-                        }
-
-                        offsets.push(candidate);
-                        return candidate;
-                    };
-
-                    flowEdges.forEach(function (edge) {
-                        var forward = edge.targetIndex >= edge.sourceIndex;
-                        var laneIndex = forward ? downwardLaneCount++ : upwardLaneCount++;
-                        var leftLaneX = leftBaseX - laneIndex * laneStep;
-                        var rightLaneX = rightBaseX + laneIndex * laneStep;
-                        var sourceLeftX = edge.source.x - cardWidth / 2 - 10;
-                        var sourceRightX = edge.source.x + cardWidth / 2 + 10;
-                        var targetLeftX = edge.target.x - cardWidth / 2 - 10;
-                        var targetRightX = edge.target.x + cardWidth / 2 + 10;
-
-                        var sourceLeftY = edge.source.y + reservePortOffset(
-                            edge.sourcePath + ':left-out',
-                            forward ? 18 : -18
-                        );
-                        var targetLeftY = edge.target.y + reservePortOffset(
-                            edge.targetPath + ':left-in',
-                            forward ? -18 : 18
-                        );
-                        var targetRightY = edge.target.y + reservePortOffset(
-                            edge.targetPath + ':right-out',
-                            forward ? -18 : 18
-                        );
-                        var sourceRightY = edge.source.y + reservePortOffset(
-                            edge.sourcePath + ':right-in',
-                            forward ? 18 : -18
-                        );
-
-                        relationLayer.appendChild(createSvgEl('path', {
-                            d: polylinePath([
-                                { x: sourceLeftX, y: sourceLeftY },
-                                { x: leftLaneX, y: sourceLeftY },
-                                { x: leftLaneX, y: targetLeftY },
-                                { x: targetLeftX, y: targetLeftY }
-                            ]),
-                            fill: 'none',
-                            stroke: palette.next,
-                            'stroke-width': '2.1',
-                            'stroke-opacity': '0.9',
-                            'stroke-linecap': 'round',
-                            'marker-end': 'url(#arrow-next)'
-                        }));
-
-                        relationLayer.appendChild(createSvgEl('path', {
-                            d: polylinePath([
-                                { x: targetRightX, y: targetRightY },
-                                { x: rightLaneX, y: targetRightY },
-                                { x: rightLaneX, y: sourceRightY },
-                                { x: sourceRightX, y: sourceRightY }
-                            ]),
-                            fill: 'none',
-                            stroke: palette.prev,
-                            'stroke-width': '2.1',
-                            'stroke-opacity': '0.9',
-                            'stroke-linecap': 'round',
-                            'marker-end': 'url(#arrow-prev)'
-                        }));
-                    });
-                } else {
-                    var flowBaseLane = flowEdges.length > 0
-                        ? Math.round(Math.max.apply(null, flowEdges.map(function (edge) {
-                            return Math.max(edge.source.y + docHalfHeight + 4, edge.target.y + docHalfHeight + 4);
-                        })) + 64)
-                        : 0;
-                    var usedFlowColumns = [];
-
-                    function reserveFlowColumn(preferredX) {
-                        var candidate = clamp(Math.round(preferredX), 20, 1180);
-                        var guard = 0;
-                        while (guard < 80 && usedFlowColumns.some(function (col) {
-                            return Math.abs(col - candidate) < 18;
-                        })) {
-                            var step = (Math.floor(guard / 2) + 1) * 18;
-                            candidate = clamp(
-                                preferredX + (guard % 2 === 0 ? step : -step),
-                                20,
-                                1180
-                            );
-                            guard += 1;
-                        }
-                        usedFlowColumns.push(candidate);
-                        return candidate;
-                    }
-
-                    flowEdges.forEach(function (edge, edgeOrder) {
-                        var sourceAnchorY = edge.source.y + docHalfHeight + 4;
-                        var targetAnchorY = edge.target.y + docHalfHeight + 4;
-                        var direction = edge.target.x >= edge.source.x ? 1 : -1;
-                        var laneOffset = (Math.floor(edgeOrder / 2) + 1) * 16;
-                        var sourcePortX = reserveFlowColumn(edge.source.x + direction * (24 + laneOffset));
-                        var targetPortX = reserveFlowColumn(edge.target.x - direction * (28 + laneOffset));
-                        var laneY = flowBaseLane + edgeOrder * 30;
-
-                        relationLayer.appendChild(createSvgEl('path', {
-                            d: polylinePath([
-                                { x: edge.source.x, y: sourceAnchorY },
-                                { x: sourcePortX, y: sourceAnchorY },
-                                { x: sourcePortX, y: laneY },
-                                { x: targetPortX, y: laneY },
-                                { x: targetPortX, y: targetAnchorY },
-                                { x: edge.target.x, y: targetAnchorY }
-                            ]),
-                            fill: 'none',
-                            stroke: palette.next,
-                            'stroke-width': '2.2',
-                            'stroke-opacity': '0.9',
-                            'stroke-linecap': 'round',
-                            'marker-start': 'url(#arrow-prev-start)',
-                            'marker-end': 'url(#arrow-next)'
-                        }));
+                        strokeWidth: 1.8,
+                        textColor: palette.text,
+                        title: '当前目录暂无文章',
+                        titleSize: 20,
+                        subtitle: renderState.childCount
+                            ? '该目录及其子目录暂无文章，可点击左侧节点返回上一级。'
+                            : '点击左侧节点返回上一级目录，或从路径节点切换层级。',
+                        subtitleSize: 12,
+                        subtitleMax: 34
                     });
                 }
 
-                setMapEmpty(folders.length === 0 && docs.length === 0);
+                viewTarget = opts.focusGroupPath != null
+                    ? state.groupLayoutByPath.get(normalizePath(opts.focusGroupPath))
+                    : state.groupLayoutByPath.get(normalizePath(state.activeGroupPath || folderNode.path || ''));
+                if (!viewTarget) {
+                    viewTarget = { x: centerX + 80, y: contentCenterY };
+                }
+
+                window.requestAnimationFrame(function () {
+                    focusStageOnPoint(viewTarget, opts.focusBehavior || 'auto');
+                });
+            }
+
+            function refreshFolderView(folderNode, options) {
+                var renderState = buildFolderRenderState(folderNode);
+                renderMap(folderNode, renderState, options || {});
             }
 
             function applyPathToUrl(path, replace) {
@@ -1175,10 +1213,14 @@
                 }
 
                 state.currentPath = normalized;
+                state.activeGroupPath = normalized;
+                state.loadError = '';
                 updateSeo(normalized);
                 applyPathToUrl(normalized, !!replaceState);
-                updateToolbar(node);
-                renderMap(node);
+                refreshFolderView(node, {
+                    focusGroupPath: normalized,
+                    focusBehavior: replaceState ? 'auto' : 'smooth'
+                });
             }
 
             async function loadConfig() {
@@ -1208,14 +1250,22 @@
                     var node = getFolderNode(path);
                     if (!node) path = '';
                     state.currentPath = path;
+                    state.activeGroupPath = path;
                     updateSeo(path);
-                    updateToolbar(getFolderNode(path));
-                    renderMap(getFolderNode(path));
+                    refreshFolderView(getFolderNode(path), {
+                        focusGroupPath: path,
+                        focusBehavior: 'auto'
+                    });
                 });
 
                 window.addEventListener('themechange', function () {
                     var node = getFolderNode(state.currentPath || '');
-                    if (node) renderMap(node);
+                    if (node) {
+                        refreshFolderView(node, {
+                            focusGroupPath: state.activeGroupPath || state.currentPath || '',
+                            focusBehavior: 'auto'
+                        });
+                    }
                 });
             }
 
@@ -1225,12 +1275,8 @@
                     navigateTo(getFolderPathFromURL(), true);
                 }).catch(function (error) {
                     console.error('folder.html 初始化失败:', error);
-                    setMapEmpty(true);
-                    var empty = document.getElementById('folder-map-empty');
-                    if (empty) {
-                        empty.hidden = false;
-                        empty.textContent = '加载目录数据失败，请稍后重试。';
-                    }
+                    state.loadError = '加载目录数据失败，请稍后重试。';
+                    renderErrorMap(state.loadError);
                 });
             });
         })();
