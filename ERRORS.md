@@ -2955,3 +2955,20 @@
 - `站点Markdown扩展语法说明.md`、`在线写作IDE使用教程.md`、`ContentProjects解决方案说明.md` 已改为参考/进阶定位，不再充当新人默认必读链路。
 - `npm run build` 持续出现既有 Vite warning：`JetBrainsMonoNerdFont-Bold.ttf` 在构建时未解析、保留到运行时；本轮构建仍成功产出。
 - `check-content` 的历史报错不在本轮处理范围内，仅在此记录基线状态。
+
+### 验证记录 [2026-03-08 12:40]：main 合并工作树分支（仅已提交历史）
+
+**级别**：分支集成（main 快进合并）
+
+**命令与结果**：
+- `git merge --ff-only fix-doc-viewer-folder-nav`：通过（fast-forward 到 `7b21966`）
+- `git merge --ff-only fix-folder-tree-reference-layout`：通过（Already up to date）
+- `git merge --ff-only fix-ide-validation-ux`：通过（Already up to date）
+- `git merge --ff-only docs/contributor-learning`：通过（Already up to date）
+- `npm run build`：通过
+- `npm run check-generated`：失败（`git diff --exit-code`；生成流程重写时间戳字段）
+
+**备注**：
+- 本次仅并入各工作树分支的已提交历史，未纳入工作树未提交改动。
+- `check-generated` 失败差异集中在时间戳字段：`fun-test/quiz-data.v1.json`（`generatedAt`）、`site/assets/ide-editable-index.v1.json`（`generatedAt`）、`site/assets/shader-gallery/index.json`（`generated_at`）。
+- 为保持工作区干净，验收后已执行 `git restore --worktree --staged .` 清理生成命令引入的临时改动。
